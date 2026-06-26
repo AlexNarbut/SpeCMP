@@ -24,8 +24,7 @@ kotlin {
     }
 
     listOf(
-        iosArm64(),
-        iosSimulatorArm64()
+        iosArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "CoreUI"
