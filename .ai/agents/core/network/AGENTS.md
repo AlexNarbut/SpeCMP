@@ -1,0 +1,5 @@
+# core/network
+
+- Область: общий HTTP-клиент, общая конфигурация Ktor и shared network infrastructure в `core/network`.
+- Перед изменениями читай `docs/architecture.md`; при правке зависимостей, client plugins и платформенной конфигурации — `docs/build.md`.
+- DTO, mapper-ы и feature-репозитории ищи в `feature/*/data`, а не в `core/network`.

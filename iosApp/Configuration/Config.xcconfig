@@ -1,0 +1,11 @@
+PRODUCT_NAME = SpeCMP
+PRODUCT_BUNDLE_IDENTIFIER = ru.alarmtrade.specmp.iosApp
+
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+
+IPHONEOS_DEPLOYMENT_TARGET = 17.2
+
+// Leave empty for simulator builds. Set your Apple Developer Team ID locally
+// or select a team in Xcode before installing on a physical device.
+TEAM_ID =

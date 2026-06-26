@@ -1,0 +1,55 @@
+# Local AI workflow artifacts (not project source of truth)
+agentTasks/
+.ai/requirements/
+.ai/refactoring/
+.ai/bugs/
+.ai/plans/
+.ai/tests/
+.ai/review/
+.ai/memory/
+
+# Gradle / Kotlin / Compose Desktop
+.gradle/
+build/
+.kotlin/
+out/
+
+# Compose Desktop native distributions
+# Usually covered by build/, but useful if outputBaseDir is customized.
+compose/binaries/
+*.dmg
+*.pkg
+*.msi
+*.exe
+*.deb
+*.rpm
+*.AppImage
+
+# JVM artifacts and crash dumps
+*.class
+*.hprof
+hs_err_pid*
+replay_pid*
+
+# Logs
+*.log
+
+# Local machine / secrets
+local.properties
+.env
+.env.*
+!.env.example
+
+# IDE files if desktopApp is opened standalone
+.idea/
+*.iml
+*.iws
+
+# OS junk
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini

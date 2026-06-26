@@ -1,0 +1,94 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
+plugins {
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.android.kmp.library)
+    alias(libs.plugins.kotlinx.serialization)
+
+}
+
+kotlin {
+    val jvmTargetVersion = JvmTarget.JVM_17
+
+    jvm {
+        compilerOptions { jvmTarget.set(jvmTargetVersion) }
+    }
+
+    android {
+        namespace = "ru.alarmtrade.specmp"
+        compileSdk = libs.versions.android.targetSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        androidResources.enable = true
+        compilerOptions { jvmTargetVersion }
+    }
+
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        commonMain.dependencies {
+            // Core modules
+            implementation(project(":core:common"))
+            implementation(project(":core:network"))
+            implementation(project(":core:ui"))
+
+            // Feature modules
+            implementation(project(":feature:calculator"))
+
+            // Compose
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.resources)
+            implementation(libs.compose.ui.tooling.preview)
+
+            // Lifecycle
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime)
+
+            // Navigation
+            implementation(libs.compose.nav3)
+
+            // DI
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
+            // Image loading
+            implementation(libs.coil)
+            implementation(libs.coil.network.ktor)
+
+            // Coroutines
+            implementation(libs.kotlinx.coroutines.core)
+
+            // Serialization (for nav3 routes)
+            implementation(libs.kotlinx.serialization.json)
+        }
+
+        androidMain.dependencies {
+            implementation(libs.compose.ui.tooling)
+            implementation(libs.androidx.activityCompose)
+        }
+
+    }
+
+    targets
+        .withType<KotlinNativeTarget>()
+        .matching { it.konanTarget.family.isAppleFamily }
+        .configureEach {
+            binaries {
+                framework {
+                    baseName = "composeApp"
+                    isStatic = true
+                }
+            }
+        }
+}
+
+dependencies {
+    androidRuntimeClasspath(libs.compose.ui.tooling)
+}
