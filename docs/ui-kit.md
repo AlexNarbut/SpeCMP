@@ -72,6 +72,10 @@ commonMain.dependencies {
 | Badge | `badge/CmpBadge.kt` |
 | Разделитель | `divider/CmpDivider.kt` |
 | Текст | `text/CmpText.kt` |
+| Box | `layout/CmpBox.kt` |
+| Column | `layout/CmpColumn.kt` |
+| Row | `layout/CmpRow.kt` |
+| Spacer | `layout/CmpSpacer.kt` |
 
 ---
 

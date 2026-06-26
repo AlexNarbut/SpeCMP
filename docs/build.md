@@ -126,6 +126,19 @@ actual fun platformName(): String = UIDevice.currentDevice.systemName()
 - Всегда использовать **Gradle wrapper**: `./gradlew` (Unix/macOS) или `gradlew.bat` (Windows)
 - Первая сборка скачивает Kotlin/Native toolchain (~300–500 MB в `~/.konan/`), занимает 10–20 мин
 
+### Android SDK levels
+
+| Параметр | Значение |
+|---|---|
+| compileSdk | 36 |
+| minSdk | 24 |
+| targetSdk | 36 |
+
+`minSdk = 24` требуется Android-артефактом `ru.alarmtrade.common:specialist-android`.
+Android wrapper также объявляет `ACCESS_COARSE_LOCATION`, потому что транзитивный
+`bluetooth-common` manifest добавляет `ACCESS_FINE_LOCATION`, а Android 12+ lint
+требует запрашивать оба location-разрешения парой.
+
 ---
 
 ### macOS

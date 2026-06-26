@@ -5,6 +5,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.feature.calculator.di.calculatorModule
+import ru.alarmtrade.specmp.feature.login.di.loginModule
+import ru.alarmtrade.specmp.feature.login.di.platformLoginModule
 import ru.alarmtrade.specmp.navigation.AppNavigation
 import org.koin.compose.KoinApplication
 
@@ -14,7 +16,7 @@ fun App(
     onThemeChanged: @Composable (isDark: Boolean) -> Unit = {}
 ) {
     KoinApplication(application = {
-        modules(commonModule, calculatorModule)
+        modules(commonModule, calculatorModule, loginModule, platformLoginModule)
     }) {
         AppTheme(onThemeChanged) {
             AppNavigation()

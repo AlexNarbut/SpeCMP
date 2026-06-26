@@ -23,11 +23,15 @@ data object HomeRoute : NavKey
 @Serializable
 data object CalculatorRoute : NavKey
 
+@Serializable
+data object LoginRoute : NavKey
+
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(HomeRoute::class, HomeRoute.serializer())
             subclass(CalculatorRoute::class, CalculatorRoute.serializer())
+            subclass(LoginRoute::class, LoginRoute.serializer())
         }
     }
 }
@@ -47,10 +51,22 @@ fun AppNavigation() {
         onBack = { backStack.removeLastOrNull() },
         entryProvider = entryProvider<NavKey> {
             entry<HomeRoute> { _ ->
-                HomeScreen(onNavigateToCalculator = { backStack += CalculatorRoute })
+                HomeScreen(
+                    onNavigateToCalculator = { backStack += CalculatorRoute },
+                    onNavigateToLogin = { backStack += LoginRoute },
+                )
             }
             entry<CalculatorRoute> { _ ->
                 CalculatorScreen(onBack = { backStack.removeLastOrNull() })
+            }
+            entry<LoginRoute> { _ ->
+                LoginScreen(
+                    onBack = { backStack.removeLastOrNull() },
+                    onLoginSuccess = {
+                        backStack.clear()
+                        backStack += HomeRoute
+                    },
+                )
             }
         }
     )
@@ -63,9 +79,18 @@ fun AppNavigation() {
 
 ```kotlin
 backStack += CalculatorRoute           // перейти вперёд
+backStack += LoginRoute                // перейти на авторизацию
 backStack.removeLastOrNull()           // назад
 backStack.clear(); backStack += HomeRoute  // сброс к корню
 ```
+
+## Текущие маршруты
+
+| Route | Экран |
+|---|---|
+| `HomeRoute` | `HomeScreen` |
+| `CalculatorRoute` | `CalculatorScreen` |
+| `LoginRoute` | `LoginScreen` |
 
 ---
 

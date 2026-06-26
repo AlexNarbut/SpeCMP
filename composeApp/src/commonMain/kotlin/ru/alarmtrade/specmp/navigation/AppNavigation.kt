@@ -9,7 +9,9 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import ru.alarmtrade.specmp.feature.calculator.presentation.CalculatorScreen
+import ru.alarmtrade.specmp.feature.login.presentation.LoginScreen
 import ru.alarmtrade.specmp.home.HomeScreen
 
 @Serializable
@@ -18,11 +20,15 @@ data object HomeRoute : NavKey
 @Serializable
 data object CalculatorRoute : NavKey
 
+@Serializable
+data object LoginRoute : NavKey
+
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(HomeRoute::class, HomeRoute.serializer())
             subclass(CalculatorRoute::class, CalculatorRoute.serializer())
+            subclass(LoginRoute::class, LoginRoute.serializer())
         }
     }
 }
@@ -36,10 +42,22 @@ fun AppNavigation() {
         onBack = { backStack.removeLastOrNull() },
         entryProvider = entryProvider<NavKey> {
             entry<HomeRoute> { _ ->
-                HomeScreen(onNavigateToCalculator = { backStack += CalculatorRoute })
+                HomeScreen(
+                    onNavigateToCalculator = { backStack += CalculatorRoute },
+                    onNavigateToLogin = { backStack += LoginRoute },
+                )
             }
             entry<CalculatorRoute> { _ ->
                 CalculatorScreen(onBack = { backStack.removeLastOrNull() })
+            }
+            entry<LoginRoute> { _ ->
+                LoginScreen(
+                    onBack = { backStack.removeLastOrNull() },
+                    onLoginSuccess = {
+                        backStack.clear()
+                        backStack += HomeRoute
+                    },
+                )
             }
         }
     )

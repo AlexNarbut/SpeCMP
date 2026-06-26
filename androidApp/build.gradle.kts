@@ -8,11 +8,11 @@ plugins {
 
 android {
     namespace = "ru.alarmtrade.specmp.androidApp"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = 23
-        targetSdk = 36
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
 
         applicationId = "ru.alarmtrade.specmp.androidApp"
         versionCode = 1

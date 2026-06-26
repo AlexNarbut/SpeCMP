@@ -1,0 +1,22 @@
+package ru.alarmtrade.specmp.feature.login.presentation
+
+import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
+
+@Immutable
+data class LoginState(
+    val login: String = "",
+    val password: String = "",
+    val isPasswordVisible: Boolean = false,
+    val authState: LCEState<LoginResult> = LCEState.None(),
+    val activationResendState: LCEState<Unit> = LCEState.None(),
+) {
+    val isAuthLoading: Boolean get() = authState is LCEState.Loading
+    val isActivationResendLoading: Boolean get() = activationResendState is LCEState.Loading
+    val isActivationRequired: Boolean
+        get() = authState is LCEState.Content && authState.content is LoginResult.ActivationRequired
+
+    val canSubmit: Boolean
+        get() = login.isNotBlank() && password.isNotBlank() && !isAuthLoading
+}

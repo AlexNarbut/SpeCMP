@@ -20,7 +20,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
 @Composable
-fun HomeScreen(onNavigateToCalculator: () -> Unit) {
+fun HomeScreen(
+    onNavigateToCalculator: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,6 +90,14 @@ fun HomeScreen(onNavigateToCalculator: () -> Unit) {
             onClick = onNavigateToCalculator,
             content = {
                 Text("Calculator")
+            }
+        )
+
+        ElevatedButton(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
+            onClick = onNavigateToLogin,
+            content = {
+                Text("Login")
             }
         )
 

@@ -89,6 +89,10 @@ Feature-модули:
 - Являются Kotlin Multiplatform библиотеками
 - Подключаются в `:composeApp` для интеграции в UI
 
+Текущие feature-модули:
+- `feature/calculator` — UI-фича калькулятора.
+- `feature/login` — авторизация специалиста. Общие `domain`, `presentation` и use case-слои живут в `commonMain`; адаптер `SpecialistApp` подключён в `androidMain` и `jvmMain`, а iOS использует явную unavailable-реализацию репозитория до появления совместимой iOS-интеграции auth SDK.
+
 **Зависимости feature-модулей от core:**
 
 | Зависимость | Что даёт | Когда нужна |

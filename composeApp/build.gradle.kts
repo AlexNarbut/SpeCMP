@@ -36,6 +36,7 @@ kotlin {
 
             // Feature modules
             implementation(project(":feature:calculator"))
+            implementation(project(":feature:login"))
 
             // Compose
             implementation(libs.compose.runtime)
