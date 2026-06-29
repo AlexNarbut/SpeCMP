@@ -19,8 +19,9 @@ core/common ──┬── core/network
 ```
 
 **Ключевые принципы:**
-- `core/*` — переиспользуемая инфраструктура, без логики фич
-- `composeApp` — общая Compose UI библиотека (зависит от всех core-модулей), точка входа: `App()`
+- `core/*` — атомарная, широко переиспользуемая инфраструктура без бизнес-логики фич. Модули в `core/` минимально зависят от других модулей проекта и не содержат доменных моделей конкретных фич (аккаунты, дети, дневник и т.д.). Если модуль завязан на доменную логику или зависит от нескольких других модулей — он принадлежит `feature/*`.
+- `feature/*` — доменная и UI-логика фич, включая модели, репозитории и экраны. Сюда же относятся «сервисные» модули с доменными моделями (например, `feature/account` для Parent/Child).
+- `composeApp` — общая Compose UI библиотека (зависит от всех core и feature модулей), точка входа: `App()`
 - Платформенные приложения (`androidApp`, `desktopApp`, `iosApp`) — только тонкие обёртки
 
 ---
@@ -49,6 +50,8 @@ core/common ──┬── core/network
 - Плагин: `com.android.kotlin.multiplatform.library`
 - Ресурсы: `composeApp/src/commonMain/composeResources/`
 - Пакет генерируемых ресурсов: `specmp.composeapp.generated.resources`
+- `App()` — composition root, все Koin-модули (включая платформенные) подключаются внутри common-кода, без параметров от платформы
+- `composeApp/src/iosMain/kotlin/.../MainViewController.kt` — iOS entry point, создаёт `ComposeUIViewController`
 
 ### Все KMP-модули (core/*, feature/* и composeApp)
 - Плагин: `alias(libs.plugins.android.kmp.library)`
@@ -72,22 +75,54 @@ feature/
     │   ├── dto/          # @Serializable DTO
     │   ├── mapper/       # Функции-расширения toDomain() / toDto()
     │   └── repository/   # Реализации репозиториев
-    ├── presentation/     # ViewModels, экраны, Compose-компоненты
-    │   ├── *State.kt     # @Immutable data-классы
-    │   └── *StateMapper.kt  # (опционально) маппинг domain → UI state
+    ├── presentation/     # ViewModels, экраны, Compose-компоненты (подробная раскладка ниже)
+    │   ├── screen/<screen_name>/
+    │   ├── widgets/<widget_name>/
+    │   └── components/
     └── di/               # Определение Koin-модуля
 ```
 
 > **`domain/model/`** — только чистый Kotlin. Без Compose, без `@Serializable`, без зависимостей от фреймворков.
->
-> **`presentation/*State.kt`** — всегда `@Immutable` (или `@Stable`) для оптимизации skip в Compose.
->
-> **`presentation/*StateMapper.kt`** — опционально; инкапсулирует сложное преобразование domain → UI.
-> Регистрируется в `di/` и внедряется в ViewModel через Koin.
+
+### Раскладка `presentation/`
+
+Каждый «presentation business unit» (отдельный экран или виджет) получает свою корневую папку. В корне живут только root-файлы; все вложенные sub-composables лежат в `subcomponents/` этого же юнита.
+
+```
+presentation/
+├── screen/<screen_name>/            # Экран — обычно по одному на feature-модуль
+│   ├── <Name>Screen.kt              # Корневая @Composable функция экрана
+│   ├── <Name>ScreenState.kt         # @Immutable state (+ sealed actions / enum'ы state-слоя)
+│   ├── <Name>ScreenViewModel.kt     # ViewModel — регистрируется в di/
+│   ├── <Name>StateMapper.kt         # (опционально) domain → UI state
+│   └── subcomponents/               # Все прочие @Composable этого экрана
+│       └── *.kt                     # Header, секции, карточки, BottomSheet'ы, чарты и т.п.
+├── widgets/<widget_name>/           # Встраиваемый виджет — отображается на других экранах
+│   ├── <Name>Widget.kt              # Корневая @Composable функция виджета
+│   ├── <Name>State.kt               # @Immutable state виджета
+│   ├── <Name>ViewModel.kt           # Отдельная VM (если есть своё состояние)
+│   └── subcomponents/               # Sub-composables виджета (active/idle/loading состояния и т.п.)
+└── components/                      # Общие переиспользуемые composables и helpers фичи
+    └── *.kt                         # BigStatCard, NormBadge, форматтеры, date-helpers и т.п.
+```
+
+**Правила размещения:**
+
+- В корне `screen/<name>/` или `widgets/<name>/` — только `root composable + state + ViewModel + (опционально) mapper`. Ничего другого.
+- Любая дополнительная @Composable функция для конкретного экрана/виджета → `<unit>/subcomponents/`.
+- Composable или helper, который реально переиспользуется между разными screen/widget внутри той же фичи → `presentation/components/`.
+- Composable, нужный сразу нескольким features, — поднимать в `core/ui` (`docs/ui-kit.md`), а не в `feature/*/presentation/components/`.
+- Имя корневой папки юнита = имя бизнес-единицы в нижнем регистре (`screen/sleep/`, `widgets/sleep/`). Несколько экранов в одном feature-модуле — каждый в своей подпапке.
+
+**State-файлы:**
+
+- `*State.kt` — всегда `@Immutable` (или `@Stable`) для skip-оптимизации Compose.
+- `*StateMapper.kt` — опционально; инкапсулирует сложное преобразование domain → UI и внедряется в ViewModel через Koin.
 
 Feature-модули:
 - Являются Kotlin Multiplatform библиотеками
 - Подключаются в `:composeApp` для интеграции в UI
+- **НЕ импортируют** `androidx.compose.material.icons` напрямую — иконки берутся из `CmpIcons` enum в `core/ui`, либо подключаются как compose resources модуля
 
 Текущие feature-модули:
 - `feature/calculator` — UI-фича калькулятора.
@@ -104,10 +139,25 @@ Feature-модули:
 Примеры `build.gradle.kts`:
 
 ```kotlin
-// Feature с UI
-commonMain.dependencies {
-    implementation(project(":core:common"))  // Response, AppDispatchers — обязательно
-    implementation(project(":core:ui"))      // LCEState, Cmp*, тема — есть UI
+// Feature с UI и compose resources
+compose.resources {
+    publicResClass = false
+    generateResClass = always
+}
+
+kotlin {
+    android {
+        namespace = "org.evolyta.babysteps.feature.<name>"
+        // ...
+        androidResources.enable = true  // обязательно если есть composeResources/
+    }
+    // ...
+    sourceSets {
+        commonMain.dependencies {
+            implementation(project(":core:common"))  // Response, AppDispatchers — обязательно
+            implementation(project(":core:ui"))      // LCEState, Cmp*, тема — есть UI
+        }
+    }
 }
 
 // Feature без UI (только domain + data)
@@ -116,19 +166,21 @@ commonMain.dependencies {
 }
 ```
 
+> **Важно:** Если feature-модуль содержит `composeResources/`, в `kotlin { android { } }` необходимо добавить `androidResources.enable = true`. Без этого ресурсы не будут упакованы в Android APK и приложение упадёт с `MissingResourceException` в runtime.
+
 > **Примечание:** `core:ui` зависит от `core:common` через `implementation`, поэтому `Response` и `AppDispatchers` **не** доступны транзитивно. Feature-модули **обязаны** явно подключать `:core:common`.
 
 ---
 
 ## Пространства имён
 
-| Модуль       | Пакет                              |
-|--------------|------------------------------------|
-| core/common  | `ru.alarmtrade.specmp.core.common`      |
-| core/network | `ru.alarmtrade.specmp.core.network`     |
-| core/ui      | `ru.alarmtrade.specmp.core.ui`          |
-| composeApp   | `ru.alarmtrade.specmp`                  |
-| androidApp   | `ru.alarmtrade.specmp.androidApp`       |
-| desktopApp   | `ru.alarmtrade.specmp.desktopApp`       |
+| Модуль                 | Пакет                                        |
+|------------------------|----------------------------------------------|
+| core/common            | `org.evolyta.babysteps.core.common`          |
+| core/network           | `org.evolyta.babysteps.core.network`         |
+| core/ui                | `org.evolyta.babysteps.core.ui`              |
+| core/live-notification | `org.evolyta.babysteps.core.livenotification`|
+| composeApp             | `org.evolyta.babysteps`                      |
+| androidApp             | `org.evolyta.babysteps.androidApp`           |
 
 JVM target: **Java 17**

@@ -29,6 +29,72 @@ CmpText(text = "Hello")
 
 ---
 
+## Каркас экрана и навигация
+
+Корневой composable экрана оборачивается в `CmpScaffold` (`scaffold/CmpScaffold.kt`); `paddingValues` из него применяются к контенту **первыми**. Верхнюю панель собирать **только** через `CmpTopAppBar` (`navigation/CmpTopAppBar.kt`) в слоте `topBar` — не делать руками `Row` с кнопкой и заголовком. Кнопка «назад» — `CmpIconButton(icon = CmpIcons.ArrowBack, ...)` в слоте `navigationIcon`.
+
+```kotlin
+CmpScaffold(
+    topBar = {
+        CmpTopAppBar(
+            title = { CmpText(text = stringResource(Res.string.calculator_main_title)) },
+            navigationIcon = {
+                CmpIconButton(
+                    onClick = onBack,
+                    icon = CmpIcons.ArrowBack,
+                    contentDescription = stringResource(Res.string.calculator_common_a11y_back),
+                )
+            },
+        )
+    },
+    snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
+) { paddingValues ->
+    Column(Modifier.fillMaxSize().padding(paddingValues)) { /* контент */ }
+}
+```
+
+WindowInsets (status bar) обрабатывает `CmpScaffold` через `topBar`-слот — `CmpTopAppBar` свои insets обнуляет, чтобы не было двойного отступа. Не добавлять `.statusBarsPadding()` / ручной `.background(...)` на корневом контейнере — фон и insets даёт Scaffold.
+
+---
+
+## Иконки
+
+Иконки добавляются **ТОЛЬКО** через `CmpIcons` enum (`icon/CmpIcons.kt`). Feature-модули **НЕ импортируют** `androidx.compose.material.icons` напрямую.
+
+```kotlin
+// ✅ ПРАВИЛЬНО — material-иконка через каталог
+CmpIcon(icon = CmpIcons.ArrowBack, contentDescription = "Назад")
+
+// ❌ ЗАПРЕЩЕНО — прямой импорт material icons в feature
+import androidx.compose.material.icons.filled.ArrowBack
+Icon(Icons.Filled.ArrowBack, ...)
+```
+
+Порядок действий при отсутствии нужной иконки:
+1. Добавить элемент в `CmpIcons` enum.
+2. Добавить ветку в `CmpIcons.imageVector()` (`icon/CmpIconsResolver.kt`).
+3. Брендовые/кастомные иконки — через compose resources и `CmpIcon(painter = ...)`.
+
+**Архитектура:**
+- `CmpIcons` — enum без данных, только имена.
+- `CmpIcons.imageVector()` — `@Composable` расширение, резолвит enum → `ImageVector` из material-icons.
+- `CmpIcon(icon: CmpIcons)` — вызывает `imageVector()` автоматически.
+- Material-иконки берутся из `compose.materialIconsExtended` (запинен на 1.7.3; для новых иконок при желании можно мигрировать на Material Symbols через vector resources).
+
+### CmpIconButton — только иконки
+
+`CmpIconButton` принимает **только иконку** — `icon: CmpIcons` (предпочтительно) или `icon: ImageVector`. Произвольный `@Composable`-контент сознательно **не поддерживается**: содержимым иконочной кнопки должна быть иконка, а не любой UI.
+
+```kotlin
+// ✅ ПРАВИЛЬНО
+CmpIconButton(onClick = onBack, icon = CmpIcons.ArrowBack, contentDescription = "Назад")
+
+// ❌ больше не компилируется — произвольный content убран
+CmpIconButton(onClick = onBack) { CmpText(text = "←") }
+```
+
+---
+
 ## Подключение к модулю
 
 ```kotlin
@@ -48,12 +114,14 @@ commonMain.dependencies {
 
 | Потребность | Файл |
 |-------------|------|
+| Scaffold (каркас экрана) | `scaffold/CmpScaffold.kt` |
 | Кнопка (filled) | `button/CmpButton.kt` |
 | Кнопка (outlined) | `button/CmpOutlinedButton.kt` |
 | Кнопка (text) | `button/CmpTextButton.kt` |
 | Кнопка с иконкой | `button/CmpIconButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
 | Текстовое поле | `input/CmpTextField.kt` |
+| Выпадающий список | `input/CmpDropdown.kt` |
 | Switch | `input/CmpSwitch.kt` |
 | Checkbox | `input/CmpCheckbox.kt` |
 | Radio button | `input/CmpRadioButton.kt` |
@@ -61,11 +129,15 @@ commonMain.dependencies {
 | Круговой прогресс | `progress/CmpCircularProgressIndicator.kt` |
 | Линейный прогресс | `progress/CmpLinearProgressIndicator.kt` |
 | Card | `surface/CmpCard.kt` |
+| Выбираемая карточка | `surface/CmpSelectableCard.kt` |
 | Surface | `surface/CmpSurface.kt` |
+| Bottom sheet | `sheet/CmpBottomSheet.kt` |
 | Top bar | `navigation/CmpTopAppBar.kt` |
 | Нижняя навигация | `navigation/CmpNavigationBar.kt` |
 | Вкладки | `navigation/CmpTab.kt` |
 | Иконка | `icon/CmpIcon.kt` |
+| Каталог иконок (enum) | `icon/CmpIcons.kt` |
+| Резолвер иконок (@Composable) | `icon/CmpIconsResolver.kt` |
 | Изображение | `image/CmpImage.kt` |
 | Диалог | `dialog/CmpDialog.kt` |
 | Snackbar | `dialog/CmpSnackbar.kt` |

@@ -1,18 +1,14 @@
 package ru.alarmtrade.specmp.feature.calculator.presentation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -28,70 +24,98 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
+import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
+import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import specmp.feature.calculator.generated.resources.Res
+import specmp.feature.calculator.generated.resources.calculator_common_a11y_back
+import specmp.feature.calculator.generated.resources.calculator_main_error_divzero
+import specmp.feature.calculator.generated.resources.calculator_main_title
+import specmp.feature.calculator.generated.resources.calculator_timer_btn_reset
+import specmp.feature.calculator.generated.resources.calculator_timer_btn_start
+import specmp.feature.calculator.generated.resources.calculator_timer_btn_stop
 
 @Composable
 fun CalculatorScreen(onBack: () -> Unit) {
     val viewModel = koinViewModel<CalculatorViewModel>()
     val state = viewModel.state.collectAsState()
     val colors = cmpThemeColors()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.background)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-    ) {
-        Row(
+    val snackbarHostState = rememberCmpSnackbarHostState()
+
+    viewModel.effect.collectSideEffect { effect ->
+        when (effect) {
+            CalculatorEffect.DivideByZero ->
+                snackbarHostState.showSnackbar(getString(Res.string.calculator_main_error_divzero))
+        }
+    }
+
+    CmpScaffold(
+        topBar = {
+            CmpTopAppBar(
+                title = {
+                    CmpText(
+                        text = stringResource(Res.string.calculator_main_title),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                },
+                navigationIcon = {
+                    CmpIconButton(
+                        onClick = onBack,
+                        icon = CmpIcons.ArrowBack,
+                        contentDescription = stringResource(Res.string.calculator_common_a11y_back),
+                    )
+                },
+            )
+        },
+        snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            CmpIconButton(onClick = onBack) {
-                CmpText(text = "←", fontSize = 24.sp, color = colors.onBackground)
-            }
-            CmpText(
-                text = "Calculator",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 8.dp)
+            Spacer(modifier = Modifier.weight(1f))
+
+            TimerSection(
+                state = state,
+                colors = colors,
+                onStart = viewModel::onTimerStart,
+                onStop = viewModel::onTimerStop,
+                onReset = viewModel::onTimerReset,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CalculatorDisplay(state = state, colors = colors)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CalculatorGrid(
+                colors = colors,
+                onDigit = viewModel::onDigit,
+                onOperation = viewModel::onOperation,
+                onEqual = viewModel::onEqual,
+                onClear = viewModel::onClear,
+                onDelete = viewModel::onDelete,
+                onDecimal = viewModel::onDecimal,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 16.dp)
             )
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        TimerSection(
-            state = state,
-            colors = colors,
-            onStart = viewModel::onTimerStart,
-            onStop = viewModel::onTimerStop,
-            onReset = viewModel::onTimerReset,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        CalculatorDisplay(state = state, colors = colors)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        CalculatorGrid(
-            colors = colors,
-            onDigit = viewModel::onDigit,
-            onOperation = viewModel::onOperation,
-            onEqual = viewModel::onEqual,
-            onClear = viewModel::onClear,
-            onDelete = viewModel::onDelete,
-            onDecimal = viewModel::onDecimal,
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 16.dp)
-        )
     }
 }
 
@@ -131,7 +155,7 @@ private fun TimerSection(
                     contentColor = colors.onPrimaryContainer,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        CmpText(text = "Старт", fontSize = 14.sp)
+                        CmpText(text = stringResource(Res.string.calculator_timer_btn_start), fontSize = 14.sp)
                     }
                 }
             }
@@ -144,7 +168,7 @@ private fun TimerSection(
                     contentColor = colors.onSecondaryContainer,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        CmpText(text = "Стоп", fontSize = 14.sp)
+                        CmpText(text = stringResource(Res.string.calculator_timer_btn_stop), fontSize = 14.sp)
                     }
                 }
             }
@@ -156,7 +180,7 @@ private fun TimerSection(
                 contentColor = colors.onSurfaceVariant,
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    CmpText(text = "Сброс", fontSize = 14.sp)
+                    CmpText(text = stringResource(Res.string.calculator_timer_btn_reset), fontSize = 14.sp)
                 }
             }
         }

@@ -201,10 +201,11 @@ Repository (Flow<Domain>)
 
 ### Одноразовые события (side effects)
 
-НЕ встраивать события в `UiState`. Использовать отдельный `Channel` или `SharedFlow`:
+НЕ встраивать события в `UiState`. В проекте используется **только `MutableSharedFlow`** (`Channel` + `receiveAsFlow()` не используем — см. `docs/patterns.md`, раздел «One-shot события (Effects)»):
 
 ```kotlin
-val events: Flow<UiEvent> = _events.receiveAsFlow()
+private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+val events: SharedFlow<UiEvent> = _events.asSharedFlow()
 
 LaunchedEffect(Unit) {
     vm.events.collect { event ->

@@ -24,6 +24,7 @@
 - `feature/*`: `docs/patterns.md`
 - Compose UI: `docs/ui-kit.md`, `docs/compose-best-prac.md`
 - Navigation: `docs/navigation.md`
+- Локализация / строковые ресурсы: `docs/localization.md`
 
 ## Build / Platform
 

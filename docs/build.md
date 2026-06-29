@@ -23,6 +23,7 @@
 | Собрать Desktop пакет | `./gradlew :desktopApp:packageDistributionForCurrentOS` |
 | Тесты | `./gradlew test` |
 | Очистить | `./gradlew clean` |
+| Очистить Konan-кеш | `rm -rf ~/.konan/cache` |
 
 APK: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
 
@@ -79,6 +80,28 @@ import specmp.composeapp.generated.resources.app_name
 stringResource(Res.string.app_name)
 painterResource(Res.drawable.ic_logo)
 ```
+
+### Ресурсы в других модулях (`core/*`, `feature/*`)
+
+Сейчас `composeResources/` есть только в `composeApp`. При выносе ресурсов в
+library-модуль учитывать:
+
+- Каждый KMP-library-модуль с `composeResources/` **обязан** включить
+  `androidResources.enable = true` в блоке `android { … }` — иначе ресурсы не
+  попадут в Android APK (в `composeApp/build.gradle.kts` это уже стоит).
+- Настроить блок `compose.resources`:
+
+  ```kotlin
+  compose.resources {
+      publicResClass = true          // true для общих модулей (core/ui); false для feature-модулей
+      generateResClass = always
+  }
+  ```
+
+- Пакет `Res`-класса формируется из `rootProject.name` + путь модуля:
+  `composeApp` → `specmp.composeapp.generated.resources`,
+  `core/ui` → `specmp.core.ui.generated.resources`,
+  `feature/calculator` → `specmp.feature.calculator.generated.resources`.
 
 ---
 
@@ -202,6 +225,7 @@ Capabilities внутри Xcode.
 |---|---|
 | iOS Release build OOM | Уже `-Xmx6G`; если мало — поднять до `-Xmx8G` |
 | Xcode не находит gradlew | Build Phase должна выполняться из `$SRCROOT/..` |
+| Konan-кеш несовместим с новым Xcode/SDK (undefined symbols из `*-cache.a`) | `rm -rf ~/.konan/cache`, затем пересобрать framework |
 
 ---
 
