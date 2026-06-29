@@ -38,3 +38,18 @@ fun CmpIcon(
         else androidx.compose.material3.LocalContentColor.current,
     )
 }
+
+@Composable
+fun CmpIcon(
+    icon: CmpIcons,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified,
+) {
+    CmpIcon(
+        imageVector = icon.imageVector(),
+        contentDescription = contentDescription,
+        modifier = modifier,
+        tint = tint,
+    )
+}

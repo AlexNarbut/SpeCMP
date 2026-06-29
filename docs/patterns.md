@@ -3,6 +3,41 @@
 ## Ограничения
 - Никогда не использовать `material3` / `foundation` напрямую в фичах — только через `Cmp*` из `core/ui`
 - Предпочитать `commonMain`; `expect`/`actual` только для по-настоящему платформо-специфичного кода
+- **Никаких `launch`/`coroutineScope` в Composable-функциях** — все suspend-операции (сохранение настроек, сетевые вызовы, БД) выполнять только через ViewModel (`viewModelScope.launch`) или Repository. Composable-функции вызывают только синхронные методы ViewModel.
+- **Импорты — только сверху файла.** Полностью квалифицированные имена (`ru.alarmtrade.specmp.feature.*.SomeType`) в теле кода — запрещены. Сигнатуры, `when`-ветки, параметры, возвращаемые типы, аннотации — всё через `import` блок. Единственное исключение: конфликт имён (два разных `Foo` из разных пакетов в одном файле) — тогда используется `import ... as` alias, а не inline FQN.
+- **Unused imports удаляем** по завершении работы с файлом. Неиспользуемый import — это шум и источник ложной связи между модулями. Проверять глазами после каждой крупной правки (или `./gradlew :moduleName:compileCommonMainKotlinMetadata` — компилятор выдаст warning).
+- **Никаких строковых литералов в `@Composable`-функциях.** Текст в UI (включая `contentDescription`) — только через `stringResource(Res.string.*)` (см. `docs/localization.md`). Строки, нужные для логики (ключи, теги, идентификаторы) — через `const val` / companion object, не inline. Исключение — нелокализуемые математические/служебные глифы (цифры `0`–`9`, операторы `+ − × ÷ =`, `.`, `⌫`): остаются литералами, т.к. не являются переводимым текстом.
+
+```kotlin
+// ❌ Плохо — статический UI-текст в composable
+CmpIconButton(onClick = onBack, icon = CmpIcons.ArrowBack, contentDescription = "Назад")
+CmpText(text = "Калькулятор")
+
+// ✅ Хорошо — через перевод
+CmpIconButton(
+    onClick = onBack,
+    icon = CmpIcons.ArrowBack,
+    contentDescription = stringResource(Res.string.calculator_common_a11y_back),
+)
+CmpText(text = stringResource(Res.string.calculator_main_title))
+
+// ✅ Строки для логики — через константы, а не inline
+private const val ANALYTICS_SCREEN = "calculator_main"
+```
+
+```kotlin
+// ❌ Плохо — inline FQN
+fun applyOperation(op: ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation) { }
+
+// ✅ Хорошо — через import сверху файла
+import ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation
+
+fun applyOperation(op: CalculatorOperation) { }
+
+// ✅ Хорошо — alias при конфликте имён
+import androidx.compose.ui.graphics.Color as ComposeColor
+import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
+```
 
 ## Response vs LCEState
 
@@ -66,11 +101,18 @@ when (state) {
 
 ---
 
-## Внедрение зависимостей — Koin 4.0.0
+## Внедрение зависимостей — Koin 4.2.2
 
-Инициализация в `composeApp` через `startKoin { modules(...) }`.
+Инициализация в `composeApp` через `KoinApplication { modules(...) }` в `App()` (не `startKoin`):
 
 ```kotlin
+// composeApp/.../App.kt
+KoinApplication(application = {
+    modules(commonModule, calculatorModule)
+}) {
+    AppTheme(onThemeChanged) { AppNavigation() }
+}
+
 // DI-модуль в feature/*/di/
 val myFeatureModule = module {
     singleOf(::MyRepositoryImpl) bind MyRepository::class
@@ -85,7 +127,7 @@ val dep = koinInject<MyDependency>()
 
 Чеклист при добавлении фичи:
 1. Добавить зависимость модуля в `composeApp/build.gradle.kts`
-2. Зарегистрировать Koin-модуль в `startKoin { modules(...) }` в `App()`
+2. Зарегистрировать Koin-модуль в `KoinApplication { modules(...) }` в `App()`
 3. Добавить маршруты в навигацию в `AppNavigation.kt`
 
 ---
@@ -298,6 +340,45 @@ class DashboardViewModel(
     }
 }
 ```
+
+---
+
+## One-shot события (Effects)
+
+Навигация, snackbar'ы и прочие одноразовые события из ViewModel в UI — **только через `MutableSharedFlow`**. `Channel` + `receiveAsFlow()` в проекте не используем.
+
+Механизм изолирован в `core/ui` — `ru.alarmtrade.specmp.core.ui.effect`: фабрика `sideEffectFlow()` для emit-стороны и composable `collectSideEffect { }` для lifecycle-aware сбора. Руками `LaunchedEffect` + `repeatOnLifecycle` в фичах не писать.
+
+ViewModel — emit через `sideEffectFlow()`:
+
+```kotlin
+class CalculatorViewModel(...) : ViewModel() {
+
+    private val _effect = sideEffectFlow<CalculatorEffect>()   // extraBufferCapacity = 1, replay = 0
+    val effect: SharedFlow<CalculatorEffect> = _effect.asSharedFlow()
+
+    private fun emitEffect(effect: CalculatorEffect) {
+        _effect.tryEmit(effect)
+    }
+}
+```
+
+UI — сбор через `collectSideEffect`:
+
+```kotlin
+viewModel.effect.collectSideEffect { effect ->
+    when (effect) {
+        is CalculatorEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+    }
+}
+```
+
+Правила:
+
+- `sideEffectFlow()` фиксирует стандартную конфигурацию (`extraBufferCapacity = 1`, `replay = 0`); эмит — через `tryEmit`. `replay` не задаём (повтор события после пересоздания экрана приведёт к двойной навигации).
+- `collectSideEffect` собирает с `repeatOnLifecycle(STARTED)` и `rememberUpdatedState` — подписка приостанавливается в фоне, пересоздание лямбды не перезапускает сбор.
+- Эффекты эмитим только в ответ на действия пользователя, когда экран на переднем плане — коллектор гарантированно активен. Эмит «в пустоту» (до старта коллектора) будет потерян — не эмитить эффекты из `init`.
+- Несколько подписчиков получат одно и то же событие каждый — на эффект подписывается ровно один экран.
 
 ---
 
