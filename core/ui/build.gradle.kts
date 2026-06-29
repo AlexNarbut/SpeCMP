@@ -44,6 +44,8 @@ kotlin {
             api(libs.compose.resources)
             api(libs.compose.ui.tooling.preview)
             implementation(libs.compose.material3)
+            // Каталог material-иконок для CmpIcons (резолвится в CmpIconsResolver)
+            implementation(compose.materialIconsExtended)
 
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)

@@ -91,6 +91,9 @@ keystore.properties
 *.tar.gz
 *.rar
 
+# Gradle wrapper jar must be committed (re-include after the *.jar rules above)
+!gradle/wrapper/gradle-wrapper.jar
+
 # virtual machine crash logs
 hs_err_pid*
 replay_pid*

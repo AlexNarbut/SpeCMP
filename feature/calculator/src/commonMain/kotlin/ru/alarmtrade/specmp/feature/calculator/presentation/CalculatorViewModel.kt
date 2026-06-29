@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation
 
 class CalculatorViewModel(
@@ -20,6 +23,13 @@ class CalculatorViewModel(
 
     private val _state = MutableStateFlow(CalculatorState())
     val state: StateFlow<CalculatorState> = _state.asStateFlow()
+
+    private val _effect = sideEffectFlow<CalculatorEffect>()
+    val effect: SharedFlow<CalculatorEffect> = _effect.asSharedFlow()
+
+    private fun emitEffect(effect: CalculatorEffect) {
+        _effect.tryEmit(effect)
+    }
 
     fun onDigit(digit: String) {
         _state.update { current ->
@@ -48,20 +58,24 @@ class CalculatorViewModel(
     }
 
     fun onEqual() {
-        _state.update { current ->
-            val first = current.firstOperand ?: return@update current
-            val second = current.display.toDoubleOrNull() ?: return@update current
-            val result = when (current.operation) {
-                is CalculatorOperation.Add -> first + second
-                is CalculatorOperation.Subtract -> first - second
-                is CalculatorOperation.Multiply -> first * second
-                is CalculatorOperation.Divide -> if (second != 0.0) first / second else Double.NaN
-                null -> return@update current
-            }
-            val resultStr = if (result.isNaN()) "Error"
-            else if (result == result.toLong().toDouble()) result.toLong().toString()
-            else result.toString()
-            current.copy(display = resultStr, firstOperand = null, operation = null, isNewInput = true)
+        val current = _state.value
+        val first = current.firstOperand ?: return
+        val second = current.display.toDoubleOrNull() ?: return
+        if (current.operation is CalculatorOperation.Divide && second == 0.0) {
+            emitEffect(CalculatorEffect.DivideByZero)
+            return
+        }
+        val result = when (current.operation) {
+            is CalculatorOperation.Add -> first + second
+            is CalculatorOperation.Subtract -> first - second
+            is CalculatorOperation.Multiply -> first * second
+            is CalculatorOperation.Divide -> first / second
+            null -> return
+        }
+        val resultStr = if (result == result.toLong().toDouble()) result.toLong().toString()
+        else result.toString()
+        _state.update {
+            it.copy(display = resultStr, firstOperand = null, operation = null, isNewInput = true)
         }
     }
 
