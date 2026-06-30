@@ -1,0 +1,11 @@
+# Артефакты компилятора дизайн-системы (генерируются на каждом ходу, править руками нельзя)
+_ds_bundle.js
+_ds_manifest.json
+_adherence.oxlintrc.json
+
+# Системное
+.DS_Store
+Thumbs.db
+
+# Исходники/выгрузки
+uploads/
