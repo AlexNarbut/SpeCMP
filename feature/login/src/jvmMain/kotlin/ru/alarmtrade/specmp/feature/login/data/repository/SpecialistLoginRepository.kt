@@ -10,11 +10,15 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
+import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
+import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.domain.errors.UserIsNotConfirmed
 import ru.alarmtrade.specialist.interactors.auth.requests.LoginRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.ResendActivationEmailRequest
+import ru.alarmtrade.specialist.interactors.auth.requests.ResetPasswordRequest
+import ru.alarmtrade.specialist.interactors.auth.requests.SignUpRequest
 
 class SpecialistLoginRepository(
     private val specialistApp: SpecialistApp,
@@ -36,6 +40,28 @@ class SpecialistLoginRepository(
                         response.toProjectError()
                     }
                 }
+            }
+        }
+    }
+
+    override suspend fun signUp(credentials: SignUpCredentials): Response<Unit> {
+        return runAuthRequest {
+            when (val response = specialistApp.authInteractor.signUpUseCase.execute(credentials.toSignUpRequest())) {
+                is SpecialistResponse.Success -> Response.Success(Unit)
+                is SpecialistResponse.Error -> response.toProjectError()
+            }
+        }
+    }
+
+    override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> {
+        return runAuthRequest {
+            when (
+                val response = specialistApp.authInteractor.resetPasswordUseCase.execute(
+                    credentials.toResetPasswordRequest()
+                )
+            ) {
+                is SpecialistResponse.Success -> Response.Success(Unit)
+                is SpecialistResponse.Error -> response.toProjectError()
             }
         }
     }
@@ -90,6 +116,21 @@ class SpecialistLoginRepository(
         return LoginRequest(
             username = normalizedLogin,
             password = password,
+        )
+    }
+
+    private fun SignUpCredentials.toSignUpRequest(): SignUpRequest {
+        return SignUpRequest(
+            email = normalizedEmail,
+            password = password,
+            fullName = normalizedFullName,
+            phoneNumber = normalizedPhoneNumber,
+        )
+    }
+
+    private fun ResetPasswordCredentials.toResetPasswordRequest(): ResetPasswordRequest {
+        return ResetPasswordRequest(
+            login = normalizedEmail,
         )
     }
 

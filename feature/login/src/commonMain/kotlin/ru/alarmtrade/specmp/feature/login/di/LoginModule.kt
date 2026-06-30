@@ -8,12 +8,16 @@ import ru.alarmtrade.specmp.feature.login.domain.usecase.CheckLoginStatusUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.LoginUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.ResendActivationEmailUseCase
+import ru.alarmtrade.specmp.feature.login.domain.usecase.ResetPasswordUseCase
+import ru.alarmtrade.specmp.feature.login.domain.usecase.SignUpUseCase
 import ru.alarmtrade.specmp.feature.login.presentation.LoginViewModel
 
 expect val platformLoginModule: Module
 
 val loginModule = module {
     factoryOf(::LoginUseCase)
+    factoryOf(::SignUpUseCase)
+    factoryOf(::ResetPasswordUseCase)
     factoryOf(::ResendActivationEmailUseCase)
     factoryOf(::CheckLoginStatusUseCase)
     factoryOf(::LogoutUseCase)

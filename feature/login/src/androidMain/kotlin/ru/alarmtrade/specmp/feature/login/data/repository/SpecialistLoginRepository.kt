@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.login.data.repository
 
+import android.os.Build
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.common.app.domain.AppDeviceInformation
@@ -10,11 +11,15 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
+import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
+import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.domain.errors.UserIsNotConfirmed
 import ru.alarmtrade.specialist.interactors.auth.requests.LoginRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.ResendActivationEmailRequest
+import ru.alarmtrade.specialist.interactors.auth.requests.ResetPasswordRequest
+import ru.alarmtrade.specialist.interactors.auth.requests.SignUpRequest
 
 class SpecialistLoginRepository(
     private val specialistApp: SpecialistApp,
@@ -36,6 +41,28 @@ class SpecialistLoginRepository(
                         response.toProjectError()
                     }
                 }
+            }
+        }
+    }
+
+    override suspend fun signUp(credentials: SignUpCredentials): Response<Unit> {
+        return runAuthRequest {
+            when (val response = specialistApp.authInteractor.signUpUseCase.execute(credentials.toSignUpRequest())) {
+                is SpecialistResponse.Success -> Response.Success(Unit)
+                is SpecialistResponse.Error -> response.toProjectError()
+            }
+        }
+    }
+
+    override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> {
+        return runAuthRequest {
+            when (
+                val response = specialistApp.authInteractor.resetPasswordUseCase.execute(
+                    credentials.toResetPasswordRequest()
+                )
+            ) {
+                is SpecialistResponse.Success -> Response.Success(Unit)
+                is SpecialistResponse.Error -> response.toProjectError()
             }
         }
     }
@@ -93,6 +120,21 @@ class SpecialistLoginRepository(
         )
     }
 
+    private fun SignUpCredentials.toSignUpRequest(): SignUpRequest {
+        return SignUpRequest(
+            email = normalizedEmail,
+            password = password,
+            fullName = normalizedFullName,
+            phoneNumber = normalizedPhoneNumber,
+        )
+    }
+
+    private fun ResetPasswordCredentials.toResetPasswordRequest(): ResetPasswordRequest {
+        return ResetPasswordRequest(
+            login = normalizedEmail,
+        )
+    }
+
     private fun LoginCredentials.toResendActivationEmailRequest(): ResendActivationEmailRequest {
         return ResendActivationEmailRequest(
             email = normalizedLogin,
@@ -120,15 +162,15 @@ class SpecialistLoginRepository(
 
     private fun createAppDeviceInformation(): AppDeviceInformation {
         val model = listOfNotNull(
-            android.os.Build.MANUFACTURER,
-            android.os.Build.MODEL,
+            Build.MANUFACTURER,
+            Build.MODEL,
         )
             .joinToString(separator = " ")
             .trim()
             .ifBlank { "Android device" }
 
-        val osVersion = "Android ${android.os.Build.VERSION.RELEASE} (SDK ${android.os.Build.VERSION.SDK_INT})"
-        val fingerprint = android.os.Build.FINGERPRINT.ifBlank { model }
+        val osVersion = "Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})"
+        val fingerprint = Build.FINGERPRINT.ifBlank { model }
 
         return AppDeviceInformation(
             deviceId = fingerprint,

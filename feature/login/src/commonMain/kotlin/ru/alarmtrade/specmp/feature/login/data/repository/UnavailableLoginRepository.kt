@@ -3,10 +3,20 @@ package ru.alarmtrade.specmp.feature.login.data.repository
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
+import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
+import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
 class UnavailableLoginRepository : LoginRepository {
     override suspend fun login(credentials: LoginCredentials): Response<LoginResult> {
+        return unavailable()
+    }
+
+    override suspend fun signUp(credentials: SignUpCredentials): Response<Unit> {
+        return unavailable()
+    }
+
+    override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> {
         return unavailable()
     }
 
