@@ -23,6 +23,7 @@
               "components/navigation/**",
               "components/progress/**",
               "components/surfaces/**",
+              "features/auth/**",
               "features/calculator/**",
               "res/**",
               "res/icons/**"

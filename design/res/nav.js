@@ -21,6 +21,11 @@
     calculator:          'features/calculator/Calculator.html',
     'calculator-tablet':  'features/calculator/CalculatorTablet.html',
     'calculator-desktop': 'features/calculator/CalculatorDesktop.html',
+    auth:                'features/auth/Auth.html',
+    'auth-tablet':        'features/auth/AuthTablet.html',
+    'auth-desktop':       'features/auth/AuthDesktop.html',
+    'auth-states':        'features/auth/AuthStates.html',
+    'auth-flow':          'features/auth/AuthFlow.html',
   };
 
   window.PS_ROOT = ROOT;

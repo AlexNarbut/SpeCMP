@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":3,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"63ca7258ddbd","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/calculator/Calculator.jsx":"778bbbf9b839","res/icons/cmp-icons.js":"8c00925c86ca","res/nav.js":"47d990f170bc"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
+/* @ds-bundle: {"format":3,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"0d6435223dd7","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/auth/Auth.jsx":"730fafddac89","features/auth/AuthScreens.jsx":"4986c79933ee","features/auth/i18n.js":"9e4ecc677e9e","features/calculator/Calculator.jsx":"778bbbf9b839","res/icons/cmp-icons.js":"8c00925c86ca","res/nav.js":"45d4d98077d9"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
 
 (() => {
 
@@ -1968,6 +1968,12 @@ function CmpCircularProgressIndicator({
       display: "inline-flex",
       width: size,
       height: size,
+      // Spin the whole element around its own centre. Rotating the inner
+      // <circle> instead is unreliable: SVG shapes take transform-origin
+      // from the viewport corner (0,0), so the arc orbits rather than spins.
+      ...(indeterminate ? {
+        animation: "cmp-spin 0.9s linear infinite"
+      } : {}),
       ...style
     }
   }, rest), /*#__PURE__*/React.createElement("svg", {
@@ -1991,13 +1997,10 @@ function CmpCircularProgressIndicator({
     strokeLinecap: "round",
     strokeDasharray: `${dash} ${c}`,
     transform: `rotate(-90 ${size / 2} ${size / 2})`,
-    style: indeterminate ? {
-      transformOrigin: "center",
-      animation: "cmp-spin 1s linear infinite"
-    } : {
+    style: indeterminate ? undefined : {
       transition: "stroke-dasharray var(--motion-standard)"
     }
-  })), /*#__PURE__*/React.createElement("style", null, `@keyframes cmp-spin{to{transform:rotate(270deg)}}`));
+  })), /*#__PURE__*/React.createElement("style", null, `@keyframes cmp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`));
 }
 Object.assign(__ds_scope, { CmpCircularProgressIndicator });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/progress/CmpCircularProgressIndicator.jsx", error: String((e && e.message) || e) }); }
@@ -2240,6 +2243,1670 @@ function CmpSurface({
 }
 Object.assign(__ds_scope, { CmpSurface });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/surfaces/CmpSurface.jsx", error: String((e && e.message) || e) }); }
+
+// features/auth/Auth.jsx
+try { (() => {
+// Auth.jsx — Pandora Spec auth flow controller.
+//   • AuthFlow   — live, interactive flow (real navigation + form state +
+//                  scripted async). Used by Auth.html / AuthTablet.html /
+//                  AuthDesktop.html.
+//   • AuthPinned — renders one screen pinned to one explicit state with
+//                  representative values. Used by AuthStates.html (gallery)
+//                  and by the demo state-selector.
+// Both reuse the presentational components from AuthScreens.jsx, so the live
+// flow and the gallery never drift apart. Built only from the design system.
+
+const {
+  AuthRootScreen,
+  LoginScreen,
+  RegisterScreen,
+  ForgotScreen,
+  LoggedInScreen,
+  useAuthMode
+} = window.AuthScreens;
+
+// ── validation helpers ───────────────────────────────────────────────────────
+const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const rePhone = /^[+\d][\d\s()-]{5,}$/;
+const validEmail = v => reEmail.test(v.trim());
+const validPhone = v => rePhone.test(v.trim());
+
+// ════════════════════════════════════════════════════════════════════════════
+// AuthFlow — interactive
+// ════════════════════════════════════════════════════════════════════════════
+function AuthFlow({
+  lang: langProp,
+  onLang,
+  initialScreen = "login"
+}) {
+  const {
+    useState,
+    useRef,
+    useEffect
+  } = React;
+  const [rootRef, mode] = useAuthMode();
+  const [langState, setLangState] = useState("en");
+  const lang = langProp || langState;
+  const setLang = l => onLang ? onLang(l) : setLangState(l);
+  const t = window.AuthT(lang);
+  const [screen, setScreen] = useState(initialScreen);
+  const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const timer = useRef(null);
+  const after = (ms, fn) => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(fn, ms);
+  };
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  // ── login state ──
+  const [lEmail, setLEmail] = useState("");
+  const [lPass, setLPass] = useState("");
+  const [lError, setLError] = useState(false);
+  const [activationOpen, setActivationOpen] = useState(false);
+  const [activationSent, setActivationSent] = useState(false);
+
+  // ── register state ──
+  const [rName, setRName] = useState("");
+  const [rEmail, setREmail] = useState("");
+  const [rPhone, setRPhone] = useState("");
+  const [rPass, setRPass] = useState("");
+  const [installer, setInstaller] = useState(false);
+  const [rErrors, setRErrors] = useState({});
+  const [rServerError, setRServerError] = useState(false);
+  const [rSuccess, setRSuccess] = useState(false);
+
+  // ── forgot state ──
+  const [fEmail, setFEmail] = useState("");
+  const [fError, setFError] = useState(false);
+  const [fSuccess, setFSuccess] = useState(false);
+
+  // ── logged-in state ──
+  const [logoutError, setLogoutError] = useState(false);
+
+  // Root: simulate the session check, then land on login.
+  useEffect(() => {
+    if (initialScreen === "root") {
+      setBusy(true);
+      after(1300, () => {
+        setBusy(false);
+        setScreen("login");
+      });
+    }
+    // eslint-disable-next-line
+  }, []);
+  const go = s => {
+    setBusy(false);
+    setLError(false);
+    setRServerError(false);
+    setFError(false);
+    setLogoutError(false);
+    setScreen(s);
+  };
+
+  // ── login submit (scripted): email contains "fail" → error,
+  //    "activate"/"new" → activation dialog, else success → loggedIn. ──
+  const loginCanSubmit = lEmail.trim() !== "" && lPass !== "" && !busy;
+  const submitLogin = () => {
+    if (!loginCanSubmit) return;
+    setLError(false);
+    setBusy(true);
+    after(1300, () => {
+      setBusy(false);
+      const e = lEmail.toLowerCase();
+      if (e.includes("fail")) setLError(true);else if (e.includes("activate") || e.includes("new")) {
+        setActivationSent(false);
+        setActivationOpen(true);
+      } else go("loggedIn");
+    });
+  };
+  const registerCanSubmit = rName.trim() && rEmail.trim() && rPhone.trim() && rPass !== "" && installer && !busy;
+  const submitRegister = () => {
+    if (busy) return;
+    const errs = {};
+    if (!rName.trim()) errs.name = true;
+    if (!validEmail(rEmail)) errs.email = true;
+    if (!validPhone(rPhone)) errs.phone = true;
+    if (rPass.length < 6) errs.password = true;
+    if (!installer) return; // checkbox gates the button; nothing to submit
+    if (Object.keys(errs).length) {
+      setRErrors(errs);
+      return;
+    }
+    setRErrors({});
+    setRServerError(false);
+    setBusy(true);
+    after(1400, () => {
+      setBusy(false);
+      if (rEmail.toLowerCase().includes("fail")) setRServerError(true);else setRSuccess(true);
+    });
+  };
+  const forgotCanSubmit = fEmail.trim() !== "" && !busy;
+  const submitForgot = () => {
+    if (!forgotCanSubmit) return;
+    setFError(false);
+    setBusy(true);
+    after(1300, () => {
+      setBusy(false);
+      if (fEmail.toLowerCase().includes("fail")) setFError(true);else setFSuccess(true);
+    });
+  };
+  const submitLogout = () => {
+    if (busy) return;
+    setLogoutError(false);
+    setBusy(true);
+    after(1200, () => {
+      setBusy(false);
+      // reset login form for a clean return
+      setLEmail("");
+      setLPass("");
+      setLError(false);
+      go("login");
+    });
+  };
+  let node;
+  if (screen === "root") {
+    node = /*#__PURE__*/React.createElement(AuthRootScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      state: busy ? "loading" : "error",
+      onRetry: () => {
+        setBusy(true);
+        after(1300, () => {
+          setBusy(false);
+          go("login");
+        });
+      }
+    });
+  } else if (screen === "login") {
+    node = /*#__PURE__*/React.createElement(LoginScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      mode: mode,
+      email: lEmail,
+      password: lPass,
+      showPassword: showPassword,
+      onEmail: setLEmail,
+      onPassword: setLPass,
+      onToggleShow: setShowPassword,
+      loading: busy,
+      error: lError,
+      canSubmit: loginCanSubmit,
+      onSubmit: submitLogin,
+      onForgot: () => {
+        setFEmail("");
+        setFError(false);
+        setFSuccess(false);
+        go("forgot");
+      },
+      onSignUp: () => {
+        setRErrors({});
+        setRServerError(false);
+        setRSuccess(false);
+        go("register");
+      },
+      activationOpen: activationOpen,
+      activationSent: activationSent,
+      onResendActivation: () => setActivationSent(true),
+      onCloseActivation: () => setActivationOpen(false)
+    });
+  } else if (screen === "register") {
+    node = /*#__PURE__*/React.createElement(RegisterScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      mode: mode,
+      onBack: () => go("login"),
+      name: rName,
+      email: rEmail,
+      phone: rPhone,
+      password: rPass,
+      showPassword: showPassword,
+      installer: installer,
+      onName: setRName,
+      onEmail: setREmail,
+      onPhone: setRPhone,
+      onPassword: setRPass,
+      onToggleShow: setShowPassword,
+      onInstaller: setInstaller,
+      loading: busy,
+      errors: rErrors,
+      serverError: rServerError,
+      success: rSuccess,
+      canSubmit: registerCanSubmit,
+      onSubmit: submitRegister,
+      onGoLogin: () => {
+        setRSuccess(false);
+        go("login");
+      }
+    });
+  } else if (screen === "forgot") {
+    node = /*#__PURE__*/React.createElement(ForgotScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      mode: mode,
+      onBack: () => go("login"),
+      email: fEmail,
+      onEmail: setFEmail,
+      loading: busy,
+      error: fError,
+      success: fSuccess,
+      canSubmit: forgotCanSubmit,
+      onSubmit: submitForgot,
+      onGoLogin: () => {
+        setFSuccess(false);
+        go("login");
+      }
+    });
+  } else {
+    node = /*#__PURE__*/React.createElement(LoggedInScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      mode: mode,
+      loading: busy,
+      error: logoutError,
+      onLogout: submitLogout
+    });
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    ref: rootRef,
+    style: {
+      height: "100%",
+      width: "100%"
+    }
+  }, node);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// AuthPinned — render a screen pinned to an explicit state
+// ════════════════════════════════════════════════════════════════════════════
+const PIN = {
+  login: {
+    empty: {
+      email: "",
+      password: ""
+    },
+    partial: {
+      email: "installer@",
+      password: ""
+    },
+    ready: {
+      email: "ivan@pandora.pro",
+      password: "service123"
+    },
+    loading: {
+      email: "ivan@pandora.pro",
+      password: "service123",
+      loading: true
+    },
+    error: {
+      email: "ivan@pandora.pro",
+      password: "service123",
+      error: true
+    },
+    activation: {
+      email: "new.installer@pandora.pro",
+      password: "service123",
+      activationOpen: true
+    }
+  },
+  register: {
+    empty: {
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      installer: false
+    },
+    partial: {
+      name: "Иван Петров",
+      email: "ivan@",
+      phone: "",
+      password: "",
+      installer: false
+    },
+    ready: {
+      name: "Иван Петров",
+      email: "ivan@pandora.pro",
+      phone: "+7 912 345-67-89",
+      password: "service123",
+      installer: true
+    },
+    loading: {
+      name: "Иван Петров",
+      email: "ivan@pandora.pro",
+      phone: "+7 912 345-67-89",
+      password: "service123",
+      installer: true,
+      loading: true
+    },
+    validation: {
+      name: "Иван",
+      email: "ivan@",
+      phone: "12",
+      password: "123",
+      installer: true,
+      errors: {
+        email: true,
+        phone: true,
+        password: true
+      }
+    },
+    server: {
+      name: "Иван Петров",
+      email: "ivan@pandora.pro",
+      phone: "+7 912 345-67-89",
+      password: "service123",
+      installer: true,
+      serverError: true
+    },
+    success: {
+      success: true
+    }
+  },
+  forgot: {
+    empty: {
+      email: ""
+    },
+    ready: {
+      email: "ivan@pandora.pro"
+    },
+    loading: {
+      email: "ivan@pandora.pro",
+      loading: true
+    },
+    error: {
+      email: "ivan@pandora.pro",
+      error: true
+    },
+    success: {
+      success: true
+    }
+  },
+  loggedIn: {
+    loggedIn: {},
+    logoutLoading: {
+      loading: true
+    },
+    logoutError: {
+      error: true
+    }
+  },
+  root: {
+    loading: {
+      state: "loading"
+    },
+    error: {
+      state: "error"
+    }
+  }
+};
+function AuthPinned({
+  screen,
+  state,
+  lang,
+  setLang = () => {},
+  mode = "compact"
+}) {
+  const {
+    useState
+  } = React;
+  const t = window.AuthT(lang);
+  const p = PIN[screen] && PIN[screen][state] || {};
+  const [show, setShow] = useState(false);
+  const noop = () => {};
+  if (screen === "root") {
+    return /*#__PURE__*/React.createElement(AuthRootScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      state: p.state,
+      onRetry: noop
+    });
+  }
+  if (screen === "login") {
+    const canSubmit = !!(p.email && p.password) && !p.loading;
+    return /*#__PURE__*/React.createElement(LoginScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      mode: mode,
+      email: p.email,
+      password: p.password,
+      showPassword: show,
+      onEmail: noop,
+      onPassword: noop,
+      onToggleShow: setShow,
+      loading: !!p.loading,
+      error: !!p.error,
+      canSubmit: canSubmit,
+      onSubmit: noop,
+      onForgot: noop,
+      onSignUp: noop,
+      activationOpen: !!p.activationOpen,
+      activationSent: false,
+      onResendActivation: noop,
+      onCloseActivation: noop
+    });
+  }
+  if (screen === "register") {
+    const canSubmit = !!(p.name && p.email && p.phone && p.password && p.installer) && !p.loading;
+    return /*#__PURE__*/React.createElement(RegisterScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      mode: mode,
+      onBack: noop,
+      name: p.name,
+      email: p.email,
+      phone: p.phone,
+      password: p.password,
+      showPassword: show,
+      installer: !!p.installer,
+      onName: noop,
+      onEmail: noop,
+      onPhone: noop,
+      onPassword: noop,
+      onToggleShow: setShow,
+      onInstaller: noop,
+      loading: !!p.loading,
+      errors: p.errors || {},
+      serverError: !!p.serverError,
+      success: !!p.success,
+      canSubmit: canSubmit,
+      onSubmit: noop,
+      onGoLogin: noop
+    });
+  }
+  if (screen === "forgot") {
+    const canSubmit = !!p.email && !p.loading;
+    return /*#__PURE__*/React.createElement(ForgotScreen, {
+      t: t,
+      lang: lang,
+      setLang: setLang,
+      mode: mode,
+      onBack: noop,
+      email: p.email,
+      onEmail: noop,
+      loading: !!p.loading,
+      error: !!p.error,
+      success: !!p.success,
+      canSubmit: canSubmit,
+      onSubmit: noop,
+      onGoLogin: noop
+    });
+  }
+  return /*#__PURE__*/React.createElement(LoggedInScreen, {
+    t: t,
+    lang: lang,
+    setLang: setLang,
+    mode: mode,
+    loading: !!p.loading,
+    error: !!p.error,
+    onLogout: noop
+  });
+}
+
+// State catalog (for selectors / gallery), in display order.
+const AUTH_STATES = {
+  root: ["loading", "error"],
+  login: ["empty", "partial", "ready", "loading", "error", "activation"],
+  register: ["empty", "partial", "ready", "loading", "validation", "server", "success"],
+  forgot: ["empty", "ready", "loading", "error", "success"],
+  loggedIn: ["loggedIn", "logoutLoading", "logoutError"]
+};
+window.AuthFlow = AuthFlow;
+window.AuthPinned = AuthPinned;
+window.AUTH_STATES = AUTH_STATES;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/auth/Auth.jsx", error: String((e && e.message) || e) }); }
+
+// features/auth/AuthScreens.jsx
+try { (() => {
+// AuthScreens — presentational auth screens for Pandora Spec, built ONLY from
+// design-system Cmp* components (window.PandoraSpecDesignSystem_b8d6e1).
+//
+// These are pure/visual: every screen takes an explicit display state + values
+// + handlers, so the same components render both the live interactive flow
+// (Auth.jsx → AuthFlow) and the pinned state gallery (AuthStates.html).
+//
+// Adaptivity — Material 3 Window Size Classes by container width (CLAUDE.md):
+//   • compact  (<600)   — form full-width, one column.
+//   • medium   (600–959)— centered card on the background.
+//   • expanded (≥960)   — two-pane: brand rail + form card.
+//
+// Candidate UI-Kit compositions (assembled from primitives, flagged in spec):
+//   • PasswordField — CmpTextField + trailing visibility CmpIconButton.
+//   • LangSegment   — EN | RU segmented toggle for the top app bar.
+
+const AS_DS = window.PandoraSpecDesignSystem_b8d6e1;
+const {
+  CmpTopAppBar,
+  CmpIconButton,
+  CmpButton,
+  CmpOutlinedButton,
+  CmpTextButton,
+  CmpTextField,
+  CmpCheckbox,
+  CmpDialog,
+  CmpCard,
+  CmpText,
+  CmpIcon,
+  CmpCircularProgressIndicator,
+  CmpLinearProgressIndicator
+} = AS_DS;
+
+// Layered brand backdrop — soft primary/tertiary "blooms" over the page tone.
+// Gives the auth flow depth without leaving the palette (roles adapt per theme).
+const AUTH_BG = "radial-gradient(140% 95% at 100% -15%, color-mix(in srgb, var(--primary-container) 88%, transparent) 0%, transparent 55%)," + "radial-gradient(125% 90% at -20% 115%, color-mix(in srgb, var(--tertiary-container) 80%, transparent) 0%, transparent 55%)," + "var(--background)";
+// Big, finger-friendly primary CTA (taller + softer corners than the 40dp default).
+const BIG_BTN = {
+  height: 52,
+  borderRadius: 16,
+  fontSize: 16
+};
+function AuthBackdrop() {
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: AUTH_BG,
+      pointerEvents: "none"
+    }
+  });
+}
+
+// App icon (real brand mark dropped in by the user).
+const APP_ICON = "./app-icon.png";
+
+// ── Container-width hook → Window Size Class ─────────────────────────────────
+function useAuthMode() {
+  const ref = React.useRef(null);
+  const [w, setW] = React.useState(0);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const remeasure = () => setW(el.offsetWidth);
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(el);
+    window.addEventListener("resize", remeasure);
+    remeasure();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", remeasure);
+    };
+  }, []);
+  let mode = "compact";
+  if (w >= 960) mode = "expanded";else if (w >= 600) mode = "medium";
+  return [ref, mode];
+}
+
+// ── EN | RU segment (UI-Kit candidate: LangSegment) ──────────────────────────
+function LangSegment({
+  lang,
+  setLang
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      background: "var(--surface-variant)",
+      borderRadius: 999,
+      padding: 3
+    }
+  }, ["en", "ru"].map(l => {
+    const on = lang === l;
+    return /*#__PURE__*/React.createElement("button", {
+      key: l,
+      type: "button",
+      onClick: () => setLang && setLang(l),
+      "aria-pressed": on,
+      style: {
+        border: "none",
+        cursor: "pointer",
+        minWidth: 46,
+        height: 38,
+        borderRadius: 999,
+        padding: "0 14px",
+        background: on ? "var(--primary)" : "transparent",
+        color: on ? "var(--on-primary)" : "var(--on-surface-variant)",
+        fontFamily: "var(--font-sans)",
+        fontSize: 13,
+        fontWeight: 600,
+        letterSpacing: 0.4
+      }
+    }, l.toUpperCase());
+  }));
+}
+
+// ── Brand lockup: app icon + wordmark ────────────────────────────────────────
+function LogoPlaceholder({
+  t,
+  big = false,
+  align = "center"
+}) {
+  const size = big ? 84 : 60;
+  const center = align === "center";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: center ? "center" : "flex-start",
+      gap: big ? 18 : 12
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: APP_ICON,
+    alt: t("appName"),
+    width: size,
+    height: size,
+    style: {
+      display: "block",
+      filter: "drop-shadow(0 10px 22px color-mix(in srgb, var(--primary) 35%, transparent))"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: center ? "center" : "flex-start",
+      gap: 2
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: big ? "headlineMedium" : "titleLarge",
+    weight: 700
+  }, t("appName"))));
+}
+
+// ── PasswordField (UI-Kit candidate) ─────────────────────────────────────────
+function PasswordField({
+  t,
+  value,
+  onChange,
+  show,
+  setShow,
+  isError,
+  supportingText,
+  disabled
+}) {
+  return /*#__PURE__*/React.createElement(CmpTextField, {
+    label: t("password"),
+    value: value,
+    onChange: onChange,
+    type: show ? "text" : "password",
+    singleLine: true,
+    disabled: disabled,
+    isError: isError,
+    supportingText: supportingText,
+    leadingIcon: /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "Lock"
+    }),
+    trailingIcon: /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: show ? "VisibilityOff" : "Visibility",
+      contentDescription: show ? t("hidePassword") : t("showPassword"),
+      onClick: () => !disabled && setShow && setShow(!show),
+      disabled: disabled,
+      style: {
+        width: 40,
+        height: 40
+      }
+    })
+  });
+}
+
+// ── Soft error banner ────────────────────────────────────────────────────────
+function ErrorBanner({
+  text
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    role: "alert",
+    style: {
+      display: "flex",
+      gap: "var(--space-m)",
+      alignItems: "flex-start",
+      padding: "12px 16px",
+      borderRadius: "var(--radius-s)",
+      background: "var(--error-container)",
+      color: "var(--on-error-container)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "AlertCircle",
+    color: "var(--on-error-container)"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-error-container)"
+  }, text)));
+}
+
+// ── Submit button with built-in loading spinner ──────────────────────────────
+function SubmitButton({
+  loading,
+  disabled,
+  text,
+  onClick,
+  icon
+}) {
+  if (loading) {
+    return /*#__PURE__*/React.createElement(CmpButton, {
+      fullWidth: true,
+      onClick: undefined,
+      style: {
+        ...BIG_BTN,
+        cursor: "default",
+        pointerEvents: "none"
+      }
+    }, /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+      size: 24,
+      strokeWidth: 3,
+      color: "var(--on-primary)"
+    }));
+  }
+  return /*#__PURE__*/React.createElement(CmpButton, {
+    fullWidth: true,
+    text: text,
+    icon: icon,
+    disabled: disabled,
+    onClick: onClick,
+    style: BIG_BTN
+  });
+}
+
+// ── Shared chrome: layered backdrop + top bar + loading bar + body + dialog ───
+function ScreenChrome({
+  topBar,
+  loading,
+  children,
+  overlay
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      height: "100%",
+      width: "100%",
+      overflow: "hidden",
+      color: "var(--on-background)"
+    }
+  }, /*#__PURE__*/React.createElement(AuthBackdrop, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      zIndex: 1,
+      height: "100%",
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, topBar, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 4,
+      flex: "0 0 auto"
+    }
+  }, loading && /*#__PURE__*/React.createElement(CmpLinearProgressIndicator, null)), children), overlay, /*#__PURE__*/React.createElement("style", null, `@keyframes authIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.auth-anim{animation:none!important}}`));
+}
+
+// ── Body layout by window-size class ─────────────────────────────────────────
+// A "floating" surface card on the brand backdrop. The card keeps --surface so
+// the outlined-field label notch (also --surface) blends in; the backdrop uses
+// --background so the card visibly lifts off it. `logoTop` adds the brand hero
+// above the card on compact/medium (login only).
+function AuthBody({
+  t,
+  mode,
+  logoTop,
+  children
+}) {
+  const card = /*#__PURE__*/React.createElement(CmpCard, {
+    className: "auth-anim",
+    elevation: 2,
+    border: true,
+    style: {
+      boxSizing: "border-box",
+      width: "100%",
+      padding: 28,
+      borderRadius: 28,
+      animation: "authIn .5s ease both"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-l)"
+    }
+  }, children));
+  if (mode === "expanded") {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minHeight: 0,
+        overflow: "auto",
+        display: "flex"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        margin: "auto",
+        minWidth: 0,
+        display: "flex",
+        alignItems: "center",
+        gap: 64,
+        padding: "48px 56px",
+        boxSizing: "border-box"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: "1 1 0",
+        maxWidth: 420,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+        gap: "var(--space-l)"
+      }
+    }, /*#__PURE__*/React.createElement(LogoPlaceholder, {
+      t: t,
+      big: true
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        maxWidth: 360
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, t("loginSubtitle"))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 64,
+        height: 4,
+        borderRadius: 999,
+        background: "var(--primary)",
+        marginTop: 4
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: "0 0 440px",
+        maxWidth: 440
+      }
+    }, card)));
+  }
+  if (mode === "medium") {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minHeight: 0,
+        overflow: "auto",
+        display: "flex"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        margin: "auto",
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "var(--space-xl)",
+        padding: "40px 24px",
+        boxSizing: "border-box",
+        width: "100%",
+        maxWidth: 420
+      }
+    }, logoTop && /*#__PURE__*/React.createElement(LogoPlaceholder, {
+      t: t
+    }), card));
+  }
+
+  // compact
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflow: "auto",
+      display: "flex"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: "auto",
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "var(--space-xl)",
+      padding: "24px 24px 32px",
+      boxSizing: "border-box",
+      width: "100%",
+      maxWidth: 460
+    }
+  }, logoTop && /*#__PURE__*/React.createElement(LogoPlaceholder, {
+    t: t
+  }), card));
+}
+
+// Success panel (registration / forgot success) — replaces the form.
+function SuccessPanel({
+  icon,
+  title,
+  text,
+  primary
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      textAlign: "center",
+      gap: "var(--space-l)",
+      padding: "8px 0"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 72,
+      height: 72,
+      borderRadius: 999,
+      background: "color-mix(in srgb, var(--success) 18%, transparent)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 40,
+    color: "var(--success)"
+  })), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headlineSmall"
+  }, title), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, text), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      paddingTop: "var(--space-s)"
+    }
+  }, primary));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// AUTH ROOT — session check
+// ════════════════════════════════════════════════════════════════════════════
+function AuthRootScreen({
+  t,
+  lang,
+  setLang,
+  state = "loading",
+  onRetry
+}) {
+  const topBar = /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    title: "",
+    style: {
+      background: "transparent"
+    },
+    actions: /*#__PURE__*/React.createElement(LangSegment, {
+      lang: lang,
+      setLang: setLang
+    })
+  });
+  return /*#__PURE__*/React.createElement(ScreenChrome, {
+    topBar: topBar
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 32
+    }
+  }, state === "error" ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      textAlign: "center",
+      gap: "var(--space-l)",
+      maxWidth: 360
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "AlertCircle",
+    size: 40,
+    color: "var(--error)"
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleLarge"
+  }, t("rootErrorTitle")), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, t("rootErrorText")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingTop: "var(--space-s)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpButton, {
+    text: t("retry"),
+    icon: "Refresh",
+    onClick: onRetry
+  }))) :
+  /*#__PURE__*/
+  // Loading — calm, no "checking authorization" text.
+  React.createElement(CmpCircularProgressIndicator, {
+    size: 48
+  })));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════════════════════
+function LoginScreen(props) {
+  const {
+    t,
+    lang,
+    setLang,
+    mode = "compact",
+    email = "",
+    password = "",
+    showPassword = false,
+    onEmail,
+    onPassword,
+    onToggleShow,
+    loading = false,
+    error = false,
+    canSubmit = false,
+    onSubmit,
+    onForgot,
+    onSignUp,
+    activationOpen = false,
+    activationSent = false,
+    onResendActivation,
+    onCloseActivation
+  } = props;
+  const topBar = /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    title: "",
+    style: {
+      background: "transparent"
+    },
+    actions: /*#__PURE__*/React.createElement(LangSegment, {
+      lang: lang,
+      setLang: setLang
+    })
+  });
+  const form = /*#__PURE__*/React.createElement(React.Fragment, null, mode === "expanded" && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headlineSmall"
+  }, t("loginTitle")), error && /*#__PURE__*/React.createElement(ErrorBanner, {
+    text: t("loginError")
+  }), /*#__PURE__*/React.createElement(CmpTextField, {
+    label: t("email"),
+    value: email,
+    onChange: onEmail,
+    type: "email",
+    singleLine: true,
+    disabled: loading,
+    isError: error,
+    leadingIcon: /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "Email"
+    })
+  }), /*#__PURE__*/React.createElement(PasswordField, {
+    t: t,
+    value: password,
+    onChange: onPassword,
+    show: showPassword,
+    setShow: onToggleShow,
+    disabled: loading,
+    isError: error
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "flex-end",
+      marginTop: -12
+    }
+  }, /*#__PURE__*/React.createElement(CmpTextButton, {
+    text: t("forgot"),
+    onClick: onForgot,
+    disabled: loading
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: "var(--space-s)"
+    }
+  }, /*#__PURE__*/React.createElement(SubmitButton, {
+    loading: loading,
+    disabled: !canSubmit,
+    text: t("loginBtn"),
+    onClick: onSubmit
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      flexWrap: "wrap",
+      paddingTop: "var(--space-xs)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, t("noAccount")), /*#__PURE__*/React.createElement(CmpTextButton, {
+    text: t("signUp"),
+    onClick: onSignUp,
+    disabled: loading
+  })));
+  const dialog = /*#__PURE__*/React.createElement(CmpDialog, {
+    open: activationOpen,
+    onDismissRequest: onCloseActivation,
+    icon: "Email",
+    title: t("activationTitle"),
+    text: activationSent ? t("activationSent") : t("activationText"),
+    dismissButton: /*#__PURE__*/React.createElement(CmpTextButton, {
+      text: t("close"),
+      onClick: onCloseActivation
+    }),
+    confirmButton: !activationSent && /*#__PURE__*/React.createElement(CmpTextButton, {
+      text: t("resendActivation"),
+      onClick: onResendActivation
+    })
+  });
+  return /*#__PURE__*/React.createElement(ScreenChrome, {
+    topBar: topBar,
+    loading: loading,
+    overlay: dialog
+  }, /*#__PURE__*/React.createElement(AuthBody, {
+    t: t,
+    mode: mode,
+    logoTop: mode !== "expanded"
+  }, form));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// REGISTRATION
+// ════════════════════════════════════════════════════════════════════════════
+function RegisterScreen(props) {
+  const {
+    t,
+    lang,
+    setLang,
+    mode = "compact",
+    onBack,
+    name = "",
+    email = "",
+    phone = "",
+    password = "",
+    showPassword = false,
+    installer = false,
+    onName,
+    onEmail,
+    onPhone,
+    onPassword,
+    onToggleShow,
+    onInstaller,
+    loading = false,
+    errors = {},
+    serverError = false,
+    success = false,
+    canSubmit = false,
+    onSubmit,
+    onGoLogin
+  } = props;
+  const topBar = /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    title: t("registerTitle"),
+    style: {
+      background: "transparent"
+    },
+    navigationIcon: /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: "ArrowBack",
+      contentDescription: t("backToLogin"),
+      onClick: onBack
+    }),
+    actions: /*#__PURE__*/React.createElement(LangSegment, {
+      lang: lang,
+      setLang: setLang
+    })
+  });
+  let body;
+  if (success) {
+    body = /*#__PURE__*/React.createElement(AuthBody, {
+      t: t,
+      mode: mode
+    }, /*#__PURE__*/React.createElement(SuccessPanel, {
+      icon: "CheckCircle",
+      title: t("regSuccessTitle"),
+      text: t("regSuccessText"),
+      primary: /*#__PURE__*/React.createElement(CmpButton, {
+        fullWidth: true,
+        text: t("goToLogin"),
+        onClick: onGoLogin,
+        style: BIG_BTN
+      })
+    }));
+  } else {
+    const form = /*#__PURE__*/React.createElement(React.Fragment, null, serverError && /*#__PURE__*/React.createElement(ErrorBanner, {
+      text: t("serverError")
+    }), /*#__PURE__*/React.createElement(CmpTextField, {
+      label: t("fullName"),
+      value: name,
+      onChange: onName,
+      singleLine: true,
+      disabled: loading,
+      isError: !!errors.name,
+      supportingText: errors.name ? t("errName") : undefined,
+      leadingIcon: /*#__PURE__*/React.createElement(CmpIcon, {
+        icon: "Person"
+      })
+    }), /*#__PURE__*/React.createElement(CmpTextField, {
+      label: t("email"),
+      value: email,
+      onChange: onEmail,
+      type: "email",
+      singleLine: true,
+      disabled: loading,
+      isError: !!errors.email,
+      supportingText: errors.email ? t("errEmail") : undefined,
+      leadingIcon: /*#__PURE__*/React.createElement(CmpIcon, {
+        icon: "Email"
+      })
+    }), /*#__PURE__*/React.createElement(CmpTextField, {
+      label: t("phone"),
+      value: phone,
+      onChange: onPhone,
+      type: "tel",
+      singleLine: true,
+      disabled: loading,
+      isError: !!errors.phone,
+      supportingText: errors.phone ? t("errPhone") : undefined,
+      leadingIcon: /*#__PURE__*/React.createElement(CmpIcon, {
+        icon: "Phone"
+      })
+    }), /*#__PURE__*/React.createElement(PasswordField, {
+      t: t,
+      value: password,
+      onChange: onPassword,
+      show: showPassword,
+      setShow: onToggleShow,
+      disabled: loading,
+      isError: !!errors.password,
+      supportingText: errors.password ? t("errPasswordShort") : undefined
+    }), /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+        cursor: loading ? "default" : "pointer",
+        marginLeft: -12
+      }
+    }, /*#__PURE__*/React.createElement(CmpCheckbox, {
+      checked: installer,
+      onCheckedChange: loading ? undefined : onInstaller,
+      disabled: loading
+    }), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyMedium"
+    }, t("installer"))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: "var(--space-s)"
+      }
+    }, /*#__PURE__*/React.createElement(SubmitButton, {
+      loading: loading,
+      disabled: !canSubmit,
+      text: t("registerBtn"),
+      onClick: onSubmit
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "center",
+        paddingTop: "var(--space-xs)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpTextButton, {
+      text: t("backToLogin"),
+      icon: "ArrowBack",
+      onClick: onBack,
+      disabled: loading
+    })));
+    body = /*#__PURE__*/React.createElement(AuthBody, {
+      t: t,
+      mode: mode
+    }, form);
+  }
+  return /*#__PURE__*/React.createElement(ScreenChrome, {
+    topBar: topBar,
+    loading: loading
+  }, body);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FORGOT PASSWORD
+// ════════════════════════════════════════════════════════════════════════════
+function ForgotScreen(props) {
+  const {
+    t,
+    lang,
+    setLang,
+    mode = "compact",
+    onBack,
+    email = "",
+    onEmail,
+    loading = false,
+    error = false,
+    success = false,
+    canSubmit = false,
+    onSubmit,
+    onGoLogin
+  } = props;
+  const topBar = /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    title: t("forgotTitle"),
+    style: {
+      background: "transparent"
+    },
+    navigationIcon: /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: "ArrowBack",
+      contentDescription: t("backToLogin"),
+      onClick: onBack
+    }),
+    actions: /*#__PURE__*/React.createElement(LangSegment, {
+      lang: lang,
+      setLang: setLang
+    })
+  });
+  let body;
+  if (success) {
+    body = /*#__PURE__*/React.createElement(AuthBody, {
+      t: t,
+      mode: mode
+    }, /*#__PURE__*/React.createElement(SuccessPanel, {
+      icon: "Email",
+      title: t("forgotSuccessTitle"),
+      text: t("forgotSuccessText"),
+      primary: /*#__PURE__*/React.createElement(CmpButton, {
+        fullWidth: true,
+        text: t("goToLogin"),
+        onClick: onGoLogin,
+        style: BIG_BTN
+      })
+    }));
+  } else {
+    const form = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyMedium",
+      color: "var(--on-surface-variant)"
+    }, t("forgotSubtitle")), error && /*#__PURE__*/React.createElement(ErrorBanner, {
+      text: t("forgotError")
+    }), /*#__PURE__*/React.createElement(CmpTextField, {
+      label: t("email"),
+      value: email,
+      onChange: onEmail,
+      type: "email",
+      singleLine: true,
+      disabled: loading,
+      isError: error,
+      leadingIcon: /*#__PURE__*/React.createElement(CmpIcon, {
+        icon: "Email"
+      })
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: "var(--space-s)"
+      }
+    }, /*#__PURE__*/React.createElement(SubmitButton, {
+      loading: loading,
+      disabled: !canSubmit,
+      text: t("restoreBtn"),
+      onClick: onSubmit
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "center",
+        paddingTop: "var(--space-xs)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpTextButton, {
+      text: t("backToLogin"),
+      icon: "ArrowBack",
+      onClick: onBack,
+      disabled: loading
+    })));
+    body = /*#__PURE__*/React.createElement(AuthBody, {
+      t: t,
+      mode: mode
+    }, form);
+  }
+  return /*#__PURE__*/React.createElement(ScreenChrome, {
+    topBar: topBar,
+    loading: loading
+  }, body);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// LOGGED-IN PLACEHOLDER
+// ════════════════════════════════════════════════════════════════════════════
+function LoggedInScreen(props) {
+  const {
+    t,
+    lang,
+    setLang,
+    mode = "compact",
+    loading = false,
+    error = false,
+    onLogout
+  } = props;
+  const topBar = /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    title: t("appName"),
+    style: {
+      background: "transparent"
+    },
+    actions: /*#__PURE__*/React.createElement(LangSegment, {
+      lang: lang,
+      setLang: setLang
+    })
+  });
+  const content = /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      textAlign: "center",
+      gap: "var(--space-l)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 72,
+      height: 72,
+      borderRadius: 999,
+      background: "var(--primary-container)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "CheckCircle",
+    size: 40,
+    color: "var(--on-primary-container)"
+  })), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headlineSmall"
+  }, t("loggedInTitle")), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, t("loggedInText")), error && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%"
+    }
+  }, /*#__PURE__*/React.createElement(ErrorBanner, {
+    text: t("logoutError")
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      paddingTop: "var(--space-s)"
+    }
+  }, loading ? /*#__PURE__*/React.createElement(CmpOutlinedButton, {
+    fullWidth: true,
+    onClick: undefined,
+    style: {
+      ...BIG_BTN,
+      cursor: "default",
+      pointerEvents: "none"
+    }
+  }, /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+    size: 24,
+    strokeWidth: 3,
+    color: "var(--primary)"
+  })) : /*#__PURE__*/React.createElement(CmpOutlinedButton, {
+    fullWidth: true,
+    text: t("logout"),
+    icon: "ExitToApp",
+    onClick: onLogout,
+    style: BIG_BTN
+  })));
+  const wrap = /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflow: "auto",
+      display: "flex",
+      padding: mode === "compact" ? "24px 24px 32px" : 40,
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement(CmpCard, {
+    className: "auth-anim",
+    elevation: 2,
+    border: true,
+    style: {
+      boxSizing: "border-box",
+      margin: "auto",
+      minWidth: 0,
+      width: "100%",
+      maxWidth: mode === "compact" ? 440 : 420,
+      padding: 28,
+      borderRadius: 28,
+      animation: "authIn .5s ease both"
+    }
+  }, content));
+  return /*#__PURE__*/React.createElement(ScreenChrome, {
+    topBar: topBar,
+    loading: loading
+  }, wrap);
+}
+window.AuthScreens = {
+  useAuthMode,
+  LangSegment,
+  LogoPlaceholder,
+  PasswordField,
+  AuthRootScreen,
+  LoginScreen,
+  RegisterScreen,
+  ForgotScreen,
+  LoggedInScreen
+};
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/auth/AuthScreens.jsx", error: String((e && e.message) || e) }); }
+
+// features/auth/i18n.js
+try { (() => {
+// Pandora Spec — Auth flow i18n dictionary (EN default/fallback, RU required).
+// Plain JS module: exposes window.AuthI18N = { en: {...}, ru: {...} }.
+// All user-facing auth strings live here so EN/RU can be toggled without
+// clearing the form. English wording can run longer than Russian — layouts
+// must hold both (see designer-requirements.md → «Языки и тексты»).
+(function () {
+  var STR = {
+    en: {
+      appName: "Pandora Spec",
+      logoPlaceholder: "LOGO",
+      // Auth root / session check
+      rootErrorTitle: "Couldn't verify your session",
+      rootErrorText: "Check your connection and try again.",
+      retry: "Retry",
+      // Login
+      loginTitle: "Sign in",
+      loginSubtitle: "Sign in to continue the installation",
+      email: "Email",
+      password: "Password",
+      showPassword: "Show password",
+      hidePassword: "Hide password",
+      forgot: "Forgot password?",
+      loginBtn: "Log in",
+      noAccount: "Don't have an account?",
+      signUp: "Sign up",
+      loginError: "Wrong email or password",
+      // Activation required (dialog)
+      activationTitle: "Account not activated",
+      activationText: "We sent an activation link to your email. Confirm it to sign in.",
+      resendActivation: "Resend email",
+      activationSent: "Activation email sent again",
+      close: "Close",
+      // Registration
+      registerTitle: "Create account",
+      fullName: "Full name",
+      phone: "Phone number",
+      installer: "I am an installer",
+      registerBtn: "Create account",
+      backToLogin: "Back to login",
+      errEmail: "Enter a valid email",
+      errPhone: "Enter a valid phone number",
+      errName: "Enter your full name",
+      errPasswordShort: "Password is too short",
+      serverError: "Something went wrong. Please try again.",
+      regSuccessTitle: "Account created",
+      regSuccessText: "Your installer account is ready. Sign in to continue.",
+      goToLogin: "Go to login",
+      // Forgot password
+      forgotTitle: "Reset password",
+      forgotSubtitle: "Enter your email — we'll send recovery instructions.",
+      restoreBtn: "Send instructions",
+      forgotError: "Couldn't send. Check the email and try again.",
+      forgotSuccessTitle: "Check your email",
+      forgotSuccessText: "We sent recovery instructions to your email.",
+      // Logged-in placeholder
+      loggedInTitle: "You are signed in",
+      loggedInText: "Your dashboard isn't ready yet — it's coming in a later version.",
+      logout: "Log out",
+      logoutError: "Couldn't log out. Please try again.",
+      // Misc
+      signedInAs: "Signed in as"
+    },
+    ru: {
+      appName: "Pandora Spec",
+      logoPlaceholder: "ЛОГО",
+      rootErrorTitle: "Не удалось проверить сессию",
+      rootErrorText: "Проверьте подключение и попробуйте снова.",
+      retry: "Повторить",
+      loginTitle: "Вход",
+      loginSubtitle: "Войдите, чтобы продолжить монтаж",
+      email: "Email",
+      password: "Пароль",
+      showPassword: "Показать пароль",
+      hidePassword: "Скрыть пароль",
+      forgot: "Забыли пароль?",
+      loginBtn: "Войти",
+      noAccount: "Нет аккаунта?",
+      signUp: "Зарегистрироваться",
+      loginError: "Неверный email или пароль",
+      activationTitle: "Аккаунт не активирован",
+      activationText: "Мы отправили ссылку активации на ваш email. Подтвердите её, чтобы войти.",
+      resendActivation: "Отправить письмо повторно",
+      activationSent: "Письмо активации отправлено повторно",
+      close: "Закрыть",
+      registerTitle: "Регистрация",
+      fullName: "Имя и фамилия",
+      phone: "Телефон",
+      installer: "Я установщик",
+      registerBtn: "Создать аккаунт",
+      backToLogin: "Вернуться ко входу",
+      errEmail: "Введите корректный email",
+      errPhone: "Введите корректный телефон",
+      errName: "Введите имя и фамилию",
+      errPasswordShort: "Пароль слишком короткий",
+      serverError: "Что-то пошло не так. Попробуйте снова.",
+      regSuccessTitle: "Аккаунт создан",
+      regSuccessText: "Аккаунт установщика готов. Войдите, чтобы продолжить.",
+      goToLogin: "Перейти ко входу",
+      forgotTitle: "Восстановление пароля",
+      forgotSubtitle: "Введите email — пришлём инструкцию по восстановлению.",
+      restoreBtn: "Отправить инструкцию",
+      forgotError: "Не удалось отправить. Проверьте email и попробуйте снова.",
+      forgotSuccessTitle: "Проверьте почту",
+      forgotSuccessText: "Мы отправили инструкцию по восстановлению на ваш email.",
+      loggedInTitle: "Вы вошли в систему",
+      loggedInText: "Личный кабинет пока в разработке — появится в следующей версии.",
+      logout: "Выйти",
+      logoutError: "Не удалось выйти. Попробуйте снова.",
+      signedInAs: "Вы вошли как"
+    }
+  };
+  window.AuthI18N = STR;
+  // Helper: t(lang) → function(key) with EN fallback.
+  window.AuthT = function (lang) {
+    var d = STR[lang] || STR.en;
+    return function (key) {
+      return d[key] != null ? d[key] : STR.en[key] != null ? STR.en[key] : key;
+    };
+  };
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/auth/i18n.js", error: String((e && e.message) || e) }); }
 
 // features/calculator/Calculator.jsx
 try { (() => {
@@ -2948,7 +4615,12 @@ try { (() => {
     home: 'index.html',
     calculator: 'features/calculator/Calculator.html',
     'calculator-tablet': 'features/calculator/CalculatorTablet.html',
-    'calculator-desktop': 'features/calculator/CalculatorDesktop.html'
+    'calculator-desktop': 'features/calculator/CalculatorDesktop.html',
+    auth: 'features/auth/Auth.html',
+    'auth-tablet': 'features/auth/AuthTablet.html',
+    'auth-desktop': 'features/auth/AuthDesktop.html',
+    'auth-states': 'features/auth/AuthStates.html',
+    'auth-flow': 'features/auth/AuthFlow.html'
   };
   window.PS_ROOT = ROOT;
   window.PS_LINKS = LINKS;
