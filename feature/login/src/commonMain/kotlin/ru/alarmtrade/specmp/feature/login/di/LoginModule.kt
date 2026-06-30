@@ -6,6 +6,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.login.domain.usecase.CheckLoginStatusUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.LoginUseCase
+import ru.alarmtrade.specmp.feature.login.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.ResendActivationEmailUseCase
 import ru.alarmtrade.specmp.feature.login.presentation.LoginViewModel
 
@@ -15,5 +16,6 @@ val loginModule = module {
     factoryOf(::LoginUseCase)
     factoryOf(::ResendActivationEmailUseCase)
     factoryOf(::CheckLoginStatusUseCase)
+    factoryOf(::LogoutUseCase)
     viewModelOf(::LoginViewModel)
 }

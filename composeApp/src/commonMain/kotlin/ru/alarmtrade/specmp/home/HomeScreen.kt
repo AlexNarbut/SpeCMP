@@ -89,7 +89,7 @@ fun HomeScreen(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
             onClick = onNavigateToCalculator,
             content = {
-                Text("Calculator")
+                Text(stringResource(Res.string.home_btn_calculator))
             }
         )
 
@@ -97,7 +97,7 @@ fun HomeScreen(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
             onClick = onNavigateToLogin,
             content = {
-                Text("Login")
+                Text(stringResource(Res.string.home_btn_login))
             }
         )
 

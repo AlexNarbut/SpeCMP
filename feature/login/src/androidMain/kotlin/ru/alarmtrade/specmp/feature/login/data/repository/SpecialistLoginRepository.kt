@@ -22,7 +22,7 @@ class SpecialistLoginRepository(
 ) : LoginRepository {
 
     override suspend fun login(credentials: LoginCredentials): Response<LoginResult> {
-        return runAuthRequest(defaultError = "Не удалось войти") {
+        return runAuthRequest {
             when (val response = saveDeviceInformation()) {
                 is Response.Success -> Unit
                 is Response.Error -> return@runAuthRequest response
@@ -33,7 +33,7 @@ class SpecialistLoginRepository(
                     if (response.exception is UserIsNotConfirmed) {
                         Response.Success(LoginResult.ActivationRequired)
                     } else {
-                        response.toProjectError(defaultMessage = "Не удалось войти")
+                        response.toProjectError()
                     }
                 }
             }
@@ -41,7 +41,7 @@ class SpecialistLoginRepository(
     }
 
     override suspend fun resendActivationEmail(credentials: LoginCredentials): Response<Unit> {
-        return runAuthRequest(defaultError = "Не удалось отправить письмо подтверждения") {
+        return runAuthRequest {
             when (val response = saveDeviceInformation()) {
                 is Response.Success -> Unit
                 is Response.Error -> return@runAuthRequest response
@@ -52,33 +52,37 @@ class SpecialistLoginRepository(
                 )
             ) {
                 is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> response.toProjectError(
-                    defaultMessage = "Не удалось отправить письмо подтверждения"
-                )
+                is SpecialistResponse.Error -> response.toProjectError()
             }
         }
     }
 
     override suspend fun isLoggedIn(): Response<Boolean> {
-        return runAuthRequest(defaultError = "Не удалось проверить статус авторизации") {
+        return runAuthRequest {
             when (val response = specialistApp.authInteractor.checkIfUserLoggedInUseCase.execute()) {
                 is SpecialistResponse.Success -> Response.Success(response.value.boolean)
-                is SpecialistResponse.Error -> response.toProjectError(
-                    defaultMessage = "Не удалось проверить статус авторизации"
-                )
+                is SpecialistResponse.Error -> response.toProjectError()
+            }
+        }
+    }
+
+    override suspend fun logout(): Response<Unit> {
+        return runAuthRequest {
+            when (val response = specialistApp.authInteractor.logoutUseCase.execute()) {
+                is SpecialistResponse.Success -> Response.Success(Unit)
+                is SpecialistResponse.Error -> response.toProjectError()
             }
         }
     }
 
     private suspend fun <T> runAuthRequest(
-        defaultError: String,
         block: suspend () -> Response<T>,
     ): Response<T> {
         return try {
             withContext(dispatchers.io) { block() }
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            Response.Error(e, e.message ?: defaultError)
+            Response.Error(e)
         }
     }
 
@@ -103,14 +107,14 @@ class SpecialistLoginRepository(
             )
         ) {
             is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError(defaultMessage = "Не удалось сохранить информацию об устройстве")
+            is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
-    private fun <T> SpecialistResponse.Error.toProjectError(defaultMessage: String): Response<T> {
+    private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> {
         return Response.Error(
             exception = exception,
-            message = message ?: exception.message ?: defaultMessage,
+            message = message ?: exception.message,
         )
     }
 

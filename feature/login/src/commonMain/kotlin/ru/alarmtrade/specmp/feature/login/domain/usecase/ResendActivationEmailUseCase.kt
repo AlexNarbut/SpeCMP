@@ -10,8 +10,7 @@ class ResendActivationEmailUseCase(
     suspend operator fun invoke(credentials: LoginCredentials): Response<Unit> {
         if (!credentials.isValid()) {
             return Response.Error(
-                IllegalArgumentException("Login and password must not be empty"),
-                "Введите логин и пароль",
+                IllegalArgumentException(),
             )
         }
         return repository.resendActivationEmail(credentials)

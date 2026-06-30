@@ -1,0 +1,9 @@
+<resources>
+    <string name="cyclone">Циклон</string>
+    <string name="open_github">Открыть GitHub</string>
+    <string name="run">Запустить</string>
+    <string name="stop">Остановить</string>
+    <string name="theme">Тема</string>
+    <string name="home_btn_calculator">Калькулятор</string>
+    <string name="home_btn_login">Вход</string>
+</resources>

@@ -18,10 +18,15 @@ class UnavailableLoginRepository : LoginRepository {
         return Response.Success(false)
     }
 
+    override suspend fun logout(): Response<Unit> {
+        return Response.Error(
+            exception = UnsupportedOperationException(),
+        )
+    }
+
     private fun <T> unavailable(): Response<T> {
         return Response.Error(
-            exception = UnsupportedOperationException("Login is not available on this platform"),
-            message = "Авторизация недоступна на этой платформе",
+            exception = UnsupportedOperationException(),
         )
     }
 }

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_common_a11y_back">Назад</string>
+    <string name="login_common_a11y_language_en">Переключить язык на английский</string>
+    <string name="login_common_a11y_language_ru">Переключить язык на русский</string>
+    <string name="login_common_btn_language_en">EN</string>
+    <string name="login_common_btn_language_ru">RU</string>
+    <string name="login_common_btn_done">Готово</string>
+    <string name="login_common_btn_later">Позже</string>
+    <string name="login_common_btn_send_email">Отправить письмо</string>
+    <string name="login_common_btn_logout">Выйти</string>
+    <string name="login_common_btn_retry">Повторить</string>
+    <string name="login_common_label_email">Email</string>
+    <string name="login_common_label_login_email">Логин или email</string>
+    <string name="login_common_label_password">Пароль</string>
+    <string name="login_common_label_full_name">ФИО</string>
+    <string name="login_common_label_phone">Номер телефона</string>
+    <string name="login_common_error_auth_failed">Не удалось войти. Проверьте данные и попробуйте снова.</string>
+    <string name="login_common_error_activation_resend_failed">Не удалось отправить письмо подтверждения. Попробуйте позже.</string>
+    <string name="login_common_error_session_check_failed">Не удалось проверить статус авторизации. Попробуйте снова.</string>
+    <string name="login_common_error_logout_failed">Не удалось выйти. Попробуйте снова.</string>
+    <string name="login_common_error_required_fields">Заполните обязательные поля.</string>
+    <string name="login_common_loading_auth">Выполняем вход...</string>
+    <string name="login_common_loading_logout">Выходим...</string>
+    <string name="login_common_loading_send_email">Отправляем письмо...</string>
+
+    <string name="login_authroot_title_brand">SpeCMP</string>
+    <string name="login_authroot_subtitle_specialist">Авторизация специалиста</string>
+
+    <string name="login_login_title_screen">Вход</string>
+    <string name="login_login_btn_submit">Войти</string>
+    <string name="login_login_btn_show_password">Показать</string>
+    <string name="login_login_btn_hide_password">Скрыть</string>
+    <string name="login_login_link_forgot_password">Забыли пароль?</string>
+    <string name="login_login_link_registration">У вас нет аккаунта? Зарегистрируйтесь.</string>
+    <string name="login_login_title_confirm_email">Подтвердите email</string>
+    <string name="login_login_msg_activation_required">Аккаунт ещё не активирован. Можно повторно отправить письмо подтверждения на указанный логин.</string>
+    <string name="login_login_msg_activation_email_sent">Письмо подтверждения отправлено.</string>
+
+    <string name="login_registration_title_screen">Регистрация</string>
+    <string name="login_registration_btn_submit">Зарегистрироваться</string>
+    <string name="login_registration_label_installer_confirm">Я подтверждаю, что являюсь установщиком</string>
+    <string name="login_registration_msg_success">Заявка на регистрацию отправлена.</string>
+
+    <string name="login_forgot_title_screen">Восстановление пароля</string>
+    <string name="login_forgot_btn_submit">Восстановить пароль</string>
+    <string name="login_forgot_msg_success">Инструкция по восстановлению пароля отправлена.</string>
+
+    <string name="login_loggedin_title_screen">Авторизован</string>
+    <string name="login_loggedin_msg_placeholder">Вы вошли в систему.</string>
+</resources>
