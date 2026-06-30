@@ -53,6 +53,11 @@ CmpScaffold(
 }
 ```
 
+Для брендовых или визуально сложных экранов можно передавать plain `Color`:
+`CmpScaffold(containerColor = Color.Transparent, contentColor = colors.onBackground)` и
+`CmpTopAppBar(containerColor = Color.Transparent, contentColor = colors.onBackground)`.
+Feature-код не должен импортировать `TopAppBarDefaults` или другие Material3-типы ради цветов.
+
 WindowInsets (status bar) обрабатывает `CmpScaffold` через `topBar`-слот — `CmpTopAppBar` свои insets обнуляет, чтобы не было двойного отступа. Не добавлять `.statusBarsPadding()` / ручной `.background(...)` на корневом контейнере — фон и insets даёт Scaffold.
 
 ---
