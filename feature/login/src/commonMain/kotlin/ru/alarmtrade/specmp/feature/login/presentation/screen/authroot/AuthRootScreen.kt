@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,7 +36,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthErrorMessage
-import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLocaleSwitcher
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLanguageSegment
 import ru.alarmtrade.specmp.feature.login.presentation.locale.AppLocale
 import ru.alarmtrade.specmp.feature.login.presentation.locale.applyAppLocale
 import ru.alarmtrade.specmp.feature.login.presentation.locale.currentAppLocale
@@ -72,28 +71,26 @@ fun AuthRootScreen(
         }
     }
 
-    key(appLocale) {
-        AuthRootContent(
-            state = state,
-            colors = colors,
-            destination = destination,
-            onDestinationChanged = { destination = it },
-            onLoginChanged = viewModel::onLoginChanged,
-            onPasswordChanged = viewModel::onPasswordChanged,
-            onPasswordVisibilityChanged = viewModel::onPasswordVisibilityChanged,
-            onResetLoginForm = viewModel::resetLoginForm,
-            onSubmitLogin = viewModel::submit,
-            onResendActivationEmail = viewModel::resendActivationEmail,
-            onDismissActivationRequest = viewModel::dismissActivationRequest,
-            onRetrySessionCheck = viewModel::retrySessionCheck,
-            onLogout = viewModel::logout,
-            appLocale = appLocale,
-            onLocaleChanged = { locale ->
-                applyAppLocale(locale)
-                appLocale = locale
-            },
-        )
-    }
+    AuthRootContent(
+        state = state,
+        colors = colors,
+        destination = destination,
+        onDestinationChanged = { destination = it },
+        onLoginChanged = viewModel::onLoginChanged,
+        onPasswordChanged = viewModel::onPasswordChanged,
+        onPasswordVisibilityChanged = viewModel::onPasswordVisibilityChanged,
+        onResetLoginForm = viewModel::resetLoginForm,
+        onSubmitLogin = viewModel::submit,
+        onResendActivationEmail = viewModel::resendActivationEmail,
+        onDismissActivationRequest = viewModel::dismissActivationRequest,
+        onRetrySessionCheck = viewModel::retrySessionCheck,
+        onLogout = viewModel::logout,
+        appLocale = appLocale,
+        onLocaleChanged = { locale ->
+            applyAppLocale(locale)
+            appLocale = locale
+        },
+    )
 }
 
 @Composable
@@ -145,9 +142,10 @@ private fun AuthRootContent(
                     }
                 },
                 actions = {
-                    AuthLocaleSwitcher(
+                    AuthLanguageSegment(
                         appLocale = appLocale,
                         onLocaleChanged = onLocaleChanged,
+                        colors = colors,
                     )
                 },
             )

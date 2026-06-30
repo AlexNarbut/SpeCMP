@@ -7,6 +7,7 @@
     <string name="login_common_a11y_hide_password">Hide password</string>
     <string name="login_common_btn_language_en">EN</string>
     <string name="login_common_btn_language_ru">RU</string>
+    <string name="login_common_btn_close">Close</string>
     <string name="login_common_btn_done">Done</string>
     <string name="login_common_btn_later">Later</string>
     <string name="login_common_btn_send_email">Send email</string>
@@ -17,41 +18,58 @@
     <string name="login_common_label_password">Password</string>
     <string name="login_common_label_full_name">Full name</string>
     <string name="login_common_label_phone">Phone number</string>
-    <string name="login_common_error_auth_failed">Unable to sign in. Check your credentials and try again.</string>
+    <string name="login_common_error_auth_failed">Wrong email or password</string>
     <string name="login_common_error_activation_resend_failed">Unable to send confirmation email. Try again later.</string>
-    <string name="login_common_error_session_check_failed">Unable to check authorization status. Try again.</string>
-    <string name="login_common_error_logout_failed">Unable to log out. Try again.</string>
-    <string name="login_common_error_registration_failed">Unable to register. Try again later.</string>
-    <string name="login_common_error_reset_password_failed">Unable to reset password. Try again later.</string>
+    <string name="login_common_error_session_check_failed">Check your connection and try again.</string>
+    <string name="login_common_error_logout_failed">Couldn't log out. Please try again.</string>
+    <string name="login_common_error_registration_failed">Something went wrong. Please try again.</string>
+    <string name="login_common_error_reset_password_failed">Couldn't send. Check the email and try again.</string>
     <string name="login_common_error_required_fields">Fill in the required fields.</string>
+    <string name="login_common_error_email_invalid">Enter a valid email</string>
+    <string name="login_common_error_phone_invalid">Enter a valid phone number</string>
+    <string name="login_common_error_full_name_required">Enter your full name</string>
+    <string name="login_common_error_password_short">Password is too short</string>
     <string name="login_common_loading_auth">Signing in...</string>
     <string name="login_common_loading_session_check">Checking authorization status...</string>
     <string name="login_common_loading_registration">Registering...</string>
     <string name="login_common_loading_logout">Logging out...</string>
     <string name="login_common_loading_send_email">Sending email...</string>
 
-    <string name="login_authroot_title_brand">SpeCMP</string>
+    <string name="login_authroot_title_brand">Pandora Spec</string>
     <string name="login_authroot_subtitle_specialist">Specialist authorization</string>
+    <string name="login_authroot_title_session_error">Couldn't verify your session</string>
+    <string name="login_authroot_msg_session_error">Check your connection and try again.</string>
 
     <string name="login_login_title_screen">Sign in</string>
-    <string name="login_login_btn_submit">Sign in</string>
+    <string name="login_login_subtitle_screen">Sign in to continue the installation</string>
+    <string name="login_login_btn_submit">Log in</string>
     <string name="login_login_btn_show_password">Show</string>
     <string name="login_login_btn_hide_password">Hide</string>
     <string name="login_login_link_forgot_password">Forgot password?</string>
-    <string name="login_login_link_registration">Don't have an account? Register.</string>
-    <string name="login_login_title_confirm_email">Confirm email</string>
-    <string name="login_login_msg_activation_required">The account is not activated yet. You can resend the confirmation email to the specified login.</string>
-    <string name="login_login_msg_activation_email_sent">Confirmation email has been sent.</string>
+    <string name="login_login_msg_no_account">Don't have an account?</string>
+    <string name="login_login_link_signup">Sign up</string>
+    <string name="login_login_link_registration">Don't have an account? Sign up</string>
+    <string name="login_login_title_confirm_email">Account not activated</string>
+    <string name="login_login_msg_activation_required">We sent an activation link to your email. Confirm it to sign in.</string>
+    <string name="login_login_btn_resend_activation">Resend email</string>
+    <string name="login_login_msg_activation_email_sent">Activation email sent again</string>
 
-    <string name="login_registration_title_screen">Registration</string>
-    <string name="login_registration_btn_submit">Register</string>
-    <string name="login_registration_label_installer_confirm">I confirm that I am an installer</string>
-    <string name="login_registration_msg_success">Registration request has been sent.</string>
+    <string name="login_registration_title_screen">Create account</string>
+    <string name="login_registration_btn_submit">Create account</string>
+    <string name="login_registration_label_installer_confirm">I am an installer</string>
+    <string name="login_registration_btn_back_to_login">Back to login</string>
+    <string name="login_registration_title_success">Account created</string>
+    <string name="login_registration_msg_success">Your installer account is ready. Sign in to continue.</string>
+    <string name="login_registration_btn_go_to_login">Go to login</string>
 
-    <string name="login_forgot_title_screen">Password recovery</string>
-    <string name="login_forgot_btn_submit">Reset password</string>
-    <string name="login_forgot_msg_success">Password recovery instructions have been sent.</string>
+    <string name="login_forgot_title_screen">Reset password</string>
+    <string name="login_forgot_subtitle_screen">Enter your email — we'll send recovery instructions.</string>
+    <string name="login_forgot_btn_submit">Send instructions</string>
+    <string name="login_forgot_title_success">Check your email</string>
+    <string name="login_forgot_msg_success">We sent recovery instructions to your email.</string>
+    <string name="login_forgot_link_back_to_login">Back to login</string>
 
-    <string name="login_loggedin_title_screen">Authorized</string>
-    <string name="login_loggedin_msg_placeholder">You are signed in.</string>
+    <string name="login_loggedin_title_screen">You are signed in</string>
+    <string name="login_loggedin_msg_placeholder">Your dashboard isn't ready yet — it's coming in a later version.</string>
+    <string name="login_loggedin_label_signed_in_as">Signed in as</string>
 </resources>
