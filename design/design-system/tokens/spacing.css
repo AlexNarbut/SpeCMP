@@ -1,0 +1,51 @@
+/* ============================================================
+   Pandora Spec — Spacing, shape, sizing, elevation
+   Base grid unit = 4dp. Use only scale values.
+   dp/sp map to px 1:1 in these mockups.
+   ============================================================ */
+
+:root {
+  /* ── Spacing scale (base 4dp) ── */
+  --space-xs: 4px;    /* icon↔text, tiny gaps */
+  --space-s: 8px;     /* compact inner padding */
+  --space-m: 12px;    /* gap between related items */
+  --space-l: 16px;    /* screen margins, card padding */
+  --space-xl: 24px;   /* between semantic blocks */
+  --space-xxl: 32px;  /* major section breaks */
+
+  /* ── Corner radius ── */
+  --radius-none: 0px;
+  --radius-xs: 4px;     /* chips, small elements */
+  --radius-s: 8px;      /* compact blocks */
+  --radius-m: 12px;     /* cards, dropdown, selectable card */
+  --radius-l: 16px;     /* bottom sheet (top corners) */
+  --radius-xl: 28px;    /* dialogs */
+
+  /* ── Component sizes ── */
+  --touch-min: 48px;       /* minimum touch target */
+  --button-height: 40px;
+  --field-height: 56px;
+  --topbar-height: 64px;
+  --navbar-height: 80px;
+  --icon-size: 24px;
+  --avatar-size: 40px;
+  --fab-small: 40px;
+  --fab-default: 56px;
+  --fab-large: 96px;
+
+  /* ── Fixed line weights ── */
+  --divider-thickness: 1px;
+  --card-shadow-dp: 1px;
+  --selectable-card-border: 1.5px;
+  --progress-arc: 4px;
+
+  /* ── Elevation (shadow) ── */
+  --elevation-0: none;
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.10);
+  --elevation-3: 0 6px 16px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.12);
+
+  /* ── Motion ── */
+  --motion-standard: 300ms cubic-bezier(0.2, 0.0, 0, 1.0); /* @kind other */
+  --motion-fast: 150ms cubic-bezier(0.2, 0.0, 0, 1.0); /* @kind other */
+}

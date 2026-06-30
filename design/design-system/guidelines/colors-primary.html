@@ -1,0 +1,29 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Primary" subtitle="primary · primaryContainer (+ on- roles)" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: var(--background); padding: 16px; }
+  .row { display: flex; gap: 12px; }
+  .sw { flex: 1; height: 110px; border-radius: 12px; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--outline-variant); }
+  .name { font-size: 13px; font-weight: 600; }
+  .hex { font-family: var(--font-mono); font-size: 11px; opacity: .85; }
+  .on { font-size: 11px; opacity: .9; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="sw" style="background: var(--primary); color: var(--on-primary);">
+    <div><div class="name">primary</div><div class="hex">#1A3E7A</div></div>
+    <div class="on">onPrimary · #FFFFFF</div>
+  </div>
+  <div class="sw" style="background: var(--primary-container); color: var(--on-primary-container);">
+    <div><div class="name">primaryContainer</div><div class="hex">#D8E2F8</div></div>
+    <div class="on">onPrimaryContainer · #07203F</div>
+  </div>
+</div>
+</body>
+</html>
