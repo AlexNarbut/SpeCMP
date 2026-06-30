@@ -225,30 +225,30 @@ LaunchedEffect(Unit) {
 Когда родитель читает `StateFlow` через `by collectAsState()`, он подписывается на каждое изменение состояния — даже если только глубокий дочерний composable реально использует это состояние.
 
 ```kotlin
-// ПЛОХО: CalculatorScreen рекомпозируется при каждом нажатии цифры
+// ПЛОХО: FormScreen рекомпозируется при каждом нажатии клавиши
 @Composable
-fun CalculatorScreen() {
+fun FormScreen() {
     val state by viewModel.state.collectAsState()  // ← родитель подписывается
     // ...
-    CalculatorDisplay(state = state)               // ← значение читается здесь, родитель владеет областью
-    CalculatorGrid(...)                            // ← рекомпозируется без необходимости
+    FormDisplay(state = state)                     // ← значение читается здесь, родитель владеет областью
+    StaticActions(...)                             // ← рекомпозируется без необходимости
 }
 ```
 
 ### Решение: собрать без `by`, передать `State<T>` дочернему
 
 ```kotlin
-// ХОРОШО: CalculatorScreen никогда не читает значение — рекомпозируется только CalculatorDisplay
+// ХОРОШО: FormScreen никогда не читает значение — рекомпозируется только FormDisplay
 @Composable
-fun CalculatorScreen() {
+fun FormScreen() {
     val state = viewModel.state.collectAsState()   // объект State<T>, значение НЕ читается здесь
     // ...
-    CalculatorDisplay(state = state)
-    CalculatorGrid(...)                            // стабильные параметры → пропускается
+    FormDisplay(state = state)
+    StaticActions(...)                             // стабильные параметры → пропускается
 }
 
 @Composable
-private fun CalculatorDisplay(state: State<CalculatorState>) {
+private fun FormDisplay(state: State<FormState>) {
     val value = state.value                        // ← чтение происходит здесь, только эта область инвалидируется
     // ...
 }

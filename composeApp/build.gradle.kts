@@ -35,7 +35,6 @@ kotlin {
             implementation(project(":core:ui"))
 
             // Feature modules
-            implementation(project(":feature:calculator"))
             implementation(project(":feature:login"))
 
             // Compose

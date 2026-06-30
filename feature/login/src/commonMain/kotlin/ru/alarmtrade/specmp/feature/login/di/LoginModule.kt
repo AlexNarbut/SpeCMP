@@ -10,7 +10,9 @@ import ru.alarmtrade.specmp.feature.login.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.ResendActivationEmailUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.ResetPasswordUseCase
 import ru.alarmtrade.specmp.feature.login.domain.usecase.SignUpUseCase
-import ru.alarmtrade.specmp.feature.login.presentation.LoginViewModel
+import ru.alarmtrade.specmp.feature.login.presentation.screen.authroot.AuthRootViewModel
+import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordScreenViewModel
+import ru.alarmtrade.specmp.feature.login.presentation.screen.registration.RegistrationScreenViewModel
 
 expect val platformLoginModule: Module
 
@@ -21,5 +23,7 @@ val loginModule = module {
     factoryOf(::ResendActivationEmailUseCase)
     factoryOf(::CheckLoginStatusUseCase)
     factoryOf(::LogoutUseCase)
-    viewModelOf(::LoginViewModel)
+    viewModelOf(::AuthRootViewModel)
+    viewModelOf(::RegistrationScreenViewModel)
+    viewModelOf(::ForgotPasswordScreenViewModel)
 }

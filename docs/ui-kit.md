@@ -37,12 +37,12 @@ CmpText(text = "Hello")
 CmpScaffold(
     topBar = {
         CmpTopAppBar(
-            title = { CmpText(text = stringResource(Res.string.calculator_main_title)) },
+            title = { CmpText(text = stringResource(Res.string.login_login_title_screen)) },
             navigationIcon = {
                 CmpIconButton(
                     onClick = onBack,
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Res.string.calculator_common_a11y_back),
+                    contentDescription = stringResource(Res.string.login_common_a11y_back),
                 )
             },
         )
@@ -192,6 +192,12 @@ fun CmpTextField(style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined) {
 
 Расположение: `core/ui/src/commonMain/kotlin/ru/alarmtrade/specmp/core/ui/theme/`
 Базовый цвет (seed): `#1D3557`
+
+Feature-модули читают цвета через `cmpThemeColors()`, не импортируя `MaterialTheme`
+напрямую. `CmpThemeColors` раскрывает общие Material-роли: базовые
+`background` / `surface` / `primary` / `secondary` / `tertiary` / `error`,
+container-роли (`primaryContainer`, `secondaryContainer`, `tertiaryContainer`,
+`errorContainer`, `surfaceContainer*`), outline-роли и `scrim`.
 
 ```kotlin
 // Прочитать текущую тему

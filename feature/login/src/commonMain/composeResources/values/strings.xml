@@ -3,6 +3,8 @@
     <string name="login_common_a11y_back">Back</string>
     <string name="login_common_a11y_language_en">Switch language to English</string>
     <string name="login_common_a11y_language_ru">Switch language to Russian</string>
+    <string name="login_common_a11y_show_password">Show password</string>
+    <string name="login_common_a11y_hide_password">Hide password</string>
     <string name="login_common_btn_language_en">EN</string>
     <string name="login_common_btn_language_ru">RU</string>
     <string name="login_common_btn_done">Done</string>
@@ -11,7 +13,7 @@
     <string name="login_common_btn_logout">Log out</string>
     <string name="login_common_btn_retry">Retry</string>
     <string name="login_common_label_email">Email</string>
-    <string name="login_common_label_login_email">Login or email</string>
+    <string name="login_common_label_login_email">Email</string>
     <string name="login_common_label_password">Password</string>
     <string name="login_common_label_full_name">Full name</string>
     <string name="login_common_label_phone">Phone number</string>
@@ -19,8 +21,12 @@
     <string name="login_common_error_activation_resend_failed">Unable to send confirmation email. Try again later.</string>
     <string name="login_common_error_session_check_failed">Unable to check authorization status. Try again.</string>
     <string name="login_common_error_logout_failed">Unable to log out. Try again.</string>
+    <string name="login_common_error_registration_failed">Unable to register. Try again later.</string>
+    <string name="login_common_error_reset_password_failed">Unable to reset password. Try again later.</string>
     <string name="login_common_error_required_fields">Fill in the required fields.</string>
     <string name="login_common_loading_auth">Signing in...</string>
+    <string name="login_common_loading_session_check">Checking authorization status...</string>
+    <string name="login_common_loading_registration">Registering...</string>
     <string name="login_common_loading_logout">Logging out...</string>
     <string name="login_common_loading_send_email">Sending email...</string>
 

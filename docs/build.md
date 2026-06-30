@@ -101,7 +101,7 @@ library-модуль учитывать:
 - Пакет `Res`-класса формируется из `rootProject.name` + путь модуля:
   `composeApp` → `specmp.composeapp.generated.resources`,
   `core/ui` → `specmp.core.ui.generated.resources`,
-  `feature/calculator` → `specmp.feature.calculator.generated.resources`.
+  `feature/login` → `specmp.feature.login.generated.resources`.
 
 ---
 

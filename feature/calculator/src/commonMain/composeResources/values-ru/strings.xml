@@ -1,8 +1,0 @@
-<resources>
-    <string name="calculator_main_title">Калькулятор</string>
-    <string name="calculator_common_a11y_back">Назад</string>
-    <string name="calculator_timer_btn_start">Старт</string>
-    <string name="calculator_timer_btn_stop">Стоп</string>
-    <string name="calculator_timer_btn_reset">Сброс</string>
-    <string name="calculator_main_error_divzero">Деление на ноль невозможно</string>
-</resources>

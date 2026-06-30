@@ -11,28 +11,28 @@
 ```kotlin
 // ❌ Плохо — статический UI-текст в composable
 CmpIconButton(onClick = onBack, icon = CmpIcons.ArrowBack, contentDescription = "Назад")
-CmpText(text = "Калькулятор")
+CmpText(text = "Вход")
 
 // ✅ Хорошо — через перевод
 CmpIconButton(
     onClick = onBack,
     icon = CmpIcons.ArrowBack,
-    contentDescription = stringResource(Res.string.calculator_common_a11y_back),
+    contentDescription = stringResource(Res.string.login_common_a11y_back),
 )
-CmpText(text = stringResource(Res.string.calculator_main_title))
+CmpText(text = stringResource(Res.string.login_login_title_screen))
 
 // ✅ Строки для логики — через константы, а не inline
-private const val ANALYTICS_SCREEN = "calculator_main"
+private const val ANALYTICS_SCREEN = "login"
 ```
 
 ```kotlin
 // ❌ Плохо — inline FQN
-fun applyOperation(op: ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation) { }
+fun submit(credentials: ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials) { }
 
 // ✅ Хорошо — через import сверху файла
-import ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation
+import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 
-fun applyOperation(op: CalculatorOperation) { }
+fun submit(credentials: LoginCredentials) { }
 
 // ✅ Хорошо — alias при конфликте имён
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -108,7 +108,7 @@ when (state) {
 ```kotlin
 // composeApp/.../App.kt
 KoinApplication(application = {
-    modules(commonModule, calculatorModule)
+    modules(commonModule, loginModule, platformLoginModule)
 }) {
     AppTheme(onThemeChanged) { AppNavigation() }
 }
@@ -352,12 +352,12 @@ class DashboardViewModel(
 ViewModel — emit через `sideEffectFlow()`:
 
 ```kotlin
-class CalculatorViewModel(...) : ViewModel() {
+class LoginViewModel(...) : ViewModel() {
 
-    private val _effect = sideEffectFlow<CalculatorEffect>()   // extraBufferCapacity = 1, replay = 0
-    val effect: SharedFlow<CalculatorEffect> = _effect.asSharedFlow()
+    private val _effect = sideEffectFlow<LoginEffect>()   // extraBufferCapacity = 1, replay = 0
+    val effect: SharedFlow<LoginEffect> = _effect.asSharedFlow()
 
-    private fun emitEffect(effect: CalculatorEffect) {
+    private fun emitEffect(effect: LoginEffect) {
         _effect.tryEmit(effect)
     }
 }
@@ -368,7 +368,7 @@ UI — сбор через `collectSideEffect`:
 ```kotlin
 viewModel.effect.collectSideEffect { effect ->
     when (effect) {
-        is CalculatorEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+        is LoginEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
     }
 }
 ```

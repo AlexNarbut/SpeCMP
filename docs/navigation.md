@@ -1,102 +1,78 @@
 # Навигация — androidx Navigation3 (nav3)
 
-Библиотека: `org.jetbrains.androidx.navigation3:navigation3-ui`
+Библиотека: `org.jetbrains.androidx.navigation3:navigation3-ui`.
 
 ## Основные понятия
 
-- **Back stack** — обычный `SnapshotStateList`, управляемый вашим кодом (не библиотекой)
-- **Маршруты (Routes)** — любые объекты, реализующие `NavKey`
-- **NavDisplay** — отображает текущий destination из back stack
-- **NavEntry** — связывает ключ маршрута с Compose-контентом
+- **Back stack** — обычный `SnapshotStateList`, управляемый кодом приложения.
+- **Routes** — сериализуемые объекты, реализующие `NavKey`.
+- **NavDisplay** — отображает текущий destination из back stack.
+- **NavEntry** — связывает ключ маршрута с Compose-контентом.
 
----
+## Текущий route graph
+
+Auth-flow является стартовым экраном приложения. Демо-экран и демонстрационные маршруты удалены из composition root.
+
+| Route | Экран |
+|---|---|
+| `LoginRoute` | `LoginScreen` / auth-root |
 
 ## Объявление маршрутов
 
 Каждый маршрут — это `@Serializable data object` или `data class`, реализующий `NavKey`.
-Для multiplatform (iOS не имеет рефлексии) требуется `SavedStateConfiguration` с явной регистрацией типов.
+Для multiplatform требуется `SavedStateConfiguration` с явной регистрацией типов.
 
 ```kotlin
-@Serializable
-data object HomeRoute : NavKey
-
-@Serializable
-data object CalculatorRoute : NavKey
-
 @Serializable
 data object LoginRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
-            subclass(HomeRoute::class, HomeRoute.serializer())
-            subclass(CalculatorRoute::class, CalculatorRoute.serializer())
             subclass(LoginRoute::class, LoginRoute.serializer())
         }
     }
 }
 ```
 
----
-
 ## NavDisplay + entryProvider
 
 ```kotlin
 @Composable
 fun AppNavigation() {
-    val backStack = rememberNavBackStack(navConfig, HomeRoute)
+    val backStack = rememberNavBackStack(navConfig, LoginRoute)
 
     NavDisplay(
         backStack = backStack,
-        onBack = { backStack.removeLastOrNull() },
+        onBack = {
+            if (backStack.size > 1) {
+                backStack.removeLastOrNull()
+            }
+        },
         entryProvider = entryProvider<NavKey> {
-            entry<HomeRoute> { _ ->
-                HomeScreen(
-                    onNavigateToCalculator = { backStack += CalculatorRoute },
-                    onNavigateToLogin = { backStack += LoginRoute },
-                )
-            }
-            entry<CalculatorRoute> { _ ->
-                CalculatorScreen(onBack = { backStack.removeLastOrNull() })
-            }
             entry<LoginRoute> { _ ->
                 LoginScreen(
-                    onBack = { backStack.removeLastOrNull() },
-                    onLoginSuccess = {
-                        backStack.clear()
-                        backStack += HomeRoute
-                    },
+                    onLoginSuccess = {},
                 )
             }
-        }
+        },
     )
 }
 ```
 
----
-
 ## Навигационные действия
 
 ```kotlin
-backStack += CalculatorRoute           // перейти вперёд
-backStack += LoginRoute                // перейти на авторизацию
-backStack.removeLastOrNull()           // назад
-backStack.clear(); backStack += HomeRoute  // сброс к корню
+backStack += LoginRoute
+if (backStack.size > 1) backStack.removeLastOrNull()
 ```
 
-## Текущие маршруты
-
-| Route | Экран |
-|---|---|
-| `HomeRoute` | `HomeScreen` |
-| `CalculatorRoute` | `CalculatorScreen` |
-| `LoginRoute` | `LoginScreen` |
-
----
+Успешный login не сбрасывает stack на home-экран: auth-root сам переключается в logged-in placeholder state.
 
 ## Настройка Gradle
 
 В `composeApp/build.gradle.kts`:
+
 ```kotlin
 plugins {
     alias(libs.plugins.kotlinx.serialization)
@@ -107,8 +83,6 @@ commonMain.dependencies {
     implementation(libs.kotlinx.serialization.json)
 }
 ```
-
----
 
 ## Добавление нового маршрута
 
@@ -124,8 +98,6 @@ subclass(NewFeatureRoute::class, NewFeatureRoute.serializer())
 // 3. Добавить entry в entryProvider
 entry<NewFeatureRoute> { _ -> NewFeatureScreen(...) }
 ```
-
----
 
 ## Необходимые импорты
 

@@ -39,5 +39,4 @@ include(":androidApp")
 include(":desktopApp")
 
 // Feature modules
-include(":feature:calculator")
 include(":feature:login")

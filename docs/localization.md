@@ -25,7 +25,7 @@ feature/<name>/src/commonMain/composeResources/
 Формат: **`{feature}_{screen}_{type}_{name}`**
 
 ```
-feature   — имя feature-модуля (calculator, ...)
+feature   — имя feature-модуля (login, ...)
 screen    — экран или секция (main, settings, common)
 type      — тип элемента (см. таблицу ниже)
 name      — краткое описание содержимого
@@ -35,36 +35,36 @@ name      — краткое описание содержимого
 
 | Тип | Что это | Пример |
 |-----|---------|--------|
-| `title` | Заголовок экрана/секции | `calculator_main_title` |
-| `subtitle` | Подзаголовок | `calculator_main_subtitle` |
-| `btn` | Текст кнопки | `calculator_main_btn_equals` |
-| `label` | Label поля ввода | `calculator_main_label_input` |
-| `placeholder` | Placeholder поля | `calculator_main_placeholder_value` |
-| `hint` | Подсказка под полем | `calculator_main_hint_input` |
-| `link` | Кликабельная ссылка/текст | `calculator_main_link_history` |
-| `error` | Текст ошибки | `calculator_main_error_divzero` |
-| `msg` | Информационное сообщение | `calculator_main_msg_overflow` |
-| `loading` | Текст при загрузке | `calculator_main_loading_compute` |
-| `a11y` | Accessibility (contentDescription) | `calculator_common_a11y_back` |
+| `title` | Заголовок экрана/секции | `login_login_title_screen` |
+| `subtitle` | Подзаголовок | `login_authroot_subtitle_specialist` |
+| `btn` | Текст кнопки | `login_login_btn_submit` |
+| `label` | Label поля ввода | `login_common_label_email` |
+| `placeholder` | Placeholder поля | `login_common_placeholder_email` |
+| `hint` | Подсказка под полем | `login_common_hint_email` |
+| `link` | Кликабельная ссылка/текст | `login_login_link_forgot_password` |
+| `error` | Текст ошибки | `login_common_error_auth_failed` |
+| `msg` | Информационное сообщение | `login_forgot_msg_success` |
+| `loading` | Текст при загрузке | `login_common_loading_auth` |
+| `a11y` | Accessibility (contentDescription) | `login_common_a11y_back` |
 
 ### Общие строки внутри feature
 
 Если строка одинакова на нескольких экранах модуля — используйте `common` как screen:
 
 ```xml
-<string name="calculator_common_a11y_back">Back</string>
-<string name="calculator_common_btn_clear">Clear</string>
+<string name="login_common_a11y_back">Back</string>
+<string name="login_common_btn_retry">Retry</string>
 ```
 
 ### Примеры
 
 ```xml
 <!-- Main screen -->
-<string name="calculator_main_title">Calculator</string>
-<string name="calculator_main_btn_equals">=</string>
-<string name="calculator_main_btn_clear">C</string>
-<string name="calculator_main_error_divzero">Cannot divide by zero</string>
-<string name="calculator_main_loading_compute">Computing…</string>
+<string name="login_login_title_screen">Sign in</string>
+<string name="login_login_btn_submit">Sign in</string>
+<string name="login_common_label_email">Email</string>
+<string name="login_common_error_auth_failed">Unable to sign in.</string>
+<string name="login_common_loading_auth">Signing in...</string>
 ```
 
 ---
@@ -78,28 +78,28 @@ name      — краткое описание содержимого
 3. **Использование в коде:**
    ```kotlin
    // Пакет ресурсов формируется из rootProject.name + путь модуля.
-   // Для feature/calculator: specmp.feature.calculator.generated.resources
-   import specmp.feature.calculator.generated.resources.Res
-   import specmp.feature.calculator.generated.resources.calculator_main_title
+   // Для feature/login: specmp.feature.login.generated.resources
+   import specmp.feature.login.generated.resources.Res
+   import specmp.feature.login.generated.resources.login_login_title_screen
    import org.jetbrains.compose.resources.stringResource
 
-   Text(text = stringResource(Res.string.calculator_main_title))
+   Text(text = stringResource(Res.string.login_login_title_screen))
    ```
 
 4. **Не передавать строки через ViewModel.** Строки — ответственность UI-слоя. ViewModel возвращает enum/sealed class, UI маппит в `stringResource`.
 
 5. **Параметры.** Для строк с подстановкой использовать `%s`, `%d`:
    ```xml
-   <string name="calculator_main_msg_result">Result: %s</string>
+   <string name="login_common_msg_email_sent">Email sent to %s</string>
    ```
    ```kotlin
-   stringResource(Res.string.calculator_main_msg_result, resultText)
+   stringResource(Res.string.login_common_msg_email_sent, email)
    ```
 
 6. **Plurals** не поддерживаются CMP напрямую. Используйте несколько ключей или `when` в коде:
    ```xml
-   <string name="calculator_history_one">%d entry</string>
-   <string name="calculator_history_other">%d entries</string>
+   <string name="login_common_one_attempt">%d attempt</string>
+   <string name="login_common_other_attempts">%d attempts</string>
    ```
 
 ---

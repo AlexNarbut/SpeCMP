@@ -3,6 +3,8 @@
     <string name="login_common_a11y_back">Назад</string>
     <string name="login_common_a11y_language_en">Переключить язык на английский</string>
     <string name="login_common_a11y_language_ru">Переключить язык на русский</string>
+    <string name="login_common_a11y_show_password">Показать пароль</string>
+    <string name="login_common_a11y_hide_password">Скрыть пароль</string>
     <string name="login_common_btn_language_en">EN</string>
     <string name="login_common_btn_language_ru">RU</string>
     <string name="login_common_btn_done">Готово</string>
@@ -11,7 +13,7 @@
     <string name="login_common_btn_logout">Выйти</string>
     <string name="login_common_btn_retry">Повторить</string>
     <string name="login_common_label_email">Email</string>
-    <string name="login_common_label_login_email">Логин или email</string>
+    <string name="login_common_label_login_email">Email</string>
     <string name="login_common_label_password">Пароль</string>
     <string name="login_common_label_full_name">ФИО</string>
     <string name="login_common_label_phone">Номер телефона</string>
@@ -19,8 +21,12 @@
     <string name="login_common_error_activation_resend_failed">Не удалось отправить письмо подтверждения. Попробуйте позже.</string>
     <string name="login_common_error_session_check_failed">Не удалось проверить статус авторизации. Попробуйте снова.</string>
     <string name="login_common_error_logout_failed">Не удалось выйти. Попробуйте снова.</string>
+    <string name="login_common_error_registration_failed">Не удалось зарегистрироваться. Попробуйте позже.</string>
+    <string name="login_common_error_reset_password_failed">Не удалось восстановить пароль. Попробуйте позже.</string>
     <string name="login_common_error_required_fields">Заполните обязательные поля.</string>
     <string name="login_common_loading_auth">Выполняем вход...</string>
+    <string name="login_common_loading_session_check">Проверяем статус авторизации...</string>
+    <string name="login_common_loading_registration">Регистрируем...</string>
     <string name="login_common_loading_logout">Выходим...</string>
     <string name="login_common_loading_send_email">Отправляем письмо...</string>
 
