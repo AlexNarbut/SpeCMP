@@ -1,0 +1,147 @@
+/* ============================================================
+   Pandora Spec — Color roles (Material 3, seed #2C3639)
+   Palette matched to the real app screenshots (Pandora Спец):
+   • Light  — neutral light-grey chrome, near-black ink, navy-blue
+              line icons / accent, muted-grey secondary text.
+   • Dark   — desaturated dark-navy background, near-white ink,
+              bright-blue accent, blue-grey secondary text.
+   Designer works with ROLES, not raw hex; every "on*" role is the
+   correct text/icon color on its matching surface.
+   Light = :root default. Dark = [data-theme="dark"].
+
+   The surfaceContainer* ladder is DERIVED via color-mix from
+   surface→onSurface (keeps elevation on-palette in both themes).
+   Domain tokens: --success and the CAN/LIN wiring-bus colors.
+   ============================================================ */
+
+:root {
+  /* Seed (brand base) — reference only */
+  --seed: #2C3639;
+
+  /* ── Primary — navy-blue accent (line icons, CTAs, links) ── */
+  --primary: #1A3E7A;
+  --on-primary: #FFFFFF;
+  --primary-container: #D8E2F8;
+  --on-primary-container: #07203F;
+
+  /* ── Secondary ── */
+  --secondary: #3F5A82;
+  --on-secondary: #FFFFFF;
+  --secondary-container: #DAE3F3;
+  --on-secondary-container: #16243B;
+
+  /* ── Tertiary ── */
+  --tertiary: #2C6A6E;
+  --on-tertiary: #FFFFFF;
+  --tertiary-container: #C9EAEC;
+  --on-tertiary-container: #062A2C;
+
+  /* ── Error ── */
+  --error: #C62828;
+  --on-error: #FFFFFF;
+  --error-container: #FBDAD7;
+  --on-error-container: #410004;
+
+  /* ── Background / Surface — neutral light grey chrome ── */
+  --background: #ECECEC;
+  --on-background: #262626;
+  --surface: #F3F3F3;
+  --on-surface: #262626;
+  --surface-variant: #E1E1E1;
+  --on-surface-variant: #8E8E8E;
+
+  /* ── Outline ── */
+  --outline: #BDBDBD;
+  --outline-variant: #D7D7D7;
+
+  /* ── Scrim / Shadow / Tint / Inverse ── */
+  --scrim: #000000;
+  --shadow: #000000;
+  --surface-tint: #1A3E7A;
+  --inverse-surface: #2E3340;
+  --inverse-on-surface: #F0F1F3;
+  --inverse-primary: #9CC0F5;
+
+  /* ── Surface ladder (DERIVED — elevation by tone) ── */
+  --surface-container-lowest: #FFFFFF;
+  --surface-container-low: color-mix(in srgb, var(--surface) 97%, var(--on-surface));
+  --surface-container: color-mix(in srgb, var(--surface) 95%, var(--on-surface));
+  --surface-container-high: color-mix(in srgb, var(--surface) 93%, var(--on-surface));
+  --surface-container-highest: color-mix(in srgb, var(--surface) 91%, var(--on-surface));
+  --surface-dim: color-mix(in srgb, var(--surface) 89%, var(--on-surface));
+  --surface-bright: var(--surface);
+
+  /* ── Domain tokens (Pandora Spec) ── */
+  --success: #79BD5B;          /* @kind color */
+  --bus-can1: #183C7A;         /* @kind color */
+  --bus-can2: #183C7A;         /* @kind color */
+  --bus-can3: #183C7A;         /* @kind color */
+  --bus-lin: #183C7A;          /* @kind color */
+  --bus-unknown: #183C7A;      /* @kind color */
+}
+
+[data-theme="dark"] {
+  --seed: #2C3639;
+
+  /* ── Primary — bright blue accent ── */
+  --primary: #4AA3EA;
+  --on-primary: #04243F;
+  --primary-container: #1C3A5E;
+  --on-primary-container: #CFE3FF;
+
+  /* ── Secondary ── */
+  --secondary: #9DBCE6;
+  --on-secondary: #14293F;
+  --secondary-container: #2C435F;
+  --on-secondary-container: #DAE6F8;
+
+  /* ── Tertiary ── */
+  --tertiary: #84CFD2;
+  --on-tertiary: #003739;
+  --tertiary-container: #1F4E50;
+  --on-tertiary-container: #C9EAEC;
+
+  /* ── Error ── */
+  --error: #FFB4AB;
+  --on-error: #690005;
+  --error-container: #93000A;
+  --on-error-container: #FFDAD6;
+
+  /* ── Background / Surface — desaturated dark navy ── */
+  --background: #1F2636;
+  --on-background: #ECEEF2;
+  --surface: #1F2636;
+  --on-surface: #ECEEF2;
+  --surface-variant: #39435A;
+  --on-surface-variant: #9AA4B8;
+
+  /* ── Outline ── */
+  --outline: #5B647A;
+  --outline-variant: #39435A;
+
+  /* ── Scrim / Shadow / Tint / Inverse ── */
+  --scrim: #000000;
+  --shadow: #000000;
+  --surface-tint: #4AA3EA;
+  --inverse-surface: #ECEEF2;
+  --inverse-on-surface: #1F2636;
+  --inverse-primary: #1A3E7A;
+
+  /* Surface ladder derived; in dark, mixing toward the light onSurface
+     lightens with elevation (matches the lighter title bar / hover). */
+  --surface-container-lowest: color-mix(in srgb, var(--surface) 96%, #000);
+  --surface-container-low: color-mix(in srgb, var(--surface) 95%, var(--on-surface));
+  --surface-container: color-mix(in srgb, var(--surface) 92%, var(--on-surface));
+  --surface-container-high: color-mix(in srgb, var(--surface) 89%, var(--on-surface));
+  --surface-container-highest: color-mix(in srgb, var(--surface) 86%, var(--on-surface));
+  --surface-dim: var(--surface);
+  --surface-bright: color-mix(in srgb, var(--surface) 84%, var(--on-surface));
+
+  /* Domain tokens keep their hue across themes */
+  --success: #79BD5B;          /* @kind color */
+  --bus-can1: #4C7AD0;         /* @kind color */
+  --bus-can2: #4C7AD0;         /* @kind color */
+  --bus-can3: #4C7AD0;         /* @kind color */
+  --bus-lin: #4C7AD0;          /* @kind color */
+  --bus-unknown: #4C7AD0;      /* @kind color */
+}

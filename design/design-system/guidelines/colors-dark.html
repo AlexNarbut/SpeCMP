@@ -1,0 +1,27 @@
+<!-- @dsCard group="Colors" viewport="700x170" name="Dark theme" subtitle="Same roles, dark values — primary · surface ladder" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body[data-theme="dark"] { font-family: var(--font-sans); background: var(--background); padding: 16px; }
+  .row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .sw { flex: 1; height: 60px; border-radius: 8px; padding: 8px 10px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--outline-variant); }
+  .name { font-size: 12px; font-weight: 600; }
+  .hex { font-family: var(--font-mono); font-size: 10px; opacity: .8; }
+</style>
+</head>
+<body data-theme="dark">
+<div class="row">
+  <div class="sw" style="background: var(--primary); color: var(--on-primary);"><span class="name">primary</span><span class="hex">#4AA3EA</span></div>
+  <div class="sw" style="background: var(--primary-container); color: var(--on-primary-container);"><span class="name">primaryContainer</span><span class="hex">#1C3A5E</span></div>
+</div>
+<div class="row">
+  <div class="sw" style="background: var(--surface); color: var(--on-surface);"><span class="name">surface</span><span class="hex">#1F2636</span></div>
+  <div class="sw" style="background: var(--surface-container); color: var(--on-surface);"><span class="name">surfaceContainer</span><span class="hex">+tone</span></div>
+  <div class="sw" style="background: var(--surface-container-highest); color: var(--on-surface);"><span class="name">surfaceHighest</span><span class="hex">+tone</span></div>
+</div>
+</body>
+</html>
