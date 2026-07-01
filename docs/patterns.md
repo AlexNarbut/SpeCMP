@@ -108,7 +108,7 @@ when (state) {
 ```kotlin
 // composeApp/.../App.kt
 KoinApplication(application = {
-    modules(commonModule, specialistModule, loginModule, platformLoginRepositoryModule)
+    modules(commonModule, specialistModule, loginModule)
 }) {
     AppTheme(onThemeChanged) { AppNavigation() }
 }

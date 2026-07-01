@@ -71,10 +71,14 @@ applyAppLocale(AppLocale.Russian)
 **Содержит:**
 - `specialistModule` - Koin-модуль, который создаёт `SpecialistApp`
 - Регистрацию конкретных SDK interactor-ов для feature-модулей
+- `SpecialistDeviceInformationProvider` - узкий provider device information для SDK
+- Platform-specific реализацию `AppDeviceInformation` для Android, iOS и JVM/Desktop
 
 **Правило:**
 Feature-модули не создают `SpecialistApp` и не принимают его целиком в конструкторах. Вместо
-этого они получают конкретные SDK interactor-ы или use case-обёртки, которые им нужны.
+этого они получают конкретные SDK interactor-ы, use case-обёртки или узкие provider-ы, которые им нужны.
+Если SDK доступен в common-коде, feature-репозиторий и DI должны оставаться в `commonMain`;
+в platform source set выносится только действительно platform-specific код.
 
 ### core/ui
 **UI компоненты и утилиты** для Compose Multiplatform.

@@ -33,16 +33,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(libs.alarmtrade.specialist)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.koin.core)
-        }
-
-        androidMain.dependencies {
-            implementation(libs.alarmtrade.specialist)
-        }
-
-        jvmMain.dependencies {
-            implementation(libs.alarmtrade.specialist)
         }
     }
 }

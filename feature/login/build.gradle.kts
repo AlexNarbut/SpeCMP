@@ -31,6 +31,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
+            implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
@@ -40,13 +41,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-        }
 
-        androidMain.dependencies {
-            implementation(libs.alarmtrade.specialist)
-        }
-
-        jvmMain.dependencies {
             implementation(libs.alarmtrade.specialist)
         }
     }

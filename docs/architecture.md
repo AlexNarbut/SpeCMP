@@ -56,6 +56,7 @@ core/common ──┬── core/network
 - Пакет: `ru.alarmtrade.specmp.core.specialist`
 - `specialistModule` — Koin-модуль инициализации `SpecialistApp`
 - Регистрирует app-level SDK singleton и конкретные SDK interactors для feature-модулей
+- Содержит platform-specific сборку `AppDeviceInformation` для Specialist SDK
 - `feature/*` не создают `SpecialistApp` самостоятельно и зависят только от нужных SDK interactors
 
 ### core/ui
@@ -145,7 +146,7 @@ Feature-модули:
 - **НЕ объявляют** app-level типы и сервисы (`AppLocale`, глобальные settings, SDK app-контейнеры, root navigation/DI). Такие типы создаются в `core/*` или `composeApp`.
 
 Текущие feature-модули:
-- `feature/login` — авторизация специалиста. Общие `domain`, `presentation` и use case-слои живут в `commonMain`; app-level инициализация `SpecialistApp` живёт в `core/specialist`, Android/JVM-реализация репозитория получает только нужные SDK interactors, а iOS использует явную unavailable-реализацию репозитория до появления совместимой iOS-интеграции auth SDK.
+- `feature/login` — авторизация специалиста. `domain`, `data`, `presentation`, use case-слои и DI фичи живут в `commonMain`; app-level инициализация `SpecialistApp` и platform-specific `AppDeviceInformation` живут в `core/specialist`. Репозиторий фичи получает только нужные SDK interactors и provider device information, не создаёт `SpecialistApp` и не содержит platform-specific DI.
   `LoginRepository` описывает auth-операции (`login`, `signUp`, `resetPassword`, `resendActivationEmail`, `isLoggedIn`, `logout`) и возвращает результаты через `Response<T>`.
 
 **Зависимости feature-модулей от core:**

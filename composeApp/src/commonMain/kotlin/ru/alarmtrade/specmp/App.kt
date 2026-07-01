@@ -6,7 +6,6 @@ import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.specialist.specialistModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.feature.login.di.loginModule
-import ru.alarmtrade.specmp.feature.login.di.platformLoginRepositoryModule
 import ru.alarmtrade.specmp.navigation.AppNavigation
 import org.koin.compose.KoinApplication
 
@@ -16,7 +15,7 @@ fun App(
     onThemeChanged: @Composable (isDark: Boolean) -> Unit = {}
 ) {
     KoinApplication(application = {
-        modules(commonModule, specialistModule, loginModule, platformLoginRepositoryModule)
+        modules(commonModule, specialistModule, loginModule)
     }) {
         AppTheme(onThemeChanged) {
             AppNavigation()

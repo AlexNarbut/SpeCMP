@@ -1,14 +1,12 @@
 package ru.alarmtrade.specmp.feature.login.data.repository
 
-import android.os.Build
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
-import ru.alarmtrade.common.app.domain.AppDeviceInformation
-import ru.alarmtrade.common.app.domain.DeviceType
 import ru.alarmtrade.common.app.interactors.appInformation.requests.SaveAppDeviceInformationRequest
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.specialist.SpecialistDeviceInformationProvider
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
@@ -25,6 +23,7 @@ import ru.alarmtrade.specialist.interactors.auth.requests.SignUpRequest
 class SpecialistLoginRepository(
     private val authInteractor: AuthInteractor,
     private val appDeviceInformationInteractor: AppDeviceInformationInteractor,
+    private val deviceInformationProvider: SpecialistDeviceInformationProvider,
     private val dispatchers: AppDispatchers,
 ) : LoginRepository {
 
@@ -147,7 +146,7 @@ class SpecialistLoginRepository(
     private suspend fun saveDeviceInformation(): Response<Unit> {
         return when (
             val response = appDeviceInformationInteractor.saveAppDeviceInformationUseCase.execute(
-                SaveAppDeviceInformationRequest(createAppDeviceInformation())
+                SaveAppDeviceInformationRequest(deviceInformationProvider.create())
             )
         ) {
             is SpecialistResponse.Success -> Response.Success(Unit)
@@ -159,25 +158,6 @@ class SpecialistLoginRepository(
         return Response.Error(
             exception = exception,
             message = message ?: exception.message,
-        )
-    }
-
-    private fun createAppDeviceInformation(): AppDeviceInformation {
-        val model = listOfNotNull(
-            Build.MANUFACTURER,
-            Build.MODEL,
-        )
-            .joinToString(separator = " ")
-            .trim()
-            .ifBlank { "Android device" }
-
-        val osVersion = "Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})"
-        val fingerprint = Build.FINGERPRINT.ifBlank { model }
-
-        return AppDeviceInformation(
-            deviceId = fingerprint,
-            deviceType = DeviceType.ANDROID,
-            deviceDescription = "$model, $osVersion, SpeCMP",
         )
     }
 }
