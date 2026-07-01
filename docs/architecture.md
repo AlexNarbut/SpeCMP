@@ -4,7 +4,9 @@
 
 ```
 core/common ──┬── core/network
-              └── core/ui
+              ├── core/ui
+              ├── core/localization
+              └── core/specialist
                     ▲
                     │
               feature/* (будущие)
@@ -24,6 +26,12 @@ core/common ──┬── core/network
 - `composeApp` — общая Compose UI библиотека (зависит от всех core и feature модулей), точка входа: `App()`
 - Платформенные приложения (`androidApp`, `desktopApp`, `iosApp`) — только тонкие обёртки
 
+**Правило границ feature-модулей:**
+- `feature/*` не владеют app-level инфраструктурой: глобальной локалью, темой приложения, SDK-контейнерами, платформенной инициализацией сторонних библиотек, глобальными настройками, навигационным composition root и DI-модулями всего приложения.
+- Если функциональность может понадобиться двум и более фичам или описывает состояние всего приложения, она должна жить в `core/*` или подключаться в `composeApp`, а feature-модуль должен только зависеть от узкого публичного API.
+- Feature-репозитории не принимают "большие" SDK/application-контейнеры вроде `SpecialistApp`. В конструктор передаются только конкретные interactors/use cases/data sources, реально используемые классом.
+- Feature DI-модуль регистрирует только зависимости своей фичи. Создание singleton-ов внешних SDK и platform/app-wide объектов выполняется в профильном `core/*` модуле или в `composeApp`.
+
 ---
 
 ## Зона ответственности модулей
@@ -38,6 +46,17 @@ core/common ──┬── core/network
 ### core/network
 - Пакет: `ru.alarmtrade.specmp.core.network`
 - `HttpClientFactory` — Ktor HttpClient (OkHttp на Android, Darwin на iOS)
+
+### core/localization
+- Пакет: `ru.alarmtrade.specmp.core.localization`
+- `AppLocale` — поддерживаемые языки приложения
+- `currentAppLocale()` / `applyAppLocale()` — platform-specific чтение и применение локали приложения
+
+### core/specialist
+- Пакет: `ru.alarmtrade.specmp.core.specialist`
+- `specialistModule` — Koin-модуль инициализации `SpecialistApp`
+- Регистрирует app-level SDK singleton и конкретные SDK interactors для feature-модулей
+- `feature/*` не создают `SpecialistApp` самостоятельно и зависят только от нужных SDK interactors
 
 ### core/ui
 - Пакет: `ru.alarmtrade.specmp.core.ui`
@@ -123,9 +142,10 @@ Feature-модули:
 - Являются Kotlin Multiplatform библиотеками
 - Подключаются в `:composeApp` для интеграции в UI
 - **НЕ импортируют** `androidx.compose.material.icons` напрямую — иконки берутся из `CmpIcons` enum в `core/ui`, либо подключаются как compose resources модуля
+- **НЕ объявляют** app-level типы и сервисы (`AppLocale`, глобальные settings, SDK app-контейнеры, root navigation/DI). Такие типы создаются в `core/*` или `composeApp`.
 
 Текущие feature-модули:
-- `feature/login` — авторизация специалиста. Общие `domain`, `presentation` и use case-слои живут в `commonMain`; адаптер `SpecialistApp` подключён в `androidMain` и `jvmMain`, а iOS использует явную unavailable-реализацию репозитория до появления совместимой iOS-интеграции auth SDK.
+- `feature/login` — авторизация специалиста. Общие `domain`, `presentation` и use case-слои живут в `commonMain`; app-level инициализация `SpecialistApp` живёт в `core/specialist`, Android/JVM-реализация репозитория получает только нужные SDK interactors, а iOS использует явную unavailable-реализацию репозитория до появления совместимой iOS-интеграции auth SDK.
   `LoginRepository` описывает auth-операции (`login`, `signUp`, `resetPassword`, `resendActivationEmail`, `isLoggedIn`, `logout`) и возвращает результаты через `Response<T>`.
 
 **Зависимости feature-модулей от core:**
@@ -133,6 +153,7 @@ Feature-модули:
 | Зависимость | Что даёт | Когда нужна |
 |-------------|----------|-------------|
 | `:core:common` | `Response<T>`, `ResponseExt`, `AppDispatchers` | **Всегда** — каждый feature-модуль обязан зависеть от `core:common` |
+| `:core:localization` | `AppLocale`, чтение/применение локали приложения | Если фича показывает переключение языка или зависит от текущей локали |
 | `:core:ui` | `LCEState<T>`, `LCEStateExt`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
 | `:core:network` | `HttpClientFactory`, Ktor-клиент | Только если фича работает с сетью |
 

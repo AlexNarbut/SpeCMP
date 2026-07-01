@@ -35,11 +35,11 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.localization.applyAppLocale
+import ru.alarmtrade.specmp.core.localization.currentAppLocale
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthErrorMessage
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLanguageSegment
-import ru.alarmtrade.specmp.feature.login.presentation.locale.AppLocale
-import ru.alarmtrade.specmp.feature.login.presentation.locale.applyAppLocale
-import ru.alarmtrade.specmp.feature.login.presentation.locale.currentAppLocale
 import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.loggedinplaceholder.LoggedInPlaceholderScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreen

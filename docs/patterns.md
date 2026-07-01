@@ -108,7 +108,7 @@ when (state) {
 ```kotlin
 // composeApp/.../App.kt
 KoinApplication(application = {
-    modules(commonModule, loginModule, platformLoginModule)
+    modules(commonModule, specialistModule, loginModule, platformLoginRepositoryModule)
 }) {
     AppTheme(onThemeChanged) { AppNavigation() }
 }
@@ -124,6 +124,14 @@ val myFeatureModule = module {
 val viewModel = koinViewModel<MyViewModel>()
 val dep = koinInject<MyDependency>()
 ```
+
+**Границы DI и app-level инфраструктуры:**
+- `composeApp` подключает все Koin-модули приложения и является composition root.
+- `core/*` модули владеют переиспользуемой инфраструктурой и app-level integration DI: локаль, SDK initialization, общие settings, network/client factories, UI theme primitives.
+- `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, use cases, mappers, ViewModel.
+- Feature-модули не создают singleton внешнего SDK/application container (`SpecialistApp` и аналоги). Такой singleton создаётся в профильном `core/*` модуле или в `composeApp`.
+- В конструкторы feature-классов передаются узкие зависимости (`AuthInteractor`, конкретный SDK use case, data source), а не цельный SDK/application container. Так по сигнатуре видно, что реально использует класс, и фича не становится владельцем всего SDK.
+- Если при разработке feature понадобилась глобальная возможность приложения, сначала добавь/расширь профильный `core/*` API и документацию, затем используй этот API из feature.
 
 Чеклист при добавлении фичи:
 1. Добавить зависимость модуля в `composeApp/build.gradle.kts`

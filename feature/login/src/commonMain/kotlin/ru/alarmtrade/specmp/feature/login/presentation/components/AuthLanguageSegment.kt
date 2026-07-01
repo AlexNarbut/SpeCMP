@@ -21,7 +21,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.login.presentation.locale.AppLocale
+import ru.alarmtrade.specmp.core.localization.AppLocale
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_a11y_language_en
 import specmp.feature.login.generated.resources.login_common_a11y_language_ru

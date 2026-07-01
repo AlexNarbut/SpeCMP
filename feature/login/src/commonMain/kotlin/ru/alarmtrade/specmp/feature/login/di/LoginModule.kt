@@ -14,7 +14,7 @@ import ru.alarmtrade.specmp.feature.login.presentation.screen.authroot.AuthRootV
 import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordScreenViewModel
 import ru.alarmtrade.specmp.feature.login.presentation.screen.registration.RegistrationScreenViewModel
 
-expect val platformLoginModule: Module
+expect val platformLoginRepositoryModule: Module
 
 val loginModule = module {
     factoryOf(::LoginUseCase)

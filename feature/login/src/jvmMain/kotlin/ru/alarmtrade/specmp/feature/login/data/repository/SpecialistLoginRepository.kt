@@ -13,15 +13,17 @@ import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
-import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.domain.errors.UserIsNotConfirmed
+import ru.alarmtrade.specialist.interactors.appDevice.AppDeviceInformationInteractor
+import ru.alarmtrade.specialist.interactors.auth.AuthInteractor
 import ru.alarmtrade.specialist.interactors.auth.requests.LoginRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.ResendActivationEmailRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.ResetPasswordRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.SignUpRequest
 
 class SpecialistLoginRepository(
-    private val specialistApp: SpecialistApp,
+    private val authInteractor: AuthInteractor,
+    private val appDeviceInformationInteractor: AppDeviceInformationInteractor,
     private val dispatchers: AppDispatchers,
 ) : LoginRepository {
 
@@ -31,7 +33,7 @@ class SpecialistLoginRepository(
                 is Response.Success -> Unit
                 is Response.Error -> return@runAuthRequest response
             }
-            when (val response = specialistApp.authInteractor.loginUseCase.execute(credentials.toLoginRequest())) {
+            when (val response = authInteractor.loginUseCase.execute(credentials.toLoginRequest())) {
                 is SpecialistResponse.Success -> Response.Success(LoginResult.Authorized)
                 is SpecialistResponse.Error -> {
                     if (response.exception is UserIsNotConfirmed) {
@@ -46,7 +48,7 @@ class SpecialistLoginRepository(
 
     override suspend fun signUp(credentials: SignUpCredentials): Response<Unit> {
         return runAuthRequest {
-            when (val response = specialistApp.authInteractor.signUpUseCase.execute(credentials.toSignUpRequest())) {
+            when (val response = authInteractor.signUpUseCase.execute(credentials.toSignUpRequest())) {
                 is SpecialistResponse.Success -> Response.Success(Unit)
                 is SpecialistResponse.Error -> response.toProjectError()
             }
@@ -56,7 +58,7 @@ class SpecialistLoginRepository(
     override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> {
         return runAuthRequest {
             when (
-                val response = specialistApp.authInteractor.resetPasswordUseCase.execute(
+                val response = authInteractor.resetPasswordUseCase.execute(
                     credentials.toResetPasswordRequest()
                 )
             ) {
@@ -73,7 +75,7 @@ class SpecialistLoginRepository(
                 is Response.Error -> return@runAuthRequest response
             }
             when (
-                val response = specialistApp.authInteractor.resendActivationEmailUseCase.execute(
+                val response = authInteractor.resendActivationEmailUseCase.execute(
                     credentials.toResendActivationEmailRequest()
                 )
             ) {
@@ -85,7 +87,7 @@ class SpecialistLoginRepository(
 
     override suspend fun isLoggedIn(): Response<Boolean> {
         return runAuthRequest {
-            when (val response = specialistApp.authInteractor.checkIfUserLoggedInUseCase.execute()) {
+            when (val response = authInteractor.checkIfUserLoggedInUseCase.execute()) {
                 is SpecialistResponse.Success -> Response.Success(response.value.boolean)
                 is SpecialistResponse.Error -> response.toProjectError()
             }
@@ -94,7 +96,7 @@ class SpecialistLoginRepository(
 
     override suspend fun logout(): Response<Unit> {
         return runAuthRequest {
-            when (val response = specialistApp.authInteractor.logoutUseCase.execute()) {
+            when (val response = authInteractor.logoutUseCase.execute()) {
                 is SpecialistResponse.Success -> Response.Success(Unit)
                 is SpecialistResponse.Error -> response.toProjectError()
             }
@@ -143,7 +145,7 @@ class SpecialistLoginRepository(
 
     private suspend fun saveDeviceInformation(): Response<Unit> {
         return when (
-            val response = specialistApp.appDeviceInformationInteractor.saveAppDeviceInformationUseCase.execute(
+            val response = appDeviceInformationInteractor.saveAppDeviceInformationUseCase.execute(
                 SaveAppDeviceInformationRequest(createAppDeviceInformation())
             )
         ) {
