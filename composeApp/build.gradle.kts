@@ -31,7 +31,9 @@ kotlin {
         commonMain.dependencies {
             // Core modules
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             implementation(project(":core:network"))
+            implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
 
             // Feature modules

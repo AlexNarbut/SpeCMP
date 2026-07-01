@@ -30,7 +30,9 @@ dependencyResolutionManagement {
 }
 // Core modules
 include(":core:common")
+include(":core:localization")
 include(":core:network")
+include(":core:specialist")
 include(":core:ui")
 
 // Main Compose Multiplatform application

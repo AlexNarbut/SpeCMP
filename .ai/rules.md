@@ -4,6 +4,7 @@
 
 - Изучай затронутую подсистему и предпочитай минимальные локальные изменения.
 - Сохраняй текущую KMP-архитектуру: `core/*` для общей инфраструктуры, `feature/*` для фич, `composeApp` как composition root, `androidApp`, `desktopApp` и `iosApp` как тонкие платформенные обёртки.
+- Не размещай app-level инфраструктуру внутри `feature/*`: глобальную локаль, SDK/application-контейнеры, инициализацию сторонних SDK, root DI/navigation, общие settings. Выноси это в профильный `core/*` модуль или composition root, а feature давай только узкие зависимости.
 - Не редактируй вручную сгенерированные `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` и вложенные `*/AGENTS.md`; меняй `.ai/*` и затем запускай `.ai/generate.sh`.
 - Не трогай автогенерируемые файлы, build outputs, `local.properties`, `.env` и другие секреты.
 - Локальные workflow-артефакты не являются source of truth проекта.
