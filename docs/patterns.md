@@ -43,7 +43,7 @@ import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
 
 | Слой | Тип | Состояния |
 |------|-----|-----------|
-| Репозитории, Use Cases | `Response<T>` | `Success<T>` / `Error` |
+| Репозитории | `Response<T>` | `Success<T>` / `Error` |
 | ViewModels, Compose | `LCEState<T>` | `None` / `Loading` / `Content<T>` / `Error` |
 
 Конвертация: `response.asLCEState { it.message ?: "Error" }`
@@ -67,8 +67,8 @@ suspend fun fetchUser(id: String): User = api.getUser(id)
 ```
 
 **Правила:**
-- ВСЕ suspend-функции в репозиториях/use cases ДОЛЖНЫ возвращать `Response<T>`
-- НИКОГДА не бросать исключения из репозиториев/use cases
+- ВСЕ suspend-функции в репозиториях ДОЛЖНЫ возвращать `Response<T>`
+- НИКОГДА не бросать исключения из репозиториев
 - Оборачивать каждую асинхронную операцию в `Response.Success` / `Response.Error`
 
 ---
@@ -77,14 +77,20 @@ suspend fun fetchUser(id: String): User = api.getUser(id)
 
 ```kotlin
 // ViewModel
-class UserViewModel(private val getUser: GetUserUseCase) : ViewModel() {
+class UserViewModel(
+    private val repository: UserRepository,
+    private val dispatchers: AppDispatchers,
+) : ViewModel() {
     private val _state = MutableStateFlow<LCEState<User>>(LCEState.None())
     val state: StateFlow<LCEState<User>> = _state.asStateFlow()
 
     fun load(id: String) {
         viewModelScope.launch {
             _state.value = LCEState.Loading()
-            _state.value = getUser(id).asLCEState { it.message ?: "Error" }
+            val response = withContext(dispatchers.io) {
+                repository.fetchUser(id)
+            }
+            _state.value = response.asLCEState { it.message ?: "Error" }
         }
     }
 }
@@ -116,7 +122,6 @@ KoinApplication(application = {
 // DI-модуль в feature/*/di/
 val myFeatureModule = module {
     singleOf(::MyRepositoryImpl) bind MyRepository::class
-    factoryOf(::MyUseCase)
     viewModelOf(::MyViewModel)
 }
 
@@ -128,9 +133,10 @@ val dep = koinInject<MyDependency>()
 **Границы DI и app-level инфраструктуры:**
 - `composeApp` подключает все Koin-модули приложения и является composition root.
 - `core/*` модули владеют переиспользуемой инфраструктурой и app-level integration DI: локаль, SDK initialization, общие settings, network/client factories, UI theme primitives.
-- `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, use cases, mappers, ViewModel.
+- `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
 - Feature-модули не создают singleton внешнего SDK/application container (`SpecialistApp` и аналоги). Такой singleton создаётся в профильном `core/*` модуле или в `composeApp`.
-- В конструкторы feature-классов передаются узкие зависимости (`AuthInteractor`, конкретный SDK use case, data source), а не цельный SDK/application container. Так по сигнатуре видно, что реально использует класс, и фича не становится владельцем всего SDK.
+- В конструкторы feature-классов передаются узкие зависимости (`AuthInteractor`, repository, data source, provider), а не цельный SDK/application container. Так по сигнатуре видно, что реально использует класс, и фича не становится владельцем всего SDK.
+- Не добавляй use case, если он только прокидывает один вызов в repository. В таком случае ViewModel может зависеть от repository напрямую; отдельный use case нужен только когда он инкапсулирует самостоятельное бизнес-правило или оркестрацию нескольких зависимостей.
 - Если при разработке feature понадобилась глобальная возможность приложения, сначала добавь/расширь профильный `core/*` API и документацию, затем используй этот API из feature.
 
 Чеклист при добавлении фичи:
@@ -396,7 +402,7 @@ viewModel.effect.collectSideEffect { effect ->
 
 | Диспетчер | Назначение |
 |-----------|-----------|
-| `dispatchers.io` | Сеть, БД, файловый I/O — в репозиториях |
+| `dispatchers.io` | Сеть, БД, файловый I/O — во ViewModel вокруг вызова repository |
 | `dispatchers.default` | Маппинг, комбинация, CPU-работа — в `flowOn()`, `withContext()` |
 | `dispatchers.main` | UI-обновления (обычно не нужен явно — `viewModelScope` уже на Main) |
 

@@ -1,10 +1,8 @@
 package ru.alarmtrade.specmp.feature.login.data.repository
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 import ru.alarmtrade.common.app.interactors.appInformation.requests.SaveAppDeviceInformationRequest
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.specialist.SpecialistDeviceInformationProvider
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
@@ -24,7 +22,6 @@ class SpecialistLoginRepository(
     private val authInteractor: AuthInteractor,
     private val appDeviceInformationInteractor: AppDeviceInformationInteractor,
     private val deviceInformationProvider: SpecialistDeviceInformationProvider,
-    private val dispatchers: AppDispatchers,
 ) : LoginRepository {
 
     override suspend fun login(credentials: LoginCredentials): Response<LoginResult> {
@@ -107,7 +104,7 @@ class SpecialistLoginRepository(
         block: suspend () -> Response<T>,
     ): Response<T> {
         return try {
-            withContext(dispatchers.io) { block() }
+            block()
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             Response.Error(e)

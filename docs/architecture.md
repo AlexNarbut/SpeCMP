@@ -29,7 +29,7 @@ core/common ──┬── core/network
 **Правило границ feature-модулей:**
 - `feature/*` не владеют app-level инфраструктурой: глобальной локалью, темой приложения, SDK-контейнерами, платформенной инициализацией сторонних библиотек, глобальными настройками, навигационным composition root и DI-модулями всего приложения.
 - Если функциональность может понадобиться двум и более фичам или описывает состояние всего приложения, она должна жить в `core/*` или подключаться в `composeApp`, а feature-модуль должен только зависеть от узкого публичного API.
-- Feature-репозитории не принимают "большие" SDK/application-контейнеры вроде `SpecialistApp`. В конструктор передаются только конкретные interactors/use cases/data sources, реально используемые классом.
+- Feature-репозитории не принимают "большие" SDK/application-контейнеры вроде `SpecialistApp`. В конструктор передаются только конкретные interactors/data sources/provider-ы, реально используемые классом.
 - Feature DI-модуль регистрирует только зависимости своей фичи. Создание singleton-ов внешних SDK и platform/app-wide объектов выполняется в профильном `core/*` модуле или в `composeApp`.
 
 ---
@@ -146,7 +146,7 @@ Feature-модули:
 - **НЕ объявляют** app-level типы и сервисы (`AppLocale`, глобальные settings, SDK app-контейнеры, root navigation/DI). Такие типы создаются в `core/*` или `composeApp`.
 
 Текущие feature-модули:
-- `feature/login` — авторизация специалиста. `domain`, `data`, `presentation`, use case-слои и DI фичи живут в `commonMain`; app-level инициализация `SpecialistApp` и platform-specific `AppDeviceInformation` живут в `core/specialist`. Репозиторий фичи получает только нужные SDK interactors и provider device information, не создаёт `SpecialistApp` и не содержит platform-specific DI.
+- `feature/login` — авторизация специалиста. `domain`, `data`, `presentation` и DI фичи живут в `commonMain`; app-level инициализация `SpecialistApp` и platform-specific `AppDeviceInformation` живут в `core/specialist`. ViewModel вызывает `LoginRepository` напрямую, управляет dispatcher boundary и клиентской валидацией submit-flow. Репозиторий фичи получает только нужные SDK interactors и provider device information, не создаёт `SpecialistApp` и не содержит platform-specific DI.
   `LoginRepository` описывает auth-операции (`login`, `signUp`, `resetPassword`, `resendActivationEmail`, `isLoggedIn`, `logout`) и возвращает результаты через `Response<T>`.
 
 **Зависимости feature-модулей от core:**

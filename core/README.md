@@ -76,7 +76,7 @@ applyAppLocale(AppLocale.Russian)
 
 **Правило:**
 Feature-модули не создают `SpecialistApp` и не принимают его целиком в конструкторах. Вместо
-этого они получают конкретные SDK interactor-ы, use case-обёртки или узкие provider-ы, которые им нужны.
+этого они получают конкретные SDK interactor-ы или узкие provider-ы, которые им нужны.
 Если SDK доступен в common-коде, feature-репозиторий и DI должны оставаться в `commonMain`;
 в platform source set выносится только действительно platform-specific код.
 
@@ -104,7 +104,7 @@ class UserViewModel : ViewModel() {
     fun loadUser(id: String) {
         viewModelScope.launch {
             _userState.value = LCEState.Loading()
-            val response = getUserUseCase(id)
+            val response = userRepository.fetchUser(id)
             _userState.value = response.asLCEState { it.message ?: "Error" }
         }
     }

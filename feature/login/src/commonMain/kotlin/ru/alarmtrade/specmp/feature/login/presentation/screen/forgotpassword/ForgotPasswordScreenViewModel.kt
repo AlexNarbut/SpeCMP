@@ -7,14 +7,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.login.domain.model.AuthValidationException
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
-import ru.alarmtrade.specmp.feature.login.domain.usecase.ResetPasswordUseCase
+import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
 class ForgotPasswordScreenViewModel(
-    private val resetPasswordUseCase: ResetPasswordUseCase,
+    private val repository: LoginRepository,
+    private val dispatchers: AppDispatchers,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ForgotPasswordScreenState())
@@ -34,7 +37,13 @@ class ForgotPasswordScreenViewModel(
         viewModelScope.launch {
             _state.update { it.copy(resetState = LCEState.Loading()) }
 
-            when (val response = resetPasswordUseCase(credentials)) {
+            val response = credentials.validationError()?.let { error ->
+                Response.Error(AuthValidationException(error))
+            } ?: withContext(dispatchers.io) {
+                repository.resetPassword(credentials)
+            }
+
+            when (response) {
                 is Response.Success -> _state.update {
                     it.copy(resetState = LCEState.Content(Unit))
                 }

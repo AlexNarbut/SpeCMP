@@ -9,21 +9,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
-import ru.alarmtrade.specmp.feature.login.domain.usecase.CheckLoginStatusUseCase
-import ru.alarmtrade.specmp.feature.login.domain.usecase.LoginUseCase
-import ru.alarmtrade.specmp.feature.login.domain.usecase.LogoutUseCase
-import ru.alarmtrade.specmp.feature.login.domain.usecase.ResendActivationEmailUseCase
+import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
 class AuthRootViewModel(
-    private val loginUseCase: LoginUseCase,
-    private val resendActivationEmailUseCase: ResendActivationEmailUseCase,
-    private val checkLoginStatusUseCase: CheckLoginStatusUseCase,
-    private val logoutUseCase: LogoutUseCase,
+    private val repository: LoginRepository,
+    private val dispatchers: AppDispatchers,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthRootState())
@@ -87,7 +84,13 @@ class AuthRootViewModel(
                 )
             }
 
-            when (val response = loginUseCase(credentials)) {
+            val response = if (credentials.isValid()) {
+                withContext(dispatchers.io) { repository.login(credentials) }
+            } else {
+                Response.Error(IllegalArgumentException())
+            }
+
+            when (response) {
                 is Response.Success -> handleLoginResult(response.value)
                 is Response.Error -> _state.update {
                     it.copy(authState = response.toLCEError(errorCode = ERROR_AUTH))
@@ -102,7 +105,13 @@ class AuthRootViewModel(
         viewModelScope.launch {
             _state.update { it.copy(activationResendState = LCEState.Loading()) }
 
-            when (val response = resendActivationEmailUseCase(credentials)) {
+            val response = if (credentials.isValid()) {
+                withContext(dispatchers.io) { repository.resendActivationEmail(credentials) }
+            } else {
+                Response.Error(IllegalArgumentException())
+            }
+
+            when (response) {
                 is Response.Success -> _state.update {
                     it.copy(activationResendState = LCEState.Content(Unit))
                 }
@@ -121,7 +130,7 @@ class AuthRootViewModel(
         viewModelScope.launch {
             _state.update { it.copy(logoutState = LCEState.Loading()) }
 
-            when (val response = logoutUseCase()) {
+            when (val response = withContext(dispatchers.io) { repository.logout() }) {
                 is Response.Success -> _state.update {
                     it.copy(
                         password = "",
@@ -156,7 +165,7 @@ class AuthRootViewModel(
                 )
             }
 
-            when (val response = checkLoginStatusUseCase()) {
+            when (val response = withContext(dispatchers.io) { repository.isLoggedIn() }) {
                 is Response.Success -> _state.update {
                     if (it.isAuthorized) {
                         it

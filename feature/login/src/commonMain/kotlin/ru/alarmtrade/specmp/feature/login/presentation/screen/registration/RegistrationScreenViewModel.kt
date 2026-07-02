@@ -7,14 +7,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.login.domain.model.AuthValidationException
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
-import ru.alarmtrade.specmp.feature.login.domain.usecase.SignUpUseCase
+import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
 class RegistrationScreenViewModel(
-    private val signUpUseCase: SignUpUseCase,
+    private val repository: LoginRepository,
+    private val dispatchers: AppDispatchers,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegistrationScreenState())
@@ -54,7 +57,13 @@ class RegistrationScreenViewModel(
         viewModelScope.launch {
             _state.update { it.copy(registrationState = LCEState.Loading()) }
 
-            when (val response = signUpUseCase(credentials)) {
+            val response = credentials.validationError()?.let { error ->
+                Response.Error(AuthValidationException(error))
+            } ?: withContext(dispatchers.io) {
+                repository.signUp(credentials)
+            }
+
+            when (response) {
                 is Response.Success -> _state.update {
                     it.copy(registrationState = LCEState.Content(Unit))
                 }
