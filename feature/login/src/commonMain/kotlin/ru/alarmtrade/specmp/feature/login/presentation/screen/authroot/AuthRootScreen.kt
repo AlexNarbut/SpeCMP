@@ -1,12 +1,14 @@
 package ru.alarmtrade.specmp.feature.login.presentation.screen.authroot
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -18,38 +20,40 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.localization.applyAppLocale
+import ru.alarmtrade.specmp.core.localization.currentAppLocale
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
-import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.core.localization.AppLocale
-import ru.alarmtrade.specmp.core.localization.applyAppLocale
-import ru.alarmtrade.specmp.core.localization.currentAppLocale
-import ru.alarmtrade.specmp.feature.login.presentation.components.AuthErrorMessage
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLanguageSegment
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthScreenChrome
 import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.loggedinplaceholder.LoggedInPlaceholderScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
 import ru.alarmtrade.specmp.feature.login.presentation.screen.registration.RegistrationScreen
 import specmp.feature.login.generated.resources.Res
+import specmp.feature.login.generated.resources.login_authroot_msg_session_error
+import specmp.feature.login.generated.resources.login_authroot_title_session_error
 import specmp.feature.login.generated.resources.login_common_a11y_back
 import specmp.feature.login.generated.resources.login_common_btn_retry
-import specmp.feature.login.generated.resources.login_common_error_session_check_failed
-import specmp.feature.login.generated.resources.login_common_loading_session_check
 import specmp.feature.login.generated.resources.login_forgot_title_screen
 import specmp.feature.login.generated.resources.login_loggedin_title_screen
 import specmp.feature.login.generated.resources.login_login_title_screen
@@ -117,45 +121,45 @@ private fun AuthRootContent(
     } else {
         destination
     }
+    val isSessionLoading = value.sessionState is LCEState.None ||
+        value.sessionState is LCEState.Loading
     val showBackButton = effectiveDestination == AuthRootDestination.Registration ||
         effectiveDestination == AuthRootDestination.ForgotPassword
 
-    CmpScaffold(
-        topBar = {
-            CmpTopAppBar(
-                title = {
-                    CmpText(
-                        text = authTitle(effectiveDestination),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                },
-                navigationIcon = {
-                    if (showBackButton) {
-                        CmpIconButton(
-                            onClick = {
-                                onDestinationChanged(AuthRootDestination.Login)
-                            },
-                            icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Res.string.login_common_a11y_back),
-                        )
-                    }
-                },
-                actions = {
-                    AuthLanguageSegment(
-                        appLocale = appLocale,
-                        onLocaleChanged = onLocaleChanged,
-                        colors = colors,
-                    )
-                },
-            )
+    AuthScreenChrome(
+        colors = colors,
+        title = {
+            if (!isSessionLoading) {
+                CmpText(
+                    text = authTitle(effectiveDestination),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
         },
-    ) { paddingValues ->
+        navigationIcon = {
+            if (!isSessionLoading && showBackButton) {
+                CmpIconButton(
+                    onClick = {
+                        onDestinationChanged(AuthRootDestination.Login)
+                    },
+                    icon = CmpIcons.ArrowBack,
+                    contentDescription = stringResource(Res.string.login_common_a11y_back),
+                )
+            }
+        },
+        actions = {
+            if (!isSessionLoading) {
+                AuthLanguageSegment(
+                    appLocale = appLocale,
+                    onLocaleChanged = onLocaleChanged,
+                    colors = colors,
+                )
+            }
+        },
+    ) {
         CmpBox(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.background)
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
         ) {
             CmpColumn(
                 modifier = Modifier
@@ -287,13 +291,9 @@ private fun AuthSessionLoading(
     CmpColumn(
         modifier = Modifier.widthIn(max = 420.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.Center,
     ) {
         CmpCircularProgressIndicator(color = colors.primary)
-        CmpText(
-            text = stringResource(Res.string.login_common_loading_session_check),
-            color = colors.onBackground,
-        )
     }
 }
 
@@ -305,17 +305,51 @@ private fun AuthSessionError(
     CmpColumn(
         modifier = Modifier.widthIn(max = 420.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        AuthErrorMessage(
-            text = stringResource(Res.string.login_common_error_session_check_failed),
-            colors = colors,
+        CmpSurface(
+            shape = CircleShape,
+            color = colors.errorContainer,
+            contentColor = colors.onErrorContainer,
+        ) {
+            CmpIcon(
+                icon = CmpIcons.AlertCircle,
+                contentDescription = null,
+                modifier = Modifier.padding(16.dp).size(40.dp),
+                tint = colors.onErrorContainer,
+            )
+        }
+        CmpText(
+            text = stringResource(Res.string.login_authroot_title_session_error),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.onBackground,
+            textAlign = TextAlign.Center,
+        )
+        CmpText(
+            text = stringResource(Res.string.login_authroot_msg_session_error),
+            fontSize = 14.sp,
+            color = colors.onBackground.copy(alpha = 0.72f),
+            textAlign = TextAlign.Center,
         )
         CmpButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResource(Res.string.login_common_btn_retry),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
             onClick = onRetrySessionCheck,
-        )
+        ) {
+            CmpRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CmpIcon(
+                    icon = CmpIcons.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                CmpText(text = stringResource(Res.string.login_common_btn_retry))
+            }
+        }
     }
 }
 
