@@ -29,4 +29,10 @@ kotlin {
             isStatic = true
         }
     }
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.multiplatformSettings)
+        }
+    }
 }

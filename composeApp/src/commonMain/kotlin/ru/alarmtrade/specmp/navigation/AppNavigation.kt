@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.feature.login.presentation.LoginScreen
 
 @Serializable
@@ -24,7 +25,10 @@ private val navConfig = SavedStateConfiguration {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    appLocale: AppLocale,
+    onLocaleChanged: (AppLocale) -> Unit,
+) {
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
 
     NavDisplay(
@@ -37,6 +41,8 @@ fun AppNavigation() {
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
                 LoginScreen(
+                    appLocale = appLocale,
+                    onLocaleChanged = onLocaleChanged,
                     onLoginSuccess = {},
                 )
             }

@@ -102,6 +102,13 @@ name      — краткое описание содержимого
    <string name="login_common_other_attempts">%d attempts</string>
    ```
 
+7. **App-level локаль живёт в `core/localization` и `composeApp`.**
+   Feature-модули не читают системный язык и не сохраняют выбранный язык самостоятельно.
+   Composition root вызывает `prepareAppLocale()` на старте, хранит `AppLocale` в Compose state
+   и передаёт в фичи только `appLocale` + `onLocaleChanged`. Пользовательский выбор из
+   switcher применяется через `applyAppLocale(locale)`: он сохраняется и переживает перезапуск.
+   Если пользователь ещё ничего не выбирал, используется системный язык устройства.
+
 ---
 
 ## Особенности CMP-ресурсов (отличия от Android AAPT)

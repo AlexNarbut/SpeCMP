@@ -39,7 +39,10 @@ private val navConfig = SavedStateConfiguration {
 
 ```kotlin
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    appLocale: AppLocale,
+    onLocaleChanged: (AppLocale) -> Unit,
+) {
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
 
     NavDisplay(
@@ -52,6 +55,8 @@ fun AppNavigation() {
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
                 LoginScreen(
+                    appLocale = appLocale,
+                    onLocaleChanged = onLocaleChanged,
                     onLoginSuccess = {},
                 )
             }

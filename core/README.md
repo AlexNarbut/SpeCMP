@@ -56,12 +56,16 @@ class UserRemoteDataSource(private val httpClient: HttpClient) {
 
 **Содержит:**
 - `AppLocale` - поддерживаемые языки приложения
-- `currentAppLocale()` - получение текущей локали приложения
-- `applyAppLocale()` - применение выбранной локали на платформе
+- `systemAppLocale()` - получение системной локали устройства
+- `currentAppLocale()` - получение эффективной локали приложения: сохранённый выбор
+  пользователя или системная локаль
+- `savedAppLocale()` - сохранённый пользовательский выбор, если он есть
+- `prepareAppLocale()` - применение эффективной локали при старте composition root
+- `applyAppLocale()` - сохранение и применение выбранной пользователем локали
 
 **Использование:**
 ```kotlin
-val locale = currentAppLocale()
+val locale = prepareAppLocale()
 applyAppLocale(AppLocale.Russian)
 ```
 

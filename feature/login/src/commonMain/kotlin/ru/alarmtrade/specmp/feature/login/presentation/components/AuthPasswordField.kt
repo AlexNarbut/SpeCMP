@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import specmp.feature.login.generated.resources.Res
@@ -25,6 +26,7 @@ fun AuthPasswordField(
     onPasswordVisibilityChanged: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    isError: Boolean = false,
     imeAction: ImeAction = ImeAction.Done,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
@@ -35,6 +37,7 @@ fun AuthPasswordField(
         label = stringResource(Res.string.login_common_label_password),
         singleLine = true,
         enabled = enabled,
+        isError = isError,
         visualTransformation = if (isPasswordVisible) {
             VisualTransformation.None
         } else {
@@ -45,6 +48,12 @@ fun AuthPasswordField(
             imeAction = imeAction,
         ),
         keyboardActions = keyboardActions,
+        leadingIcon = {
+            CmpIcon(
+                icon = CmpIcons.Lock,
+                contentDescription = null,
+            )
+        },
         trailingIcon = {
             CmpIconButton(
                 onClick = onPasswordVisibilityChanged,

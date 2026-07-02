@@ -1,5 +1,7 @@
 package ru.alarmtrade.specmp.core.localization
 
+import com.russhwolf.settings.Settings
+
 enum class AppLocale(
     val languageTag: String,
 ) {
@@ -13,6 +15,27 @@ enum class AppLocale(
     }
 }
 
-expect fun currentAppLocale(): AppLocale
+private const val AppLocaleSettingsKey = "app_locale"
 
-expect fun applyAppLocale(locale: AppLocale)
+private val appLocaleSettings: Settings by lazy { Settings() }
+
+fun currentAppLocale(): AppLocale {
+    return savedAppLocale() ?: systemAppLocale()
+}
+
+fun savedAppLocale(): AppLocale? {
+    return appLocaleSettings.getStringOrNull(AppLocaleSettingsKey)?.let(AppLocale::fromLanguageTag)
+}
+
+fun prepareAppLocale(): AppLocale {
+    return currentAppLocale().also(::applyPlatformAppLocale)
+}
+
+fun applyAppLocale(locale: AppLocale) {
+    appLocaleSettings.putString(AppLocaleSettingsKey, locale.languageTag)
+    applyPlatformAppLocale(locale)
+}
+
+expect fun systemAppLocale(): AppLocale
+
+internal expect fun applyPlatformAppLocale(locale: AppLocale)
