@@ -27,6 +27,7 @@ fun AuthPasswordField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
     imeAction: ImeAction = ImeAction.Done,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
@@ -38,6 +39,7 @@ fun AuthPasswordField(
         singleLine = true,
         enabled = enabled,
         isError = isError,
+        supportingText = supportingText,
         visualTransformation = if (isPasswordVisible) {
             VisualTransformation.None
         } else {

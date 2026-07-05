@@ -37,7 +37,9 @@ kotlin {
             implementation(project(":core:ui"))
 
             // Feature modules
+            implementation(project(":feature:auth-state"))
             implementation(project(":feature:login"))
+            implementation(project(":feature:main"))
 
             // Compose
             implementation(libs.compose.runtime)

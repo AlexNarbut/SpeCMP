@@ -11,6 +11,8 @@ import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
@@ -18,7 +20,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_btn_close
-import specmp.feature.login.generated.resources.login_common_btn_done
 import specmp.feature.login.generated.resources.login_common_error_activation_resend_failed
 import specmp.feature.login.generated.resources.login_common_loading_send_email
 import specmp.feature.login.generated.resources.login_login_btn_resend_activation
@@ -33,10 +34,11 @@ fun ActivationRequiredDialog(
     onDismissActivationRequest: () -> Unit,
 ) {
     val resendSucceeded = state.activationResendState is LCEState.Content
-    val resendError = state.activationResendState as? LCEState.Error
+    val resendFailed = state.activationResendError != null
 
     CmpDialog(
         onDismissRequest = onDismissActivationRequest,
+        icon = CmpIcons.Email.imageVector(),
         title = {
             CmpText(
                 text = stringResource(Res.string.login_login_title_confirm_email),
@@ -45,8 +47,16 @@ fun ActivationRequiredDialog(
         },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Один текстовый слот: сообщение заменяется по состоянию отправки.
                 CmpText(
-                    text = stringResource(Res.string.login_login_msg_activation_required),
+                    text = when {
+                        resendSucceeded ->
+                            stringResource(Res.string.login_login_msg_activation_email_sent)
+                        resendFailed ->
+                            stringResource(Res.string.login_common_error_activation_resend_failed)
+                        else ->
+                            stringResource(Res.string.login_login_msg_activation_required)
+                    },
                 )
                 if (state.isActivationResendLoading) {
                     CmpRow(
@@ -60,24 +70,16 @@ fun ActivationRequiredDialog(
                         CmpText(text = stringResource(Res.string.login_common_loading_send_email))
                     }
                 }
-                if (resendSucceeded) {
-                    CmpText(text = stringResource(Res.string.login_login_msg_activation_email_sent))
-                }
-                if (resendError != null) {
-                    CmpText(text = stringResource(Res.string.login_common_error_activation_resend_failed))
-                }
             }
         },
         confirmButton = {
-            CmpTextButton(
-                text = if (resendSucceeded) {
-                    stringResource(Res.string.login_common_btn_done)
-                } else {
-                    stringResource(Res.string.login_login_btn_resend_activation)
-                },
-                onClick = if (resendSucceeded) onDismissActivationRequest else onResendActivationEmail,
-                enabled = !state.isActivationResendLoading,
-            )
+            if (!resendSucceeded) {
+                CmpTextButton(
+                    text = stringResource(Res.string.login_login_btn_resend_activation),
+                    onClick = onResendActivationEmail,
+                    enabled = !state.isActivationResendLoading,
+                )
+            }
         },
         dismissButton = {
             CmpTextButton(

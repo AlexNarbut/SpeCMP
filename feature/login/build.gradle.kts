@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -35,6 +36,10 @@ kotlin {
             implementation(project(":core:ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
+
+            // Nav3-граф фичи (см. docs/navigation.md)
+            implementation(libs.compose.nav3)
+            implementation(libs.kotlinx.serialization.json)
 
             implementation(libs.kotlinx.coroutines.core)
 

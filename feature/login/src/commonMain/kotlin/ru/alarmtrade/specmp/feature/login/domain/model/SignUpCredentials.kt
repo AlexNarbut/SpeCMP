@@ -11,14 +11,19 @@ data class SignUpCredentials(
     val normalizedEmail: String = email.trim()
     val normalizedPhoneNumber: String = phoneNumber.trim()
 
-    fun validationError(): SignUpValidationError? {
-        return when {
-            normalizedFullName.isBlank() -> SignUpValidationError.EmptyFullName
-            normalizedEmail.isBlank() -> SignUpValidationError.EmptyEmail
-            normalizedPhoneNumber.isBlank() -> SignUpValidationError.EmptyPhoneNumber
-            password.isBlank() -> SignUpValidationError.EmptyPassword
-            !isInstallerConfirmed -> SignUpValidationError.InstallerNotConfirmed
-            else -> null
+    fun validationErrors(): Set<SignUpValidationError> {
+        return buildSet {
+            if (normalizedFullName.isBlank()) add(SignUpValidationError.InvalidFullName)
+            if (!EMAIL_REGEX.matches(normalizedEmail)) add(SignUpValidationError.InvalidEmail)
+            if (!PHONE_REGEX.matches(normalizedPhoneNumber)) add(SignUpValidationError.InvalidPhoneNumber)
+            if (password.length < MIN_PASSWORD_LENGTH) add(SignUpValidationError.PasswordTooShort)
         }
+    }
+
+    private companion object {
+        // Правила зафиксированы в дизайне auth-флоу (design/features/auth).
+        val EMAIL_REGEX = Regex("""^[^\s@]+@[^\s@]+\.[^\s@]+$""")
+        val PHONE_REGEX = Regex("""^[+\d][\d\s()-]{5,}$""")
+        const val MIN_PASSWORD_LENGTH = 6
     }
 }

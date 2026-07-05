@@ -104,10 +104,59 @@ name      — краткое описание содержимого
 
 7. **App-level локаль живёт в `core/localization` и `composeApp`.**
    Feature-модули не читают системный язык и не сохраняют выбранный язык самостоятельно.
-   Composition root вызывает `prepareAppLocale()` на старте, хранит `AppLocale` в Compose state
-   и передаёт в фичи только `appLocale` + `onLocaleChanged`. Пользовательский выбор из
-   switcher применяется через `applyAppLocale(locale)`: он сохраняется и переживает перезапуск.
-   Если пользователь ещё ничего не выбирал, используется системный язык устройства.
+   Composition root вызывает `prepareAppLocale()` на старте, хранит `AppLocale` в Compose state,
+   провайдит его через `LocalAppLocale` и передаёт в фичи только callback `onLocaleChanged`.
+   Пользовательский выбор из switcher применяется через `applyAppLocale(locale)`: он
+   сохраняется и переживает перезапуск. Если пользователь ещё ничего не выбирал,
+   используется системный язык устройства.
+
+---
+
+## Смена языка в рантайме — контракт
+
+Live-переключение языка — app-level механизм. Он обязан работать для **всех** фич сразу,
+а не только для той, где физически расположен переключатель.
+
+1. **Единственный механизм инвалидации строк — `LocalAppLocale` из `core/localization`.**
+   Официального API для смены локали в рантайме в CMP нет (на 1.11.x): `stringResource`
+   резолвит язык через `Locale.current`, который читает платформенную локаль
+   **нереактивно**. Поэтому `LocalAppLocale` объявлен как `staticCompositionLocalOf`:
+   смена значения статического local принудительно рекомпозирует всё поддерево
+   (без пересоздания — `remember`/back stack не сбрасываются), и `stringResource`
+   во всех модулях перечитывает уже применённую платформенную локаль.
+   Composition root (`App()`) провайдит его один раз над всем деревом:
+
+   ```kotlin
+   var appLocale by remember { mutableStateOf(prepareAppLocale()) }
+
+   CompositionLocalProvider(LocalAppLocale provides appLocale) {
+       AppTheme(onThemeChanged) {
+           AppNavigation(
+               onLocaleChanged = { locale ->
+                   applyAppLocale(locale)   // сначала платформенная локаль,
+                   appLocale = locale       // затем инвалидация дерева
+               },
+           )
+       }
+   }
+   ```
+
+2. **`key(locale)` для форс-рекомпозиции запрещён** — и в фичах, и в composition root.
+   Он пересоздаёт поддерево (сбрасывает `remember` / `rememberSaveable` / back stack)
+   и «чинит» строки только там, где написан: остальные экраны приложения смену языка
+   не увидят. Если строки не обновляются — чинить провайдер локали, а не оборачивать
+   экран в `key`.
+
+3. **Фичи не управляют локалью.** Feature-модуль:
+   - текущую локаль читает через `LocalAppLocale.current` (или получает готовый `AppLocale` параметром);
+   - о выборе пользователя сообщает только через callback `onLocaleChanged(AppLocale)`, пришедший из composition root;
+   - не вызывает `applyAppLocale` / `prepareAppLocale` и платформенные locale-API.
+
+4. **Платформенная мутация локали — только внутри `core/localization`**
+   (`Locale.setDefault`, `AppleLanguages`). Это дополнение для форматирования дат/чисел
+   и для следующего запуска, а не механизм live-обновления UI: на iOS `AppleLanguages`
+   применяется только после перезапуска процесса. Live-обновление обязано работать
+   через `LocalAppLocale` (п.1), без платформенных хаков.
 
 ---
 

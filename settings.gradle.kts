@@ -41,4 +41,6 @@ include(":androidApp")
 include(":desktopApp")
 
 // Feature modules
+include(":feature:auth-state")
 include(":feature:login")
+include(":feature:main")

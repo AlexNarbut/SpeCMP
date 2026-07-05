@@ -31,6 +31,7 @@ core/common ──┬── core/network
 - Если функциональность может понадобиться двум и более фичам или описывает состояние всего приложения, она должна жить в `core/*` или подключаться в `composeApp`, а feature-модуль должен только зависеть от узкого публичного API.
 - Feature-репозитории не принимают "большие" SDK/application-контейнеры вроде `SpecialistApp`. В конструктор передаются только конкретные interactors/data sources/provider-ы, реально используемые классом.
 - Feature DI-модуль регистрирует только зависимости своей фичи. Создание singleton-ов внешних SDK и platform/app-wide объектов выполняется в профильном `core/*` модуле или в `composeApp`.
+- Обёртки над SDK-методами (репозитории) живут в атомарных фичах, владеющих соответствующей областью (например, session-операции — в `feature/auth-state`). Экранная фича не заводит собственный репозиторий ради одного-двух вызовов — её ViewModel подключает репозиторий профильной фичи как узкую зависимость (пример: `MainScreenViewModel` → `AuthStateRepository.logout()`).
 
 ---
 
@@ -145,9 +146,9 @@ Feature-модули:
 - **НЕ импортируют** `androidx.compose.material.icons` напрямую — иконки берутся из `CmpIcons` enum в `core/ui`, либо подключаются как compose resources модуля
 - **НЕ объявляют** app-level типы и сервисы (`AppLocale`, глобальные settings, SDK app-контейнеры, root navigation/DI). Такие типы создаются в `core/*` или `composeApp`.
 
-Текущие feature-модули:
-- `feature/login` — авторизация специалиста. `domain`, `data`, `presentation` и DI фичи живут в `commonMain`; app-level инициализация `SpecialistApp` и platform-specific `AppDeviceInformation` живут в `core/specialist`. ViewModel вызывает `LoginRepository` напрямую, управляет dispatcher boundary и клиентской валидацией submit-flow. Репозиторий фичи получает только нужные SDK interactors и provider device information, не создаёт `SpecialistApp` и не содержит platform-specific DI.
-  `LoginRepository` описывает auth-операции (`login`, `signUp`, `resetPassword`, `resendActivationEmail`, `isLoggedIn`, `logout`) и возвращает результаты через `Response<T>`.
+Все feature-модули живут в `feature/*` (каждый — отдельный Gradle-модуль `:feature:<name>`).
+
+> **Описание конкретного модуля — в его `AGENTS.md`** (источник: `.ai/agents/feature/<name>/AGENTS.md` → `.ai/generate.sh`). `architecture.md` описывает только общие правила и границы, отдельные фичи здесь не перечисляются и не описываются — чтобы документ не распухал. Добавил фичу — заведи ей `AGENTS.md`, а не абзац здесь.
 
 **Зависимости feature-модулей от core:**
 

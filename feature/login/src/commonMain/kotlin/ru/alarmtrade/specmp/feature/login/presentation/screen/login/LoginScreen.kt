@@ -14,7 +14,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -53,7 +52,7 @@ fun LoginScreen(
     onDismissActivationRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isAuthError = state.authState is LCEState.Error
+    val isAuthError = state.isAuthError
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),

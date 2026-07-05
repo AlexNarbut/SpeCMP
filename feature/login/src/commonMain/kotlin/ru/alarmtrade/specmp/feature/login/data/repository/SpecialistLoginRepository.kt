@@ -82,24 +82,6 @@ class SpecialistLoginRepository(
         }
     }
 
-    override suspend fun isLoggedIn(): Response<Boolean> {
-        return runAuthRequest {
-            when (val response = authInteractor.checkIfUserLoggedInUseCase.execute()) {
-                is SpecialistResponse.Success -> Response.Success(response.value.boolean)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
-        }
-    }
-
-    override suspend fun logout(): Response<Unit> {
-        return runAuthRequest {
-            when (val response = authInteractor.logoutUseCase.execute()) {
-                is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
-        }
-    }
-
     private suspend fun <T> runAuthRequest(
         block: suspend () -> Response<T>,
     ): Response<T> {

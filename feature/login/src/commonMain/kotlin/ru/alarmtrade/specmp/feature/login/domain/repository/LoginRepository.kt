@@ -11,6 +11,4 @@ interface LoginRepository {
     suspend fun signUp(credentials: SignUpCredentials): Response<Unit>
     suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit>
     suspend fun resendActivationEmail(credentials: LoginCredentials): Response<Unit>
-    suspend fun isLoggedIn(): Response<Boolean>
-    suspend fun logout(): Response<Unit>
 }

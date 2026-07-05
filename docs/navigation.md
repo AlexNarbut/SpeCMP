@@ -9,13 +9,51 @@
 - **NavDisplay** — отображает текущий destination из back stack.
 - **NavEntry** — связывает ключ маршрута с Compose-контентом.
 
-## Текущий route graph
+## Текущая структура навигации
 
-Auth-flow является стартовым экраном приложения. Демо-экран и демонстрационные маршруты удалены из composition root.
+Верхний уровень — `AuthStateNavGraph` из `feature/auth-state`: composable-переключатель по состоянию сессии (`WAITING` / `NO_AUTH` / `AUTHED` / `CHECK_FAILED`) с fade-анимацией. Он получает слоты зон и сам решает, какая зона приложения видна:
 
-| Route | Экран |
-|---|---|
-| `LoginRoute` | `LoginScreen` / auth-root |
+```kotlin
+@Composable
+fun AppNavigation(
+    onLocaleChanged: (AppLocale) -> Unit,
+) {
+    AuthStateNavGraph(
+        waitingState = { AppStartLoading() },
+        noAuthState = { LoginNavGraph(onLocaleChanged = onLocaleChanged) },
+        authedState = { MainNavGraph() },
+        errorState = { onRetry -> SessionCheckErrorScreen(onRetry = onRetry) },
+    )
+}
+```
+
+Экраны не навигируют между зонами сами: успешный login и logout меняют состояние сессии, `AuthStateNavGraph` подхватывает изменение и переключает зону.
+
+Nav3 back stack используется **внутри каждой зоны**: `LoginNavGraph` (`feature/login`) в неавторизованной, `MainNavGraph` (`composeApp`) в авторизованной.
+
+| Route | Экран | Граф |
+|---|---|---|
+| `LoginRoute` | `LoginScreen` (`feature/login`) | `LoginNavGraph` |
+| `RegistrationRoute` | `RegistrationScreen` (`feature/login`) | `LoginNavGraph` |
+| `ForgotPasswordRoute` | `ForgotPasswordScreen` (`feature/login`) | `LoginNavGraph` |
+| `MainRoute` | `MainScreen` (`feature/main`) | `MainNavGraph` |
+
+## Навигация внутри feature
+
+Фича с несколькими экранами обязана иметь **собственный nav3-граф** внутри модуля:
+`feature/<name>/.../presentation/navigation/<Name>NavGraph.kt` — свои `NavKey`-роуты,
+свой `SavedStateConfiguration`, `rememberNavBackStack` + `NavDisplay`.
+
+- `composeApp` подключает граф фичи целиком (один composable-вызов в слоте/entry),
+  а не отдельные экраны фичи.
+- **Самодельный роутинг через enum / `mutableStateOf` / boolean-флаги запрещён.**
+  Он ломает системную кнопку «назад» (и predictive back), теряет позицию во flow
+  при пересоздании (plain `remember` не saveable) и не масштабируется на новые экраны.
+- Системный back внутри фичи обрабатывает `NavDisplay.onBack` её графа. Выход за пределы
+  фичи (смена зоны) — по-прежнему только через состояние сессии (`feature/auth-state`),
+  экраны между зонами сами не навигируют.
+- Общий каркас экранов фичи (chrome: title, back-кнопка, actions) может жить снаружи
+  `NavDisplay`; title и наличие back-кнопки выводятся из последнего ключа back stack.
 
 ## Объявление маршрутов
 
@@ -24,12 +62,12 @@ Auth-flow является стартовым экраном приложени�
 
 ```kotlin
 @Serializable
-data object LoginRoute : NavKey
+data object MainRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
-            subclass(LoginRoute::class, LoginRoute.serializer())
+            subclass(MainRoute::class, MainRoute.serializer())
         }
     }
 }
@@ -39,11 +77,8 @@ private val navConfig = SavedStateConfiguration {
 
 ```kotlin
 @Composable
-fun AppNavigation(
-    appLocale: AppLocale,
-    onLocaleChanged: (AppLocale) -> Unit,
-) {
-    val backStack = rememberNavBackStack(navConfig, LoginRoute)
+private fun MainNavGraph() {
+    val backStack = rememberNavBackStack(navConfig, MainRoute)
 
     NavDisplay(
         backStack = backStack,
@@ -53,12 +88,8 @@ fun AppNavigation(
             }
         },
         entryProvider = entryProvider<NavKey> {
-            entry<LoginRoute> { _ ->
-                LoginScreen(
-                    appLocale = appLocale,
-                    onLocaleChanged = onLocaleChanged,
-                    onLoginSuccess = {},
-                )
+            entry<MainRoute> { _ ->
+                MainScreen()
             }
         },
     )
@@ -68,11 +99,9 @@ fun AppNavigation(
 ## Навигационные действия
 
 ```kotlin
-backStack += LoginRoute
+backStack += MainRoute
 if (backStack.size > 1) backStack.removeLastOrNull()
 ```
-
-Успешный login не сбрасывает stack на home-экран: auth-root сам переключается в logged-in placeholder state.
 
 ## Настройка Gradle
 
