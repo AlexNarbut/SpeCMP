@@ -1,8 +1,0 @@
-<resources>
-    <string name="calculator_main_title">Calculator</string>
-    <string name="calculator_common_a11y_back">Back</string>
-    <string name="calculator_timer_btn_start">Start</string>
-    <string name="calculator_timer_btn_stop">Stop</string>
-    <string name="calculator_timer_btn_reset">Reset</string>
-    <string name="calculator_main_error_divzero">Cannot divide by zero</string>
-</resources>

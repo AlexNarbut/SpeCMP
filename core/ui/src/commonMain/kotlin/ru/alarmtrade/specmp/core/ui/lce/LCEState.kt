@@ -22,9 +22,9 @@ import androidx.compose.runtime.Immutable
  *
  *     fun loadUser(id: String) {
  *         viewModelScope.launch {
- *             _userState.value = LCEState.Loading()
+ *             _userState.update { LCEState.Loading() }
  *             val response = getUserUseCase(id)
- *             _userState.value = response.asLCEState { it.message ?: "Error" }
+ *             _userState.update { response.asLCEState { it.message ?: "Error" } }
  *         }
  *     }
  * }

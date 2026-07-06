@@ -16,6 +16,7 @@ plugins {
 var giteaUsername = System.getenv("GITEA_USERNAME")
 var giteaPassword = System.getenv("GITEA_PASSWORD")
 val localPropFile = file("local.properties")
+val kotlinxDatetimeVersion = libs.versions.kotlinx.datetime.get()
 
 if (localPropFile.exists()) {
     val properties = Properties().apply {
@@ -39,6 +40,15 @@ allprojects {
             credentials {
                 username = giteaUsername
                 password = giteaPassword
+            }
+        }
+    }
+
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlinx" && requested.name == "kotlinx-datetime") {
+                useVersion(kotlinxDatetimeVersion)
+                because("AlarmTrade Specialist SDK 1.1.76 iOS artifacts are built against kotlinx-datetime 0.6.2")
             }
         }
     }

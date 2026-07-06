@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="authstate_root_title_error">Couldn't verify your session</string>
+    <string name="authstate_root_msg_error">Check your connection and try again.</string>
+    <string name="authstate_root_btn_retry">Retry</string>
+</resources>

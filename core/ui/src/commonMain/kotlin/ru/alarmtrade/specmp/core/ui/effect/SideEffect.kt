@@ -26,10 +26,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
  *
  *
  * ```kotlin
- * private val _effect = sideEffectFlow<CalculatorEffect>()
- * val effect: SharedFlow<CalculatorEffect> = _effect.asSharedFlow()
+ * private val _effect = sideEffectFlow<LoginEffect>()
+ * val effect: SharedFlow<LoginEffect> = _effect.asSharedFlow()
  *
- * private fun emitEffect(effect: CalculatorEffect) { _effect.tryEmit(effect) }
+ * private fun emitEffect(effect: LoginEffect) { _effect.tryEmit(effect) }
  * ```
  */
 fun <T> sideEffectFlow(): MutableSharedFlow<T> =
@@ -48,7 +48,7 @@ fun <T> sideEffectFlow(): MutableSharedFlow<T> =
  * ```kotlin
  * viewModel.effect.collectSideEffect { effect ->
  *     when (effect) {
- *         is CalculatorEffect.NavigateBack -> onBack()
+ *         is LoginEffect.NavigateBack -> onBack()
  *     }
  * }
  * ```

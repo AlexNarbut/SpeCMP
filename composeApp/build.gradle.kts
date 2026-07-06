@@ -31,11 +31,15 @@ kotlin {
         commonMain.dependencies {
             // Core modules
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             implementation(project(":core:network"))
+            implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
 
             // Feature modules
-            implementation(project(":feature:calculator"))
+            implementation(project(":feature:auth-state"))
+            implementation(project(":feature:login"))
+            implementation(project(":feature:main"))
 
             // Compose
             implementation(libs.compose.runtime)

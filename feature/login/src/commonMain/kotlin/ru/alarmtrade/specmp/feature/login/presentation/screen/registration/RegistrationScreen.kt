@@ -1,0 +1,239 @@
+package ru.alarmtrade.specmp.feature.login.presentation.screen.registration
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
+import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthErrorBanner
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSuccessPanel
+import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldError
+import specmp.feature.login.generated.resources.Res
+import specmp.feature.login.generated.resources.login_common_btn_go_to_login
+import specmp.feature.login.generated.resources.login_common_error_email_invalid
+import specmp.feature.login.generated.resources.login_common_error_full_name_required
+import specmp.feature.login.generated.resources.login_common_error_password_short
+import specmp.feature.login.generated.resources.login_common_error_phone_invalid
+import specmp.feature.login.generated.resources.login_common_error_registration_failed
+import specmp.feature.login.generated.resources.login_common_label_email
+import specmp.feature.login.generated.resources.login_common_label_full_name
+import specmp.feature.login.generated.resources.login_common_label_phone
+import specmp.feature.login.generated.resources.login_registration_btn_back_to_login
+import specmp.feature.login.generated.resources.login_registration_btn_submit
+import specmp.feature.login.generated.resources.login_registration_label_installer_confirm
+import specmp.feature.login.generated.resources.login_registration_msg_success
+import specmp.feature.login.generated.resources.login_registration_title_success
+
+@Composable
+fun RegistrationScreen(
+    colors: CmpThemeColors,
+    onBackToLogin: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val viewModel = koinViewModel<RegistrationScreenViewModel>()
+    val state = viewModel.state.collectAsState()
+
+    DisposableEffect(viewModel) {
+        onDispose(viewModel::reset)
+    }
+
+    if (state.value.isSuccess) {
+        AuthSuccessPanel(
+            title = stringResource(Res.string.login_registration_title_success),
+            text = stringResource(Res.string.login_registration_msg_success),
+            modifier = modifier,
+            icon = CmpIcons.CheckCircle,
+            colors = colors,
+            primaryAction = {
+                AuthSubmitButton(
+                    text = stringResource(Res.string.login_common_btn_go_to_login),
+                    onClick = onBackToLogin,
+                    colors = colors,
+                )
+            },
+        )
+    } else {
+        RegistrationForm(
+            state = state,
+            colors = colors,
+            onFullNameChanged = viewModel::onFullNameChanged,
+            onEmailChanged = viewModel::onEmailChanged,
+            onPhoneNumberChanged = viewModel::onPhoneNumberChanged,
+            onPasswordChanged = viewModel::onPasswordChanged,
+            onPasswordVisibilityChanged = viewModel::onPasswordVisibilityChanged,
+            onInstallerConfirmedChanged = viewModel::onInstallerConfirmedChanged,
+            onSubmit = viewModel::submit,
+            onBackToLogin = onBackToLogin,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun RegistrationForm(
+    state: State<RegistrationScreenState>,
+    colors: CmpThemeColors,
+    onFullNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onPhoneNumberChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onPasswordVisibilityChanged: () -> Unit,
+    onInstallerConfirmedChanged: (Boolean) -> Unit,
+    onSubmit: () -> Unit,
+    onBackToLogin: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val value = state.value
+
+    CmpColumn(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        if (value.registrationError != null) {
+            AuthErrorBanner(
+                text = stringResource(Res.string.login_common_error_registration_failed),
+                colors = colors,
+            )
+        }
+
+        CmpTextField(
+            value = value.fullName,
+            onValueChange = onFullNameChanged,
+            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(Res.string.login_common_label_full_name),
+            singleLine = true,
+            enabled = !value.isLoading,
+            isError = RegistrationFieldError.FullName in value.fieldErrors,
+            supportingText = fieldErrorText(
+                visible = RegistrationFieldError.FullName in value.fieldErrors,
+                text = Res.string.login_common_error_full_name_required,
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            leadingIcon = {
+                CmpIcon(icon = CmpIcons.Person, contentDescription = null)
+            },
+        )
+
+        CmpTextField(
+            value = value.email,
+            onValueChange = onEmailChanged,
+            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(Res.string.login_common_label_email),
+            singleLine = true,
+            enabled = !value.isLoading,
+            isError = RegistrationFieldError.Email in value.fieldErrors,
+            supportingText = fieldErrorText(
+                visible = RegistrationFieldError.Email in value.fieldErrors,
+                text = Res.string.login_common_error_email_invalid,
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next,
+            ),
+            leadingIcon = {
+                CmpIcon(icon = CmpIcons.Email, contentDescription = null)
+            },
+        )
+
+        CmpTextField(
+            value = value.phoneNumber,
+            onValueChange = onPhoneNumberChanged,
+            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(Res.string.login_common_label_phone),
+            singleLine = true,
+            enabled = !value.isLoading,
+            isError = RegistrationFieldError.Phone in value.fieldErrors,
+            supportingText = fieldErrorText(
+                visible = RegistrationFieldError.Phone in value.fieldErrors,
+                text = Res.string.login_common_error_phone_invalid,
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Next,
+            ),
+            leadingIcon = {
+                CmpIcon(icon = CmpIcons.Phone, contentDescription = null)
+            },
+        )
+
+        AuthPasswordField(
+            value = value.password,
+            onValueChange = onPasswordChanged,
+            isPasswordVisible = value.isPasswordVisible,
+            onPasswordVisibilityChanged = onPasswordVisibilityChanged,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !value.isLoading,
+            isError = RegistrationFieldError.Password in value.fieldErrors,
+            supportingText = fieldErrorText(
+                visible = RegistrationFieldError.Password in value.fieldErrors,
+                text = Res.string.login_common_error_password_short,
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    if (value.canSubmit) onSubmit()
+                },
+            ),
+        )
+
+        CmpRow(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            CmpCheckbox(
+                checked = value.isInstallerConfirmed,
+                onCheckedChange = onInstallerConfirmedChanged,
+                enabled = !value.isLoading,
+            )
+            CmpText(
+                text = stringResource(Res.string.login_registration_label_installer_confirm),
+                color = colors.onBackground,
+            )
+        }
+
+        AuthSubmitButton(
+            text = stringResource(Res.string.login_registration_btn_submit),
+            onClick = onSubmit,
+            enabled = value.canSubmit,
+            isLoading = value.isLoading,
+            colors = colors,
+        )
+
+        CmpTextButton(
+            text = stringResource(Res.string.login_registration_btn_back_to_login),
+            onClick = onBackToLogin,
+            enabled = !value.isLoading,
+        )
+    }
+}
+
+private fun fieldErrorText(
+    visible: Boolean,
+    text: StringResource,
+): (@Composable () -> Unit)? {
+    if (!visible) return null
+    return { CmpText(text = stringResource(text)) }
+}

@@ -1,6 +1,6 @@
 # core
 
-- Область: `core/common`, `core/network`, `core/ui`.
+- Область: core-модули проекта.
 - Перед изменениями читай `core/README.md`; при изменении модульных границ и зависимостей между `core`-модулями — `docs/architecture.md`.
 - Для сети переходи в `core/network/AGENTS.md`; для UI-слоя — в `core/ui/AGENTS.md`.
 - Если меняешь публичные возможности `core`-модулей, обновляй `core/README.md` и соответствующий тематический документ в `docs/`.

@@ -1,0 +1,6 @@
+# feature/main
+
+- Авторизованная зона приложения; пока placeholder-экран с logout.
+- Чисто экранная фича без собственных `domain`/`data`: `MainScreenViewModel` подключает `AuthStateRepository` из `feature/auth-state` и вызывает `logout()`.
+- После успешного выхода экран не навигирует сам — переключение обратно на login выполняет `feature/auth-state` по обновлению состояния сессии; кнопка logout остаётся заблокированной до переключения зоны.
+- Строковые ресурсы модуля — `main_*` (EN/RU) в `composeResources`.

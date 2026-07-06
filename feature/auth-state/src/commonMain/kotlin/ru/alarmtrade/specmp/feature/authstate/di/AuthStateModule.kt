@@ -1,0 +1,14 @@
+package ru.alarmtrade.specmp.feature.authstate.di
+
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.bind
+import org.koin.dsl.module
+import ru.alarmtrade.specmp.feature.authstate.data.repository.SpecialistAuthStateRepository
+import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
+import ru.alarmtrade.specmp.feature.authstate.presentation.logic.AuthStateViewModel
+
+val authStateModule = module {
+    singleOf(::SpecialistAuthStateRepository) bind AuthStateRepository::class
+    viewModelOf(::AuthStateViewModel)
+}

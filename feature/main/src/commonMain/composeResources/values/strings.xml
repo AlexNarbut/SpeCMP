@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="main_main_title_screen">You are signed in</string>
+    <string name="main_main_msg_placeholder">Your dashboard isn't ready yet — it's coming in a later version.</string>
+    <string name="main_main_btn_logout">Log out</string>
+    <string name="main_main_loading_logout">Logging out...</string>
+    <string name="main_main_error_logout_failed">Couldn't log out. Please try again.</string>
+</resources>

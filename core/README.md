@@ -51,6 +51,39 @@ class UserRemoteDataSource(private val httpClient: HttpClient) {
 }
 ```
 
+### core/localization
+**Общая локализация приложения** без зависимости от UI-фич.
+
+**Содержит:**
+- `AppLocale` - поддерживаемые языки приложения
+- `systemAppLocale()` - получение системной локали устройства
+- `currentAppLocale()` - получение эффективной локали приложения: сохранённый выбор
+  пользователя или системная локаль
+- `savedAppLocale()` - сохранённый пользовательский выбор, если он есть
+- `prepareAppLocale()` - применение эффективной локали при старте composition root
+- `applyAppLocale()` - сохранение и применение выбранной пользователем локали
+
+**Использование:**
+```kotlin
+val locale = prepareAppLocale()
+applyAppLocale(AppLocale.Russian)
+```
+
+### core/specialist
+**Интеграционный слой Specialist SDK** и единая точка его DI-инициализации.
+
+**Содержит:**
+- `specialistModule` - Koin-модуль, который создаёт `SpecialistApp`
+- Регистрацию конкретных SDK interactor-ов для feature-модулей
+- `SpecialistDeviceInformationProvider` - узкий provider device information для SDK
+- Platform-specific реализацию `AppDeviceInformation` для Android, iOS и JVM/Desktop
+
+**Правило:**
+Feature-модули не создают `SpecialistApp` и не принимают его целиком в конструкторах. Вместо
+этого они получают конкретные SDK interactor-ы или узкие provider-ы, которые им нужны.
+Если SDK доступен в common-коде, feature-репозиторий и DI должны оставаться в `commonMain`;
+в platform source set выносится только действительно platform-specific код.
+
 ### core/ui
 **UI компоненты и утилиты** для Compose Multiplatform.
 
@@ -75,7 +108,7 @@ class UserViewModel : ViewModel() {
     fun loadUser(id: String) {
         viewModelScope.launch {
             _userState.value = LCEState.Loading()
-            val response = getUserUseCase(id)
+            val response = userRepository.fetchUser(id)
             _userState.value = response.asLCEState { it.message ?: "Error" }
         }
     }
@@ -90,14 +123,15 @@ class UserViewModel : ViewModel() {
 └─────────────┘
        ▲
        │
-       ├──────────────────┐
-       │                  │
-┌─────────────┐    ┌─────────────┐
-│core/network │    │  core/ui    │
-└─────────────┘    └─────────────┘
-       ▲                  ▲
-       │                  │
-       └────────┬─────────┘
+       ├─────────────┬──────────────┬──────────────┐
+       │             │              │              │
+┌─────────────┐ ┌─────────────┐ ┌────────────┐ ┌───────────────────┐
+│core/network │ │  core/ui    │ │core/local- │ │  core/specialist  │
+│             │ │             │ │ ization    │ │                   │
+└─────────────┘ └─────────────┘ └────────────┘ └───────────────────┘
+       ▲             ▲              ▲              ▲
+       │             │              │              │
+       └─────────────┴──────────────┴──────────────┘
                 │
          ┌─────────────┐
          │  feature/*  │ ◄─── Feature модули

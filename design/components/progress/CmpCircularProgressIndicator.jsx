@@ -21,7 +21,14 @@ export function CmpCircularProgressIndicator({
     <span
       role="progressbar"
       aria-valuenow={indeterminate ? undefined : Math.round(progress * 100)}
-      style={{ display: "inline-flex", width: size, height: size, ...style }}
+      style={{
+        display: "inline-flex", width: size, height: size,
+        // Spin the whole element around its own centre. Rotating the inner
+        // <circle> instead is unreliable: SVG shapes take transform-origin
+        // from the viewport corner (0,0), so the arc orbits rather than spins.
+        ...(indeterminate ? { animation: "cmp-spin 0.9s linear infinite" } : {}),
+        ...style,
+      }}
       {...rest}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -39,14 +46,10 @@ export function CmpCircularProgressIndicator({
           strokeLinecap="round"
           strokeDasharray={`${dash} ${c}`}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={
-            indeterminate
-              ? { transformOrigin: "center", animation: "cmp-spin 1s linear infinite" }
-              : { transition: "stroke-dasharray var(--motion-standard)" }
-          }
+          style={indeterminate ? undefined : { transition: "stroke-dasharray var(--motion-standard)" }}
         />
       </svg>
-      <style>{`@keyframes cmp-spin{to{transform:rotate(270deg)}}`}</style>
+      <style>{`@keyframes cmp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
     </span>
   );
 }

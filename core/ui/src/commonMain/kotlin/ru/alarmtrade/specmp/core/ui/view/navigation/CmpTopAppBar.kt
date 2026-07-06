@@ -16,6 +16,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 enum class CmpTopAppBarStyle { Small, CenterAligned }
@@ -31,13 +32,9 @@ fun CmpTopAppBar(
     subtitle: (@Composable () -> Unit)? = null,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.background,
-        scrolledContainerColor = MaterialTheme.colorScheme.background,
-        navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
-        titleContentColor = MaterialTheme.colorScheme.onBackground,
-        actionIconContentColor = MaterialTheme.colorScheme.onBackground,
-    ),
+    containerColor: Color = Color.Unspecified,
+    contentColor: Color = Color.Unspecified,
+    colors: TopAppBarColors = cmpTopAppBarColors(containerColor, contentColor),
     style: CmpTopAppBarStyle = CmpTopAppBarStyle.Small,
 ) {
     val titleSlot: @Composable () -> Unit = if (subtitle != null) {
@@ -96,3 +93,28 @@ fun CmpTopAppBar(
     }
 }
 
+@Composable
+private fun cmpTopAppBarColors(
+    containerColor: Color,
+    contentColor: Color,
+): TopAppBarColors {
+    val colorScheme = MaterialTheme.colorScheme
+    val resolvedContainerColor = if (containerColor != Color.Unspecified) {
+        containerColor
+    } else {
+        colorScheme.background
+    }
+    val resolvedContentColor = if (contentColor != Color.Unspecified) {
+        contentColor
+    } else {
+        colorScheme.onBackground
+    }
+
+    return TopAppBarDefaults.topAppBarColors(
+        containerColor = resolvedContainerColor,
+        scrolledContainerColor = resolvedContainerColor,
+        navigationIconContentColor = resolvedContentColor,
+        titleContentColor = resolvedContentColor,
+        actionIconContentColor = resolvedContentColor,
+    )
+}

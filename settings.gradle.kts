@@ -30,7 +30,9 @@ dependencyResolutionManagement {
 }
 // Core modules
 include(":core:common")
+include(":core:localization")
 include(":core:network")
+include(":core:specialist")
 include(":core:ui")
 
 // Main Compose Multiplatform application
@@ -39,4 +41,6 @@ include(":androidApp")
 include(":desktopApp")
 
 // Feature modules
-include(":feature:calculator")
+include(":feature:auth-state")
+include(":feature:login")
+include(":feature:main")

@@ -37,12 +37,12 @@ CmpText(text = "Hello")
 CmpScaffold(
     topBar = {
         CmpTopAppBar(
-            title = { CmpText(text = stringResource(Res.string.calculator_main_title)) },
+            title = { CmpText(text = stringResource(Res.string.login_login_title_screen)) },
             navigationIcon = {
                 CmpIconButton(
                     onClick = onBack,
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Res.string.calculator_common_a11y_back),
+                    contentDescription = stringResource(Res.string.login_common_a11y_back),
                 )
             },
         )
@@ -52,6 +52,11 @@ CmpScaffold(
     Column(Modifier.fillMaxSize().padding(paddingValues)) { /* контент */ }
 }
 ```
+
+Для брендовых или визуально сложных экранов можно передавать plain `Color`:
+`CmpScaffold(containerColor = Color.Transparent, contentColor = colors.onBackground)` и
+`CmpTopAppBar(containerColor = Color.Transparent, contentColor = colors.onBackground)`.
+Feature-код не должен импортировать `TopAppBarDefaults` или другие Material3-типы ради цветов.
 
 WindowInsets (status bar) обрабатывает `CmpScaffold` через `topBar`-слот — `CmpTopAppBar` свои insets обнуляет, чтобы не было двойного отступа. Не добавлять `.statusBarsPadding()` / ручной `.background(...)` на корневом контейнере — фон и insets даёт Scaffold.
 
@@ -144,6 +149,10 @@ commonMain.dependencies {
 | Badge | `badge/CmpBadge.kt` |
 | Разделитель | `divider/CmpDivider.kt` |
 | Текст | `text/CmpText.kt` |
+| Box | `layout/CmpBox.kt` |
+| Column | `layout/CmpColumn.kt` |
+| Row | `layout/CmpRow.kt` |
+| Spacer | `layout/CmpSpacer.kt` |
 
 ---
 
@@ -188,6 +197,12 @@ fun CmpTextField(style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined) {
 
 Расположение: `core/ui/src/commonMain/kotlin/ru/alarmtrade/specmp/core/ui/theme/`
 Базовый цвет (seed): `#1D3557`
+
+Feature-модули читают цвета через `cmpThemeColors()`, не импортируя `MaterialTheme`
+напрямую. `CmpThemeColors` раскрывает общие Material-роли: базовые
+`background` / `surface` / `primary` / `secondary` / `tertiary` / `error`,
+container-роли (`primaryContainer`, `secondaryContainer`, `tertiaryContainer`,
+`errorContainer`, `surfaceContainer*`), outline-роли и `scrim`.
 
 ```kotlin
 // Прочитать текущую тему

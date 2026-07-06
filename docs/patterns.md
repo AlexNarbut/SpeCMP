@@ -6,44 +6,125 @@
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — все suspend-операции (сохранение настроек, сетевые вызовы, БД) выполнять только через ViewModel (`viewModelScope.launch`) или Repository. Composable-функции вызывают только синхронные методы ViewModel.
 - **Импорты — только сверху файла.** Полностью квалифицированные имена (`ru.alarmtrade.specmp.feature.*.SomeType`) в теле кода — запрещены. Сигнатуры, `when`-ветки, параметры, возвращаемые типы, аннотации — всё через `import` блок. Единственное исключение: конфликт имён (два разных `Foo` из разных пакетов в одном файле) — тогда используется `import ... as` alias, а не inline FQN.
 - **Unused imports удаляем** по завершении работы с файлом. Неиспользуемый import — это шум и источник ложной связи между модулями. Проверять глазами после каждой крупной правки (или `./gradlew :moduleName:compileCommonMainKotlinMetadata` — компилятор выдаст warning).
+- **`init`-блок не использовать для инициализации и загрузки данных** — особенно во ViewModel и Repository. Работа, запущенная из `init`, стартует неявно при создании объекта, не переживает пересоздание подписчиков и усложняет тестирование. Вместо этого: реактивные данные — через `stateIn(SharingStarted.WhileSubscribed)` (загрузка стартует при подписке), one-shot загрузка — через явный метод (`loadProfile()`), вызываемый из UI. Эмит эффектов из `init` запрещён отдельно (см. «One-shot события»).
+- **`MutableStateFlow` обновляем только через `update { }`** — это атомарный CAS, потокобезопасный при конкурентных обновлениях из нескольких корутин. Прямое присваивание `_state.value = ...` при read-modify-write (`_state.value = _state.value.copy(...)`) теряет обновления при гонке. Чтение `_state.value` допустимо.
 - **Никаких строковых литералов в `@Composable`-функциях.** Текст в UI (включая `contentDescription`) — только через `stringResource(Res.string.*)` (см. `docs/localization.md`). Строки, нужные для логики (ключи, теги, идентификаторы) — через `const val` / companion object, не inline. Исключение — нелокализуемые математические/служебные глифы (цифры `0`–`9`, операторы `+ − × ÷ =`, `.`, `⌫`): остаются литералами, т.к. не являются переводимым текстом.
 
 ```kotlin
 // ❌ Плохо — статический UI-текст в composable
 CmpIconButton(onClick = onBack, icon = CmpIcons.ArrowBack, contentDescription = "Назад")
-CmpText(text = "Калькулятор")
+CmpText(text = "Вход")
 
 // ✅ Хорошо — через перевод
 CmpIconButton(
     onClick = onBack,
     icon = CmpIcons.ArrowBack,
-    contentDescription = stringResource(Res.string.calculator_common_a11y_back),
+    contentDescription = stringResource(Res.string.login_common_a11y_back),
 )
-CmpText(text = stringResource(Res.string.calculator_main_title))
+CmpText(text = stringResource(Res.string.login_login_title_screen))
 
 // ✅ Строки для логики — через константы, а не inline
-private const val ANALYTICS_SCREEN = "calculator_main"
+private const val ANALYTICS_SCREEN = "login"
+```
+
+- **Ошибки из ViewModel — только типизированные** (enum / sealed class в state), не строковые коды. `LCEState.Error(message)` со строкой-«кодом» (`"required_fields"`), которую UI сравнивает с собственной константой, — запрещён: контракт держится на двух независимых литералах в разных файлах и при рассинхронизации ломается молча. ViewModel кладёт в state типизированную ошибку, UI маппит её в `stringResource` (см. `docs/localization.md`, правило 4; структура иерархии — раздел «Ошибки в feature-модулях» ниже).
+
+```kotlin
+// ❌ Плохо — строковый код как контракт VM ↔ UI
+// ViewModel:
+_state.update { it.copy(registrationState = LCEState.Error("required_fields")) }
+// UI (другой файл, своя копия константы):
+if (state.error == REQUIRED_FIELDS_ERROR) { /* ... */ }
+
+// ✅ Хорошо — типизированная ошибка в state
+enum class RegistrationError { RequiredFields, RequestFailed }
+_state.update { it.copy(error = RegistrationError.RequiredFields) }
+// UI:
+val text = when (error) {
+    RegistrationError.RequiredFields -> stringResource(Res.string.login_common_error_required_fields)
+    RegistrationError.RequestFailed -> stringResource(Res.string.login_common_error_registration_failed)
+}
 ```
 
 ```kotlin
 // ❌ Плохо — inline FQN
-fun applyOperation(op: ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation) { }
+fun submit(credentials: ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials) { }
 
 // ✅ Хорошо — через import сверху файла
-import ru.alarmtrade.specmp.feature.calculator.domain.model.CalculatorOperation
+import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 
-fun applyOperation(op: CalculatorOperation) { }
+fun submit(credentials: LoginCredentials) { }
 
 // ✅ Хорошо — alias при конфликте имён
 import androidx.compose.ui.graphics.Color as ComposeColor
 import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
 ```
 
+## Типы feature-модулей
+
+Перед созданием фичи классифицируй её тип — логическая / обособленная / экранная /
+пара `<name>` + `<name>-ui`. Таксономия, правила зависимостей между типами и критерии
+разделения на пару модулей — в **`docs/architecture.md`, раздел «Типы feature-модулей»**.
+
+## Ошибки в feature-модулях — sealed interface
+
+Ошибки фичи организуются как иерархия `sealed interface` внутри модуля, на двух уровнях:
+
+- **Domain-ошибки** — `feature/<name>/domain/model`. Базовый `sealed interface` на предметную
+  область; наследники-`sealed interface` на каждый flow/операцию; конкретные случаи —
+  `data object` (или `data class`, когда ошибке нужен payload: имя поля, лимит и т.п.).
+- **Presentation-ошибки** — `feature/<name>/presentation/model`. Компактный тип под то, что
+  реально различают экраны: `sealed interface` с наследниками, либо `enum`, если ни одному
+  случаю не нужен payload. ViewModel маппит domain → presentation, UI маппит
+  presentation → `stringResource`.
+
+```kotlin
+// domain/model — полная детализация для бизнес-правил
+sealed interface AuthValidationError
+
+sealed interface SignUpValidationError : AuthValidationError {
+    data object EmptyFullName : SignUpValidationError
+    data object EmptyEmail : SignUpValidationError
+    data object EmptyPassword : SignUpValidationError
+}
+
+sealed interface ResetPasswordValidationError : AuthValidationError {
+    data object EmptyEmail : ResetPasswordValidationError
+}
+
+// presentation/model — только то, что различает UI
+enum class AuthFormError {
+    RequiredFields,
+    RequestFailed,
+}
+
+// пример sealed-варианта с payload на UI-уровне
+sealed interface ProfileFormError {
+    data object RequestFailed : ProfileFormError
+    data class FieldTooLong(val maxLength: Int) : ProfileFormError
+}
+```
+
+**Правила:**
+
+- `when` по sealed-иерархии — исчерпывающий, **без ветки `else`**: новый наследник должен
+  ломать компиляцию во всех точках обработки, а не молча проваливаться в default.
+- Данные об ошибке (поле, лимит, оставшиеся попытки) — свойства `data class`-наследника,
+  а не парсинг `message`-строки.
+- Уровень детализации presentation-типа диктует UI: если экран показывает одно сообщение
+  на группу domain-случаев — группа маппится в одно значение (`SignUpValidationError.*` →
+  `AuthFormError.RequiredFields`), полная domain-иерархия в state экрана не протаскивается.
+- Ошибки фичи живут в самой фиче. В `core/*` иерархия выносится только когда одни и те же
+  ошибки реально нужны нескольким модулям, не «на будущее».
+- Исключения из domain/data наружу не выходят: репозиторий конвертирует их в
+  `Response.Error` (см. «Response — слой бизнес-логики»), а типизированная ошибка
+  появляется на границе ViewModel при обработке `Response`.
+
 ## Response vs LCEState
 
 | Слой | Тип | Состояния |
 |------|-----|-----------|
-| Репозитории, Use Cases | `Response<T>` | `Success<T>` / `Error` |
+| Репозитории | `Response<T>` | `Success<T>` / `Error` |
 | ViewModels, Compose | `LCEState<T>` | `None` / `Loading` / `Content<T>` / `Error` |
 
 Конвертация: `response.asLCEState { it.message ?: "Error" }`
@@ -67,8 +148,8 @@ suspend fun fetchUser(id: String): User = api.getUser(id)
 ```
 
 **Правила:**
-- ВСЕ suspend-функции в репозиториях/use cases ДОЛЖНЫ возвращать `Response<T>`
-- НИКОГДА не бросать исключения из репозиториев/use cases
+- ВСЕ suspend-функции в репозиториях ДОЛЖНЫ возвращать `Response<T>`
+- НИКОГДА не бросать исключения из репозиториев
 - Оборачивать каждую асинхронную операцию в `Response.Success` / `Response.Error`
 
 ---
@@ -77,14 +158,20 @@ suspend fun fetchUser(id: String): User = api.getUser(id)
 
 ```kotlin
 // ViewModel
-class UserViewModel(private val getUser: GetUserUseCase) : ViewModel() {
+class UserViewModel(
+    private val repository: UserRepository,
+    private val dispatchers: AppDispatchers,
+) : ViewModel() {
     private val _state = MutableStateFlow<LCEState<User>>(LCEState.None())
     val state: StateFlow<LCEState<User>> = _state.asStateFlow()
 
     fun load(id: String) {
         viewModelScope.launch {
-            _state.value = LCEState.Loading()
-            _state.value = getUser(id).asLCEState { it.message ?: "Error" }
+            _state.update { LCEState.Loading() }
+            val response = withContext(dispatchers.io) {
+                repository.fetchUser(id)
+            }
+            _state.update { response.asLCEState { it.message ?: "Error" } }
         }
     }
 }
@@ -108,7 +195,7 @@ when (state) {
 ```kotlin
 // composeApp/.../App.kt
 KoinApplication(application = {
-    modules(commonModule, calculatorModule)
+    modules(commonModule, specialistModule, loginModule)
 }) {
     AppTheme(onThemeChanged) { AppNavigation() }
 }
@@ -116,7 +203,6 @@ KoinApplication(application = {
 // DI-модуль в feature/*/di/
 val myFeatureModule = module {
     singleOf(::MyRepositoryImpl) bind MyRepository::class
-    factoryOf(::MyUseCase)
     viewModelOf(::MyViewModel)
 }
 
@@ -124,6 +210,15 @@ val myFeatureModule = module {
 val viewModel = koinViewModel<MyViewModel>()
 val dep = koinInject<MyDependency>()
 ```
+
+**Границы DI и app-level инфраструктуры:**
+- `composeApp` подключает все Koin-модули приложения и является composition root.
+- `core/*` модули владеют переиспользуемой инфраструктурой и app-level integration DI: локаль, SDK initialization, общие settings, network/client factories, UI theme primitives.
+- `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
+- Feature-модули не создают singleton внешнего SDK/application container (`SpecialistApp` и аналоги). Такой singleton создаётся в профильном `core/*` модуле или в `composeApp`.
+- В конструкторы feature-классов передаются узкие зависимости (`AuthInteractor`, repository, data source, provider), а не цельный SDK/application container. Так по сигнатуре видно, что реально использует класс, и фича не становится владельцем всего SDK.
+- Не добавляй use case, если он только прокидывает один вызов в repository. В таком случае ViewModel может зависеть от repository напрямую; отдельный use case нужен только когда он инкапсулирует самостоятельное бизнес-правило или оркестрацию нескольких зависимостей.
+- Если при разработке feature понадобилась глобальная возможность приложения, сначала добавь/расширь профильный `core/*` API и документацию, затем используй этот API из feature.
 
 Чеклист при добавлении фичи:
 1. Добавить зависимость модуля в `composeApp/build.gradle.kts`
@@ -352,12 +447,12 @@ class DashboardViewModel(
 ViewModel — emit через `sideEffectFlow()`:
 
 ```kotlin
-class CalculatorViewModel(...) : ViewModel() {
+class LoginViewModel(...) : ViewModel() {
 
-    private val _effect = sideEffectFlow<CalculatorEffect>()   // extraBufferCapacity = 1, replay = 0
-    val effect: SharedFlow<CalculatorEffect> = _effect.asSharedFlow()
+    private val _effect = sideEffectFlow<LoginEffect>()   // extraBufferCapacity = 1, replay = 0
+    val effect: SharedFlow<LoginEffect> = _effect.asSharedFlow()
 
-    private fun emitEffect(effect: CalculatorEffect) {
+    private fun emitEffect(effect: LoginEffect) {
         _effect.tryEmit(effect)
     }
 }
@@ -368,7 +463,7 @@ UI — сбор через `collectSideEffect`:
 ```kotlin
 viewModel.effect.collectSideEffect { effect ->
     when (effect) {
-        is CalculatorEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+        is LoginEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
     }
 }
 ```
@@ -388,9 +483,15 @@ viewModel.effect.collectSideEffect { effect ->
 
 | Диспетчер | Назначение |
 |-----------|-----------|
-| `dispatchers.io` | Сеть, БД, файловый I/O — в репозиториях |
+| `dispatchers.io` | Сеть, БД, файловый I/O — во ViewModel вокруг вызова repository |
 | `dispatchers.default` | Маппинг, комбинация, CPU-работа — в `flowOn()`, `withContext()` |
 | `dispatchers.main` | UI-обновления (обычно не нужен явно — `viewModelScope` уже на Main) |
+
+### Где переключать контекст
+
+Диспетчер переключаем **в месте вызова** — обычно во ViewModel: `withContext(dispatchers.io) { repository.foo() }`. Репозитории **не** оборачивают свои методы в `withContext` — это прячет переключение от вызывающего кода и делает поведение менее явным.
+
+**Единственное исключение** — `AppDispatchers` внутри менеджера/репозитория допустим, когда у него есть собственная, не зависимая от UI логика: обычно наблюдение за стейтом с фоновой работой (пуллинг баланса, периодическая синхронизация). Такая работа живёт в доменном объекте и сама владеет своим диспетчером.
 
 ### Когда использовать `flowOn` / `stateIn`
 

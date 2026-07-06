@@ -1,6 +1,9 @@
 package ru.alarmtrade.specmp.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -9,38 +12,68 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import ru.alarmtrade.specmp.feature.calculator.presentation.CalculatorScreen
-import ru.alarmtrade.specmp.home.HomeScreen
+import kotlinx.serialization.modules.subclass
+import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
+import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
+import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
+import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
 
 @Serializable
-data object HomeRoute : NavKey
-
-@Serializable
-data object CalculatorRoute : NavKey
+data object MainRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
-            subclass(HomeRoute::class, HomeRoute.serializer())
-            subclass(CalculatorRoute::class, CalculatorRoute.serializer())
+            subclass(MainRoute::class, MainRoute.serializer())
         }
     }
 }
 
 @Composable
-fun AppNavigation() {
-    val backStack = rememberNavBackStack(navConfig, HomeRoute)
+fun AppNavigation(
+    onLocaleChanged: (AppLocale) -> Unit,
+) {
+    AuthStateNavGraph(
+        waitingState = { AppStartLoading() },
+        noAuthState = {
+            LoginNavGraph(onLocaleChanged = onLocaleChanged)
+        },
+        authedState = { MainNavGraph() },
+        errorState = { onRetry ->
+            SessionCheckErrorScreen(onRetry = onRetry)
+        },
+    )
+}
+
+@Composable
+private fun MainNavGraph() {
+    val backStack = rememberNavBackStack(navConfig, MainRoute)
 
     NavDisplay(
         backStack = backStack,
-        onBack = { backStack.removeLastOrNull() },
-        entryProvider = entryProvider<NavKey> {
-            entry<HomeRoute> { _ ->
-                HomeScreen(onNavigateToCalculator = { backStack += CalculatorRoute })
+        onBack = {
+            if (backStack.size > 1) {
+                backStack.removeLastOrNull()
             }
-            entry<CalculatorRoute> { _ ->
-                CalculatorScreen(onBack = { backStack.removeLastOrNull() })
+        },
+        entryProvider = entryProvider<NavKey> {
+            entry<MainRoute> { _ ->
+                MainScreen()
             }
         }
     )
+}
+
+@Composable
+private fun AppStartLoading() {
+    CmpBox(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        CmpCircularProgressIndicator(color = cmpThemeColors().primary)
+    }
 }

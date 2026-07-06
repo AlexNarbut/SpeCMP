@@ -1,0 +1,11 @@
+package ru.alarmtrade.specmp.core.localization
+
+import java.util.Locale
+
+actual fun systemAppLocale(): AppLocale {
+    return AppLocale.fromLanguageTag(Locale.getDefault().toLanguageTag())
+}
+
+internal actual fun applyPlatformAppLocale(locale: AppLocale) {
+    Locale.setDefault(Locale.forLanguageTag(locale.languageTag))
+}
