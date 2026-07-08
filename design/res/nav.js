@@ -17,7 +17,12 @@
 
   // Section key → file, relative to project root.
   var LINKS = {
-    home:                'index.html',
+    home:                'features/home/Home.html',
+    'home-tablet':        'features/home/HomeTablet.html',
+    'home-desktop':       'features/home/HomeDesktop.html',
+    'home-parts':         'features/home/HomeParts.html',
+    'app-update':         'features/app-update/AppUpdate.html',
+    index:               'index.html',
     calculator:          'features/calculator/Calculator.html',
     'calculator-tablet':  'features/calculator/CalculatorTablet.html',
     'calculator-desktop': 'features/calculator/CalculatorDesktop.html',

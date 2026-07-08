@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":3,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"0d6435223dd7","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/auth/Auth.jsx":"730fafddac89","features/auth/AuthScreens.jsx":"4986c79933ee","features/auth/i18n.js":"9e4ecc677e9e","features/calculator/Calculator.jsx":"778bbbf9b839","res/icons/cmp-icons.js":"8c00925c86ca","res/nav.js":"45d4d98077d9"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
+/* @ds-bundle: {"format":4,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"0d6435223dd7","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/app-update/AppUpdateScreen.jsx":"e61af0c29b73","features/auth/Auth.jsx":"730fafddac89","features/auth/AuthScreens.jsx":"4986c79933ee","features/auth/i18n.js":"9e4ecc677e9e","features/calculator/Calculator.jsx":"778bbbf9b839","features/home/Home.jsx":"75522ab51ddd","features/home/HomeScreens.jsx":"f315b6354eec","res/icons/cmp-icons.js":"8c00925c86ca","res/icons/main-icons.js":"a5ee0c0aad77","res/nav.js":"930eac4f60c2"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
 
 (() => {
 
@@ -2243,6 +2243,450 @@ function CmpSurface({
 }
 Object.assign(__ds_scope, { CmpSurface });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/surfaces/CmpSurface.jsx", error: String((e && e.message) || e) }); }
+
+// features/app-update/AppUpdateScreen.jsx
+try { (() => {
+// AppUpdateScreen — Pandora Spec desktop app-version update (download a newer
+// build, e.g. .dmg). Built ONLY from design-system Cmp* components.
+//
+//   • UpdateScreen — stateless BODY, rendered per `state`. Chrome (top bar) is
+//     supplied by the host, so it embeds inside the main screen (route=update)
+//     and inside this feature's own AppUpdate.html the same way.
+//   • UpdateFlow   — stateful controller: checking → available → downloading
+//     (determinate progress) → downloaded → (install) up-to-date. Renders the
+//     body only. Used by the main screen's update route and by AppUpdateApp.
+//   • AppUpdateApp — full standalone screen (top bar + UpdateFlow), or pinned to
+//     one explicit state for the states gallery.
+
+const AU_DS = window.PandoraSpecDesignSystem_b8d6e1;
+const {
+  CmpTopAppBar,
+  CmpIconButton,
+  CmpText,
+  CmpIcon,
+  CmpSurface,
+  CmpDivider,
+  CmpButton,
+  CmpTextButton,
+  CmpCircularProgressIndicator
+} = AU_DS;
+const UPDATE_STATES = ["available", "checking", "downloading", "downloaded", "uptodate", "error"];
+const AU_ICON = {
+  appUpdate: "system_update",
+  download: "download"
+};
+const DEFAULT_NOTES = ["Ускорена запись прошивок и синхронизация базы", "Новые поддерживаемые автомобили и точки подключения", "Исправления стабильности при работе по CAN/LIN"];
+
+// ── Container-width hook → padding / max-width class ─────────────────────────
+function useAuMode() {
+  const ref = React.useRef(null);
+  const [w, setW] = React.useState(0);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const remeasure = () => setW(el.offsetWidth);
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(el);
+    window.addEventListener("resize", remeasure);
+    remeasure();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", remeasure);
+    };
+  }, []);
+  let mode = "compact";
+  if (w >= 1200) mode = "large";else if (w >= 840) mode = "expanded";else if (w >= 600) mode = "medium";
+  return [ref, mode];
+}
+function VerPill({
+  label,
+  value,
+  accent = false
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      padding: "10px 16px",
+      borderRadius: 12,
+      minWidth: 120,
+      background: accent ? "var(--primary-container)" : "var(--surface-variant)",
+      color: accent ? "var(--on-primary-container)" : "var(--on-surface-variant)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "currentColor"
+  }, label), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleMedium",
+    color: "currentColor"
+  }, value));
+}
+const HEAD = {
+  available: {
+    icon: AU_ICON.appUpdate,
+    tone: "primary",
+    title: "Доступна новая версия",
+    sub: (c, l) => `Версия ${l} · для macOS (.dmg)`
+  },
+  checking: {
+    icon: null,
+    tone: "primary",
+    title: "Проверка обновлений",
+    sub: () => "Ищем новую версию…"
+  },
+  downloading: {
+    icon: AU_ICON.download,
+    tone: "primary",
+    title: "Загрузка обновления",
+    sub: (c, l, s) => `Версия ${l} · ${s} МБ`
+  },
+  downloaded: {
+    icon: "CheckCircle",
+    tone: "primary",
+    title: "Обновление готово к установке",
+    sub: (c, l) => `Версия ${l} загружена`
+  },
+  uptodate: {
+    icon: "CheckCircle",
+    tone: "success",
+    title: "Установлена последняя версия",
+    sub: c => `Версия ${c}`
+  },
+  error: {
+    icon: "AlertCircle",
+    tone: "error",
+    title: "Не удалось проверить обновления",
+    sub: () => "Проверьте подключение и повторите"
+  }
+};
+
+// ── Stateless body ────────────────────────────────────────────────────────────
+function UpdateScreen({
+  mode = "expanded",
+  state = "available",
+  current = "2.4.1",
+  latest = "2.5.0",
+  sizeMB = 84,
+  progress = 0,
+  notes = DEFAULT_NOTES,
+  onDownload = () => {},
+  onCancel = () => {},
+  onInstall = () => {},
+  onLater = () => {},
+  onCheck = () => {}
+}) {
+  const pad = mode === "compact" ? 16 : mode === "medium" ? 24 : 32;
+  const h = HEAD[state] || HEAD.available;
+  const tileBg = h.tone === "error" ? "var(--error-container)" : h.tone === "success" ? "color-mix(in srgb, var(--success) 20%, transparent)" : "var(--primary-container)";
+  const tileFg = h.tone === "error" ? "var(--on-error-container)" : h.tone === "success" ? "var(--success)" : "var(--on-primary-container)";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflow: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 640,
+      margin: "0 auto",
+      padding: `${pad}px`,
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement(CmpSurface, {
+    border: true,
+    radius: 16,
+    color: "var(--surface-container-low)",
+    style: {
+      padding: 24,
+      display: "flex",
+      flexDirection: "column",
+      gap: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 56,
+      height: 56,
+      borderRadius: "var(--radius-m)",
+      background: tileBg,
+      color: tileFg,
+      display: "grid",
+      placeItems: "center",
+      flex: "0 0 auto"
+    }
+  }, state === "checking" ? /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+    size: 28,
+    strokeWidth: 3
+  }) : /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: h.icon,
+    size: 30,
+    color: tileFg
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headlineSmall"
+  }, h.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 2
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, h.sub(current, latest, sizeMB))))), (state === "available" || state === "downloaded") && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      flexWrap: "wrap",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(VerPill, {
+    label: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u043E",
+    value: current
+  }), /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "ArrowForward",
+    size: 20,
+    color: "var(--on-surface-variant)"
+  }), /*#__PURE__*/React.createElement(VerPill, {
+    label: "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E",
+    value: latest,
+    accent: true
+  })), state === "downloading" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 6,
+      borderRadius: 999,
+      background: "var(--surface-variant)",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${progress}%`,
+      background: "var(--primary)",
+      borderRadius: 999,
+      transition: "width .2s linear"
+    }
+  })), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--on-surface-variant)"
+  }, `Загрузка… ${Math.round(progress)}% · ${Math.round(sizeMB * progress / 100)} из ${sizeMB} МБ`)), state === "available" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpDivider, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleMedium"
+  }, "\u0427\u0442\u043E \u043D\u043E\u0432\u043E\u0433\u043E"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, notes.map((n, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 10,
+      alignItems: "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "Check",
+    size: 18,
+    color: "var(--success)",
+    style: {
+      marginTop: 2
+    }
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)",
+    style: {
+      textWrap: "pretty"
+    }
+  }, n)))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap",
+      paddingTop: 4
+    }
+  }, state === "available" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+    text: "\u0421\u043A\u0430\u0447\u0430\u0442\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 (.dmg)",
+    icon: AU_ICON.download,
+    onClick: onDownload
+  }), /*#__PURE__*/React.createElement(CmpTextButton, {
+    text: "\u041F\u043E\u0437\u0436\u0435",
+    onClick: onLater
+  })), state === "checking" && /*#__PURE__*/React.createElement(CmpButton, {
+    text: "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430\u2026",
+    disabled: true,
+    onClick: () => {}
+  }), state === "downloading" && /*#__PURE__*/React.createElement(CmpTextButton, {
+    text: "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C",
+    onClick: onCancel
+  }), state === "downloaded" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+    text: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0438 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C",
+    icon: "Refresh",
+    onClick: onInstall
+  }), /*#__PURE__*/React.createElement(CmpTextButton, {
+    text: "\u041F\u043E\u0437\u0436\u0435",
+    onClick: onLater
+  })), state === "uptodate" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+    text: "\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0441\u043D\u043E\u0432\u0430",
+    icon: "Refresh",
+    onClick: onCheck
+  }), /*#__PURE__*/React.createElement(CmpTextButton, {
+    text: "\u0413\u043E\u0442\u043E\u0432\u043E",
+    onClick: onLater
+  })), state === "error" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CmpButton, {
+    text: "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C",
+    icon: "Refresh",
+    onClick: onCheck
+  }), /*#__PURE__*/React.createElement(CmpTextButton, {
+    text: "\u041F\u043E\u0437\u0436\u0435",
+    onClick: onLater
+  }))))));
+}
+
+// ── Stateful body: full download flow ────────────────────────────────────────
+function UpdateFlow({
+  mode = "expanded",
+  initialState = "available",
+  current = "2.4.1",
+  latest = "2.5.0",
+  sizeMB = 84,
+  onLater = () => {}
+}) {
+  const {
+    useState,
+    useRef,
+    useEffect
+  } = React;
+  const [state, setState] = useState(initialState);
+  const [progress, setProgress] = useState(0);
+  const t = useRef(null);
+  const iv = useRef(null);
+  useEffect(() => () => {
+    clearTimeout(t.current);
+    clearInterval(iv.current);
+  }, []);
+  const check = () => {
+    setState("checking");
+    clearTimeout(t.current);
+    t.current = setTimeout(() => setState("available"), 1300);
+  };
+  const download = () => {
+    setState("downloading");
+    setProgress(0);
+    clearInterval(iv.current);
+    iv.current = setInterval(() => {
+      setProgress(p => {
+        const next = p + 100 / 22; // ~2.2s
+        if (next >= 100) {
+          clearInterval(iv.current);
+          setState("downloaded");
+          return 100;
+        }
+        return next;
+      });
+    }, 100);
+  };
+  const cancel = () => {
+    clearInterval(iv.current);
+    setProgress(0);
+    setState("available");
+  };
+  const install = () => {
+    setState("checking");
+    clearTimeout(t.current);
+    t.current = setTimeout(() => setState("uptodate"), 1200);
+  };
+  return /*#__PURE__*/React.createElement(UpdateScreen, {
+    mode: mode,
+    state: state,
+    current: current,
+    latest: latest,
+    sizeMB: sizeMB,
+    progress: progress,
+    onDownload: download,
+    onCancel: cancel,
+    onInstall: install,
+    onCheck: check,
+    onLater: onLater
+  });
+}
+
+// ── Full standalone screen (top bar + flow), or pinned to one state ──────────
+function AppUpdateApp({
+  pinnedState,
+  current = "2.4.1",
+  latest = "2.5.0",
+  sizeMB = 84,
+  onBack,
+  showBack = false
+}) {
+  const [rootRef, mode] = useAuMode();
+  return /*#__PURE__*/React.createElement("div", {
+    ref: rootRef,
+    style: {
+      position: "relative",
+      height: "100%",
+      width: "100%",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden",
+      background: "var(--background)",
+      color: "var(--on-background)"
+    }
+  }, /*#__PURE__*/React.createElement("style", null, `.au-focusable:focus-visible{outline:2px solid var(--primary);outline-offset:2px}`), /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    centered: true,
+    title: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u044F",
+    style: {
+      flex: "0 0 auto"
+    },
+    navigationIcon: showBack ? /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: "ArrowBack",
+      contentDescription: "\u041D\u0430\u0437\u0430\u0434",
+      onClick: onBack
+    }) : undefined
+  }), pinnedState ? /*#__PURE__*/React.createElement(UpdateScreen, {
+    mode: mode,
+    state: pinnedState,
+    current: current,
+    latest: latest,
+    sizeMB: sizeMB,
+    progress: pinnedState === "downloading" ? 46 : 0
+  }) : /*#__PURE__*/React.createElement(UpdateFlow, {
+    mode: mode,
+    current: current,
+    latest: latest,
+    sizeMB: sizeMB,
+    onLater: () => {}
+  }));
+}
+window.AppUpdate = {
+  UpdateScreen,
+  UpdateFlow,
+  AppUpdateApp,
+  VerPill,
+  useAuMode,
+  UPDATE_STATES
+};
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/app-update/AppUpdateScreen.jsx", error: String((e && e.message) || e) }); }
 
 // features/auth/Auth.jsx
 try { (() => {
@@ -4502,6 +4946,1171 @@ Object.assign(window, {
 });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/calculator/Calculator.jsx", error: String((e && e.message) || e) }); }
 
+// features/home/Home.jsx
+try { (() => {
+// Home.jsx — Pandora Spec main-screen controller.
+//   • HomeApp — live, interactive screen. Owns ephemeral UI (menu open, sync
+//     in progress); theme / card-variant / profile are controlled from the host
+//     HTML so the demo toolbars stay in sync with the in-screen drawer.
+// Presentational blocks come from HomeScreens.jsx, so the prototype and the
+// parts/states gallery never drift apart. Built only from the design system.
+
+const {
+  HomeScreen,
+  PROFILES
+} = window.HomeScreens;
+
+// Card interaction states, in display order (used by the parts gallery).
+window.HOME_CARD_STATES = ["default", "hover", "focus", "pressed", "disabled"];
+function HomeApp({
+  dark = false,
+  onDark = () => {},
+  cardVariant = "centered",
+  profile = "full",
+  initialMenuOpen = false,
+  initialLoading = true,
+  loadMs = 1500,
+  platform = "mobile",
+  appVersion = "2.4.1",
+  latestVersion = "2.5.0",
+  initialUpdateState = "available"
+}) {
+  const {
+    useState,
+    useRef,
+    useEffect
+  } = React;
+  const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
+  const [syncing, setSyncing] = useState(false);
+  const [loading, setLoading] = useState(initialLoading);
+  const [route, setRoute] = useState("home");
+  const isDesktop = platform === "desktop";
+  // App-version update is a desktop-only capability (download a newer .dmg build).
+  const [updateState, setUpdateState] = useState(isDesktop ? initialUpdateState : "idle");
+  const timer = useRef(null);
+  const loadTimer = useRef(null);
+  const upTimer = useRef(null);
+  useEffect(() => () => {
+    clearTimeout(timer.current);
+    clearTimeout(loadTimer.current);
+    clearTimeout(upTimer.current);
+  }, []);
+
+  // Simulate initial data load, then reveal the panel (scripted, like auth root).
+  useEffect(() => {
+    if (!loading) return;
+    clearTimeout(loadTimer.current);
+    loadTimer.current = setTimeout(() => setLoading(false), loadMs);
+    return () => clearTimeout(loadTimer.current);
+  }, [loading, loadMs]);
+
+  // Follow host toggles for the persistent panel (expanded/large).
+  useEffect(() => {
+    setMenuOpen(initialMenuOpen);
+  }, [initialMenuOpen]);
+  const onSync = () => {
+    if (syncing) return;
+    setSyncing(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setSyncing(false), 1700);
+  };
+  const onNav = key => {
+    // Prototype: real routing lands here. Close the drawer on selection.
+    if (key === "settings" || key === "logout") setMenuOpen(false);
+  };
+
+  // Desktop: check for a newer app build, then surface the update banner.
+  const onCheckUpdate = () => {
+    if (updateState === "checking") return;
+    setUpdateState("checking");
+    clearTimeout(upTimer.current);
+    upTimer.current = setTimeout(() => setUpdateState("available"), 1400);
+  };
+  const onOpenUpdate = () => {
+    setMenuOpen(false);
+    setRoute("update");
+  };
+  const onBackHome = () => setRoute("home");
+  const onDownload = () => {/* prototype: real app would start the .dmg download */};
+  const appUpdate = isDesktop ? {
+    state: updateState,
+    current: appVersion,
+    latest: latestVersion,
+    onCheck: onCheckUpdate,
+    onOpen: onOpenUpdate
+  } : null;
+  const profileObj = PROFILES[profile] || PROFILES.full;
+  return /*#__PURE__*/React.createElement(HomeScreen, {
+    dark: dark,
+    onDark: onDark,
+    menuOpen: menuOpen,
+    onMenu: () => setMenuOpen(v => !v),
+    syncing: syncing,
+    onSync: onSync,
+    loading: loading,
+    appUpdate: appUpdate,
+    route: route,
+    onBackHome: onBackHome,
+    onDownload: onDownload,
+    cardVariant: cardVariant,
+    profile: profileObj,
+    onNav: onNav
+  });
+}
+window.HomeApp = HomeApp;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/home/Home.jsx", error: String((e && e.message) || e) }); }
+
+// features/home/HomeScreens.jsx
+try { (() => {
+// HomeScreens — presentational main screen for Pandora Spec, built ONLY from
+// design-system Cmp* components (window.PandoraSpecDesignSystem_b8d6e1).
+//
+// The screen is a calm "installer work panel": top app bar + drawer + two equal
+// primary action cards + a quiet grid of secondary tools. No visible section
+// headings ("Монтаж"/"Инструменты"), no marketing hero, no data slop.
+//
+// Adaptivity — Material 3 Window Size Classes by container width (CLAUDE.md):
+//   • compact  (<600)   — 1-col cards, tools as rows, modal drawer.
+//   • medium   (600–839)— 2-col cards, 2-col tools, modal drawer.
+//   • expanded (840–1199)— 2-col cards, 3-col tools, side-panel drawer.
+//   • large    (≥1200)  — 2-col cards, 4-col tools, side-panel drawer.
+//
+// Everything takes explicit props/state so the same blocks render both the live
+// interactive prototype (Home.jsx → HomeApp) and the parts/states gallery.
+
+const HS_DS = window.PandoraSpecDesignSystem_b8d6e1;
+const {
+  CmpTopAppBar,
+  CmpIconButton,
+  CmpText,
+  CmpIcon,
+  CmpSurface,
+  CmpDivider,
+  CmpSwitch,
+  CmpCircularProgressIndicator,
+  CmpLinearProgressIndicator,
+  CmpButton,
+  CmpTextButton
+} = HS_DS;
+
+// ── Icon map (Material Icons filled ligatures; swap for project icons) ───────
+const ICON = {
+  quick: "bolt",
+  extended: "tune",
+  configurator: "settings",
+  firmware: "archive",
+  cars: "directions_car",
+  requests: "assignment",
+  feedback: "feedback",
+  product: "info",
+  menu: "menu",
+  sync: "sync",
+  settings: "settings",
+  logout: "logout",
+  themeDark: "dark_mode",
+  themeLight: "light_mode",
+  status: "check_circle",
+  person: "person",
+  appUpdate: "system_update",
+  download: "download"
+};
+
+// ── Content data (icons = old-project SVGs via window.PS_MAIN_ICONS) ─────────
+const MAIN_ACTIONS = [{
+  key: "quick",
+  svg: "fast_mount",
+  title: "Быстрый монтаж",
+  desc: "Пошаговая установка по готовым настройкам"
+}, {
+  key: "extended",
+  svg: "adv_mount",
+  title: "Расширенный монтаж",
+  desc: "Детальная настройка и проверка системы"
+}];
+const TOOLS = [{
+  key: "configurator",
+  svg: "settings_configurator",
+  title: "Конфигуратор",
+  desc: "Создание и изменение настроек системы"
+}, {
+  key: "firmware",
+  svg: "firmware_archive",
+  title: "Архив прошивок",
+  desc: "Поиск и загрузка прошивок"
+}, {
+  key: "cars",
+  svg: "vehicle_support",
+  title: "Автомобили",
+  desc: "Поддерживаемые автомобили и функции"
+}, {
+  key: "requests",
+  svg: "orders",
+  title: "Заявки",
+  desc: "Заявки и пользовательский опыт монтажа"
+}, {
+  key: "feedback",
+  svg: "feedback",
+  title: "Обратная связь",
+  desc: "Отзыв о монтаже и улучшениях"
+}, {
+  key: "product",
+  svg: "articles",
+  title: "Информация о товаре",
+  desc: "Поиск информации о продукте"
+}];
+const PROFILES = {
+  full: {
+    name: "Иван Петров",
+    email: "ivan@pandora.pro"
+  },
+  partial: {
+    name: "",
+    email: "installer@pandora.pro"
+  },
+  noEmail: {
+    name: "Иван Петров",
+    email: ""
+  }
+};
+
+// ── Container-width hook → Window Size Class ─────────────────────────────────
+function useHomeMode() {
+  const ref = React.useRef(null);
+  const [w, setW] = React.useState(0);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const remeasure = () => setW(el.offsetWidth);
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(el);
+    window.addEventListener("resize", remeasure);
+    remeasure();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", remeasure);
+    };
+  }, []);
+  let mode = "compact";
+  if (w >= 1200) mode = "large";else if (w >= 840) mode = "expanded";else if (w >= 600) mode = "medium";
+  return [ref, mode];
+}
+
+// ── Forced state layer (for the gallery: hover/focus/pressed) ────────────────
+function stateOpacity(s) {
+  return s === "pressed" ? 0.12 : s === "focus" ? 0.1 : s === "hover" ? 0.08 : 0;
+}
+function ForcedOverlay({
+  state
+}) {
+  const o = stateOpacity(state);
+  if (!o) return null;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "var(--on-surface)",
+      opacity: o,
+      pointerEvents: "none",
+      borderRadius: "inherit"
+    }
+  });
+}
+
+// ── Status chip in the top app bar ───────────────────────────────────────────
+function StatusChip({
+  compact = false,
+  syncing = false
+}) {
+  if (syncing) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: compact ? "8px" : "6px 14px 6px 10px",
+        borderRadius: 999,
+        background: compact ? "transparent" : "var(--surface-variant)"
+      }
+    }, /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+      size: 18,
+      strokeWidth: 2.5
+    }), !compact && /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435\u2026"));
+  }
+  if (compact) {
+    return /*#__PURE__*/React.createElement("div", {
+      title: "\u0411\u0430\u0437\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0430",
+      "aria-label": "\u0411\u0430\u0437\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0430",
+      style: {
+        width: 40,
+        height: 40,
+        display: "grid",
+        placeItems: "center",
+        flex: "0 0 auto"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: ICON.status,
+      size: 22,
+      color: "var(--success)",
+      title: "\u0411\u0430\u0437\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0430"
+    }));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "6px 14px 6px 10px",
+      borderRadius: 999,
+      background: "var(--surface-variant)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: ICON.status,
+    size: 18,
+    color: "var(--success)"
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelLarge",
+    color: "var(--on-surface-variant)"
+  }, "\u0411\u0430\u0437\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0430"));
+}
+
+// ── Inline SVG icon (old-project asset; inlined so it inherits currentColor) ──
+function PsSvgIcon({
+  name,
+  size = 32
+}) {
+  const html = window.PS_MAIN_ICONS && window.PS_MAIN_ICONS[name] || "";
+  return /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      width: size,
+      height: size,
+      display: "inline-flex",
+      flex: "0 0 auto"
+    },
+    dangerouslySetInnerHTML: {
+      __html: html
+    }
+  });
+}
+
+// ── Icon tile ─────────────────────────────────────────────────────────────────
+function IconTile({
+  icon,
+  svg,
+  size = 64,
+  iconSize = 32,
+  tint = "primary",
+  muted = false
+}) {
+  const bg = tint === "primary" ? muted ? "color-mix(in srgb, var(--on-surface) 8%, transparent)" : "var(--primary-container)" : muted ? "color-mix(in srgb, var(--on-surface) 8%, transparent)" : "var(--surface-variant)";
+  const fg = tint === "primary" ? muted ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : "var(--on-primary-container)" : muted ? "color-mix(in srgb, var(--on-surface) 38%, transparent)" : "var(--on-surface-variant)";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: size,
+      height: size,
+      borderRadius: "var(--radius-m)",
+      background: bg,
+      color: fg,
+      display: "grid",
+      placeItems: "center",
+      flex: "0 0 auto"
+    }
+  }, svg ? /*#__PURE__*/React.createElement(PsSvgIcon, {
+    name: svg,
+    size: iconSize
+  }) : /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: iconSize,
+    color: fg
+  }));
+}
+
+// ── Primary action card (two equal, large) ───────────────────────────────────
+// variant: "centered" (icon on top, centered) | "leading" (icon on the left)
+function MainActionCard({
+  item,
+  variant = "centered",
+  state = "default",
+  onClick
+}) {
+  const disabled = state === "disabled";
+  const clickable = !disabled && !!onClick;
+  const focus = state === "focus";
+  const centered = variant === "centered";
+  const content = /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: centered ? "column" : "row",
+      alignItems: "center",
+      textAlign: centered ? "center" : "left",
+      gap: centered ? 16 : 18,
+      opacity: disabled ? 0.5 : 1,
+      width: "100%"
+    }
+  }, /*#__PURE__*/React.createElement(IconTile, {
+    svg: item.svg,
+    icon: item.icon,
+    size: 64,
+    iconSize: 38,
+    tint: "primary",
+    muted: disabled
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      alignItems: centered ? "center" : "flex-start",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleLarge",
+    weight: 600,
+    align: centered ? "center" : "left"
+  }, item.title), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)",
+    align: centered ? "center" : "left",
+    style: {
+      textWrap: "pretty"
+    }
+  }, item.desc)));
+  return /*#__PURE__*/React.createElement(CmpSurface, {
+    onClick: clickable ? onClick : undefined,
+    color: "var(--surface-container-low)",
+    border: true,
+    radius: 16,
+    className: "ps-focusable",
+    role: "button",
+    tabIndex: clickable ? 0 : -1,
+    "aria-disabled": disabled || undefined,
+    style: {
+      boxSizing: "border-box",
+      padding: centered ? "28px 24px" : "24px",
+      minHeight: 168,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: centered ? "center" : "flex-start",
+      cursor: clickable ? "pointer" : "default",
+      outline: focus ? "2px solid var(--primary)" : "none",
+      outlineOffset: 2,
+      transition: "box-shadow var(--motion-fast)"
+    }
+  }, content, /*#__PURE__*/React.createElement(ForcedOverlay, {
+    state: state
+  }));
+}
+
+// ── Secondary tool card (quieter than primary) ───────────────────────────────
+// layout: "grid" (icon top, centered) | "row" (icon left, for compact lists)
+function ToolCard({
+  item,
+  layout = "grid",
+  state = "default",
+  onClick
+}) {
+  const disabled = state === "disabled";
+  const clickable = !disabled && !!onClick;
+  const focus = state === "focus";
+  const isRow = layout === "row";
+  const content = /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: isRow ? "row" : "column",
+      alignItems: "center",
+      textAlign: isRow ? "left" : "center",
+      gap: isRow ? 16 : 12,
+      opacity: disabled ? 0.5 : 1,
+      width: "100%"
+    }
+  }, /*#__PURE__*/React.createElement(IconTile, {
+    svg: item.svg,
+    icon: item.icon,
+    size: 48,
+    iconSize: 28,
+    tint: "neutral",
+    muted: disabled
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      alignItems: isRow ? "flex-start" : "center",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleMedium",
+    align: isRow ? "left" : "center",
+    style: {
+      textWrap: "pretty"
+    }
+  }, item.title), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodySmall",
+    color: "var(--on-surface-variant)",
+    align: isRow ? "left" : "center",
+    maxLines: 2,
+    style: {
+      textWrap: "pretty"
+    }
+  }, item.desc)));
+  return /*#__PURE__*/React.createElement(CmpSurface, {
+    onClick: clickable ? onClick : undefined,
+    color: "var(--surface)",
+    border: true,
+    radius: 12,
+    className: "ps-focusable",
+    role: "button",
+    tabIndex: clickable ? 0 : -1,
+    "aria-disabled": disabled || undefined,
+    style: {
+      boxSizing: "border-box",
+      padding: isRow ? "14px 16px" : "20px 16px",
+      minHeight: isRow ? 72 : 132,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: isRow ? "flex-start" : "center",
+      cursor: clickable ? "pointer" : "default",
+      outline: focus ? "2px solid var(--primary)" : "none",
+      outlineOffset: 2
+    }
+  }, content, /*#__PURE__*/React.createElement(ForcedOverlay, {
+    state: state
+  }));
+}
+
+// ── Drawer: profile block ─────────────────────────────────────────────────────
+function ProfileBlock({
+  profile
+}) {
+  const name = profile && profile.name ? profile.name.trim() : "";
+  const email = profile && profile.email ? profile.email.trim() : "";
+  const initials = name ? name.split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase() : "";
+  const primary = name || email || "Профиль";
+  const secondary = name ? email || "Email не указан" : name ? "" : "Имя не указано";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      padding: "8px 4px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 52,
+      height: 52,
+      borderRadius: 999,
+      background: "var(--primary-container)",
+      color: "var(--on-primary-container)",
+      display: "grid",
+      placeItems: "center",
+      flex: "0 0 auto"
+    }
+  }, initials ? /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleMedium",
+    weight: 600,
+    color: "var(--on-primary-container)"
+  }, initials) : /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: ICON.person,
+    size: 28,
+    color: "var(--on-primary-container)"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      gap: 2
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleMedium",
+    maxLines: 1
+  }, primary), secondary && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)",
+    maxLines: 1
+  }, secondary)));
+}
+
+// ── Drawer: one row ───────────────────────────────────────────────────────────
+function DrawerRow({
+  icon,
+  label,
+  trailing,
+  onClick,
+  spin = false
+}) {
+  return /*#__PURE__*/React.createElement(CmpSurface, {
+    onClick: onClick,
+    color: "transparent",
+    radius: 12,
+    className: "ps-focusable",
+    role: "button",
+    tabIndex: 0,
+    style: {
+      boxSizing: "border-box",
+      minHeight: 52,
+      display: "flex",
+      alignItems: "center",
+      gap: 16,
+      padding: "0 12px",
+      cursor: onClick ? "pointer" : "default"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 24,
+    color: "var(--on-surface-variant)",
+    style: spin ? {
+      animation: "psSpin 1s linear infinite"
+    } : undefined
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyLarge",
+    maxLines: 1
+  }, label)), trailing);
+}
+
+// ── Drawer ────────────────────────────────────────────────────────────────────
+function HomeDrawer({
+  variant = "modal",
+  profile,
+  dark,
+  onDark,
+  syncing,
+  onSync,
+  appUpdate = null,
+  onNav = () => {}
+}) {
+  const panel = variant === "panel";
+  return /*#__PURE__*/React.createElement("nav", {
+    "aria-label": "\u041C\u0435\u043D\u044E",
+    style: {
+      width: panel ? 312 : "min(320px, 86vw)",
+      maxWidth: panel ? 312 : 320,
+      height: "100%",
+      boxSizing: "border-box",
+      display: "flex",
+      flexDirection: "column",
+      background: "var(--surface)",
+      color: "var(--on-surface)",
+      borderRight: panel ? "1px solid var(--outline-variant)" : "none",
+      boxShadow: panel ? "none" : "var(--elevation-3)",
+      padding: "20px 16px 16px"
+    }
+  }, /*#__PURE__*/React.createElement(ProfileBlock, {
+    profile: profile
+  }), /*#__PURE__*/React.createElement(CmpDivider, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      paddingTop: 8
+    }
+  }, /*#__PURE__*/React.createElement(DrawerRow, {
+    icon: dark ? ICON.themeDark : ICON.themeLight,
+    label: "\u0422\u0451\u043C\u043D\u0430\u044F \u0442\u0435\u043C\u0430",
+    onClick: () => onDark && onDark(!dark),
+    trailing: /*#__PURE__*/React.createElement(CmpSwitch, {
+      checked: dark,
+      onCheckedChange: onDark,
+      thumbIcon: true
+    })
+  }), /*#__PURE__*/React.createElement(DrawerRow, {
+    icon: ICON.sync,
+    label: syncing ? "Обновление базы…" : "Обновить базу",
+    onClick: syncing ? undefined : onSync,
+    spin: syncing,
+    trailing: syncing ? /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+      size: 20,
+      strokeWidth: 2.5
+    }) : null
+  }), appUpdate && /*#__PURE__*/React.createElement(DrawerRow, {
+    icon: ICON.appUpdate,
+    label: appUpdate.state === "checking" ? "Проверка обновлений…" : "Проверить обновления",
+    onClick: appUpdate.state === "checking" ? undefined : appUpdate.onCheck,
+    trailing: appUpdate.state === "checking" ? /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+      size: 20,
+      strokeWidth: 2.5
+    }) : null
+  }), /*#__PURE__*/React.createElement(DrawerRow, {
+    icon: ICON.settings,
+    label: "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438",
+    onClick: () => onNav("settings")
+  }), /*#__PURE__*/React.createElement(DrawerRow, {
+    icon: ICON.logout,
+    label: "\u0412\u044B\u0445\u043E\u0434",
+    onClick: () => onNav("logout")
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+      paddingTop: 12
+    }
+  }, appUpdate && appUpdate.state === "available" && /*#__PURE__*/React.createElement(CmpSurface, {
+    onClick: appUpdate.onOpen,
+    color: "var(--primary-container)",
+    contentColor: "var(--on-primary-container)",
+    radius: 12,
+    className: "ps-focusable",
+    role: "button",
+    tabIndex: 0,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "12px 14px",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: ICON.appUpdate,
+    size: 24,
+    color: "var(--on-primary-container)"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelLarge",
+    weight: 600,
+    color: "var(--on-primary-container)"
+  }, "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u0430 \u043D\u043E\u0432\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 1
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "color-mix(in srgb, var(--on-primary-container) 78%, transparent)"
+  }, appUpdate.latest, " \xB7 \u043D\u0430\u0436\u043C\u0438\u0442\u0435, \u0447\u0442\u043E\u0431\u044B \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C"))), /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "ChevronRight",
+    size: 22,
+    color: "var(--on-primary-container)"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 12px",
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--on-surface-variant)"
+  }, "Pandora \u0421\u043F\u0435\u0446 \xB7 \u0432\u0435\u0440\u0441\u0438\u044F ", appUpdate && appUpdate.current || "2.4.1"), appUpdate && appUpdate.state === "uptodate" && /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 4
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "Check",
+    size: 14,
+    color: "var(--success)"
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--success)"
+  }, "\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F")))));
+}
+
+// ── Top app bar ───────────────────────────────────────────────────────────────
+function HomeTopBar({
+  compactStatus = false,
+  syncing = false,
+  loading = false,
+  onMenu,
+  title = "Pandora Спец",
+  back = false,
+  onBack
+}) {
+  return /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    centered: true,
+    title: title,
+    style: {
+      flex: "0 0 auto"
+    },
+    navigationIcon: back ? /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: "ArrowBack",
+      contentDescription: "\u041D\u0430\u0437\u0430\u0434",
+      onClick: onBack
+    }) : /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: ICON.menu,
+      contentDescription: "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043C\u0435\u043D\u044E",
+      onClick: onMenu,
+      disabled: loading
+    }),
+    actions: loading || back ? null : /*#__PURE__*/React.createElement(StatusChip, {
+      compact: compactStatus,
+      syncing: syncing
+    })
+  });
+}
+
+// ── Screen body (cards + tools), no visible section headings ─────────────────
+function HomeContent({
+  mode,
+  cardVariant = "centered",
+  onNav = () => {}
+}) {
+  const compact = mode === "compact";
+  const mainCols = compact ? 1 : 2;
+  const toolCols = mode === "large" ? 4 : mode === "expanded" ? 3 : mode === "medium" ? 2 : 1;
+  const pad = mode === "compact" ? 16 : mode === "medium" ? 24 : 32;
+  const maxW = mode === "large" || mode === "expanded" ? 1040 : "none";
+  const toolLayout = compact ? "row" : "grid";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflow: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: maxW,
+      margin: "0 auto",
+      padding: `${pad}px ${pad}px ${pad + 8}px`,
+      display: "flex",
+      flexDirection: "column",
+      gap: mode === "compact" ? 16 : 24,
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: `repeat(${mainCols}, 1fr)`,
+      gap: mode === "compact" ? 12 : 16
+    }
+  }, MAIN_ACTIONS.map(item => /*#__PURE__*/React.createElement(MainActionCard, {
+    key: item.key,
+    item: item,
+    variant: cardVariant,
+    onClick: () => onNav(item.key)
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: `repeat(${toolCols}, 1fr)`,
+      gap: 12
+    }
+  }, TOOLS.map(item => /*#__PURE__*/React.createElement(ToolCard, {
+    key: item.key,
+    item: item,
+    layout: toolLayout,
+    onClick: () => onNav(item.key)
+  })))));
+}
+
+// ── Loading skeletons (screen loading state) ─────────────────────────
+function Skel({
+  w,
+  h,
+  r = 8,
+  style
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ps-skel",
+    style: {
+      width: w,
+      height: h,
+      borderRadius: r,
+      flex: "0 0 auto",
+      ...style
+    }
+  });
+}
+function MainCardSkeleton({
+  variant = "centered"
+}) {
+  const centered = variant === "centered";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      boxSizing: "border-box",
+      padding: centered ? "28px 24px" : "24px",
+      minHeight: 168,
+      borderRadius: 16,
+      background: "var(--surface-container-low)",
+      border: "1px solid var(--outline-variant)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: centered ? "center" : "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: centered ? "column" : "row",
+      alignItems: "center",
+      gap: centered ? 16 : 18,
+      width: "100%"
+    }
+  }, /*#__PURE__*/React.createElement(Skel, {
+    w: 64,
+    h: 64,
+    r: 16
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+      alignItems: centered ? "center" : "flex-start",
+      width: centered ? "auto" : "100%"
+    }
+  }, /*#__PURE__*/React.createElement(Skel, {
+    w: centered ? 150 : 180,
+    h: 18,
+    r: 6
+  }), /*#__PURE__*/React.createElement(Skel, {
+    w: centered ? 200 : "80%",
+    h: 13,
+    r: 6
+  }))));
+}
+function ToolCardSkeleton({
+  layout = "grid"
+}) {
+  const isRow = layout === "row";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      boxSizing: "border-box",
+      padding: isRow ? "14px 16px" : "20px 16px",
+      minHeight: isRow ? 72 : 132,
+      borderRadius: 12,
+      background: "var(--surface)",
+      border: "1px solid var(--outline-variant)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: isRow ? "flex-start" : "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: isRow ? "row" : "column",
+      alignItems: "center",
+      gap: isRow ? 16 : 12,
+      width: "100%"
+    }
+  }, /*#__PURE__*/React.createElement(Skel, {
+    w: 48,
+    h: 48,
+    r: 12
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      alignItems: isRow ? "flex-start" : "center",
+      width: isRow ? "100%" : "auto"
+    }
+  }, /*#__PURE__*/React.createElement(Skel, {
+    w: isRow ? 140 : 96,
+    h: 15,
+    r: 6
+  }), /*#__PURE__*/React.createElement(Skel, {
+    w: isRow ? "70%" : 120,
+    h: 12,
+    r: 6
+  }))));
+}
+
+// Mirrors HomeContent layout so the skeleton reflows at every window-size class.
+function HomeSkeleton({
+  mode,
+  cardVariant = "centered"
+}) {
+  const compact = mode === "compact";
+  const mainCols = compact ? 1 : 2;
+  const toolCols = mode === "large" ? 4 : mode === "expanded" ? 3 : mode === "medium" ? 2 : 1;
+  const pad = mode === "compact" ? 16 : mode === "medium" ? 24 : 32;
+  const maxW = mode === "large" || mode === "expanded" ? 1040 : "none";
+  const toolLayout = compact ? "row" : "grid";
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-busy": "true",
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: maxW,
+      margin: "0 auto",
+      padding: `${pad}px ${pad}px ${pad + 8}px`,
+      display: "flex",
+      flexDirection: "column",
+      gap: compact ? 16 : 24,
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: `repeat(${mainCols}, 1fr)`,
+      gap: compact ? 12 : 16
+    }
+  }, MAIN_ACTIONS.map(it => /*#__PURE__*/React.createElement(MainCardSkeleton, {
+    key: it.key,
+    variant: cardVariant
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: `repeat(${toolCols}, 1fr)`,
+      gap: 12
+    }
+  }, TOOLS.map(it => /*#__PURE__*/React.createElement(ToolCardSkeleton, {
+    key: it.key,
+    layout: toolLayout
+  })))));
+}
+
+// ── App-version update: the update screen now lives in its own feature
+// (features/app-update/AppUpdateScreen.jsx). The home update route reuses
+// window.AppUpdate.UpdateFlow so there is a single source of truth.
+
+// ── Full screen (chrome + drawer + content) ──────────────────────────────────
+function HomeScreen({
+  dark = false,
+  onDark = () => {},
+  menuOpen = false,
+  onMenu = () => {},
+  syncing = false,
+  onSync = () => {},
+  loading = false,
+  appUpdate = null,
+  route = "home",
+  onBackHome = () => {},
+  onDownload = () => {},
+  cardVariant = "centered",
+  profile = PROFILES.full,
+  onNav = () => {}
+}) {
+  const [rootRef, mode] = useHomeMode();
+  const compact = mode === "compact";
+  const sidePanel = mode === "expanded" || mode === "large";
+  const showPanel = !loading && sidePanel && menuOpen;
+  const showModal = !loading && !sidePanel && menuOpen;
+  const inUpdate = route === "update";
+  return /*#__PURE__*/React.createElement("div", {
+    ref: rootRef,
+    style: {
+      position: "relative",
+      height: "100%",
+      width: "100%",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden",
+      background: "var(--background)",
+      color: "var(--on-background)"
+    }
+  }, /*#__PURE__*/React.createElement("style", null, `
+        @keyframes psSpin { to { transform: rotate(360deg); } }
+        @keyframes psDrawerIn { from { transform: translateX(-100%); } to { transform: none; } }
+        @keyframes psScrimIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes psShimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+        .ps-focusable:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        .ps-skel { background: linear-gradient(90deg, var(--surface-variant) 25%, var(--surface-container-highest) 37%, var(--surface-variant) 63%); background-size: 400% 100%; animation: psShimmer 1.4s ease infinite; }
+        @media (prefers-reduced-motion: reduce) { .ps-anim { animation: none !important; } .ps-skel { animation: none !important; } }
+      `), /*#__PURE__*/React.createElement(HomeTopBar, {
+    compactStatus: compact,
+    syncing: syncing,
+    loading: loading,
+    onMenu: onMenu,
+    title: inUpdate ? "Обновление приложения" : "Pandora Спец",
+    back: inUpdate,
+    onBack: onBackHome
+  }), loading && /*#__PURE__*/React.createElement(CmpLinearProgressIndicator, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      display: "flex"
+    }
+  }, showPanel && /*#__PURE__*/React.createElement("div", {
+    className: "ps-anim",
+    style: {
+      flex: "0 0 auto",
+      animation: "psDrawerIn var(--motion-standard) both"
+    }
+  }, /*#__PURE__*/React.createElement(HomeDrawer, {
+    variant: "panel",
+    profile: profile,
+    dark: dark,
+    onDark: onDark,
+    syncing: syncing,
+    onSync: onSync,
+    appUpdate: appUpdate,
+    onNav: onNav
+  })), loading ? /*#__PURE__*/React.createElement(HomeSkeleton, {
+    mode: mode,
+    cardVariant: cardVariant
+  }) : inUpdate ? window.AppUpdate ? /*#__PURE__*/React.createElement(window.AppUpdate.UpdateFlow, {
+    mode: mode,
+    current: appUpdate ? appUpdate.current : "2.4.1",
+    latest: appUpdate ? appUpdate.latest : "2.5.0",
+    onLater: onBackHome
+  }) : null : /*#__PURE__*/React.createElement(HomeContent, {
+    mode: mode,
+    cardVariant: cardVariant,
+    onNav: onNav
+  })), showModal && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      zIndex: 10,
+      display: "flex"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ps-anim",
+    onClick: onMenu,
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "color-mix(in srgb, var(--scrim) 42%, transparent)",
+      animation: "psScrimIn var(--motion-fast) both"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ps-anim",
+    style: {
+      position: "relative",
+      height: "100%",
+      animation: "psDrawerIn var(--motion-standard) both"
+    }
+  }, /*#__PURE__*/React.createElement(HomeDrawer, {
+    variant: "modal",
+    profile: profile,
+    dark: dark,
+    onDark: onDark,
+    syncing: syncing,
+    onSync: onSync,
+    appUpdate: appUpdate,
+    onNav: onNav
+  }))));
+}
+window.HomeScreens = {
+  useHomeMode,
+  HomeScreen,
+  HomeTopBar,
+  HomeContent,
+  HomeDrawer,
+  ProfileBlock,
+  MainActionCard,
+  ToolCard,
+  StatusChip,
+  IconTile,
+  PsSvgIcon,
+  HomeSkeleton,
+  MainCardSkeleton,
+  ToolCardSkeleton,
+  ICON,
+  MAIN_ACTIONS,
+  TOOLS,
+  PROFILES
+};
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/home/HomeScreens.jsx", error: String((e && e.message) || e) }); }
+
 // res/icons/cmp-icons.js
 try { (() => {
 // Pandora Spec — icon catalog (CmpIcons).
@@ -4593,6 +6202,26 @@ try { (() => {
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "res/icons/cmp-icons.js", error: String((e && e.message) || e) }); }
 
+// res/icons/main-icons.js
+try { (() => {
+// Pandora Спец — main-screen icons (inlined for currentColor theming).
+// Source: old-project SVGs (uploads/Архив/main_*). class refs → inline styles;
+// monochrome icons inherit fill=currentColor; duotone (fast_mount, adv_mount) use
+// opacity .3 for base layers. Render INLINE (not <img>) so currentColor applies.
+(function () {
+  window.PS_MAIN_ICONS = {
+    "fast_mount": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" version=\"1.1\" id=\"Слой_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 128 128\" style=\"enable-background:new 0 0 128 128;\" xml:space=\"preserve\">\n\n<g>\n&#x9;<rect x=\"4.3\" y=\"64.3\" style=\"fill:currentColor;opacity:.3\" width=\"119.4\" height=\"28.9\"></rect>\n&#x9;<path style=\"fill:currentColor;opacity:.3\" d=\"M4.3,105c0,9.4,7.7,17.1,17.1,17.1h85.3c9.4,0,17.1-7.7,17.1-17.1V93.2H4.3V105z\"></path>\n&#x9;<path style=\"fill:currentColor;opacity:.3\" d=\"M106.6,5.9H21.4c-1.7,0-3.3,0.3-4.8,0.7h94.9C109.9,6.2,108.3,5.9,106.6,5.9z\"></path>\n&#x9;<rect x=\"4.3\" y=\"35.5\" style=\"fill:currentColor;opacity:.3\" width=\"119.4\" height=\"28.9\"></rect>\n&#x9;<path style=\"fill:currentColor;opacity:.3\" d=\"M123.7,23c0-7.8-5.2-14.3-12.3-16.4H16.6C9.5,8.7,4.3,15.2,4.3,23v12.5h119.4C123.7,35.5,123.7,23,123.7,23z\"></path>\n&#x9;<g>\n&#x9;&#x9;<g>\n&#x9;&#x9;&#x9;<g>\n&#x9;&#x9;&#x9;&#x9;<g>\n&#x9;&#x9;&#x9;&#x9;&#x9;<path style=\"fill:currentColor\" d=\"M103.1,87.2c0-0.1,0.1-0.1,0.1-0.2c0.2-0.3,0.3-0.6,0.5-0.9c0.2-0.5,0.5-1,0.7-1.5c0-0.1,0-0.1,0.1-0.2&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;c3.8-8.3,4.8-17.5,3.1-26.4v-0.1c-0.2-0.9-0.4-1.7-0.6-2.6c0-0.1,0-0.1-0.1-0.2c-0.2-0.9-0.5-1.7-0.8-2.6&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;c-1.1-3.4-2.6-6.5-4.4-9.5c-1.1-1.8-3.5-2.2-5.1-1l0,0c-1.5,1.1-1.8,3.2-0.8,4.7c6.6,10.5,7.6,24.1,1.7,36&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;c-2,3.9-4.6,7.4-7.6,10.2L89.8,93C79.1,103,63,106,49,99.4l2.1-4.3c0.6-1.2,0-1.9-1.3-1.6l-11.7,2.8c-1.3,0.3-1.9,1.6-1.4,2.8&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;l4.9,11c0.5,1.2,1.5,1.2,2.1,0l2.1-4.3c10.2,4.9,21.7,5.6,32.5,2c1.1-0.4,2.2-0.8,3.2-1.2l0,0c0,0,0.1,0,0.1-0.1&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;C90.9,102.8,98.4,96,103.1,87.2z\"></path>\n&#x9;&#x9;&#x9;&#x9;</g>\n&#x9;&#x9;&#x9;&#x9;<g>\n&#x9;&#x9;&#x9;&#x9;&#x9;<path style=\"fill:currentColor\" d=\"M31.9,90.4c1.5-1.1,1.8-3.2,0.8-4.7c-6.6-10.5-7.7-24.1-1.7-36c2-3.9,4.6-7.4,7.6-10.2l0.1-0.1&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;c10.7-10,26.8-13,40.8-6.4l-2.1,4.3c-0.6,1.2,0,1.9,1.3,1.6L90.4,36c1.3-0.3,1.9-1.6,1.4-2.8l-4.9-11c-0.5-1.2-1.5-1.2-2.1,0&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;l-2.1,4.3c-10.2-4.9-21.7-5.6-32.5-2c-1.1,0.4-2.2,0.8-3.2,1.2l0,0c0,0-0.1,0-0.1,0.1c-9.2,3.9-16.7,10.7-21.4,19.5&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;c0,0.1-0.1,0.1-0.1,0.2c-0.2,0.3-0.3,0.6-0.5,0.9c-0.2,0.5-0.5,1-0.7,1.5c0,0.1,0,0.1-0.1,0.2c-3.8,8.3-4.8,17.5-3.1,26.4v0.1&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;c0.2,0.9,0.4,1.7,0.6,2.6c0,0.1,0,0.1,0.1,0.2c0.2,0.9,0.5,1.7,0.8,2.6c1.1,3.4,2.6,6.5,4.4,9.5C27.9,91.2,30.2,91.6,31.9,90.4&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;L31.9,90.4z\"></path>\n&#x9;&#x9;&#x9;&#x9;</g>\n&#x9;&#x9;&#x9;</g>\n&#x9;&#x9;&#x9;<g>\n&#x9;&#x9;&#x9;&#x9;<path style=\"fill:currentColor\" d=\"M79.3,61.7v1.7v0.4h-0.4H42.7V82c0,1.6,0.9,3.4,2.3,4.8c1.6,1.5,3.6,2.3,5.6,2.3h27.2&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;c2.1,0,4.1-0.8,5.6-2.3c1.4-1.4,2.3-3.2,2.3-4.8V63.4v-1.7c0-4.2-1.2-8.2-3.3-11.7C80.5,53.5,79.3,57.5,79.3,61.7z M67.9,78.5&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;c0,1.8-1.3,3.7-3.7,3.7c-2.4,0-3.7-1.9-3.7-3.7v-4c0-1.8,1.3-3.7,3.7-3.7c2.8,0,3.7,1.7,3.7,3.7V78.5z\"></path>\n&#x9;&#x9;&#x9;&#x9;<path style=\"fill:currentColor\" d=\"M49.2,61.3c0.2-8.4,6.9-15.2,15-15.2c6.4,0,12.1,4.3,14.2,10.5l0.1-0.3l0.2-0.8l0.2-0.8l0.3-0.8l0.3-0.8&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;l0.3-0.8l0.3-0.8l0.4-0.8l0.4-0.7l0.4-0.7l0.4-0.7c-4.1-5.9-10.5-9.3-17.4-9.3c-11.7,0-21.3,9.9-21.5,22.1h6.4V61.3z\"></path>\n&#x9;&#x9;&#x9;</g>\n&#x9;&#x9;</g>\n&#x9;&#x9;<path style=\"fill:currentColor\" d=\"M44.9,29.7L29.3,41.6l-5.3-7c-1-1.3-0.7-3.1,0.6-4.1l11-8.3c1.3-1,3.1-0.7,4.1,0.6L44.9,29.7z\"></path>\n&#x9;</g>\n</g>\n</svg>",
+    "adv_mount": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" version=\"1.1\" id=\"Слой_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 128 128\" style=\"enable-background:new 0 0 128 128;\" xml:space=\"preserve\">\n\n<g>\n&#x9;<path style=\"fill:currentColor\" d=\"M110.5,122.6c5.2,0,9.5-4.2,9.5-9.5V83.5V44.5V14.8c0-5.2-4.2-9.5-9.5-9.5H58.7v39.1v39.1v39.1H110.5z\"></path>\n&#x9;<g>\n&#x9;&#x9;<path style=\"fill:currentColor;opacity:.3\" d=\"M8,113.2c0,5.2,4.2,9.5,9.5,9.5h51.8V83.5H8V113.2z\"></path>\n&#x9;&#x9;<path style=\"fill:currentColor;opacity:.3\" d=\"M69.3,5.4H17.5C12.2,5.4,8,9.6,8,14.8v29.6h61.3V5.4z\"></path>\n&#x9;&#x9;<rect x=\"8\" y=\"44.5\" style=\"fill:currentColor;opacity:.3\" width=\"61.3\" height=\"39.1\"></rect>\n&#x9;</g>\n&#x9;<g>\n&#x9;&#x9;<path style=\"fill:currentColor\" d=\"M48.7,64.1V65v0.2h-0.2H30.1v9.2c0,0.8,0.4,1.7,1.2,2.4c0.8,0.8,1.8,1.2,2.9,1.2h13.8c1.1,0,2.1-0.4,2.9-1.2&#xA;&#x9;&#x9;&#x9;c0.7-0.7,1.2-1.6,1.2-2.4V65v-0.9c0-2.1-0.6-4.2-1.7-6C49.2,59.9,48.7,62,48.7,64.1z M42.9,72.6c0,0.9-0.6,1.9-1.9,1.9&#xA;&#x9;&#x9;&#x9;c-1.2,0-1.9-0.9-1.9-1.9v-2.1c0-0.9,0.6-1.9,1.9-1.9c1.4,0,1.9,0.9,1.9,1.9V72.6z\"></path>\n&#x9;&#x9;<path style=\"fill:currentColor\" d=\"M33.4,63.9c0.1-4.3,3.5-7.7,7.6-7.7c3.3,0,6.1,2.2,7.2,5.4l0-0.2l0.1-0.4l0.1-0.4l0.1-0.4l0.1-0.4l0.2-0.4&#xA;&#x9;&#x9;&#x9;l0.2-0.4l0.2-0.4l0.2-0.4l0.2-0.4l0.2-0.3c-2.1-3-5.4-4.7-8.9-4.7c-6,0-10.8,5-10.9,11.2H33.4z\"></path>\n&#x9;</g>\n&#x9;<g>\n&#x9;&#x9;\n&#x9;&#x9;&#x9;<rect x=\"86.2\" y=\"22.2\" transform=\"matrix(0.7071 -0.7071 0.7071 0.7071 10.7543 77.9871)\" style=\"fill:currentColor\" width=\"26.6\" height=\"7.6\"></rect>\n&#x9;&#x9;\n&#x9;&#x9;&#x9;<rect x=\"81.6\" y=\"22.7\" transform=\"matrix(-0.7071 -0.7071 0.7071 -0.7071 129.0224 106.4977)\" style=\"fill:currentColor\" width=\"10\" height=\"7.6\"></rect>\n&#x9;</g>\n&#x9;<g>\n&#x9;&#x9;\n&#x9;&#x9;&#x9;<rect x=\"86.2\" y=\"58.3\" transform=\"matrix(0.7071 -0.7071 0.7071 0.7071 -14.7221 88.5398)\" style=\"fill:currentColor\" width=\"26.6\" height=\"7.6\"></rect>\n&#x9;&#x9;\n&#x9;&#x9;&#x9;<rect x=\"81.6\" y=\"58.8\" transform=\"matrix(-0.7071 -0.7071 0.7071 -0.7071 103.546 168.0033)\" style=\"fill:currentColor\" width=\"10\" height=\"7.6\"></rect>\n&#x9;</g>\n&#x9;<g>\n&#x9;&#x9;\n&#x9;&#x9;&#x9;<rect x=\"86.2\" y=\"94.3\" transform=\"matrix(0.7071 -0.7071 0.7071 0.7071 -40.1986 99.0925)\" style=\"fill:currentColor\" width=\"26.6\" height=\"7.6\"></rect>\n&#x9;&#x9;\n&#x9;&#x9;&#x9;<rect x=\"81.6\" y=\"94.8\" transform=\"matrix(-0.7071 -0.7071 0.7071 -0.7071 78.0695 229.509)\" style=\"fill:currentColor\" width=\"10\" height=\"7.6\"></rect>\n&#x9;</g>\n&#x9;<path style=\"fill:currentColor\" d=\"M59.9,44.2c0.2-0.7,2.4-17.5,2.5-18.2c0-0.1,0.3-1.2-0.8-1.8c-0.8-0.5-11.7-4.4-21.7-4.4&#xA;&#x9;&#x9;c-10,0-21,3.9-21.7,4.4c-1,0.6-0.8,1.6-0.8,1.8c0.1,0.7,2.3,17.5,2.5,18.2c0.1,0.6,0.6,0.9,1,0.9c0.6,0,1.6-0.2,2.7-0.3&#xA;&#x9;&#x9;c1.8-0.2,10.5-0.5,16.4-0.5c5.9,0.1,14.6,0.3,16.4,0.5c1.1,0.1,2,0.3,2.7,0.3C59.3,45.1,59.7,44.8,59.9,44.2z\"></path>\n&#x9;<path style=\"fill:currentColor\" d=\"M18.7,87.2c1,0.6,3.7,1.7,7.1,2.4c3.9,0.8,10.4,1.3,14.1,1.3c3.6,0,10.2-0.6,14.1-1.3c3.4-0.7,6.2-1.9,7.1-2.4&#xA;&#x9;&#x9;c0.3,5.1,0.5,10.6,0.4,17.2c0,0.2-0.1,0.4-0.3,0.5c-4.7,2.4-13,4.6-21.2,4.6c-8.2,0-16.5-2.2-21.2-4.6c-0.2-0.1-0.3-0.3-0.3-0.5&#xA;&#x9;&#x9;C18.2,97.8,18.4,92.3,18.7,87.2z\"></path>\n</g>\n</svg>",
+    "settings_configurator": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" version=\"1.1\" id=\"Слой_1\" xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\" viewBox=\"0 0 128 128\" style=\"enable-background:new 0 0 128 128;\" xml:space=\"preserve\">\n<g>\n&#x9;<path d=\"M66.1,22.5c-1.7,0-4.9,0-7.1,0.1c-2.3-1.4-4.8-2.5-7.4-3.4l-2.1-0.7l-1.1,1.9C47,23.3,44.1,25,41,25c-3.1,0-6-1.7-7.5-4.5&#xA;&#x9;&#x9;l-1-1.9l-2.1,0.7c-4.9,1.5-9.3,4.1-13.2,7.6l-1.6,1.5l1.1,1.9c1.6,2.7,1.6,6,0.1,8.7c-1.6,2.7-4.5,4.4-7.6,4.3l-2.2-0.1l-0.5,2.2&#xA;&#x9;&#x9;c-0.6,2.6-0.9,5.2-0.9,7.7c0,2.5,0.3,5,0.8,7.6l0.5,2.2l2.2-0.1c3.1-0.1,6,1.6,7.6,4.3c1.6,2.7,1.5,6-0.1,8.7l-1.1,1.9L17,79&#xA;&#x9;&#x9;c2.4,2.2,5,4,7.8,5.5v14.5c0,9,21.4,13.2,41.2,13.2c19.9,0,41.2-4.1,41.2-13.2V77.8V56.8V35.7C107.3,26.7,86,22.5,66.1,22.5z&#xA;&#x9;&#x9; M21.3,64.2c-2.1-3.7-5.9-6.2-10-6.8c-0.2-1.5-0.3-3-0.3-4.5c0-1.5,0.1-3,0.4-4.6c4.2-0.6,7.9-3.1,10.1-6.8&#xA;&#x9;&#x9;c2.1-3.7,2.4-8.2,0.9-12.1c2.4-1.9,5-3.4,7.8-4.5c2.6,3.3,6.6,5.3,10.9,5.3c4.3,0,8.3-2,10.9-5.3c2.8,1.1,5.4,2.6,7.8,4.6&#xA;&#x9;&#x9;c-1.6,3.9-1.3,8.4,0.9,12.1c2.1,3.7,5.9,6.2,10,6.8c0.2,1.5,0.3,3,0.3,4.5c0,1.5-0.1,3-0.4,4.6c-4.2,0.6-7.9,3.1-10.1,6.8&#xA;&#x9;&#x9;c-2.1,3.7-2.4,8.2-0.9,12.1c-2.4,1.9-5,3.4-7.8,4.5c-2.6-3.3-6.6-5.3-10.9-5.3c-4.3,0-8.3,2-10.9,5.3c-2.8-1.1-5.4-2.6-7.8-4.6&#xA;&#x9;&#x9;C23.7,72.4,23.5,67.9,21.3,64.2z M47.7,84.3c-4.1-0.6-7.7-1.4-10.7-2.4c1.2-0.6,2.5-1,3.9-1C43.6,80.9,46.1,82.2,47.7,84.3z&#xA;&#x9;&#x9; M66.1,106.7c-23.7,0-35.9-5.5-35.9-7.8V86.6c0,0,0,0,0,0l2.1,0.7l0.7-1.2c7.5,3,19.8,4.9,33.1,4.9c13.8,0,28.3-2,35.9-6.2v14.1&#xA;&#x9;&#x9;C102,101.2,89.8,106.7,66.1,106.7z M66.1,85.6c-3.7,0-7.3-0.2-10.7-0.4c3.4-1.5,6.5-3.6,9.3-6.2l1.6-1.5l-1.1-1.9&#xA;&#x9;&#x9;c-1.1-1.8-1.4-3.8-1.1-5.8c0.7,0,1.3,0,2,0c0.8,0,1.5,0,2.3,0c0.2,0,0.4,0,0.7,0c0.6,0,1.2,0,1.8,0c0.2,0,0.4,0,0.6,0&#xA;&#x9;&#x9;c0.8,0,1.5-0.1,2.3-0.1c0.2,0,0.3,0,0.5,0c0.6,0,1.2-0.1,1.9-0.1c0.2,0,0.4,0,0.7,0c0.7-0.1,1.4-0.1,2-0.2c0.1,0,0.2,0,0.2,0&#xA;&#x9;&#x9;c0.7-0.1,1.5-0.1,2.2-0.2c0.2,0,0.4,0,0.6-0.1c0.6-0.1,1.1-0.1,1.7-0.2c0.2,0,0.4-0.1,0.6-0.1c0.7-0.1,1.4-0.2,2.1-0.3&#xA;&#x9;&#x9;c0.1,0,0.2,0,0.3-0.1c0.6-0.1,1.2-0.2,1.7-0.3c0.2,0,0.4-0.1,0.6-0.1c0.6-0.1,1.1-0.2,1.7-0.3c0.1,0,0.2-0.1,0.4-0.1&#xA;&#x9;&#x9;c0.6-0.1,1.3-0.3,1.9-0.5c0.2,0,0.3-0.1,0.5-0.1c0.5-0.1,0.9-0.3,1.4-0.4c0.2,0,0.3-0.1,0.5-0.1c0.6-0.2,1.2-0.4,1.7-0.5&#xA;&#x9;&#x9;c0.1,0,0.1,0,0.1-0.1c0.5-0.2,1-0.4,1.5-0.5c0.2-0.1,0.3-0.1,0.4-0.2c0.4-0.2,0.8-0.3,1.2-0.5c0.1,0,0.2-0.1,0.3-0.1&#xA;&#x9;&#x9;c0.5-0.2,0.9-0.4,1.3-0.7c0,0,0.1,0,0.1,0v14.1C102,80.2,89.8,85.6,66.1,85.6z M67.3,64.5c1.5-1.2,3.5-1.8,5.5-1.8l2.2,0.1l0.5-2.2&#xA;&#x9;&#x9;c0.6-2.6,0.9-5.2,0.9-7.7c0-1.5-0.1-3-0.3-4.5c0.1,0,0.2,0,0.3,0c0.2,0,0.3,0,0.5,0c0.4,0,0.9-0.1,1.3-0.1c0.2,0,0.4,0,0.6,0&#xA;&#x9;&#x9;c0.5,0,1-0.1,1.5-0.1c0.1,0,0.2,0,0.3,0c0.6-0.1,1.2-0.1,1.8-0.2c0.2,0,0.3,0,0.5-0.1c0.4-0.1,0.9-0.1,1.3-0.2c0.2,0,0.4,0,0.5-0.1&#xA;&#x9;&#x9;c0.5-0.1,0.9-0.1,1.4-0.2c0.1,0,0.2,0,0.4-0.1c0.6-0.1,1.1-0.2,1.7-0.3c0.1,0,0.2,0,0.4-0.1c0.4-0.1,0.9-0.2,1.3-0.3&#xA;&#x9;&#x9;c0.2,0,0.3-0.1,0.5-0.1c0.4-0.1,0.8-0.2,1.2-0.3c0.1,0,0.3-0.1,0.4-0.1c0.5-0.1,1.1-0.2,1.6-0.4c0.1,0,0.1,0,0.2-0.1&#xA;&#x9;&#x9;c0.4-0.1,0.9-0.2,1.3-0.4c0.1,0,0.3-0.1,0.4-0.1c0.4-0.1,0.7-0.2,1.1-0.3c0.1,0,0.3-0.1,0.4-0.1c0.9-0.3,1.8-0.6,2.7-1&#xA;&#x9;&#x9;c0.1-0.1,0.2-0.1,0.4-0.2c0.3-0.1,0.6-0.3,0.9-0.4c0.1-0.1,0.2-0.1,0.4-0.2c0.3-0.2,0.6-0.3,1-0.5c0,0,0.1,0,0.1-0.1v14.1&#xA;&#x9;&#x9;C102,59.1,90.2,64.4,67.3,64.5z M74.2,43.3L74.2,43.3l-1.4,0c-3.1,0.1-6-1.6-7.6-4.3c-1.6-2.7-1.5-6,0.1-8.7l1.1-1.9l-0.6-0.6&#xA;&#x9;&#x9;c0.1,0,0.2,0,0.3,0c23.7,0,35.9,5.5,35.9,7.8C102,37.4,93.7,42.1,74.2,43.3z\"></path>\n</g>\n</svg>",
+    "firmware_archive": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" id=\"Слой_1\" data-name=\"Слой 1\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><title>archive-icon</title><path d=\"M108.8,40.32,93.72,17a1.32,1.32,0,0,0-1.13-.62H35.41a1.32,1.32,0,0,0-1.13.62L19.2,40.32a4.2,4.2,0,0,0-.67,2.29v65.68a3.37,3.37,0,0,0,3.37,3.38h84.2a3.37,3.37,0,0,0,3.37-3.38V42.61A4.2,4.2,0,0,0,108.8,40.32Zm-5,64.34a1.34,1.34,0,0,1-1.34,1.34H25.54a1.34,1.34,0,0,1-1.34-1.34V58.6a1.34,1.34,0,0,1,1.34-1.34h76.92a1.34,1.34,0,0,1,1.34,1.34Zm0-54.42a1.34,1.34,0,0,1-1.34,1.35H25.54a1.34,1.34,0,0,1-1.34-1.35v-6A4.2,4.2,0,0,1,24.87,42l12.5-19.37A1.32,1.32,0,0,1,38.49,22h51a1.32,1.32,0,0,1,1.12.62L103.13,42a4.2,4.2,0,0,1,.67,2.29Z\"></path><path d=\"M93.6,39.38H55a1.35,1.35,0,0,1-1.13-.61l-1.29-2a1.34,1.34,0,0,0-1.12-.61H33.63a1.34,1.34,0,0,0-1.34,1.34v8.76a2.83,2.83,0,0,0,2.83,2.84h0A2.83,2.83,0,0,0,38,46.28V43.19a1.35,1.35,0,0,1,1.35-1.34h9.05a1.34,1.34,0,0,1,1.12.61l1.29,2a1.35,1.35,0,0,0,1.13.61h36a1.34,1.34,0,0,1,1.34,1.34h0A2.73,2.73,0,0,0,92,49.12h.11a2.84,2.84,0,0,0,2.83-2.84V40.72A1.34,1.34,0,0,0,93.6,39.38Z\"></path><path d=\"M40.39,34.23h1.14a2.48,2.48,0,0,0,2.3-1.79,1.33,1.33,0,0,1,1.26-.89h6.4a1.33,1.33,0,0,1,1.14.63l1.17,1.89a1.35,1.35,0,0,0,1.14.64H84.69a2.5,2.5,0,0,0,2.5,2.5h.68a2.5,2.5,0,0,0,2.5-2.5V30.38A1.34,1.34,0,0,0,89,29H58.1A1.35,1.35,0,0,1,57,28.4l-1.17-1.89a1.35,1.35,0,0,0-1.14-.63H39.42a1.34,1.34,0,0,0-1.34,1.34v4.7A2.31,2.31,0,0,0,40.39,34.23Z\"></path><path d=\"M79.39,78.43a2.84,2.84,0,0,0-4.11-.11l-8.22,8.22V67.17a1.4,1.4,0,0,0-1.4-1.4H62.79a1.4,1.4,0,0,0-1.4,1.4V86.54l-8.21-8.22a2.84,2.84,0,0,0-4.37.44,2.9,2.9,0,0,0,.43,3.65l15,15L79.17,82.45A3,3,0,0,0,79.39,78.43Z\"></path></svg>",
+    "vehicle_support": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" version=\"1.1\" id=\"Слой_1\" xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\" viewBox=\"0 0 128 128\" style=\"enable-background:new 0 0 128 128;\" xml:space=\"preserve\">\n<g>\n&#x9;<path d=\"M44.9,96.8c4.1,2.4,6.6,6.8,6.5,11.5l-0.1,2.2l2.1,0.5c3.6,0.8,7.1,1.2,10.7,1.2c3.4,0,6.8-0.4,10.2-1.1l2.2-0.5l-0.1-2.2&#xA;&#x9;&#x9;c-0.1-4.7,2.4-9.2,6.5-11.5c4.1-2.4,9.2-2.3,13.3,0.2l1.9,1.2l1.5-1.6c4.7-5.1,8.2-11.2,10.4-18l0.7-2.1l-1.9-1.1&#xA;&#x9;&#x9;c-4.1-2.3-6.7-6.6-6.7-11.3c0-4.8,2.6-9.1,6.8-11.4l1.9-1.1l-0.7-2.1c-1.1-3.4-2.5-6.7-4.2-9.7c-1.7-2.9-3.8-5.8-6.1-8.4l-1.5-1.6&#xA;&#x9;&#x9;L96.3,31c-4,2.5-9.1,2.5-13.2,0.2c-4.1-2.4-6.6-6.8-6.5-11.5l0.1-2.2L74.5,17c-7-1.6-14-1.6-20.8-0.1l-2.2,0.5l0.1,2.2&#xA;&#x9;&#x9;c0.1,4.7-2.4,9.2-6.5,11.5c-4.1,2.4-9.2,2.3-13.3-0.2L30,29.7l-1.5,1.6c-4.7,5.1-8.2,11.2-10.4,18l-0.7,2.1l1.9,1.1&#xA;&#x9;&#x9;c4.1,2.3,6.7,6.6,6.7,11.3c0,4.8-2.6,9.1-6.8,11.4l-1.9,1.1l0.7,2.1c1.1,3.4,2.5,6.7,4.2,9.7c1.7,2.9,3.8,5.8,6.1,8.4l1.5,1.6&#xA;&#x9;&#x9;l1.9-1.1C35.8,94.5,40.8,94.4,44.9,96.8z M31,91.3c-1.6-1.9-2.9-3.8-4.1-5.9c-1.2-2.1-2.2-4.3-3.1-6.7c4.8-3.4,7.6-8.9,7.6-14.9&#xA;&#x9;&#x9;c0-5.9-2.9-11.4-7.6-14.8c1.7-4.6,4.1-8.9,7.2-12.6c5.3,2.4,11.6,2.2,16.7-0.8c5.1-3,8.5-8.2,9.1-14c4.8-0.8,9.6-0.8,14.5,0.1&#xA;&#x9;&#x9;c0.6,5.8,3.9,11.1,9.1,14c5.1,3,11.3,3.2,16.6,0.8c1.6,1.9,2.9,3.8,4.1,5.9c1.2,2.1,2.2,4.3,3.1,6.7c-4.8,3.4-7.6,8.9-7.6,14.9&#xA;&#x9;&#x9;c0,5.9,2.9,11.4,7.6,14.8c-1.7,4.6-4.1,8.9-7.2,12.6c-5.3-2.4-11.6-2.2-16.7,0.8c-5.1,3-8.5,8.2-9.1,14c-4.8,0.8-9.6,0.8-14.5-0.1&#xA;&#x9;&#x9;c-0.6-5.8-3.9-11.1-9.1-14C42.5,89.2,36.3,89,31,91.3z\"></path>\n&#x9;<path d=\"M79.3,61.2c-1,1-1.6,2.5-1.6,4c0,3,2.4,5.4,5.4,5.4c0,0,0,0,0,0c3,0,5.3-2.4,5.3-5.5c0-3.1-2.3-5.5-5.3-5.5&#xA;&#x9;&#x9;C81.7,59.6,80.4,60.2,79.3,61.2z M85.5,65.1c0,1.4-1,2.4-2.3,2.4c0,0,0,0,0,0c-1.3,0-2.3-1.1-2.3-2.4c0-0.7,0.2-1.3,0.7-1.8&#xA;&#x9;&#x9;c0.4-0.4,1-0.7,1.7-0.7c0,0,0,0,0,0C84.5,62.7,85.5,63.7,85.5,65.1z\"></path>\n&#x9;<path d=\"M44.8,70.6c3,0,5.3-2.4,5.4-5.4c0-3.1-2.2-5.5-5.3-5.5c-1.5,0-2.8,0.5-3.9,1.5c-1,1-1.6,2.5-1.6,4&#xA;&#x9;&#x9;C39.5,68.2,41.8,70.6,44.8,70.6C44.8,70.6,44.8,70.6,44.8,70.6z M42.5,65.1c0-0.7,0.2-1.4,0.7-1.8c0.4-0.4,1-0.6,1.6-0.6&#xA;&#x9;&#x9;c0,0,0,0,0,0c1.3,0,2.3,1.1,2.3,2.5v0c0,1.4-1,2.4-2.3,2.4c0,0,0,0,0,0C43.5,67.5,42.5,66.5,42.5,65.1z\"></path>\n&#x9;<path d=\"M42,88.3c0.8,0.5,1.7,0.7,2.7,0.7c1,0,2-0.3,2.9-0.8c1.9-1,2.9-2.8,2.9-5.1c0-1.1,0-2.1,0-3.2h27.1c0,1,0,2,0,2.9&#xA;&#x9;&#x9;c0,1.9,0.7,3.5,1.8,4.6c1.1,1,2.4,1.5,4,1.5c3.3-0.1,5.6-2.6,5.6-6.2c0-1,0-1.9,0-2.9h4.5V61.5l-0.1-0.2c-1-3.1-2.8-5-5.4-5.9&#xA;&#x9;&#x9;c0-0.1-0.1-0.2-0.1-0.3c-0.8-2-1.6-4.1-2.4-6.1l-1.7-4.3c-1.5-3.8-4-5.6-8-5.6c-7.6,0-15.4,0-23.8,0c-4,0-6.5,1.7-8,5.6&#xA;&#x9;&#x9;c-0.5,1.2-0.9,2.3-1.4,3.5c-0.9,2.3-1.7,4.5-2.7,6.7c-0.1,0.2-0.4,0.5-0.6,0.6c-2.4,1-4,2.9-4.9,5.8l-0.1,18.5H39c0,0,0,0,0,0&#xA;&#x9;&#x9;c0,1.1,0,2.3,0,3.5C39.1,85.5,40.2,87.3,42,88.3z M37.6,76.8V62c0.7-1.9,1.6-3.1,3.1-3.7c0.9-0.4,1.8-1.3,2.2-2.3&#xA;&#x9;&#x9;c0.9-2.3,1.8-4.5,2.7-6.8c0.4-1.2,0.9-2.3,1.3-3.5c1-2.7,2.4-3.6,5.2-3.6c8.4,0,16.1,0,23.8,0c2.7,0,4.1,1,5.2,3.6l1.7,4.3&#xA;&#x9;&#x9;c0.8,2,1.6,4.1,2.4,6.1c0.3,0.8,0.8,1.7,1.7,2c1.8,0.5,2.9,1.8,3.7,3.9v14.7H86l0,3c0,1,0,2,0,3c0,0.9-0.3,3.1-2.6,3.2&#xA;&#x9;&#x9;c-0.7,0-1.4-0.2-1.8-0.7c-0.6-0.5-0.9-1.4-0.9-2.5c0-1,0-2,0-3l0-3H47.4l0,3c0,1.1,0,2.1,0,3.2c0,1.2-0.4,2-1.3,2.5&#xA;&#x9;&#x9;c-0.8,0.5-1.8,0.5-2.6,0.1c-0.8-0.5-1.3-1.3-1.4-2.4c-0.1-1.1,0-2.2,0-3.3c0-0.5,0-1.1,0-1.6v-1.5H37.6z\"></path>\n&#x9;<path d=\"M82.5,53c-0.9-2.5-1.8-4.9-2.8-7.3c-0.4-1.1-1.4-2.3-3.9-2.3c0,0,0,0,0,0c-7.8,0-15.6,0-23.5,0c0,0,0,0,0,0&#xA;&#x9;&#x9;c-2.2,0-3.6,1-4.3,3.1c-0.4,1.1-0.8,2.2-1.2,3.3l-3,8.2h40.6L82.5,53z M48.1,54.9l1.5-4.1c0.4-1.1,0.8-2.2,1.2-3.4&#xA;&#x9;&#x9;c0.3-0.8,0.6-1,1.4-1c0,0,0,0,0,0c7.8,0,15.7,0,23.5,0c0,0,0,0,0,0c0.9,0,1,0.2,1.1,0.4c0.9,2.4,1.8,4.8,2.8,7.2l0.3,0.8H48.1z\"></path>\n</g>\n</svg>",
+    "orders": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" version=\"1.1\" id=\"Слой_1\" xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\" viewBox=\"0 0 128 128\" style=\"enable-background:new 0 0 128 128;\" xml:space=\"preserve\">\n<g>\n&#x9;<path d=\"M101.1,29.6H39.7v0.2l-1.8-3.7c-2.3-4.5-6.8-7.4-11.9-7.4h-4.9v6.1H26c2.7,0,5.2,1.5,6.4,4l16.9,34.1l-6.3,8.5&#xA;&#x9;&#x9;c-2.2,2.9-2.5,6.8-0.9,10.1c1.6,3.3,4.9,5.3,8.6,5.3h50.5v-6.1H50.8c-1.4,0-2.5-0.7-3.1-1.9C47,77.5,47.2,76.1,48,75l5.7-7.7h29.9&#xA;&#x9;&#x9;c4.1,0,7.9-2.2,9.8-5.8l12.8-23.3c1-1.8,1-4-0.1-5.7C105.1,30.7,103.2,29.6,101.1,29.6z M88,58.6c-0.9,1.6-2.6,2.6-4.5,2.6H55.3&#xA;&#x9;&#x9;L42.7,35.7h57.9L88,58.6z\"></path>\n&#x9;<path d=\"M50.6,88.8c-5.7,0-10.3,4.6-10.3,10.3s4.6,10.3,10.3,10.3c5.7,0,10.3-4.6,10.3-10.3S56.2,88.8,50.6,88.8z M50.6,103.2&#xA;&#x9;&#x9;c-2.3,0-4.2-1.9-4.2-4.2c0-2.3,1.9-4.2,4.2-4.2c2.3,0,4.2,1.9,4.2,4.2C54.7,101.3,52.9,103.2,50.6,103.2z\"></path>\n&#x9;<path d=\"M93.5,88.8c-5.7,0-10.3,4.6-10.3,10.3s4.6,10.3,10.3,10.3c5.7,0,10.3-4.6,10.3-10.3S99.1,88.8,93.5,88.8z M93.5,103.2&#xA;&#x9;&#x9;c-2.3,0-4.2-1.9-4.2-4.2c0-2.3,1.9-4.2,4.2-4.2s4.2,1.9,4.2,4.2C97.6,101.3,95.8,103.2,93.5,103.2z\"></path>\n</g>\n</svg>",
+    "feedback": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" version=\"1.1\" id=\"Слой_1\" xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\" viewBox=\"0 0 128 128\" style=\"enable-background:new 0 0 128 128;\" xml:space=\"preserve\">\n<g>\n&#x9;<path d=\"M100.6,23.1H29.1c-6.7,0-12.2,5.5-12.2,12.2v49.5c0,6.7,5.5,12.2,12.2,12.2h12.1v11.9c0,2.3,1.4,4.4,3.6,5.3&#xA;&#x9;&#x9;c0.7,0.3,1.5,0.4,2.2,0.4c1.5,0,3-0.6,4.1-1.7l16-16h33.6c6.7,0,12.2-5.5,12.2-12.2V35.3C112.9,28.6,107.4,23.1,100.6,23.1z&#xA;&#x9;&#x9; M107.5,84.8c0,3.8-3.1,6.9-6.9,6.9H64.9l-17.6,17.6c-0.1,0.1-0.2,0.2-0.5,0.1c-0.3-0.1-0.3-0.3-0.3-0.4V91.6H29.1&#xA;&#x9;&#x9;c-3.8,0-6.9-3.1-6.9-6.9V35.3c0-3.8,3.1-6.9,6.9-6.9h71.6c3.8,0,6.9,3.1,6.9,6.9V84.8z\"></path>\n&#x9;<path d=\"M80.5,57.6H44.2V70c0,8.5,6.9,15.3,15.3,15.3h10.3c8.5,0,15.3-6.9,15.3-15.3v-7.6C85.2,59.8,83.1,57.6,80.5,57.6z M79.9,70&#xA;&#x9;&#x9;c0,5.5-4.5,10-10,10H59.6c-5.5,0-10-4.5-10-10v-7h30.3V70z\"></path>\n&#x9;<path d=\"M64.6,54.8c5.9,0,10.7-4.8,10.7-10.7s-4.8-10.7-10.7-10.7s-10.7,4.8-10.7,10.7S58.7,54.8,64.6,54.8z M64.6,38.8&#xA;&#x9;&#x9;c3,0,5.4,2.4,5.4,5.4s-2.4,5.4-5.4,5.4s-5.4-2.4-5.4-5.4S61.7,38.8,64.6,38.8z\"></path>\n</g>\n</svg>",
+    "articles": "<svg fill=\"currentColor\" width=\"100%\" height=\"100%\" preserveAspectRatio=\"xMidYMid meet\" version=\"1.1\" id=\"Слой_1\" xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\" viewBox=\"0 0 128 128\" style=\"enable-background:new 0 0 128 128;\" xml:space=\"preserve\">\n<g>\n&#x9;<path d=\"M93.9,15.6H34.1c-5.2,0-9.4,4.2-9.4,9.4v40h5.3v-40c0-2.3,1.8-4.1,4.1-4.1h59.7c2.3,0,4.1,1.8,4.1,4.1v80.1&#xA;&#x9;&#x9;c0,2.3-1.8,4.1-4.1,4.1H34.1c-2.3,0-4.1-1.8-4.1-4.1V65.1h-5.3v40.1c0,5.2,4.2,9.4,9.4,9.4h59.7c5.2,0,9.4-4.2,9.4-9.4V25.1&#xA;&#x9;&#x9;C103.3,19.9,99.1,15.6,93.9,15.6z\"></path>\n&#x9;<rect x=\"38.5\" y=\"32.5\" width=\"50.9\" height=\"5.3\"></rect>\n&#x9;<rect x=\"38.5\" y=\"45\" width=\"50.9\" height=\"5.3\"></rect>\n&#x9;<rect x=\"38.5\" y=\"57.5\" width=\"50.9\" height=\"5.3\"></rect>\n&#x9;<rect x=\"38.5\" y=\"70\" width=\"50.9\" height=\"5.3\"></rect>\n&#x9;<rect x=\"38.5\" y=\"82.5\" width=\"50.9\" height=\"5.3\"></rect>\n</g>\n</svg>"
+  };
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "res/icons/main-icons.js", error: String((e && e.message) || e) }); }
+
 // res/nav.js
 try { (() => {
 // Pandora Spec — cross-mockup navigation.
@@ -4612,7 +6241,12 @@ try { (() => {
 
   // Section key → file, relative to project root.
   var LINKS = {
-    home: 'index.html',
+    home: 'features/home/Home.html',
+    'home-tablet': 'features/home/HomeTablet.html',
+    'home-desktop': 'features/home/HomeDesktop.html',
+    'home-parts': 'features/home/HomeParts.html',
+    'app-update': 'features/app-update/AppUpdate.html',
+    index: 'index.html',
     calculator: 'features/calculator/Calculator.html',
     'calculator-tablet': 'features/calculator/CalculatorTablet.html',
     'calculator-desktop': 'features/calculator/CalculatorDesktop.html',
