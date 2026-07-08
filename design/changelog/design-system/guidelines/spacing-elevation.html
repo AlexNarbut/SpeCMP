@@ -1,0 +1,24 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Elevation" subtitle="0 flat · 1 card · higher for FAB / menus / dialogs" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: var(--surface-container-low); color: var(--on-background); padding: 24px; }
+  .row { display: flex; gap: 26px; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .box { width: 110px; height: 64px; background: var(--surface); border-radius: 12px; }
+  .cap { font-family: var(--font-mono); font-size: 11px; color: var(--on-surface-variant); }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="item"><div class="box" style="box-shadow: var(--elevation-0); border: 1px solid var(--outline-variant);"></div><div class="cap">level 0</div></div>
+  <div class="item"><div class="box" style="box-shadow: var(--elevation-1);"></div><div class="cap">level 1 · card</div></div>
+  <div class="item"><div class="box" style="box-shadow: var(--elevation-2);"></div><div class="cap">level 2 · menu</div></div>
+  <div class="item"><div class="box" style="box-shadow: var(--elevation-3);"></div><div class="cap">level 3 · FAB/dialog</div></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!-- @dsCard group="Components" viewport="700x220" name="Progress" subtitle="Circular & linear — determinate & indeterminate" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: var(--background); color: var(--on-background); padding: 24px; }
+  .col { display: flex; flex-direction: column; gap: 22px; }
+  .row { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .lbl { font-size: 11px; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: .07em; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const DS = window.PandoraSpecDesignSystem_b8d6e1;
+  const { CmpCircularProgressIndicator, CmpLinearProgressIndicator, CmpText } = DS;
+  function Demo() {
+    return (
+      <div className="col">
+        <div className="lbl">Circular</div>
+        <div className="row">
+          <CmpCircularProgressIndicator progress={0.7} />
+          <CmpCircularProgressIndicator />
+          <CmpText variant="bodyMedium" color="var(--on-surface-variant)">determinate · indeterminate</CmpText>
+        </div>
+        <div className="lbl">Linear</div>
+        <div style={{ maxWidth: 420, display: "flex", flexDirection: "column", gap: 16 }}>
+          <CmpLinearProgressIndicator progress={0.4} />
+          <CmpLinearProgressIndicator />
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!-- @dsCard group="Обновление приложения" viewport="900x640" name="Обновление (desktop)" subtitle="Проверка и загрузка новой версии (.dmg) — прототип потока + состояния, светлая и тёмная тема" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Спец — Обновление приложения</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 980px; }
+  .seg { display: flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 7px 13px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .link { border: none; background: #fff; border-radius: 999px; padding: 7px 13px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #1A3E7A; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .picker { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 760px; }
+  .chip { border: 1px solid #b9bcbe; background: #fff; border-radius: 999px; padding: 5px 11px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; cursor: pointer; color: #444; }
+  .chip.on { background: #1A3E7A; color: #fff; border-color: #1A3E7A; }
+  .scaler { transform-origin: top left; }
+  .win { border-radius: 10px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); display: flex; flex-direction: column; }
+  .titlebar { height: 38px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); }
+  .title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .title .material-icons { font-size: 18px; color: var(--primary); }
+  .wctl { display: flex; align-items: center; gap: 6px; }
+  .wbtn { width: 28px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--on-surface-variant); cursor: pointer; }
+  .wbtn .material-icons { font-size: 16px; }
+  .cbody { flex: 1; min-height: 0; display: flex; background: var(--background); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./AppUpdateScreen.jsx"></script>
+<script type="text/babel">
+  const STATE_LABEL = { available: "available", checking: "checking", downloading: "downloading", downloaded: "downloaded", uptodate: "uptodate", error: "error" };
+  const W = 1100, H = 720;
+
+  function UpdateHost() {
+    const [dark, setDark] = React.useState(true);
+    const [demo, setDemo] = React.useState(true);
+    const [state, setState] = React.useState("available");
+    const states = window.AppUpdate.UPDATE_STATES;
+
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const fit = () => setScale(Math.min(1, (window.innerWidth - 48) / W, (window.innerHeight - 240) / H));
+      fit();
+      window.addEventListener("resize", fit);
+      return () => window.removeEventListener("resize", fit);
+    }, []);
+
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <div className="seg">
+            <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+            <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+          </div>
+          <div className="seg">
+            <button className={demo ? "on" : ""} onClick={() => setDemo(true)}>Прототип</button>
+            <button className={!demo ? "on" : ""} onClick={() => setDemo(false)}>Состояния</button>
+          </div>
+          <button className="link" onClick={() => window.psGo("home-desktop")}>Главный экран →</button>
+        </div>
+
+        {!demo && (
+          <div className="picker">
+            {states.map((s) => (
+              <button key={s} className={"chip" + (state === s ? " on" : "")} onClick={() => setState(s)}>{STATE_LABEL[s]}</button>
+            ))}
+          </div>
+        )}
+
+        <div style={{ width: W * scale, height: H * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="win" data-theme={dark ? "dark" : undefined} style={{ width: W, height: H }}>
+              <div className="titlebar">
+                <div className="title"><span className="material-icons">build</span>Pandora Спец</div>
+                <div className="wctl">
+                  <div className="wbtn"><span className="material-icons">remove</span></div>
+                  <div className="wbtn"><span className="material-icons">crop_square</span></div>
+                  <div className="wbtn"><span className="material-icons">close</span></div>
+                </div>
+              </div>
+              <div className="cbody">
+                {demo
+                  ? <window.AppUpdate.AppUpdateApp key="flow" showBack onBack={() => window.psGo("home-desktop")} />
+                  : <window.AppUpdate.AppUpdateApp key={"pin-" + state} pinnedState={state} showBack onBack={() => window.psGo("home-desktop")} />}
+              </div>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<UpdateHost />);
+</script>
+</body>
+</html>

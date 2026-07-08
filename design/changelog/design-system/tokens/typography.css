@@ -1,0 +1,43 @@
+/* ============================================================
+   Pandora Spec — Typography (Material 3 type scale)
+   Font: Roboto (Material default; no custom face in codebase).
+   Sizes given in sp == px 1:1. Designer picks a ROLE, not a size.
+   ============================================================ */
+
+:root {
+  /* Font families */
+  --font-sans: "Roboto", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Weights */
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Display ── */
+  --display-large-size: 57px;        --display-large-line: 64px;
+  --display-medium-size: 45px;       --display-medium-line: 52px;
+  --display-small-size: 36px;        --display-small-line: 44px;
+
+  /* ── Headline ── */
+  --headline-large-size: 32px;       --headline-large-line: 40px;
+  --headline-medium-size: 28px;      --headline-medium-line: 36px;
+  --headline-small-size: 24px;       --headline-small-line: 32px;
+
+  /* ── Title ── */
+  --title-large-size: 22px;          --title-large-line: 28px;
+  --title-medium-size: 16px;         --title-medium-line: 24px;
+  --title-small-size: 14px;          --title-small-line: 20px;
+
+  /* ── Body ── */
+  --body-large-size: 16px;           --body-large-line: 24px;
+  --body-medium-size: 14px;          --body-medium-line: 20px;
+  --body-small-size: 12px;           --body-small-line: 16px;
+
+  /* ── Label ── */
+  --label-large-size: 14px;          --label-large-line: 20px;
+  --label-medium-size: 12px;         --label-medium-line: 16px;
+  --label-small-size: 11px;          --label-small-line: 16px;
+}

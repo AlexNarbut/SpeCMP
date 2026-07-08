@@ -1,0 +1,9 @@
+/* ============================================================
+   Root styles.css — platform compile entry (must live at project
+   root). The real manifest is design-system/styles.css; this is a
+   thin shim that re-exports it so the compiler indexes every token
+   and @font-face in the closure. Link EITHER file — both resolve to
+   the same tokens.
+   ============================================================ */
+
+@import url("design-system/styles.css");
