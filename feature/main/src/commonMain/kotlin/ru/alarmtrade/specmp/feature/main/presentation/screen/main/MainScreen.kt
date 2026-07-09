@@ -1,35 +1,36 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import org.koin.compose.viewmodel.koinViewModel
-import ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents.MainPlaceholderBody
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents.MainHomeBody
 
 @Composable
 fun MainScreen(
+    isDarkTheme: Boolean,
+    onThemeChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel = koinViewModel<MainScreenViewModel>()
     val state = viewModel.state.collectAsState()
 
-    MainContent(
-        state = state,
-        onLogout = viewModel::logout,
-        modifier = modifier,
-    )
-}
+    LaunchedEffect(viewModel) {
+        viewModel.onScreenEntered()
+    }
 
-@Composable
-private fun MainContent(
-    state: State<MainScreenState>,
-    onLogout: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    MainPlaceholderBody(
-        state = state.value,
-        onLogout = onLogout,
+    MainHomeBody(
+        state = state,
+        onMenuClick = viewModel::onMenuClicked,
+        onMenuDismiss = viewModel::onMenuDismissed,
+        onDatabaseSyncClick = viewModel::onDatabaseSyncClicked,
+        onAppUpdateCheckClick = viewModel::onAppUpdateCheckClicked,
+        onAppUpdateOpenClick = viewModel::onAppUpdateBannerClicked,
+        onHomeActionClick = viewModel::onHomeActionClicked,
+        isDarkTheme = isDarkTheme,
+        onThemeChanged = onThemeChanged,
+        onLogout = viewModel::logout,
         modifier = modifier,
     )
 }

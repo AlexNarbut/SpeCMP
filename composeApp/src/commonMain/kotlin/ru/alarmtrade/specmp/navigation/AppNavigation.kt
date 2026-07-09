@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
@@ -14,6 +15,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
@@ -52,6 +54,8 @@ fun AppNavigation(
 @Composable
 private fun MainNavGraph() {
     val backStack = rememberNavBackStack(navConfig, MainRoute)
+    val isDarkState = LocalThemeIsDark.current
+    val isDark by isDarkState
 
     NavDisplay(
         backStack = backStack,
@@ -62,7 +66,10 @@ private fun MainNavGraph() {
         },
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
-                MainScreen()
+                MainScreen(
+                    isDarkTheme = isDark,
+                    onThemeChanged = { isDarkState.value = it },
+                )
             }
         }
     )
