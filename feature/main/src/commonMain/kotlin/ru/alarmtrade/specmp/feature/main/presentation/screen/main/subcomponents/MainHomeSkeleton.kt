@@ -36,6 +36,8 @@ import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
 @Composable
 internal fun MainHomeSkeleton(
@@ -48,6 +50,9 @@ internal fun MainHomeSkeleton(
     colors: CmpThemeColors = cmpThemeColors(),
 ) {
     val contentPadding = mode.contentPadding
+    val visibleActions = MainHomeAction.visibleActions()
+    val primaryActionsCount = visibleActions.count { it.group == MainHomeActionGroup.Primary }
+    val toolActionsCount = visibleActions.count { it.group == MainHomeActionGroup.Tool }
     val mainColumns = if (mode == MainHomeMode.Compact) 1 else 2
     val toolColumns = when (mode) {
         MainHomeMode.Compact -> 1
@@ -77,7 +82,7 @@ internal fun MainHomeSkeleton(
                 columns = mainColumns,
                 gap = if (mode == MainHomeMode.Compact) 12.dp else 16.dp,
                 itemHeight = { itemWidth -> mainHomePrimaryCardHeight(mode, itemWidth) },
-                itemCount = 2,
+                itemCount = primaryActionsCount,
             ) { itemModifier ->
                 MainCardSkeleton(
                     variant = cardVariant,
@@ -91,7 +96,7 @@ internal fun MainHomeSkeleton(
                 columns = toolColumns,
                 gap = 12.dp,
                 itemHeight = { itemWidth -> mainHomeToolCardHeight(mode, itemWidth) },
-                itemCount = 6,
+                itemCount = toolActionsCount,
             ) { itemModifier ->
                 ToolCardSkeleton(
                     isRow = isToolRow,

@@ -21,12 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
@@ -38,44 +35,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
-import specmp.feature.main.generated.resources.Res
-import specmp.feature.main.generated.resources.adv_mount
-import specmp.feature.main.generated.resources.can
-import specmp.feature.main.generated.resources.chat
-import specmp.feature.main.generated.resources.fast_mount
-import specmp.feature.main.generated.resources.feedback
-import specmp.feature.main.generated.resources.firmware_archive
-import specmp.feature.main.generated.resources.main_main_msg_advanced_mount
-import specmp.feature.main.generated.resources.main_main_msg_can_scanner
-import specmp.feature.main.generated.resources.main_main_msg_cars
-import specmp.feature.main.generated.resources.main_main_msg_configurator
-import specmp.feature.main.generated.resources.main_main_msg_feedback
-import specmp.feature.main.generated.resources.main_main_msg_firmware_archive
-import specmp.feature.main.generated.resources.main_main_msg_product_info
-import specmp.feature.main.generated.resources.main_main_msg_quick_mount
-import specmp.feature.main.generated.resources.main_main_msg_requests
-import specmp.feature.main.generated.resources.main_main_msg_tech_support_chat
-import specmp.feature.main.generated.resources.main_main_title_advanced_mount
-import specmp.feature.main.generated.resources.main_main_title_can_scanner
-import specmp.feature.main.generated.resources.main_main_title_cars
-import specmp.feature.main.generated.resources.main_main_title_configurator
-import specmp.feature.main.generated.resources.main_main_title_feedback
-import specmp.feature.main.generated.resources.main_main_title_firmware_archive
-import specmp.feature.main.generated.resources.main_main_title_product_info
-import specmp.feature.main.generated.resources.main_main_title_quick_mount
-import specmp.feature.main.generated.resources.main_main_title_requests
-import specmp.feature.main.generated.resources.main_main_title_tech_support_chat
-import specmp.feature.main.generated.resources.product_search
-import specmp.feature.main.generated.resources.settings_configurator
-import specmp.feature.main.generated.resources.user_manual_request
-import specmp.feature.main.generated.resources.vehicle_support
-
-private data class MainHomeItem(
-    val action: MainHomeAction,
-    val icon: DrawableResource,
-    val title: StringResource,
-    val description: StringResource,
-)
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
 @Composable
 internal fun MainHomeDashboard(
@@ -86,9 +46,12 @@ internal fun MainHomeDashboard(
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
+    actions: List<MainHomeAction> = MainHomeAction.visibleActions(),
     colors: CmpThemeColors = cmpThemeColors(),
 ) {
     val contentPadding = mode.contentPadding
+    val primaryActions = actions.filter { it.group == MainHomeActionGroup.Primary }
+    val toolActions = actions.filter { it.group == MainHomeActionGroup.Tool }
     val mainColumns = if (mode == MainHomeMode.Compact) 1 else 2
     val toolColumns = when (mode) {
         MainHomeMode.Compact -> 1
@@ -117,13 +80,13 @@ internal fun MainHomeDashboard(
                 columns = mainColumns,
                 gap = if (mode == MainHomeMode.Compact) 12.dp else 16.dp,
                 itemHeight = { itemWidth -> mainHomePrimaryCardHeight(mode, itemWidth) },
-                items = mainHomeActions(),
+                items = primaryActions,
             ) { item, itemModifier ->
                 MainActionCard(
                     item = item,
                     variant = cardVariant,
                     colors = colors,
-                    onClick = { onHomeActionClick(item.action) },
+                    onClick = { onHomeActionClick(item) },
                     modifier = itemModifier,
                 )
             }
@@ -132,13 +95,13 @@ internal fun MainHomeDashboard(
                 columns = toolColumns,
                 gap = 12.dp,
                 itemHeight = { itemWidth -> mainHomeToolCardHeight(mode, itemWidth) },
-                items = mainHomeTools(),
+                items = toolActions,
             ) { item, itemModifier ->
                 ToolCard(
                     item = item,
                     layout = toolLayout,
                     colors = colors,
-                    onClick = { onHomeActionClick(item.action) },
+                    onClick = { onHomeActionClick(item) },
                     modifier = itemModifier,
                 )
             }
@@ -148,7 +111,7 @@ internal fun MainHomeDashboard(
 
 @Composable
 private fun MainActionCard(
-    item: MainHomeItem,
+    item: MainHomeAction,
     variant: MainCardVariant,
     colors: CmpThemeColors,
     onClick: () -> Unit,
@@ -213,14 +176,14 @@ private fun MainActionCard(
 
 @Composable
 private fun MainActionText(
-    item: MainHomeItem,
+    item: MainHomeAction,
     colors: CmpThemeColors,
     textAlign: TextAlign,
     horizontalAlignment: Alignment.Horizontal,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         horizontalAlignment = horizontalAlignment,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -230,6 +193,7 @@ private fun MainActionText(
             fontWeight = FontWeight.SemiBold,
             color = colors.onSurface,
             textAlign = textAlign,
+            maxLines = 2,
         )
         CmpText(
             text = stringResource(item.description),
@@ -237,14 +201,13 @@ private fun MainActionText(
             color = colors.onSurfaceVariant,
             textAlign = textAlign,
             maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
 private fun ToolCard(
-    item: MainHomeItem,
+    item: MainHomeAction,
     layout: ToolCardLayout,
     colors: CmpThemeColors,
     onClick: () -> Unit,
@@ -309,14 +272,14 @@ private fun ToolCard(
 
 @Composable
 private fun ToolText(
-    item: MainHomeItem,
+    item: MainHomeAction,
     colors: CmpThemeColors,
     textAlign: TextAlign,
     horizontalAlignment: Alignment.Horizontal,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         horizontalAlignment = horizontalAlignment,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -326,14 +289,14 @@ private fun ToolText(
             fontWeight = FontWeight.Medium,
             color = colors.onSurface,
             textAlign = textAlign,
+            maxLines = 2,
         )
         CmpText(
             text = stringResource(item.description),
             fontSize = 12.sp,
             color = colors.onSurfaceVariant,
             textAlign = textAlign,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+            maxLines = 3,
         )
     }
 }
@@ -429,74 +392,4 @@ private fun Modifier.mainHomeContentWidth(maxWidth: Dp): Modifier {
 private enum class ToolCardLayout {
     Grid,
     Row,
-}
-
-private fun mainHomeActions(): List<MainHomeItem> {
-    return listOf(
-        MainHomeItem(
-            action = MainHomeAction.QuickMount,
-            icon = Res.drawable.fast_mount,
-            title = Res.string.main_main_title_quick_mount,
-            description = Res.string.main_main_msg_quick_mount,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.AdvancedMount,
-            icon = Res.drawable.adv_mount,
-            title = Res.string.main_main_title_advanced_mount,
-            description = Res.string.main_main_msg_advanced_mount,
-        ),
-    )
-}
-
-private fun mainHomeTools(): List<MainHomeItem> {
-    return listOf(
-        MainHomeItem(
-            action = MainHomeAction.Configurator,
-            icon = Res.drawable.settings_configurator,
-            title = Res.string.main_main_title_configurator,
-            description = Res.string.main_main_msg_configurator,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.FirmwareArchive,
-            icon = Res.drawable.firmware_archive,
-            title = Res.string.main_main_title_firmware_archive,
-            description = Res.string.main_main_msg_firmware_archive,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.Cars,
-            icon = Res.drawable.vehicle_support,
-            title = Res.string.main_main_title_cars,
-            description = Res.string.main_main_msg_cars,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.CanScanner,
-            icon = Res.drawable.can,
-            title = Res.string.main_main_title_can_scanner,
-            description = Res.string.main_main_msg_can_scanner,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.Requests,
-            icon = Res.drawable.user_manual_request,
-            title = Res.string.main_main_title_requests,
-            description = Res.string.main_main_msg_requests,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.Feedback,
-            icon = Res.drawable.feedback,
-            title = Res.string.main_main_title_feedback,
-            description = Res.string.main_main_msg_feedback,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.ProductInfo,
-            icon = Res.drawable.product_search,
-            title = Res.string.main_main_title_product_info,
-            description = Res.string.main_main_msg_product_info,
-        ),
-        MainHomeItem(
-            action = MainHomeAction.TechSupportChat,
-            icon = Res.drawable.chat,
-            title = Res.string.main_main_title_tech_support_chat,
-            description = Res.string.main_main_msg_tech_support_chat,
-        ),
-    )
 }

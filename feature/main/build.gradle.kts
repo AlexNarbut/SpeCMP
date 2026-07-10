@@ -30,6 +30,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
             implementation(project(":feature:auth-state"))
 
@@ -40,6 +41,10 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+
+            implementation(libs.alarmtrade.specialist)
+
+            implementation(libs.kermit)
         }
     }
 }

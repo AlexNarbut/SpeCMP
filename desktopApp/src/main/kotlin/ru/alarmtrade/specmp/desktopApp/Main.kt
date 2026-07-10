@@ -7,6 +7,8 @@ import androidx.compose.ui.window.rememberWindowState
 import ru.alarmtrade.specmp.App
 
 fun main() = application {
+    val (versionName, versionCode) = loadDesktopAppVersion()
+
     Window(
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(
@@ -15,6 +17,26 @@ fun main() = application {
         ),
         title = "SpeCMP",
     ) {
-        App()
+        App(
+            appVersionName = versionName,
+            appVersionCode = versionCode,
+        )
+    }
+}
+
+private fun loadDesktopAppVersion(): Pair<String, Int> {
+    return try {
+        val properties = java.util.Properties().apply {
+            val stream = Thread.currentThread().contextClassLoader
+                ?.getResourceAsStream("version.properties")
+            if (stream != null) {
+                load(stream)
+            }
+        }
+        val versionName = properties.getProperty("versionName", "2.0.40")
+        val versionCode = properties.getProperty("versionCode", "240").toIntOrNull() ?: 240
+        versionName to versionCode
+    } catch (e: Throwable) {
+        "2.0.40" to 240
     }
 }

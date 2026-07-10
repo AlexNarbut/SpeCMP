@@ -35,7 +35,7 @@ compose.desktop {
                 TargetFormat.Deb,
             )
             packageName = "SpeCMP"
-            packageVersion = "1.0.0"
+            packageVersion = "2.0.40"
         }
     }
 }

@@ -76,6 +76,7 @@ applyAppLocale(AppLocale.Russian)
 - `specialistModule` - Koin-модуль, который создаёт `SpecialistApp`
 - Регистрацию конкретных SDK interactor-ов для feature-модулей
 - `SpecialistDeviceInformationProvider` - узкий provider device information для SDK
+- `SpecialistAppVersionProvider` - узкий provider текущей версии приложения для SDK
 - Platform-specific реализацию `AppDeviceInformation` для Android, iOS и JVM/Desktop
 
 **Правило:**
@@ -83,6 +84,8 @@ Feature-модули не создают `SpecialistApp` и не принима�
 этого они получают конкретные SDK interactor-ы или узкие provider-ы, которые им нужны.
 Если SDK доступен в common-коде, feature-репозиторий и DI должны оставаться в `commonMain`;
 в platform source set выносится только действительно platform-specific код.
+Версия приложения для SDK задаётся через `SpecialistAppVersionProvider`; она же используется
+feature-модулями, которым нужно показать текущую версию или передать код версии в SDK-запрос.
 
 ### core/ui
 **UI компоненты и утилиты** для Compose Multiplatform.

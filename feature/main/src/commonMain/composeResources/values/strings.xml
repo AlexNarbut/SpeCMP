@@ -27,6 +27,8 @@
     <string name="main_main_msg_product_info">Find product and package information</string>
     <string name="main_main_title_tech_support_chat">Tech support chat</string>
     <string name="main_main_msg_tech_support_chat">Message our specialist in chat about your issue</string>
+    <string name="main_main_title_warehouse_1c">Warehouse 1C</string>
+    <string name="main_main_msg_warehouse_1c">Open warehouse integration</string>
 
     <string name="main_drawer_label_profile">Profile</string>
     <string name="main_drawer_label_name_missing">Name not specified</string>
@@ -37,10 +39,10 @@
     <string name="main_drawer_label_app_update_check">Check app updates</string>
     <string name="main_drawer_label_app_update_checking">Checking updates...</string>
     <string name="main_drawer_banner_app_update_available">New version available</string>
-    <string name="main_drawer_banner_app_update_subtitle">%s · tap to update</string>
-    <string name="main_drawer_label_app_update_latest">latest</string>
+    <string name="main_drawer_banner_app_update_subtitle">%1$s · tap to update</string>
     <string name="main_drawer_label_settings">Settings</string>
     <string name="main_drawer_btn_logout">Log out</string>
-    <string name="main_drawer_label_version">Pandora Spec · version %s</string>
+    <string name="main_drawer_label_version">Pandora Spec · version %1$s</string>
+    <string name="main_drawer_label_database_version">DB version %1$s</string>
     <string name="main_drawer_error_logout_failed">Couldn't log out. Please try again.</string>
 </resources>

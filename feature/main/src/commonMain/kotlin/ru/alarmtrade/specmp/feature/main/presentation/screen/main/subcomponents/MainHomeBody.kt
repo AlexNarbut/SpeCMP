@@ -53,6 +53,7 @@ fun MainHomeBody(
     onAppUpdateCheckClick: () -> Unit,
     onAppUpdateOpenClick: () -> Unit,
     onHomeActionClick: (MainHomeAction) -> Unit,
+    onSettingsClick: () -> Unit,
     isDarkTheme: Boolean,
     onThemeChanged: (Boolean) -> Unit,
     onLogout: () -> Unit,
@@ -127,7 +128,7 @@ fun MainHomeBody(
                             onDatabaseSyncClick = onDatabaseSyncClick,
                             onAppUpdateCheckClick = onAppUpdateCheckClick,
                             onAppUpdateOpenClick = onAppUpdateOpenClick,
-                            onSettingsClick = { onHomeActionClick(MainHomeAction.Settings) },
+                            onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             contentPadding = sidePanelDrawerPadding,
                             modifier = Modifier.width(312.dp),
@@ -145,6 +146,7 @@ fun MainHomeBody(
                         )
                     } else {
                         MainHomeContent(
+                            state = value,
                             mode = mode,
                             cardVariant = value.cardVariant,
                             onHomeActionClick = onHomeActionClick,
@@ -182,7 +184,7 @@ fun MainHomeBody(
                             onDatabaseSyncClick = onDatabaseSyncClick,
                             onAppUpdateCheckClick = onAppUpdateCheckClick,
                             onAppUpdateOpenClick = onAppUpdateOpenClick,
-                            onSettingsClick = { onHomeActionClick(MainHomeAction.Settings) },
+                            onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             contentPadding = modalDrawerPadding,
                             modifier = Modifier.width(320.dp),
@@ -216,6 +218,7 @@ private fun sidePanelExitTransition() = drawerExitTransition() + shrinkHorizonta
 
 @Composable
 private fun MainHomeContent(
+    state: MainScreenState,
     mode: MainHomeMode,
     cardVariant: MainCardVariant,
     onHomeActionClick: (MainHomeAction) -> Unit,
@@ -224,6 +227,12 @@ private fun MainHomeContent(
     bottomContentPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
+    val actions = MainHomeAction.visibleActions(
+        features = state.appFeatures,
+        commercial = state.userCommercial,
+        showChat = state.chatAvailability,
+    )
+
     MainHomeDashboard(
         mode = mode,
         cardVariant = cardVariant,
@@ -231,6 +240,7 @@ private fun MainHomeContent(
         startContentPadding = startContentPadding,
         endContentPadding = endContentPadding,
         bottomContentPadding = bottomContentPadding,
+        actions = actions,
         modifier = modifier,
     )
 }

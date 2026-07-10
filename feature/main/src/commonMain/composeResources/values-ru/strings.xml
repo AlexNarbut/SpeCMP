@@ -27,6 +27,8 @@
     <string name="main_main_msg_product_info">Найти информацию о товаре и комплектации</string>
     <string name="main_main_title_tech_support_chat">Чат тех. поддержки</string>
     <string name="main_main_msg_tech_support_chat">Напишите в чат нашему специалисту о вашей проблеме</string>
+    <string name="main_main_title_warehouse_1c">Склад 1С</string>
+    <string name="main_main_msg_warehouse_1c">Открыть интеграцию со складом</string>
 
     <string name="main_drawer_label_profile">Профиль</string>
     <string name="main_drawer_label_name_missing">Имя не указано</string>
@@ -37,10 +39,10 @@
     <string name="main_drawer_label_app_update_check">Проверить обновления</string>
     <string name="main_drawer_label_app_update_checking">Проверка обновлений...</string>
     <string name="main_drawer_banner_app_update_available">Доступна новая версия</string>
-    <string name="main_drawer_banner_app_update_subtitle">%s · нажмите, чтобы обновить</string>
-    <string name="main_drawer_label_app_update_latest">последняя</string>
+    <string name="main_drawer_banner_app_update_subtitle">%1$s · нажмите, чтобы обновить</string>
     <string name="main_drawer_label_settings">Настройки</string>
     <string name="main_drawer_btn_logout">Выход</string>
-    <string name="main_drawer_label_version">Pandora Спец · версия %s</string>
+    <string name="main_drawer_label_version">Pandora Спец · версия %1$s</string>
+    <string name="main_drawer_label_database_version">Версия базы %1$s</string>
     <string name="main_drawer_error_logout_failed">Не удалось выйти. Попробуйте снова.</string>
 </resources>

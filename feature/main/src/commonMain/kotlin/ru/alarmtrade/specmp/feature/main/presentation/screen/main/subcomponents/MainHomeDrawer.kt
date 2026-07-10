@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
+import ru.alarmtrade.specmp.core.ui.lce.isSuccess
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -36,7 +37,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainAppUpdateState
+import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
@@ -49,8 +50,8 @@ import specmp.feature.main.generated.resources.main_drawer_btn_logout
 import specmp.feature.main.generated.resources.main_drawer_error_logout_failed
 import specmp.feature.main.generated.resources.main_drawer_label_app_update_check
 import specmp.feature.main.generated.resources.main_drawer_label_app_update_checking
-import specmp.feature.main.generated.resources.main_drawer_label_app_update_latest
 import specmp.feature.main.generated.resources.main_drawer_label_database_update
+import specmp.feature.main.generated.resources.main_drawer_label_database_version
 import specmp.feature.main.generated.resources.main_drawer_label_database_updating
 import specmp.feature.main.generated.resources.main_drawer_label_email_missing
 import specmp.feature.main.generated.resources.main_drawer_label_name_missing
@@ -58,9 +59,6 @@ import specmp.feature.main.generated.resources.main_drawer_label_profile
 import specmp.feature.main.generated.resources.main_drawer_label_settings
 import specmp.feature.main.generated.resources.main_drawer_label_theme
 import specmp.feature.main.generated.resources.main_drawer_label_version
-
-private const val AppVersion = "2.4.1"
-private const val LatestAppVersion = "2.5.0"
 
 @Composable
 internal fun MainHomeDrawer(
@@ -361,8 +359,14 @@ private fun MainDrawerFooter(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        if (state.isAppUpdateSupported && state.appUpdateState == MainAppUpdateState.Available) {
+        val availableAppVersion = state.appUpdateCheckResult as? MainAppUpdateCheckResult.Available
+        if (
+            state.isAppUpdateSupported &&
+            state.appUpdateState.isSuccess() &&
+            availableAppVersion != null
+        ) {
             MainAppUpdateBanner(
+                version = availableAppVersion.versionName,
                 colors = colors,
                 onClick = onAppUpdateOpenClick,
             )
@@ -375,29 +379,19 @@ private fun MainDrawerFooter(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             CmpText(
-                text = stringResource(Res.string.main_drawer_label_version, AppVersion),
+                text = stringResource(Res.string.main_drawer_label_version, state.appVersionName),
                 fontSize = 12.sp,
                 color = colors.onSurfaceVariant,
             )
-            if (state.isAppUpdateSupported && state.appUpdateState == MainAppUpdateState.UpToDate) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    CmpIcon(
-                        icon = CmpIcons.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MainHomeTokens.Success,
-                    )
-                    CmpText(
-                        text = stringResource(Res.string.main_drawer_label_app_update_latest),
-                        modifier = Modifier.weight(1f),
-                        fontSize = 12.sp,
-                        color = MainHomeTokens.Success,
-                    )
-                }
+            state.databaseVersion?.let { databaseVersion ->
+                CmpText(
+                    text = stringResource(
+                        Res.string.main_drawer_label_database_version,
+                        databaseVersion.toString(),
+                    ),
+                    fontSize = 12.sp,
+                    color = colors.onSurfaceVariant,
+                )
             }
         }
     }
@@ -405,6 +399,7 @@ private fun MainDrawerFooter(
 
 @Composable
 private fun MainAppUpdateBanner(
+    version: String,
     colors: CmpThemeColors,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -442,7 +437,7 @@ private fun MainAppUpdateBanner(
                 CmpText(
                     text = stringResource(
                         Res.string.main_drawer_banner_app_update_subtitle,
-                        LatestAppVersion,
+                        version,
                     ),
                     fontSize = 12.sp,
                     color = colors.onPrimaryContainer.copy(alpha = 0.78f),
