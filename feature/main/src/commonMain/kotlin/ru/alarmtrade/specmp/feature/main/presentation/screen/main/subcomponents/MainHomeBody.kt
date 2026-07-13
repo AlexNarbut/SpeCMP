@@ -82,7 +82,7 @@ fun MainHomeBody(
                     MainHomeTopBar(
                         isCompact = mode == MainHomeMode.Compact,
                         isLoading = value.isInitialLoading,
-                        isDatabaseSyncing = value.isDatabaseSyncing,
+                        databaseSyncBadge = value.databaseSyncBadge,
                         onMenuClick = onMenuClick,
                     )
                     if (value.isInitialLoading) {

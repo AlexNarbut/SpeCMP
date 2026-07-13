@@ -26,10 +26,14 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 import specmp.feature.main.generated.resources.Res
-import specmp.feature.main.generated.resources.main_common_a11y_database_updated
 import specmp.feature.main.generated.resources.main_common_a11y_open_menu
-import specmp.feature.main.generated.resources.main_common_loading_database_update
+import specmp.feature.main.generated.resources.main_common_loading_database_applying
+import specmp.feature.main.generated.resources.main_common_loading_database_checking
+import specmp.feature.main.generated.resources.main_common_loading_database_downloading
+import specmp.feature.main.generated.resources.main_common_status_database_app_update_required
+import specmp.feature.main.generated.resources.main_common_status_database_update_failed
 import specmp.feature.main.generated.resources.main_common_status_database_updated
 import specmp.feature.main.generated.resources.main_main_title_app
 
@@ -37,7 +41,7 @@ import specmp.feature.main.generated.resources.main_main_title_app
 internal fun MainHomeTopBar(
     isCompact: Boolean,
     isLoading: Boolean,
-    isDatabaseSyncing: Boolean,
+    databaseSyncBadge: MainDatabaseSyncBadge,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: CmpThemeColors = cmpThemeColors(),
@@ -66,7 +70,7 @@ internal fun MainHomeTopBar(
             if (!isLoading) {
                 MainDatabaseStatusChip(
                     isCompact = isCompact,
-                    isDatabaseSyncing = isDatabaseSyncing,
+                    badge = databaseSyncBadge,
                     colors = colors,
                 )
             }
@@ -80,7 +84,7 @@ internal fun MainHomeTopBar(
 @Composable
 private fun MainDatabaseStatusChip(
     isCompact: Boolean,
-    isDatabaseSyncing: Boolean,
+    badge: MainDatabaseSyncBadge,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
 ) {
@@ -92,45 +96,59 @@ private fun MainDatabaseStatusChip(
             .background(colors.surfaceVariant, CircleShape)
             .padding(start = 10.dp, end = 14.dp)
     }
+    val label = badge.label()
 
     Row(
         modifier = chipModifier.clip(CircleShape),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (isDatabaseSyncing) {
-            CmpCircularProgressIndicator(
+        when (badge) {
+            MainDatabaseSyncBadge.CheckingVersion,
+            MainDatabaseSyncBadge.Downloading,
+            MainDatabaseSyncBadge.Applying,
+            -> CmpCircularProgressIndicator(
                 modifier = Modifier.size(18.dp),
                 strokeWidth = 2.5.dp,
                 color = colors.primary,
             )
-            if (!isCompact) {
-                CmpText(
-                    text = stringResource(Res.string.main_common_loading_database_update),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.onSurfaceVariant,
-                )
-            }
-        } else {
-            CmpIcon(
+
+            MainDatabaseSyncBadge.Updated -> CmpIcon(
                 icon = CmpIcons.CheckCircle,
-                contentDescription = if (isCompact) {
-                    stringResource(Res.string.main_common_a11y_database_updated)
-                } else {
-                    null
-                },
+                contentDescription = if (isCompact) label else null,
                 modifier = Modifier.size(if (isCompact) 22.dp else 18.dp),
                 tint = MainHomeTokens.Success,
             )
-            if (!isCompact) {
-                CmpText(
-                    text = stringResource(Res.string.main_common_status_database_updated),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.onSurfaceVariant,
-                )
-            }
+
+            MainDatabaseSyncBadge.UpdateFailed,
+            MainDatabaseSyncBadge.AppUpdateRequired,
+            -> CmpIcon(
+                icon = CmpIcons.Warning,
+                contentDescription = if (isCompact) label else null,
+                modifier = Modifier.size(if (isCompact) 22.dp else 18.dp),
+                tint = colors.error,
+            )
         }
+
+        if (!isCompact) {
+            CmpText(
+                text = label,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = colors.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MainDatabaseSyncBadge.label(): String {
+    return when (this) {
+        MainDatabaseSyncBadge.CheckingVersion -> stringResource(Res.string.main_common_loading_database_checking)
+        MainDatabaseSyncBadge.Downloading -> stringResource(Res.string.main_common_loading_database_downloading)
+        MainDatabaseSyncBadge.Applying -> stringResource(Res.string.main_common_loading_database_applying)
+        MainDatabaseSyncBadge.Updated -> stringResource(Res.string.main_common_status_database_updated)
+        MainDatabaseSyncBadge.UpdateFailed -> stringResource(Res.string.main_common_status_database_update_failed)
+        MainDatabaseSyncBadge.AppUpdateRequired -> stringResource(Res.string.main_common_status_database_app_update_required)
     }
 }

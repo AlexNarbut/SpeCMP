@@ -4,9 +4,11 @@ import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
+import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainUnknownAppVersion
@@ -18,7 +20,8 @@ data class MainScreenState(
     val isAppUpdateSupported: Boolean = false,
     val appVersionName: String = MainUnknownAppVersion,
     val profileState: LCEState<MainProfile> = LCEState.None(),
-    val databaseSyncState: LCEState<Long?> = LCEState.None(),
+    val databaseSyncState: LCEState<MainDatabaseSyncStatus> = LCEState.None(),
+    val databaseVersion: Long? = null,
     val appFeaturesState: LCEState<MainUserAppFeatures> = LCEState.None(),
     val userCommercialState: LCEState<MainUserCommercial> = LCEState.None(),
     val appUpdateState: LCEState<MainAppUpdateCheckResult> = LCEState.None(),
@@ -31,11 +34,29 @@ data class MainScreenState(
     val profile: MainProfile
         get() = profileState.content ?: MainProfile()
 
-    val databaseVersion: Long?
-        get() = databaseSyncState.content
-
     val isDatabaseSyncing: Boolean
-        get() = databaseSyncState is LCEState.Loading
+        get() = databaseSyncState is LCEState.Loading ||
+            databaseSyncState.content is MainDatabaseSyncStatus.InProgress
+
+    val databaseSyncBadge: MainDatabaseSyncBadge
+        get() {
+            if (databaseSyncState is LCEState.Error) return MainDatabaseSyncBadge.UpdateFailed
+
+            return when (databaseSyncState.content) {
+                MainDatabaseSyncStatus.InProgress.CheckingVersion -> MainDatabaseSyncBadge.CheckingVersion
+                MainDatabaseSyncStatus.InProgress.Downloading -> MainDatabaseSyncBadge.Downloading
+                MainDatabaseSyncStatus.InProgress.Applying -> MainDatabaseSyncBadge.Applying
+                is MainDatabaseSyncStatus.Finished.NotCompatible -> MainDatabaseSyncBadge.AppUpdateRequired
+                is MainDatabaseSyncStatus.Finished.Success,
+                MainDatabaseSyncStatus.Finished.NoUpdates,
+                -> MainDatabaseSyncBadge.Updated
+                null -> if (databaseSyncState is LCEState.Loading) {
+                    MainDatabaseSyncBadge.CheckingVersion
+                } else {
+                    MainDatabaseSyncBadge.Updated
+                }
+            }
+        }
 
     val appFeatures: MainUserAppFeatures
         get() = appFeaturesState.content ?: MainUserAppFeatures()

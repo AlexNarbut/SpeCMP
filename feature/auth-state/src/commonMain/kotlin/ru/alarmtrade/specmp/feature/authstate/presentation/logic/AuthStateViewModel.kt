@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.authstate.presentation.logic
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +15,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 import kotlin.time.Duration.Companion.seconds
@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 class AuthStateViewModel(
     repository: AuthStateRepository,
     dispatchers: AppDispatchers,
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val retryTrigger = MutableStateFlow(0)
 

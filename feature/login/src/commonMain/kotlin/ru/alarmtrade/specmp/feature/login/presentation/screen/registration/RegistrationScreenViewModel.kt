@@ -1,16 +1,14 @@
 package ru.alarmtrade.specmp.feature.login.presentation.screen.registration
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpValidationError
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
@@ -20,7 +18,7 @@ import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldEr
 class RegistrationScreenViewModel(
     private val repository: LoginRepository,
     private val dispatchers: AppDispatchers,
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _state = MutableStateFlow(RegistrationScreenState())
     val state: StateFlow<RegistrationScreenState> = _state.asStateFlow()
@@ -67,7 +65,7 @@ class RegistrationScreenViewModel(
             return
         }
 
-        viewModelScope.launch {
+        safeLaunch {
             _state.update {
                 it.copy(
                     registrationState = LCEState.Loading(),

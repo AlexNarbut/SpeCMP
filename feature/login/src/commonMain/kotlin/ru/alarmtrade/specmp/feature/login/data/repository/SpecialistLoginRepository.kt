@@ -1,9 +1,9 @@
 package ru.alarmtrade.specmp.feature.login.data.repository
 
-import kotlinx.coroutines.CancellationException
 import ru.alarmtrade.common.app.interactors.appInformation.requests.SaveAppDeviceInformationRequest
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.specialist.SpecialistDeviceInformationProvider
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
@@ -25,11 +25,7 @@ class SpecialistLoginRepository(
 ) : LoginRepository {
 
     override suspend fun login(credentials: LoginCredentials): Response<LoginResult> {
-        return runAuthRequest {
-            when (val response = saveDeviceInformation()) {
-                is Response.Success -> Unit
-                is Response.Error -> return@runAuthRequest response
-            }
+        return saveDeviceInformation().mapIfSuccess {
             when (val response = authInteractor.loginUseCase.execute(credentials.toLoginRequest())) {
                 is SpecialistResponse.Success -> Response.Success(LoginResult.Authorized)
                 is SpecialistResponse.Error -> {
@@ -44,33 +40,25 @@ class SpecialistLoginRepository(
     }
 
     override suspend fun signUp(credentials: SignUpCredentials): Response<Unit> {
-        return runAuthRequest {
-            when (val response = authInteractor.signUpUseCase.execute(credentials.toSignUpRequest())) {
-                is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
+        return when (val response = authInteractor.signUpUseCase.execute(credentials.toSignUpRequest())) {
+            is SpecialistResponse.Success -> Response.Success(Unit)
+            is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> {
-        return runAuthRequest {
-            when (
-                val response = authInteractor.resetPasswordUseCase.execute(
-                    credentials.toResetPasswordRequest()
-                )
-            ) {
-                is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
+        return when (
+            val response = authInteractor.resetPasswordUseCase.execute(
+                credentials.toResetPasswordRequest()
+            )
+        ) {
+            is SpecialistResponse.Success -> Response.Success(Unit)
+            is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     override suspend fun resendActivationEmail(credentials: LoginCredentials): Response<Unit> {
-        return runAuthRequest {
-            when (val response = saveDeviceInformation()) {
-                is Response.Success -> Unit
-                is Response.Error -> return@runAuthRequest response
-            }
+        return saveDeviceInformation().mapIfSuccess {
             when (
                 val response = authInteractor.resendActivationEmailUseCase.execute(
                     credentials.toResendActivationEmailRequest()
@@ -79,17 +67,6 @@ class SpecialistLoginRepository(
                 is SpecialistResponse.Success -> Response.Success(Unit)
                 is SpecialistResponse.Error -> response.toProjectError()
             }
-        }
-    }
-
-    private suspend fun <T> runAuthRequest(
-        block: suspend () -> Response<T>,
-    ): Response<T> {
-        return try {
-            block()
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            Response.Error(e)
         }
     }
 

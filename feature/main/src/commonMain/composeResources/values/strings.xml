@@ -2,9 +2,12 @@
 <resources>
     <string name="main_main_title_app">Pandora Spec</string>
     <string name="main_common_a11y_open_menu">Open menu</string>
-    <string name="main_common_a11y_database_updated">Database is up to date</string>
     <string name="main_common_status_database_updated">Database updated</string>
-    <string name="main_common_loading_database_update">Updating...</string>
+    <string name="main_common_loading_database_checking">Checking database...</string>
+    <string name="main_common_loading_database_downloading">Downloading database...</string>
+    <string name="main_common_loading_database_applying">Applying update...</string>
+    <string name="main_common_status_database_update_failed">Database update failed</string>
+    <string name="main_common_status_database_app_update_required">App update required</string>
 
     <string name="main_main_title_quick_mount">Quick install</string>
     <string name="main_main_msg_quick_mount">Step-by-step setup with ready-made settings</string>

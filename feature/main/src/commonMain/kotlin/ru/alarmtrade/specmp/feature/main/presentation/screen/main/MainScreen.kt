@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import org.koin.compose.viewmodel.koinViewModel
@@ -18,10 +17,6 @@ fun MainScreen(
 ) {
     val viewModel = koinViewModel<MainScreenViewModel>()
     val state = viewModel.state.collectAsState()
-
-    LaunchedEffect(viewModel) {
-        viewModel.onScreenEntered()
-    }
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {

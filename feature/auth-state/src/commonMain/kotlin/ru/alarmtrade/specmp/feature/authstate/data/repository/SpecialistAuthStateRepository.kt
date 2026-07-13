@@ -1,9 +1,10 @@
 package ru.alarmtrade.specmp.feature.authstate.data.repository
 
-import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.isActive
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
@@ -19,7 +20,7 @@ class SpecialistAuthStateRepository(
     // Когда в SDK появится flow-метод, заменить опрос на подписку.
     override fun observeIsLoggedIn(): Flow<Response<Boolean>> {
         return flow {
-            while (true) {
+            while (currentCoroutineContext().isActive) {
                 emit(checkIsLoggedIn())
                 delay(POLL_INTERVAL)
             }
@@ -27,31 +28,16 @@ class SpecialistAuthStateRepository(
     }
 
     override suspend fun logout(): Response<Unit> {
-        return runAuthStateRequest {
-            when (val response = authInteractor.logoutUseCase.execute()) {
-                is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
+        return when (val response = authInteractor.logoutUseCase.execute()) {
+            is SpecialistResponse.Success -> Response.Success(Unit)
+            is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     private suspend fun checkIsLoggedIn(): Response<Boolean> {
-        return runAuthStateRequest {
-            when (val response = authInteractor.checkIfUserLoggedInUseCase.execute()) {
-                is SpecialistResponse.Success -> Response.Success(response.value.boolean)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
-        }
-    }
-
-    private suspend fun <T> runAuthStateRequest(
-        block: suspend () -> Response<T>,
-    ): Response<T> {
-        return try {
-            block()
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            Response.Error(e)
+        return when (val response = authInteractor.checkIfUserLoggedInUseCase.execute()) {
+            is SpecialistResponse.Success -> Response.Success(response.value.boolean)
+            is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
