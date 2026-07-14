@@ -111,6 +111,7 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - `specialistModule` — Koin-модуль инициализации `SpecialistApp`
 - Регистрирует app-level SDK singleton и конкретные SDK interactors для feature-модулей
 - Содержит platform-specific сборку `AppDeviceInformation` для Specialist SDK
+- Содержит `SpecialistAppVersionProvider` для единой передачи версии приложения в Specialist SDK
 - `feature/*` не создают `SpecialistApp` самостоятельно и зависят только от нужных SDK interactors
 
 ### core/ui
@@ -223,7 +224,7 @@ compose.resources {
 
 kotlin {
     android {
-        namespace = "org.evolyta.babysteps.feature.<name>"
+        namespace = "ru.alarmtrade.specmp.feature.<name>"
         // ...
         androidResources.enable = true  // обязательно если есть composeResources/
     }
@@ -250,13 +251,15 @@ commonMain.dependencies {
 
 ## Пространства имён
 
-| Модуль                 | Пакет                                        |
-|------------------------|----------------------------------------------|
-| core/common            | `org.evolyta.babysteps.core.common`          |
-| core/network           | `org.evolyta.babysteps.core.network`         |
-| core/ui                | `org.evolyta.babysteps.core.ui`              |
-| core/live-notification | `org.evolyta.babysteps.core.livenotification`|
-| composeApp             | `org.evolyta.babysteps`                      |
-| androidApp             | `org.evolyta.babysteps.androidApp`           |
+| Модуль            | Пакет                                     |
+|-------------------|-------------------------------------------|
+| core/common       | `ru.alarmtrade.specmp.core.common`        |
+| core/localization | `ru.alarmtrade.specmp.core.localization`  |
+| core/network      | `ru.alarmtrade.specmp.core.network`       |
+| core/specialist   | `ru.alarmtrade.specmp.core.specialist`    |
+| core/ui           | `ru.alarmtrade.specmp.core.ui`            |
+| feature/`<name>`  | `ru.alarmtrade.specmp.feature.<name>` (дефис в имени модуля схлопывается: `auth-state` → `authstate`) |
+| composeApp        | `ru.alarmtrade.specmp`                    |
+| androidApp        | `ru.alarmtrade.specmp.androidApp`         |
 
 JVM target: **Java 17**

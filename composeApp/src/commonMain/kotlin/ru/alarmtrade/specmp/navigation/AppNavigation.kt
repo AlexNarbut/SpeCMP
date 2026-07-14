@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
@@ -14,12 +15,14 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
 
 @Serializable
@@ -52,6 +55,8 @@ fun AppNavigation(
 @Composable
 private fun MainNavGraph() {
     val backStack = rememberNavBackStack(navConfig, MainRoute)
+    val isDarkState = LocalThemeIsDark.current
+    val isDark by isDarkState
 
     NavDisplay(
         backStack = backStack,
@@ -62,10 +67,32 @@ private fun MainNavGraph() {
         },
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
-                MainScreen()
+                MainScreen(
+                    isDarkTheme = isDark,
+                    onThemeChanged = { isDarkState.value = it },
+                    onNavigateToFeature = ::navigateFromMain,
+                )
             }
         }
     )
+}
+
+private fun navigateFromMain(target: MainNavigationTarget) {
+    when (target) {
+        MainNavigationTarget.QuickMount -> Unit
+        MainNavigationTarget.AdvancedMount -> Unit
+        MainNavigationTarget.Configurator -> Unit
+        MainNavigationTarget.FirmwareArchive -> Unit
+        MainNavigationTarget.Cars -> Unit
+        MainNavigationTarget.CanScanner -> Unit
+        MainNavigationTarget.Requests -> Unit
+        MainNavigationTarget.Feedback -> Unit
+        MainNavigationTarget.ProductInfo -> Unit
+        MainNavigationTarget.TechSupportChat -> Unit
+        MainNavigationTarget.Warehouse1C -> Unit
+        MainNavigationTarget.Settings -> Unit
+        MainNavigationTarget.AppUpdate -> Unit
+    }
 }
 
 @Composable

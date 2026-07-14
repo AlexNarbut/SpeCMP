@@ -1,0 +1,193 @@
+<!-- @dsCard group="Главный экран" viewport="1100x900" name="Главный — компоненты" subtitle="Блоки по отдельности: топбар, статус, основные карточки (2 варианта × состояния), инструменты, меню" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Спец — Главный экран (компоненты)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; margin: 0; }
+  .toolbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; padding: 14px; background: rgba(201,204,206,.92); backdrop-filter: blur(6px); }
+  .seg { display: flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 16px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .link { border: none; background: #fff; border-radius: 999px; padding: 8px 16px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #1A3E7A; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script src="../../res/icons/main-icons.js"></script>
+<script type="text/babel" src="./HomeScreens.jsx"></script>
+<script type="text/babel" src="./Home.jsx"></script>
+<script type="text/babel">
+  const DS = window.PandoraSpecDesignSystem_b8d6e1;
+  const { CmpText } = DS;
+  const HS = window.HomeScreens;
+  const { MainActionCard, ToolCard, HomeTopBar, HomeDrawer, ProfileBlock, StatusChip, HomeSkeleton, MAIN_ACTIONS, TOOLS, PROFILES } = HS;
+  const CARD_STATES = window.HOME_CARD_STATES;
+  const STATE_LABEL = { default: "default", hover: "hover", focus: "focus", pressed: "pressed", disabled: "disabled" };
+
+  function Caption({ children }) {
+    return <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--on-surface-variant)", marginBottom: 8 }}>{children}</div>;
+  }
+  function Section({ title, note, children }) {
+    return (
+      <section style={{ marginBottom: 40 }}>
+        <CmpText variant="titleLarge" weight={600} style={{ display: "block" }}>{title}</CmpText>
+        {note && <div style={{ marginTop: 2, marginBottom: 16 }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{note}</CmpText></div>}
+        {!note && <div style={{ height: 16 }} />}
+        {children}
+      </section>
+    );
+  }
+  // Specimen box — themed surface behind a block, with a caption.
+  function Box({ label, w, children, pad = 20 }) {
+    return (
+      <div style={{ display: "inline-flex", flexDirection: "column", verticalAlign: "top" }}>
+        <Caption>{label}</Caption>
+        <div style={{ width: w, background: "var(--surface-container-lowest)", border: "1px solid var(--outline-variant)", borderRadius: 12, padding: pad, boxSizing: "border-box" }}>
+          {children}
+        </div>
+      </div>
+    );
+  }
+  const noop = () => {};
+
+  function Gallery() {
+    const [dark, setDark] = React.useState(true);
+
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <div className="seg">
+            <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+            <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+          </div>
+          <button className="link" onClick={() => window.psGo("home")}>Mobile →</button>
+          <button className="link" onClick={() => window.psGo("home-tablet")}>Планшет →</button>
+          <button className="link" onClick={() => window.psGo("home-desktop")}>Desktop →</button>
+        </div>
+
+        <div data-theme={dark ? "dark" : undefined} style={{ background: "var(--background)", color: "var(--on-background)", minHeight: "100vh", padding: "28px clamp(16px, 4vw, 48px) 64px", boxSizing: "border-box" }}>
+          <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+
+            <Section title="Верхняя панель" note="64dp · слева меню, по центру название, справа статус данных. На узкой ширине статус — только иконка.">
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <Box label="topbar / широкий · статус «База обновлена»" w={720} pad={0}>
+                  <HomeTopBar compactStatus={false} syncing={false} onMenu={noop} />
+                </Box>
+                <Box label="topbar / синхронизация" w={720} pad={0}>
+                  <HomeTopBar compactStatus={false} syncing={true} onMenu={noop} />
+                </Box>
+                <Box label="topbar / compact · статус свёрнут в иконку" w={412} pad={0}>
+                  <HomeTopBar compactStatus={true} syncing={false} onMenu={noop} />
+                </Box>
+              </div>
+            </Section>
+
+            <Section title="Статус данных" note="Живёт в топбаре, не в контенте.">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                <Box label="default"><StatusChip /></Box>
+                <Box label="compact"><StatusChip compact /></Box>
+                <Box label="syncing"><StatusChip syncing /></Box>
+                <Box label="syncing / compact"><StatusChip syncing compact /></Box>
+              </div>
+            </Section>
+
+            <Section title="Основные карточки — вариант «центр»" note="Иконка сверху по центру. Равнозначные, без выделения одной. Состояния:">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                {CARD_STATES.map((st) => (
+                  <Box key={st} label={STATE_LABEL[st]} w={300}>
+                    <MainActionCard item={MAIN_ACTIONS[0]} variant="centered" state={st} onClick={st === "default" ? noop : undefined} />
+                  </Box>
+                ))}
+              </div>
+            </Section>
+
+            <Section title="Основные карточки — вариант «слева»" note="Иконка в ведущей плитке слева, текст рядом. Второй вариант компоновки.">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                {CARD_STATES.map((st) => (
+                  <Box key={st} label={STATE_LABEL[st]} w={360}>
+                    <MainActionCard item={MAIN_ACTIONS[1]} variant="leading" state={st} onClick={st === "default" ? noop : undefined} />
+                  </Box>
+                ))}
+              </div>
+            </Section>
+
+            <Section title="Вспомогательные карточки — сетка" note="Тише основных, единая система, нейтральная плитка иконки. Состояния:">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                {CARD_STATES.map((st) => (
+                  <Box key={st} label={STATE_LABEL[st]} w={220}>
+                    <ToolCard item={TOOLS[0]} layout="grid" state={st} onClick={st === "default" ? noop : undefined} />
+                  </Box>
+                ))}
+              </div>
+            </Section>
+
+            <Section title="Вспомогательные карточки — строки (compact)" note="На узкой ширине инструменты — вертикальный список строк.">
+              <Box label="tool / row" w={380}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {TOOLS.slice(0, 3).map((it) => (
+                    <ToolCard key={it.key} item={it} layout="row" onClick={noop} />
+                  ))}
+                </div>
+              </Box>
+            </Section>
+
+            <Section title="Состояние загрузки экрана" note="Скелетон-плейсхолдеры в раскладке карточек (перестраиваются по ширине). В макетах ещё тонкий индикатор под топбаром.">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+                <div>
+                  <Caption>skeleton · medium (2 колонки)</Caption>
+                  <div style={{ width: 640, maxWidth: "100%", background: "var(--surface-container-lowest)", border: "1px solid var(--outline-variant)", borderRadius: 12, overflow: "hidden" }}>
+                    <HomeSkeleton mode="medium" cardVariant="centered" />
+                  </div>
+                </div>
+                <div>
+                  <Caption>skeleton · compact (строки)</Caption>
+                  <div style={{ width: 360, maxWidth: "100%", background: "var(--surface-container-lowest)", border: "1px solid var(--outline-variant)", borderRadius: 12, overflow: "hidden" }}>
+                    <HomeSkeleton mode="compact" cardVariant="centered" />
+                  </div>
+                </div>
+              </div>
+            </Section>
+
+            <Section title="Профиль в меню" note="Начинает боковое меню. Поддержка неполного профиля: нет имени / нет email.">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                <Box label="полный" w={300}><ProfileBlock profile={PROFILES.full} /></Box>
+                <Box label="без имени" w={300}><ProfileBlock profile={PROFILES.partial} /></Box>
+                <Box label="без email" w={300}><ProfileBlock profile={PROFILES.noEmail} /></Box>
+              </div>
+            </Section>
+
+            <Section title="Боковое меню" note="Без заголовка «Меню» и без крестика. Профиль → тема → обновление → настройки → выход. Версия ПО внизу.">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+                <div>
+                  <Caption>drawer · профиль полный</Caption>
+                  <div style={{ height: 520, borderRadius: 12, overflow: "hidden", border: "1px solid var(--outline-variant)", display: "inline-flex" }}>
+                    <HomeDrawer variant="panel" profile={PROFILES.full} dark={dark} onDark={setDark} syncing={false} onSync={noop} onNav={noop} />
+                  </div>
+                </div>
+                <div>
+                  <Caption>drawer · профиль неполный · синхронизация</Caption>
+                  <div style={{ height: 520, borderRadius: 12, overflow: "hidden", border: "1px solid var(--outline-variant)", display: "inline-flex" }}>
+                    <HomeDrawer variant="panel" profile={PROFILES.partial} dark={dark} onDark={setDark} syncing={true} onSync={noop} onNav={noop} />
+                  </div>
+                </div>
+              </div>
+            </Section>
+
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Gallery />);
+</script>
+</body>
+</html>

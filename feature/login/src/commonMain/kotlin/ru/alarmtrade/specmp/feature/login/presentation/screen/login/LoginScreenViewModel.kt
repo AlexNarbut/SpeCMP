@@ -1,16 +1,14 @@
 package ru.alarmtrade.specmp.feature.login.presentation.screen.login
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
@@ -19,7 +17,7 @@ import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 class LoginScreenViewModel(
     private val repository: LoginRepository,
     private val dispatchers: AppDispatchers,
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _state = MutableStateFlow(LoginScreenState())
     val state: StateFlow<LoginScreenState> = _state.asStateFlow()
@@ -57,7 +55,7 @@ class LoginScreenViewModel(
     fun submit() {
         val credentials = _state.value.toCredentials()
 
-        viewModelScope.launch {
+        safeLaunch {
             _state.update {
                 it.copy(
                     authState = LCEState.Loading(),
@@ -88,7 +86,7 @@ class LoginScreenViewModel(
     fun resendActivationEmail() {
         val credentials = _state.value.toCredentials()
 
-        viewModelScope.launch {
+        safeLaunch {
             _state.update {
                 it.copy(
                     activationResendState = LCEState.Loading(),

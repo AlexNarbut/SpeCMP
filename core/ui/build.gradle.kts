@@ -54,6 +54,9 @@ kotlin {
             // Kotlinx
             implementation(libs.kotlinx.coroutines.core)
 
+            // Логирование: Logger — часть protected API BaseViewModel, поэтому api
+            api(libs.kermit)
+
             // Material Kolor
             implementation(libs.materialKolor)
 
