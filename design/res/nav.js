@@ -31,6 +31,9 @@
     'auth-desktop':       'features/auth/AuthDesktop.html',
     'auth-states':        'features/auth/AuthStates.html',
     'auth-flow':          'features/auth/AuthFlow.html',
+    'support-chat':         'features/support-chat/SupportChat.html',
+    'support-chat-tablet':  'features/support-chat/SupportChatTablet.html',
+    'support-chat-desktop': 'features/support-chat/SupportChatDesktop.html',
   };
 
   window.PS_ROOT = ROOT;

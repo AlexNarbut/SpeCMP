@@ -57,6 +57,11 @@ function HomeApp({
   const onNav = (key) => {
     // Prototype: real routing lands here. Close the drawer on selection.
     if (key === "settings" || key === "logout") setMenuOpen(false);
+    if (key === "support" || key === "requests") {
+      // «Заявки на техпомощь» / карточка «Заявки» → support chat mockup for this platform.
+      const target = isDesktop ? "support-chat-desktop" : "support-chat";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
   };
 
   // Desktop: check for a newer app build, then surface the update banner.
