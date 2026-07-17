@@ -1,0 +1,5 @@
+<resources>
+    <string name="support_chat_picker_title_image">Выберите изображение</string>
+    <string name="support_chat_picker_label_images">Изображения</string>
+    <string name="support_chat_picker_title_file">Выберите файл</string>
+</resources>

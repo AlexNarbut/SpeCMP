@@ -29,7 +29,7 @@ fun AppNavigation(
 
 Экраны не навигируют между зонами сами: успешный login и logout меняют состояние сессии, `AuthStateNavGraph` подхватывает изменение и переключает зону.
 
-Nav3 back stack используется **внутри каждой зоны**: `LoginNavGraph` (`feature/login`) в неавторизованной, `MainNavGraph` (`composeApp`) в авторизованной.
+Nav3 back stack используется **внутри каждой зоны**: `LoginNavGraph` (`feature/login`) в неавторизованной, `MainNavGraph` (`composeApp`) в авторизованной. `MainNavGraph` подключает `feature/support-chat` целиком и хранит app-level переход между `MainRoute` и `SupportChatRoute`.
 
 | Route | Экран | Граф |
 |---|---|---|
@@ -37,6 +37,9 @@ Nav3 back stack используется **внутри каждой зоны**:
 | `RegistrationRoute` | `RegistrationScreen` (`feature/login`) | `LoginNavGraph` |
 | `ForgotPasswordRoute` | `ForgotPasswordScreen` (`feature/login`) | `LoginNavGraph` |
 | `MainRoute` | `MainScreen` (`feature/main`) | `MainNavGraph` |
+| `SupportChatRoute` | `SupportChatScreen` (`feature/support-chat`) | `MainNavGraph` → `SupportChatNavGraph` |
+
+Из главного экрана в `SupportChatRoute` ведут карточки `Requests` и `TechSupportChat`. В drawer перехода в чат нет. `feature/main` только эмитит `MainNavigationTarget`; изменение app-level back stack остаётся ответственностью `composeApp`.
 
 ## Навигация внутри feature
 

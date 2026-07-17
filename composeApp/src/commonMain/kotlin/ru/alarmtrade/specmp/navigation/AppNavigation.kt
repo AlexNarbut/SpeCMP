@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -24,6 +25,10 @@ import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckEr
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
+import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatNavGraph
+import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.filepicker.rememberSupportChatFilePicker
+import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileSaver
 
 @Serializable
 data object MainRoute : NavKey
@@ -32,6 +37,7 @@ private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(MainRoute::class, MainRoute.serializer())
+            subclass(SupportChatRoute::class, SupportChatRoute.serializer())
         }
     }
 }
@@ -70,14 +76,25 @@ private fun MainNavGraph() {
                 MainScreen(
                     isDarkTheme = isDark,
                     onThemeChanged = { isDarkState.value = it },
-                    onNavigateToFeature = ::navigateFromMain,
+                    onNavigateToFeature = { target ->
+                        navigateFromMain(target, backStack)
+                    },
+                )
+            }
+            entry<SupportChatRoute> { _ ->
+                val filePicker = rememberSupportChatFilePicker()
+                val fileSaver = rememberSupportChatFileSaver()
+                SupportChatNavGraph(
+                    onBack = { backStack.removeLastOrNull() },
+                    filePicker = filePicker,
+                    fileSaver = fileSaver,
                 )
             }
         }
     )
 }
 
-private fun navigateFromMain(target: MainNavigationTarget) {
+private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackStack<NavKey>) {
     when (target) {
         MainNavigationTarget.QuickMount -> Unit
         MainNavigationTarget.AdvancedMount -> Unit
@@ -85,10 +102,10 @@ private fun navigateFromMain(target: MainNavigationTarget) {
         MainNavigationTarget.FirmwareArchive -> Unit
         MainNavigationTarget.Cars -> Unit
         MainNavigationTarget.CanScanner -> Unit
-        MainNavigationTarget.Requests -> Unit
+        MainNavigationTarget.Requests -> backStack += SupportChatRoute
         MainNavigationTarget.Feedback -> Unit
         MainNavigationTarget.ProductInfo -> Unit
-        MainNavigationTarget.TechSupportChat -> Unit
+        MainNavigationTarget.TechSupportChat -> backStack += SupportChatRoute
         MainNavigationTarget.Warehouse1C -> Unit
         MainNavigationTarget.Settings -> Unit
         MainNavigationTarget.AppUpdate -> Unit

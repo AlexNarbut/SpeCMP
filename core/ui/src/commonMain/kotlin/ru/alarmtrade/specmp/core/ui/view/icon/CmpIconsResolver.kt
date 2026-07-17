@@ -9,6 +9,14 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Build
@@ -105,6 +113,11 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.ThumbUp -> Icons.Filled.ThumbUp
     CmpIcons.List -> Icons.AutoMirrored.Filled.List
     CmpIcons.Tag -> Icons.Filled.Sell
+    CmpIcons.AttachFile -> Icons.Filled.AttachFile
+    CmpIcons.Image -> Icons.Filled.Image
+    CmpIcons.Description -> Icons.Filled.Description
+    CmpIcons.DoneAll -> Icons.Filled.DoneAll
+    CmpIcons.Download -> Icons.Filled.Download
 
     // Communication
     CmpIcons.Email -> Icons.Filled.Email
@@ -112,6 +125,8 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.Call -> Icons.Filled.Call
     CmpIcons.Notifications -> Icons.Filled.Notifications
     CmpIcons.Mic -> Icons.Filled.Mic
+    CmpIcons.Forum -> Icons.Filled.Forum
+    CmpIcons.SupportAgent -> Icons.Filled.SupportAgent
 
     // User
     CmpIcons.Person -> Icons.Filled.Person
@@ -126,6 +141,7 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.Lock -> Icons.Filled.Lock
     CmpIcons.Visibility -> Icons.Filled.Visibility
     CmpIcons.VisibilityOff -> Icons.Filled.VisibilityOff
+    CmpIcons.WifiOff -> Icons.Filled.WifiOff
 
     // Places
     CmpIcons.LocationOn -> Icons.Filled.LocationOn

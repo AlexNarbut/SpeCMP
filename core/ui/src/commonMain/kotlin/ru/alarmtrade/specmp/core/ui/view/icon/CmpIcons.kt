@@ -63,6 +63,8 @@ enum class CmpIcons {
     Call,
     Notifications,
     Mic,
+    Forum,
+    SupportAgent,
 
     // ── User ────────────────────────────────────────────────
     Person,
@@ -77,10 +79,18 @@ enum class CmpIcons {
     Lock,
     Visibility,
     VisibilityOff,
+    WifiOff,
 
     // ── Places ──────────────────────────────────────────────
     LocationOn,
     Place,
+
+    // ── Content / Files ─────────────────────────────────────
+    AttachFile,
+    Image,
+    Description,
+    DoneAll,
+    Download,
 
     // ── Other ───────────────────────────────────────────────
     Settings,

@@ -20,6 +20,7 @@ import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
+import ru.alarmtrade.specmp.feature.supportchat.di.supportChatModule
 import ru.alarmtrade.specmp.navigation.AppNavigation
 
 @Preview
@@ -57,6 +58,7 @@ fun App(
                 add(authStateModule)
                 add(loginModule)
                 add(mainModule)
+                add(supportChatModule)
             }
         )
     }) {

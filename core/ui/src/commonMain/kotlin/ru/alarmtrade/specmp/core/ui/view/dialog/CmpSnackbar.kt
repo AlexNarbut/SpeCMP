@@ -4,6 +4,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -18,6 +19,8 @@ data class CmpSnackbarData(
 
 enum class CmpSnackbarDuration { Short, Long, Indefinite }
 
+enum class CmpSnackbarResult { Dismissed, ActionPerformed }
+
 /**
  * Wrapper around [SnackbarHostState] — feature modules interact only with this class,
  * never with the material3 type directly.
@@ -30,19 +33,24 @@ class CmpSnackbarHostState {
         actionLabel: String? = null,
         withDismissAction: Boolean = false,
         duration: CmpSnackbarDuration = CmpSnackbarDuration.Short,
-    ) {
-        delegate.showSnackbar(
+    ): CmpSnackbarResult {
+        return delegate.showSnackbar(
             message = message,
             actionLabel = actionLabel,
             withDismissAction = withDismissAction,
             duration = duration.toMaterial(),
-        )
+        ).toCmp()
     }
 
     private fun CmpSnackbarDuration.toMaterial(): SnackbarDuration = when (this) {
         CmpSnackbarDuration.Short -> SnackbarDuration.Short
         CmpSnackbarDuration.Long -> SnackbarDuration.Long
         CmpSnackbarDuration.Indefinite -> SnackbarDuration.Indefinite
+    }
+
+    private fun SnackbarResult.toCmp(): CmpSnackbarResult = when (this) {
+        SnackbarResult.Dismissed -> CmpSnackbarResult.Dismissed
+        SnackbarResult.ActionPerformed -> CmpSnackbarResult.ActionPerformed
     }
 }
 

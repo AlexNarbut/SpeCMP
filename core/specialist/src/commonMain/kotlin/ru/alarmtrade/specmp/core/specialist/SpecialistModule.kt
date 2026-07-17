@@ -33,6 +33,7 @@ val specialistModule = module {
     single { get<SpecialistApp>().appUpdatesInteractor }
     single { get<SpecialistApp>().userInteractor }
     single { get<SpecialistApp>().chatInteractor }
+    single { get<SpecialistApp>().filesInteractor }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }
     }

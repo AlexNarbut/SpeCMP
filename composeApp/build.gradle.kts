@@ -40,6 +40,7 @@ kotlin {
             implementation(project(":feature:auth-state"))
             implementation(project(":feature:login"))
             implementation(project(":feature:main"))
+            implementation(project(":feature:support-chat"))
 
             // Compose
             implementation(libs.compose.runtime)

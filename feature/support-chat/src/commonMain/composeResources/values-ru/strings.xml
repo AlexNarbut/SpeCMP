@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="support_chat_title_screen">Техподдержка</string>
+    <string name="support_chat_a11y_back">Назад</string>
+    <string name="support_chat_a11y_attach_file">Прикрепить файл</string>
+    <string name="support_chat_a11y_attach_photo">Прикрепить фото</string>
+    <string name="support_chat_a11y_send">Отправить</string>
+    <string name="support_chat_a11y_retry">Повторить</string>
+    <string name="support_chat_a11y_remove_attachment">Убрать вложение</string>
+    <string name="support_chat_label_message_hint">Сообщение</string>
+    <string name="support_chat_msg_empty_title">Чем можем помочь?</string>
+    <string name="support_chat_msg_empty_subtitle">Задайте вопрос — специалист техподдержки ответит в ближайшее время.</string>
+    <string name="support_chat_chip_documents">Документы</string>
+    <string name="support_chat_chip_installation_photos">Фото монтажа</string>
+    <string name="support_chat_typing">печатает…</string>
+    <string name="support_chat_offline_title">Нет соединения</string>
+    <string name="support_chat_offline_subtitle">Сообщения будут отправлены при восстановлении связи.</string>
+    <string name="support_chat_btn_retry">Повторить</string>
+    <string name="support_chat_error_send">Не удалось отправить сообщение. Нажмите, чтобы повторить.</string>
+    <string name="support_chat_download_success">Файл сохранён в Загрузки/Pandora Spec</string>
+    <string name="support_chat_download_failed">Не удалось скачать файл</string>
+    <string name="support_chat_a11y_download">Скачать</string>
+    <string name="support_chat_error_load_history">Не удалось загрузить историю чата.</string>
+    <string name="support_chat_status_sending">Отправка</string>
+    <string name="support_chat_status_sent">Отправлено</string>
+    <string name="support_chat_status_read">Прочитано</string>
+    <string name="support_chat_status_pending">Ожидание связи</string>
+    <string name="support_chat_status_failed">Ошибка</string>
+    <string name="support_chat_today">Сегодня</string>
+    <string name="support_chat_yesterday">Вчера</string>
+    <string name="support_chat_month_january">января</string>
+    <string name="support_chat_month_february">февраля</string>
+    <string name="support_chat_month_march">марта</string>
+    <string name="support_chat_month_april">апреля</string>
+    <string name="support_chat_month_may">мая</string>
+    <string name="support_chat_month_june">июня</string>
+    <string name="support_chat_month_july">июля</string>
+    <string name="support_chat_month_august">августа</string>
+    <string name="support_chat_month_september">сентября</string>
+    <string name="support_chat_month_october">октября</string>
+    <string name="support_chat_month_november">ноября</string>
+    <string name="support_chat_month_december">декабря</string>
+    <string name="support_chat_a11y_close_viewer">Закрыть изображение</string>
+</resources>

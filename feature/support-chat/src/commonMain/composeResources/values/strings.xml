@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="support_chat_title_screen">Tech support</string>
+    <string name="support_chat_a11y_back">Back</string>
+    <string name="support_chat_a11y_attach_file">Attach file</string>
+    <string name="support_chat_a11y_attach_photo">Attach photo</string>
+    <string name="support_chat_a11y_send">Send</string>
+    <string name="support_chat_a11y_retry">Retry</string>
+    <string name="support_chat_a11y_remove_attachment">Remove attachment</string>
+    <string name="support_chat_label_message_hint">Message</string>
+    <string name="support_chat_msg_empty_title">How can we help?</string>
+    <string name="support_chat_msg_empty_subtitle">Ask a question — a support agent will reply shortly.</string>
+    <string name="support_chat_chip_documents">Documents</string>
+    <string name="support_chat_chip_installation_photos">Installation photos</string>
+    <string name="support_chat_typing">typing…</string>
+    <string name="support_chat_offline_title">No connection</string>
+    <string name="support_chat_offline_subtitle">Messages will be sent when connection is restored.</string>
+    <string name="support_chat_btn_retry">Retry</string>
+    <string name="support_chat_error_send">Failed to send message. Tap to retry.</string>
+    <string name="support_chat_download_success">File saved to Downloads/Pandora Spec</string>
+    <string name="support_chat_download_failed">Failed to download file</string>
+    <string name="support_chat_a11y_download">Download</string>
+    <string name="support_chat_error_load_history">Failed to load chat history.</string>
+    <string name="support_chat_status_sending">Sending</string>
+    <string name="support_chat_status_sent">Sent</string>
+    <string name="support_chat_status_read">Read</string>
+    <string name="support_chat_status_pending">Waiting for connection</string>
+    <string name="support_chat_status_failed">Failed</string>
+    <string name="support_chat_today">Today</string>
+    <string name="support_chat_yesterday">Yesterday</string>
+    <string name="support_chat_month_january">January</string>
+    <string name="support_chat_month_february">February</string>
+    <string name="support_chat_month_march">March</string>
+    <string name="support_chat_month_april">April</string>
+    <string name="support_chat_month_may">May</string>
+    <string name="support_chat_month_june">June</string>
+    <string name="support_chat_month_july">July</string>
+    <string name="support_chat_month_august">August</string>
+    <string name="support_chat_month_september">September</string>
+    <string name="support_chat_month_october">October</string>
+    <string name="support_chat_month_november">November</string>
+    <string name="support_chat_month_december">December</string>
+    <string name="support_chat_a11y_close_viewer">Close image</string>
+</resources>
