@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.asResponse
@@ -212,13 +215,15 @@ class SpecialistSupportChatRepository(
             else -> null
         }
 
+        val localTime = time.toInstant(TimeZone.UTC).toLocalDateTime(TimeZone.currentSystemDefault())
+
         return SupportChatMessage(
             id = id.toString(),
             serverId = id,
             text = text,
             attachment = attachment,
-            time = time,
-            displayTime = formatTime(time),
+            time = localTime,
+            displayTime = formatTime(localTime),
             isMine = myEmail != null && sender.login == myEmail,
             authorEmail = sender.login,
             status = if (wasRead) SupportChatMessageStatus.Read else SupportChatMessageStatus.Sent,

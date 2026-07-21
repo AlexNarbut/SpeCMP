@@ -273,6 +273,52 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `server echo with renamed attachment merges into optimistic image instead of duplicating`() = runTest {
+        val viewModel = createViewModelAndStart()
+        viewModel.onImagePicked(
+            SupportChatPickedFile(
+                id = "img-1",
+                name = "local-name.png",
+                path = "/tmp/local-name.png",
+                mimeType = "image/png",
+            ),
+        )
+        viewModel.onSend()
+        runCurrent()
+        assertEquals(1, viewModel.state.value.messages.size)
+
+        repository.emitEvent(SupportChatEvent.MessageReceived(ownImageEcho(id = 100, attachmentName = "server-renamed.png")))
+        runCurrent()
+
+        assertEquals(1, viewModel.state.value.messages.size)
+        assertEquals(100L, viewModel.state.value.messages.single().serverId)
+    }
+
+    @Test
+    fun `server echoes for two pending images merge in FIFO order`() = runTest {
+        val viewModel = createViewModelAndStart()
+        viewModel.onImagePicked(
+            SupportChatPickedFile(id = "img-a", name = "a.png", path = "/tmp/a.png", mimeType = "image/png"),
+        )
+        viewModel.onSend()
+        runCurrent()
+        viewModel.onImagePicked(
+            SupportChatPickedFile(id = "img-b", name = "b.png", path = "/tmp/b.png", mimeType = "image/png"),
+        )
+        viewModel.onSend()
+        runCurrent()
+        assertEquals(2, viewModel.state.value.messages.size)
+
+        repository.emitEvent(SupportChatEvent.MessageReceived(ownImageEcho(id = 101, attachmentName = "renamed-a.png")))
+        runCurrent()
+        repository.emitEvent(SupportChatEvent.MessageReceived(ownImageEcho(id = 102, attachmentName = "renamed-b.png")))
+        runCurrent()
+
+        assertEquals(2, viewModel.state.value.messages.size)
+        assertEquals(listOf(101L, 102L), viewModel.state.value.messages.map { it.serverId })
+    }
+
+    @Test
     fun `typing indicator toggles by Writing events`() = runTest {
         val viewModel = createViewModelAndStart()
 
@@ -618,6 +664,25 @@ class SupportChatScreenViewModelTest {
             displayTime = formatTime(now),
             isMine = false,
             authorEmail = "agent@example.com",
+            status = SupportChatMessageStatus.Sent,
+        )
+    }
+
+    private fun ownImageEcho(id: Long, attachmentName: String): SupportChatMessage {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        return SupportChatMessage(
+            id = id.toString(),
+            serverId = id,
+            text = null,
+            attachment = SupportChatAttachment.Image(
+                id = "srv-$id",
+                name = attachmentName,
+                url = "https://example.com/files/$id",
+            ),
+            time = now,
+            displayTime = formatTime(now),
+            isMine = true,
+            authorEmail = "me@example.com",
             status = SupportChatMessageStatus.Sent,
         )
     }

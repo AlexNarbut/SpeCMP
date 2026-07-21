@@ -323,9 +323,7 @@ class SupportChatScreenViewModel(
                 current.messages.toMutableList().apply { set(index, message) }
             } else {
                 val echoIndex = if (message.isMine) {
-                    current.messages.indexOfLast {
-                        it.isMine && it.serverId == null && it.contentMatches(message)
-                    }
+                    current.messages.indexOfEcho(message)
                 } else {
                     -1
                 }
@@ -337,6 +335,12 @@ class SupportChatScreenViewModel(
             }
             current.copy(messages = updatedMessages)
         }
+    }
+
+    private fun List<SupportChatMessage>.indexOfEcho(message: SupportChatMessage): Int {
+        indexOfLast { it.isMine && it.serverId == null && it.contentMatches(message) }
+            .takeIf { it != -1 }?.let { return it }
+        return indexOfFirst { it.isMine && it.serverId == null && it.shapeMatches(message) }
     }
 
     private fun handleHistoryPageReceived(messages: List<SupportChatMessage>) {
@@ -480,6 +484,14 @@ class SupportChatScreenViewModel(
 
     private fun SupportChatMessage.contentMatches(other: SupportChatMessage): Boolean {
         return text == other.text && attachment?.name == other.attachment?.name
+    }
+
+    private fun SupportChatMessage.shapeMatches(other: SupportChatMessage): Boolean {
+        if (text.isNullOrBlank() != other.text.isNullOrBlank()) return false
+        val a = attachment ?: return other.attachment == null
+        val b = other.attachment ?: return false
+        return (a is SupportChatAttachment.Image && b is SupportChatAttachment.Image) ||
+            (a is SupportChatAttachment.Document && b is SupportChatAttachment.Document)
     }
 
     private fun SupportChatAttachment.toPending(): SupportChatPendingAttachment? {
