@@ -223,7 +223,22 @@ class SupportChatScreenViewModel(
     }
 
     fun onConnectionRetry() {
-        launchReconnect(immediate = true)
+        if (reconnectJob?.isActive == true) return
+        reconnectJob = safeLaunch {
+            when (withContext(dispatchers.io) { repository.openChat() }) {
+                is Response.Success -> {
+                    _state.update { it.copy(isOffline = false) }
+                    if (_state.value.messages.isEmpty() &&
+                        _state.value.hasMoreHistory &&
+                        !_state.value.isLoadingHistory
+                    ) {
+                        loadHistoryPage()
+                    }
+                    retryPendingMessages()
+                }
+                is Response.Error -> _state.update { it.copy(isOffline = true) }
+            }
+        }
     }
 
     fun onMessageVisible(messageId: String) {
@@ -242,12 +257,12 @@ class SupportChatScreenViewModel(
 
     private fun startEventCollection() {
         eventCollectionJob?.cancel()
-        eventCollectionJob = safeLaunch {
+        eventCollectionJob = safeLaunch(dispatchers.io) {
             repository.observeEvents()
                 .collect { response ->
                     when (response) {
                         is Response.Success -> handleEvent(response.value)
-                        is Response.Error -> logger.d(response.exception) { "Chat event error" }
+                        is Response.Error -> handleEventError(response.exception)
                     }
                 }
         }
@@ -263,12 +278,23 @@ class SupportChatScreenViewModel(
         }
     }
 
+    private fun handleEventError(error: Throwable) {
+        if (_state.value.isOffline) return
+        logger.d(error) { "Chat event error, switching to offline" }
+        _state.update { it.copy(isOffline = true) }
+        reconnectJob?.cancel()
+        reconnectJob = safeLaunch(dispatchers.io) { repository.closeChat() }
+    }
+
     private fun handleConnectionChanged(isConnected: Boolean) {
         _state.update { it.copy(isOffline = !isConnected) }
         if (isConnected) {
             retryPendingMessages()
         } else {
-            launchReconnect(immediate = false)
+            reconnectJob?.cancel()
+            reconnectJob = safeLaunch {
+                withContext(dispatchers.io) { repository.closeChat() }
+            }
         }
     }
 
@@ -296,8 +322,6 @@ class SupportChatScreenViewModel(
             val updatedMessages = if (index != -1) {
                 current.messages.toMutableList().apply { set(index, message) }
             } else {
-                // Серверное эхо исходящего сообщения может прийти без client-id.
-                // Пытаемся сопоставить по содержимому с последним оптимистичным сообщением.
                 val echoIndex = if (message.isMine) {
                     current.messages.indexOfLast {
                         it.isMine && it.serverId == null && it.contentMatches(message)
@@ -485,7 +509,6 @@ class SupportChatScreenViewModel(
                         isOffline = true,
                     )
                 }
-                launchReconnect(immediate = false)
             }
         }
     }
@@ -498,32 +521,6 @@ class SupportChatScreenViewModel(
                 it.copy(isLoadingHistory = false)
             }
             _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
-        }
-    }
-
-    private fun launchReconnect(immediate: Boolean) {
-        reconnectJob?.cancel()
-        reconnectJob = safeLaunch {
-            var shouldDelay = !immediate
-            while (_state.value.isOffline) {
-                if (shouldDelay) delay(RECONNECT_DELAY)
-                shouldDelay = true
-
-                when (withContext(dispatchers.io) { repository.openChat() }) {
-                    is Response.Success -> {
-                        _state.update { it.copy(isOffline = false) }
-                        if (_state.value.messages.isEmpty() &&
-                            _state.value.hasMoreHistory &&
-                            !_state.value.isLoadingHistory
-                        ) {
-                            loadHistoryPage()
-                        }
-                        retryPendingMessages()
-                        return@safeLaunch
-                    }
-                    is Response.Error -> _state.update { it.copy(isOffline = true) }
-                }
-            }
         }
     }
 
@@ -557,6 +554,5 @@ class SupportChatScreenViewModel(
 
     private companion object {
         val TYPING_TIMEOUT = 5.seconds
-        val RECONNECT_DELAY = 3.seconds
     }
 }

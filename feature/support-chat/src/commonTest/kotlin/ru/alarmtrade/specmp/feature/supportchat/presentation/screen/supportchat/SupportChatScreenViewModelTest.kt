@@ -154,6 +154,54 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `connection lost tears down websocket and shows offline banner`() = runTest {
+        val viewModel = createViewModelAndStart()
+        val closeCallsAfterInit = repository.closeChatCallCount
+
+        repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
+        runCurrent()
+
+        // closeSocket обнуляет webSocket.value в SDK — это останавливает
+        // рекурсивный цикл receiveMessage в iosMain, вешающий main-поток.
+        assertEquals(true, viewModel.state.value.isOffline)
+        assertEquals(closeCallsAfterInit + 1, repository.closeChatCallCount)
+    }
+
+    @Test
+    fun `connection lost does not auto-reconnect without manual retry`() = runTest {
+        val viewModel = createViewModelAndStart()
+        val openCallsAfterInit = repository.openChatCallCount
+
+        repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
+        advanceUntilIdle()
+
+        // Никаких фоновых попыток: переподключение только кнопкой на баннере.
+        assertEquals(openCallsAfterInit, repository.openChatCallCount)
+        assertEquals(true, viewModel.state.value.isOffline)
+    }
+
+    @Test
+    fun `ws error event switches to offline once and ignores error storm`() = runTest {
+        val viewModel = createViewModelAndStart()
+        val closeCallsAfterInit = repository.closeChatCallCount
+
+        repository.emitError(Exception("socket lost"))
+        runCurrent()
+
+        assertEquals(true, viewModel.state.value.isOffline)
+        assertEquals(closeCallsAfterInit + 1, repository.closeChatCallCount)
+
+        // Шторм повторных ошибок (на iOS обрыв сокета шлёт их ~кГц) не должен
+        // повторно дёргать SDK и состояние.
+        repository.emitError(Exception("socket lost"))
+        repository.emitError(Exception("socket lost"))
+        runCurrent()
+
+        assertEquals(closeCallsAfterInit + 1, repository.closeChatCallCount)
+        assertEquals(true, viewModel.state.value.isOffline)
+    }
+
+    @Test
     fun `connected event during openChat does not cancel history loading`() = runTest {
         repository.openChatResult = Response.Error(Exception("Offline"))
         val viewModel = SupportChatScreenViewModel(
