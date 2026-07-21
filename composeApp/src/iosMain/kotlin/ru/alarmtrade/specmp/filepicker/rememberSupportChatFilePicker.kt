@@ -11,11 +11,18 @@ import platform.Foundation.NSNumber
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
+import platform.PhotosUI.PHPickerConfiguration
+import platform.PhotosUI.PHPickerFilter
+import platform.PhotosUI.PHPickerResult
+import platform.PhotosUI.PHPickerViewController
+import platform.PhotosUI.PHPickerViewControllerDelegateProtocol
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerMode
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
 import platform.darwin.NSObject
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFilePicker
 import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
 
@@ -31,12 +38,24 @@ private class IosSupportChatFilePicker(
     private val viewController: UIViewController,
 ) : SupportChatFilePicker {
 
-    private var activeDelegate: DocumentPickerDelegate? = null
+    private var activeDelegate: NSObject? = null
 
     override fun launchImage(onPicked: (SupportChatPickedFile?) -> Unit) {
-        launchPicker(
-            documentTypes = listOf(IMAGE_UTI),
+        val configuration = PHPickerConfiguration().apply {
+            filter = PHPickerFilter.imagesFilter()
+            selectionLimit = 1
+        }
+        val picker = PHPickerViewController(configuration)
+        val delegate = PhotoPickerDelegate(
             onPicked = onPicked,
+            onFinished = { activeDelegate = null },
+        )
+        activeDelegate = delegate
+        picker.delegate = delegate
+        viewController.presentViewController(
+            viewControllerToPresent = picker,
+            animated = true,
+            completion = null,
         )
     }
 
@@ -71,8 +90,32 @@ private class IosSupportChatFilePicker(
     }
 
     private companion object {
-        const val IMAGE_UTI = "public.image"
         const val DATA_UTI = "public.data"
+    }
+}
+
+private const val IMAGE_UTI = "public.image"
+
+private class PhotoPickerDelegate(
+    private val onPicked: (SupportChatPickedFile?) -> Unit,
+    private val onFinished: () -> Unit,
+) : NSObject(), PHPickerViewControllerDelegateProtocol {
+
+    override fun picker(picker: PHPickerViewController, didFinishPicking: List<*>) {
+        picker.dismissViewControllerAnimated(true, null)
+        val result = didFinishPicking.firstOrNull() as? PHPickerResult
+        if (result == null) {
+            onPicked(null)
+            onFinished()
+            return
+        }
+        result.itemProvider.loadFileRepresentationForTypeIdentifier(IMAGE_UTI) { url, _ ->
+            val picked = url?.copyToTemporaryFile()
+            dispatch_async(dispatch_get_main_queue()) {
+                onPicked(picked)
+                onFinished()
+            }
+        }
     }
 }
 
