@@ -122,6 +122,11 @@ class MainScreenViewModel(
     fun onMenuClicked() {
         if (state.value.isInitialLoading) return
 
+        val profile = state.value.profileState
+        if (profile !is LCEState.Content && profile !is LCEState.Loading) {
+            safeLaunch { loadUserProfile() }
+        }
+
         _state.update { it.copy(isMenuOpen = !it.isMenuOpen) }
     }
 
