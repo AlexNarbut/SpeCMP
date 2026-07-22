@@ -22,6 +22,7 @@ function HomeApp({
   appVersion = "2.4.1",
   latestVersion = "2.5.0",
   initialUpdateState = "available",
+  onLogout = null,
 }) {
   const { useState, useRef, useEffect } = React;
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
@@ -57,9 +58,15 @@ function HomeApp({
   const onNav = (key) => {
     // Prototype: real routing lands here. Close the drawer on selection.
     if (key === "settings" || key === "logout") setMenuOpen(false);
+    if (key === "logout" && onLogout) onLogout();
     if (key === "support" || key === "requests") {
       // «Заявки на техпомощь» / карточка «Заявки» → support chat mockup for this platform.
       const target = isDesktop ? "support-chat-desktop" : "support-chat";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
+    if (key === "quick" || key === "extended") {
+      // «Быстрый / Расширенный монтаж» → экран поиска и выбора устройства.
+      const target = isDesktop ? "device-select-desktop" : "device-select";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
   };

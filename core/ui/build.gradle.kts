@@ -43,6 +43,9 @@ kotlin {
             api(libs.compose.ui)
             api(libs.compose.resources)
             api(libs.compose.ui.tooling.preview)
+            // Nav3 — api: тип NavBackStack фигурирует в публичном API навигационных
+            // хелперов (core.ui.navigation.NavBackStackSafe), доступных всем фичам.
+            api(libs.compose.nav3)
             implementation(libs.compose.material3)
             // Каталог material-иконок для CmpIcons (резолвится в CmpIconsResolver)
             implementation(compose.materialIconsExtended)

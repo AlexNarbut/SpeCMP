@@ -268,7 +268,7 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private suspend fun handleEvent(event: SupportChatEvent) {
+    private fun handleEvent(event: SupportChatEvent) {
         when (event) {
             is SupportChatEvent.ConnectionChanged -> handleConnectionChanged(event.isConnected)
             is SupportChatEvent.TypingChanged -> handleTypingChanged(event.authorEmail, event.isTyping)

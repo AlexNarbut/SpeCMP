@@ -34,6 +34,11 @@ val specialistModule = module {
     single { get<SpecialistApp>().userInteractor }
     single { get<SpecialistApp>().chatInteractor }
     single { get<SpecialistApp>().filesInteractor }
+    // Device connection interactors (feature/device/*): скан и сессии BLE/USB,
+    // операции с подключённым alarm-устройством.
+    single { get<SpecialistApp>().bluetoothConnectorInteractor }
+    single { get<SpecialistApp>().usbConnectorInteractor }
+    single { get<SpecialistApp>().bluetoothAlarmDeviceInteractor }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }
     }

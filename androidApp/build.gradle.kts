@@ -32,4 +32,6 @@ kotlin {
 dependencies {
     implementation(project(":composeApp"))
     implementation(libs.androidx.activityCompose)
+    // AppActivity — FragmentActivity (нужно core/permissions для bind PermissionsController)
+    implementation(libs.androidx.fragment)
 }

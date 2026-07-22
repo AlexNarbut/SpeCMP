@@ -21,7 +21,7 @@ const validPhone = (v) => rePhone.test(v.trim());
 // ════════════════════════════════════════════════════════════════════════════
 // AuthFlow — interactive
 // ════════════════════════════════════════════════════════════════════════════
-function AuthFlow({ lang: langProp, onLang, initialScreen = "login" }) {
+function AuthFlow({ lang: langProp, onLang, initialScreen = "login", onLoggedIn = null }) {
   const { useState, useRef, useEffect } = React;
   const [rootRef, mode] = useAuthMode();
 
@@ -81,6 +81,7 @@ function AuthFlow({ lang: langProp, onLang, initialScreen = "login" }) {
       const e = lEmail.toLowerCase();
       if (e.includes("fail")) setLError(true);
       else if (e.includes("activate") || e.includes("new")) { setActivationSent(false); setActivationOpen(true); }
+      else if (onLoggedIn) onLoggedIn();      // app entry: hand off to the main feature
       else go("loggedIn");
     });
   };

@@ -618,6 +618,37 @@ class MainScreenViewModel(
 - Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять
   `.onStart { emit(<initial>) }`, иначе `combine` не эмитит, пока не ответят все источники.
 
+**Запрещено, без исключений (частые «оправдания», которые не работают):**
+
+- `LaunchedEffect(Unit) { viewModel.start() }` / `init()` / `load()` / `prepareX()` — **запрещено**,
+  даже если метод назван не «load». Переименование init-хука не делает его легальным: любой
+  запуск работы VM из composition side-effect нарушает правило. Триггер — подписка на `state`.
+- **«Это платформенно-зависимо, поэтому можно через `LaunchedEffect`»** — нет. Composition
+  side-effects (`LaunchedEffect`/`DisposableEffect`) допустимы **только** для (а) привязки
+  платформенных объектов, живущих в композиции (напр. `BindEffect` для `PermissionsController`),
+  и (б) проброса UI-события/сигнала в метод-интент VM (`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`).
+  Запуск собственного жизненного цикла/загрузки VM сюда не входит — привязка контроллера и старт
+  работы VM это разные вещи.
+- **Начальный шаг/режим экрана как чистая функция от входа/платформы — это НЕ «работа», а начальное
+  значение состояния.** Вычисляй его в конструкторе VM (инициализация `MutableStateFlow`), а не
+  через `start()`-интент. Реактивные источники, завязанные на этот шаг (скан, подписки), стартуют
+  сами при первой подписке на `state` (`flatMapLatest`/`combine` + `stateIn(WhileSubscribed/Lazily)`).
+
+```kotlin
+// ❌ Плохо — init-хук через LaunchedEffect, даже под именем start()
+// VM:
+fun start() { if (started) return; started = true; _step.value = if (…) Scanning else Rationale }
+// UI:
+LaunchedEffect(Unit) { viewModel.start() }
+
+// ✅ Хорошо — начальный шаг = начальное состояние; скан реактивен и стартует по подписке
+private val _step = MutableStateFlow(if (requirements.isEmpty()) Scanning else Rationale)
+private val devices = _step.flatMapLatest { if (it is Scanning) scan() else flowOf(None) }
+val state = combine(_step, devices, …) { … }.stateIn(scope, WhileSubscribed(5.seconds), initial)
+// реакция на действие пользователя — явный интент (это не init-загрузка):
+fun onAllowClicked(controller: PermissionsController) { … }
+```
+
 ### One-shot события (Effects)
 
 Навигация, snackbar'ы и прочие одноразовые события из ViewModel в UI — **только через `MutableSharedFlow`**. `Channel` + `receiveAsFlow()` в проекте не используем.

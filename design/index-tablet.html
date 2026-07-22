@@ -1,0 +1,97 @@
+<!-- @dsCard group="Главный экран" viewport="900x900" name="Вход в приложение (tablet)" subtitle="Точка входа на планшете: не авторизован → auth flow, авторизован → главный; сессия общая (localStorage)" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec (tablet)</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+  .seg { display: flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .link { border: none; background: #fff; border-radius: 999px; padding: 8px 14px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #1A3E7A; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .tablet { background: #1b1d1e; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); box-sizing: content-box; }
+  .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+  .scaler { transform-origin: top left; }
+  a { color: #1A3E7A; } a:hover { color: #07203F; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="_ds_bundle.js"></script>
+<script src="features/auth/i18n.js"></script>
+<script src="res/icons/main-icons.js"></script>
+<script type="text/babel" src="features/auth/AuthScreens.jsx"></script>
+<script type="text/babel" src="features/auth/Auth.jsx"></script>
+<script type="text/babel" src="features/home/HomeScreens.jsx"></script>
+<script type="text/babel" src="features/home/Home.jsx"></script>
+<script type="text/babel">
+  const AUTH_KEY = "ps-authed";
+  const SIZES = { portrait: { w: 800, h: 1280 }, landscape: { w: 1280, h: 800 } };
+
+  function TabletApp() {
+    const [dark, setDark] = React.useState(false);
+    const [lang, setLang] = React.useState("ru");
+    const [orient, setOrient] = React.useState("portrait");
+    const [authed, setAuthed] = React.useState(() => localStorage.getItem(AUTH_KEY) === "1");
+    const [sessionKey, setSessionKey] = React.useState(0);
+    const { w, h } = SIZES[orient];
+
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const fit = () => setScale(Math.min(1, (window.innerWidth - 64) / w, (window.innerHeight - 220) / h));
+      fit();
+      window.addEventListener("resize", fit);
+      return () => window.removeEventListener("resize", fit);
+    }, [w, h]);
+
+    const onLoggedIn = () => { localStorage.setItem(AUTH_KEY, "1"); setAuthed(true); setSessionKey((k) => k + 1); };
+    const onLogout = () => { localStorage.removeItem(AUTH_KEY); setAuthed(false); setSessionKey((k) => k + 1); };
+
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <div className="seg">
+            <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+            <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+          </div>
+          <div className="seg">
+            <button className={orient === "portrait" ? "on" : ""} onClick={() => setOrient("portrait")}>Портрет 800×1280</button>
+            <button className={orient === "landscape" ? "on" : ""} onClick={() => setOrient("landscape")}>Ландшафт 1280×800</button>
+          </div>
+          {!authed && (
+            <div className="seg">
+              <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</button>
+              <button className={lang === "ru" ? "on" : ""} onClick={() => setLang("ru")}>RU</button>
+            </div>
+          )}
+          <button className="link" onClick={onLogout}>↻ Сбросить сессию</button>
+          <button className="link" onClick={() => window.psGo("index")}>Mobile →</button>
+          <button className="link" onClick={() => window.psGo("index-desktop")}>Desktop →</button>
+        </div>
+
+        <div style={{ width: (w + 32) * scale, height: (h + 32) * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="tablet">
+              <div className="screen" data-theme={dark ? "dark" : undefined} style={{ width: w, height: h }}>
+                {authed
+                  ? <window.HomeApp key={"home" + orient + sessionKey} dark={dark} onDark={setDark} onLogout={onLogout} initialMenuOpen={orient === "landscape"} />
+                  : <window.AuthFlow key={"auth" + orient + sessionKey} initialScreen="root" lang={lang} onLang={setLang} onLoggedIn={onLoggedIn} />}
+              </div>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<TabletApp />);
+</script>
+</body>
+</html>

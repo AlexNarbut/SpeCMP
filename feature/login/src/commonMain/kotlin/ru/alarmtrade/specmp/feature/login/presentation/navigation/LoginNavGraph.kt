@@ -14,10 +14,11 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
+import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.AppLocale
@@ -84,7 +85,7 @@ fun LoginNavGraph(
         navigationIcon = {
             if (backStack.size > 1) {
                 CmpIconButton(
-                    onClick = { backStack.removeLastOrNull() },
+                    onClick = { backStack.popSafe() },
                     icon = CmpIcons.ArrowBack,
                     contentDescription = stringResource(Res.string.login_common_a11y_back),
                 )
@@ -118,11 +119,7 @@ private fun LoginNavDisplay(
     NavDisplay(
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),
-        onBack = {
-            if (backStack.size > 1) {
-                backStack.removeLastOrNull()
-            }
-        },
+        onBack = { backStack.popSafe() },
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
                 AuthBody(
@@ -140,11 +137,11 @@ private fun LoginNavDisplay(
                         onSubmit = viewModel::submit,
                         onOpenRegistration = {
                             viewModel.resetLoginForm()
-                            backStack += RegistrationRoute
+                            backStack.navigateSafe(RegistrationRoute)
                         },
                         onOpenForgotPassword = {
                             viewModel.resetLoginForm()
-                            backStack += ForgotPasswordRoute
+                            backStack.navigateSafe(ForgotPasswordRoute)
                         },
                         onResendActivationEmail = viewModel::resendActivationEmail,
                         onDismissActivationRequest = viewModel::dismissActivationRequest,
@@ -161,7 +158,7 @@ private fun LoginNavDisplay(
                 ) {
                     RegistrationScreen(
                         colors = colors,
-                        onBackToLogin = { backStack.removeLastOrNull() },
+                        onBackToLogin = { backStack.popSafe() },
                     )
                 }
             }
@@ -174,7 +171,7 @@ private fun LoginNavDisplay(
                 ) {
                     ForgotPasswordScreen(
                         colors = colors,
-                        onBackToLogin = { backStack.removeLastOrNull() },
+                        onBackToLogin = { backStack.popSafe() },
                     )
                 }
             }

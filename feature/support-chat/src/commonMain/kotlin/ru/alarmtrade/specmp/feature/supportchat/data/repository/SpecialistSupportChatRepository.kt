@@ -2,10 +2,12 @@ package ru.alarmtrade.specmp.feature.supportchat.data.repository
 
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDateTime
@@ -43,7 +45,7 @@ class SpecialistSupportChatRepository(
     // новой закрыло бы свежее соединение.
     private val connectionMutex = Mutex()
 
-    private var currentUserEmail: String? = null
+    private val currentUserEmail = MutableStateFlow<String?>(null)
 
     override fun observeEvents(): Flow<Response<SupportChatEvent>> {
         return flow {
@@ -67,14 +69,17 @@ class SpecialistSupportChatRepository(
         return connectionMutex.withLock {
             // Репозиторий — синглтон и переживает смену аккаунта, поэтому identity
             // перечитывается на каждую новую чат-сессию.
-            currentUserEmail = null
-            when (val typeResponse = chatInteractor.setChatTypeUseCase.execute(SetChatTypeRequest(ChatType.Default))) {
+            currentUserEmail.update { null }
+            when (val typeResponse =
+                chatInteractor.setChatTypeUseCase.execute(SetChatTypeRequest(ChatType.Default))) {
                 is SpecialistResponse.Success -> {
-                    when (val response = chatInteractor.openChatUseCase.execute(ConnectChatRequest(resetPages = true))) {
+                    when (val response =
+                        chatInteractor.openChatUseCase.execute(ConnectChatRequest(resetPages = true))) {
                         is SpecialistResponse.Success -> Response.Success(Unit)
                         is SpecialistResponse.Error -> response.toProjectError()
                     }
                 }
+
                 is SpecialistResponse.Error -> typeResponse.toProjectError()
             }
         }
@@ -82,7 +87,8 @@ class SpecialistSupportChatRepository(
 
     override suspend fun closeChat(): Response<Unit> {
         return connectionMutex.withLock {
-            when (val response = chatInteractor.closeChatUseCase.execute(ConnectChatRequest(resetPages = false))) {
+            when (val response =
+                chatInteractor.closeChatUseCase.execute(ConnectChatRequest(resetPages = false))) {
                 is SpecialistResponse.Success -> Response.Success(Unit)
                 is SpecialistResponse.Error -> response.toProjectError()
             }
@@ -97,35 +103,40 @@ class SpecialistSupportChatRepository(
     }
 
     override suspend fun sendMessage(text: String): Response<Unit> {
-        return when (val response = chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text))) {
+        return when (val response =
+            chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text))) {
             is SpecialistResponse.Success -> Response.Success(Unit)
             is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     override suspend fun sendImage(file: SupportChatPickedFile): Response<Unit> {
-        return when (val response = chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path))) {
+        return when (val response =
+            chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path))) {
             is SpecialistResponse.Success -> Response.Success(Unit)
             is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     override suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit> {
-        return when (val response = chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path))) {
+        return when (val response =
+            chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path))) {
             is SpecialistResponse.Success -> Response.Success(Unit)
             is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     override suspend fun downloadFile(url: String): Response<ByteArray> {
-        return when (val response = filesInteractor.downloadFileUseCase.execute(DownloadFileRequest(url))) {
+        return when (val response =
+            filesInteractor.downloadFileUseCase.execute(DownloadFileRequest(url))) {
             is SpecialistResponse.Success -> Response.Success(response.value)
             is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     override suspend fun markMessagesAsRead(ids: List<Long>): Response<Unit> {
-        return when (val response = chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids))) {
+        return when (val response =
+            chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids))) {
             is SpecialistResponse.Success -> Response.Success(Unit)
             is SpecialistResponse.Error -> response.toProjectError()
         }
@@ -154,14 +165,22 @@ class SpecialistSupportChatRepository(
                 authorEmail = event.userLogin,
                 isTyping = true,
             )
+
             is ChatEvent.Chat.Writing.Stop -> SupportChatEvent.TypingChanged(
                 authorEmail = event.userLogin,
                 isTyping = false,
             )
-            is ChatEvent.Chat.Message.Default -> SupportChatEvent.MessageReceived(event.toSupportChatMessage(myEmail))
+
+            is ChatEvent.Chat.Message.Default -> SupportChatEvent.MessageReceived(
+                event.toSupportChatMessage(
+                    myEmail
+                )
+            )
+
             is ChatEvent.Chat.MessagesPage -> SupportChatEvent.HistoryPageReceived(
                 messages = event.messages.map { it.toSupportChatMessage(myEmail) },
             )
+
             is ChatEvent.Chat.MarkMessageAsRead -> SupportChatEvent.MessagesRead(ids = event.messageIds)
             is ChatEvent.ChatRoom.SubscribeSuccess -> null
             else -> {
@@ -172,14 +191,15 @@ class SpecialistSupportChatRepository(
     }
 
     private suspend fun resolveCurrentUserEmail(): String? {
-        val cached = currentUserEmail
+        val cached = currentUserEmail.value
         if (cached != null) return cached
 
         return when (val response = userInteractor.getUserUseCase.execute()) {
             is SpecialistResponse.Success -> {
-                currentUserEmail = response.value.login
+                currentUserEmail.update { response.value.login }
                 response.value.login
             }
+
             is SpecialistResponse.Error -> {
                 logger.d(response.exception) { "Failed to resolve current user email for chat" }
                 null
@@ -199,11 +219,13 @@ class SpecialistSupportChatRepository(
                 name = content.name,
                 url = content.url,
             )
+
             is ChatMessageContent.Document -> SupportChatAttachment.Document(
                 id = content.id,
                 name = content.name,
                 url = content.url,
             )
+
             else -> null
         }
 

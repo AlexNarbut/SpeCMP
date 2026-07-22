@@ -1,0 +1,89 @@
+<!-- @dsCard group="Выбор устройства" viewport="860x900" name="Выбор устройства (tablet)" subtitle="Планшет — портрет 800×1280 (столбец) и ландшафт 1280×800 (master-detail), light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Выбор устройства (tablet)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+  .seg { display: flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 16px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .tablet { background: #1b1d1e; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); box-sizing: content-box; }
+  .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+  .scaler { transform-origin: top left; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./DeviceSelect.jsx"></script>
+<script type="text/babel">
+  const SIZES = { portrait: { w: 800, h: 1280 }, landscape: { w: 1280, h: 800 } };
+  const STEPS = [
+    { key: "permission", label: "Разрешения" },
+    { key: "scanning",   label: "Поиск" },
+    { key: "list",       label: "Список" },
+    { key: "empty",      label: "Пусто" },
+    { key: "connecting", label: "Подключение" },
+  ];
+  function TabletApp() {
+    const [dark, setDark] = React.useState(false);
+    const [orient, setOrient] = React.useState("landscape");
+    const [step, setStep] = React.useState("list");
+    const { w, h } = SIZES[orient];
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const fit = () => setScale(Math.min(1, (window.innerWidth - 64) / w, (window.innerHeight - 220) / h));
+      fit();
+      window.addEventListener("resize", fit);
+      return () => window.removeEventListener("resize", fit);
+    }, [w, h]);
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <div className="seg">
+            <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+            <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+          </div>
+          <div className="seg">
+            <button className={orient === "portrait" ? "on" : ""} onClick={() => setOrient("portrait")}>Портрет 800×1280</button>
+            <button className={orient === "landscape" ? "on" : ""} onClick={() => setOrient("landscape")}>Ландшафт 1280×800</button>
+          </div>
+        </div>
+        <div className="toolbar">
+          <div className="seg">
+            {STEPS.map((s) => (
+              <button key={s.key} className={step === s.key ? "on" : ""} onClick={() => setStep(s.key)}>{s.label}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ width: (w + 32) * scale, height: (h + 32) * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="tablet">
+              <div className="screen" data-theme={dark ? "dark" : undefined} style={{ width: w, height: h }}>
+                <window.DeviceSelectScreen
+                  key={orient + step}
+                  platform="android"
+                  initialStep={step}
+                  demoEmpty={step === "empty"}
+                  onBack={() => window.psGo("home-tablet")}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<TabletApp />);
+</script>
+</body>
+</html>

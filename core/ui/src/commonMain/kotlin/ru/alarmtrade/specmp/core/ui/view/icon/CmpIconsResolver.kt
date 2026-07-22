@@ -19,6 +19,16 @@ import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.BluetoothDisabled
+import androidx.compose.material.icons.filled.BluetoothSearching
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Usb
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
@@ -146,6 +156,18 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     // Places
     CmpIcons.LocationOn -> Icons.Filled.LocationOn
     CmpIcons.Place -> Icons.Filled.Place
+
+    // Devices / Connectivity
+    CmpIcons.Bluetooth -> Icons.Filled.Bluetooth
+    CmpIcons.BluetoothSearching -> Icons.Filled.BluetoothSearching
+    CmpIcons.BluetoothDisabled -> Icons.Filled.BluetoothDisabled
+    CmpIcons.Usb -> Icons.Filled.Usb
+    CmpIcons.Sensors -> Icons.Filled.Sensors
+    CmpIcons.Memory -> Icons.Filled.Memory
+    CmpIcons.VpnKey -> Icons.Filled.VpnKey
+    CmpIcons.SearchOff -> Icons.Filled.SearchOff
+    CmpIcons.TouchApp -> Icons.Filled.TouchApp
+    CmpIcons.Link -> Icons.Filled.Link
 
     // Other
     CmpIcons.Settings -> Icons.Filled.Settings

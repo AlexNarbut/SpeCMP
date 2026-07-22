@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="device_select_title_screen">Select device</string>
+    <string name="device_select_a11y_back">Back</string>
+    <string name="device_select_a11y_device_photo">device photo</string>
+
+    <!-- Permission rationale -->
+
+    <!-- Denied -->
+    <string name="device_select_denied_title">No access</string>
+    <string name="device_select_denied_subtitle">Without permission the app can\'t find devices. Enable access in settings.</string>
+    <string name="device_select_fix_android_1">Settings → Apps → Pandora Spec → Permissions</string>
+    <string name="device_select_fix_android_2">Enable “Nearby devices” and “Bluetooth”</string>
+    <string name="device_select_fix_ios_1">Settings → Pandora Spec → Bluetooth → enable</string>
+    <string name="device_select_btn_open_settings">Open settings</string>
+    <string name="device_select_btn_retry">Retry</string>
+
+    <!-- Adapter off -->
+    <string name="device_select_adapter_title">Bluetooth is off</string>
+    <string name="device_select_adapter_subtitle">Turn on Bluetooth to find the alarm unit.</string>
+    <string name="device_select_btn_enable_bluetooth">Turn on Bluetooth</string>
+
+    <!-- Scanning -->
+    <string name="device_select_scanning_title">Searching for devices…</string>
+    <string name="device_select_scanning_subtitle">Keep the alarm unit nearby. Bluetooth and USB devices will appear in the list automatically.</string>
+
+    <!-- Empty -->
+    <string name="device_select_empty_title">No devices found</string>
+    <string name="device_select_empty_subtitle">The search continues. Make sure the device is ready to connect.</string>
+    <!-- Подсказки «пусто» — по поддерживаемым транспортам -->
+    <string name="device_select_empty_ble_1">Make sure the device is powered on</string>
+    <string name="device_select_empty_ble_2">Bring the unit closer — within 1–2 meters</string>
+    <string name="device_select_empty_ble_3">Check that Bluetooth is on</string>
+    <string name="device_select_empty_usb_1">Check that the cable is connected to the device and the computer</string>
+    <string name="device_select_empty_usb_2">Try another USB port or cable</string>
+    <string name="device_select_empty_usb_3">Make sure the module is detected by the system</string>
+    <string name="device_select_empty_both_1">Make sure the device is powered on and the cable is connected</string>
+    <string name="device_select_empty_both_2">For Bluetooth, bring the unit closer — within 1–2 meters</string>
+    <string name="device_select_empty_both_3">Check that Bluetooth is on or the USB module is detected</string>
+    <string name="device_select_searching">Searching…</string>
+
+    <!-- List -->
+    <string name="device_select_list_count">Devices found: %1$d</string>
+    <string name="device_select_list_searching_short">searching…</string>
+
+    <!-- Connecting -->
+    <string name="device_select_connecting_title">Connecting…</string>
+    <string name="device_select_btn_cancel">Cancel</string>
+
+    <!-- Detail (master-detail) -->
+    <string name="device_select_detail_empty">Select a device from the list</string>
+    <string name="device_select_detail_label_link">Connection</string>
+    <string name="device_select_detail_label_address">Address</string>
+    <string name="device_select_detail_label_mac">MAC address</string>
+    <string name="device_select_btn_connect">Connect</string>
+
+    <!-- Transport -->
+    <string name="device_select_transport_ble">Bluetooth</string>
+    <string name="device_select_transport_usb">USB</string>
+
+    <!-- Errors / effects -->
+    <string name="device_select_error_connection_failed">Failed to connect to the device</string>
+    <string name="device_select_error_bond_remove_phone">The device is paired with the phone. Remove it in the phone\'s Bluetooth settings and try again.</string>
+    <string name="device_select_error_bond_remove_device">The device is paired with another phone. Reset the pairing on the unit and try again.</string>
+</resources>

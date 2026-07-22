@@ -92,6 +92,18 @@ enum class CmpIcons {
     DoneAll,
     Download,
 
+    // ── Devices / Connectivity ──────────────────────────────
+    Bluetooth,
+    BluetoothSearching,
+    BluetoothDisabled,
+    Usb,
+    Sensors,
+    Memory,
+    VpnKey,
+    SearchOff,
+    TouchApp,
+    Link,
+
     // ── Other ───────────────────────────────────────────────
     Settings,
     DateRange,

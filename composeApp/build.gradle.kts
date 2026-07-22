@@ -33,6 +33,7 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
             implementation(project(":core:network"))
+            implementation(project(":core:permissions"))
             implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
 
@@ -41,6 +42,9 @@ kotlin {
             implementation(project(":feature:login"))
             implementation(project(":feature:main"))
             implementation(project(":feature:support-chat"))
+            implementation(project(":feature:device:selection"))
+            implementation(project(":feature:device:interaction"))
+            implementation(project(":feature:device:selection-ui"))
 
             // Compose
             implementation(libs.compose.runtime)
@@ -56,6 +60,8 @@ kotlin {
 
             // Navigation
             implementation(libs.compose.nav3)
+            // ViewModelStore-декоратор Nav3: per-entry ViewModelStore → очистка VM при pop
+            implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
             // DI
             implementation(libs.koin.core)

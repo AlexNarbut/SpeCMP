@@ -9,7 +9,7 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents.MainHomeBody
 
 @Composable
-fun MainScreen(
+internal fun MainScreen(
     isDarkTheme: Boolean,
     onThemeChanged: (Boolean) -> Unit,
     onNavigateToFeature: (MainNavigationTarget) -> Unit,

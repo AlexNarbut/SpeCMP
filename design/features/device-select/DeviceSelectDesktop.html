@@ -1,0 +1,99 @@
+<!-- @dsCard group="Выбор устройства" viewport="1040x760" name="Выбор устройства (desktop)" subtitle="Compose Desktop — окно 1280×800, без запроса разрешений, master-detail; light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Выбор устройства (desktop)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .tseg { display: flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .tseg button { border: none; background: transparent; padding: 8px 16px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .tseg button.on { background: #1A3E7A; color: #fff; }
+  .win { width: 1280px; height: 800px; border-radius: 10px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); display: flex; flex-direction: column; }
+  .titlebar { height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); }
+  .title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .title .material-icons { font-size: 18px; color: var(--primary); }
+  .wctl { display: flex; align-items: center; gap: 6px; }
+  .seg { display: flex; background: var(--surface-container-highest); border-radius: 999px; padding: 3px; margin-right: 12px; }
+  .seg button { border: none; background: transparent; padding: 5px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; cursor: pointer; color: var(--on-surface-variant); }
+  .seg button.on { background: var(--primary); color: var(--on-primary); }
+  .wbtn { width: 28px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--on-surface-variant); cursor: pointer; }
+  .wbtn .material-icons { font-size: 16px; }
+  .body { flex: 1; min-height: 0; display: flex; background: var(--background); }
+  .scaler { transform-origin: top left; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./DeviceSelect.jsx"></script>
+<script type="text/babel">
+  const STEPS = [
+    { key: "scanning",   label: "Поиск" },
+    { key: "list",       label: "Список" },
+    { key: "empty",      label: "Пусто" },
+    { key: "connecting", label: "Подключение" },
+  ];
+  function DesktopApp() {
+    const [dark, setDark] = React.useState(false);
+    const [step, setStep] = React.useState("list");
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const fit = () => setScale(Math.min(1, (window.innerWidth - 48) / 1280, (window.innerHeight - 150) / 800));
+      fit();
+      window.addEventListener("resize", fit);
+      return () => window.removeEventListener("resize", fit);
+    }, []);
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <div className="tseg">
+            {STEPS.map((s) => (
+              <button key={s.key} className={step === s.key ? "on" : ""} onClick={() => setStep(s.key)}>{s.label}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ width: 1280 * scale, height: 800 * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="win" data-theme={dark ? "dark" : undefined}>
+              <div className="titlebar">
+                <div className="title"><span className="material-icons">build</span>Pandora Spec — Выбор устройства</div>
+                <div className="wctl">
+                  <div className="seg">
+                    <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+                    <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+                  </div>
+                  <div className="wbtn"><span className="material-icons">remove</span></div>
+                  <div className="wbtn"><span className="material-icons">crop_square</span></div>
+                  <div className="wbtn"><span className="material-icons">close</span></div>
+                </div>
+              </div>
+              <div className="body">
+                <div style={{ flex: 1, minWidth: 0, height: "100%" }}>
+                  <window.DeviceSelectScreen
+                    key={step}
+                    platform="desktop"
+                    initialStep={step}
+                    demoEmpty={step === "empty"}
+                    showBack={true}
+                    onBack={() => window.psGo("home-desktop")}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<DesktopApp />);
+</script>
+</body>
+</html>

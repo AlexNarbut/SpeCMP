@@ -26,6 +26,7 @@
               "features/app-update/**",
               "features/auth/**",
               "features/calculator/**",
+              "features/device-select/**",
               "features/home/**",
               "features/support-chat/**",
               "res/**",

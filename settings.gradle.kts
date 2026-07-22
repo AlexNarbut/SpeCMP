@@ -32,6 +32,7 @@ dependencyResolutionManagement {
 include(":core:common")
 include(":core:localization")
 include(":core:network")
+include(":core:permissions")
 include(":core:specialist")
 include(":core:ui")
 
@@ -45,3 +46,8 @@ include(":feature:auth-state")
 include(":feature:login")
 include(":feature:main")
 include(":feature:support-chat")
+
+include(":feature:device")
+include(":feature:device:selection")
+include(":feature:device:interaction")
+include(":feature:device:selection-ui")
