@@ -51,7 +51,8 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_adap
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_cancel
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_connect
-import specmp.feature.device.selection_ui.generated.resources.device_select_btn_enable_bluetooth
+import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_bluetooth
+import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_location
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_settings
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_retry
 import specmp.feature.device.selection_ui.generated.resources.device_select_connecting_title
@@ -80,6 +81,8 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_fix_
 import specmp.feature.device.selection_ui.generated.resources.device_select_fix_ios_1
 import specmp.feature.device.selection_ui.generated.resources.device_select_list_count
 import specmp.feature.device.selection_ui.generated.resources.device_select_list_searching_short
+import specmp.feature.device.selection_ui.generated.resources.device_select_location_subtitle
+import specmp.feature.device.selection_ui.generated.resources.device_select_location_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_scanning_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_scanning_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_searching
@@ -143,7 +146,8 @@ internal fun DeviceSelectionScreen(
                 layout = layout,
                 onRetry = viewModel::onRetry,
                 onOpenSettings = viewModel::openAppSettings,
-                onEnableBluetooth = viewModel::onEnableBluetoothClicked,
+                onOpenBluetoothSettings = viewModel::onOpenBluetoothSettings,
+                onOpenLocationSettings = viewModel::onOpenLocationSettings,
                 onSelect = { item -> viewModel.onDeviceSelected(item, isSplit = layout == DeviceSelectLayout.Split) },
                 onConnectSelected = viewModel::onConnectSelected,
                 onCancelConnecting = viewModel::onCancelConnecting,
@@ -158,7 +162,8 @@ private fun StepBody(
     layout: DeviceSelectLayout,
     onRetry: () -> Unit,
     onOpenSettings: () -> Unit,
-    onEnableBluetooth: () -> Unit,
+    onOpenBluetoothSettings: () -> Unit,
+    onOpenLocationSettings: () -> Unit,
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelected: () -> Unit,
     onCancelConnecting: () -> Unit,
@@ -168,7 +173,25 @@ private fun StepBody(
 
         is ScanStep.Denied -> DeniedBody(state.requirements, step.canOpenSettings, onOpenSettings, onRetry)
 
-        ScanStep.AdapterOff -> AdapterOffBody(onEnableBluetooth)
+        ScanStep.AdapterOff -> OffStateBody(
+            icon = CmpIcons.BluetoothDisabled,
+            title = stringResource(Res.string.device_select_adapter_title),
+            subtitle = stringResource(Res.string.device_select_adapter_subtitle),
+            primaryText = stringResource(Res.string.device_select_btn_open_bluetooth),
+            primaryIcon = CmpIcons.Bluetooth,
+            onPrimary = onOpenBluetoothSettings,
+            onRetry = onRetry,
+        )
+
+        ScanStep.LocationOff -> OffStateBody(
+            icon = CmpIcons.LocationOn,
+            title = stringResource(Res.string.device_select_location_title),
+            subtitle = stringResource(Res.string.device_select_location_subtitle),
+            primaryText = stringResource(Res.string.device_select_btn_open_location),
+            primaryIcon = CmpIcons.LocationOn,
+            onPrimary = onOpenLocationSettings,
+            onRetry = onRetry,
+        )
 
         ScanStep.Scanning -> ScanningOrListBody(state, layout, onSelect, onConnectSelected)
 
@@ -210,15 +233,29 @@ private fun DeniedBody(
     }
 }
 
+/** Состояние «что-то выключено» (Bluetooth / геолокация): открыть настройки + повторить. */
 @Composable
-private fun AdapterOffBody(onEnableBluetooth: () -> Unit) {
+private fun OffStateBody(
+    icon: CmpIcons,
+    title: String,
+    subtitle: String,
+    primaryText: String,
+    primaryIcon: CmpIcons,
+    onPrimary: () -> Unit,
+    onRetry: () -> Unit,
+) {
     CenterState {
-        Hero(icon = CmpIcons.BluetoothDisabled, tone = HeroTone.Neutral)
-        StateHeadline(stringResource(Res.string.device_select_adapter_title), stringResource(Res.string.device_select_adapter_subtitle))
+        Hero(icon = icon, tone = HeroTone.Neutral)
+        StateHeadline(title, subtitle)
         IconedButton(
-            text = stringResource(Res.string.device_select_btn_enable_bluetooth),
-            icon = CmpIcons.Bluetooth,
-            onClick = onEnableBluetooth,
+            text = primaryText,
+            icon = primaryIcon,
+            onClick = onPrimary,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        CmpOutlinedButton(
+            text = stringResource(Res.string.device_select_btn_retry),
+            onClick = onRetry,
             modifier = Modifier.fillMaxWidth(),
         )
     }

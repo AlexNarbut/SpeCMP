@@ -58,9 +58,14 @@ class FakePermissionsController(
 class FakePermissionsProvider(
     private val controller: PermissionsController = FakePermissionsController(),
     private val blePermissions: List<Permission> = emptyList(),
+    private val locationEnabled: Boolean = true,
 ) : PermissionsProvider {
     override fun getController(): PermissionsController = controller
     override fun getBlePermission(): List<Permission> = blePermissions
+    override fun isLocationEnabled(): Boolean = locationEnabled
+    override fun openLocationSettings() = Unit
+    override fun openBluetoothSettings() = Unit
+    // observe* методов больше нет в интерфейсе (revert реактивного варианта)
 }
 
 class FakeAlarmDeviceRepository(

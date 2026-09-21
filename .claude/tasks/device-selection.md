@@ -65,6 +65,11 @@
   → `Denied(false)` + «Повторить». Rationale-экрана нет — системный диалог сразу.
 - Запуск проверки — init-источник `stateIn(Lazily)` (первая подписка на state), не `LaunchedEffect`
   (см. [[no-launchedeffect-vm-start]] и `docs/patterns.md`).
+- **Preflight после разрешений** (для BLE): адаптер выключен → `AdapterOff` («Открыть настройки
+  Bluetooth» + «Повторить»); служба геолокации выключена (Android < 12, т.к. BLE-скан требует
+  геолокацию; на 12+ `neverForLocation` — не нужна) → `LocationOff` («Открыть настройки геолокации»
+  + «Повторить»). `PermissionsProvider`: `isLocationEnabled()`, `openLocationSettings()`,
+  `openBluetoothSettings()` (iOS/desktop — no-op).
 - `AppActivity` — `FragmentActivity` (нужно для `bind`); в androidApp добавлен `androidx.fragment`.
 - Креды репо — в `local.properties` (`signing.GITEA_*`). См. [[alarmtrade-sdk-versions]].
 

@@ -18,7 +18,12 @@
     <!-- Bluetooth выключен -->
     <string name="device_select_adapter_title">Bluetooth выключен</string>
     <string name="device_select_adapter_subtitle">Включите Bluetooth на устройстве, чтобы найти блок сигнализации.</string>
-    <string name="device_select_btn_enable_bluetooth">Включить Bluetooth</string>
+    <string name="device_select_btn_open_bluetooth">Открыть настройки Bluetooth</string>
+
+    <!-- Служба геолокации выключена (BLE-скан на Android < 12) -->
+    <string name="device_select_location_title">Геолокация выключена</string>
+    <string name="device_select_location_subtitle">На этой версии Android для поиска по Bluetooth нужно включить службу геолокации.</string>
+    <string name="device_select_btn_open_location">Открыть настройки геолокации</string>
 
     <!-- Сканирование -->
     <string name="device_select_scanning_title">Поиск устройств…</string>

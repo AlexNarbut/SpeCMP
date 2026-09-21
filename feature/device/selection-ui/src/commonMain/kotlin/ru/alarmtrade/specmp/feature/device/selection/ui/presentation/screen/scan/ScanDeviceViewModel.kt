@@ -126,14 +126,19 @@ class ScanDeviceViewModel(
 
     // --- Интенты: разрешения ---
 
-    /** Повтор после отказа: заново запросить доступ. */
+    /** Повтор: заново запросить доступ / перепроверить адаптер и геолокацию. */
     fun onRetry() {
         safeLaunch { checkPermissionAndProceed() }
     }
 
-    /** «Включить Bluetooth»: перепроверить состояние адаптера. */
-    fun onEnableBluetoothClicked() {
-        safeLaunch { moveToScanningOrAdapterOff() }
+    /** Открыть системные настройки Bluetooth (случай выключенного адаптера). */
+    fun onOpenBluetoothSettings() {
+        permissionsProvider.openBluetoothSettings()
+    }
+
+    /** Открыть системные настройки геолокации (случай выключенной службы). */
+    fun onOpenLocationSettings() {
+        permissionsProvider.openLocationSettings()
     }
 
     /** Открыть системные настройки приложения (случай «отклонено навсегда»). */
@@ -142,7 +147,7 @@ class ScanDeviceViewModel(
     }
 
     private suspend fun checkPermissionAndProceed() {
-        if (checkPermission()) moveToScanningOrAdapterOff()
+        if (checkPermission()) proceedAfterPermission()
     }
 
     private suspend fun checkPermission(): Boolean {
@@ -170,10 +175,16 @@ class ScanDeviceViewModel(
         return true
     }
 
-    private fun moveToScanningOrAdapterOff() {
+    // Preflight после выдачи разрешений: BLE требует включённого адаптера, а на Android < 12 —
+    // ещё и включённой службы геолокации (иначе скан молча ничего не находит).
+    private fun proceedAfterPermission() {
         val bluetoothNeeded = requirements.contains(DeviceAccessRequirement.BLUETOOTH)
         _step.update {
-            if (bluetoothNeeded && !isBluetoothEnabled()) ScanStep.AdapterOff else ScanStep.Scanning
+            when {
+                bluetoothNeeded && !isBluetoothEnabled() -> ScanStep.AdapterOff
+                bluetoothNeeded && !permissionsProvider.isLocationEnabled() -> ScanStep.LocationOff
+                else -> ScanStep.Scanning
+            }
         }
     }
 

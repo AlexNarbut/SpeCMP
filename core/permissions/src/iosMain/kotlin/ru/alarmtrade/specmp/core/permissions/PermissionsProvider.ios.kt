@@ -10,6 +10,11 @@ internal class IosPermissionsProvider : PermissionsProvider {
     private val controller: PermissionsController = IosPermissionsController()
     override fun getController(): PermissionsController = controller
     override fun getBlePermission(): List<Permission> = blePermissions()
+    override fun isLocationEnabled(): Boolean = true
+    override fun openLocationSettings() = Unit
+    // iOS: программно открыть системные настройки Bluetooth нельзя — состояние адаптера
+    // показывает сам CoreBluetooth. No-op.
+    override fun openBluetoothSettings() = Unit
 }
 
 actual fun permissionsModule(): Module = module {

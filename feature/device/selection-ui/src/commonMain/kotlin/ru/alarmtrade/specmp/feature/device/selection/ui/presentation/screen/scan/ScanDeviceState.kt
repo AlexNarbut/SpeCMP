@@ -17,6 +17,9 @@ sealed interface ScanStep {
     /** Bluetooth выключен. */
     data object AdapterOff : ScanStep
 
+    /** Служба геолокации выключена (нужна для BLE-скана на Android < 12). */
+    data object LocationOff : ScanStep
+
     /** Идёт сканирование; список/пусто выводятся из [ScanDeviceState.devices]. */
     data object Scanning : ScanStep
 

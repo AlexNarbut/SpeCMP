@@ -18,7 +18,12 @@
     <!-- Adapter off -->
     <string name="device_select_adapter_title">Bluetooth is off</string>
     <string name="device_select_adapter_subtitle">Turn on Bluetooth to find the alarm unit.</string>
-    <string name="device_select_btn_enable_bluetooth">Turn on Bluetooth</string>
+    <string name="device_select_btn_open_bluetooth">Open Bluetooth settings</string>
+
+    <!-- Location services off (BLE scan on Android < 12) -->
+    <string name="device_select_location_title">Location is off</string>
+    <string name="device_select_location_subtitle">On this Android version, Bluetooth scanning requires location services to be on.</string>
+    <string name="device_select_btn_open_location">Open location settings</string>
 
     <!-- Scanning -->
     <string name="device_select_scanning_title">Searching for devices…</string>
