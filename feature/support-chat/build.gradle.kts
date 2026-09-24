@@ -55,9 +55,7 @@ kotlin {
 
             implementation(libs.kermit)
 
-            // Image loading
-            implementation(libs.coil)
-            implementation(libs.coil.network.ktor)
+            // Image loading — CmpAsyncImage/CmpSubcomposeAsyncImage из core/ui (U-2)
         }
 
         commonTest.dependencies {

@@ -50,7 +50,7 @@ internal fun SupportChatLoadingSkeleton(
                 .width(96.dp)
                 .height(28.dp)
                 .background(skeletonColor, RoundedCornerShape(percent = 50)),
-        ) {}
+        )
         SkeletonBubble(widthFraction = 0.78f, height = 72.dp, isMine = true, color = skeletonColor)
         SkeletonBubble(widthFraction = 0.62f, height = 56.dp, isMine = true, color = skeletonColor)
         SkeletonBubble(widthFraction = 0.88f, height = 88.dp, isMine = false, color = skeletonColor)
@@ -83,6 +83,6 @@ private fun SkeletonBubble(
                         bottomEnd = if (isMine) 4.dp else 16.dp,
                     ),
                 ),
-        ) {}
+        )
     }
 }

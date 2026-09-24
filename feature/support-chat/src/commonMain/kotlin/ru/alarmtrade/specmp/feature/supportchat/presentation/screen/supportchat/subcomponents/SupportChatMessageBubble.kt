@@ -1,7 +1,8 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import ru.alarmtrade.specmp.core.ui.view.image.CmpImage
+import ru.alarmtrade.specmp.core.ui.view.image.CmpSubcomposeAsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.SubcomposeAsyncImage
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
@@ -32,7 +32,6 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiAttachment
-import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.LocalSupportChatImageLoader
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -338,11 +337,10 @@ private fun SupportChatImageAttachment(
     isDownloading: Boolean,
     downloadAction: (() -> Unit)?,
 ) {
-    val imageLoader = LocalSupportChatImageLoader.current
 
-    SubcomposeAsyncImage(
+
+    CmpSubcomposeAsyncImage(
         model = source,
-        imageLoader = imageLoader,
         contentDescription = name,
     ) {
         // Высота фиксирована, ширина следует за пропорциями изображения —
@@ -370,7 +368,7 @@ private fun SupportChatImageAttachment(
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
-            Image(
+            CmpImage(
                 painter = imagePainter,
                 contentDescription = name,
                 contentScale = ContentScale.Crop,

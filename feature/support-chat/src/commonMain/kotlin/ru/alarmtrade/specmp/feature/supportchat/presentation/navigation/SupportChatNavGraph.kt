@@ -9,7 +9,6 @@ import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
-import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.ProvideSupportChatImageLoader
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreen
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreenViewModel
 
@@ -37,12 +36,10 @@ fun SupportChatEntry(
     val viewModel = koinViewModel<SupportChatScreenViewModel> { parametersOf(fileSaver) }
     val state = viewModel.state.collectAsState()
 
-    ProvideSupportChatImageLoader {
-        SupportChatScreen(
+    SupportChatScreen(
             state = state.value,
             effect = viewModel.effect,
             onBack = onBack,
-            onDraftChange = viewModel::onDraftChange,
             onAttachFile = {
                 filePicker.launchDocument { result ->
                     if (result is SupportChatPickedFileResult.Picked) {
@@ -66,5 +63,4 @@ fun SupportChatEntry(
             onMessageVisible = viewModel::onMessageVisible,
             onDownloadAttachment = viewModel::onDownloadAttachment,
         )
-    }
 }

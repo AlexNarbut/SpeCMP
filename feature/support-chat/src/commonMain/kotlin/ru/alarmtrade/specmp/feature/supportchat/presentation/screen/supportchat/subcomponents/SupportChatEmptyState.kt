@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -29,6 +28,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.support_chat_chip_documents
 import specmp.feature.support_chat.generated.resources.support_chat_chip_installation_photos
@@ -53,7 +53,7 @@ internal fun SupportChatEmptyState(
         ) {
             CmpText(
                 text = stringResource(Res.string.support_chat_msg_empty_title),
-                fontSize = 22.sp,
+                style = CmpTextStyle.Title,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
             )
@@ -178,8 +178,7 @@ private fun GhostBubble(
                             .size(height = 6.dp, width = 0.dp)
                             .clip(RoundedCornerShape(percent = 50))
                             .background(colors.onSurface.copy(alpha = 0.18f)),
-                    ) {
-                    }
+                    )
                 }
             }
         }

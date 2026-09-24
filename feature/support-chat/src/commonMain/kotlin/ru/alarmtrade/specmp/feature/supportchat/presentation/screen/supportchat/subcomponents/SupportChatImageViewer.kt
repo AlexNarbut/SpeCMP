@@ -5,19 +5,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
-import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.LocalSupportChatImageLoader
 import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.support_chat_a11y_close_viewer
 
@@ -26,15 +24,9 @@ internal fun SupportChatImageViewer(
     imageSource: String,
     onDismiss: () -> Unit,
 ) {
-    val imageLoader = LocalSupportChatImageLoader.current
     val colors = cmpThemeColors()
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-        ),
-    ) {
+    CmpFullScreenDialog(onDismissRequest = onDismiss) {
         CmpBox(
             modifier = Modifier
                 .fillMaxSize()
@@ -42,10 +34,9 @@ internal fun SupportChatImageViewer(
                 .clickable(onClick = onDismiss),
             contentAlignment = Alignment.Center,
         ) {
-            AsyncImage(
+            CmpAsyncImage(
                 model = imageSource,
                 contentDescription = null,
-                imageLoader = imageLoader,
                 modifier = Modifier.fillMaxSize(),
             )
 

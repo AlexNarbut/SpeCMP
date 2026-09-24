@@ -47,6 +47,10 @@ kotlin {
             // Каталог material-иконок для CmpIcons (резолвится в CmpIconsResolver)
             implementation(compose.materialIconsExtended)
 
+            // Image loading — единый ImageLoader приложения, обёртки CmpAsyncImage/CmpSubcomposeAsyncImage
+            implementation(libs.coil)
+            implementation(libs.coil.network.ktor)
+
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)

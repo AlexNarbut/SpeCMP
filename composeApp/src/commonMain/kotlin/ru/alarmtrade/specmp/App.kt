@@ -17,6 +17,8 @@ import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
 import ru.alarmtrade.specmp.core.specialist.specialistModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
+import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
+import ru.alarmtrade.specmp.core.ui.view.image.rememberCmpImageLoader
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
@@ -63,13 +65,17 @@ fun App(
         )
     }) {
         CompositionLocalProvider(LocalAppLocale provides appLocale) {
-            AppTheme(onThemeChanged) {
-                AppNavigation(
-                    onLocaleChanged = { locale ->
-                        applyAppLocale(locale)
-                        appLocale = locale
-                    },
-                )
+            // Единый ImageLoader приложения: memory/disk-кэш Coil общий для
+            // всех экранов (U-1).
+            ProvideCmpImageLoader(rememberCmpImageLoader()) {
+                AppTheme(onThemeChanged) {
+                    AppNavigation(
+                        onLocaleChanged = { locale ->
+                            applyAppLocale(locale)
+                            appLocale = locale
+                        },
+                    )
+                }
             }
         }
     }

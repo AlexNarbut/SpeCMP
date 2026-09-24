@@ -98,6 +98,5 @@ private fun TypingDot(
             .size(8.dp)
             .clip(CircleShape)
             .background(color.copy(alpha = alpha)),
-    ) {
-    }
+    )
 }

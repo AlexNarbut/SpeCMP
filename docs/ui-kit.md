@@ -143,8 +143,11 @@ commonMain.dependencies {
 | Иконка | `icon/CmpIcon.kt` |
 | Каталог иконок (enum) | `icon/CmpIcons.kt` |
 | Резолвер иконок (@Composable) | `icon/CmpIconsResolver.kt` |
-| Изображение | `image/CmpImage.kt` |
+| Изображение (painter) | `image/CmpImage.kt` |
+| Загрузка изображения по url (Coil) | `image/CmpAsyncImage.kt` |
+| Загрузка с кастомным placeholder'ом (Coil) | `image/CmpAsyncImage.kt` |
 | Диалог | `dialog/CmpDialog.kt` |
+| Полноэкранный диалог | `dialog/CmpFullScreenDialog.kt` |
 | Snackbar | `dialog/CmpSnackbar.kt` |
 | Badge | `badge/CmpBadge.kt` |
 | Разделитель | `divider/CmpDivider.kt` |
@@ -153,6 +156,20 @@ commonMain.dependencies {
 | Column | `layout/CmpColumn.kt` |
 | Row | `layout/CmpRow.kt` |
 | Spacer | `layout/CmpSpacer.kt` |
+
+## Исключения из «только Cmp*»
+
+Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — сознательное
+исключение (U-5): осмысленная обёртка неизбежно протечёт наружу `LazyListScope`/
+`DrawScope`, поэтому фичи используют их напрямую. Coil в фичах запрещён — только
+`CmpAsyncImage`/`CmpSubcomposeAsyncImage` (общий `ImageLoader` провайдится из
+`composeApp`).
+
+## Типографика
+
+`CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`Body`/`Caption`) с
+маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
+в фичах числами не задаются. Параметр `fontSize` остаётся для исключений.
 
 ---
 
