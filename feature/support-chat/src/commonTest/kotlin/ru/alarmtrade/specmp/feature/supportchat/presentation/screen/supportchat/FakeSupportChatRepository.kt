@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.yield
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
@@ -20,7 +21,8 @@ class FakeSupportChatRepository : SupportChatRepository {
 
     var openChatResult: Response<Unit> = Response.Success(Unit)
     var closeChatResult: Response<Unit> = Response.Success(Unit)
-    var loadNextMessagesResult: Response<Unit> = Response.Success(Unit)
+    var loadNextMessagesResult: Response<SupportChatHistoryPage> =
+        Response.Success(SupportChatHistoryPage(messages = emptyList(), hasMore = false))
     var sendMessageResult: Response<Unit> = Response.Success(Unit)
     var sendImageResult: Response<Unit> = Response.Success(Unit)
     var sendDocumentResult: Response<Unit> = Response.Success(Unit)
@@ -28,6 +30,7 @@ class FakeSupportChatRepository : SupportChatRepository {
     var downloadFileResult: Response<ByteArray> = Response.Success(byteArrayOf(1, 2, 3))
     var startWritingResult: Response<Unit> = Response.Success(Unit)
     var stopWritingResult: Response<Unit> = Response.Success(Unit)
+    // Страница, которую вернёт следующий вызов loadNextMessages. null — вернуть loadNextMessagesResult.
     var historyPageOnLoad: List<SupportChatMessage>? = emptyList()
     var emitConnectedDuringNextOpenChat = false
     var outgoingDelayMillis = 0L
@@ -66,12 +69,10 @@ class FakeSupportChatRepository : SupportChatRepository {
         return closeChatResult
     }
 
-    override suspend fun loadNextMessages(): Response<Unit> {
+    override suspend fun loadNextMessages(): Response<SupportChatHistoryPage> {
         loadNextMessagesCallCount++
-        if (loadNextMessagesResult is Response.Success) {
-            historyPageOnLoad?.let { page ->
-                emitEvent(SupportChatEvent.HistoryPageReceived(page))
-            }
+        historyPageOnLoad?.let { page ->
+            return Response.Success(SupportChatHistoryPage(messages = page, hasMore = page.isNotEmpty()))
         }
         return loadNextMessagesResult
     }

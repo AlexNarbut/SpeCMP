@@ -1,32 +1,30 @@
 package ru.alarmtrade.specmp.feature.supportchat.data.repository
 
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.LocalDateTime
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
-import kotlin.concurrent.Volatile
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.asResponse
+import ru.alarmtrade.specmp.core.common.mapIfSuccess
+import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
+import ru.alarmtrade.specmp.feature.supportchat.data.mapper.SupportChatMessageMapper
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 import ru.alarmtrade.specialist.domain.chat.ChatEvent
-import ru.alarmtrade.specialist.domain.chat.ChatMessageContent
-import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.domain.chat.ChatType
+import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.interactors.chat.requests.ConnectChatRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.MarkMessagesAsReadRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.SetChatTypeRequest
@@ -34,6 +32,7 @@ import ru.alarmtrade.specialist.interactors.chat.requests.UploadChatFileRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.WriteMessageRequest
 import ru.alarmtrade.specialist.interactors.files.RemoteFilesInteractor
 import ru.alarmtrade.specialist.interactors.files.requests.DownloadFileRequest
+import kotlin.concurrent.Volatile
 
 class SpecialistSupportChatRepository(
     private val chatInteractor: ChatInteractor,
@@ -43,9 +42,19 @@ class SpecialistSupportChatRepository(
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
+    private val messageMapper = SupportChatMessageMapper(TimeZone.currentSystemDefault())
+
     // Сериализует open/close: переплетение closeChat прошлой сессии с openChat
     // новой закрыло бы свежее соединение.
     private val connectionMutex = Mutex()
+
+    // Ожидающий вызов loadNextMessages. SDK отвечает на запрос страницы не
+    // возвратом значения, а эмитом MessagesPage в общий поток событий —
+    // репозиторий маршрутизирует её сюда, чтобы контракт loadNextMessages
+    // имел гарантированный финал (см. интерфейс). Мьютекс защищает установку
+    // и потребление: параллельный запрос страницы отклоняется.
+    private val historyPageMutex = Mutex()
+    private var historyPageAwaiter: CompletableDeferred<SupportChatHistoryPage>? = null
 
     // Identity текущей чат-сессии. Репозиторий не владеет identity аккаунта:
     // email резолвится из AccountRepository один раз на openChat (под мьютексом)
@@ -57,20 +66,24 @@ class SpecialistSupportChatRepository(
 
     override fun observeEvents(): Flow<Response<SupportChatEvent>> {
         return flow {
-            chatInteractor.getChatEventsFlowUseCase.execute()
-                .map { response ->
-                    when (response) {
-                        is SpecialistResponse.Success -> mapChatEvent(response.value)?.asResponse()
-                        is SpecialistResponse.Error -> Response.Error(
-                            exception = response.exception,
-                            message = response.message ?: response.exception.message,
-                        )
-                    }
+            // Единственная обёртка: SDK-flow может бросить мимо Response-контракта,
+            // safeFlowRun конвертирует это в Response.Error (CancellationException
+            // пробрасывается).
+            emitAll(
+                safeFlowRun {
+                    chatInteractor.getChatEventsFlowUseCase.execute()
+                        .mapNotNull { response ->
+                            when (response) {
+                                is SpecialistResponse.Success -> mapChatEvent(response.value)?.asResponse()
+                                is SpecialistResponse.Error -> Response.Error(
+                                    exception = response.exception,
+                                    message = response.message ?: response.exception.message,
+                                )
+                            }
+                        }
                 }
-                .filterNotNull()
-                .catch { e -> emit(Response.Error(e, e.message)) }
-                .collect { emit(it) }
-        }.catch { e -> emit(Response.Error(e, e.message)) }
+            )
+        }
     }
 
     override suspend fun openChat(): Response<Unit> {
@@ -78,26 +91,22 @@ class SpecialistSupportChatRepository(
             // Identity сессии перечитывается на каждое открытие: репозиторий — синглтон
             // и переживает смену аккаунта. Неуспех резолва — ошибка открытия чата
             // (offline-баннер), а не молчаливое вычисление isMine по чужому/пустому email.
-            val profileResponse = accountRepository.currentProfile()
-            if (profileResponse is Response.Error) {
-                sessionEmail = null
-                return@withLock Response.Error(profileResponse.exception, profileResponse.message)
-            }
-            sessionEmail = (profileResponse as Response.Success).value.email
-
-            when (val typeResponse = chatInteractor.setChatTypeUseCase.execute(SetChatTypeRequest(ChatType.Default))) {
-                is SpecialistResponse.Success -> {
-                    when (val response = chatInteractor.openChatUseCase.execute(ConnectChatRequest(resetPages = true))) {
-                        is SpecialistResponse.Success -> Response.Success(Unit)
-                        is SpecialistResponse.Error -> {
-                            sessionEmail = null
-                            response.toProjectError()
-                        }
-                    }
-                }
-                is SpecialistResponse.Error -> {
+            when (val profileResponse = accountRepository.currentProfile()) {
+                is Response.Error -> {
                     sessionEmail = null
-                    typeResponse.toProjectError()
+                    Response.Error(profileResponse.exception, profileResponse.message)
+                }
+
+                is Response.Success -> {
+                    sessionEmail = profileResponse.value.email
+                    chatInteractor.setChatTypeUseCase.execute(SetChatTypeRequest(ChatType.Default))
+                        .toProject()
+                        .mapIfSuccess {
+                            chatInteractor.openChatUseCase.execute(ConnectChatRequest(resetPages = true)).toProject()
+                        }
+                        .also { response ->
+                            if (response is Response.Error) sessionEmail = null
+                        }
                 }
             }
         }
@@ -106,67 +115,96 @@ class SpecialistSupportChatRepository(
     override suspend fun closeChat(): Response<Unit> {
         return connectionMutex.withLock {
             sessionEmail = null
-            when (val response = chatInteractor.closeChatUseCase.execute(ConnectChatRequest(resetPages = false))) {
-                is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
+            chatInteractor.closeChatUseCase.execute(ConnectChatRequest(resetPages = false)).toProject()
         }
     }
 
-    override suspend fun loadNextMessages(): Response<Unit> {
-        return when (val response = chatInteractor.getNextMessagesUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
+    override suspend fun loadNextMessages(): Response<SupportChatHistoryPage> {
+        val awaiter = CompletableDeferred<SupportChatHistoryPage>()
+        val installed = historyPageMutex.withLock {
+            if (historyPageAwaiter != null) {
+                false
+            } else {
+                historyPageAwaiter = awaiter
+                true
+            }
+        }
+        if (!installed) {
+            return Response.Error(IllegalStateException("History page request is already in progress"))
+        }
+
+        return try {
+            when (val response = chatInteractor.getNextMessagesUseCase.execute()) {
+                is SpecialistResponse.Error -> {
+                    consumeHistoryPageAwaiter()
+                    response.toProjectError()
+                }
+
+                is SpecialistResponse.Success -> {
+                    // Гарантированный финал: если событие со страницей не пришло
+                    // (обрыв соединения между запросом и ответом), вызов всё равно
+                    // завершается — флаг загрузки не может залипнуть.
+                    val page = withTimeoutOrNull(HISTORY_PAGE_TIMEOUT_MS) { awaiter.await() }
+                    if (page == null) {
+                        consumeHistoryPageAwaiter()
+                        Response.Error(
+                            IllegalStateException(
+                                "History page was not emitted within $HISTORY_PAGE_TIMEOUT_MS ms"
+                            )
+                        )
+                    } else {
+                        Response.Success(page)
+                    }
+                }
+            }
+        } catch (e: CancellationException) {
+            consumeHistoryPageAwaiter()
+            throw e
         }
     }
 
     override suspend fun sendMessage(text: String): Response<Unit> {
-        return when (val response = chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text))) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
+        return chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text)).toProject()
     }
 
     override suspend fun sendImage(file: SupportChatPickedFile): Response<Unit> {
-        return when (val response = chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path))) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
+        return chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path)).toProject()
     }
 
     override suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit> {
-        return when (val response = chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path))) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
+        return chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path)).toProject()
     }
 
     override suspend fun downloadFile(url: String): Response<ByteArray> {
         return when (val response = filesInteractor.downloadFileUseCase.execute(DownloadFileRequest(url))) {
-            is SpecialistResponse.Success -> Response.Success(response.value)
+            is SpecialistResponse.Success -> {
+                // Файл целиком в памяти (ByteArray): без лимита документ на десятки
+                // МБ даст OOM на слабом устройстве. Потоковая запись в файл —
+                // перспектива, лимит — минимальная защита.
+                if (response.value.size > MAX_DOWNLOAD_BYTES) {
+                    logger.d { "Downloaded file exceeds limit: ${response.value.size} bytes" }
+                    Response.Error(
+                        IllegalStateException("Downloaded file exceeds $MAX_DOWNLOAD_BYTES bytes")
+                    )
+                } else {
+                    Response.Success(response.value)
+                }
+            }
+
             is SpecialistResponse.Error -> response.toProjectError()
         }
     }
 
     override suspend fun markMessagesAsRead(ids: List<Long>): Response<Unit> {
-        return when (val response = chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids))) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
+        return chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids)).toProject()
     }
 
     override suspend fun startWriting(): Response<Unit> {
-        return when (val response = chatInteractor.startWritingUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
+        return chatInteractor.startWritingUseCase.execute().toProject()
     }
 
     override suspend fun stopWriting(): Response<Unit> {
-        return when (val response = chatInteractor.stopWritingUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
+        return chatInteractor.stopWritingUseCase.execute().toProject()
     }
 
     override suspend fun release() {
@@ -189,10 +227,22 @@ class SpecialistSupportChatRepository(
                 authorEmail = event.userLogin,
                 isTyping = false,
             )
-            is ChatEvent.Chat.Message.Default -> SupportChatEvent.MessageReceived(event.toSupportChatMessage(myEmail))
-            is ChatEvent.Chat.MessagesPage -> SupportChatEvent.HistoryPageReceived(
-                messages = event.messages.map { it.toSupportChatMessage(myEmail) },
-            )
+            is ChatEvent.Chat.Message.Default -> SupportChatEvent.MessageReceived(messageMapper.map(event, myEmail))
+            is ChatEvent.Chat.MessagesPage -> {
+                // Ответ на loadNextMessages: страница уходит ожидающему вызову,
+                // в общий поток событий не эмитится.
+                val page = SupportChatHistoryPage(
+                    messages = event.messages.map { messageMapper.map(it, myEmail) },
+                    hasMore = event.messages.isNotEmpty(),
+                )
+                val awaiter = consumeHistoryPageAwaiter()
+                if (awaiter != null) {
+                    awaiter.complete(page)
+                } else {
+                    logger.d { "History page arrived without a pending request — dropped" }
+                }
+                null
+            }
             is ChatEvent.Chat.MarkMessageAsRead -> SupportChatEvent.MessagesRead(ids = event.messageIds)
             is ChatEvent.ChatRoom.SubscribeSuccess -> null
             else -> {
@@ -202,50 +252,17 @@ class SpecialistSupportChatRepository(
         }
     }
 
-    private fun ChatEvent.Chat.Message.toSupportChatMessage(myEmail: String?): SupportChatMessage {
-        val content = when (this) {
-            is ChatEvent.Chat.Message.Default -> messageContent
-            else -> null
+    private suspend fun consumeHistoryPageAwaiter(): CompletableDeferred<SupportChatHistoryPage>? {
+        return historyPageMutex.withLock {
+            historyPageAwaiter.also { historyPageAwaiter = null }
         }
-
-        val attachment = when (content) {
-            is ChatMessageContent.Image -> SupportChatAttachment.Image(
-                id = content.id,
-                name = content.name,
-                url = content.url,
-            )
-            is ChatMessageContent.Document -> SupportChatAttachment.Document(
-                id = content.id,
-                name = content.name,
-                url = content.url,
-            )
-            else -> null
-        }
-
-        val text = when (content) {
-            is ChatMessageContent.Text -> content.text
-            else -> null
-        }
-
-        val localTime = time.toInstant(TimeZone.UTC).toLocalDateTime(TimeZone.currentSystemDefault())
-
-        return SupportChatMessage(
-            id = id.toString(),
-            serverId = id,
-            text = text,
-            attachment = attachment,
-            time = localTime,
-            displayTime = formatTime(localTime),
-            isMine = myEmail != null && sender.login == myEmail,
-            authorEmail = sender.login,
-            status = if (wasRead) SupportChatMessageStatus.Read else SupportChatMessageStatus.Sent,
-        )
     }
 
-    private fun formatTime(time: LocalDateTime): String {
-        val hour = time.hour.toString().padStart(2, '0')
-        val minute = time.minute.toString().padStart(2, '0')
-        return "$hour:$minute"
+    private fun <T> SpecialistResponse<T>.toProject(): Response<T> {
+        return when (this) {
+            is SpecialistResponse.Success -> Response.Success(value)
+            is SpecialistResponse.Error -> toProjectError()
+        }
     }
 
     private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> {
@@ -253,6 +270,11 @@ class SpecialistSupportChatRepository(
             exception = exception,
             message = message ?: exception.message,
         )
+    }
+
+    private companion object {
+        const val HISTORY_PAGE_TIMEOUT_MS = 15_000L
+        const val MAX_DOWNLOAD_BYTES = 20L * 1024 * 1024
     }
 
 }

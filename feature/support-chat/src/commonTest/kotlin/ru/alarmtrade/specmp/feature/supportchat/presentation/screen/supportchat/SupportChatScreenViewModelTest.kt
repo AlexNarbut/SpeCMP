@@ -413,10 +413,9 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `loadMore failure emits history load failed effect`() = runTest {
+        repository.historyPageOnLoad = listOf(incomingMessage(id = 1, text = "Old"))
         val viewModel = createViewModel()
-
-        repository.emitEvent(SupportChatEvent.HistoryPageReceived(listOf(incomingMessage(id = 1, text = "Old"))))
-        advanceUntilIdle()
+        repository.historyPageOnLoad = null
 
         val effects = mutableListOf<SupportChatEffect>()
         val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
@@ -433,10 +432,8 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `empty history page sets hasMoreHistory to false`() = runTest {
+        // По умолчанию фейк отдаёт пустую первую страницу.
         val viewModel = createViewModel()
-
-        repository.emitEvent(SupportChatEvent.HistoryPageReceived(emptyList()))
-        advanceUntilIdle()
 
         assertEquals(false, viewModel.state.value.hasMoreHistory)
         assertEquals(false, viewModel.state.value.isLoadingHistory)
@@ -444,11 +441,8 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `history page with messages keeps hasMoreHistory true`() = runTest {
+        repository.historyPageOnLoad = listOf(incomingMessage(id = 1, text = "Old"))
         val viewModel = createViewModel()
-        val page = listOf(incomingMessage(id = 1, text = "Old"))
-
-        repository.emitEvent(SupportChatEvent.HistoryPageReceived(page))
-        advanceUntilIdle()
 
         assertEquals(true, viewModel.state.value.hasMoreHistory)
         assertEquals(1, viewModel.state.value.messages.size)
@@ -456,26 +450,23 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `duplicate history messages are ignored`() = runTest {
-        val viewModel = createViewModel()
         val page = listOf(incomingMessage(id = 1, text = "Old"))
+        repository.historyPageOnLoad = page
+        val viewModel = createViewModel()
+        assertEquals(1, viewModel.state.value.messages.size)
 
-        repository.emitEvent(SupportChatEvent.HistoryPageReceived(page))
-        advanceUntilIdle()
-
-        repository.emitEvent(SupportChatEvent.HistoryPageReceived(page))
+        // Вторая такая же страница (сбой пагинации): дедупликация по id.
+        repository.historyPageOnLoad = page
+        viewModel.onLoadMore()
         advanceUntilIdle()
 
         assertEquals(1, viewModel.state.value.messages.size)
-        assertEquals(false, viewModel.state.value.hasMoreHistory)
     }
 
     @Test
     fun `loadMore is no-op when hasMoreHistory is false`() = runTest {
         val viewModel = createViewModel()
         val callsAfterInit = repository.loadNextMessagesCallCount
-
-        repository.emitEvent(SupportChatEvent.HistoryPageReceived(emptyList()))
-        advanceUntilIdle()
 
         viewModel.onLoadMore()
         advanceUntilIdle()

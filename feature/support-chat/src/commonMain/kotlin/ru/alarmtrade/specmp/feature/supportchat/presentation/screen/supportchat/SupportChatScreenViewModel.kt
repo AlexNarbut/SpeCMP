@@ -22,6 +22,7 @@ import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPendingAttachment
@@ -201,14 +202,7 @@ class SupportChatScreenViewModel(
     fun onLoadMore() {
         val current = _state.value
         if (current.isLoadingHistory || !current.hasMoreHistory) return
-        safeLaunch {
-            _state.update { it.copy(isLoadingHistory = true) }
-            val response = withContext(dispatchers.io) { repository.loadNextMessages() }
-            if (response is Response.Error) {
-                _state.update { it.copy(isLoadingHistory = false) }
-                _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
-            }
-        }
+        safeLaunch { loadHistoryPage() }
     }
 
     fun onConnectionRetry() {
@@ -263,7 +257,6 @@ class SupportChatScreenViewModel(
             is SupportChatEvent.ConnectionChanged -> handleConnectionChanged(event.isConnected)
             is SupportChatEvent.TypingChanged -> handleTypingChanged(event.authorEmail, event.isTyping)
             is SupportChatEvent.MessageReceived -> handleMessageReceived(event.message)
-            is SupportChatEvent.HistoryPageReceived -> handleHistoryPageReceived(event.messages)
             is SupportChatEvent.MessagesRead -> handleMessagesRead(event.ids)
         }
     }
@@ -334,16 +327,17 @@ class SupportChatScreenViewModel(
         return indexOfFirst { it.isMine && it.serverId == null && it.shapeMatches(message) }
     }
 
-    private fun handleHistoryPageReceived(messages: List<SupportChatMessage>) {
-        _state.update { current ->
-            val existingIds = current.messages.map { it.serverId ?: it.id }.toHashSet()
-            val newMessages = messages.filter { (it.serverId ?: it.id) !in existingIds }
-            current.copy(
-                messages = newMessages + current.messages,
-                isLoadingHistory = false,
-                hasMoreHistory = newMessages.isNotEmpty(),
-            )
-        }
+    private fun mergeHistoryPage(
+        current: SupportChatScreenState,
+        page: SupportChatHistoryPage,
+    ): SupportChatScreenState {
+        val existingIds = current.messages.map { it.serverId ?: it.id }.toHashSet()
+        val newMessages = page.messages.filter { (it.serverId ?: it.id) !in existingIds }
+        return current.copy(
+            messages = newMessages + current.messages,
+            isLoadingHistory = false,
+            hasMoreHistory = page.hasMore,
+        )
     }
 
     private fun handleMessagesRead(ids: List<Long>) {
@@ -517,12 +511,13 @@ class SupportChatScreenViewModel(
 
     private suspend fun loadHistoryPage() {
         _state.update { it.copy(isLoadingHistory = true) }
-        val response = withContext(dispatchers.io) { repository.loadNextMessages() }
-        if (response is Response.Error) {
-            _state.update {
-                it.copy(isLoadingHistory = false)
+        when (val response = withContext(dispatchers.io) { repository.loadNextMessages() }) {
+            is Response.Success -> _state.update { current -> mergeHistoryPage(current, response.value) }
+            is Response.Error -> {
+                logger.d(response.exception) { "Failed to load history page" }
+                _state.update { it.copy(isLoadingHistory = false) }
+                _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
             }
-            _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
         }
     }
 
