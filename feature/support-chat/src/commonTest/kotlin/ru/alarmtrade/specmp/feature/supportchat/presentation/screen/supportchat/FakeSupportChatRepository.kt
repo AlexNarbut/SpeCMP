@@ -112,6 +112,10 @@ class FakeSupportChatRepository : SupportChatRepository {
     override suspend fun startWriting(): Response<Unit> = startWritingResult
     override suspend fun stopWriting(): Response<Unit> = stopWritingResult
 
+    override suspend fun release() {
+        closeChat()
+    }
+
     fun emitEvent(event: SupportChatEvent) {
         val emitted = events.tryEmit(Response.Success(event))
         check(emitted) { "Failed to emit event: $event" }

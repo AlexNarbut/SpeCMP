@@ -13,6 +13,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
+import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppVersion
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
@@ -24,7 +25,6 @@ import ru.alarmtrade.specialist.domain.appUpdates.AppUpdatesResponse
 import ru.alarmtrade.specialist.domain.appUpdates.SettingsUpdatingStatus
 import ru.alarmtrade.specialist.domain.appUpdates.UpdateVersionInformation
 import ru.alarmtrade.specialist.domain.chat.ChatAvailability
-import ru.alarmtrade.specialist.domain.user.User
 import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specialist.domain.user.UserCommercial
 import ru.alarmtrade.specialist.interactors.appUpdates.AppUpdatesInteractor
@@ -36,24 +36,30 @@ import kotlin.time.Duration.Companion.seconds
 class SpecialistMainRepository(
     private val appUpdatesInteractor: AppUpdatesInteractor,
     private val userInteractor: UserInteractor,
+    private val accountRepository: AccountRepository,
     private val chatInteractor: ChatInteractor,
     private val appVersionProvider: SpecialistAppVersionProvider,
 ) : MainRepository {
 
-    private val logger = Logger.withTag("SpecialistMainRepository")
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     override val appVersion: MainAppVersion
         get() = appVersionProvider.current().toMainAppVersion()
 
     override suspend fun currentUserProfile(): Response<MainUserProfile> {
-        return when (val response = userInteractor.getUserUseCase.execute()) {
-            is SpecialistResponse.Success -> {
+        return when (val response = accountRepository.currentProfile()) {
+            is Response.Success -> {
                 logger.d { "Current user profile fetched" }
-                Response.Success(response.value.toMainUserProfile())
+                Response.Success(
+                    MainUserProfile(
+                        name = response.value.name,
+                        email = response.value.email,
+                    )
+                )
             }
-            is SpecialistResponse.Error -> {
+            is Response.Error -> {
                 logger.e(response.exception) { "Failed to fetch current user profile" }
-                response.toProjectError()
+                response
             }
         }
     }
@@ -65,8 +71,16 @@ class SpecialistMainRepository(
                 Response.Success(response.value.long)
             }
             is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to fetch current settings version" }
-                response.toProjectError()
+                // SDK не даёт типизированной ошибки: пустая БД (свежая установка)
+                // приходит как Exception("settingsVersion not found"). Это валидное
+                // состояние «версии ещё нет», а не сбой — отдаём Success(null).
+                if (response.exception.message == "settingsVersion not found") {
+                    logger.d { "Settings version not stored yet (fresh install)" }
+                    Response.Success(null)
+                } else {
+                    logger.e(response.exception) { "Failed to fetch current settings version" }
+                    response.toProjectError()
+                }
             }
         }
     }
@@ -241,13 +255,6 @@ class SpecialistMainRepository(
         return MainAppVersion(
             name = name,
             code = code,
-        )
-    }
-
-    private fun User.toMainUserProfile(): MainUserProfile {
-        return MainUserProfile(
-            name = userContactInformation.fullName,
-            email = login,
         )
     }
 

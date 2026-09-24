@@ -31,7 +31,7 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.mapContent
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
+import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
@@ -42,7 +42,7 @@ import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSu
 import kotlin.time.Duration.Companion.seconds
 
 class MainScreenViewModel(
-    private val authStateRepository: AuthStateRepository,
+    private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
@@ -176,7 +176,7 @@ class MainScreenViewModel(
                 )
             }
 
-            when (withContext(dispatchers.io) { authStateRepository.logout() }) {
+            when (withContext(dispatchers.io) { logoutUseCase.execute() }) {
                 is Response.Success -> {
                     logger.d { "Logout succeeded" }
                     _state.update {

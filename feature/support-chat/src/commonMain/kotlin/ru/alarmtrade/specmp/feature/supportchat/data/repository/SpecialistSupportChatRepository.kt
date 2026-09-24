@@ -12,9 +12,11 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlin.concurrent.Volatile
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.asResponse
+import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
@@ -32,21 +34,26 @@ import ru.alarmtrade.specialist.interactors.chat.requests.UploadChatFileRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.WriteMessageRequest
 import ru.alarmtrade.specialist.interactors.files.RemoteFilesInteractor
 import ru.alarmtrade.specialist.interactors.files.requests.DownloadFileRequest
-import ru.alarmtrade.specialist.interactors.user.UserInteractor
 
 class SpecialistSupportChatRepository(
     private val chatInteractor: ChatInteractor,
-    private val userInteractor: UserInteractor,
+    private val accountRepository: AccountRepository,
     private val filesInteractor: RemoteFilesInteractor,
 ) : SupportChatRepository {
 
-    private val logger = Logger.withTag("SpecialistSupportChatRepository")
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     // Сериализует open/close: переплетение closeChat прошлой сессии с openChat
     // новой закрыло бы свежее соединение.
     private val connectionMutex = Mutex()
 
-    private var currentUserEmail: String? = null
+    // Identity текущей чат-сессии. Репозиторий не владеет identity аккаунта:
+    // email резолвится из AccountRepository один раз на openChat (под мьютексом)
+    // и живёт ровно столько, сколько живёт сессия. Запись — только из openChat
+    // под connectionMutex, чтение — из коллектора событий; ссылка неизменяема,
+    // поэтому @Volatile достаточно.
+    @Volatile
+    private var sessionEmail: String? = null
 
     override fun observeEvents(): Flow<Response<SupportChatEvent>> {
         return flow {
@@ -68,23 +75,37 @@ class SpecialistSupportChatRepository(
 
     override suspend fun openChat(): Response<Unit> {
         return connectionMutex.withLock {
-            // Репозиторий — синглтон и переживает смену аккаунта, поэтому identity
-            // перечитывается на каждую новую чат-сессию.
-            currentUserEmail = null
+            // Identity сессии перечитывается на каждое открытие: репозиторий — синглтон
+            // и переживает смену аккаунта. Неуспех резолва — ошибка открытия чата
+            // (offline-баннер), а не молчаливое вычисление isMine по чужому/пустому email.
+            val profileResponse = accountRepository.currentProfile()
+            if (profileResponse is Response.Error) {
+                sessionEmail = null
+                return@withLock Response.Error(profileResponse.exception, profileResponse.message)
+            }
+            sessionEmail = (profileResponse as Response.Success).value.email
+
             when (val typeResponse = chatInteractor.setChatTypeUseCase.execute(SetChatTypeRequest(ChatType.Default))) {
                 is SpecialistResponse.Success -> {
                     when (val response = chatInteractor.openChatUseCase.execute(ConnectChatRequest(resetPages = true))) {
                         is SpecialistResponse.Success -> Response.Success(Unit)
-                        is SpecialistResponse.Error -> response.toProjectError()
+                        is SpecialistResponse.Error -> {
+                            sessionEmail = null
+                            response.toProjectError()
+                        }
                     }
                 }
-                is SpecialistResponse.Error -> typeResponse.toProjectError()
+                is SpecialistResponse.Error -> {
+                    sessionEmail = null
+                    typeResponse.toProjectError()
+                }
             }
         }
     }
 
     override suspend fun closeChat(): Response<Unit> {
         return connectionMutex.withLock {
+            sessionEmail = null
             when (val response = chatInteractor.closeChatUseCase.execute(ConnectChatRequest(resetPages = false))) {
                 is SpecialistResponse.Success -> Response.Success(Unit)
                 is SpecialistResponse.Error -> response.toProjectError()
@@ -148,8 +169,15 @@ class SpecialistSupportChatRepository(
         }
     }
 
+    override suspend fun release() {
+        when (val response = closeChat()) {
+            is Response.Error -> logger.d(response.exception) { "Failed to close chat on logout" }
+            is Response.Success -> Unit
+        }
+    }
+
     private suspend fun mapChatEvent(event: ChatEvent): SupportChatEvent? {
-        val myEmail = resolveCurrentUserEmail()
+        val myEmail = sessionEmail
         return when (event) {
             is ChatEvent.Connection.Connected -> SupportChatEvent.ConnectionChanged(true)
             is ChatEvent.Connection.Disconnected -> SupportChatEvent.ConnectionChanged(false)
@@ -169,22 +197,6 @@ class SpecialistSupportChatRepository(
             is ChatEvent.ChatRoom.SubscribeSuccess -> null
             else -> {
                 logger.d { "Ignored unsupported chat event: $event" }
-                null
-            }
-        }
-    }
-
-    private suspend fun resolveCurrentUserEmail(): String? {
-        val cached = currentUserEmail
-        if (cached != null) return cached
-
-        return when (val response = userInteractor.getUserUseCase.execute()) {
-            is SpecialistResponse.Success -> {
-                currentUserEmail = response.value.login
-                response.value.login
-            }
-            is SpecialistResponse.Error -> {
-                logger.d(response.exception) { "Failed to resolve current user email for chat" }
                 null
             }
         }

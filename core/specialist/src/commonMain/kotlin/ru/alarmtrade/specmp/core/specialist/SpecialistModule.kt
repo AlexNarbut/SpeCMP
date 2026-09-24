@@ -1,9 +1,13 @@
 package ru.alarmtrade.specmp.core.specialist
 
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.common.core.configuration.CommonConfigurator
 import ru.alarmtrade.common.core.configuration.ProvideCommon
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
+import ru.alarmtrade.specmp.core.specialist.account.SpecialistAccountRepository
 import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.SpecialistConfig
 
@@ -34,6 +38,7 @@ val specialistModule = module {
     single { get<SpecialistApp>().userInteractor }
     single { get<SpecialistApp>().chatInteractor }
     single { get<SpecialistApp>().filesInteractor }
+    singleOf(::SpecialistAccountRepository) bind AccountRepository::class
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }
     }

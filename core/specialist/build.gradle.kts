@@ -35,6 +35,7 @@ kotlin {
             implementation(project(":core:common"))
             implementation(libs.alarmtrade.specialist)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kermit)
             implementation(libs.koin.core)
         }
     }

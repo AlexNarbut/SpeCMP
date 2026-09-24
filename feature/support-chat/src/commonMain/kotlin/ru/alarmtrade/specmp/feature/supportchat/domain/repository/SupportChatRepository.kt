@@ -1,11 +1,19 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.repository
 
 import kotlinx.coroutines.flow.Flow
+import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
 
-interface SupportChatRepository {
+/**
+ * Контракт чат-сессии техподдержки.
+ *
+ * Реализация — app-scoped синглтон и наследует [AuthCloseable]: сессия обязана
+ * закрываться при логауте через `release()` (`LogoutUseCase`), а не переживать
+ * смену аккаунта со своим состоянием.
+ */
+interface SupportChatRepository : AuthCloseable {
     fun observeEvents(): Flow<Response<SupportChatEvent>>
     suspend fun openChat(): Response<Unit>
     suspend fun closeChat(): Response<Unit>
