@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -93,11 +94,10 @@ fun SupportChatScreen(
     state: SupportChatScreenState,
     effect: SharedFlow<SupportChatEffect>,
     onBack: () -> Unit,
-    onDraftChange: (String) -> Unit,
     onAttachFile: () -> Unit,
     onAttachPhoto: () -> Unit,
     onRemoveAttachment: (String) -> Unit,
-    onSend: () -> Unit,
+    onSend: (String) -> Unit,
     onRetry: (String) -> Unit,
     onConnectionRetry: () -> Unit,
     onHistoryRetry: () -> Unit,
@@ -143,6 +143,10 @@ fun SupportChatScreen(
         stringResource(Res.string.support_chat_month_december),
     )
     var viewerImageSource by remember { mutableStateOf<String?>(null) }
+    // Черновик — локальное UI-состояние (U-11): каждый символ не должен
+    // рекомпозировать весь экран через state ViewModel. В VM текст попадает
+    // только в момент отправки.
+    var draftText by rememberSaveable { mutableStateOf("") }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val layoutMode = when {
@@ -169,11 +173,12 @@ fun SupportChatScreen(
             listItems = listItems,
             snackbarHostState = snackbarHostState,
             onBack = onBack,
-            onDraftChange = onDraftChange,
+            onDraftChange = { draftText = it },
             onAttachFile = onAttachFile,
             onAttachPhoto = onAttachPhoto,
             onRemoveAttachment = onRemoveAttachment,
-            onSend = onSend,
+            onSend = { onSend(draftText); draftText = "" },
+            draftText = draftText,
             onRetry = onRetry,
             onConnectionRetry = onConnectionRetry,
             onHistoryRetry = onHistoryRetry,
@@ -206,6 +211,7 @@ private fun SupportChatScaffold(
     onAttachPhoto: () -> Unit,
     onRemoveAttachment: (String) -> Unit,
     onSend: () -> Unit,
+    draftText: String,
     onRetry: (String) -> Unit,
     onConnectionRetry: () -> Unit,
     onHistoryRetry: () -> Unit,
@@ -272,6 +278,7 @@ private fun SupportChatScaffold(
             onAttachPhoto = onAttachPhoto,
             onRemoveAttachment = onRemoveAttachment,
             onSend = onSend,
+            draftText = draftText,
             onRetry = onRetry,
             onConnectionRetry = onConnectionRetry,
             onHistoryRetry = onHistoryRetry,
@@ -292,6 +299,7 @@ private fun SupportChatBody(
     listState: LazyListState,
     paddingValues: PaddingValues,
     onDraftChange: (String) -> Unit,
+    draftText: String,
     onAttachFile: () -> Unit,
     onAttachPhoto: () -> Unit,
     onRemoveAttachment: (String) -> Unit,
@@ -451,7 +459,7 @@ private fun SupportChatBody(
         }
 
         SupportChatComposer(
-            draftText = state.draftText,
+            draftText = draftText,
             onDraftChange = onDraftChange,
             onSend = onSend,
             onAttachFile = onAttachFile,
@@ -465,7 +473,7 @@ private fun SupportChatBody(
                 .fillMaxWidth()
                 .padding(horizontal = contentPadding, vertical = 8.dp)
                 .widthIn(max = columnMaxWidth),
-            enabled = state.isComposerEnabled,
+            enabled = !state.isOffline,
         )
     }
 }

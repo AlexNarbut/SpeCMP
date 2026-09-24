@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -24,6 +25,9 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.feature.supportchat.data.outbox.SupportChatOutboxEntry
+import ru.alarmtrade.specmp.feature.supportchat.data.outbox.SupportChatOutboxStore
+import ru.alarmtrade.specmp.feature.supportchat.data.outbox.toOutboxEntries
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
@@ -46,6 +50,9 @@ class SupportChatScreenViewModel(
     // Платформенный сейвер из composeApp: зависимость конструктора, передаётся
     // через parametersOf при создании VM (нужен composition context на Android).
     private val fileSaver: SupportChatFileSaver,
+    // Персистентная очередь неотправленных: переживает смерть VM и пересоздание
+    // процесса; очищается при логауте (зарегистрирован как AuthCloseable).
+    private val outboxStore: SupportChatOutboxStore,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
@@ -67,6 +74,9 @@ class SupportChatScreenViewModel(
     private var clientMessageIdSequence = 0L
 
     init {
+        // Очередь восстанавливается первой: это самые новые сообщения,
+        // история при своей загрузке встаёт перед ними.
+        restoreOutbox()
         // Порядок обязателен: сначала подписка на hot flow событий, затем openChat —
         // SDK публикует MessagesPage без replay прямо во время loadNextMessages().
         startEventCollection()
@@ -83,10 +93,6 @@ class SupportChatScreenViewModel(
         appScope.launch {
             withContext(dispatchers.io) { repository.closeChat() }
         }
-    }
-
-    fun onDraftChange(value: String) {
-        _state.update { it.copy(draftText = value) }
     }
 
     // Тип вложения определяется источником выбора, а не содержимым файла:
@@ -149,25 +155,24 @@ class SupportChatScreenViewModel(
         }
     }
 
-    fun onSend() {
-        val text = _state.value.draftText.trim()
+    fun onSend(text: String) {
+        val trimmed = text.trim()
         val attachments = _state.value.pendingAttachments
-        if (text.isEmpty() && attachments.isEmpty()) return
+        if (trimmed.isEmpty() && attachments.isEmpty()) return
 
         val timestamp = now()
         val outgoingMessages = buildList {
             attachments.forEach { attachment ->
                 add(createOptimisticMessage(timestamp = timestamp, attachment = attachment))
             }
-            if (text.isNotEmpty()) {
-                add(createOptimisticMessage(timestamp = timestamp, text = text))
+            if (trimmed.isNotEmpty()) {
+                add(createOptimisticMessage(timestamp = timestamp, text = trimmed))
             }
         }
 
         _state.update {
             it.copy(
                 history = LCEState.Content((it.messages + outgoingMessages).toPersistentList()),
-                draftText = "",
                 pendingAttachments = persistentListOf(),
             )
         }
@@ -337,6 +342,9 @@ class SupportChatScreenViewModel(
             }
             current.copy(history = LCEState.Content(updatedMessages.toPersistentList()))
         }
+        // Серверное эхо заменило оптимистичное сообщение: его запись
+        // покидает очередь (снимок берёт только serverId == null).
+        persistOutbox()
     }
 
     private fun List<SupportChatMessage>.indexOfEcho(message: SupportChatMessage): Int {
@@ -463,12 +471,59 @@ class SupportChatScreenViewModel(
 
     private fun updateMessageStatus(id: String, status: SupportChatMessageStatus) {
         updateMessages { messages -> messages.map { if (it.id == id) it.copy(status = status) else it } }
+        // Любой переход статуса меняет снимок очереди: Sent/Read удаляют
+        // запись, Pending/Failed — сохраняют.
+        persistOutbox()
     }
 
     private fun updateMessages(transform: (List<SupportChatMessage>) -> List<SupportChatMessage>) {
         _state.update { current ->
             current.copy(history = LCEState.Content(transform(current.messages).toPersistentList()))
         }
+    }
+
+    private fun restoreOutbox() {
+        val restored = outboxStore.load().map { it.toMessage() }
+        if (restored.isEmpty()) return
+        _state.update { current ->
+            current.copy(history = LCEState.Content((current.messages + restored).toPersistentList()))
+        }
+    }
+
+    private fun persistOutbox() {
+        outboxStore.save(_state.value.messages.toOutboxEntries())
+    }
+
+    private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage {
+        val domainAttachment = attachment?.let { stored ->
+            when (stored.kind) {
+                SupportChatOutboxEntry.Kind.Image -> SupportChatAttachment.Image(
+                    id = stored.id,
+                    name = stored.name,
+                    localPath = stored.localPath,
+                )
+                SupportChatOutboxEntry.Kind.Document -> SupportChatAttachment.Document(
+                    id = stored.id,
+                    name = stored.name,
+                    localPath = stored.localPath,
+                    mimeType = stored.mimeType,
+                    sizeBytes = stored.sizeBytes,
+                )
+            }
+        }
+        return SupportChatMessage(
+            id = clientId,
+            serverId = null,
+            text = text,
+            attachment = domainAttachment,
+            time = Instant.fromEpochMilliseconds(timeMillis).toLocalDateTime(TimeZone.currentSystemDefault()),
+            isMine = true,
+            authorEmail = null,
+            status = when (status) {
+                SupportChatOutboxEntry.Status.Pending -> SupportChatMessageStatus.Pending
+                SupportChatOutboxEntry.Status.Failed -> SupportChatMessageStatus.Failed
+            },
+        )
     }
 
     private suspend fun connectAndLoadInitialHistory() {
@@ -483,7 +538,15 @@ class SupportChatScreenViewModel(
     }
 
     private suspend fun loadInitialHistory() {
-        _state.update { it.copy(history = LCEState.Loading()) }
+        // В Content не сбрасываем: лента (в т.ч. восстановленная из outbox)
+        // остаётся на экране, а сброс на Loading стёр бы её до merge.
+        _state.update { current ->
+            if (current.history is LCEState.Content) {
+                current
+            } else {
+                current.copy(history = LCEState.Loading())
+            }
+        }
         when (val response = withContext(dispatchers.io) { repository.loadNextMessages() }) {
             is Response.Success -> _state.update { mergeHistoryPage(it, response.value) }
             is Response.Error -> {

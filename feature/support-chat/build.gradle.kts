@@ -44,6 +44,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.collections.immutable)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.multiplatformSettings)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)

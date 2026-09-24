@@ -31,7 +31,6 @@ data class SupportChatScreenState(
     val isOffline: Boolean = false,
 
     val typingAuthor: String? = null,
-    val draftText: String = "",
     // Вложения композера — сразу в presentation-модели, маппинг на границе VM.
     val pendingAttachments: ImmutableList<SupportChatUiAttachment> = persistentListOf(),
     val downloadingAttachmentId: String? = null,
@@ -41,11 +40,4 @@ data class SupportChatScreenState(
      */
     val messages: List<SupportChatMessage>
         get() = (history as? LCEState.Content)?.content ?: emptyList()
-
-    /**
-     * Единый источник «можно отправлять»: композер гейтится только реальным
-     * офлайном, загрузка истории отправку не блокирует.
-     */
-    val isComposerEnabled: Boolean
-        get() = !isOffline && (draftText.isNotBlank() || pendingAttachments.isNotEmpty())
 }

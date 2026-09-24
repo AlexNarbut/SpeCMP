@@ -51,6 +51,10 @@ internal fun SupportChatComposer(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    // Владелец черновика — composer, поэтому «есть что отправить» считается
+    // здесь; офлайн-гейтинг приходит из state единственным источником.
+    val canSend = enabled && (draftText.isNotBlank() || pendingAttachments.isNotEmpty())
+
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -74,14 +78,14 @@ internal fun SupportChatComposer(
                 onClick = onAttachFile,
                 icon = CmpIcons.AttachFile,
                 contentDescription = stringResource(Res.string.support_chat_a11y_attach_file),
-                enabled = enabled,
+                enabled = canSend,
             )
 
             CmpIconButton(
                 onClick = onAttachPhoto,
                 icon = CmpIcons.Image,
                 contentDescription = stringResource(Res.string.support_chat_a11y_attach_photo),
-                enabled = enabled,
+                enabled = canSend,
             )
 
             CmpTextField(
@@ -94,7 +98,7 @@ internal fun SupportChatComposer(
                         if (event.type == KeyEventType.KeyDown &&
                             event.key == Key.Enter &&
                             !event.isShiftPressed &&
-                            enabled
+                            canSend
                         ) {
                             onSend()
                             true
@@ -103,7 +107,7 @@ internal fun SupportChatComposer(
                         }
                     },
                 placeholder = stringResource(Res.string.support_chat_label_message_hint),
-                enabled = enabled,
+                enabled = canSend,
                 singleLine = false,
                 maxLines = 4,
                 style = CmpTextFieldStyle.Filled,
@@ -112,14 +116,14 @@ internal fun SupportChatComposer(
                 ),
                 keyboardActions = KeyboardActions(
                     onSend = {
-                        if (enabled) onSend()
+                        if (canSend) onSend()
                     },
                 ),
             )
 
             SendButton(
                 onClick = onSend,
-                enabled = enabled,
+                enabled = canSend,
                 colors = colors,
             )
         }

@@ -20,6 +20,7 @@ import kotlinx.datetime.toLocalDateTime
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.supportchat.data.outbox.SupportChatOutboxEntry
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
@@ -39,6 +40,7 @@ class SupportChatScreenViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var repository: FakeSupportChatRepository
     private lateinit var saver: FakeSupportChatFileSaver
+    private lateinit var outboxStore: FakeSupportChatOutboxStore
     private lateinit var dispatchers: AppDispatchers
 
     @BeforeTest
@@ -46,6 +48,7 @@ class SupportChatScreenViewModelTest {
         Dispatchers.setMain(testDispatcher)
         repository = FakeSupportChatRepository()
         saver = FakeSupportChatFileSaver()
+        outboxStore = FakeSupportChatOutboxStore()
         dispatchers = AppDispatchers(
             main = testDispatcher,
             io = testDispatcher,
@@ -80,8 +83,7 @@ class SupportChatScreenViewModelTest {
     fun `send adds optimistic message with Sending status`() = runTest {
         val viewModel = createViewModel()
 
-        viewModel.onDraftChange("Test message")
-        viewModel.onSend()
+        viewModel.onSend("Test message")
         advanceUntilIdle()
 
         assertEquals(1, viewModel.state.value.messages.size)
@@ -126,8 +128,7 @@ class SupportChatScreenViewModelTest {
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
         runCurrent()
 
-        viewModel.onDraftChange("Queued")
-        viewModel.onSend()
+        viewModel.onSend("Queued")
         runCurrent()
 
         assertEquals(SupportChatMessageStatus.Pending, viewModel.state.value.messages.first().status)
@@ -147,8 +148,7 @@ class SupportChatScreenViewModelTest {
 
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
         runCurrent()
-        viewModel.onDraftChange("Queued")
-        viewModel.onSend()
+        viewModel.onSend("Queued")
         runCurrent()
 
         viewModel.onConnectionRetry()
@@ -234,8 +234,7 @@ class SupportChatScreenViewModelTest {
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
         runCurrent()
         queuedTexts.forEach { text ->
-            viewModel.onDraftChange(text)
-            viewModel.onSend()
+            viewModel.onSend(text)
         }
         runCurrent()
         assertTrue(viewModel.state.value.messages.all { it.status == SupportChatMessageStatus.Pending })
@@ -264,7 +263,7 @@ class SupportChatScreenViewModelTest {
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
         runCurrent()
         viewModel.onImagePicked(image)
-        viewModel.onSend()
+        viewModel.onSend("")
         runCurrent()
 
         assertEquals(SupportChatMessageStatus.Pending, viewModel.state.value.messages.single().status)
@@ -286,7 +285,7 @@ class SupportChatScreenViewModelTest {
                 mimeType = "image/png",
             ),
         )
-        viewModel.onSend()
+        viewModel.onSend("")
         runCurrent()
         assertEquals(1, viewModel.state.value.messages.size)
 
@@ -303,12 +302,12 @@ class SupportChatScreenViewModelTest {
         viewModel.onImagePicked(
             SupportChatPickedFile(id = "img-a", name = "a.png", path = "/tmp/a.png", mimeType = "image/png"),
         )
-        viewModel.onSend()
+        viewModel.onSend("")
         runCurrent()
         viewModel.onImagePicked(
             SupportChatPickedFile(id = "img-b", name = "b.png", path = "/tmp/b.png", mimeType = "image/png"),
         )
-        viewModel.onSend()
+        viewModel.onSend("")
         runCurrent()
         assertEquals(2, viewModel.state.value.messages.size)
 
@@ -349,11 +348,9 @@ class SupportChatScreenViewModelTest {
     @Test
     fun `server echoes for two identical texts merge in FIFO order`() = runTest {
         val viewModel = createViewModel()
-        viewModel.onDraftChange("Same")
-        viewModel.onSend()
+        viewModel.onSend("Same")
         runCurrent()
-        viewModel.onDraftChange("Same")
-        viewModel.onSend()
+        viewModel.onSend("Same")
         runCurrent()
         assertEquals(2, viewModel.state.value.messages.size)
 
@@ -383,8 +380,7 @@ class SupportChatScreenViewModelTest {
         val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
         runCurrent()
 
-        viewModel.onDraftChange("Fail me")
-        viewModel.onSend()
+        viewModel.onSend("Fail me")
         advanceUntilIdle()
 
         val failedMessage = viewModel.state.value.messages.first()
@@ -410,7 +406,7 @@ class SupportChatScreenViewModelTest {
         assertEquals(1, viewModel.state.value.pendingAttachments.size)
         assertEquals(SupportChatUiAttachment.Kind.Image, viewModel.state.value.pendingAttachments.first().kind)
 
-        viewModel.onSend()
+        viewModel.onSend("")
         advanceUntilIdle()
 
         assertEquals(1, viewModel.state.value.messages.size)
@@ -439,8 +435,7 @@ class SupportChatScreenViewModelTest {
 
         viewModel.onImagePicked(image)
         viewModel.onDocumentPicked(document)
-        viewModel.onDraftChange("See attachments")
-        viewModel.onSend()
+        viewModel.onSend("See attachments")
         advanceUntilIdle()
 
         assertEquals(3, viewModel.state.value.messages.size)
@@ -563,7 +558,7 @@ class SupportChatScreenViewModelTest {
 
         assertTrue(viewModel.state.value.pendingAttachments.first().kind == SupportChatUiAttachment.Kind.Document)
 
-        viewModel.onSend()
+        viewModel.onSend("")
         advanceUntilIdle()
 
         assertEquals(listOf("img-as-doc"), repository.sentDocuments.map { it.id })
@@ -679,6 +674,52 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `offline message is persisted to outbox and restored in new view model`() = runTest {
+        val firstViewModel = createViewModel()
+        repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
+        runCurrent()
+        firstViewModel.onSend("Survive me")
+        runCurrent()
+
+        assertEquals(1, outboxStore.entries.size)
+        assertEquals(SupportChatOutboxEntry.Status.Pending, outboxStore.entries.single().status)
+
+        // «Смерть» VM: новый инстанс восстанавливает очередь из outbox
+        // (события эмитим только при живом коллекторе — SharedFlow replay=0
+        // не доставляет то, что было эмитнуто до подписки).
+        firstViewModel.onCleared()
+        firstViewModel.viewModelScope.coroutineContext.cancelChildren()
+        advanceUntilIdle()
+
+        val secondViewModel = createViewModel()
+        val restored = secondViewModel.state.value.messages.single { it.text == "Survive me" }
+        assertEquals(SupportChatMessageStatus.Pending, restored.status)
+
+        // Очередь уходит по сети при восстановлении соединения.
+        repository.emitEvent(SupportChatEvent.ConnectionChanged(true))
+        advanceUntilIdle()
+
+        assertEquals(listOf("Survive me"), repository.sentMessages)
+        assertTrue(outboxStore.entries.isEmpty())
+    }
+
+    @Test
+    fun `failed message stays in outbox with Failed status`() = runTest {
+        val firstViewModel = createViewModel()
+        repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
+        runCurrent()
+        firstViewModel.onSend("Fail later")
+        runCurrent()
+        assertEquals(1, outboxStore.entries.size)
+
+        repository.sendMessageResult = Response.Error(Exception("Network error"))
+        repository.emitEvent(SupportChatEvent.ConnectionChanged(true))
+        advanceUntilIdle()
+
+        assertEquals(SupportChatOutboxEntry.Status.Failed, outboxStore.entries.single().status)
+    }
+
+    @Test
     fun `cleared view model closes chat via app scope`() = runTest {
         val viewModel = createViewModel()
 
@@ -734,6 +775,7 @@ class SupportChatScreenViewModelTest {
             dispatchers = dispatchers,
             appScope = CoroutineScope(testDispatcher),
             fileSaver = saver,
+            outboxStore = outboxStore,
         )
         advanceUntilIdle()
         return viewModel
