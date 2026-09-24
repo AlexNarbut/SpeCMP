@@ -23,8 +23,9 @@ import platform.UIKit.UIViewController
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFilePicker
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
 @Composable
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
@@ -40,7 +41,7 @@ private class IosSupportChatFilePicker(
 
     private var activeDelegate: NSObject? = null
 
-    override fun launchImage(onPicked: (SupportChatPickedFile?) -> Unit) {
+    override fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit) {
         val configuration = PHPickerConfiguration().apply {
             filter = PHPickerFilter.imagesFilter()
             selectionLimit = 1
@@ -59,7 +60,7 @@ private class IosSupportChatFilePicker(
         )
     }
 
-    override fun launchDocument(onPicked: (SupportChatPickedFile?) -> Unit) {
+    override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
         launchPicker(
             documentTypes = listOf(DATA_UTI),
             onPicked = onPicked,
@@ -68,7 +69,7 @@ private class IosSupportChatFilePicker(
 
     private fun launchPicker(
         documentTypes: List<String>,
-        onPicked: (SupportChatPickedFile?) -> Unit,
+        onPicked: (SupportChatPickedFileResult) -> Unit,
     ) {
         val picker = UIDocumentPickerViewController(
             documentTypes = documentTypes,
@@ -94,10 +95,14 @@ private class IosSupportChatFilePicker(
     }
 }
 
+private fun SupportChatPickedFile?.toPickerResult(): SupportChatPickedFileResult {
+    return this?.let(SupportChatPickedFileResult::Picked) ?: SupportChatPickedFileResult.Cancelled
+}
+
 private const val IMAGE_UTI = "public.image"
 
 private class PhotoPickerDelegate(
-    private val onPicked: (SupportChatPickedFile?) -> Unit,
+    private val onPicked: (SupportChatPickedFileResult) -> Unit,
     private val onFinished: () -> Unit,
 ) : NSObject(), PHPickerViewControllerDelegateProtocol {
 
@@ -105,12 +110,12 @@ private class PhotoPickerDelegate(
         picker.dismissViewControllerAnimated(true, null)
         val result = didFinishPicking.firstOrNull() as? PHPickerResult
         if (result == null) {
-            onPicked(null)
+            onPicked(SupportChatPickedFileResult.Cancelled)
             onFinished()
             return
         }
         result.itemProvider.loadFileRepresentationForTypeIdentifier(IMAGE_UTI) { url, _ ->
-            val picked = url?.copyToTemporaryFile()
+            val picked = url?.copyToTemporaryFile().toPickerResult()
             dispatch_async(dispatch_get_main_queue()) {
                 onPicked(picked)
                 onFinished()
@@ -120,7 +125,7 @@ private class PhotoPickerDelegate(
 }
 
 private class DocumentPickerDelegate(
-    private val onPicked: (SupportChatPickedFile?) -> Unit,
+    private val onPicked: (SupportChatPickedFileResult) -> Unit,
     private val onFinished: () -> Unit,
 ) : NSObject(), UIDocumentPickerDelegateProtocol {
 
@@ -129,12 +134,12 @@ private class DocumentPickerDelegate(
         didPickDocumentsAtURLs: List<*>,
     ) {
         val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
-        onPicked(url?.copyToTemporaryFile())
+        onPicked(url?.copyToTemporaryFile().toPickerResult())
         onFinished()
     }
 
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
-        onPicked(null)
+        onPicked(SupportChatPickedFileResult.Cancelled)
         onFinished()
     }
 }

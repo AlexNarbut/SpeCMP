@@ -21,6 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.Clock
@@ -47,9 +50,9 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.isSupportChatDesktopPlatform
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatComposer
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatDateDivider
@@ -100,7 +103,7 @@ fun SupportChatScreen(
     onHistoryRetry: () -> Unit,
     onLoadMore: () -> Unit,
     onMessageVisible: (String) -> Unit,
-    onDownloadAttachment: (SupportChatAttachment) -> Unit,
+    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
@@ -195,7 +198,7 @@ private fun SupportChatScaffold(
     colors: CmpThemeColors,
     layoutMode: SupportChatLayoutMode,
     isDesktop: Boolean,
-    listItems: List<SupportChatListItem>,
+    listItems: ImmutableList<SupportChatListItem>,
     snackbarHostState: CmpSnackbarHostState,
     onBack: () -> Unit,
     onDraftChange: (String) -> Unit,
@@ -209,7 +212,7 @@ private fun SupportChatScaffold(
     onLoadMore: () -> Unit,
     onMessageVisible: (String) -> Unit,
     onImageClick: (String) -> Unit,
-    onDownloadAttachment: (SupportChatAttachment) -> Unit,
+    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
 ) {
     val listState = rememberLazyListState()
 
@@ -285,7 +288,7 @@ private fun SupportChatBody(
     state: SupportChatScreenState,
     colors: CmpThemeColors,
     layoutMode: SupportChatLayoutMode,
-    listItems: List<SupportChatListItem>,
+    listItems: ImmutableList<SupportChatListItem>,
     listState: LazyListState,
     paddingValues: PaddingValues,
     onDraftChange: (String) -> Unit,
@@ -299,7 +302,7 @@ private fun SupportChatBody(
     onLoadMore: () -> Unit,
     onMessageVisible: (String) -> Unit,
     onImageClick: (String) -> Unit,
-    onDownloadAttachment: (SupportChatAttachment) -> Unit,
+    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
 ) {
     val columnMaxWidth = when (layoutMode) {
         SupportChatLayoutMode.Compact -> Dp.Unspecified
@@ -483,7 +486,7 @@ internal fun buildListItems(
     yesterdayLabel: String,
     monthLabels: List<String>,
     typingAuthor: String?,
-): List<SupportChatListItem> {
+): ImmutableList<SupportChatListItem> {
     val result = mutableListOf<SupportChatListItem>()
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val yesterday = now.minus(DatePeriod(days = 1))
@@ -507,7 +510,7 @@ internal fun buildListItems(
         result.add(SupportChatListItem.Typing(author))
     }
 
-    return result
+    return result.toPersistentList()
 }
 
 private fun formatDate(

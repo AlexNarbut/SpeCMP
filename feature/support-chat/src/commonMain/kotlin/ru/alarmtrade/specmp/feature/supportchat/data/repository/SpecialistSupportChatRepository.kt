@@ -20,7 +20,7 @@ import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
 import ru.alarmtrade.specmp.feature.supportchat.data.mapper.SupportChatMessageMapper
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 import ru.alarmtrade.specialist.domain.chat.ChatEvent
 import ru.alarmtrade.specialist.domain.chat.ChatType
@@ -199,14 +199,6 @@ class SpecialistSupportChatRepository(
         return chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids)).toProject()
     }
 
-    override suspend fun startWriting(): Response<Unit> {
-        return chatInteractor.startWritingUseCase.execute().toProject()
-    }
-
-    override suspend fun stopWriting(): Response<Unit> {
-        return chatInteractor.stopWritingUseCase.execute().toProject()
-    }
-
     override suspend fun release() {
         when (val response = closeChat()) {
             is Response.Error -> logger.d(response.exception) { "Failed to close chat on logout" }
@@ -222,10 +214,12 @@ class SpecialistSupportChatRepository(
             is ChatEvent.Chat.Writing.Start -> SupportChatEvent.TypingChanged(
                 authorEmail = event.userLogin,
                 isTyping = true,
+                isMine = event.userLogin != null && event.userLogin == myEmail,
             )
             is ChatEvent.Chat.Writing.Stop -> SupportChatEvent.TypingChanged(
                 authorEmail = event.userLogin,
                 isTyping = false,
+                isMine = event.userLogin != null && event.userLogin == myEmail,
             )
             is ChatEvent.Chat.Message.Default -> SupportChatEvent.MessageReceived(messageMapper.map(event, myEmail))
             is ChatEvent.Chat.MessagesPage -> {

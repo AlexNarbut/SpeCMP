@@ -11,11 +11,12 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 
 val supportChatModule = module {
     single { SpecialistSupportChatRepository(get(), get(), get()) } bind SupportChatRepository::class bind AuthCloseable::class
-    viewModel {
+    viewModel { params ->
         SupportChatScreenViewModel(
             repository = get(),
             dispatchers = get(),
             appScope = get(appScopeQualifier),
+            fileSaver = params.get(),
         )
     }
 }

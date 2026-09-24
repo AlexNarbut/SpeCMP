@@ -3,8 +3,9 @@ package ru.alarmtrade.specmp.filepicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFilePicker
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import specmp.composeapp.generated.resources.Res
 import specmp.composeapp.generated.resources.support_chat_picker_label_images
 import specmp.composeapp.generated.resources.support_chat_picker_title_file
@@ -34,7 +35,7 @@ private class DesktopSupportChatFilePicker(
     private val fileTitle: String,
 ) : SupportChatFilePicker {
 
-    override fun launchImage(onPicked: (SupportChatPickedFile?) -> Unit) {
+    override fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit) {
         val file = showDialog(
             title = imageTitle,
             filter = FileNameExtensionFilter(
@@ -42,15 +43,15 @@ private class DesktopSupportChatFilePicker(
                 "jpg", "jpeg", "png", "gif", "webp", "bmp",
             ),
         )
-        onPicked(file?.toPickedFile())
+        onPicked(file?.toPickedFile().toPickerResult())
     }
 
-    override fun launchDocument(onPicked: (SupportChatPickedFile?) -> Unit) {
+    override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
         val file = showDialog(
             title = fileTitle,
             filter = null,
         )
-        onPicked(file?.toPickedFile())
+        onPicked(file?.toPickedFile().toPickerResult())
     }
 
     private fun showDialog(
@@ -67,7 +68,11 @@ private class DesktopSupportChatFilePicker(
         return if (result == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
     }
 
-    private fun File.toPickedFile(): SupportChatPickedFile {
+    private fun SupportChatPickedFile?.toPickerResult(): SupportChatPickedFileResult {
+    return this?.let(SupportChatPickedFileResult::Picked) ?: SupportChatPickedFileResult.Cancelled
+}
+
+private fun File.toPickedFile(): SupportChatPickedFile {
         val extension = name.substringAfterLast('.', "").lowercase()
         val mimeType = when (extension) {
             "jpg", "jpeg" -> "image/jpeg"

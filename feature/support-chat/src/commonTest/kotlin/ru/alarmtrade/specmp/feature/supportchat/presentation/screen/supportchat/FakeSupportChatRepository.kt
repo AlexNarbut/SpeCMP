@@ -9,7 +9,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
 class FakeSupportChatRepository : SupportChatRepository {
@@ -109,9 +109,6 @@ class FakeSupportChatRepository : SupportChatRepository {
         }
         return markMessagesAsReadResult
     }
-
-    override suspend fun startWriting(): Response<Unit> = startWritingResult
-    override suspend fun stopWriting(): Response<Unit> = stopWritingResult
 
     override suspend fun release() {
         closeChat()

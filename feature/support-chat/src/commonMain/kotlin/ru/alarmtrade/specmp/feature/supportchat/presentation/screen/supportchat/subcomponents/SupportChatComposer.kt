@@ -31,7 +31,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPendingAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.support_chat_a11y_attach_file
 import specmp.feature.support_chat.generated.resources.support_chat_a11y_attach_photo
@@ -45,7 +45,7 @@ internal fun SupportChatComposer(
     onSend: () -> Unit,
     onAttachFile: () -> Unit,
     onAttachPhoto: () -> Unit,
-    pendingAttachments: List<SupportChatPendingAttachment>,
+    pendingAttachments: List<SupportChatUiAttachment>,
     onRemoveAttachment: (String) -> Unit,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
@@ -128,7 +128,7 @@ internal fun SupportChatComposer(
 
 @Composable
 private fun PendingAttachmentsRow(
-    attachments: List<SupportChatPendingAttachment>,
+    attachments: List<SupportChatUiAttachment>,
     onRemove: (String) -> Unit,
     colors: CmpThemeColors,
 ) {

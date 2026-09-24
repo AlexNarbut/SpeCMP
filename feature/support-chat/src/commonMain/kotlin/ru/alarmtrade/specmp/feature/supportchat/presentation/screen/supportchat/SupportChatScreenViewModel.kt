@@ -1,17 +1,20 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.yield
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -26,12 +29,12 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPendingAttachment
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFileSaver
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
-import kotlin.random.Random
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 import kotlin.time.Duration.Companion.seconds
 
 class SupportChatScreenViewModel(
@@ -40,6 +43,9 @@ class SupportChatScreenViewModel(
     // Application-scoped скоуп: закрытие чат-сессии из onCleared должно пережить
     // viewModelScope (уже отменён на момент onCleared).
     private val appScope: CoroutineScope,
+    // Платформенный сейвер из composeApp: зависимость конструктора, передаётся
+    // через parametersOf при создании VM (нужен composition context на Android).
+    private val fileSaver: SupportChatFileSaver,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
@@ -54,6 +60,11 @@ class SupportChatScreenViewModel(
     // и «повисший» индикатор.
     private var typingTimeoutJob: Job? = null
     private val markedAsReadIds = mutableSetOf<Long>()
+
+    // Клиентские id оптимистичных сообщений: метка времени + счётчик инстанса VM.
+    // Контракт идентичности — в KDoc SupportChatMessage; уникальность держится
+    // в пределах инстанса VM (пер-ентри скоуп не даёт двум VM пересечься).
+    private var clientMessageIdSequence = 0L
 
     init {
         // Порядок обязателен: сначала подписка на hot flow событий, затем openChat —
@@ -81,62 +92,52 @@ class SupportChatScreenViewModel(
     // Тип вложения определяется источником выбора, а не содержимым файла:
     // картинка, выбранная как документ, должна уйти документом.
     fun onImagePicked(file: SupportChatPickedFile) {
-        addPendingAttachment(
-            SupportChatPendingAttachment.Image(
-                id = file.id,
-                name = file.name,
-                localPath = file.path,
-                mimeType = file.mimeType,
-                sizeBytes = file.sizeBytes,
-            )
-        )
+        addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Image))
     }
 
     fun onDocumentPicked(file: SupportChatPickedFile) {
-        addPendingAttachment(
-            SupportChatPendingAttachment.Document(
-                id = file.id,
-                name = file.name,
-                localPath = file.path,
-                mimeType = file.mimeType,
-                sizeBytes = file.sizeBytes,
-            )
-        )
+        addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Document))
     }
 
-    private fun addPendingAttachment(attachment: SupportChatPendingAttachment) {
+    private fun addPendingAttachment(attachment: SupportChatUiAttachment) {
         _state.update {
-            it.copy(
-                pendingAttachments = it.pendingAttachments + attachment,
-            )
+            it.copy(pendingAttachments = (it.pendingAttachments + attachment).toPersistentList())
         }
     }
 
     fun onRemoveAttachment(id: String) {
         _state.update { current ->
-            current.copy(pendingAttachments = current.pendingAttachments.filter { it.id != id })
+            current.copy(pendingAttachments = current.pendingAttachments.filterNot { it.id == id }.toPersistentList())
         }
     }
 
     // Скачивание доступно только для входящих вложений (от поддержки) — см. UI.
-    fun onDownloadAttachment(attachment: SupportChatAttachment, saver: SupportChatFileSaver) {
-        val url = when (attachment) {
-            is SupportChatAttachment.Image -> attachment.url
-            is SupportChatAttachment.Document -> attachment.url
-        } ?: return
-        if (_state.value.downloadingAttachmentId != null) return
+    fun onDownloadAttachment(attachment: SupportChatUiAttachment) {
+        val url = attachment.url ?: return
 
-        _state.update { it.copy(downloadingAttachmentId = attachment.id) }
+        // Атомарный guard: двойное нажатие не пройдёт (раньше проверка и запись
+        // были разнесены, оба нажатия проходили, второе молча игнорировалось).
+        _state.update { current ->
+            if (current.downloadingAttachmentId != null) {
+                current
+            } else {
+                current.copy(downloadingAttachmentId = attachment.id)
+            }
+        }
+        if (_state.value.downloadingAttachmentId != attachment.id) return
+
         safeLaunch {
             when (val response = withContext(dispatchers.io) { repository.downloadFile(url) }) {
                 is Response.Success -> {
-                    val savedPath = withContext(dispatchers.io) {
-                        saver.saveToDownloads(attachment.name, response.value)
-                    }
-                    if (savedPath != null) {
-                        _effect.tryEmit(SupportChatEffect.AttachmentDownloaded(savedPath))
-                    } else {
-                        _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
+                    when (val result = withContext(dispatchers.io) {
+                        fileSaver.saveToDownloads(attachment.name, response.value)
+                    }) {
+                        is SupportChatFileSaveResult.Saved ->
+                            _effect.tryEmit(SupportChatEffect.AttachmentDownloaded(result.path))
+                        // Пользователь сам отменил системный диалог — не ошибка.
+                        SupportChatFileSaveResult.Cancelled -> Unit
+                        SupportChatFileSaveResult.Failed ->
+                            _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
                     }
                 }
                 is Response.Error -> {
@@ -165,9 +166,9 @@ class SupportChatScreenViewModel(
 
         _state.update {
             it.copy(
-                history = LCEState.Content(it.messages + outgoingMessages),
+                history = LCEState.Content((it.messages + outgoingMessages).toPersistentList()),
                 draftText = "",
-                pendingAttachments = emptyList(),
+                pendingAttachments = persistentListOf(),
             )
         }
 
@@ -176,7 +177,7 @@ class SupportChatScreenViewModel(
                 sendOutgoingMessage(
                     clientMessageId = message.id,
                     text = message.text.orEmpty(),
-                    attachment = message.attachment?.toPending(),
+                    attachment = message.attachment,
                 )
             }
         }
@@ -189,7 +190,7 @@ class SupportChatScreenViewModel(
             sendOutgoingMessage(
                 clientMessageId = messageId,
                 text = message.text ?: "",
-                attachment = message.attachment?.toPending(),
+                attachment = message.attachment,
             )
         }
     }
@@ -264,7 +265,12 @@ class SupportChatScreenViewModel(
     private suspend fun handleEvent(event: SupportChatEvent) {
         when (event) {
             is SupportChatEvent.ConnectionChanged -> handleConnectionChanged(event.isConnected)
-            is SupportChatEvent.TypingChanged -> handleTypingChanged(event.authorEmail, event.isTyping)
+            is SupportChatEvent.TypingChanged -> {
+                // Своё событие набора (SDK эхит его обратно) не рисуем.
+                if (!event.isMine) {
+                    handleTypingChanged(event.authorEmail, event.isTyping)
+                }
+            }
             is SupportChatEvent.MessageReceived -> handleMessageReceived(event.message)
             is SupportChatEvent.MessagesRead -> handleMessagesRead(event.ids)
         }
@@ -329,12 +335,14 @@ class SupportChatScreenViewModel(
                     messages + message
                 }
             }
-            current.copy(history = LCEState.Content(updatedMessages))
+            current.copy(history = LCEState.Content(updatedMessages.toPersistentList()))
         }
     }
 
     private fun List<SupportChatMessage>.indexOfEcho(message: SupportChatMessage): Int {
-        indexOfLast { it.isMine && it.serverId == null && it.contentMatches(message) }
+        // Обе ветки — FIFO: порядок подтверждений сервера соответствует
+        // порядку отправки (P-9).
+        indexOfFirst { it.isMine && it.serverId == null && it.contentMatches(message) }
             .takeIf { it != -1 }?.let { return it }
         return indexOfFirst { it.isMine && it.serverId == null && it.shapeMatches(message) }
     }
@@ -346,42 +354,44 @@ class SupportChatScreenViewModel(
         val existingIds = current.messages.map { it.serverId ?: it.id }.toHashSet()
         val newMessages = page.messages.filter { (it.serverId ?: it.id) !in existingIds }
         return current.copy(
-            history = LCEState.Content(newMessages + current.messages),
+            history = LCEState.Content((newMessages + current.messages).toPersistentList()),
             isLoadingMore = false,
             hasMoreHistory = page.hasMore,
         )
     }
 
     private fun handleMessagesRead(ids: List<Long>) {
-        _state.update { current ->
-            current.copy(
-                history = LCEState.Content(
-                    current.messages.map { message ->
-                        if (message.serverId != null && message.serverId in ids) {
-                            message.copy(status = SupportChatMessageStatus.Read)
-                        } else {
-                            message
-                        }
-                    }
-                ),
-            )
+        updateMessages { messages ->
+            messages.map { message ->
+                if (message.serverId != null && message.serverId in ids) {
+                    message.copy(status = SupportChatMessageStatus.Read)
+                } else {
+                    message
+                }
+            }
         }
     }
 
     private suspend fun sendOutgoingMessage(
         clientMessageId: String,
         text: String,
-        attachment: SupportChatPendingAttachment?,
+        attachment: SupportChatAttachment?,
     ) {
         if (_state.value.isOffline) {
             updateMessageStatus(clientMessageId, SupportChatMessageStatus.Pending)
             return
         }
 
+        // Контент сообщения эксклюзивен (SDK не поддерживает подпись к вложению),
+        // поэтому каждая ветка здесь — либо текст, либо вложение. «Нечего
+        // отправлять» — ошибка контракта, а не молчаливый Success: иначе
+        // сообщение получит статус Sent, ничего не отправив (P-7).
         val response = when {
+            text.isNotBlank() && attachment != null -> unsupportedMessageContent()
             text.isNotBlank() -> withContext(dispatchers.io) { repository.sendMessage(text) }
-            attachment != null -> sendAttachment(attachment)
-            else -> Response.Success(Unit)
+            attachment?.localPath != null -> sendAttachment(attachment)
+            attachment != null -> missingLocalFile()
+            else -> nothingToSend()
         }
 
         when (response) {
@@ -394,18 +404,34 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private suspend fun sendAttachment(attachment: SupportChatPendingAttachment): Response<Unit> {
+    private fun unsupportedMessageContent(): Response.Error {
+        logger.d { "Message with both text and attachment is not supported by SDK" }
+        return Response.Error(IllegalStateException("Message cannot carry text and attachment together"))
+    }
+
+    private fun missingLocalFile(): Response.Error {
+        logger.d { "Attachment local file is missing, cannot resend" }
+        return Response.Error(IllegalStateException("Attachment local file is missing"))
+    }
+
+    private fun nothingToSend(): Response.Error {
+        logger.d { "Message has neither text nor attachment" }
+        return Response.Error(IllegalStateException("Nothing to send"))
+    }
+
+    private suspend fun sendAttachment(attachment: SupportChatAttachment): Response<Unit> {
+        val localPath = attachment.localPath ?: return missingLocalFile()
         val file = SupportChatPickedFile(
             id = attachment.id,
             name = attachment.name,
-            path = attachment.localPath,
-            mimeType = attachment.mimeType,
-            sizeBytes = attachment.sizeBytes,
+            path = localPath,
+            mimeType = (attachment as? SupportChatAttachment.Document)?.mimeType,
+            sizeBytes = (attachment as? SupportChatAttachment.Document)?.sizeBytes,
         )
         return withContext(dispatchers.io) {
             when (attachment) {
-                is SupportChatPendingAttachment.Image -> repository.sendImage(file)
-                is SupportChatPendingAttachment.Document -> repository.sendDocument(file)
+                is SupportChatAttachment.Image -> repository.sendImage(file)
+                is SupportChatAttachment.Document -> repository.sendDocument(file)
             }
         }
     }
@@ -430,7 +456,7 @@ class SupportChatScreenViewModel(
             sendOutgoingMessage(
                 clientMessageId = message.id,
                 text = message.text ?: "",
-                attachment = message.attachment?.toPending(),
+                attachment = message.attachment,
             )
         }
     }
@@ -440,54 +466,8 @@ class SupportChatScreenViewModel(
     }
 
     private fun updateMessages(transform: (List<SupportChatMessage>) -> List<SupportChatMessage>) {
-        _state.update { current -> current.copy(history = LCEState.Content(transform(current.messages))) }
-    }
-
-    private fun SupportChatPendingAttachment.toAttachment(): SupportChatAttachment {
-        return when (this) {
-            is SupportChatPendingAttachment.Image -> SupportChatAttachment.Image(
-                id = id,
-                name = name,
-                url = "",
-                localPath = localPath,
-            )
-            is SupportChatPendingAttachment.Document -> SupportChatAttachment.Document(
-                id = id,
-                name = name,
-                url = null,
-                localPath = localPath,
-                mimeType = mimeType,
-                sizeBytes = sizeBytes,
-            )
-        }
-    }
-
-    private fun SupportChatMessage.contentMatches(other: SupportChatMessage): Boolean {
-        return text == other.text && attachment?.name == other.attachment?.name
-    }
-
-    private fun SupportChatMessage.shapeMatches(other: SupportChatMessage): Boolean {
-        if (text.isNullOrBlank() != other.text.isNullOrBlank()) return false
-        val a = attachment ?: return other.attachment == null
-        val b = other.attachment ?: return false
-        return (a is SupportChatAttachment.Image && b is SupportChatAttachment.Image) ||
-            (a is SupportChatAttachment.Document && b is SupportChatAttachment.Document)
-    }
-
-    private fun SupportChatAttachment.toPending(): SupportChatPendingAttachment? {
-        return when (this) {
-            is SupportChatAttachment.Image -> localPath?.let {
-                SupportChatPendingAttachment.Image(id = id, name = name, localPath = it)
-            }
-            is SupportChatAttachment.Document -> localPath?.let {
-                SupportChatPendingAttachment.Document(
-                    id = id,
-                    name = name,
-                    localPath = it,
-                    mimeType = mimeType,
-                    sizeBytes = sizeBytes,
-                )
-            }
+        _state.update { current ->
+            current.copy(history = LCEState.Content(transform(current.messages).toPersistentList()))
         }
     }
 
@@ -517,32 +497,71 @@ class SupportChatScreenViewModel(
     private fun createOptimisticMessage(
         timestamp: LocalDateTime,
         text: String? = null,
-        attachment: SupportChatPendingAttachment? = null,
+        attachment: SupportChatUiAttachment? = null,
     ): SupportChatMessage {
         return SupportChatMessage(
-            id = Random.nextLong().toString(),
+            id = nextClientMessageId(),
             serverId = null,
             text = text,
-            attachment = attachment?.toAttachment(),
+            attachment = attachment?.toDomain(),
             time = timestamp,
-            displayTime = formatTime(timestamp),
             isMine = true,
             authorEmail = null,
             status = SupportChatMessageStatus.Sending,
         )
     }
 
+    private fun nextClientMessageId(): String {
+        return "local-${Clock.System.now().toEpochMilliseconds()}-${clientMessageIdSequence++}"
+    }
+
     private fun now(): LocalDateTime {
         return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     }
 
-    private fun formatTime(time: LocalDateTime): String {
-        val hour = time.hour.toString().padStart(2, '0')
-        val minute = time.minute.toString().padStart(2, '0')
-        return "$hour:$minute"
+    private fun SupportChatUiAttachment.toDomain(): SupportChatAttachment {
+        return when (kind) {
+            SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
+                id = id,
+                name = name,
+                localPath = localPath,
+            )
+            SupportChatUiAttachment.Kind.Document -> SupportChatAttachment.Document(
+                id = id,
+                name = name,
+                localPath = localPath,
+                mimeType = mimeType,
+                sizeBytes = sizeBytes,
+            )
+        }
+    }
+
+    private fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): SupportChatUiAttachment {
+        return SupportChatUiAttachment(
+            id = id,
+            name = name,
+            kind = kind,
+            url = null,
+            localPath = path,
+            mimeType = mimeType,
+            sizeBytes = sizeBytes,
+        )
+    }
+
+    private fun SupportChatMessage.contentMatches(other: SupportChatMessage): Boolean {
+        return text == other.text && attachment?.name == other.attachment?.name
+    }
+
+    private fun SupportChatMessage.shapeMatches(other: SupportChatMessage): Boolean {
+        if (text.isNullOrBlank() != other.text.isNullOrBlank()) return false
+        val a = attachment ?: return other.attachment == null
+        val b = other.attachment ?: return false
+        return (a is SupportChatAttachment.Image && b is SupportChatAttachment.Image) ||
+            (a is SupportChatAttachment.Document && b is SupportChatAttachment.Document)
     }
 
     private companion object {
         val TYPING_TIMEOUT = 5.seconds
     }
+
 }

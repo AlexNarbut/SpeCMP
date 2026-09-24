@@ -8,7 +8,8 @@ import android.provider.MediaStore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFileSaver
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 import java.io.File
 
 @Composable
@@ -16,8 +17,15 @@ actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
     val context = LocalContext.current
     return remember(context) {
         object : SupportChatFileSaver {
-            override suspend fun saveToDownloads(fileName: String, bytes: ByteArray): String? {
-                return saveToDownloads(context, fileName, bytes)
+            override suspend fun saveToDownloads(fileName: String, bytes: ByteArray): SupportChatFileSaveResult {
+                val path = saveToDownloads(context, fileName, bytes)
+                return if (path != null) {
+                    SupportChatFileSaveResult.Saved(path)
+                } else {
+                    // Ошибка записи или отсутствие прав (Android < 29 без
+                    // WRITE_EXTERNAL_STORAGE) — отмены как исхода на Android нет.
+                    SupportChatFileSaveResult.Failed
+                }
             }
         }
     }

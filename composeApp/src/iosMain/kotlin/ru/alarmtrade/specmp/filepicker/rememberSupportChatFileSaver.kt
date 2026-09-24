@@ -22,23 +22,24 @@ import platform.UIKit.UIWindowScene
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFileSaver
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 
 @Composable
 actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
     return remember {
         object : SupportChatFileSaver {
-            override suspend fun saveToDownloads(fileName: String, bytes: ByteArray): String? {
-                if (bytes.isEmpty()) return null
+            override suspend fun saveToDownloads(fileName: String, bytes: ByteArray): SupportChatFileSaveResult {
+                if (bytes.isEmpty()) return SupportChatFileSaveResult.Failed
                 return try {
-                    val tempUrl = writeTempFile(fileName, bytes) ?: return null
+                    val tempUrl = writeTempFile(fileName, bytes) ?: return SupportChatFileSaveResult.Failed
                     try {
                         presentExportPicker(tempUrl)
                     } finally {
                         NSFileManager.defaultManager.removeItemAtURL(tempUrl, error = null)
                     }
                 } catch (e: Throwable) {
-                    null
+                    SupportChatFileSaveResult.Failed
                 }
             }
         }
@@ -63,16 +64,23 @@ private class ExportDelegate(
     }
 }
 
-private suspend fun presentExportPicker(fileUrl: NSURL): String? = suspendCancellableCoroutine { cont ->
+private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResult = suspendCancellableCoroutine { cont ->
     dispatch_async(dispatch_get_main_queue()) {
         val presenter = topViewController()
         if (presenter == null) {
-            cont.resumeWith(Result.success(null))
+            cont.resumeWith(Result.success(SupportChatFileSaveResult.Failed))
             return@dispatch_async
         }
         val delegate = ExportDelegate { pickedUrl ->
             activeExportDelegate = null
-            if (cont.isActive) cont.resumeWith(Result.success(pickedUrl?.path))
+            if (cont.isActive) {
+                val result = when {
+                    pickedUrl == null -> SupportChatFileSaveResult.Cancelled
+                    pickedUrl.path != null -> SupportChatFileSaveResult.Saved(pickedUrl.path!!)
+                    else -> SupportChatFileSaveResult.Failed
+                }
+                cont.resumeWith(Result.success(result))
+            }
         }
         activeExportDelegate = delegate
         val picker = UIDocumentPickerViewController(forExportingURLs = listOf(fileUrl), asCopy = true)

@@ -24,8 +24,8 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachme
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPendingAttachment
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -38,12 +38,14 @@ class SupportChatScreenViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var repository: FakeSupportChatRepository
+    private lateinit var saver: FakeSupportChatFileSaver
     private lateinit var dispatchers: AppDispatchers
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         repository = FakeSupportChatRepository()
+        saver = FakeSupportChatFileSaver()
         dispatchers = AppDispatchers(
             main = testDispatcher,
             io = testDispatcher,
@@ -323,15 +325,53 @@ class SupportChatScreenViewModelTest {
     fun `typing indicator toggles by Writing events`() = runTest {
         val viewModel = createViewModel()
 
-        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", true))
+        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", true, isMine = false))
         runCurrent()
 
         assertEquals("agent@example.com", viewModel.state.value.typingAuthor)
 
-        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", false))
+        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", false, isMine = false))
         runCurrent()
 
         assertNull(viewModel.state.value.typingAuthor)
+    }
+
+    @Test
+    fun `own typing event is ignored`() = runTest {
+        val viewModel = createViewModel()
+
+        repository.emitEvent(SupportChatEvent.TypingChanged("me@example.com", true, isMine = true))
+        runCurrent()
+
+        assertNull(viewModel.state.value.typingAuthor)
+    }
+
+    @Test
+    fun `server echoes for two identical texts merge in FIFO order`() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onDraftChange("Same")
+        viewModel.onSend()
+        runCurrent()
+        viewModel.onDraftChange("Same")
+        viewModel.onSend()
+        runCurrent()
+        assertEquals(2, viewModel.state.value.messages.size)
+
+        repository.emitEvent(
+            SupportChatEvent.MessageReceived(
+                ownTextEcho(id = 201, text = "Same"),
+            ),
+        )
+        runCurrent()
+        repository.emitEvent(
+            SupportChatEvent.MessageReceived(
+                ownTextEcho(id = 202, text = "Same"),
+            ),
+        )
+        runCurrent()
+
+        assertEquals(2, viewModel.state.value.messages.size)
+        assertEquals(listOf(201L, 202L), viewModel.state.value.messages.map { it.serverId })
     }
 
     @Test
@@ -368,7 +408,7 @@ class SupportChatScreenViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, viewModel.state.value.pendingAttachments.size)
-        assertTrue(viewModel.state.value.pendingAttachments.first() is SupportChatPendingAttachment.Image)
+        assertEquals(SupportChatUiAttachment.Kind.Image, viewModel.state.value.pendingAttachments.first().kind)
 
         viewModel.onSend()
         advanceUntilIdle()
@@ -521,7 +561,7 @@ class SupportChatScreenViewModelTest {
         viewModel.onDocumentPicked(file)
         advanceUntilIdle()
 
-        assertTrue(viewModel.state.value.pendingAttachments.first() is SupportChatPendingAttachment.Document)
+        assertTrue(viewModel.state.value.pendingAttachments.first().kind == SupportChatUiAttachment.Kind.Document)
 
         viewModel.onSend()
         advanceUntilIdle()
@@ -533,18 +573,13 @@ class SupportChatScreenViewModelTest {
     @Test
     fun `download attachment saves file and emits effect`() = runTest {
         val viewModel = createViewModel()
-        val saver = FakeSupportChatFileSaver()
-        val attachment = SupportChatAttachment.Document(
-            id = "doc-1",
-            name = "scheme.pdf",
-            url = "https://files/scheme.pdf",
-        )
+        val attachment = documentUiAttachment()
 
         val effects = mutableListOf<SupportChatEffect>()
         val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
         runCurrent()
 
-        viewModel.onDownloadAttachment(attachment, saver)
+        viewModel.onDownloadAttachment(attachment)
         advanceUntilIdle()
 
         assertEquals(listOf("scheme.pdf"), saver.savedFiles.map { it.first })
@@ -557,18 +592,13 @@ class SupportChatScreenViewModelTest {
     fun `failed attachment download emits error effect`() = runTest {
         repository.downloadFileResult = Response.Error(Exception("No network"))
         val viewModel = createViewModel()
-        val saver = FakeSupportChatFileSaver()
-        val attachment = SupportChatAttachment.Document(
-            id = "doc-1",
-            name = "scheme.pdf",
-            url = "https://files/scheme.pdf",
-        )
+        val attachment = documentUiAttachment()
 
         val effects = mutableListOf<SupportChatEffect>()
         val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
         runCurrent()
 
-        viewModel.onDownloadAttachment(attachment, saver)
+        viewModel.onDownloadAttachment(attachment)
         advanceUntilIdle()
 
         assertTrue(saver.savedFiles.isEmpty())
@@ -579,23 +609,73 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `failed attachment save emits error effect`() = runTest {
+        saver.saveResult = ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult.Failed
         val viewModel = createViewModel()
-        val saver = FakeSupportChatFileSaver().apply { saveResult = null }
-        val attachment = SupportChatAttachment.Image(
-            id = "img-1",
-            name = "photo.jpg",
-            url = "https://files/photo.jpg",
-        )
+        val attachment = imageUiAttachment()
 
         val effects = mutableListOf<SupportChatEffect>()
         val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
         runCurrent()
 
-        viewModel.onDownloadAttachment(attachment, saver)
+        viewModel.onDownloadAttachment(attachment)
         advanceUntilIdle()
 
         assertTrue(effects.any { it is SupportChatEffect.AttachmentDownloadFailed })
         collectJob.cancel()
+    }
+
+    @Test
+    fun `cancelled attachment save emits nothing`() = runTest {
+        saver.saveResult = ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult.Cancelled
+        val viewModel = createViewModel()
+        val attachment = imageUiAttachment()
+
+        val effects = mutableListOf<SupportChatEffect>()
+        val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
+        runCurrent()
+
+        viewModel.onDownloadAttachment(attachment)
+        advanceUntilIdle()
+
+        assertTrue(effects.isEmpty())
+        collectJob.cancel()
+    }
+
+    private fun ownTextEcho(id: Long, text: String): SupportChatMessage {
+        return SupportChatMessage(
+            id = id.toString(),
+            serverId = id,
+            text = text,
+            attachment = null,
+            time = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            isMine = true,
+            authorEmail = "me@example.com",
+            status = SupportChatMessageStatus.Sent,
+        )
+    }
+
+    private fun documentUiAttachment(): SupportChatUiAttachment {
+        return SupportChatUiAttachment(
+            id = "doc-1",
+            name = "scheme.pdf",
+            kind = SupportChatUiAttachment.Kind.Document,
+            url = "https://files/scheme.pdf",
+            localPath = null,
+            mimeType = "application/pdf",
+            sizeBytes = 1024,
+        )
+    }
+
+    private fun imageUiAttachment(): SupportChatUiAttachment {
+        return SupportChatUiAttachment(
+            id = "img-1",
+            name = "photo.jpg",
+            kind = SupportChatUiAttachment.Kind.Image,
+            url = "https://files/photo.jpg",
+            localPath = null,
+            mimeType = null,
+            sizeBytes = null,
+        )
     }
 
     @Test
@@ -653,20 +733,19 @@ class SupportChatScreenViewModelTest {
             repository = repository,
             dispatchers = dispatchers,
             appScope = CoroutineScope(testDispatcher),
+            fileSaver = saver,
         )
         advanceUntilIdle()
         return viewModel
     }
 
     private fun incomingMessage(id: Long, text: String): SupportChatMessage {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         return SupportChatMessage(
             id = id.toString(),
             serverId = id,
             text = text,
             attachment = null,
-            time = now,
-            displayTime = formatTime(now),
+            time = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
             isMine = false,
             authorEmail = "agent@example.com",
             status = SupportChatMessageStatus.Sent,
@@ -674,7 +753,6 @@ class SupportChatScreenViewModelTest {
     }
 
     private fun ownImageEcho(id: Long, attachmentName: String): SupportChatMessage {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         return SupportChatMessage(
             id = id.toString(),
             serverId = id,
@@ -684,20 +762,10 @@ class SupportChatScreenViewModelTest {
                 name = attachmentName,
                 url = "https://example.com/files/$id",
             ),
-            time = now,
-            displayTime = formatTime(now),
+            time = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
             isMine = true,
             authorEmail = "me@example.com",
             status = SupportChatMessageStatus.Sent,
         )
     }
-
-    private fun formatTime(time: LocalDateTime): String {
-        val hour = time.hour.toString().padStart(2, '0')
-        val minute = time.minute.toString().padStart(2, '0')
-        return "$hour:$minute"
-    }
-
-    private val SupportChatMessage.isRead: Boolean
-        get() = status == SupportChatMessageStatus.Read
 }

@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.supportchat.data.mapper
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
@@ -52,16 +51,9 @@ internal class SupportChatMessageMapper(
             text = text,
             attachment = attachment,
             time = localTime,
-            displayTime = formatTime(localTime),
             isMine = myEmail != null && message.sender.login == myEmail,
             authorEmail = message.sender.login,
             status = if (message.wasRead) SupportChatMessageStatus.Read else SupportChatMessageStatus.Sent,
         )
-    }
-
-    private fun formatTime(time: LocalDateTime): String {
-        val hour = time.hour.toString().padStart(2, '0')
-        val minute = time.minute.toString().padStart(2, '0')
-        return "$hour:$minute"
     }
 }

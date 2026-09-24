@@ -27,6 +27,11 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.LocalSupportChatImageLoader
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -38,9 +43,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.support_chat_a11y_download
 import specmp.feature.support_chat.generated.resources.support_chat_status_failed
@@ -58,7 +60,7 @@ internal fun SupportChatMessageBubble(
     isDownloading: Boolean = false,
     onRetry: (String) -> Unit = {},
     onImageClick: (String) -> Unit = {},
-    onDownloadAttachment: (SupportChatAttachment) -> Unit = {},
+    onDownloadAttachment: (SupportChatUiAttachment) -> Unit = {},
 ) {
     val isFailedOutgoing = message.isMine && message.status == SupportChatMessageStatus.Failed
     val isMine = message.isMine
@@ -114,12 +116,12 @@ internal fun SupportChatMessageBubble(
 
                     message.attachment?.let { attachment ->
                         SupportChatAttachmentContent(
-                            attachment = attachment,
+                            attachment = attachment.toUiAttachment(),
                             colors = colors,
                             contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
                             onImageClick = onImageClick,
                             isDownloading = isDownloading,
-                            downloadAction = attachment.downloadAction(
+                            downloadAction = attachment.toUiAttachment().downloadAction(
                                 isMine = isMine,
                                 onDownloadAttachment = onDownloadAttachment,
                             ),
@@ -159,7 +161,7 @@ private fun MessageMetaRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpText(
-            text = message.displayTime,
+            text = formatMessageTime(message.time),
             color = metaColor,
         )
 
@@ -224,15 +226,15 @@ private fun MessageStatusIcon(
 
 @Composable
 private fun SupportChatAttachmentContent(
-    attachment: SupportChatAttachment,
+    attachment: SupportChatUiAttachment,
     colors: CmpThemeColors,
     contentColor: Color,
     onImageClick: (String) -> Unit,
     isDownloading: Boolean,
     downloadAction: (() -> Unit)?,
 ) {
-    when (attachment) {
-        is SupportChatAttachment.Document -> {
+    when (attachment.kind) {
+        SupportChatUiAttachment.Kind.Document -> {
             SupportChatDocumentAttachment(
                 name = attachment.name,
                 mimeType = attachment.mimeType,
@@ -243,7 +245,7 @@ private fun SupportChatAttachmentContent(
             )
         }
 
-        is SupportChatAttachment.Image -> {
+        SupportChatUiAttachment.Kind.Image -> {
             SupportChatImageAttachment(
                 name = attachment.name,
                 source = attachment.imageSource(),
@@ -257,15 +259,12 @@ private fun SupportChatAttachmentContent(
 }
 
 // Скачивание — только для входящих вложений (от поддержки) с известным url.
-private fun SupportChatAttachment.downloadAction(
+private fun SupportChatUiAttachment.downloadAction(
     isMine: Boolean,
-    onDownloadAttachment: (SupportChatAttachment) -> Unit,
+    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
 ): (() -> Unit)? {
     if (isMine) return null
-    val url = when (this) {
-        is SupportChatAttachment.Image -> url
-        is SupportChatAttachment.Document -> url
-    } ?: return null
+    if (url == null) return null
     return { onDownloadAttachment(this) }
 }
 
@@ -413,8 +412,18 @@ private const val DEFAULT_IMAGE_RATIO = 4f / 3f
 private const val MIN_IMAGE_RATIO = 0.75f
 private const val MAX_IMAGE_RATIO = 2f
 
-private fun SupportChatAttachment.Image.imageSource(): String {
-    return localPath?.let { "file://$it" } ?: url
+private const val FILE_URI_SCHEME = "file://"
+
+// Форматирование времени сообщения — презентационная логика (D-1):
+// доменная модель хранит LocalDateTime, готовая строка в ней не живёт.
+private fun formatMessageTime(time: kotlinx.datetime.LocalDateTime): String {
+    val hour = time.hour.toString().padStart(2, '0')
+    val minute = time.minute.toString().padStart(2, '0')
+    return "$hour:$minute"
+}
+
+private fun SupportChatUiAttachment.imageSource(): String {
+    return localPath?.let { FILE_URI_SCHEME + it } ?: url.orEmpty()
 }
 
 private fun bubbleShape(isMine: Boolean): RoundedCornerShape {

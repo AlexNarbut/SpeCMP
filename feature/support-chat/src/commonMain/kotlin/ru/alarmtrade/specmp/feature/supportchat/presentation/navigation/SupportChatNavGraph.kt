@@ -5,8 +5,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFilePicker
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFileSaver
+import org.koin.core.parameter.parametersOf
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.ProvideSupportChatImageLoader
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreen
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreenViewModel
@@ -22,7 +24,9 @@ data object SupportChatRoute : NavKey
  * живёт ровно столько, сколько запись бэкстека (см. `docs/navigation.md`).
  *
  * VM создаётся здесь, а не в `composeApp`: экран и его интенты — внутренняя
- * кухня фичи, composeApp передаёт только платформенные порты.
+ * кухня фичи, composeApp передаёт только платформенные порты. Сейвер —
+ * зависимость конструктора VM (parametersOf): ему нужен composition context
+ * на Android, поэтому провайдится из remember-фабрики, а не из Koin.
  */
 @Composable
 fun SupportChatEntry(
@@ -30,7 +34,7 @@ fun SupportChatEntry(
     filePicker: SupportChatFilePicker,
     fileSaver: SupportChatFileSaver,
 ) {
-    val viewModel = koinViewModel<SupportChatScreenViewModel>()
+    val viewModel = koinViewModel<SupportChatScreenViewModel> { parametersOf(fileSaver) }
     val state = viewModel.state.collectAsState()
 
     ProvideSupportChatImageLoader {
@@ -39,8 +43,20 @@ fun SupportChatEntry(
             effect = viewModel.effect,
             onBack = onBack,
             onDraftChange = viewModel::onDraftChange,
-            onAttachFile = { filePicker.launchDocument { file -> file?.let(viewModel::onDocumentPicked) } },
-            onAttachPhoto = { filePicker.launchImage { file -> file?.let(viewModel::onImagePicked) } },
+            onAttachFile = {
+                filePicker.launchDocument { result ->
+                    if (result is SupportChatPickedFileResult.Picked) {
+                        viewModel.onDocumentPicked(result.file)
+                    }
+                }
+            },
+            onAttachPhoto = {
+                filePicker.launchImage { result ->
+                    if (result is SupportChatPickedFileResult.Picked) {
+                        viewModel.onImagePicked(result.file)
+                    }
+                }
+            },
             onRemoveAttachment = viewModel::onRemoveAttachment,
             onSend = viewModel::onSend,
             onRetry = viewModel::onRetry,
@@ -48,9 +64,7 @@ fun SupportChatEntry(
             onHistoryRetry = viewModel::onHistoryRetry,
             onLoadMore = viewModel::onLoadMore,
             onMessageVisible = viewModel::onMessageVisible,
-            onDownloadAttachment = { attachment ->
-                viewModel.onDownloadAttachment(attachment, fileSaver)
-            },
+            onDownloadAttachment = viewModel::onDownloadAttachment,
         )
     }
 }

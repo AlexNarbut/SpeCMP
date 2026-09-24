@@ -42,7 +42,6 @@ class SupportChatListItemsTest {
             text = id,
             attachment = null,
             time = time,
-            displayTime = "",
             isMine = false,
             authorEmail = null,
             status = SupportChatMessageStatus.Sent,

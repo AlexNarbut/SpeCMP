@@ -11,8 +11,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFilePicker
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import java.io.File
 import java.util.UUID
 
@@ -20,36 +21,40 @@ import java.util.UUID
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
     val context = LocalContext.current
 
-    var imageCallback by remember { mutableStateOf<((SupportChatPickedFile?) -> Unit)?>(null) }
-    var documentCallback by remember { mutableStateOf<((SupportChatPickedFile?) -> Unit)?>(null) }
+    var imageCallback by remember { mutableStateOf<((SupportChatPickedFileResult) -> Unit)?>(null) }
+    var documentCallback by remember { mutableStateOf<((SupportChatPickedFileResult) -> Unit)?>(null) }
 
     val imageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri ->
-        imageCallback?.invoke(uri?.toPickedFile(context))
+        imageCallback?.invoke(uri?.toPickedFile(context).toPickerResult())
         imageCallback = null
     }
 
     val documentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri ->
-        documentCallback?.invoke(uri?.toPickedFile(context))
+        documentCallback?.invoke(uri?.toPickedFile(context).toPickerResult())
         documentCallback = null
     }
 
     return remember(imageLauncher, documentLauncher) {
         object : SupportChatFilePicker {
-            override fun launchImage(onPicked: (SupportChatPickedFile?) -> Unit) {
+            override fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit) {
                 imageCallback = onPicked
                 imageLauncher.launch("image/*")
             }
 
-            override fun launchDocument(onPicked: (SupportChatPickedFile?) -> Unit) {
+            override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
                 documentCallback = onPicked
                 documentLauncher.launch("*/*")
             }
         }
     }
+}
+
+private fun SupportChatPickedFile?.toPickerResult(): SupportChatPickedFileResult {
+    return this?.let(SupportChatPickedFileResult::Picked) ?: SupportChatPickedFileResult.Cancelled
 }
 
 private fun Uri.toPickedFile(context: Context): SupportChatPickedFile? {

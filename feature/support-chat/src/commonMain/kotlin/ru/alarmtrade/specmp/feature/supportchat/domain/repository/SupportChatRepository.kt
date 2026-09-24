@@ -5,7 +5,7 @@ import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
 /**
  * Контракт чат-сессии техподдержки.
@@ -33,6 +33,4 @@ interface SupportChatRepository : AuthCloseable {
     suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit>
     suspend fun downloadFile(url: String): Response<ByteArray>
     suspend fun markMessagesAsRead(ids: List<Long>): Response<Unit>
-    suspend fun startWriting(): Response<Unit>
-    suspend fun stopWriting(): Response<Unit>
 }

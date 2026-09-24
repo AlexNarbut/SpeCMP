@@ -17,13 +17,13 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPendingAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.support_chat_a11y_remove_attachment
 
 @Composable
 internal fun SupportChatPendingAttachmentChip(
-    attachment: SupportChatPendingAttachment,
+    attachment: SupportChatUiAttachment,
     onRemove: () -> Unit,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
@@ -40,9 +40,9 @@ internal fun SupportChatPendingAttachmentChip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(
-                icon = when (attachment) {
-                    is SupportChatPendingAttachment.Image -> CmpIcons.Image
-                    is SupportChatPendingAttachment.Document -> CmpIcons.Description
+                icon = when (attachment.kind) {
+                    SupportChatUiAttachment.Kind.Image -> CmpIcons.Image
+                    SupportChatUiAttachment.Kind.Document -> CmpIcons.Description
                 },
                 contentDescription = null,
                 tint = colors.onSurfaceVariant,

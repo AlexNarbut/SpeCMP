@@ -23,7 +23,6 @@ class SupportChatMessageMapperTest {
         val mapped = mapper.map(sdkMessage(time = LocalDateTime(2026, 1, 15, 10, 0)), myEmail = null)
 
         assertEquals(LocalDateTime(2026, 1, 15, 13, 0), mapped.time)
-        assertEquals("13:00", mapped.displayTime)
     }
 
     @Test
