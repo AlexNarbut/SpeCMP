@@ -51,8 +51,6 @@ internal fun SupportChatComposer(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val canSend = enabled && (draftText.isNotBlank() || pendingAttachments.isNotEmpty())
-
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -96,7 +94,7 @@ internal fun SupportChatComposer(
                         if (event.type == KeyEventType.KeyDown &&
                             event.key == Key.Enter &&
                             !event.isShiftPressed &&
-                            canSend
+                            enabled
                         ) {
                             onSend()
                             true
@@ -114,14 +112,14 @@ internal fun SupportChatComposer(
                 ),
                 keyboardActions = KeyboardActions(
                     onSend = {
-                        if (canSend) onSend()
+                        if (enabled) onSend()
                     },
                 ),
             )
 
             SendButton(
                 onClick = onSend,
-                enabled = canSend,
+                enabled = enabled,
                 colors = colors,
             )
         }

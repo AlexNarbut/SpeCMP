@@ -19,6 +19,7 @@ import kotlinx.datetime.toLocalDateTime
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
@@ -164,7 +165,7 @@ class SupportChatScreenViewModel(
 
         _state.update {
             it.copy(
-                messages = it.messages + outgoingMessages,
+                history = LCEState.Content(it.messages + outgoingMessages),
                 draftText = "",
                 pendingAttachments = emptyList(),
             )
@@ -184,13 +185,7 @@ class SupportChatScreenViewModel(
     fun onRetry(messageId: String) {
         val message = _state.value.messages.find { it.id == messageId && it.isMine } ?: return
         safeLaunch {
-            _state.update { current ->
-                current.copy(
-                    messages = current.messages.map {
-                        if (it.id == messageId) it.copy(status = SupportChatMessageStatus.Sending) else it
-                    },
-                )
-            }
+            updateMessageStatus(messageId, SupportChatMessageStatus.Sending)
             sendOutgoingMessage(
                 clientMessageId = messageId,
                 text = message.text ?: "",
@@ -201,8 +196,23 @@ class SupportChatScreenViewModel(
 
     fun onLoadMore() {
         val current = _state.value
-        if (current.isLoadingHistory || !current.hasMoreHistory) return
-        safeLaunch { loadHistoryPage() }
+        if (current.isLoadingMore || !current.hasMoreHistory || current.history !is LCEState.Content) return
+        safeLaunch {
+            _state.update { it.copy(isLoadingMore = true) }
+            when (val response = withContext(dispatchers.io) { repository.loadNextMessages() }) {
+                is Response.Success -> _state.update { mergeHistoryPage(it, response.value) }
+                is Response.Error -> {
+                    // Лента живая: ошибка пагинации — тост, ленту не затираем.
+                    logger.d(response.exception) { "Failed to load next history page" }
+                    _state.update { it.copy(isLoadingMore = false) }
+                    _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
+                }
+            }
+        }
+    }
+
+    fun onHistoryRetry() {
+        safeLaunch { loadInitialHistory() }
     }
 
     fun onConnectionRetry() {
@@ -212,11 +222,10 @@ class SupportChatScreenViewModel(
                 when (withContext(dispatchers.io) { repository.openChat() }) {
                     is Response.Success -> {
                         _state.update { it.copy(isOffline = false) }
-                        if (_state.value.messages.isEmpty() &&
-                            _state.value.hasMoreHistory &&
-                            !_state.value.isLoadingHistory
+                        if (_state.value.history !is LCEState.Content &&
+                            _state.value.hasMoreHistory
                         ) {
-                            loadHistoryPage()
+                            loadInitialHistory()
                         }
                         retryPendingMessages()
                     }
@@ -297,27 +306,30 @@ class SupportChatScreenViewModel(
 
     private fun handleMessageReceived(message: SupportChatMessage) {
         _state.update { current ->
+            val messages = current.messages
             val index = when {
-                message.serverId != null -> current.messages.indexOfFirst {
+                message.serverId != null -> messages.indexOfFirst {
                     it.isMine && it.serverId == message.serverId
                 }
                 else -> -1
             }
             val updatedMessages = if (index != -1) {
-                current.messages.toMutableList().apply { set(index, message) }
+                messages.toMutableList().apply { set(index, message) }
             } else {
                 val echoIndex = if (message.isMine) {
-                    current.messages.indexOfEcho(message)
+                    messages.indexOfEcho(message)
                 } else {
                     -1
                 }
                 if (echoIndex != -1) {
-                    current.messages.toMutableList().apply { set(echoIndex, message) }
+                    messages.toMutableList().apply { set(echoIndex, message) }
                 } else {
-                    current.messages + message
+                    // Первое сообщение снимает скелетон: history становится Content,
+                    // и полноэкранная ошибка/скелетон затирки ленты не дождутся.
+                    messages + message
                 }
             }
-            current.copy(messages = updatedMessages)
+            current.copy(history = LCEState.Content(updatedMessages))
         }
     }
 
@@ -334,8 +346,8 @@ class SupportChatScreenViewModel(
         val existingIds = current.messages.map { it.serverId ?: it.id }.toHashSet()
         val newMessages = page.messages.filter { (it.serverId ?: it.id) !in existingIds }
         return current.copy(
-            messages = newMessages + current.messages,
-            isLoadingHistory = false,
+            history = LCEState.Content(newMessages + current.messages),
+            isLoadingMore = false,
             hasMoreHistory = page.hasMore,
         )
     }
@@ -343,13 +355,15 @@ class SupportChatScreenViewModel(
     private fun handleMessagesRead(ids: List<Long>) {
         _state.update { current ->
             current.copy(
-                messages = current.messages.map { message ->
-                    if (message.serverId != null && message.serverId in ids) {
-                        message.copy(status = SupportChatMessageStatus.Read)
-                    } else {
-                        message
+                history = LCEState.Content(
+                    current.messages.map { message ->
+                        if (message.serverId != null && message.serverId in ids) {
+                            message.copy(status = SupportChatMessageStatus.Read)
+                        } else {
+                            message
+                        }
                     }
-                },
+                ),
             )
         }
     }
@@ -360,13 +374,7 @@ class SupportChatScreenViewModel(
         attachment: SupportChatPendingAttachment?,
     ) {
         if (_state.value.isOffline) {
-            _state.update { current ->
-                current.copy(
-                    messages = current.messages.map {
-                        if (it.id == clientMessageId) it.copy(status = SupportChatMessageStatus.Pending) else it
-                    },
-                )
-            }
+            updateMessageStatus(clientMessageId, SupportChatMessageStatus.Pending)
             return
         }
 
@@ -377,24 +385,10 @@ class SupportChatScreenViewModel(
         }
 
         when (response) {
-            is Response.Success -> {
-                _state.update { current ->
-                    current.copy(
-                        messages = current.messages.map {
-                            if (it.id == clientMessageId) it.copy(status = SupportChatMessageStatus.Sent) else it
-                        },
-                    )
-                }
-            }
+            is Response.Success -> updateMessageStatus(clientMessageId, SupportChatMessageStatus.Sent)
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to send message" }
-                _state.update { current ->
-                    current.copy(
-                        messages = current.messages.map {
-                            if (it.id == clientMessageId) it.copy(status = SupportChatMessageStatus.Failed) else it
-                        },
-                    )
-                }
+                updateMessageStatus(clientMessageId, SupportChatMessageStatus.Failed)
                 _effect.tryEmit(SupportChatEffect.MessageSendFailed(clientMessageId))
             }
         }
@@ -432,19 +426,21 @@ class SupportChatScreenViewModel(
         pending.forEach { message ->
             if (_state.value.isOffline) return
 
-            _state.update { current ->
-                current.copy(
-                    messages = current.messages.map {
-                        if (it.id == message.id) it.copy(status = SupportChatMessageStatus.Sending) else it
-                    },
-                )
-            }
+            updateMessageStatus(message.id, SupportChatMessageStatus.Sending)
             sendOutgoingMessage(
                 clientMessageId = message.id,
                 text = message.text ?: "",
                 attachment = message.attachment?.toPending(),
             )
         }
+    }
+
+    private fun updateMessageStatus(id: String, status: SupportChatMessageStatus) {
+        updateMessages { messages -> messages.map { if (it.id == id) it.copy(status = status) else it } }
+    }
+
+    private fun updateMessages(transform: (List<SupportChatMessage>) -> List<SupportChatMessage>) {
+        _state.update { current -> current.copy(history = LCEState.Content(transform(current.messages))) }
     }
 
     private fun SupportChatPendingAttachment.toAttachment(): SupportChatAttachment {
@@ -497,26 +493,23 @@ class SupportChatScreenViewModel(
 
     private suspend fun connectAndLoadInitialHistory() {
         when (withContext(dispatchers.io) { repository.openChat() }) {
-            is Response.Success -> loadHistoryPage()
+            is Response.Success -> loadInitialHistory()
             is Response.Error -> {
-                _state.update {
-                    it.copy(
-                        isLoadingHistory = false,
-                        isOffline = true,
-                    )
-                }
+                // Сессия не открыта: баннер offline поверх скелетона,
+                // повтор — кнопкой баннера (onConnectionRetry).
+                _state.update { it.copy(isOffline = true) }
             }
         }
     }
 
-    private suspend fun loadHistoryPage() {
-        _state.update { it.copy(isLoadingHistory = true) }
+    private suspend fun loadInitialHistory() {
+        _state.update { it.copy(history = LCEState.Loading()) }
         when (val response = withContext(dispatchers.io) { repository.loadNextMessages() }) {
-            is Response.Success -> _state.update { current -> mergeHistoryPage(current, response.value) }
+            is Response.Success -> _state.update { mergeHistoryPage(it, response.value) }
             is Response.Error -> {
-                logger.d(response.exception) { "Failed to load history page" }
-                _state.update { it.copy(isLoadingHistory = false) }
-                _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
+                logger.d(response.exception) { "Failed to load initial history" }
+                // Полноэкранная ошибка с кнопкой «Повторить» (onHistoryRetry).
+                _state.update { it.copy(history = LCEState.Error(error = "")) }
             }
         }
     }

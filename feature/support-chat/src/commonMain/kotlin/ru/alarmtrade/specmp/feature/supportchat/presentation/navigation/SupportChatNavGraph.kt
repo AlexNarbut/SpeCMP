@@ -45,6 +45,7 @@ fun SupportChatEntry(
             onSend = viewModel::onSend,
             onRetry = viewModel::onRetry,
             onConnectionRetry = viewModel::onConnectionRetry,
+            onHistoryRetry = viewModel::onHistoryRetry,
             onLoadMore = viewModel::onLoadMore,
             onMessageVisible = viewModel::onMessageVisible,
             onDownloadAttachment = { attachment ->

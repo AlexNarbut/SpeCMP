@@ -19,6 +19,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
@@ -70,7 +71,7 @@ class SupportChatScreenViewModelTest {
         val viewModel = createViewModel()
 
         assertEquals(listOf("From history"), viewModel.state.value.messages.map { it.text })
-        assertEquals(false, viewModel.state.value.isLoadingHistory)
+        assertTrue(viewModel.state.value.history is LCEState.Content)
     }
 
     @Test
@@ -426,8 +427,41 @@ class SupportChatScreenViewModelTest {
         advanceUntilIdle()
 
         assertTrue(effects.any { it is SupportChatEffect.HistoryLoadFailed })
-        assertEquals(false, viewModel.state.value.isLoadingHistory)
+        assertEquals(false, viewModel.state.value.isLoadingMore)
+        // Лента остаётся на экране: ошибка пагинации не затирает Content.
+        assertTrue(viewModel.state.value.history is LCEState.Content)
+        assertEquals(listOf("Old"), viewModel.state.value.messages.map { it.text })
         collectJob.cancel()
+    }
+
+    @Test
+    fun `first load error shows fullscreen error state and retry recovers`() = runTest {
+        repository.historyPageOnLoad = null
+        repository.loadNextMessagesResult = Response.Error(Exception("Network error"))
+        val viewModel = createViewModel()
+
+        assertTrue(viewModel.state.value.history is LCEState.Error)
+
+        repository.historyPageOnLoad = listOf(incomingMessage(id = 5, text = "Recovered"))
+        viewModel.onHistoryRetry()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.history is LCEState.Content)
+        assertEquals(listOf("Recovered"), viewModel.state.value.messages.map { it.text })
+    }
+
+    @Test
+    fun `live message replaces fullscreen error with content`() = runTest {
+        // Первая страница «зависла» (не эмитится), но сокет уже жив.
+        repository.historyPageOnLoad = null
+        repository.loadNextMessagesResult = Response.Error(Exception("timeout"))
+        val viewModel = createViewModel()
+        assertTrue(viewModel.state.value.history is LCEState.Error)
+
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 9, text = "Live")))
+        advanceUntilIdle()
+
+        assertEquals(listOf("Live"), viewModel.state.value.messages.map { it.text })
     }
 
     @Test
@@ -436,7 +470,7 @@ class SupportChatScreenViewModelTest {
         val viewModel = createViewModel()
 
         assertEquals(false, viewModel.state.value.hasMoreHistory)
-        assertEquals(false, viewModel.state.value.isLoadingHistory)
+        assertTrue(viewModel.state.value.history is LCEState.Content)
     }
 
     @Test

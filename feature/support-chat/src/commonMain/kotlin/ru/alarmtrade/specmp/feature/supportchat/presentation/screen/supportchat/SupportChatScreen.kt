@@ -31,6 +31,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -53,6 +54,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.isSupportC
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatComposer
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatDateDivider
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatEmptyState
+import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatErrorState
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatImageViewer
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatLoadingSkeleton
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatMessageBubble
@@ -78,6 +80,7 @@ import specmp.feature.support_chat.generated.resources.support_chat_month_may
 import specmp.feature.support_chat.generated.resources.support_chat_month_november
 import specmp.feature.support_chat.generated.resources.support_chat_month_october
 import specmp.feature.support_chat.generated.resources.support_chat_month_september
+import specmp.feature.support_chat.generated.resources.supportchat_chat_error_history_title
 import specmp.feature.support_chat.generated.resources.support_chat_today
 import specmp.feature.support_chat.generated.resources.support_chat_title_screen
 import specmp.feature.support_chat.generated.resources.support_chat_yesterday
@@ -94,6 +97,7 @@ fun SupportChatScreen(
     onSend: () -> Unit,
     onRetry: (String) -> Unit,
     onConnectionRetry: () -> Unit,
+    onHistoryRetry: () -> Unit,
     onLoadMore: () -> Unit,
     onMessageVisible: (String) -> Unit,
     onDownloadAttachment: (SupportChatAttachment) -> Unit,
@@ -169,6 +173,7 @@ fun SupportChatScreen(
             onSend = onSend,
             onRetry = onRetry,
             onConnectionRetry = onConnectionRetry,
+            onHistoryRetry = onHistoryRetry,
             onLoadMore = onLoadMore,
             onMessageVisible = onMessageVisible,
             onImageClick = { viewerImageSource = it },
@@ -200,6 +205,7 @@ private fun SupportChatScaffold(
     onSend: () -> Unit,
     onRetry: (String) -> Unit,
     onConnectionRetry: () -> Unit,
+    onHistoryRetry: () -> Unit,
     onLoadMore: () -> Unit,
     onMessageVisible: (String) -> Unit,
     onImageClick: (String) -> Unit,
@@ -213,14 +219,14 @@ private fun SupportChatScaffold(
         }
     }
 
-    LaunchedEffect(listState, state.isLoadingHistory, state.hasMoreHistory) {
+    LaunchedEffect(listState, state.isLoadingMore, state.hasMoreHistory) {
         snapshotFlow { listState.firstVisibleItemIndex to listState.canScrollBackward }
             .distinctUntilChanged()
             .collect { (index, canScrollBackward) ->
                 if (index == 0 &&
                     canScrollBackward &&
                     state.hasMoreHistory &&
-                    !state.isLoadingHistory &&
+                    !state.isLoadingMore &&
                     state.messages.isNotEmpty()
                 ) {
                     onLoadMore()
@@ -265,6 +271,7 @@ private fun SupportChatScaffold(
             onSend = onSend,
             onRetry = onRetry,
             onConnectionRetry = onConnectionRetry,
+            onHistoryRetry = onHistoryRetry,
             onLoadMore = onLoadMore,
             onMessageVisible = onMessageVisible,
             onImageClick = onImageClick,
@@ -288,6 +295,7 @@ private fun SupportChatBody(
     onSend: () -> Unit,
     onRetry: (String) -> Unit,
     onConnectionRetry: () -> Unit,
+    onHistoryRetry: () -> Unit,
     onLoadMore: () -> Unit,
     onMessageVisible: (String) -> Unit,
     onImageClick: (String) -> Unit,
@@ -303,8 +311,6 @@ private fun SupportChatBody(
         SupportChatLayoutMode.Medium -> 24.dp
         SupportChatLayoutMode.Expanded -> 32.dp
     }
-    val isEmpty = listItems.isEmpty() && !state.isLoadingHistory
-    val isInitialLoading = state.isLoadingHistory && state.messages.isEmpty()
 
     LaunchedEffect(listState, listItems) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.map { it.key } }
@@ -323,7 +329,7 @@ private fun SupportChatBody(
             .padding(paddingValues),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (state.isLoadingHistory && !isInitialLoading) {
+        if (state.isLoadingMore) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
@@ -344,80 +350,95 @@ private fun SupportChatBody(
                 modifier = Modifier.fillMaxSize(),
             )
 
-            if (isInitialLoading) {
-                CmpBox(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.TopCenter,
-                ) {
-                    SupportChatLoadingSkeleton(
+            val historyState = state.history
+            when {
+                historyState is LCEState.None || historyState is LCEState.Loading -> {
+                    CmpBox(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        SupportChatLoadingSkeleton(
+                            colors = colors,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = columnMaxWidth)
+                                .padding(horizontal = contentPadding),
+                        )
+                    }
+                }
+
+                historyState is LCEState.Error -> {
+                    SupportChatErrorState(
+                        onRetry = onHistoryRetry,
                         colors = colors,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .widthIn(max = columnMaxWidth)
-                            .padding(horizontal = contentPadding),
+                            .fillMaxSize()
+                            .widthIn(max = columnMaxWidth),
                     )
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    state = listState,
-                    contentPadding = PaddingValues(
-                        start = contentPadding,
-                        end = contentPadding,
-                        top = 8.dp,
-                        bottom = 16.dp,
-                    ),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (isEmpty) {
-                        item {
-                            SupportChatEmptyState(
-                                colors = colors,
-                                modifier = Modifier
-                                    .fillParentMaxSize()
-                                    .widthIn(max = columnMaxWidth),
-                            )
-                        }
-                    } else {
-                        items(
-                            count = listItems.size,
-                            key = { index ->
-                                when (val item = listItems[index]) {
-                                    is SupportChatListItem.DateDivider -> "${DATE_KEY_PREFIX}${item.date}"
-                                    is SupportChatListItem.Message -> "${MESSAGE_KEY_PREFIX}${item.message.id}"
-                                    is SupportChatListItem.Typing -> "typing_${item.author}"
-                                }
-                            },
-                        ) { index ->
-                            val item = listItems[index]
-                            when (item) {
-                                is SupportChatListItem.DateDivider -> {
-                                    SupportChatDateDivider(
-                                        label = item.label,
-                                        colors = colors,
-                                    )
-                                }
 
-                                is SupportChatListItem.Message -> {
-                                    SupportChatMessageBubble(
-                                        message = item.message,
-                                        colors = colors,
-                                        modifier = Modifier.widthIn(max = columnMaxWidth),
-                                        isDownloading = state.downloadingAttachmentId != null &&
-                                            state.downloadingAttachmentId == item.message.attachment?.id,
-                                        onRetry = onRetry,
-                                        onImageClick = onImageClick,
-                                        onDownloadAttachment = onDownloadAttachment,
-                                    )
-                                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(
+                            start = contentPadding,
+                            end = contentPadding,
+                            top = 8.dp,
+                            bottom = 16.dp,
+                        ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        if (state.messages.isEmpty()) {
+                            item {
+                                SupportChatEmptyState(
+                                    colors = colors,
+                                    modifier = Modifier
+                                        .fillParentMaxSize()
+                                        .widthIn(max = columnMaxWidth),
+                                )
+                            }
+                        } else {
+                            items(
+                                count = listItems.size,
+                                key = { index ->
+                                    when (val item = listItems[index]) {
+                                        is SupportChatListItem.DateDivider -> "${DATE_KEY_PREFIX}${item.date}"
+                                        is SupportChatListItem.Message -> "${MESSAGE_KEY_PREFIX}${item.message.id}"
+                                        is SupportChatListItem.Typing -> "typing_${item.author}"
+                                    }
+                                },
+                            ) { index ->
+                                val item = listItems[index]
+                                when (item) {
+                                    is SupportChatListItem.DateDivider -> {
+                                        SupportChatDateDivider(
+                                            label = item.label,
+                                            colors = colors,
+                                        )
+                                    }
 
-                                is SupportChatListItem.Typing -> {
-                                    SupportChatTypingIndicator(
-                                        author = item.author,
-                                        colors = colors,
-                                        modifier = Modifier.widthIn(max = columnMaxWidth),
-                                    )
+                                    is SupportChatListItem.Message -> {
+                                        SupportChatMessageBubble(
+                                            message = item.message,
+                                            colors = colors,
+                                            modifier = Modifier.widthIn(max = columnMaxWidth),
+                                            isDownloading = state.downloadingAttachmentId != null &&
+                                                state.downloadingAttachmentId == item.message.attachment?.id,
+                                            onRetry = onRetry,
+                                            onImageClick = onImageClick,
+                                            onDownloadAttachment = onDownloadAttachment,
+                                        )
+                                    }
+
+                                    is SupportChatListItem.Typing -> {
+                                        SupportChatTypingIndicator(
+                                            author = item.author,
+                                            colors = colors,
+                                            modifier = Modifier.widthIn(max = columnMaxWidth),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -441,7 +462,7 @@ private fun SupportChatBody(
                 .fillMaxWidth()
                 .padding(horizontal = contentPadding, vertical = 8.dp)
                 .widthIn(max = columnMaxWidth),
-            enabled = !state.isLoadingHistory,
+            enabled = state.isComposerEnabled,
         )
     }
 }

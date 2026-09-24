@@ -21,6 +21,7 @@
     <string name="support_chat_download_failed">Failed to download file</string>
     <string name="support_chat_a11y_download">Download</string>
     <string name="support_chat_error_load_history">Failed to load chat history.</string>
+    <string name="supportchat_chat_error_history_title">Failed to load the conversation</string>
     <string name="support_chat_status_sending">Sending</string>
     <string name="support_chat_status_sent">Sent</string>
     <string name="support_chat_status_read">Read</string>
