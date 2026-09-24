@@ -21,6 +21,8 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+        // обязательно для модулей с compose resources (см. docs/build.md)
+        androidResources.enable = true
     }
 
     listOf(
@@ -57,6 +59,7 @@ kotlin {
 
             // Kotlinx
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
 
             // Логирование: Logger — часть protected API BaseViewModel, поэтому api
             api(libs.kermit)
@@ -79,4 +82,10 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+// Общие строковые ресурсы (см. docs/localization.md, правило 2)
+compose.resources {
+    publicResClass = false
+    generateResClass = always
 }

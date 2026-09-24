@@ -33,10 +33,10 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_attach_file
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_attach_photo
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_send
-import specmp.feature.support_chat.generated.resources.support_chat_label_message_hint
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_attach_file
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_attach_photo
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_send
+import specmp.feature.support_chat.generated.resources.supportchat_chat_label_message_hint
 
 @Composable
 internal fun SupportChatComposer(
@@ -77,14 +77,14 @@ internal fun SupportChatComposer(
             CmpIconButton(
                 onClick = onAttachFile,
                 icon = CmpIcons.AttachFile,
-                contentDescription = stringResource(Res.string.support_chat_a11y_attach_file),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_file),
                 enabled = canSend,
             )
 
             CmpIconButton(
                 onClick = onAttachPhoto,
                 icon = CmpIcons.Image,
-                contentDescription = stringResource(Res.string.support_chat_a11y_attach_photo),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_photo),
                 enabled = canSend,
             )
 
@@ -106,7 +106,7 @@ internal fun SupportChatComposer(
                             false
                         }
                     },
-                placeholder = stringResource(Res.string.support_chat_label_message_hint),
+                placeholder = stringResource(Res.string.supportchat_chat_label_message_hint),
                 enabled = canSend,
                 singleLine = false,
                 maxLines = 4,
@@ -174,7 +174,7 @@ private fun SendButton(
         CmpBox(contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = CmpIcons.Send,
-                contentDescription = stringResource(Res.string.support_chat_a11y_send),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_send),
             )
         }
     }

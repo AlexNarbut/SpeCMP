@@ -43,13 +43,18 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_download
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_retry
-import specmp.feature.support_chat.generated.resources.support_chat_status_failed
-import specmp.feature.support_chat.generated.resources.support_chat_status_pending
-import specmp.feature.support_chat.generated.resources.support_chat_status_read
-import specmp.feature.support_chat.generated.resources.support_chat_status_sent
-import specmp.feature.support_chat.generated.resources.support_chat_status_sending
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_download
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_retry
+import specmp.feature.support_chat.generated.resources.supportchat_chat_label_document_meta
+import specmp.feature.support_chat.generated.resources.supportchat_chat_size_bytes
+import specmp.feature.support_chat.generated.resources.supportchat_chat_size_gb
+import specmp.feature.support_chat.generated.resources.supportchat_chat_size_kb
+import specmp.feature.support_chat.generated.resources.supportchat_chat_size_mb
+import specmp.feature.support_chat.generated.resources.supportchat_chat_status_failed
+import specmp.feature.support_chat.generated.resources.supportchat_chat_status_pending
+import specmp.feature.support_chat.generated.resources.supportchat_chat_status_read
+import specmp.feature.support_chat.generated.resources.supportchat_chat_status_sent
+import specmp.feature.support_chat.generated.resources.supportchat_chat_status_sending
 
 @Composable
 internal fun SupportChatMessageBubble(
@@ -89,7 +94,7 @@ internal fun SupportChatMessageBubble(
                     .then(
                         if (isFailedOutgoing) {
                             Modifier.clickable(
-                                onClickLabel = stringResource(Res.string.support_chat_a11y_retry),
+                                onClickLabel = stringResource(Res.string.supportchat_chat_a11y_retry),
                             ) { onRetry(message.id) }
                         } else {
                             Modifier
@@ -190,31 +195,31 @@ private fun MessageStatusIcon(
         SupportChatMessageStatus.Sending -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Res.string.support_chat_status_sending),
+            stringResource(Res.string.supportchat_chat_status_sending),
         )
 
         SupportChatMessageStatus.Sent -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Res.string.support_chat_status_sent),
+            stringResource(Res.string.supportchat_chat_status_sent),
         )
 
         SupportChatMessageStatus.Read -> Triple(
             CmpIcons.DoneAll,
             readColor,
-            stringResource(Res.string.support_chat_status_read),
+            stringResource(Res.string.supportchat_chat_status_read),
         )
 
         SupportChatMessageStatus.Pending -> Triple(
             CmpIcons.Schedule,
             metaColor,
-            stringResource(Res.string.support_chat_status_pending),
+            stringResource(Res.string.supportchat_chat_status_pending),
         )
 
         SupportChatMessageStatus.Failed -> Triple(
             CmpIcons.Warning,
             errorColor,
-            stringResource(Res.string.support_chat_status_failed),
+            stringResource(Res.string.supportchat_chat_status_failed),
         )
     }
 
@@ -324,7 +329,7 @@ private fun SupportChatDocumentAttachment(
             CmpIconButton(
                 onClick = downloadAction,
                 icon = CmpIcons.Download,
-                contentDescription = stringResource(Res.string.support_chat_a11y_download),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_download),
                 tint = contentColor,
             )
         }
@@ -398,7 +403,7 @@ private fun SupportChatImageAttachment(
                         CmpIconButton(
                             onClick = downloadAction,
                             icon = CmpIcons.Download,
-                            contentDescription = stringResource(Res.string.support_chat_a11y_download),
+                            contentDescription = stringResource(Res.string.supportchat_chat_a11y_download),
                             modifier = Modifier.size(36.dp),
                         )
                     }
@@ -440,6 +445,7 @@ private fun isImage(message: SupportChatMessage): Boolean {
     return message.attachment is SupportChatAttachment.Image
 }
 
+@Composable
 private fun documentMetadata(
     name: String,
     mimeType: String?,
@@ -452,25 +458,38 @@ private fun documentMetadata(
             ?.uppercase()
             .orEmpty()
     }
-    return listOfNotNull(
-        sizeBytes?.let(::formatFileSize),
-        type.takeIf { it.isNotBlank() },
-    ).joinToString(separator = " · ")
+    val size = sizeBytes?.let { formatFileSize(it) }
+    // Разделитель — часть перевода (правило 6 localization.md); когда известна
+    // только одна часть, разделителя нет — это разные ветки, а не joinToString.
+    return when {
+        size != null && type.isNotBlank() ->
+            stringResource(Res.string.supportchat_chat_label_document_meta, size, type)
+        size != null -> size
+        else -> type
+    }
 }
 
+// Единицы и десятичный разделитель — часть перевода: шаблон `%1$s.%2$s MB`
+// в EN и `%1$s,%2$s МБ` в RU лежат в ресурсах (U-22), в Kotlin только арифметика.
+@Composable
 private fun formatFileSize(sizeBytes: Long): String {
     val kilobyte = 1_024L
     val megabyte = kilobyte * 1_024L
     val gigabyte = megabyte * 1_024L
     return when {
-        sizeBytes < kilobyte -> "$sizeBytes B"
-        sizeBytes < megabyte -> "${sizeBytes / kilobyte} KB"
-        sizeBytes < gigabyte -> formatOneDecimal(sizeBytes, megabyte, "MB")
-        else -> formatOneDecimal(sizeBytes, gigabyte, "GB")
+        sizeBytes < kilobyte -> stringResource(Res.string.supportchat_chat_size_bytes, sizeBytes)
+        sizeBytes < megabyte -> stringResource(Res.string.supportchat_chat_size_kb, sizeBytes / kilobyte)
+        sizeBytes < gigabyte -> formatWithTenths(sizeBytes, megabyte, Res.string.supportchat_chat_size_mb)
+        else -> formatWithTenths(sizeBytes, gigabyte, Res.string.supportchat_chat_size_gb)
     }
 }
 
-private fun formatOneDecimal(value: Long, unit: Long, suffix: String): String {
+@Composable
+private fun formatWithTenths(
+    value: Long,
+    unit: Long,
+    resource: org.jetbrains.compose.resources.StringResource,
+): String {
     val tenths = value * 10L / unit
-    return "${tenths / 10L}.${tenths % 10L} $suffix"
+    return stringResource(resource, tenths / 10L, tenths % 10L)
 }

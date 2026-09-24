@@ -19,9 +19,9 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_btn_retry
-import specmp.feature.support_chat.generated.resources.support_chat_offline_subtitle
-import specmp.feature.support_chat.generated.resources.support_chat_offline_title
+import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
+import specmp.feature.support_chat.generated.resources.supportchat_chat_banner_offline_subtitle
+import specmp.feature.support_chat.generated.resources.supportchat_chat_banner_offline_title
 
 @Composable
 internal fun SupportChatOfflineBanner(
@@ -47,14 +47,14 @@ internal fun SupportChatOfflineBanner(
 
             CmpColumn(modifier = Modifier.weight(1f)) {
                 CmpText(
-                    text = stringResource(Res.string.support_chat_offline_title),
+                    text = stringResource(Res.string.supportchat_chat_banner_offline_title),
                     fontWeight = FontWeight.Medium,
                 )
-                CmpText(text = stringResource(Res.string.support_chat_offline_subtitle))
+                CmpText(text = stringResource(Res.string.supportchat_chat_banner_offline_subtitle))
             }
 
             CmpButton(
-                text = stringResource(Res.string.support_chat_btn_retry),
+                text = stringResource(Res.string.supportchat_common_btn_retry),
                 onClick = onRetry,
             )
         }

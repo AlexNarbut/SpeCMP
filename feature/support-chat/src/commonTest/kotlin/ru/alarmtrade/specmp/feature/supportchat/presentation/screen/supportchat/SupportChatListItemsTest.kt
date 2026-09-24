@@ -22,9 +22,7 @@ class SupportChatListItemsTest {
                 message(id = "second-early", time = LocalDateTime(2024, 5, 2, 9, 0)),
                 message(id = "second-late", time = LocalDateTime(2024, 5, 2, 12, 0)),
             ),
-            todayLabel = "Today",
-            yesterdayLabel = "Yesterday",
-            monthLabels = List(12) { "Month" },
+            dateLabeler = { date -> "label:$date" },
         )
 
         val types = items.map {

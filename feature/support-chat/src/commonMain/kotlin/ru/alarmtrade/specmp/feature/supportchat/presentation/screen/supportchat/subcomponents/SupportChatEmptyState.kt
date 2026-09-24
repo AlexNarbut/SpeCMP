@@ -30,10 +30,10 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_chip_documents
-import specmp.feature.support_chat.generated.resources.support_chat_chip_installation_photos
-import specmp.feature.support_chat.generated.resources.support_chat_msg_empty_subtitle
-import specmp.feature.support_chat.generated.resources.support_chat_msg_empty_title
+import specmp.feature.support_chat.generated.resources.supportchat_chat_chip_documents
+import specmp.feature.support_chat.generated.resources.supportchat_chat_chip_installation_photos
+import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empty_subtitle
+import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empty_title
 
 @Composable
 internal fun SupportChatEmptyState(
@@ -52,13 +52,13 @@ internal fun SupportChatEmptyState(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpText(
-                text = stringResource(Res.string.support_chat_msg_empty_title),
+                text = stringResource(Res.string.supportchat_chat_msg_empty_title),
                 style = CmpTextStyle.Title,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
             )
             CmpText(
-                text = stringResource(Res.string.support_chat_msg_empty_subtitle),
+                text = stringResource(Res.string.supportchat_chat_msg_empty_subtitle),
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(max = 340.dp),
@@ -71,12 +71,12 @@ internal fun SupportChatEmptyState(
         ) {
             EmptyHintChip(
                 icon = CmpIcons.Description,
-                label = stringResource(Res.string.support_chat_chip_documents),
+                label = stringResource(Res.string.supportchat_chat_chip_documents),
                 colors = colors,
             )
             EmptyHintChip(
                 icon = CmpIcons.Image,
-                label = stringResource(Res.string.support_chat_chip_installation_photos),
+                label = stringResource(Res.string.supportchat_chat_chip_installation_photos),
                 colors = colors,
             )
         }

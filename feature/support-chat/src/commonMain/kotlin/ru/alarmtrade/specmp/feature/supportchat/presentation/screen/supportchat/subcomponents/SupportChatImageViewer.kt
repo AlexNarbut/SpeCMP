@@ -17,7 +17,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_close_viewer
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_close_viewer
 
 @Composable
 internal fun SupportChatImageViewer(
@@ -43,7 +43,7 @@ internal fun SupportChatImageViewer(
             CmpIconButton(
                 onClick = onDismiss,
                 icon = CmpIcons.Close,
-                contentDescription = stringResource(Res.string.support_chat_a11y_close_viewer),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_close_viewer),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(16.dp)

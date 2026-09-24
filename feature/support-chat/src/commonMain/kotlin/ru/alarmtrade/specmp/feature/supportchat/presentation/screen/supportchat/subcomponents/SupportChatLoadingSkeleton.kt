@@ -21,12 +21,15 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 
+private const val SKELETON_TRANSITION_LABEL = "support_chat_skeleton"
+private const val SKELETON_ALPHA_LABEL = "support_chat_skeleton_alpha"
+
 @Composable
 internal fun SupportChatLoadingSkeleton(
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
 ) {
-    val transition = rememberInfiniteTransition(label = "support_chat_skeleton")
+    val transition = rememberInfiniteTransition(label = SKELETON_TRANSITION_LABEL)
     val alpha by transition.animateFloat(
         initialValue = 0.45f,
         targetValue = 0.85f,
@@ -34,7 +37,7 @@ internal fun SupportChatLoadingSkeleton(
             animation = tween(durationMillis = 900),
             repeatMode = RepeatMode.Reverse,
         ),
-        label = "support_chat_skeleton_alpha",
+        label = SKELETON_ALPHA_LABEL,
     )
     val skeletonColor = colors.surfaceVariant.copy(alpha = alpha)
 

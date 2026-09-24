@@ -19,7 +19,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_remove_attachment
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_remove_attachment
 
 @Composable
 internal fun SupportChatPendingAttachmentChip(
@@ -59,7 +59,7 @@ internal fun SupportChatPendingAttachmentChip(
             CmpIconButton(
                 onClick = onRemove,
                 icon = CmpIcons.Close,
-                contentDescription = stringResource(Res.string.support_chat_a11y_remove_attachment),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_remove_attachment),
             )
         }
     }

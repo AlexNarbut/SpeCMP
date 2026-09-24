@@ -35,6 +35,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.format.rememberCmpDateLabeler
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -65,27 +66,13 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatTypingIndicator
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatWallpaper
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_back
-import specmp.feature.support_chat.generated.resources.support_chat_btn_retry
-import specmp.feature.support_chat.generated.resources.support_chat_download_failed
-import specmp.feature.support_chat.generated.resources.support_chat_download_success
-import specmp.feature.support_chat.generated.resources.support_chat_error_load_history
-import specmp.feature.support_chat.generated.resources.support_chat_error_send
-import specmp.feature.support_chat.generated.resources.support_chat_month_april
-import specmp.feature.support_chat.generated.resources.support_chat_month_august
-import specmp.feature.support_chat.generated.resources.support_chat_month_december
-import specmp.feature.support_chat.generated.resources.support_chat_month_february
-import specmp.feature.support_chat.generated.resources.support_chat_month_january
-import specmp.feature.support_chat.generated.resources.support_chat_month_july
-import specmp.feature.support_chat.generated.resources.support_chat_month_june
-import specmp.feature.support_chat.generated.resources.support_chat_month_march
-import specmp.feature.support_chat.generated.resources.support_chat_month_may
-import specmp.feature.support_chat.generated.resources.support_chat_month_november
-import specmp.feature.support_chat.generated.resources.support_chat_month_october
-import specmp.feature.support_chat.generated.resources.support_chat_month_september
-import specmp.feature.support_chat.generated.resources.support_chat_title_screen
-import specmp.feature.support_chat.generated.resources.support_chat_today
-import specmp.feature.support_chat.generated.resources.support_chat_yesterday
+import specmp.feature.support_chat.generated.resources.supportchat_common_a11y_back
+import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
+import specmp.feature.support_chat.generated.resources.supportchat_chat_snack_download_failed
+import specmp.feature.support_chat.generated.resources.supportchat_chat_snack_download_success
+import specmp.feature.support_chat.generated.resources.supportchat_chat_error_load_history
+import specmp.feature.support_chat.generated.resources.supportchat_chat_error_send
+import specmp.feature.support_chat.generated.resources.supportchat_chat_title_screen
 
 @Composable
 fun SupportChatScreen(
@@ -95,14 +82,12 @@ fun SupportChatScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
-    val todayLabel = stringResource(Res.string.support_chat_today)
-    val yesterdayLabel = stringResource(Res.string.support_chat_yesterday)
     val snackbarHostState = rememberCmpSnackbarHostState()
-    val sendFailedText = stringResource(Res.string.support_chat_error_send)
-    val historyLoadFailedText = stringResource(Res.string.support_chat_error_load_history)
-    val downloadSuccessText = stringResource(Res.string.support_chat_download_success)
-    val downloadFailedText = stringResource(Res.string.support_chat_download_failed)
-    val retryLabel = stringResource(Res.string.support_chat_btn_retry)
+    val sendFailedText = stringResource(Res.string.supportchat_chat_error_send)
+    val historyLoadFailedText = stringResource(Res.string.supportchat_chat_error_load_history)
+    val downloadSuccessText = stringResource(Res.string.supportchat_chat_snack_download_success)
+    val downloadFailedText = stringResource(Res.string.supportchat_chat_snack_download_failed)
+    val retryLabel = stringResource(Res.string.supportchat_common_btn_retry)
 
     effect.collectSideEffect { event ->
         when (event) {
@@ -115,20 +100,7 @@ fun SupportChatScreen(
             SupportChatEffect.AttachmentDownloadFailed -> snackbarHostState.showSnackbar(downloadFailedText)
         }
     }
-    val monthLabels = listOf(
-        stringResource(Res.string.support_chat_month_january),
-        stringResource(Res.string.support_chat_month_february),
-        stringResource(Res.string.support_chat_month_march),
-        stringResource(Res.string.support_chat_month_april),
-        stringResource(Res.string.support_chat_month_may),
-        stringResource(Res.string.support_chat_month_june),
-        stringResource(Res.string.support_chat_month_july),
-        stringResource(Res.string.support_chat_month_august),
-        stringResource(Res.string.support_chat_month_september),
-        stringResource(Res.string.support_chat_month_october),
-        stringResource(Res.string.support_chat_month_november),
-        stringResource(Res.string.support_chat_month_december),
-    )
+    val dateLabeler = rememberCmpDateLabeler()
     var viewerImageSource by remember { mutableStateOf<String?>(null) }
     // Черновик — локальное UI-состояние (U-11): каждый символ не рекомпозирует
     // весь экран через state ViewModel. В VM текст попадает только в момент отправки.
@@ -150,9 +122,7 @@ fun SupportChatScreen(
             onDraftChange = { draftText = it },
             onSend = { actions.onSend(draftText); draftText = "" },
             actions = actions,
-            monthLabels = monthLabels,
-            todayLabel = todayLabel,
-            yesterdayLabel = yesterdayLabel,
+            dateLabeler = dateLabeler,
             onImageClick = { viewerImageSource = it },
         )
 
@@ -175,9 +145,7 @@ private fun SupportChatScaffold(
     onDraftChange: (String) -> Unit,
     onSend: (String) -> Unit,
     actions: SupportChatActions,
-    monthLabels: List<String>,
-    todayLabel: String,
-    yesterdayLabel: String,
+    dateLabeler: (LocalDate) -> String,
     onImageClick: (String) -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -219,13 +187,13 @@ private fun SupportChatScaffold(
         topBar = {
             CmpTopAppBar(
                 title = {
-                    CmpText(text = stringResource(Res.string.support_chat_title_screen))
+                    CmpText(text = stringResource(Res.string.supportchat_chat_title_screen))
                 },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.support_chat_a11y_back),
+                        contentDescription = stringResource(Res.string.supportchat_common_a11y_back),
                     )
                 },
                 // Выравнивание заголовка — свойство раскладки, а не платформы
@@ -248,9 +216,7 @@ private fun SupportChatScaffold(
             onDraftChange = onDraftChange,
             onSend = onSend,
             actions = actions,
-            monthLabels = monthLabels,
-            todayLabel = todayLabel,
-            yesterdayLabel = yesterdayLabel,
+            dateLabeler = dateLabeler,
             onImageClick = onImageClick,
         )
     }
@@ -267,9 +233,7 @@ private fun SupportChatBody(
     onDraftChange: (String) -> Unit,
     onSend: (String) -> Unit,
     actions: SupportChatActions,
-    monthLabels: List<String>,
-    todayLabel: String,
-    yesterdayLabel: String,
+    dateLabeler: (LocalDate) -> String,
     onImageClick: (String) -> Unit,
 ) {
     val columnMaxWidth = when (layoutMode) {
@@ -285,12 +249,10 @@ private fun SupportChatBody(
     val current = state.value
     // Список мемоизируется только по сообщениям и меткам: индикатор набора —
     // отдельный item списка (index 0 при reverseLayout), не инвалидирует ленту (U-7).
-    val listItems = remember(current.messages, todayLabel, yesterdayLabel, monthLabels) {
+    val listItems = remember(current.messages, dateLabeler) {
         buildListItems(
             messages = current.messages,
-            todayLabel = todayLabel,
-            yesterdayLabel = yesterdayLabel,
-            monthLabels = monthLabels,
+            dateLabeler = dateLabeler,
         )
     }
 
@@ -459,14 +421,9 @@ internal sealed interface SupportChatListItem {
  */
 internal fun buildListItems(
     messages: List<SupportChatMessage>,
-    todayLabel: String,
-    yesterdayLabel: String,
-    monthLabels: List<String>,
+    dateLabeler: (LocalDate) -> String,
 ): ImmutableList<SupportChatListItem> {
     val result = mutableListOf<SupportChatListItem>()
-
-    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-    val yesterday = now.minus(DatePeriod(days = 1))
 
     var groupDate: LocalDate? = null
     messages.asReversed().forEach { message ->
@@ -477,7 +434,7 @@ internal fun buildListItems(
             result.add(
                 SupportChatListItem.DateDivider(
                     date = closedGroupDate,
-                    label = dateLabel(closedGroupDate, now, yesterday, todayLabel, yesterdayLabel, monthLabels),
+                    label = dateLabeler(closedGroupDate),
                 )
             )
         }
@@ -488,46 +445,12 @@ internal fun buildListItems(
         result.add(
             SupportChatListItem.DateDivider(
                 date = it,
-                label = dateLabel(it, now, yesterday, todayLabel, yesterdayLabel, monthLabels),
+                label = dateLabeler(it),
             )
         )
     }
 
     return result.toPersistentList()
-}
-
-private fun dateLabel(
-    date: LocalDate,
-    today: LocalDate,
-    yesterday: LocalDate,
-    todayLabel: String,
-    yesterdayLabel: String,
-    monthLabels: List<String>,
-): String {
-    return when (date) {
-        today -> todayLabel
-        yesterday -> yesterdayLabel
-        else -> formatDate(date, monthLabels, today.year)
-    }
-}
-
-private fun formatDate(
-    date: LocalDate,
-    monthLabels: List<String>,
-    currentYear: Int,
-): String {
-    val month = monthLabels.getOrNull(date.monthNumber - 1).orEmpty()
-    return buildString {
-        append(date.dayOfMonth)
-        if (month.isNotBlank()) {
-            append(' ')
-            append(month)
-        }
-        if (date.year != currentYear) {
-            append(' ')
-            append(date.year)
-        }
-    }
 }
 
 private enum class SupportChatLayoutMode {

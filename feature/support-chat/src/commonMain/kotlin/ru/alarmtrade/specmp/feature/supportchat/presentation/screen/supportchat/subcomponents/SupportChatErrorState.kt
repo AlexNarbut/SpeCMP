@@ -18,7 +18,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_btn_retry
+import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
 import specmp.feature.support_chat.generated.resources.supportchat_chat_error_history_title
 
 /**
@@ -56,7 +56,7 @@ internal fun SupportChatErrorState(
             )
 
             CmpButton(
-                text = stringResource(Res.string.support_chat_btn_retry),
+                text = stringResource(Res.string.supportchat_common_btn_retry),
                 onClick = onRetry,
             )
         }
