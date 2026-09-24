@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
@@ -488,7 +489,7 @@ private fun formatFileSize(sizeBytes: Long): String {
 private fun formatWithTenths(
     value: Long,
     unit: Long,
-    resource: org.jetbrains.compose.resources.StringResource,
+    resource: StringResource,
 ): String {
     val tenths = value * 10L / unit
     return stringResource(resource, tenths / 10L, tenths % 10L)

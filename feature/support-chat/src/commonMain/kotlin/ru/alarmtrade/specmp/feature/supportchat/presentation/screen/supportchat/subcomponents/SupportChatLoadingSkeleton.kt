@@ -17,6 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -65,9 +67,9 @@ internal fun SupportChatLoadingSkeleton(
 @Composable
 private fun SkeletonBubble(
     widthFraction: Float,
-    height: androidx.compose.ui.unit.Dp,
+    height: Dp,
     isMine: Boolean,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
 ) {
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
