@@ -6,6 +6,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
@@ -37,8 +38,9 @@ fun SupportChatEntry(
     val state = viewModel.state.collectAsState()
 
     SupportChatScreen(
-            state = state.value,
-            effect = viewModel.effect,
+        state = state,
+        effect = viewModel.effect,
+        actions = SupportChatActions(
             onBack = onBack,
             onAttachFile = {
                 filePicker.launchDocument { result ->
@@ -60,7 +62,8 @@ fun SupportChatEntry(
             onConnectionRetry = viewModel::onConnectionRetry,
             onHistoryRetry = viewModel::onHistoryRetry,
             onLoadMore = viewModel::onLoadMore,
-            onMessageVisible = viewModel::onMessageVisible,
+            onMessagesVisible = viewModel::onMessagesVisible,
             onDownloadAttachment = viewModel::onDownloadAttachment,
-        )
+        ),
+    )
 }

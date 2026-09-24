@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -52,9 +52,8 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.isSupportChatDesktopPlatform
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatComposer
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatDateDivider
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatEmptyState
@@ -84,30 +83,18 @@ import specmp.feature.support_chat.generated.resources.support_chat_month_may
 import specmp.feature.support_chat.generated.resources.support_chat_month_november
 import specmp.feature.support_chat.generated.resources.support_chat_month_october
 import specmp.feature.support_chat.generated.resources.support_chat_month_september
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_history_title
-import specmp.feature.support_chat.generated.resources.support_chat_today
 import specmp.feature.support_chat.generated.resources.support_chat_title_screen
+import specmp.feature.support_chat.generated.resources.support_chat_today
 import specmp.feature.support_chat.generated.resources.support_chat_yesterday
 
 @Composable
 fun SupportChatScreen(
-    state: SupportChatScreenState,
+    state: State<SupportChatScreenState>,
     effect: SharedFlow<SupportChatEffect>,
-    onBack: () -> Unit,
-    onAttachFile: () -> Unit,
-    onAttachPhoto: () -> Unit,
-    onRemoveAttachment: (String) -> Unit,
-    onSend: (String) -> Unit,
-    onRetry: (String) -> Unit,
-    onConnectionRetry: () -> Unit,
-    onHistoryRetry: () -> Unit,
-    onLoadMore: () -> Unit,
-    onMessageVisible: (String) -> Unit,
-    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
+    actions: SupportChatActions,
     modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
-    val isDesktop = isSupportChatDesktopPlatform()
     val todayLabel = stringResource(Res.string.support_chat_today)
     val yesterdayLabel = stringResource(Res.string.support_chat_yesterday)
     val snackbarHostState = rememberCmpSnackbarHostState()
@@ -121,7 +108,7 @@ fun SupportChatScreen(
         when (event) {
             is SupportChatEffect.MessageSendFailed -> {
                 val result = snackbarHostState.showSnackbar(sendFailedText, actionLabel = retryLabel)
-                if (result == CmpSnackbarResult.ActionPerformed) onRetry(event.messageId)
+                if (result == CmpSnackbarResult.ActionPerformed) actions.onRetry(event.messageId)
             }
             SupportChatEffect.HistoryLoadFailed -> snackbarHostState.showSnackbar(historyLoadFailedText)
             is SupportChatEffect.AttachmentDownloaded -> snackbarHostState.showSnackbar(downloadSuccessText)
@@ -143,9 +130,8 @@ fun SupportChatScreen(
         stringResource(Res.string.support_chat_month_december),
     )
     var viewerImageSource by remember { mutableStateOf<String?>(null) }
-    // Черновик — локальное UI-состояние (U-11): каждый символ не должен
-    // рекомпозировать весь экран через state ViewModel. В VM текст попадает
-    // только в момент отправки.
+    // Черновик — локальное UI-состояние (U-11): каждый символ не рекомпозирует
+    // весь экран через state ViewModel. В VM текст попадает только в момент отправки.
     var draftText by rememberSaveable { mutableStateOf("") }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -155,37 +141,19 @@ fun SupportChatScreen(
             else -> SupportChatLayoutMode.Compact
         }
 
-        val listItems = remember(state.messages, state.typingAuthor, todayLabel, yesterdayLabel, monthLabels) {
-            buildListItems(
-                messages = state.messages,
-                todayLabel = todayLabel,
-                yesterdayLabel = yesterdayLabel,
-                monthLabels = monthLabels,
-                typingAuthor = state.typingAuthor,
-            )
-        }
-
         SupportChatScaffold(
             state = state,
             colors = colors,
             layoutMode = layoutMode,
-            isDesktop = isDesktop,
-            listItems = listItems,
             snackbarHostState = snackbarHostState,
-            onBack = onBack,
-            onDraftChange = { draftText = it },
-            onAttachFile = onAttachFile,
-            onAttachPhoto = onAttachPhoto,
-            onRemoveAttachment = onRemoveAttachment,
-            onSend = { onSend(draftText); draftText = "" },
             draftText = draftText,
-            onRetry = onRetry,
-            onConnectionRetry = onConnectionRetry,
-            onHistoryRetry = onHistoryRetry,
-            onLoadMore = onLoadMore,
-            onMessageVisible = onMessageVisible,
+            onDraftChange = { draftText = it },
+            onSend = { actions.onSend(draftText); draftText = "" },
+            actions = actions,
+            monthLabels = monthLabels,
+            todayLabel = todayLabel,
+            yesterdayLabel = yesterdayLabel,
             onImageClick = { viewerImageSource = it },
-            onDownloadAttachment = onDownloadAttachment,
         )
 
         viewerImageSource?.let { source ->
@@ -199,47 +167,49 @@ fun SupportChatScreen(
 
 @Composable
 private fun SupportChatScaffold(
-    state: SupportChatScreenState,
+    state: State<SupportChatScreenState>,
     colors: CmpThemeColors,
     layoutMode: SupportChatLayoutMode,
-    isDesktop: Boolean,
-    listItems: ImmutableList<SupportChatListItem>,
     snackbarHostState: CmpSnackbarHostState,
-    onBack: () -> Unit,
-    onDraftChange: (String) -> Unit,
-    onAttachFile: () -> Unit,
-    onAttachPhoto: () -> Unit,
-    onRemoveAttachment: (String) -> Unit,
-    onSend: () -> Unit,
     draftText: String,
-    onRetry: (String) -> Unit,
-    onConnectionRetry: () -> Unit,
-    onHistoryRetry: () -> Unit,
-    onLoadMore: () -> Unit,
-    onMessageVisible: (String) -> Unit,
+    onDraftChange: (String) -> Unit,
+    onSend: (String) -> Unit,
+    actions: SupportChatActions,
+    monthLabels: List<String>,
+    todayLabel: String,
+    yesterdayLabel: String,
     onImageClick: (String) -> Unit,
-    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
 ) {
     val listState = rememberLazyListState()
 
-    LaunchedEffect(state.messages.lastOrNull()?.id, state.typingAuthor) {
-        if (listItems.isNotEmpty()) {
-            listState.animateScrollToItem(listItems.size - 1)
-        }
+    // Пагинация: reverseLayout — «верх истории» это конец списка, подгрузка
+    // старой страницы срабатывает, когда дальше скроллить некуда.
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.canScrollForward }
+            .distinctUntilChanged()
+            .collect { canScrollForward ->
+                val current = state.value
+                if (!canScrollForward &&
+                    current.hasMoreHistory &&
+                    !current.isLoadingMore &&
+                    current.messages.isNotEmpty()
+                ) {
+                    actions.onLoadMore()
+                }
+            }
     }
 
-    LaunchedEffect(listState, state.isLoadingMore, state.hasMoreHistory) {
-        snapshotFlow { listState.firstVisibleItemIndex to listState.canScrollBackward }
+    // Видимые сообщения — пачкой в VM (U-8): один вызов на изменение набора,
+    // батч + debounce сетевых read-отметок — в ViewModel (P-11).
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo.mapNotNull { info ->
+                (info.key as? String)?.removePrefix(MESSAGE_KEY_PREFIX)
+            }
+        }
             .distinctUntilChanged()
-            .collect { (index, canScrollBackward) ->
-                if (index == 0 &&
-                    canScrollBackward &&
-                    state.hasMoreHistory &&
-                    !state.isLoadingMore &&
-                    state.messages.isNotEmpty()
-                ) {
-                    onLoadMore()
-                }
+            .collect { messageIds ->
+                if (messageIds.isNotEmpty()) actions.onMessagesVisible(messageIds)
             }
     }
 
@@ -253,15 +223,17 @@ private fun SupportChatScaffold(
                 },
                 navigationIcon = {
                     CmpIconButton(
-                        onClick = onBack,
+                        onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
                         contentDescription = stringResource(Res.string.support_chat_a11y_back),
                     )
                 },
-                style = if (isDesktop) {
-                    CmpTopAppBarStyle.CenterAligned
-                } else {
+                // Выравнивание заголовка — свойство раскладки, а не платформы
+                // (U-15): на Android-планшете экран тоже широкий.
+                style = if (layoutMode == SupportChatLayoutMode.Compact) {
                     CmpTopAppBarStyle.Small
+                } else {
+                    CmpTopAppBarStyle.CenterAligned
                 },
             )
         },
@@ -270,47 +242,35 @@ private fun SupportChatScaffold(
             state = state,
             colors = colors,
             layoutMode = layoutMode,
-            listItems = listItems,
             listState = listState,
             paddingValues = paddingValues,
-            onDraftChange = onDraftChange,
-            onAttachFile = onAttachFile,
-            onAttachPhoto = onAttachPhoto,
-            onRemoveAttachment = onRemoveAttachment,
-            onSend = onSend,
             draftText = draftText,
-            onRetry = onRetry,
-            onConnectionRetry = onConnectionRetry,
-            onHistoryRetry = onHistoryRetry,
-            onLoadMore = onLoadMore,
-            onMessageVisible = onMessageVisible,
+            onDraftChange = onDraftChange,
+            onSend = onSend,
+            actions = actions,
+            monthLabels = monthLabels,
+            todayLabel = todayLabel,
+            yesterdayLabel = yesterdayLabel,
             onImageClick = onImageClick,
-            onDownloadAttachment = onDownloadAttachment,
         )
     }
 }
 
 @Composable
 private fun SupportChatBody(
-    state: SupportChatScreenState,
+    state: State<SupportChatScreenState>,
     colors: CmpThemeColors,
     layoutMode: SupportChatLayoutMode,
-    listItems: ImmutableList<SupportChatListItem>,
     listState: LazyListState,
     paddingValues: PaddingValues,
-    onDraftChange: (String) -> Unit,
     draftText: String,
-    onAttachFile: () -> Unit,
-    onAttachPhoto: () -> Unit,
-    onRemoveAttachment: (String) -> Unit,
-    onSend: () -> Unit,
-    onRetry: (String) -> Unit,
-    onConnectionRetry: () -> Unit,
-    onHistoryRetry: () -> Unit,
-    onLoadMore: () -> Unit,
-    onMessageVisible: (String) -> Unit,
+    onDraftChange: (String) -> Unit,
+    onSend: (String) -> Unit,
+    actions: SupportChatActions,
+    monthLabels: List<String>,
+    todayLabel: String,
+    yesterdayLabel: String,
     onImageClick: (String) -> Unit,
-    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
 ) {
     val columnMaxWidth = when (layoutMode) {
         SupportChatLayoutMode.Compact -> Dp.Unspecified
@@ -322,16 +282,16 @@ private fun SupportChatBody(
         SupportChatLayoutMode.Medium -> 24.dp
         SupportChatLayoutMode.Expanded -> 32.dp
     }
-
-    LaunchedEffect(listState, listItems) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.map { it.key } }
-            .distinctUntilChanged()
-            .collect { keys ->
-                keys.forEach { key ->
-                    val messageId = (key as? String)?.removePrefix(MESSAGE_KEY_PREFIX) ?: return@forEach
-                    onMessageVisible(messageId)
-                }
-            }
+    val current = state.value
+    // Список мемоизируется только по сообщениям и меткам: индикатор набора —
+    // отдельный item списка (index 0 при reverseLayout), не инвалидирует ленту (U-7).
+    val listItems = remember(current.messages, todayLabel, yesterdayLabel, monthLabels) {
+        buildListItems(
+            messages = current.messages,
+            todayLabel = todayLabel,
+            yesterdayLabel = yesterdayLabel,
+            monthLabels = monthLabels,
+        )
     }
 
     CmpColumn(
@@ -340,13 +300,13 @@ private fun SupportChatBody(
             .padding(paddingValues),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (state.isLoadingMore) {
+        if (current.isLoadingMore) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        if (state.isOffline) {
+        if (current.isOffline) {
             SupportChatOfflineBanner(
-                onRetry = onConnectionRetry,
+                onRetry = actions.onConnectionRetry,
                 colors = colors,
             )
         }
@@ -361,9 +321,8 @@ private fun SupportChatBody(
                 modifier = Modifier.fillMaxSize(),
             )
 
-            val historyState = state.history
-            when {
-                historyState is LCEState.None || historyState is LCEState.Loading -> {
+            when (val history = current.history) {
+                is LCEState.None, is LCEState.Loading -> {
                     CmpBox(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.TopCenter,
@@ -378,9 +337,9 @@ private fun SupportChatBody(
                     }
                 }
 
-                historyState is LCEState.Error -> {
+                is LCEState.Error -> {
                     SupportChatErrorState(
-                        onRetry = onHistoryRetry,
+                        onRetry = actions.onHistoryRetry,
                         colors = colors,
                         modifier = Modifier
                             .fillMaxSize()
@@ -388,10 +347,11 @@ private fun SupportChatBody(
                     )
                 }
 
-                else -> {
+                is LCEState.Content -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         state = listState,
+                        reverseLayout = true,
                         contentPadding = PaddingValues(
                             start = contentPadding,
                             end = contentPadding,
@@ -401,7 +361,7 @@ private fun SupportChatBody(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        if (state.messages.isEmpty()) {
+                        if (current.messages.isEmpty()) {
                             item {
                                 SupportChatEmptyState(
                                     colors = colors,
@@ -411,18 +371,26 @@ private fun SupportChatBody(
                                 )
                             }
                         } else {
+                            current.typingAuthor?.let { author ->
+                                item(key = "$TYPING_KEY_PREFIX$author") {
+                                    SupportChatTypingIndicator(
+                                        author = author,
+                                        colors = colors,
+                                        modifier = Modifier.widthIn(max = columnMaxWidth),
+                                    )
+                                }
+                            }
                             items(
                                 count = listItems.size,
                                 key = { index ->
                                     when (val item = listItems[index]) {
                                         is SupportChatListItem.DateDivider -> "${DATE_KEY_PREFIX}${item.date}"
                                         is SupportChatListItem.Message -> "${MESSAGE_KEY_PREFIX}${item.message.id}"
-                                        is SupportChatListItem.Typing -> "typing_${item.author}"
+                                        is SupportChatListItem.Typing -> "$TYPING_KEY_PREFIX${item.author}"
                                     }
                                 },
                             ) { index ->
-                                val item = listItems[index]
-                                when (item) {
+                                when (val item = listItems[index]) {
                                     is SupportChatListItem.DateDivider -> {
                                         SupportChatDateDivider(
                                             label = item.label,
@@ -435,21 +403,15 @@ private fun SupportChatBody(
                                             message = item.message,
                                             colors = colors,
                                             modifier = Modifier.widthIn(max = columnMaxWidth),
-                                            isDownloading = state.downloadingAttachmentId != null &&
-                                                state.downloadingAttachmentId == item.message.attachment?.id,
-                                            onRetry = onRetry,
+                                            isDownloading = current.downloadingAttachmentId != null &&
+                                                current.downloadingAttachmentId == item.message.attachment?.id,
+                                            onRetry = actions.onRetry,
                                             onImageClick = onImageClick,
-                                            onDownloadAttachment = onDownloadAttachment,
+                                            onDownloadAttachment = actions.onDownloadAttachment,
                                         )
                                     }
 
-                                    is SupportChatListItem.Typing -> {
-                                        SupportChatTypingIndicator(
-                                            author = item.author,
-                                            colors = colors,
-                                            modifier = Modifier.widthIn(max = columnMaxWidth),
-                                        )
-                                    }
+                                    is SupportChatListItem.Typing -> Unit // typing рисуется отдельным item сверху
                                 }
                             }
                         }
@@ -461,11 +423,11 @@ private fun SupportChatBody(
         SupportChatComposer(
             draftText = draftText,
             onDraftChange = onDraftChange,
-            onSend = onSend,
-            onAttachFile = onAttachFile,
-            onAttachPhoto = onAttachPhoto,
-            pendingAttachments = state.pendingAttachments,
-            onRemoveAttachment = onRemoveAttachment,
+            onSend = { onSend(draftText) },
+            onAttachFile = actions.onAttachFile,
+            onAttachPhoto = actions.onAttachPhoto,
+            pendingAttachments = current.pendingAttachments,
+            onRemoveAttachment = actions.onRemoveAttachment,
             colors = colors,
             // Композер ровно по ширине чат-колонки: те же боковые отступы,
             // что у LazyColumn (contentPadding), и тот же потолок ширины.
@@ -473,7 +435,7 @@ private fun SupportChatBody(
                 .fillMaxWidth()
                 .padding(horizontal = contentPadding, vertical = 8.dp)
                 .widthIn(max = columnMaxWidth),
-            enabled = !state.isOffline,
+            enabled = !current.isOffline,
         )
     }
 }
@@ -488,37 +450,65 @@ internal sealed interface SupportChatListItem {
     data class Typing(val author: String) : SupportChatListItem
 }
 
+/**
+ * Элементы списка в отображаемом порядке (newest-first; экран использует
+ * `reverseLayout = true`, поэтому index 0 — внизу, индикатор набора — первым).
+ *
+ * Порядок `messages` поддерживает ViewModel (инвариант state, P-16):
+ * здесь только разворот, без сортировки на каждом построении (U-7).
+ */
 internal fun buildListItems(
     messages: List<SupportChatMessage>,
     todayLabel: String,
     yesterdayLabel: String,
     monthLabels: List<String>,
-    typingAuthor: String?,
 ): ImmutableList<SupportChatListItem> {
     val result = mutableListOf<SupportChatListItem>()
+
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val yesterday = now.minus(DatePeriod(days = 1))
-    var lastDate: LocalDate? = null
 
-    messages.sortedBy { it.time }.forEach { message ->
+    var groupDate: LocalDate? = null
+    messages.asReversed().forEach { message ->
         val date = message.time.date
-        if (date != lastDate) {
-            val label = when (date) {
-                now -> todayLabel
-                yesterday -> yesterdayLabel
-                else -> formatDate(date, monthLabels, now.year)
-            }
-            result.add(SupportChatListItem.DateDivider(date = date, label = label))
-            lastDate = date
+        val closedGroupDate = groupDate
+        if (closedGroupDate != null && date != closedGroupDate) {
+            // Граница групп: разделитель закрывает более новую группу сверху.
+            result.add(
+                SupportChatListItem.DateDivider(
+                    date = closedGroupDate,
+                    label = dateLabel(closedGroupDate, now, yesterday, todayLabel, yesterdayLabel, monthLabels),
+                )
+            )
         }
         result.add(SupportChatListItem.Message(message))
+        groupDate = date
     }
-
-    typingAuthor?.let { author ->
-        result.add(SupportChatListItem.Typing(author))
+    groupDate?.let {
+        result.add(
+            SupportChatListItem.DateDivider(
+                date = it,
+                label = dateLabel(it, now, yesterday, todayLabel, yesterdayLabel, monthLabels),
+            )
+        )
     }
 
     return result.toPersistentList()
+}
+
+private fun dateLabel(
+    date: LocalDate,
+    today: LocalDate,
+    yesterday: LocalDate,
+    todayLabel: String,
+    yesterdayLabel: String,
+    monthLabels: List<String>,
+): String {
+    return when (date) {
+        today -> todayLabel
+        yesterday -> yesterdayLabel
+        else -> formatDate(date, monthLabels, today.year)
+    }
 }
 
 private fun formatDate(
@@ -548,3 +538,4 @@ private enum class SupportChatLayoutMode {
 
 private const val DATE_KEY_PREFIX = "date_"
 private const val MESSAGE_KEY_PREFIX = "msg_"
+private const val TYPING_KEY_PREFIX = "typing_"

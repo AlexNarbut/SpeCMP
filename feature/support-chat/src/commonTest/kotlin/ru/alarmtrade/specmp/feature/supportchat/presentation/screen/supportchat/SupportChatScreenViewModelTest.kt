@@ -114,11 +114,25 @@ class SupportChatScreenViewModelTest {
         repository.emitEvent(SupportChatEvent.MessageReceived(incoming))
         advanceUntilIdle()
 
-        viewModel.onMessageVisible("7")
+        viewModel.onMessagesVisible(listOf("7"))
         advanceUntilIdle()
 
         assertEquals(SupportChatMessageStatus.Read, viewModel.state.value.messages.first().status)
         assertEquals(listOf(listOf(7L)), repository.markedAsRead)
+    }
+
+    @Test
+    fun `visible incoming messages are marked as read in one batch call`() = runTest {
+        val viewModel = createViewModel()
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 7, text = "First")))
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 8, text = "Second")))
+        advanceUntilIdle()
+
+        // Два сообщения видимы в одном кадре скролла — один сетевой вызов (P-11).
+        viewModel.onMessagesVisible(listOf("7", "8"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(listOf(7L, 8L)), repository.markedAsRead)
     }
 
     @Test

@@ -39,6 +39,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEf
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class SupportChatScreenViewModel(
@@ -66,7 +67,12 @@ class SupportChatScreenViewModel(
     // писалось и из io-коллектора, и с main — отсюда росла потерянная отмена
     // и «повисший» индикатор.
     private var typingTimeoutJob: Job? = null
+
+    // Оба только main-confined: пишутся из интентов экрана (main) и сброса
+    // таймаута в viewModelScope.
     private val markedAsReadIds = mutableSetOf<Long>()
+    private val pendingReadIds = mutableSetOf<Long>()
+    private var readFlushJob: Job? = null
 
     // Клиентские id оптимистичных сообщений: метка времени + счётчик инстанса VM.
     // Контракт идентичности — в KDoc SupportChatMessage; уникальность держится
@@ -241,17 +247,48 @@ class SupportChatScreenViewModel(
         }
     }
 
-    fun onMessageVisible(messageId: String) {
-        val message = _state.value.messages.find { it.id == messageId } ?: return
-        val serverId = message.serverId ?: return
-        if (message.isMine || message.status == SupportChatMessageStatus.Read || serverId in markedAsReadIds) return
-
-        markedAsReadIds += serverId
-        safeLaunch {
-            val response = withContext(dispatchers.io) { repository.markMessagesAsRead(listOf(serverId)) }
-            if (response is Response.Error) {
-                markedAsReadIds -= serverId
+    fun onMessagesVisible(messageIds: List<String>) {
+        // Батчинг (P-11): скролл истории отдаёт пачки видимых id — помечаем
+        // прочитанными одним сетевым вызовом с debounce, а не запросом на
+        // каждое сообщение.
+        val eligibleServerIds = mutableListOf<Long>()
+        val idSet = messageIds.toHashSet()
+        _state.value.messages.forEach { message ->
+            val serverId = message.serverId ?: return@forEach
+            if (message.id in idSet &&
+                !message.isMine &&
+                message.status != SupportChatMessageStatus.Read &&
+                serverId !in markedAsReadIds &&
+                serverId !in pendingReadIds
+            ) {
+                eligibleServerIds += serverId
             }
+        }
+        if (eligibleServerIds.isEmpty()) return
+
+        pendingReadIds += eligibleServerIds
+        // Не перезапускаем таймер при непрерывном скролле: flush не реже
+        // одного раза за READ_FLUSH_DELAY.
+        if (readFlushJob?.isActive == true) return
+        readFlushJob = safeLaunch {
+            delay(READ_FLUSH_DELAY)
+            flushReadIds()
+        }
+    }
+
+    private suspend fun flushReadIds() {
+        val ids = pendingReadIds.toList()
+        if (ids.isEmpty()) return
+
+        // Отмечаем как «в работе» сразу, чтобы не отправить дубль; при ошибке
+        // возвращаем в буфер — следующая видимость доотправит.
+        markedAsReadIds += ids
+        pendingReadIds.clear()
+        val response = withContext(dispatchers.io) { repository.markMessagesAsRead(ids) }
+        if (response is Response.Error) {
+            logger.d(response.exception) { "Failed to mark messages as read" }
+            markedAsReadIds -= ids.toSet()
+            pendingReadIds += ids
         }
     }
 
@@ -625,6 +662,7 @@ class SupportChatScreenViewModel(
 
     private companion object {
         val TYPING_TIMEOUT = 5.seconds
+        val READ_FLUSH_DELAY = 300.milliseconds
     }
 
 }

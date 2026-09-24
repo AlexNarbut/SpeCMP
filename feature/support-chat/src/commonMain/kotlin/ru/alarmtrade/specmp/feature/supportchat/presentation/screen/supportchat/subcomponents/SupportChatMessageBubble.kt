@@ -44,6 +44,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.support_chat_a11y_download
+import specmp.feature.support_chat.generated.resources.support_chat_a11y_retry
 import specmp.feature.support_chat.generated.resources.support_chat_status_failed
 import specmp.feature.support_chat.generated.resources.support_chat_status_pending
 import specmp.feature.support_chat.generated.resources.support_chat_status_read
@@ -87,7 +88,9 @@ internal fun SupportChatMessageBubble(
                     .widthIn(max = bubbleMaxWidth)
                     .then(
                         if (isFailedOutgoing) {
-                            Modifier.clickable { onRetry(message.id) }
+                            Modifier.clickable(
+                                onClickLabel = stringResource(Res.string.support_chat_a11y_retry),
+                            ) { onRetry(message.id) }
                         } else {
                             Modifier
                         }

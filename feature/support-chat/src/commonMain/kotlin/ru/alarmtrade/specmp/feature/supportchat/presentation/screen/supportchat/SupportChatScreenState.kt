@@ -37,6 +37,10 @@ data class SupportChatScreenState(
 ) {
     /**
      * Сообщения текущей ленты (пусто в None/Loading/Error).
+     *
+     * Инвариант (P-16): порядок поддерживает ViewModel при каждой вставке —
+     * список всегда отсортирован по времени (старые → новые), UI сортировку
+     * на построении списка не делает.
      */
     val messages: List<SupportChatMessage>
         get() = (history as? LCEState.Content)?.content ?: emptyList()
