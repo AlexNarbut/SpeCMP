@@ -1,7 +1,9 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +35,9 @@ import kotlin.time.Duration.Companion.seconds
 class SupportChatScreenViewModel(
     private val repository: SupportChatRepository,
     private val dispatchers: AppDispatchers,
+    // Application-scoped скоуп: закрытие чат-сессии из onCleared должно пережить
+    // viewModelScope (уже отменён на момент onCleared).
+    private val appScope: CoroutineScope,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
@@ -41,44 +46,28 @@ class SupportChatScreenViewModel(
     private val _effect = sideEffectFlow<SupportChatEffect>()
     val effect: SharedFlow<SupportChatEffect> = _effect.asSharedFlow()
 
+    // Таймаут индикатора набора. Пишется только из коллектора событий
+    // (единственный последовательный контекст), поэтому гонок нет: раньше поле
+    // писалось и из io-коллектора, и с main — отсюда росла потерянная отмена
+    // и «повисший» индикатор.
     private var typingTimeoutJob: Job? = null
-    private var eventCollectionJob: Job? = null
-    private var reconnectJob: Job? = null
-    private var pendingRetryJob: Job? = null
-    private var pendingRetryRequested = false
-    private var sessionJob: Job? = null
     private val markedAsReadIds = mutableSetOf<Long>()
 
-    // ViewModel живёт в app-level ViewModelStore (у nav3 нет per-entry owner),
-    // поэтому сессия чата привязана к экрану явно: каждый вход начинает чистую
-    // сессию, чтобы данные прошлого аккаунта/открытия не протекали в новую.
-    fun onScreenOpened() {
-        sessionJob?.cancel()
-        reconnectJob?.cancel()
-        pendingRetryRequested = false
-        pendingRetryJob?.cancel()
-        typingTimeoutJob?.cancel()
-
-        _state.update { SupportChatScreenState() }
-        markedAsReadIds.clear()
-
+    init {
+        // Порядок обязателен: сначала подписка на hot flow событий, затем openChat —
+        // SDK публикует MessagesPage без replay прямо во время loadNextMessages().
         startEventCollection()
-        sessionJob = safeLaunch {
-            // Give the hot event flow collector a chance to subscribe before the SDK
-            // synchronously emits the first MessagesPage from loadNextMessages().
+        safeLaunch {
+            // Дать коллектору событий шанс подписаться до синхронного emit'а истории.
             yield()
             connectAndLoadInitialHistory()
         }
     }
 
-    fun onScreenDisposed() {
-        reconnectJob?.cancel()
-        pendingRetryRequested = false
-        pendingRetryJob?.cancel()
-        typingTimeoutJob?.cancel()
-        eventCollectionJob?.cancel()
-        sessionJob?.cancel()
-        sessionJob = safeLaunch {
+    // public для тестов: platform вызывает onCleared через ViewModelStore,
+    // unit-тесты — напрямую.
+    public override fun onCleared() {
+        appScope.launch {
             withContext(dispatchers.io) { repository.closeChat() }
         }
     }
@@ -223,20 +212,22 @@ class SupportChatScreenViewModel(
     }
 
     fun onConnectionRetry() {
-        if (reconnectJob?.isActive == true) return
-        reconnectJob = safeLaunch {
-            when (withContext(dispatchers.io) { repository.openChat() }) {
-                is Response.Success -> {
-                    _state.update { it.copy(isOffline = false) }
-                    if (_state.value.messages.isEmpty() &&
-                        _state.value.hasMoreHistory &&
-                        !_state.value.isLoadingHistory
-                    ) {
-                        loadHistoryPage()
+        // Повторный клик во время выполнения пропускаем: попытка одна.
+        safeLaunch {
+            executeWithProceedLock {
+                when (withContext(dispatchers.io) { repository.openChat() }) {
+                    is Response.Success -> {
+                        _state.update { it.copy(isOffline = false) }
+                        if (_state.value.messages.isEmpty() &&
+                            _state.value.hasMoreHistory &&
+                            !_state.value.isLoadingHistory
+                        ) {
+                            loadHistoryPage()
+                        }
+                        retryPendingMessages()
                     }
-                    retryPendingMessages()
+                    is Response.Error -> _state.update { it.copy(isOffline = true) }
                 }
-                is Response.Error -> _state.update { it.copy(isOffline = true) }
             }
         }
     }
@@ -256,8 +247,7 @@ class SupportChatScreenViewModel(
     }
 
     private fun startEventCollection() {
-        eventCollectionJob?.cancel()
-        eventCollectionJob = safeLaunch(dispatchers.io) {
+        safeLaunch(dispatchers.io) {
             repository.observeEvents()
                 .collect { response ->
                     when (response) {
@@ -279,11 +269,13 @@ class SupportChatScreenViewModel(
     }
 
     private fun handleEventError(error: Throwable) {
+        // Одноразовая реакция сознательная: на iOS обрыв сокета приходит потоком
+        // ошибок ~кГц (SDK мапит onFailure в State.Error), повторные вызовы
+        // closeChat только дёргают SDK. Не «чинить» без пересмотра обоснования.
         if (_state.value.isOffline) return
         logger.d(error) { "Chat event error, switching to offline" }
         _state.update { it.copy(isOffline = true) }
-        reconnectJob?.cancel()
-        reconnectJob = safeLaunch(dispatchers.io) { repository.closeChat() }
+        safeLaunch(dispatchers.io) { repository.closeChat() }
     }
 
     private fun handleConnectionChanged(isConnected: Boolean) {
@@ -291,8 +283,7 @@ class SupportChatScreenViewModel(
         if (isConnected) {
             retryPendingMessages()
         } else {
-            reconnectJob?.cancel()
-            reconnectJob = safeLaunch {
+            safeLaunch {
                 withContext(dispatchers.io) { repository.closeChat() }
             }
         }
@@ -432,12 +423,11 @@ class SupportChatScreenViewModel(
     }
 
     private fun retryPendingMessages() {
-        pendingRetryRequested = true
-        if (pendingRetryJob?.isActive == true) return
-
-        pendingRetryJob = safeLaunch {
-            while (pendingRetryRequested) {
-                pendingRetryRequested = false
+        // Сериализация через общий proceed-lock: вызовы, пришедшие во время
+        // выполнения, дождутся конца и выполнятся следом — повторный прогон
+        // по пустой очереди дёшев. Самодельный флаг-барьер не нужен.
+        safeLaunch {
+            executeWithProceedLock(needSkipAnother = false) {
                 retryPendingMessagesSequentially()
             }
         }

@@ -37,7 +37,7 @@ Nav3 back stack используется **внутри каждой зоны**:
 | `RegistrationRoute` | `RegistrationScreen` (`feature/login`) | `LoginNavGraph` |
 | `ForgotPasswordRoute` | `ForgotPasswordScreen` (`feature/login`) | `LoginNavGraph` |
 | `MainRoute` | `MainScreen` (`feature/main`) | `MainNavGraph` |
-| `SupportChatRoute` | `SupportChatScreen` (`feature/support-chat`) | `MainNavGraph` → `SupportChatNavGraph` |
+| `SupportChatRoute` | `SupportChatEntry` (`feature/support-chat`) | `MainNavGraph` |
 
 Из главного экрана в `SupportChatRoute` ведут карточки `Requests` и `TechSupportChat`. В drawer перехода в чат нет. `feature/main` только эмитит `MainNavigationTarget`; изменение app-level back stack остаётся ответственностью `composeApp`.
 
@@ -46,6 +46,10 @@ Nav3 back stack используется **внутри каждой зоны**:
 Фича с несколькими экранами обязана иметь **собственный nav3-граф** внутри модуля:
 `feature/<name>/.../presentation/navigation/<Name>NavGraph.kt` — свои `NavKey`-роуты,
 свой `SavedStateConfiguration`, `rememberNavBackStack` + `NavDisplay`.
+
+Фича с **одним экраном** граф не создаёт: её точка входа — публичный composable
+(`<Name>Entry`), который `composeApp` размещает как entry в корневом `NavDisplay`
+(как `SupportChatEntry`). При появлении второго экрана — вводить собственный граф.
 
 - `composeApp` подключает граф фичи целиком (один composable-вызов в слоте/entry),
   а не отдельные экраны фичи.
@@ -90,6 +94,14 @@ private fun MainNavGraph() {
                 backStack.removeLastOrNull()
             }
         },
+        entryDecorators = listOf(
+            // Дефолтный декоратор: без него не работает SavedStateHandle.
+            rememberSaveableStateHolderNavEntryDecorator(),
+            // Per-entry ViewModelStoreOwner: VM entry живёт ровно столько,
+            // сколько запись бэкстека (init/onCleared вместо DisposableEffect
+            // и ручного сброса state).
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
                 MainScreen()

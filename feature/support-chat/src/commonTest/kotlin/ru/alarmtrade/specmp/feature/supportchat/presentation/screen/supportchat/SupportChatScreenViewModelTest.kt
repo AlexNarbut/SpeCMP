@@ -1,6 +1,10 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -48,7 +52,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `events are collected and messages are formed`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val incoming = incomingMessage(id = 1, text = "Hello")
 
         repository.emitEvent(SupportChatEvent.MessageReceived(incoming))
@@ -63,7 +67,7 @@ class SupportChatScreenViewModelTest {
     fun `initial history emitted during load is collected`() = runTest {
         repository.historyPageOnLoad = listOf(incomingMessage(id = 11, text = "From history"))
 
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
 
         assertEquals(listOf("From history"), viewModel.state.value.messages.map { it.text })
         assertEquals(false, viewModel.state.value.isLoadingHistory)
@@ -71,7 +75,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `send adds optimistic message with Sending status`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
 
         viewModel.onDraftChange("Test message")
         viewModel.onSend()
@@ -85,7 +89,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `message status updates to Read when MessagesRead event arrives`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val incoming = incomingMessage(id = 42, text = "Read me")
 
         repository.emitEvent(SupportChatEvent.MessageReceived(incoming))
@@ -99,7 +103,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `visible incoming message is marked as read`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val incoming = incomingMessage(id = 7, text = "Visible")
 
         repository.emitEvent(SupportChatEvent.MessageReceived(incoming))
@@ -114,7 +118,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `offline queue puts message to Pending and retries on Connected`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
 
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
         runCurrent()
@@ -135,7 +139,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `connection retry reconnects and sends queued messages`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val callsAfterInit = repository.openChatCallCount
 
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
@@ -155,7 +159,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `connection lost tears down websocket and shows offline banner`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val closeCallsAfterInit = repository.closeChatCallCount
 
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
@@ -169,7 +173,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `connection lost does not auto-reconnect without manual retry`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val openCallsAfterInit = repository.openChatCallCount
 
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
@@ -182,7 +186,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `ws error event switches to offline once and ignores error storm`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val closeCallsAfterInit = repository.closeChatCallCount
 
         repository.emitError(Exception("socket lost"))
@@ -204,11 +208,7 @@ class SupportChatScreenViewModelTest {
     @Test
     fun `connected event during openChat does not cancel history loading`() = runTest {
         repository.openChatResult = Response.Error(Exception("Offline"))
-        val viewModel = SupportChatScreenViewModel(
-            repository = repository,
-            dispatchers = dispatchers,
-        )
-        viewModel.onScreenOpened()
+        val viewModel = createViewModel()
         runCurrent()
 
         assertEquals(true, viewModel.state.value.isOffline)
@@ -225,7 +225,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `pending messages retry sequentially in queue order`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val queuedTexts = listOf("First", "Second", "Third")
 
         repository.emitEvent(SupportChatEvent.ConnectionChanged(false))
@@ -250,7 +250,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `connection retry sends queued attachment`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val image = SupportChatPickedFile(
             id = "queued-image",
             name = "mount.png",
@@ -274,7 +274,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `server echo with renamed attachment merges into optimistic image instead of duplicating`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         viewModel.onImagePicked(
             SupportChatPickedFile(
                 id = "img-1",
@@ -296,7 +296,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `server echoes for two pending images merge in FIFO order`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         viewModel.onImagePicked(
             SupportChatPickedFile(id = "img-a", name = "a.png", path = "/tmp/a.png", mimeType = "image/png"),
         )
@@ -320,7 +320,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `typing indicator toggles by Writing events`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
 
         repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", true))
         runCurrent()
@@ -336,7 +336,7 @@ class SupportChatScreenViewModelTest {
     @Test
     fun `failed send marks message as Failed and emits retry effect`() = runTest {
         repository.sendMessageResult = Response.Error(Exception("Network error"))
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
 
         val effects = mutableListOf<SupportChatEffect>()
         val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
@@ -355,7 +355,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `picked image is added to pending attachments and sent`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val file = SupportChatPickedFile(
             id = "img-1",
             name = "screenshot.png",
@@ -380,7 +380,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `text and all attachments are sent as separate messages`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val image = SupportChatPickedFile(
             id = "img-1",
             name = "install.png",
@@ -413,7 +413,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `loadMore failure emits history load failed effect`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
 
         repository.emitEvent(SupportChatEvent.HistoryPageReceived(listOf(incomingMessage(id = 1, text = "Old"))))
         advanceUntilIdle()
@@ -433,7 +433,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `empty history page sets hasMoreHistory to false`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
 
         repository.emitEvent(SupportChatEvent.HistoryPageReceived(emptyList()))
         advanceUntilIdle()
@@ -444,7 +444,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `history page with messages keeps hasMoreHistory true`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val page = listOf(incomingMessage(id = 1, text = "Old"))
 
         repository.emitEvent(SupportChatEvent.HistoryPageReceived(page))
@@ -456,7 +456,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `duplicate history messages are ignored`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val page = listOf(incomingMessage(id = 1, text = "Old"))
 
         repository.emitEvent(SupportChatEvent.HistoryPageReceived(page))
@@ -471,7 +471,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `loadMore is no-op when hasMoreHistory is false`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val callsAfterInit = repository.loadNextMessagesCallCount
 
         repository.emitEvent(SupportChatEvent.HistoryPageReceived(emptyList()))
@@ -485,7 +485,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `image file picked as document stays document`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val file = SupportChatPickedFile(
             id = "img-as-doc",
             name = "screenshot.png",
@@ -507,7 +507,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `download attachment saves file and emits effect`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val saver = FakeSupportChatFileSaver()
         val attachment = SupportChatAttachment.Document(
             id = "doc-1",
@@ -531,7 +531,7 @@ class SupportChatScreenViewModelTest {
     @Test
     fun `failed attachment download emits error effect`() = runTest {
         repository.downloadFileResult = Response.Error(Exception("No network"))
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val saver = FakeSupportChatFileSaver()
         val attachment = SupportChatAttachment.Document(
             id = "doc-1",
@@ -554,7 +554,7 @@ class SupportChatScreenViewModelTest {
 
     @Test
     fun `failed attachment save emits error effect`() = runTest {
-        val viewModel = createViewModelAndStart()
+        val viewModel = createViewModel()
         val saver = FakeSupportChatFileSaver().apply { saveResult = null }
         val attachment = SupportChatAttachment.Image(
             id = "img-1",
@@ -574,30 +574,31 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
-    fun `screen disposal closes chat`() = runTest {
-        val viewModel = createViewModelAndStart()
+    fun `cleared view model closes chat via app scope`() = runTest {
+        val viewModel = createViewModel()
 
-        viewModel.onScreenDisposed()
+        viewModel.onCleared()
         advanceUntilIdle()
 
         assertEquals(1, repository.closeChatCallCount)
     }
 
     @Test
-    fun `reopen after dispose resets state and restarts session`() = runTest {
+    fun `new view model instance starts a clean session`() = runTest {
         repository.historyPageOnLoad = listOf(incomingMessage(id = 1, text = "Previous session"))
-        val viewModel = createViewModelAndStart()
-        assertEquals(1, viewModel.state.value.messages.size)
+        val firstViewModel = createViewModel()
+        assertEquals(1, firstViewModel.state.value.messages.size)
 
-        viewModel.onScreenDisposed()
+        // Переход dispose→open — это новый per-entry инстанс VM (декоратор
+        // rememberViewModelStoreNavEntryDecorator): чистый state, новая сессия.
+        firstViewModel.onCleared()
+        firstViewModel.viewModelScope.coroutineContext.cancelChildren()
         advanceUntilIdle()
 
         repository.historyPageOnLoad = emptyList()
-        viewModel.onScreenOpened()
+        val secondViewModel = createViewModel()
 
-        // Сброс синхронный: данные прошлой сессии не видны ни на кадр новой.
-        assertTrue(viewModel.state.value.messages.isEmpty())
-
+        assertTrue(secondViewModel.state.value.messages.isEmpty())
         advanceUntilIdle()
 
         assertEquals(1, repository.closeChatCallCount)
@@ -606,49 +607,28 @@ class SupportChatScreenViewModelTest {
             listOf(FakeSupportChatRepository.OPEN_CALL, FakeSupportChatRepository.CLOSE_CALL, FakeSupportChatRepository.OPEN_CALL),
             repository.connectionCalls,
         )
-        assertTrue(viewModel.state.value.messages.isEmpty())
+        assertTrue(secondViewModel.state.value.messages.isEmpty())
     }
 
     @Test
-    fun `immediate reopen cancels pending close of previous session`() = runTest {
-        val viewModel = createViewModelAndStart()
-
-        viewModel.onScreenDisposed()
-        viewModel.onScreenOpened()
+    fun `cleared view model stops collecting events`() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onCleared()
+        viewModel.viewModelScope.coroutineContext.cancelChildren()
         advanceUntilIdle()
 
-        // Быстрый возврат на экран отменяет ещё не начавшийся closeChat:
-        // новая сессия переиспользует соединение через openChat.
-        assertEquals(0, repository.closeChatCallCount)
-        assertEquals(2, repository.openChatCallCount)
-    }
-
-    @Test
-    fun `events are not collected after dispose and resume after reopen`() = runTest {
-        val viewModel = createViewModelAndStart()
-
-        viewModel.onScreenDisposed()
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 1, text = "After clear")))
         advanceUntilIdle()
 
-        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 1, text = "Between sessions")))
-        advanceUntilIdle()
         assertTrue(viewModel.state.value.messages.isEmpty())
-
-        viewModel.onScreenOpened()
-        advanceUntilIdle()
-
-        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 2, text = "New session")))
-        advanceUntilIdle()
-
-        assertEquals(listOf("New session"), viewModel.state.value.messages.map { it.text })
     }
 
-    private fun TestScope.createViewModelAndStart(): SupportChatScreenViewModel {
+    private fun TestScope.createViewModel(): SupportChatScreenViewModel {
         val viewModel = SupportChatScreenViewModel(
             repository = repository,
             dispatchers = dispatchers,
+            appScope = CoroutineScope(testDispatcher),
         )
-        viewModel.onScreenOpened()
         advanceUntilIdle()
         return viewModel
     }

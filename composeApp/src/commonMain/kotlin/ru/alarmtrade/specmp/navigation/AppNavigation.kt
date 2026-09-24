@@ -5,10 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.Serializable
@@ -25,7 +27,7 @@ import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckEr
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
-import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatNavGraph
+import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileSaver
@@ -71,6 +73,13 @@ private fun MainNavGraph() {
                 backStack.removeLastOrNull()
             }
         },
+        entryDecorators = listOf(
+            // Дефолтный декоратор NavDisplay: без него не работает SavedStateHandle.
+            rememberSaveableStateHolderNavEntryDecorator(),
+            // Per-entry ViewModelStoreOwner: VM живёт ровно столько, сколько запись
+            // бэкстека (см. docs/navigation.md).
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
                 MainScreen(
@@ -82,12 +91,10 @@ private fun MainNavGraph() {
                 )
             }
             entry<SupportChatRoute> { _ ->
-                val filePicker = rememberSupportChatFilePicker()
-                val fileSaver = rememberSupportChatFileSaver()
-                SupportChatNavGraph(
+                SupportChatEntry(
                     onBack = { backStack.removeLastOrNull() },
-                    filePicker = filePicker,
-                    fileSaver = fileSaver,
+                    filePicker = rememberSupportChatFilePicker(),
+                    fileSaver = rememberSupportChatFileSaver(),
                 )
             }
         }
