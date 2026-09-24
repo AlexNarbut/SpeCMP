@@ -78,14 +78,14 @@ internal fun SupportChatComposer(
                 onClick = onAttachFile,
                 icon = CmpIcons.AttachFile,
                 contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_file),
-                enabled = canSend,
+                enabled = enabled,
             )
 
             CmpIconButton(
                 onClick = onAttachPhoto,
                 icon = CmpIcons.Image,
                 contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_photo),
-                enabled = canSend,
+                enabled = enabled,
             )
 
             CmpTextField(
@@ -107,7 +107,7 @@ internal fun SupportChatComposer(
                         }
                     },
                 placeholder = stringResource(Res.string.supportchat_chat_label_message_hint),
-                enabled = canSend,
+                enabled = enabled,
                 singleLine = false,
                 maxLines = 4,
                 style = CmpTextFieldStyle.Filled,
