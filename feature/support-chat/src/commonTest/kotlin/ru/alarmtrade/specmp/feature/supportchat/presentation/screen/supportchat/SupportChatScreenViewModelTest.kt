@@ -122,6 +122,42 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `descending server page is normalized to ascending order in state`() = runTest {
+        // SDK отдаёт страницу истории newest-first; инвариант state —
+        // возрастающий порядок по времени (экран её просто разворачивает).
+        repository.historyPageOnLoad = listOf(
+            incomingMessageAt(id = 3, minute = 12, text = "Third"),
+            incomingMessageAt(id = 2, minute = 9, text = "Second"),
+            incomingMessageAt(id = 1, minute = 5, text = "First"),
+        )
+        val viewModel = createViewModel()
+
+        assertEquals(listOf("First", "Second", "Third"), viewModel.state.value.messages.map { it.text })
+    }
+
+    @Test
+    fun `live message is placed after older history page`() = runTest {
+        repository.historyPageOnLoad = listOf(
+            incomingMessageAt(id = 2, minute = 9, text = "Second"),
+            incomingMessageAt(id = 1, minute = 5, text = "First"),
+        )
+        val viewModel = createViewModel()
+
+        repository.emitEvent(
+            SupportChatEvent.MessageReceived(incomingMessageAt(id = 3, minute = 12, text = "Live")),
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf("First", "Second", "Live"), viewModel.state.value.messages.map { it.text })
+    }
+
+    private fun incomingMessageAt(id: Long, minute: Int, text: String): SupportChatMessage {
+        return incomingMessage(id = id, text = text).copy(
+            time = LocalDateTime(2026, 1, 15, 10, minute),
+        )
+    }
+
+    @Test
     fun `visible incoming messages are marked as read in one batch call`() = runTest {
         val viewModel = createViewModel()
         repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 7, text = "First")))

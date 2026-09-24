@@ -377,7 +377,12 @@ class SupportChatScreenViewModel(
                     messages + message
                 }
             }
-            current.copy(history = LCEState.Content(updatedMessages.toPersistentList()))
+            // Инвариант порядка — ответственность state (P-16): серверная страница
+            // может прийти newest-first, живое сообщение дописывается в конец —
+            // поэтому на вставке приводим список к возрастающему порядку по времени.
+            // Это событийная точка, а не построение списка в UI (там сортировки нет).
+            val sortedMessages = updatedMessages.sortedBy { it.time }
+            current.copy(history = LCEState.Content(sortedMessages.toPersistentList()))
         }
         // Серверное эхо заменило оптимистичное сообщение: его запись
         // покидает очередь (снимок берёт только serverId == null).
@@ -399,7 +404,11 @@ class SupportChatScreenViewModel(
         val existingIds = current.messages.map { it.serverId ?: it.id }.toHashSet()
         val newMessages = page.messages.filter { (it.serverId ?: it.id) !in existingIds }
         return current.copy(
-            history = LCEState.Content((newMessages + current.messages).toPersistentList()),
+            history = LCEState.Content(
+                // Серверная страница может прийти newest-first — нормализуем
+                // к возрастающему порядку (инвариант state).
+                (newMessages + current.messages).sortedBy { it.time }.toPersistentList()
+            ),
             isLoadingMore = false,
             hasMoreHistory = page.hasMore,
         )
