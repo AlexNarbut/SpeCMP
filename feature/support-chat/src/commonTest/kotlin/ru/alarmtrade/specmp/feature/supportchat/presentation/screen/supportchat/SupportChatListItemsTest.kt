@@ -29,7 +29,6 @@ class SupportChatListItemsTest {
             when (it) {
                 is SupportChatListItem.Message -> "msg:${it.message.id}"
                 is SupportChatListItem.DateDivider -> "divider:${it.date}"
-                is SupportChatListItem.Typing -> "typing:${it.author}"
             }
         }
 

@@ -28,8 +28,6 @@ class FakeSupportChatRepository : SupportChatRepository {
     var sendDocumentResult: Response<Unit> = Response.Success(Unit)
     var markMessagesAsReadResult: Response<Unit> = Response.Success(Unit)
     var downloadFileResult: Response<ByteArray> = Response.Success(byteArrayOf(1, 2, 3))
-    var startWritingResult: Response<Unit> = Response.Success(Unit)
-    var stopWritingResult: Response<Unit> = Response.Success(Unit)
     // Страница, которую вернёт следующий вызов loadNextMessages. null — вернуть loadNextMessagesResult.
     var historyPageOnLoad: List<SupportChatMessage>? = emptyList()
     var emitConnectedDuringNextOpenChat = false

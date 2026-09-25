@@ -23,16 +23,15 @@ import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -59,7 +58,7 @@ import specmp.feature.support_chat.generated.resources.supportchat_chat_status_s
 
 @Composable
 internal fun SupportChatMessageBubble(
-    message: SupportChatMessage,
+    message: SupportChatUiMessage,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
     maxWidthFraction: Float = 0.82f,
@@ -96,6 +95,7 @@ internal fun SupportChatMessageBubble(
                         if (isFailedOutgoing) {
                             Modifier.clickable(
                                 onClickLabel = stringResource(Res.string.supportchat_chat_a11y_retry),
+                                role = Role.Button,
                             ) { onRetry(message.id) }
                         } else {
                             Modifier
@@ -124,12 +124,12 @@ internal fun SupportChatMessageBubble(
 
                     message.attachment?.let { attachment ->
                         SupportChatAttachmentContent(
-                            attachment = attachment.toUiAttachment(),
+                            attachment = attachment,
                             colors = colors,
                             contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
                             onImageClick = onImageClick,
                             isDownloading = isDownloading,
-                            downloadAction = attachment.toUiAttachment().downloadAction(
+                            downloadAction = attachment.downloadAction(
                                 isMine = isMine,
                                 onDownloadAttachment = onDownloadAttachment,
                             ),
@@ -150,7 +150,7 @@ internal fun SupportChatMessageBubble(
 
 @Composable
 private fun MessageMetaRow(
-    message: SupportChatMessage,
+    message: SupportChatUiMessage,
     colors: CmpThemeColors,
     isImage: Boolean,
     modifier: Modifier = Modifier,
@@ -169,7 +169,7 @@ private fun MessageMetaRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpText(
-            text = formatMessageTime(message.time),
+            text = message.timeLabel,
             color = metaColor,
         )
 
@@ -421,14 +421,6 @@ private const val MAX_IMAGE_RATIO = 2f
 
 private const val FILE_URI_SCHEME = "file://"
 
-// Форматирование времени сообщения — презентационная логика (D-1):
-// доменная модель хранит LocalDateTime, готовая строка в ней не живёт.
-private fun formatMessageTime(time: kotlinx.datetime.LocalDateTime): String {
-    val hour = time.hour.toString().padStart(2, '0')
-    val minute = time.minute.toString().padStart(2, '0')
-    return "$hour:$minute"
-}
-
 private fun SupportChatUiAttachment.imageSource(): String {
     return localPath?.let { FILE_URI_SCHEME + it } ?: url.orEmpty()
 }
@@ -442,8 +434,8 @@ private fun bubbleShape(isMine: Boolean): RoundedCornerShape {
     )
 }
 
-private fun isImage(message: SupportChatMessage): Boolean {
-    return message.attachment is SupportChatAttachment.Image
+private fun isImage(message: SupportChatUiMessage): Boolean {
+    return message.attachment?.kind == SupportChatUiAttachment.Kind.Image
 }
 
 @Composable

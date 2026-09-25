@@ -55,6 +55,8 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatComposer
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatDateDivider
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatEmptyState
@@ -348,7 +350,6 @@ private fun SupportChatBody(
                                     when (val item = listItems[index]) {
                                         is SupportChatListItem.DateDivider -> "${DATE_KEY_PREFIX}${item.date}"
                                         is SupportChatListItem.Message -> "${MESSAGE_KEY_PREFIX}${item.message.id}"
-                                        is SupportChatListItem.Typing -> "$TYPING_KEY_PREFIX${item.author}"
                                     }
                                 },
                             ) { index ->
@@ -372,8 +373,6 @@ private fun SupportChatBody(
                                             onDownloadAttachment = actions.onDownloadAttachment,
                                         )
                                     }
-
-                                    is SupportChatListItem.Typing -> Unit // typing рисуется отдельным item сверху
                                 }
                             }
                         }
@@ -408,8 +407,7 @@ internal sealed interface SupportChatListItem {
         val label: String,
     ) : SupportChatListItem
 
-    data class Message(val message: SupportChatMessage) : SupportChatListItem
-    data class Typing(val author: String) : SupportChatListItem
+    data class Message(val message: SupportChatUiMessage) : SupportChatListItem
 }
 
 /**
@@ -438,7 +436,7 @@ internal fun buildListItems(
                 )
             )
         }
-        result.add(SupportChatListItem.Message(message))
+        result.add(SupportChatListItem.Message(message.toUiMessage()))
         groupDate = date
     }
     groupDate?.let {
