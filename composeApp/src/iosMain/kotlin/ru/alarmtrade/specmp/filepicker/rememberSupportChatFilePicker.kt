@@ -5,6 +5,9 @@ package ru.alarmtrade.specmp.filepicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.uikit.LocalUIViewController
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSNumber
@@ -24,6 +27,7 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
@@ -39,16 +43,19 @@ private class IosSupportChatFilePicker(
     private val viewController: UIViewController,
 ) : SupportChatFilePicker {
 
+    private val channel = Channel<SupportChatPickedFileResult>(Channel.UNLIMITED)
+    override val results: Flow<SupportChatPickedFileResult> = channel.receiveAsFlow()
+
     private var activeDelegate: NSObject? = null
 
-    override fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit) {
+    override fun launchImage() {
         val configuration = PHPickerConfiguration().apply {
             filter = PHPickerFilter.imagesFilter()
             selectionLimit = 1
         }
         val picker = PHPickerViewController(configuration)
         val delegate = PhotoPickerDelegate(
-            onPicked = onPicked,
+            onPicked = { channel.trySend(it.withKind(SupportChatPickKind.Image)) },
             onFinished = { activeDelegate = null },
         )
         activeDelegate = delegate
@@ -60,16 +67,14 @@ private class IosSupportChatFilePicker(
         )
     }
 
-    override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
+    override fun launchDocument() {
         launchPicker(
             documentTypes = listOf(DATA_UTI),
-            onPicked = onPicked,
         )
     }
 
     private fun launchPicker(
         documentTypes: List<String>,
-        onPicked: (SupportChatPickedFileResult) -> Unit,
     ) {
         val picker = UIDocumentPickerViewController(
             documentTypes = documentTypes,
@@ -78,7 +83,7 @@ private class IosSupportChatFilePicker(
             allowsMultipleSelection = false
         }
         val delegate = DocumentPickerDelegate(
-            onPicked = onPicked,
+            onPicked = { channel.trySend(it.withKind(SupportChatPickKind.Document)) },
             onFinished = { activeDelegate = null },
         )
         activeDelegate = delegate
@@ -95,14 +100,27 @@ private class IosSupportChatFilePicker(
     }
 }
 
-private fun SupportChatPickedFile?.toPickerResult(): SupportChatPickedFileResult {
-    return this?.let(SupportChatPickedFileResult::Picked) ?: SupportChatPickedFileResult.Cancelled
+private fun SupportChatPickedFile?.toPickerResult(): RawPickResult {
+    return this?.let(RawPickResult::Picked) ?: RawPickResult.Cancelled
+}
+
+/** Промежуточный результат без kind — kind проставляет источник выбора. */
+private sealed interface RawPickResult {
+    data class Picked(val file: SupportChatPickedFile) : RawPickResult
+    data object Cancelled : RawPickResult
+}
+
+private fun RawPickResult.withKind(kind: SupportChatPickKind): SupportChatPickedFileResult {
+    return when (this) {
+        is RawPickResult.Picked -> SupportChatPickedFileResult.Picked(file, kind)
+        RawPickResult.Cancelled -> SupportChatPickedFileResult.Cancelled
+    }
 }
 
 private const val IMAGE_UTI = "public.image"
 
 private class PhotoPickerDelegate(
-    private val onPicked: (SupportChatPickedFileResult) -> Unit,
+    private val onPicked: (RawPickResult) -> Unit,
     private val onFinished: () -> Unit,
 ) : NSObject(), PHPickerViewControllerDelegateProtocol {
 
@@ -110,7 +128,7 @@ private class PhotoPickerDelegate(
         picker.dismissViewControllerAnimated(true, null)
         val result = didFinishPicking.firstOrNull() as? PHPickerResult
         if (result == null) {
-            onPicked(SupportChatPickedFileResult.Cancelled)
+            onPicked(RawPickResult.Cancelled)
             onFinished()
             return
         }
@@ -125,7 +143,7 @@ private class PhotoPickerDelegate(
 }
 
 private class DocumentPickerDelegate(
-    private val onPicked: (SupportChatPickedFileResult) -> Unit,
+    private val onPicked: (RawPickResult) -> Unit,
     private val onFinished: () -> Unit,
 ) : NSObject(), UIDocumentPickerDelegateProtocol {
 
@@ -139,7 +157,7 @@ private class DocumentPickerDelegate(
     }
 
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
-        onPicked(SupportChatPickedFileResult.Cancelled)
+        onPicked(RawPickResult.Cancelled)
         onFinished()
     }
 }
