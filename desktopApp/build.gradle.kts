@@ -36,6 +36,16 @@ compose.desktop {
             )
             packageName = "SpeCMP"
             packageVersion = "2.0.40"
+
+            macOS {
+                iconFile.set(project.file("icons/macos.icns"))
+            }
+            windows {
+                iconFile.set(project.file("icons/windows.ico"))
+            }
+            linux {
+                iconFile.set(project.file("icons/linux.png"))
+            }
         }
     }
 }
