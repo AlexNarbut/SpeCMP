@@ -1,8 +1,6 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents
 
 import androidx.compose.foundation.BorderStroke
-import ru.alarmtrade.specmp.core.ui.view.image.CmpImage
-import ru.alarmtrade.specmp.core.ui.view.image.CmpSubcomposeAsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,12 +27,12 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.image.CmpImage
+import ru.alarmtrade.specmp.core.ui.view.image.CmpSubcomposeAsyncImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -42,19 +40,24 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
 import specmp.feature.support_chat.generated.resources.Res
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_document_actions
 import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_download
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_retry
 import specmp.feature.support_chat.generated.resources.supportchat_chat_label_document_meta
-import specmp.feature.support_chat.generated.resources.supportchat_chat_size_bytes
-import specmp.feature.support_chat.generated.resources.supportchat_chat_size_gb
-import specmp.feature.support_chat.generated.resources.supportchat_chat_size_kb
-import specmp.feature.support_chat.generated.resources.supportchat_chat_size_mb
-import specmp.feature.support_chat.generated.resources.supportchat_chat_status_failed
-import specmp.feature.support_chat.generated.resources.supportchat_chat_status_pending
-import specmp.feature.support_chat.generated.resources.supportchat_chat_status_read
-import specmp.feature.support_chat.generated.resources.supportchat_chat_status_sent
-import specmp.feature.support_chat.generated.resources.supportchat_chat_status_sending
+import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_bytes
+import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_gb
+import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_kb
+import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_mb
+import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_failed
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_pending
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_read
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_sent
+import specmp.feature.support_chat.generated.resources.supportchat_chat_btn_delete
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_sending
 
 @Composable
 internal fun SupportChatMessageBubble(
@@ -64,10 +67,11 @@ internal fun SupportChatMessageBubble(
     maxWidthFraction: Float = 0.82f,
     isDownloading: Boolean = false,
     onRetry: (String) -> Unit = {},
+    onDelete: (String) -> Unit = {},
     onImageClick: (String) -> Unit = {},
+    onDocumentClick: (SupportChatUiAttachment) -> Unit = {},
     onDownloadAttachment: (SupportChatUiAttachment) -> Unit = {},
 ) {
-    val isFailedOutgoing = message.isMine && message.status == SupportChatMessageStatus.Failed
     val isMine = message.isMine
     val horizontalAlignment = if (isMine) Alignment.End else Alignment.Start
 
@@ -89,18 +93,7 @@ internal fun SupportChatMessageBubble(
             val bubbleMaxWidth = maxWidth * maxWidthFraction
 
             CmpSurface(
-                modifier = Modifier
-                    .widthIn(max = bubbleMaxWidth)
-                    .then(
-                        if (isFailedOutgoing) {
-                            Modifier.clickable(
-                                onClickLabel = stringResource(Res.string.supportchat_chat_a11y_retry),
-                                role = Role.Button,
-                            ) { onRetry(message.id) }
-                        } else {
-                            Modifier
-                        }
-                    ),
+                modifier = Modifier.widthIn(max = bubbleMaxWidth),
                 shape = bubbleShape(isMine = isMine),
                 color = if (isMine) colors.primaryContainer else colors.surfaceContainerLow,
                 contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
@@ -128,6 +121,7 @@ internal fun SupportChatMessageBubble(
                             colors = colors,
                             contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
                             onImageClick = onImageClick,
+                            onDocumentClick = onDocumentClick,
                             isDownloading = isDownloading,
                             downloadAction = attachment.downloadAction(
                                 isMine = isMine,
@@ -145,6 +139,40 @@ internal fun SupportChatMessageBubble(
                 }
             }
         }
+
+        // Действия неотправленного сообщения — явные кнопки под пузырём, а не
+        // кликабельный пузырь: не конфликтуют с тапом по картинке и озвучиваются
+        // скринридером как кнопки.
+        if (message.canDelete) {
+            FailedMessageActions(
+                canRetry = message.canRetry,
+                onRetry = { onRetry(message.id) },
+                onDelete = { onDelete(message.id) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun FailedMessageActions(
+    canRetry: Boolean,
+    onRetry: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    CmpRow(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (canRetry) {
+            CmpTextButton(
+                text = stringResource(Res.string.supportchat_common_btn_retry),
+                onClick = onRetry,
+            )
+        }
+        CmpTextButton(
+            text = stringResource(Res.string.supportchat_chat_btn_delete),
+            onClick = onDelete,
+        )
     }
 }
 
@@ -196,31 +224,31 @@ private fun MessageStatusIcon(
         SupportChatMessageStatus.Sending -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Res.string.supportchat_chat_status_sending),
+            stringResource(Res.string.supportchat_chat_a11y_status_sending),
         )
 
         SupportChatMessageStatus.Sent -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Res.string.supportchat_chat_status_sent),
+            stringResource(Res.string.supportchat_chat_a11y_status_sent),
         )
 
         SupportChatMessageStatus.Read -> Triple(
             CmpIcons.DoneAll,
             readColor,
-            stringResource(Res.string.supportchat_chat_status_read),
+            stringResource(Res.string.supportchat_chat_a11y_status_read),
         )
 
         SupportChatMessageStatus.Pending -> Triple(
             CmpIcons.Schedule,
             metaColor,
-            stringResource(Res.string.supportchat_chat_status_pending),
+            stringResource(Res.string.supportchat_chat_a11y_status_pending),
         )
 
         SupportChatMessageStatus.Failed -> Triple(
             CmpIcons.Warning,
             errorColor,
-            stringResource(Res.string.supportchat_chat_status_failed),
+            stringResource(Res.string.supportchat_chat_a11y_status_failed),
         )
     }
 
@@ -238,10 +266,13 @@ private fun SupportChatAttachmentContent(
     colors: CmpThemeColors,
     contentColor: Color,
     onImageClick: (String) -> Unit,
+    onDocumentClick: (SupportChatUiAttachment) -> Unit,
     isDownloading: Boolean,
     downloadAction: (() -> Unit)?,
 ) {
     when (attachment.kind) {
+        // Действия с документом («Открыть» / «Скачать») — диалог по тапу; байты
+        // скачиваются только по выбору пользователя, не при показе ленты.
         SupportChatUiAttachment.Kind.Document -> {
             SupportChatDocumentAttachment(
                 name = attachment.name,
@@ -249,7 +280,7 @@ private fun SupportChatAttachmentContent(
                 sizeBytes = attachment.sizeBytes,
                 contentColor = contentColor,
                 isDownloading = isDownloading,
-                downloadAction = downloadAction,
+                onClick = { onDocumentClick(attachment) },
             )
         }
 
@@ -258,7 +289,7 @@ private fun SupportChatAttachmentContent(
                 name = attachment.name,
                 source = attachment.imageSource(),
                 colors = colors,
-                onClick = { onImageClick(attachment.imageSource()) },
+                onClick = onImageClick,
                 isDownloading = isDownloading,
                 downloadAction = downloadAction,
             )
@@ -283,12 +314,20 @@ private fun SupportChatDocumentAttachment(
     sizeBytes: Long?,
     contentColor: Color,
     isDownloading: Boolean,
-    downloadAction: (() -> Unit)?,
+    onClick: () -> Unit,
 ) {
     val metadata = documentMetadata(name = name, mimeType = mimeType, sizeBytes = sizeBytes)
 
     CmpRow(
-        modifier = Modifier.widthIn(min = 200.dp),
+        modifier = Modifier
+            .widthIn(min = 200.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(
+                enabled = !isDownloading,
+                onClickLabel = stringResource(Res.string.supportchat_chat_a11y_document_actions),
+                role = Role.Button,
+                onClick = onClick,
+            ),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -326,13 +365,6 @@ private fun SupportChatDocumentAttachment(
                 strokeWidth = 2.dp,
                 color = contentColor,
             )
-        } else if (downloadAction != null) {
-            CmpIconButton(
-                onClick = downloadAction,
-                icon = CmpIcons.Download,
-                contentDescription = stringResource(Res.string.supportchat_chat_a11y_download),
-                tint = contentColor,
-            )
         }
     }
 }
@@ -340,14 +372,12 @@ private fun SupportChatDocumentAttachment(
 @Composable
 private fun SupportChatImageAttachment(
     name: String,
-    source: String,
+    source: String?,
     colors: CmpThemeColors,
-    onClick: () -> Unit,
+    onClick: (String) -> Unit,
     isDownloading: Boolean,
     downloadAction: (() -> Unit)?,
 ) {
-
-
     CmpSubcomposeAsyncImage(
         model = source,
         contentDescription = name,
@@ -374,7 +404,10 @@ private fun SupportChatImageAttachment(
                         ),
                     ),
                 )
-                .clickable(onClick = onClick),
+                .then(
+                    // Без источника (ни url, ни локального файла) смотреть нечего.
+                    if (source != null) Modifier.clickable { onClick(source) } else Modifier
+                ),
             contentAlignment = Alignment.Center,
         ) {
             CmpImage(
@@ -421,8 +454,8 @@ private const val MAX_IMAGE_RATIO = 2f
 
 private const val FILE_URI_SCHEME = "file://"
 
-private fun SupportChatUiAttachment.imageSource(): String {
-    return localPath?.let { FILE_URI_SCHEME + it } ?: url.orEmpty()
+private fun SupportChatUiAttachment.imageSource(): String? {
+    return localPath?.let { FILE_URI_SCHEME + it } ?: url
 }
 
 private fun bubbleShape(isMine: Boolean): RoundedCornerShape {
@@ -470,10 +503,10 @@ private fun formatFileSize(sizeBytes: Long): String {
     val megabyte = kilobyte * 1_024L
     val gigabyte = megabyte * 1_024L
     return when {
-        sizeBytes < kilobyte -> stringResource(Res.string.supportchat_chat_size_bytes, sizeBytes)
-        sizeBytes < megabyte -> stringResource(Res.string.supportchat_chat_size_kb, sizeBytes / kilobyte)
-        sizeBytes < gigabyte -> formatWithTenths(sizeBytes, megabyte, Res.string.supportchat_chat_size_mb)
-        else -> formatWithTenths(sizeBytes, gigabyte, Res.string.supportchat_chat_size_gb)
+        sizeBytes < kilobyte -> stringResource(Res.string.supportchat_chat_label_size_bytes, sizeBytes)
+        sizeBytes < megabyte -> stringResource(Res.string.supportchat_chat_label_size_kb, sizeBytes / kilobyte)
+        sizeBytes < gigabyte -> formatWithTenths(sizeBytes, megabyte, Res.string.supportchat_chat_label_size_mb)
+        else -> formatWithTenths(sizeBytes, gigabyte, Res.string.supportchat_chat_label_size_gb)
     }
 }
 

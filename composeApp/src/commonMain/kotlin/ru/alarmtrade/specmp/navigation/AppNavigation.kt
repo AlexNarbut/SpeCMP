@@ -29,6 +29,8 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
+import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileSaver
 
@@ -95,6 +97,8 @@ private fun MainNavGraph() {
                     onBack = { backStack.removeLastOrNull() },
                     filePicker = rememberSupportChatFilePicker(),
                     fileSaver = rememberSupportChatFileSaver(),
+                    attachmentFiles = rememberSupportChatAttachmentFiles(),
+                    fileOpener = rememberSupportChatFileOpener(),
                 )
             }
         }

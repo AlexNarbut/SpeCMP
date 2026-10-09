@@ -23,7 +23,7 @@ android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 
-alarmtrade-common-specialist = "1.1.76"
+alarmtrade-common-specialist = "1.2.0"
 alarmtrade-common = "2.0.42"
 
 [libraries]

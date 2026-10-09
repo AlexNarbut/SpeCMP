@@ -111,6 +111,13 @@ private fun MainNavGraph() {
 }
 ```
 
+**Оба декоратора обязательны в каждом `NavDisplay`** — корневом и во вложенных графах фич.
+Без `rememberViewModelStoreNavEntryDecorator()` `koinViewModel()` отдаёт app-level инстанс,
+который переживает уход с экрана и смену аккаунта, — отсюда соблазн чинить жизненный цикл
+`DisposableEffect`'ами и ручным сбросом state (см. `docs/patterns.md`, «Жизненный цикл ViewModel
+и сессии»). Без `rememberSaveableStateHolderNavEntryDecorator()` не работает `SavedStateHandle`.
+Зависимость — `libs.androidx.lifecycle.viewmodel.nav3`.
+
 ## Навигационные действия
 
 ```kotlin

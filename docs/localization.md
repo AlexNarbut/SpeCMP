@@ -103,18 +103,26 @@ name      — краткое описание содержимого
 
    ```kotlin
    // ❌ Плохо — разделитель и порядок слов зашиты в коде
-   CmpText(text = "$author · ${stringResource(Res.string.support_chat_typing)}")
+   CmpText(text = "$author · ${stringResource(Res.string.supportchat_chat_msg_typing)}")
 
    // ✅ Хорошо — целая фраза в ресурсе
-   CmpText(text = stringResource(Res.string.support_chat_typing_author, author))
+   CmpText(text = stringResource(Res.string.supportchat_chat_msg_typing_author, author))
    ```
    ```xml
-   <string name="support_chat_typing_author">%s is typing…</string>
+   <string name="supportchat_chat_msg_typing_author">%s is typing…</string>
    ```
 
    То же касается **единиц измерения** (`KB`, `MB`, `Б`, `шт.`) и форматов размеров/дат:
    это UI-текст, он переводится — значит живёт в ресурсе (`<string name="..._size_kb">%s KB</string>`),
    а не в Kotlin-литерале.
+
+   - Разделитель между частями (`размер · тип`) — тоже в ресурсе (`%1$s · %2$s`); если известна
+     только одна часть — это отдельная ветка без разделителя, а не `joinToString(" · ")`.
+   - Десятичный разделитель зависит от языка (`1.5` / `1,5`) — не собирать дробь через `"."`
+     вручную.
+   - **Даты не собираются из ключей месяцев и `buildString`** — используй общий
+     `rememberCmpDateLabeler()` из `core/ui` («Сегодня»/«Вчера»/«14 марта»). Нужен новый формат —
+     расширяй хелпер в `core/ui`, а не заводи свои 12 ключей месяцев в фиче.
 
 7. **Технические строки — не в ресурсах, но и не inline.** В `strings.xml` попадает только то,
    что видит пользователь. URI-схемы и пути (`file://`), префиксы ключей `LazyColumn`,
@@ -222,10 +230,10 @@ CMP-парсер обрабатывает **только** эти последо
 
   ```xml
   <!-- ПРАВИЛЬНО -->
-  <string name="support_chat_download_success">File saved to Downloads/Pandora Spec</string>
+  <string name="supportchat_chat_msg_download_success">File saved to Downloads/Pandora Spec</string>
 
   <!-- НЕПРАВИЛЬНО — \/ не распознаётся, в UI будет "Downloads\/Pandora Spec" -->
-  <string name="support_chat_download_success">File saved to Downloads\/Pandora Spec</string>
+  <string name="supportchat_chat_msg_download_success">File saved to Downloads\/Pandora Spec</string>
   ```
 
 - **Апострофы и кавычки пишутся сырыми**, без бэкслеша. `\'` и `\"` НЕ

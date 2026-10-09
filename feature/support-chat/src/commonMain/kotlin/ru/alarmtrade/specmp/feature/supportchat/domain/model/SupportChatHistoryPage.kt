@@ -1,21 +1,17 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.model
 
 /**
- * Страница истории чата, возвращаемая [ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository.loadNextMessages].
+ * Страница истории.
  *
- * Контракт гарантирует завершение вызова: страница возвращается вызывающему
- * (или приходит ошибка/таймаут) — не бывает «успеха без данных».
+ * @param nextCursor курсор следующей (более старой) страницы; `null` — истории больше нет.
  */
 data class SupportChatHistoryPage(
     val messages: List<SupportChatMessage>,
-
-    /**
-     * Есть ли за этой страницей более старая история.
-     *
-     * HEURISTIC, а не факт источника: Specialist SDK (1.1.76) не отдаёт признак
-     * конца истории — `ChatEvent.Chat.MessagesPage` несёт только список сообщений.
-     * До появления флага в SDK считаем «страница пустая — значит, история кончилась».
-     * Риск зафиксирован: повторная выдача уже известной страницы выключит пагинацию.
-     */
-    val hasMore: Boolean,
+    val nextCursor: SupportChatHistoryCursor?,
 )
+
+/** Непрозрачный курсор истории: только хранить и передавать обратно. */
+data class SupportChatHistoryCursor(val token: Int)
+
+/** Команда отклонена: соединение не в состоянии `Ready`. Сообщение ждёт в очереди, а не падает. */
+class SupportChatNotConnectedException(cause: Throwable? = null) : Exception("Chat is not connected", cause)

@@ -34,6 +34,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(libs.koin.core)
 
             // Ktor
             implementation(libs.ktor.client.core)

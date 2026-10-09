@@ -14,7 +14,9 @@ actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
                 return try {
                     val dir = File(System.getProperty("user.home"), "Downloads/Pandora Spec")
                     if (!dir.exists() && !dir.mkdirs()) return SupportChatFileSaveResult.Failed
-                    val file = File(dir, fileName)
+                    // Имя приходит с сервера: basename без `../` и запрещённых символов,
+                    // одноимённый файл пользователя не перезаписывается.
+                    val file = File(dir, uniqueFileName(safeFileName(fileName)) { File(dir, it).exists() })
                     file.writeBytes(bytes)
                     SupportChatFileSaveResult.Saved(file.absolutePath)
                 } catch (e: Exception) {

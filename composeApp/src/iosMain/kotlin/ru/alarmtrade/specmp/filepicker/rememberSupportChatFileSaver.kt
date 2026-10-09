@@ -46,8 +46,6 @@ actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
     }
 }
 
-private var activeExportDelegate: ExportDelegate? = null
-
 private class ExportDelegate(
     private val onResult: (NSURL?) -> Unit,
 ) : NSObject(), UIDocumentPickerDelegateProtocol {
@@ -64,6 +62,12 @@ private class ExportDelegate(
     }
 }
 
+/**
+ * Делегат `UIDocumentPickerViewController` — weak-ссылка, поэтому его держит сама
+ * корутина (захват в `invokeOnCancellation`), а не глобальная переменная. При отмене
+ * корутины пикер закрывается: иначе `finally` удалил бы временный файл, пока
+ * пользователь ещё выбирает место экспорта.
+ */
 private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResult = suspendCancellableCoroutine { cont ->
     dispatch_async(dispatch_get_main_queue()) {
         val presenter = topViewController()
@@ -72,7 +76,6 @@ private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResu
             return@dispatch_async
         }
         val delegate = ExportDelegate { pickedUrl ->
-            activeExportDelegate = null
             if (cont.isActive) {
                 val result = when {
                     pickedUrl == null -> SupportChatFileSaveResult.Cancelled
@@ -82,14 +85,21 @@ private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResu
                 cont.resumeWith(Result.success(result))
             }
         }
-        activeExportDelegate = delegate
         val picker = UIDocumentPickerViewController(forExportingURLs = listOf(fileUrl), asCopy = true)
         picker.delegate = delegate
+        cont.invokeOnCancellation {
+            dispatch_async(dispatch_get_main_queue()) {
+                // Захват delegate здесь и удерживает его до закрытия пикера.
+                if (picker.delegate === delegate) picker.delegate = null
+                picker.dismissViewControllerAnimated(true, null)
+            }
+        }
         presenter.presentViewController(picker, animated = true, completion = null)
     }
 }
 
-private fun topViewController(): UIViewController? {
+/** Верхний показанный контроллер — точка показа системных экранов (экспорт, QuickLook). */
+internal fun topViewController(): UIViewController? {
     val scene = UIApplication.sharedApplication.connectedScenes.firstOrNull() as? UIWindowScene
     var controller = scene?.keyWindow?.rootViewController
     while (controller?.presentedViewController != null) {
@@ -99,7 +109,8 @@ private fun topViewController(): UIViewController? {
 }
 
 private fun writeTempFile(fileName: String, bytes: ByteArray): NSURL? {
-    val fileUrl = NSURL.fileURLWithPath(NSTemporaryDirectory() + NSUUID().UUIDString + "-" + fileName)
+    // Имя с сервера: без санитизации `/` в имени ломает путь временного файла.
+    val fileUrl = NSURL.fileURLWithPath(NSTemporaryDirectory() + NSUUID().UUIDString + "-" + safeFileName(fileName))
     val data = bytes.usePinned { NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()) }
     return if (data.writeToURL(fileUrl, atomically = true)) fileUrl else null
 }

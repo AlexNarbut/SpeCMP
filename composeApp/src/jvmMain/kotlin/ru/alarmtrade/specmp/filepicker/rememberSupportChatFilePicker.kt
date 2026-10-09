@@ -3,13 +3,14 @@ package ru.alarmtrade.specmp.filepicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import specmp.composeapp.generated.resources.Res
-import specmp.composeapp.generated.resources.support_chat_picker_label_images
-import specmp.composeapp.generated.resources.support_chat_picker_title_file
-import specmp.composeapp.generated.resources.support_chat_picker_title_image
+import specmp.composeapp.generated.resources.composeapp_picker_label_images
+import specmp.composeapp.generated.resources.composeapp_picker_title_file
+import specmp.composeapp.generated.resources.composeapp_picker_title_image
 import java.io.File
 import java.util.UUID
 import javax.swing.JFileChooser
@@ -17,9 +18,9 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 @Composable
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
-    val imageTitle = stringResource(Res.string.support_chat_picker_title_image)
-    val imagesLabel = stringResource(Res.string.support_chat_picker_label_images)
-    val fileTitle = stringResource(Res.string.support_chat_picker_title_file)
+    val imageTitle = stringResource(Res.string.composeapp_picker_title_image)
+    val imagesLabel = stringResource(Res.string.composeapp_picker_label_images)
+    val fileTitle = stringResource(Res.string.composeapp_picker_title_file)
     return remember(imageTitle, imagesLabel, fileTitle) {
         DesktopSupportChatFilePicker(
             imageTitle = imageTitle,
@@ -43,7 +44,7 @@ private class DesktopSupportChatFilePicker(
                 "jpg", "jpeg", "png", "gif", "webp", "bmp",
             ),
         )
-        onPicked(file?.toPickedFile().toPickerResult())
+        onPicked(file.toPickerResult())
     }
 
     override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
@@ -51,7 +52,7 @@ private class DesktopSupportChatFilePicker(
             title = fileTitle,
             filter = null,
         )
-        onPicked(file?.toPickedFile().toPickerResult())
+        onPicked(file.toPickerResult())
     }
 
     private fun showDialog(
@@ -68,11 +69,16 @@ private class DesktopSupportChatFilePicker(
         return if (result == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
     }
 
-    private fun SupportChatPickedFile?.toPickerResult(): SupportChatPickedFileResult {
-    return this?.let(SupportChatPickedFileResult::Picked) ?: SupportChatPickedFileResult.Cancelled
-}
+    // Desktop отправляет оригинал пользователя, без копии — поэтому размер
+    // проверяется по самому файлу, а удалять его после отправки нельзя.
+    private fun File?.toPickerResult(): SupportChatPickedFileResult {
+        val file = this ?: return SupportChatPickedFileResult.Cancelled
+        if (!file.isFile) return SupportChatPickedFileResult.Failed
+        if (file.length() > SupportChatAttachmentLimits.MAX_BYTES) return SupportChatPickedFileResult.TooLarge
+        return SupportChatPickedFileResult.Picked(file.toPickedFile())
+    }
 
-private fun File.toPickedFile(): SupportChatPickedFile {
+    private fun File.toPickedFile(): SupportChatPickedFile {
         val extension = name.substringAfterLast('.', "").lowercase()
         val mimeType = when (extension) {
             "jpg", "jpeg" -> "image/jpeg"

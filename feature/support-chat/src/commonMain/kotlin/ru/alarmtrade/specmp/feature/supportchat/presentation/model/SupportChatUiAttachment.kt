@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.supportchat.presentation.model
 
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
 /**
  * Presentation-модель вложения для UI (U-12).
@@ -48,4 +49,40 @@ fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment {
             sizeBytes = sizeBytes,
         )
     }
+}
+
+/** Обратный маппинг: вложение композера → доменное вложение исходящего сообщения. */
+fun SupportChatUiAttachment.toDomain(): SupportChatAttachment {
+    return when (kind) {
+        SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
+            id = id,
+            name = name,
+            url = url,
+            localPath = localPath,
+        )
+        SupportChatUiAttachment.Kind.Document -> SupportChatAttachment.Document(
+            id = id,
+            name = name,
+            url = url,
+            localPath = localPath,
+            mimeType = mimeType,
+            sizeBytes = sizeBytes,
+        )
+    }
+}
+
+/**
+ * Выбранный файл → чип композера. Тип задаёт источник выбора, а не содержимое:
+ * картинка, выбранная как документ, уходит документом.
+ */
+fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): SupportChatUiAttachment {
+    return SupportChatUiAttachment(
+        id = id,
+        name = name,
+        kind = kind,
+        url = null,
+        localPath = path,
+        mimeType = mimeType,
+        sizeBytes = sizeBytes,
+    )
 }

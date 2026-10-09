@@ -20,6 +20,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -45,14 +46,14 @@ internal fun SupportChatComposer(
     onSend: () -> Unit,
     onAttachFile: () -> Unit,
     onAttachPhoto: () -> Unit,
-    pendingAttachments: List<SupportChatUiAttachment>,
+    pendingAttachments: ImmutableList<SupportChatUiAttachment>,
     onRemoveAttachment: (String) -> Unit,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
     // Владелец черновика — composer, поэтому «есть что отправить» считается
-    // здесь; офлайн-гейтинг приходит из state единственным источником.
+    // здесь; доступность ввода (только Online) приходит из state единственным источником.
     val canSend = enabled && (draftText.isNotBlank() || pendingAttachments.isNotEmpty())
 
     CmpColumn(
@@ -132,7 +133,7 @@ internal fun SupportChatComposer(
 
 @Composable
 private fun PendingAttachmentsRow(
-    attachments: List<SupportChatUiAttachment>,
+    attachments: ImmutableList<SupportChatUiAttachment>,
     onRemove: (String) -> Unit,
     colors: CmpThemeColors,
 ) {

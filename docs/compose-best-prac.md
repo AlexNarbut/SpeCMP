@@ -408,6 +408,78 @@ val label = "Count: $count"
 
 ---
 
+## 9. Списки, ввод, эффекты — типовые ловушки
+
+### Построение элементов списка
+
+- **Не сортировать и не пересобирать весь список в композиции.** `remember(messages) {
+  messages.sortedBy { … } }` — O(n log n) на каждое изменение любого элемента. Порядок
+  поддерживает state при вставке (`docs/patterns.md`, «Корректность state»).
+- **Редко меняющиеся и часто меняющиеся данные — в разных ключах.** Индикатор «печатает…» в ключе
+  `remember(messages, typingAuthor)` пересобирает всю ленту ради одного элемента — вынеси его в
+  отдельный `item {}`.
+- **Ключи `items(key = …)` — стабильные**, префиксы ключей — `private const val`
+  (`docs/localization.md`, правило 7).
+
+### Чат-подобные ленты
+
+`LazyColumn(reverseLayout = true)` + элементы **от новых к старым**: «низ» — естественная стартовая
+позиция (нет рывка «верх → низ» при открытии), эффект автоскролла не нужен, пагинация вверх —
+`!listState.canScrollForward`. Если автоскролл всё же нужен — только когда пользователь уже у
+последнего сообщения; безусловный `animateScrollToItem(last)` выдёргивает его из чтения истории.
+
+### `snapshotFlow` по `layoutInfo`
+
+```kotlin
+// ❌ Плохо: listItems в ключе перезапускает подписку на каждое сообщение;
+// map аллоцирует список на каждый кадр скролла; VM дёргается поштучно
+LaunchedEffect(listState, listItems) {
+    snapshotFlow { listState.layoutInfo.visibleItemsInfo.map { it.key } }
+        .distinctUntilChanged()
+        .collect { keys -> keys.forEach { vm.onVisible(it) } }
+}
+
+// ✅ Хорошо: ключ — только listState; дешёвый снимок (два Int) вместо списка на кадр;
+// во VM — одна пачка на изменение видимого диапазона
+val currentOnVisible by rememberUpdatedState(onItemsVisible)
+LaunchedEffect(listState) {
+    snapshotFlow {
+        val visible = listState.layoutInfo.visibleItemsInfo
+        (visible.firstOrNull()?.index ?: -1) to (visible.lastOrNull()?.index ?: -1)
+    }
+        .distinctUntilChanged()
+        .collect { currentOnVisible(listState.layoutInfo.visibleItemsInfo.map { it.key }) }
+}
+```
+
+### Текстовый ввод — локальное состояние
+
+Черновик поля ввода держится в `rememberSaveable` внутри composable, а не в state ViewModel:
+иначе каждый символ → `_state.update` → рекомпозиция всего экрана со списком. ViewModel получает
+текст в момент действия (`onSend(text)`). Если VM обязана владеть черновиком (персист),
+экран разбивается так, чтобы список не попадал в область рекомпозиции поля.
+
+### Много колбэков — один `Actions`
+
+Когда один и тот же набор интентов протаскивается через несколько уровней
+(`Screen → Scaffold → Body`, 10+ параметров), колбэки собираются в
+`@Immutable data class XxxActions(val onSend: () -> Unit, …)`, создаваемый один раз
+(`remember(viewModel)`) в entry-точке.
+
+### Canvas и отрисовка
+
+Геометрия, зависящая только от размера и цветов (узоры, тайлы, пути), считается в
+`Modifier.drawWithCache { … onDrawBehind { … } }` — один раз на размер, а не на каждый проход
+фазы Draw внутри `Canvas {}`.
+
+### Доступность кликабельных областей
+
+Кликабельная область, которая не является `Cmp*`-кнопкой, получает `onClickLabel` (строка из
+ресурсов) и `role`: `Modifier.clickable(onClickLabel = stringResource(Res.string.…_a11y_retry),
+role = Role.Button) { … }`. Иначе скринридер озвучит безымянную область.
+
+---
+
 ## Быстрый справочник
 
 | Паттерн | Использовать когда | Пропустить когда |
@@ -425,3 +497,6 @@ val label = "Count: $count"
 | **`derivedStateOf`** | Вход меняется быстрее, чем значимый выход | Вход и выход меняются с одинаковой частотой |
 | **`remember(key)`** | Дорогостоящее вычисление из внешних переменных | Дешёвое вычисление; нет внешних зависимостей |
 | **`rememberSaveable`** | Пользовательский ввод, состояние формы, позиция скролла | Легко восстанавливаемое состояние |
+| **`reverseLayout = true`** | Чат/лента, где «низ» — стартовая позиция | Обычные списки сверху вниз |
+| **`drawWithCache`** | Геометрия зависит только от размера/цветов | Рисунок меняется каждый кадр (анимация) |
+| **`XxxActions`-bundle** | Один набор колбэков через 2+ уровня composable | 2–3 колбэка в одной функции |

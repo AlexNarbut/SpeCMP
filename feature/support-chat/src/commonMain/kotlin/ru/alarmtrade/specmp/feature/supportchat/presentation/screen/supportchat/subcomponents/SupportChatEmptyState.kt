@@ -30,8 +30,8 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_chip_documents
-import specmp.feature.support_chat.generated.resources.supportchat_chat_chip_installation_photos
+import specmp.feature.support_chat.generated.resources.supportchat_chat_hint_documents
+import specmp.feature.support_chat.generated.resources.supportchat_chat_hint_installation_photos
 import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empty_subtitle
 import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empty_title
 
@@ -71,12 +71,12 @@ internal fun SupportChatEmptyState(
         ) {
             EmptyHintChip(
                 icon = CmpIcons.Description,
-                label = stringResource(Res.string.supportchat_chat_chip_documents),
+                label = stringResource(Res.string.supportchat_chat_hint_documents),
                 colors = colors,
             )
             EmptyHintChip(
                 icon = CmpIcons.Image,
-                label = stringResource(Res.string.supportchat_chat_chip_installation_photos),
+                label = stringResource(Res.string.supportchat_chat_hint_installation_photos),
                 colors = colors,
             )
         }

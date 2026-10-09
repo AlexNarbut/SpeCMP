@@ -4,44 +4,68 @@ import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
+import ru.alarmtrade.specmp.feature.supportchat.domain.timeline.SupportChatTimeline
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 
 /**
  * Состояние экрана чата.
  *
- * История и соединение — два независимых измерения (S-1): можно быть offline
- * с полной лентой (баннер сверху, лента под ним) и online с ошибкой истории
- * (полный экран ошибки, баннера нет).
+ * История и соединение — два независимых измерения: можно быть offline с полной
+ * лентой (баннер сверху, лента под ним) и online с ошибкой истории (полный экран
+ * ошибки, баннера нет).
  *
- * Ошибка первой загрузки → `history = Error` (полный экран с кнопкой «Повторить»);
- * ошибка последующей пагинации при живой ленте ленту не затирает — уходит тостом
- * (`SupportChatEffect.HistoryLoadFailed`). Payload ошибки UI не читает — причина
- * одна, экран рисует свой `stringResource`.
+ * `history = Error` возникает только когда показывать нечего; при живой ленте
+ * (восстановленный outbox, live-сообщение) ошибка загрузки уходит тостом
+ * (`SupportChatEffect.HistoryLoadFailed`).
  */
 @Immutable
 data class SupportChatScreenState(
-    // История: None/Loading → скелетон, Content → лента, Error → полный экран.
-    // ImmutableList: стабильность для композера (U-12).
-    val history: LCEState<ImmutableList<SupportChatMessage>> = LCEState.None(),
+    // None/Loading → скелетон, Content → лента, Error → полный экран.
+    val history: LCEState<SupportChatTimeline> = LCEState.None(),
+    // Первая страница истории получена: пока false, подгрузка — это первичная загрузка.
+    val isInitialHistoryLoaded: Boolean = false,
+    // Курсор следующей (более старой) страницы истории.
+    val historyCursor: SupportChatHistoryCursor? = null,
     val isLoadingMore: Boolean = false,
+    // Последняя загрузка страницы упала: автоповтор по триггеру пагинации
+    // выключен (иначе цикл «ошибка → тост → повтор»), повтор — жестом пользователя.
+    val isHistoryPagingFailed: Boolean = false,
     val hasMoreHistory: Boolean = true,
 
-    // Соединение — измерение, независимое от истории.
-    val isOffline: Boolean = false,
+    val connection: SupportChatConnection = SupportChatConnection.Connecting,
+    // Соединение уже терялось и ещё не восстановлено: плашка — «нет соединения», а не
+    // «Подключение…» (переподключение, ожидание сети, повтор сессии).
+    val hasConnectionIssue: Boolean = false,
+    // Сервер отверг авторизацию: SDK подключится сам после повторного входа.
+    val isChatAuthFailed: Boolean = false,
 
     val typingAuthor: String? = null,
     // Вложения композера — сразу в presentation-модели, маппинг на границе VM.
     val pendingAttachments: ImmutableList<SupportChatUiAttachment> = persistentListOf(),
     val downloadingAttachmentId: String? = null,
 ) {
-    /**
-     * Сообщения текущей ленты (пусто в None/Loading/Error).
-     *
-     * Инвариант (P-16): порядок поддерживает ViewModel при каждой вставке —
-     * список всегда отсортирован по времени (старые → новые), UI сортировку
-     * на построении списка не делает.
-     */
+    /** Лента текущего состояния; пустая в None/Loading/Error. */
+    val timeline: SupportChatTimeline
+        get() = (history as? LCEState.Content)?.content ?: SupportChatTimeline.Empty
+
+    /** Сообщения ленты по возрастанию времени (инвариант держит [SupportChatTimeline]). */
     val messages: List<SupportChatMessage>
-        get() = (history as? LCEState.Content)?.content ?: emptyList()
+        get() = timeline.messages
+
+    /** Что показывает плашка соединения (null — ничего). */
+    val connectionBanner: SupportChatConnectionBanner?
+        get() = when {
+            connection == SupportChatConnection.Online -> null
+            isChatAuthFailed -> SupportChatConnectionBanner.AuthFailed
+            hasConnectionIssue || connection == SupportChatConnection.Offline -> SupportChatConnectionBanner.Reconnecting
+            else -> SupportChatConnectionBanner.Connecting
+        }
+
+    /** Единственный источник «можно ли отправлять»: ввод только в Online. */
+    val isInputEnabled: Boolean
+        get() = connection == SupportChatConnection.Online
 }

@@ -28,7 +28,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_typing_author
+import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_typing_author
 
 @Composable
 internal fun SupportChatTypingIndicator(
@@ -44,7 +44,7 @@ internal fun SupportChatTypingIndicator(
         CmpText(
             // Одна фраза целиком в ресурсе (правило 6 localization.md):
             // порядок слов и разделитель — часть перевода.
-            text = stringResource(Res.string.supportchat_chat_typing_author, author),
+            text = stringResource(Res.string.supportchat_chat_msg_typing_author, author),
             modifier = Modifier.padding(horizontal = 6.dp),
             color = colors.primary,
         )

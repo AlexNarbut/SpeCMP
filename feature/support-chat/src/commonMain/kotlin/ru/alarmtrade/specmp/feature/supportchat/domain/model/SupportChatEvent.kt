@@ -1,7 +1,9 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.model
 
 sealed class SupportChatEvent {
-    data class ConnectionChanged(val isConnected: Boolean) : SupportChatEvent()
+
+    /** Изменение состояния соединения. */
+    data class Connection(val state: SupportChatConnectionState) : SupportChatEvent()
 
     /**
      * @param isMine собственное событие набора (SDK эхит наш же Writing обратно) —

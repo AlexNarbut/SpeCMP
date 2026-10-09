@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -49,9 +50,11 @@ internal fun SupportChatPendingAttachmentChip(
                 modifier = Modifier.size(20.dp),
             )
 
+            // Не weight: в элементе LazyRow ширина не ограничена, и weight(fill = false)
+            // схлопывал текст в ноль — имя файла не было видно.
             CmpText(
                 text = attachment.name,
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.widthIn(max = CHIP_NAME_MAX_WIDTH),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -64,3 +67,5 @@ internal fun SupportChatPendingAttachmentChip(
         }
     }
 }
+
+private val CHIP_NAME_MAX_WIDTH = 180.dp

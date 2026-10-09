@@ -1,9 +1,7 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,49 +9,67 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.yield
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.supportchat.data.outbox.SupportChatOutboxEntry
-import ru.alarmtrade.specmp.feature.supportchat.data.outbox.SupportChatOutboxStore
-import ru.alarmtrade.specmp.feature.supportchat.data.outbox.toOutboxEntries
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatNotConnectedException
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
+import ru.alarmtrade.specmp.feature.supportchat.domain.timeline.SupportChatTimeline
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.isResendable
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toDomain
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+/**
+ * ViewModel экрана чата. Соединением владеет SDK: VM держит сессию, пока жива (уход с экрана
+ * отпускает её), отображает состояние соединения и на каждом `Ready` перечитывает первую
+ * страницу истории и отправляет очередь. Инварианты ленты держит [SupportChatTimeline],
+ * очередь — [SupportChatOutbox].
+ *
+ * Конкурентность:
+ * - события сессии собираются на main (поток репозитория — на io), лента и флаги — только
+ *   `_state.update {}`;
+ * - загрузка истории — одна за раз ([historyJob], main-confined);
+ * - отправка — [sendMutex]: новые, ретраи и очередь уходят строго по одной;
+ * - outbox — явными переходами, собственный мьютекс реализации.
+ */
 class SupportChatScreenViewModel(
     private val repository: SupportChatRepository,
     private val dispatchers: AppDispatchers,
-    // Application-scoped скоуп: закрытие чат-сессии из onCleared должно пережить
-    // viewModelScope (уже отменён на момент onCleared).
-    private val appScope: CoroutineScope,
-    // Платформенный сейвер из composeApp: зависимость конструктора, передаётся
-    // через parametersOf при создании VM (нужен composition context на Android).
+    // Платформенные порты из composeApp: зависимости конструктора, передаются
+    // через parametersOf при создании VM.
     private val fileSaver: SupportChatFileSaver,
-    // Персистентная очередь неотправленных: переживает смерть VM и пересоздание
-    // процесса; очищается при логауте (зарегистрирован как AuthCloseable).
-    private val outboxStore: SupportChatOutboxStore,
+    private val attachmentFiles: SupportChatAttachmentFiles,
+    private val fileOpener: SupportChatFileOpener,
+    private val outbox: SupportChatOutbox,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
@@ -62,53 +78,41 @@ class SupportChatScreenViewModel(
     private val _effect = sideEffectFlow<SupportChatEffect>()
     val effect: SharedFlow<SupportChatEffect> = _effect.asSharedFlow()
 
-    // Таймаут индикатора набора. Пишется только из коллектора событий
-    // (единственный последовательный контекст), поэтому гонок нет: раньше поле
-    // писалось и из io-коллектора, и с main — отсюда росла потерянная отмена
-    // и «повисший» индикатор.
+    private val sendMutex = Mutex()
+
+    // Пишется только из коллектора событий (единственный последовательный контекст).
     private var typingTimeoutJob: Job? = null
 
-    // Оба только main-confined: пишутся из интентов экрана (main) и сброса
-    // таймаута в viewModelScope.
+    // Main-confined: сбор сессии и текущая загрузка страницы истории.
+    private var sessionJob: Job? = null
+    private var historyJob: Job? = null
+
+    // Main-confined: интенты экрана и flush в viewModelScope.
     private val markedAsReadIds = mutableSetOf<Long>()
     private val pendingReadIds = mutableSetOf<Long>()
     private var readFlushJob: Job? = null
 
-    // Клиентские id оптимистичных сообщений: метка времени + счётчик инстанса VM.
-    // Контракт идентичности — в KDoc SupportChatMessage; уникальность держится
-    // в пределах инстанса VM (пер-ентри скоуп не даёт двум VM пересечься).
-    private var clientMessageIdSequence = 0L
-
     init {
-        // Очередь восстанавливается первой: это самые новые сообщения,
-        // история при своей загрузке встаёт перед ними.
-        restoreOutbox()
-        // Порядок обязателен: сначала подписка на hot flow событий, затем openChat —
-        // SDK публикует MessagesPage без replay прямо во время loadNextMessages().
-        startEventCollection()
-        safeLaunch {
-            // Дать коллектору событий шанс подписаться до синхронного emit'а истории.
-            yield()
-            connectAndLoadInitialHistory()
+        sessionJob = safeLaunch {
+            // Очередь восстанавливается первой: это самые новые сообщения,
+            // история при своей загрузке встаёт перед ними.
+            restoreOutbox()
+            collectSession()
         }
     }
 
-    // public для тестов: platform вызывает onCleared через ViewModelStore,
-    // unit-тесты — напрямую.
-    public override fun onCleared() {
-        appScope.launch {
-            withContext(dispatchers.io) { repository.closeChat() }
-        }
-    }
+    // region Вложения композера
 
-    // Тип вложения определяется источником выбора, а не содержимым файла:
-    // картинка, выбранная как документ, должна уйти документом.
     fun onImagePicked(file: SupportChatPickedFile) {
         addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Image))
     }
 
     fun onDocumentPicked(file: SupportChatPickedFile) {
         addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Document))
+    }
+
+    fun onAttachmentRejected(tooLarge: Boolean) {
+        _effect.tryEmit(SupportChatEffect.AttachmentRejected(tooLarge))
     }
 
     private fun addPendingAttachment(attachment: SupportChatUiAttachment) {
@@ -118,150 +122,392 @@ class SupportChatScreenViewModel(
     }
 
     fun onRemoveAttachment(id: String) {
+        val removed = _state.value.pendingAttachments.firstOrNull { it.id == id } ?: return
         _state.update { current ->
             current.copy(pendingAttachments = current.pendingAttachments.filterNot { it.id == id }.toPersistentList())
         }
+        removed.localPath?.let { path -> safeLaunch { discardFile(path) } }
     }
 
-    // Скачивание доступно только для входящих вложений (от поддержки) — см. UI.
-    fun onDownloadAttachment(attachment: SupportChatUiAttachment) {
-        val url = attachment.url ?: return
+    // endregion
 
-        // Атомарный guard: двойное нажатие не пройдёт (раньше проверка и запись
-        // были разнесены, оба нажатия проходили, второе молча игнорировалось).
-        _state.update { current ->
-            if (current.downloadingAttachmentId != null) {
-                current
-            } else {
-                current.copy(downloadingAttachmentId = attachment.id)
-            }
-        }
-        if (_state.value.downloadingAttachmentId != attachment.id) return
-
-        safeLaunch {
-            when (val response = withContext(dispatchers.io) { repository.downloadFile(url) }) {
-                is Response.Success -> {
-                    when (val result = withContext(dispatchers.io) {
-                        fileSaver.saveToDownloads(attachment.name, response.value)
-                    }) {
-                        is SupportChatFileSaveResult.Saved ->
-                            _effect.tryEmit(SupportChatEffect.AttachmentDownloaded(result.path))
-                        // Пользователь сам отменил системный диалог — не ошибка.
-                        SupportChatFileSaveResult.Cancelled -> Unit
-                        SupportChatFileSaveResult.Failed ->
-                            _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
-                    }
-                }
-                is Response.Error -> {
-                    logger.d(response.exception) { "Failed to download attachment" }
-                    _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
-                }
-            }
-            _state.update { it.copy(downloadingAttachmentId = null) }
-        }
-    }
+    // region Отправка
 
     fun onSend(text: String) {
+        // Офлайн-ввод запрещён продуктово; UI выключает композер, VM — страховка.
+        if (!_state.value.isInputEnabled) return
         val trimmed = text.trim()
         val attachments = _state.value.pendingAttachments
         if (trimmed.isEmpty() && attachments.isEmpty()) return
 
-        val timestamp = now()
-        val outgoingMessages = buildList {
-            attachments.forEach { attachment ->
-                add(createOptimisticMessage(timestamp = timestamp, attachment = attachment))
-            }
-            if (trimmed.isNotEmpty()) {
-                add(createOptimisticMessage(timestamp = timestamp, text = trimmed))
-            }
+        // Контент сообщения эксклюзивен (SDK не поддерживает подпись к вложению):
+        // каждое вложение и текст — отдельные сообщения.
+        val timestamp = Clock.System.now()
+        val outgoing = buildList {
+            attachments.forEach { add(optimisticMessage(timestamp, attachment = it.toDomain())) }
+            if (trimmed.isNotEmpty()) add(optimisticMessage(timestamp, text = trimmed))
         }
 
         _state.update {
             it.copy(
-                history = LCEState.Content((it.messages + outgoingMessages).toPersistentList()),
+                history = LCEState.Content(it.timeline.withOptimistic(outgoing)),
                 pendingAttachments = persistentListOf(),
             )
         }
 
         safeLaunch {
-            outgoingMessages.forEach { message ->
-                sendOutgoingMessage(
-                    clientMessageId = message.id,
-                    text = message.text.orEmpty(),
-                    attachment = message.attachment,
-                )
+            sendMutex.withLock {
+                outgoing.forEach { send(it.id) }
             }
         }
     }
 
     fun onRetry(messageId: String) {
-        val message = _state.value.messages.find { it.id == messageId && it.isMine } ?: return
+        // Атомарный переход Failed → Sending: второй тап (или action снекбара
+        // параллельно с тапом по пузырю) перехода не получит и ничего не отправит.
+        if (!tryTransition(messageId, from = RETRYABLE, to = SupportChatMessageStatus.Sending)) return
         safeLaunch {
-            updateMessageStatus(messageId, SupportChatMessageStatus.Sending)
-            sendOutgoingMessage(
-                clientMessageId = messageId,
-                text = message.text ?: "",
-                attachment = message.attachment,
-            )
+            sendMutex.withLock { send(messageId) }
         }
     }
+
+    fun onDeleteFailed(messageId: String) {
+        val message = _state.value.timeline.find(messageId) ?: return
+        if (!message.isMine || message.serverId != null || message.status != SupportChatMessageStatus.Failed) return
+        updateTimeline { it.without(messageId) }
+        safeLaunch { forget(message) }
+    }
+
+    /**
+     * Отправка одного сообщения, уже переведённого в `Sending`. Вызывать под [sendMutex].
+     */
+    private suspend fun send(messageId: String) {
+        val message = _state.value.timeline.find(messageId) ?: return
+        if (message.status != SupportChatMessageStatus.Sending) return
+
+        if (!_state.value.isInputEnabled) {
+            park(message)
+            return
+        }
+
+        // Запись очереди — до отправки: Success от SDK не подтверждает доставку, а
+        // процесс может умереть посреди загрузки. Удалит запись только серверное эхо.
+        withContext(dispatchers.io) { outbox.enqueue(message.copy(status = SupportChatMessageStatus.Pending)) }
+
+        val response = when {
+            !message.isResendable() -> missingContent(message)
+            message.attachment != null -> sendAttachment(message.attachment)
+            else -> withContext(dispatchers.io) { repository.sendMessage(message.text.orEmpty()) }
+        }
+
+        when (response) {
+            is Response.Success -> {
+                // «Ушло в сокет», а не «доставлено»: запись остаётся до эха. Если эхо
+                // успело раньше, markSent не воскресит удалённую запись.
+                updateStatus(messageId, SupportChatMessageStatus.Sent)
+                withContext(dispatchers.io) { outbox.markSent(messageId) }
+            }
+            is Response.Error -> {
+                logger.d(response.exception) { "Failed to send message" }
+                if (response.exception is SupportChatNotConnectedException || !_state.value.isInputEnabled) {
+                    // Отправку оборвала потеря связи — это не ошибка пользователя:
+                    // сообщение ждёт переподключения в очереди.
+                    park(message)
+                } else {
+                    fail(message)
+                }
+            }
+        }
+    }
+
+    private suspend fun park(message: SupportChatMessage) {
+        updateStatus(message.id, SupportChatMessageStatus.Pending)
+        withContext(dispatchers.io) { outbox.enqueue(message.copy(status = SupportChatMessageStatus.Pending)) }
+    }
+
+    private suspend fun fail(message: SupportChatMessage) {
+        updateStatus(message.id, SupportChatMessageStatus.Failed)
+        withContext(dispatchers.io) { outbox.enqueue(message.copy(status = SupportChatMessageStatus.Failed)) }
+        _effect.tryEmit(SupportChatEffect.MessageSendFailed(message.id, canRetry = message.isResendable()))
+    }
+
+    private fun missingContent(message: SupportChatMessage): Response.Error {
+        // Вложение без локального файла (копию вычистили) или пустой текст —
+        // отправить нечего. Это не Success: сообщение уходит в Failed без Retry.
+        logger.d { "Message ${message.id} has nothing to send" }
+        return Response.Error(IllegalStateException("Message has nothing to send"))
+    }
+
+    private suspend fun sendAttachment(attachment: SupportChatAttachment): Response<Unit> {
+        val localPath = attachment.localPath
+            ?: return Response.Error(IllegalStateException("Attachment local file is missing"))
+        val file = SupportChatPickedFile(
+            id = attachment.id,
+            name = attachment.name,
+            path = localPath,
+            mimeType = (attachment as? SupportChatAttachment.Document)?.mimeType,
+            sizeBytes = (attachment as? SupportChatAttachment.Document)?.sizeBytes,
+        )
+        return withContext(dispatchers.io) {
+            when (attachment) {
+                is SupportChatAttachment.Image -> repository.sendImage(file)
+                is SupportChatAttachment.Document -> repository.sendDocument(file)
+            }
+        }
+    }
+
+    private fun retryPendingMessages() {
+        safeLaunch {
+            sendMutex.withLock {
+                val pending = _state.value.messages
+                    .filter { it.isMine && it.status == SupportChatMessageStatus.Pending }
+                    .map { it.id }
+                for (id in pending) {
+                    if (!_state.value.isInputEnabled) break
+                    if (tryTransition(id, from = PENDING, to = SupportChatMessageStatus.Sending)) {
+                        send(id)
+                    }
+                }
+            }
+        }
+    }
+
+    // Сообщение покинуло ленту (эхо заменило оптимистичное, пользователь удалил):
+    // запись очереди и локальная копия вложения больше не нужны.
+    private suspend fun forget(message: SupportChatMessage) {
+        withContext(dispatchers.io) { outbox.remove(message.id) }
+        message.attachment?.localPath?.let { discardFile(it) }
+    }
+
+    private suspend fun discardFile(path: String) {
+        withContext(dispatchers.io) { attachmentFiles.discard(path) }
+    }
+
+    // endregion
+
+    // region Соединение
+
+    /**
+     * Сессия живёт, пока VM её собирает: отмена `viewModelScope` при уходе с экрана отпускает
+     * соединение в SDK. В фоне заявка держится — SDK сам ждёт сеть и переподключается.
+     */
+    private suspend fun collectSession() {
+        repository.session()
+            .flowOn(dispatchers.io)
+            .collect { handleEvent(it) }
+    }
+
+    private suspend fun handleEvent(event: SupportChatEvent) {
+        when (event) {
+            is SupportChatEvent.Connection -> handleConnection(event.state)
+            is SupportChatEvent.TypingChanged -> {
+                // Своё событие набора (SDK эхит его обратно) не рисуем.
+                if (!event.isMine) handleTypingChanged(event.authorEmail, event.isTyping)
+            }
+            is SupportChatEvent.MessageReceived -> handleMessageReceived(event.message)
+            is SupportChatEvent.MessagesRead -> updateTimeline { it.withRead(event.ids) }
+        }
+    }
+
+    /** UI-состояние соединения — прямое отображение состояния SDK. */
+    private fun handleConnection(state: SupportChatConnectionState) {
+        when (state) {
+            SupportChatConnectionState.Connecting ->
+                _state.update { it.copy(connection = SupportChatConnection.Connecting) }
+            SupportChatConnectionState.Ready -> {
+                _state.update {
+                    it.copy(
+                        connection = SupportChatConnection.Online,
+                        hasConnectionIssue = false,
+                        isChatAuthFailed = false,
+                    )
+                }
+                // Пока соединения не было, могли прийти сообщения; очередь — после страницы.
+                loadFirstHistoryPage()
+            }
+            SupportChatConnectionState.Reconnecting,
+            SupportChatConnectionState.WaitingForNetwork,
+            SupportChatConnectionState.AuthFailed -> {
+                logger.d { "Chat connection lost: $state" }
+                _state.update {
+                    it.copy(
+                        connection = SupportChatConnection.Offline,
+                        hasConnectionIssue = true,
+                        isChatAuthFailed = state == SupportChatConnectionState.AuthFailed,
+                    )
+                }
+                requeueUnconfirmed()
+            }
+            SupportChatConnectionState.Unavailable -> {
+                logger.d { "Chat session unavailable" }
+                _state.update {
+                    it.copy(
+                        connection = SupportChatConnection.Offline,
+                        hasConnectionIssue = true,
+                        // Показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии).
+                        history = if (it.history is LCEState.Content) it.history else LCEState.Error(HISTORY_ERROR),
+                    )
+                }
+            }
+        }
+    }
+
+    // Отправленные в сокет, но без эха, при обрыве считаем недоставленными: до ping-таймаута
+    // SDK отвечает Success и в мёртвый сокет. После переподключения они уйдут повторно
+    // (at-least-once: дубль возможен, если эхо потерялось, а сообщение дошло).
+    private fun requeueUnconfirmed() {
+        val unconfirmed = _state.value.messages.filter {
+            it.isMine && it.serverId == null && it.status == SupportChatMessageStatus.Sent
+        }
+        val requeued = unconfirmed.filter { tryTransition(it.id, from = SENT, to = SupportChatMessageStatus.Pending) }
+        if (requeued.isEmpty()) return
+        safeLaunch(dispatchers.io) {
+            requeued.forEach { outbox.enqueue(it.copy(status = SupportChatMessageStatus.Pending)) }
+        }
+    }
+
+    private fun handleTypingChanged(authorEmail: String?, isTyping: Boolean) {
+        _state.update { it.copy(typingAuthor = if (isTyping) authorEmail else null) }
+        typingTimeoutJob?.cancel()
+        if (isTyping && authorEmail != null) {
+            typingTimeoutJob = safeLaunch {
+                delay(TYPING_TIMEOUT)
+                _state.update { current ->
+                    if (current.typingAuthor == authorEmail) current.copy(typingAuthor = null) else current
+                }
+            }
+        }
+    }
+
+    private suspend fun handleMessageReceived(message: SupportChatMessage) {
+        val confirmed = updateTimelineConfirming(transform = { it.withIncoming(message) })
+        confirmed.forEach { forget(it) }
+    }
+
+    /**
+     * Применяет [transform] к ленте и возвращает оптимистичные сообщения, которые
+     * исчезли из неё — их заменило серверное (эхо или страница истории): запись
+     * очереди и локальная копия вложения больше не нужны.
+     */
+    private fun updateTimelineConfirming(
+        transform: (SupportChatTimeline) -> SupportChatTimeline,
+        extra: (SupportChatScreenState) -> SupportChatScreenState = { it },
+    ): List<SupportChatMessage> {
+        var confirmed = emptyList<SupportChatMessage>()
+        _state.update { current ->
+            val before = current.timeline
+            val after = transform(before)
+            confirmed = before.messages.filter { old -> old.serverId == null && after.find(old.id) == null }
+            extra(current.copy(history = LCEState.Content(after)))
+        }
+        return confirmed
+    }
+
+    // endregion
+
+    // region История
 
     fun onLoadMore() {
         val current = _state.value
-        if (current.isLoadingMore || !current.hasMoreHistory || current.history !is LCEState.Content) return
-        safeLaunch {
-            _state.update { it.copy(isLoadingMore = true) }
-            when (val response = withContext(dispatchers.io) { repository.loadNextMessages() }) {
-                is Response.Success -> _state.update { mergeHistoryPage(it, response.value) }
-                is Response.Error -> {
-                    // Лента живая: ошибка пагинации — тост, ленту не затираем.
-                    logger.d(response.exception) { "Failed to load next history page" }
-                    _state.update { it.copy(isLoadingMore = false) }
-                    _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
-                }
-            }
-        }
+        if (!current.isInputEnabled || !current.isInitialHistoryLoaded || !current.hasMoreHistory) return
+        if (historyJob?.isActive == true) return
+        _state.update { it.copy(isLoadingMore = true) }
+        historyJob = safeLaunch { loadHistoryPage(current.historyCursor) }
     }
 
     fun onHistoryRetry() {
-        safeLaunch { loadInitialHistory() }
-    }
-
-    fun onConnectionRetry() {
-        // Повторный клик во время выполнения пропускаем: попытка одна.
-        safeLaunch {
-            executeWithProceedLock {
-                when (withContext(dispatchers.io) { repository.openChat() }) {
-                    is Response.Success -> {
-                        _state.update { it.copy(isOffline = false) }
-                        if (_state.value.history !is LCEState.Content &&
-                            _state.value.hasMoreHistory
-                        ) {
-                            loadInitialHistory()
-                        }
-                        retryPendingMessages()
-                    }
-                    is Response.Error -> _state.update { it.copy(isOffline = true) }
-                }
+        when {
+            // Сессию не удалось начать — начать заново.
+            sessionJob?.isActive != true -> {
+                _state.update { it.copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading()) }
+                sessionJob = safeLaunch { collectSession() }
+            }
+            !_state.value.isInitialHistoryLoaded -> if (_state.value.isInputEnabled) loadFirstHistoryPage()
+            else -> {
+                _state.update { it.copy(isHistoryPagingFailed = false) }
+                onLoadMore()
             }
         }
     }
 
+    /**
+     * Самая новая страница — на каждом `Ready`: пока соединения не было, могли прийти
+     * сообщения. Перезапускает текущую загрузку. Пока первая страница не получена —
+     * первичная загрузка (скелетон / полноэкранная ошибка), дальше — тихое обновление.
+     */
+    private fun loadFirstHistoryPage() {
+        historyJob?.cancel()
+        _state.update { current ->
+            current.copy(
+                isLoadingMore = false,
+                // Лента (восстановленный outbox, live-сообщение) остаётся на экране.
+                history = if (!current.isInitialHistoryLoaded && current.history !is LCEState.Content) {
+                    LCEState.Loading()
+                } else {
+                    current.history
+                },
+            )
+        }
+        historyJob = safeLaunch { loadHistoryPage(cursor = null) }
+    }
+
+    private suspend fun loadHistoryPage(cursor: SupportChatHistoryCursor?) {
+        val isFirstPage = cursor == null
+        when (val response = withContext(dispatchers.io) { repository.loadHistoryPage(cursor) }) {
+            is Response.Success -> {
+                val page = response.value
+                val confirmed = updateTimelineConfirming(
+                    transform = { it.withHistoryPage(page.messages) },
+                    extra = { current ->
+                        // Повторная первая страница (после переподключения) пагинацию не сбрасывает:
+                        // курсор — номер страницы, новые сообщения сдвигают её только к дублям.
+                        val resetPaging = !isFirstPage || !current.isInitialHistoryLoaded
+                        current.copy(
+                            isInitialHistoryLoaded = true,
+                            isLoadingMore = false,
+                            isHistoryPagingFailed = false,
+                            historyCursor = if (resetPaging) page.nextCursor else current.historyCursor,
+                            hasMoreHistory = if (resetPaging) page.nextCursor != null else current.hasMoreHistory,
+                        )
+                    },
+                )
+                confirmed.forEach { forget(it) }
+            }
+            is Response.Error -> {
+                logger.d(response.exception) { "Failed to load history page" }
+                var hadContent = false
+                _state.update { current ->
+                    hadContent = current.history is LCEState.Content
+                    current.copy(
+                        isLoadingMore = false,
+                        isHistoryPagingFailed = true,
+                        // Показывать нечего — полноэкранная ошибка с «Повторить».
+                        history = if (hadContent) current.history else LCEState.Error(HISTORY_ERROR),
+                    )
+                }
+                if (hadContent) _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
+            }
+        }
+        // Очередь — после самой новой страницы: дошедшие сообщения уже подтвердила история.
+        if (isFirstPage) retryPendingMessages()
+    }
+
+    // endregion
+
+    // region Прочтение
+
     fun onMessagesVisible(messageIds: List<String>) {
-        // Батчинг (P-11): скролл истории отдаёт пачки видимых id — помечаем
-        // прочитанными одним сетевым вызовом с debounce, а не запросом на
-        // каждое сообщение.
-        val eligibleServerIds = mutableListOf<Long>()
+        // Батчинг: скролл истории отдаёт пачки видимых id — помечаем прочитанными
+        // одним сетевым вызовом с debounce, а не запросом на каждое сообщение.
         val idSet = messageIds.toHashSet()
-        _state.value.messages.forEach { message ->
-            val serverId = message.serverId ?: return@forEach
-            if (message.id in idSet &&
-                !message.isMine &&
-                message.status != SupportChatMessageStatus.Read &&
-                serverId !in markedAsReadIds &&
-                serverId !in pendingReadIds
-            ) {
-                eligibleServerIds += serverId
+        val eligibleServerIds = _state.value.messages.mapNotNull { message ->
+            val serverId = message.serverId
+            serverId?.takeIf {
+                message.id in idSet &&
+                    !message.isMine &&
+                    message.status != SupportChatMessageStatus.Read &&
+                    serverId !in markedAsReadIds &&
+                    serverId !in pendingReadIds
             }
         }
         if (eligibleServerIds.isEmpty()) return
@@ -292,327 +538,137 @@ class SupportChatScreenViewModel(
         }
     }
 
-    private fun startEventCollection() {
-        safeLaunch(dispatchers.io) {
-            repository.observeEvents()
-                .collect { response ->
-                    when (response) {
-                        is Response.Success -> handleEvent(response.value)
-                        is Response.Error -> handleEventError(response.exception)
+    // endregion
+
+    // region Скачивание
+
+    fun onDownloadAttachment(attachment: SupportChatUiAttachment) {
+        val url = attachment.url ?: return
+        if (!acquireFileSlot(attachment.id)) return
+
+        safeLaunch {
+            try {
+                when (val response = withContext(dispatchers.io) { repository.downloadFile(url) }) {
+                    is Response.Success -> saveDownloaded(attachment.name, response.value)
+                    is Response.Error -> {
+                        logger.d(response.exception) { "Failed to download attachment" }
+                        _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
                     }
                 }
-        }
-    }
-
-    private suspend fun handleEvent(event: SupportChatEvent) {
-        when (event) {
-            is SupportChatEvent.ConnectionChanged -> handleConnectionChanged(event.isConnected)
-            is SupportChatEvent.TypingChanged -> {
-                // Своё событие набора (SDK эхит его обратно) не рисуем.
-                if (!event.isMine) {
-                    handleTypingChanged(event.authorEmail, event.isTyping)
-                }
-            }
-            is SupportChatEvent.MessageReceived -> handleMessageReceived(event.message)
-            is SupportChatEvent.MessagesRead -> handleMessagesRead(event.ids)
-        }
-    }
-
-    private fun handleEventError(error: Throwable) {
-        // Одноразовая реакция сознательная: на iOS обрыв сокета приходит потоком
-        // ошибок ~кГц (SDK мапит onFailure в State.Error), повторные вызовы
-        // closeChat только дёргают SDK. Не «чинить» без пересмотра обоснования.
-        if (_state.value.isOffline) return
-        logger.d(error) { "Chat event error, switching to offline" }
-        _state.update { it.copy(isOffline = true) }
-        safeLaunch(dispatchers.io) { repository.closeChat() }
-    }
-
-    private fun handleConnectionChanged(isConnected: Boolean) {
-        _state.update { it.copy(isOffline = !isConnected) }
-        if (isConnected) {
-            retryPendingMessages()
-        } else {
-            safeLaunch {
-                withContext(dispatchers.io) { repository.closeChat() }
+            } finally {
+                _state.update { it.copy(downloadingAttachmentId = null) }
             }
         }
     }
 
-    private fun handleTypingChanged(authorEmail: String?, isTyping: Boolean) {
-        _state.update { it.copy(typingAuthor = if (isTyping) authorEmail else null) }
-        typingTimeoutJob?.cancel()
-        if (isTyping && authorEmail != null) {
-            typingTimeoutJob = safeLaunch {
-                delay(TYPING_TIMEOUT)
-                _state.update { current ->
-                    if (current.typingAuthor == authorEmail) current.copy(typingAuthor = null) else current
-                }
-            }
-        }
-    }
+    /**
+     * Открыть вложение во внешнем приложении: своё неподтверждённое — из локальной
+     * копии, остальные — скачать и открыть. Индикатор — тот же слот, что у скачивания.
+     */
+    fun onOpenAttachment(attachment: SupportChatUiAttachment) {
+        val localPath = attachment.localPath
+        val url = attachment.url
+        if (localPath == null && url == null) return
+        if (!acquireFileSlot(attachment.id)) return
 
-    private fun handleMessageReceived(message: SupportChatMessage) {
-        _state.update { current ->
-            val messages = current.messages
-            val index = when {
-                message.serverId != null -> messages.indexOfFirst {
-                    it.isMine && it.serverId == message.serverId
-                }
-                else -> -1
-            }
-            val updatedMessages = if (index != -1) {
-                messages.toMutableList().apply { set(index, message) }
-            } else {
-                val echoIndex = if (message.isMine) {
-                    messages.indexOfEcho(message)
-                } else {
-                    -1
-                }
-                if (echoIndex != -1) {
-                    messages.toMutableList().apply { set(echoIndex, message) }
-                } else {
-                    // Первое сообщение снимает скелетон: history становится Content,
-                    // и полноэкранная ошибка/скелетон затирки ленты не дождутся.
-                    messages + message
-                }
-            }
-            // Инвариант порядка — ответственность state (P-16): серверная страница
-            // может прийти newest-first, живое сообщение дописывается в конец —
-            // поэтому на вставке приводим список к возрастающему порядку по времени.
-            // Это событийная точка, а не построение списка в UI (там сортировки нет).
-            val sortedMessages = updatedMessages.sortedBy { it.time }
-            current.copy(history = LCEState.Content(sortedMessages.toPersistentList()))
-        }
-        // Серверное эхо заменило оптимистичное сообщение: его запись
-        // покидает очередь (снимок берёт только serverId == null).
-        persistOutbox()
-    }
-
-    private fun List<SupportChatMessage>.indexOfEcho(message: SupportChatMessage): Int {
-        // Обе ветки — FIFO: порядок подтверждений сервера соответствует
-        // порядку отправки (P-9).
-        indexOfFirst { it.isMine && it.serverId == null && it.contentMatches(message) }
-            .takeIf { it != -1 }?.let { return it }
-        return indexOfFirst { it.isMine && it.serverId == null && it.shapeMatches(message) }
-    }
-
-    private fun mergeHistoryPage(
-        current: SupportChatScreenState,
-        page: SupportChatHistoryPage,
-    ): SupportChatScreenState {
-        val existingIds = current.messages.map { it.serverId ?: it.id }.toHashSet()
-        val newMessages = page.messages.filter { (it.serverId ?: it.id) !in existingIds }
-        return current.copy(
-            history = LCEState.Content(
-                // Серверная страница может прийти newest-first — нормализуем
-                // к возрастающему порядку (инвариант state).
-                (newMessages + current.messages).sortedBy { it.time }.toPersistentList()
-            ),
-            isLoadingMore = false,
-            hasMoreHistory = page.hasMore,
-        )
-    }
-
-    private fun handleMessagesRead(ids: List<Long>) {
-        updateMessages { messages ->
-            messages.map { message ->
-                if (message.serverId != null && message.serverId in ids) {
-                    message.copy(status = SupportChatMessageStatus.Read)
-                } else {
-                    message
-                }
-            }
-        }
-    }
-
-    private suspend fun sendOutgoingMessage(
-        clientMessageId: String,
-        text: String,
-        attachment: SupportChatAttachment?,
-    ) {
-        if (_state.value.isOffline) {
-            updateMessageStatus(clientMessageId, SupportChatMessageStatus.Pending)
-            return
-        }
-
-        // Контент сообщения эксклюзивен (SDK не поддерживает подпись к вложению),
-        // поэтому каждая ветка здесь — либо текст, либо вложение. «Нечего
-        // отправлять» — ошибка контракта, а не молчаливый Success: иначе
-        // сообщение получит статус Sent, ничего не отправив (P-7).
-        val response = when {
-            text.isNotBlank() && attachment != null -> unsupportedMessageContent()
-            text.isNotBlank() -> withContext(dispatchers.io) { repository.sendMessage(text) }
-            attachment?.localPath != null -> sendAttachment(attachment)
-            attachment != null -> missingLocalFile()
-            else -> nothingToSend()
-        }
-
-        when (response) {
-            is Response.Success -> updateMessageStatus(clientMessageId, SupportChatMessageStatus.Sent)
-            is Response.Error -> {
-                logger.d(response.exception) { "Failed to send message" }
-                updateMessageStatus(clientMessageId, SupportChatMessageStatus.Failed)
-                _effect.tryEmit(SupportChatEffect.MessageSendFailed(clientMessageId))
-            }
-        }
-    }
-
-    private fun unsupportedMessageContent(): Response.Error {
-        logger.d { "Message with both text and attachment is not supported by SDK" }
-        return Response.Error(IllegalStateException("Message cannot carry text and attachment together"))
-    }
-
-    private fun missingLocalFile(): Response.Error {
-        logger.d { "Attachment local file is missing, cannot resend" }
-        return Response.Error(IllegalStateException("Attachment local file is missing"))
-    }
-
-    private fun nothingToSend(): Response.Error {
-        logger.d { "Message has neither text nor attachment" }
-        return Response.Error(IllegalStateException("Nothing to send"))
-    }
-
-    private suspend fun sendAttachment(attachment: SupportChatAttachment): Response<Unit> {
-        val localPath = attachment.localPath ?: return missingLocalFile()
-        val file = SupportChatPickedFile(
-            id = attachment.id,
-            name = attachment.name,
-            path = localPath,
-            mimeType = (attachment as? SupportChatAttachment.Document)?.mimeType,
-            sizeBytes = (attachment as? SupportChatAttachment.Document)?.sizeBytes,
-        )
-        return withContext(dispatchers.io) {
-            when (attachment) {
-                is SupportChatAttachment.Image -> repository.sendImage(file)
-                is SupportChatAttachment.Document -> repository.sendDocument(file)
-            }
-        }
-    }
-
-    private fun retryPendingMessages() {
-        // Сериализация через общий proceed-lock: вызовы, пришедшие во время
-        // выполнения, дождутся конца и выполнятся следом — повторный прогон
-        // по пустой очереди дёшев. Самодельный флаг-барьер не нужен.
         safeLaunch {
-            executeWithProceedLock(needSkipAnother = false) {
-                retryPendingMessagesSequentially()
+            try {
+                val result = withContext(dispatchers.io) {
+                    when {
+                        localPath != null -> fileOpener.openLocal(localPath, attachment.name)
+                        url != null -> when (val response = repository.downloadFile(url)) {
+                            is Response.Success -> fileOpener.openBytes(attachment.name, response.value)
+                            is Response.Error -> SupportChatFileOpenResult.Failed
+                        }
+                        else -> SupportChatFileOpenResult.Failed
+                    }
+                }
+                when (result) {
+                    SupportChatFileOpenResult.Opened -> Unit
+                    SupportChatFileOpenResult.NoApp ->
+                        _effect.tryEmit(SupportChatEffect.AttachmentOpenFailed(noApp = true))
+                    SupportChatFileOpenResult.Failed ->
+                        _effect.tryEmit(SupportChatEffect.AttachmentOpenFailed(noApp = false))
+                }
+            } finally {
+                _state.update { it.copy(downloadingAttachmentId = null) }
             }
         }
     }
 
-    private suspend fun retryPendingMessagesSequentially() {
-        val pending = _state.value.messages.filter { it.status == SupportChatMessageStatus.Pending && it.isMine }
-        pending.forEach { message ->
-            if (_state.value.isOffline) return
-
-            updateMessageStatus(message.id, SupportChatMessageStatus.Sending)
-            sendOutgoingMessage(
-                clientMessageId = message.id,
-                text = message.text ?: "",
-                attachment = message.attachment,
-            )
-        }
-    }
-
-    private fun updateMessageStatus(id: String, status: SupportChatMessageStatus) {
-        updateMessages { messages -> messages.map { if (it.id == id) it.copy(status = status) else it } }
-        // Любой переход статуса меняет снимок очереди: Sent/Read удаляют
-        // запись, Pending/Failed — сохраняют.
-        persistOutbox()
-    }
-
-    private fun updateMessages(transform: (List<SupportChatMessage>) -> List<SupportChatMessage>) {
+    // Слот захватывает ровно один вызов: флаг вычисляется внутри того же update,
+    // что и запись (повторный тап по тому же или другому вложению не пройдёт).
+    private fun acquireFileSlot(attachmentId: String): Boolean {
+        var acquired = false
         _state.update { current ->
-            current.copy(history = LCEState.Content(transform(current.messages).toPersistentList()))
-        }
-    }
-
-    private fun restoreOutbox() {
-        val restored = outboxStore.load().map { it.toMessage() }
-        if (restored.isEmpty()) return
-        _state.update { current ->
-            current.copy(history = LCEState.Content((current.messages + restored).toPersistentList()))
-        }
-    }
-
-    private fun persistOutbox() {
-        outboxStore.save(_state.value.messages.toOutboxEntries())
-    }
-
-    private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage {
-        val domainAttachment = attachment?.let { stored ->
-            when (stored.kind) {
-                SupportChatOutboxEntry.Kind.Image -> SupportChatAttachment.Image(
-                    id = stored.id,
-                    name = stored.name,
-                    localPath = stored.localPath,
-                )
-                SupportChatOutboxEntry.Kind.Document -> SupportChatAttachment.Document(
-                    id = stored.id,
-                    name = stored.name,
-                    localPath = stored.localPath,
-                    mimeType = stored.mimeType,
-                    sizeBytes = stored.sizeBytes,
-                )
-            }
-        }
-        return SupportChatMessage(
-            id = clientId,
-            serverId = null,
-            text = text,
-            attachment = domainAttachment,
-            time = Instant.fromEpochMilliseconds(timeMillis).toLocalDateTime(TimeZone.currentSystemDefault()),
-            isMine = true,
-            authorEmail = null,
-            status = when (status) {
-                SupportChatOutboxEntry.Status.Pending -> SupportChatMessageStatus.Pending
-                SupportChatOutboxEntry.Status.Failed -> SupportChatMessageStatus.Failed
-            },
-        )
-    }
-
-    private suspend fun connectAndLoadInitialHistory() {
-        when (withContext(dispatchers.io) { repository.openChat() }) {
-            is Response.Success -> loadInitialHistory()
-            is Response.Error -> {
-                // Сессия не открыта: баннер offline поверх скелетона,
-                // повтор — кнопкой баннера (onConnectionRetry).
-                _state.update { it.copy(isOffline = true) }
-            }
-        }
-    }
-
-    private suspend fun loadInitialHistory() {
-        // В Content не сбрасываем: лента (в т.ч. восстановленная из outbox)
-        // остаётся на экране, а сброс на Loading стёр бы её до merge.
-        _state.update { current ->
-            if (current.history is LCEState.Content) {
+            if (current.downloadingAttachmentId != null) {
+                acquired = false
                 current
             } else {
-                current.copy(history = LCEState.Loading())
+                acquired = true
+                current.copy(downloadingAttachmentId = attachmentId)
             }
         }
-        when (val response = withContext(dispatchers.io) { repository.loadNextMessages() }) {
-            is Response.Success -> _state.update { mergeHistoryPage(it, response.value) }
-            is Response.Error -> {
-                logger.d(response.exception) { "Failed to load initial history" }
-                // Полноэкранная ошибка с кнопкой «Повторить» (onHistoryRetry).
-                _state.update { it.copy(history = LCEState.Error(error = "")) }
-            }
+        return acquired
+    }
+
+    private suspend fun saveDownloaded(fileName: String, bytes: ByteArray) {
+        when (val result = withContext(dispatchers.io) { fileSaver.saveToDownloads(fileName, bytes) }) {
+            is SupportChatFileSaveResult.Saved ->
+                _effect.tryEmit(SupportChatEffect.AttachmentDownloaded(result.path))
+            // Пользователь сам отменил системный диалог — не ошибка.
+            SupportChatFileSaveResult.Cancelled -> Unit
+            SupportChatFileSaveResult.PermissionDenied ->
+                _effect.tryEmit(SupportChatEffect.AttachmentSavePermissionDenied)
+            SupportChatFileSaveResult.Failed ->
+                _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
         }
     }
 
-    private fun createOptimisticMessage(
-        timestamp: LocalDateTime,
+    // endregion
+
+    // region Внутреннее
+
+    private suspend fun restoreOutbox() {
+        val restored = withContext(dispatchers.io) { outbox.load() }
+        if (restored.isEmpty()) return
+        updateTimeline { it.withOptimistic(restored) }
+    }
+
+    private fun updateTimeline(transform: (SupportChatTimeline) -> SupportChatTimeline) {
+        _state.update { current -> current.copy(history = LCEState.Content(transform(current.timeline))) }
+    }
+
+    private fun updateStatus(id: String, status: SupportChatMessageStatus) {
+        updateTimeline { it.withStatus(id, status) }
+    }
+
+    private fun tryTransition(
+        id: String,
+        from: Set<SupportChatMessageStatus>,
+        to: SupportChatMessageStatus,
+    ): Boolean {
+        var transitioned = false
+        _state.update { current ->
+            val next = current.timeline.tryTransition(id, from, to)
+            transitioned = next != null
+            if (next == null) current else current.copy(history = LCEState.Content(next))
+        }
+        return transitioned
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    private fun optimisticMessage(
+        timestamp: Instant,
         text: String? = null,
-        attachment: SupportChatUiAttachment? = null,
+        attachment: SupportChatAttachment? = null,
     ): SupportChatMessage {
         return SupportChatMessage(
-            id = nextClientMessageId(),
+            // Глобально уникален: переживает пересоздание VM и процесса (ключ outbox).
+            id = "$LOCAL_ID_PREFIX${Uuid.random()}",
             serverId = null,
             text = text,
-            attachment = attachment?.toDomain(),
+            attachment = attachment,
             time = timestamp,
             isMine = true,
             authorEmail = null,
@@ -620,58 +676,15 @@ class SupportChatScreenViewModel(
         )
     }
 
-    private fun nextClientMessageId(): String {
-        return "local-${Clock.System.now().toEpochMilliseconds()}-${clientMessageIdSequence++}"
-    }
-
-    private fun now(): LocalDateTime {
-        return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-    }
-
-    private fun SupportChatUiAttachment.toDomain(): SupportChatAttachment {
-        return when (kind) {
-            SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
-                id = id,
-                name = name,
-                localPath = localPath,
-            )
-            SupportChatUiAttachment.Kind.Document -> SupportChatAttachment.Document(
-                id = id,
-                name = name,
-                localPath = localPath,
-                mimeType = mimeType,
-                sizeBytes = sizeBytes,
-            )
-        }
-    }
-
-    private fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): SupportChatUiAttachment {
-        return SupportChatUiAttachment(
-            id = id,
-            name = name,
-            kind = kind,
-            url = null,
-            localPath = path,
-            mimeType = mimeType,
-            sizeBytes = sizeBytes,
-        )
-    }
-
-    private fun SupportChatMessage.contentMatches(other: SupportChatMessage): Boolean {
-        return text == other.text && attachment?.name == other.attachment?.name
-    }
-
-    private fun SupportChatMessage.shapeMatches(other: SupportChatMessage): Boolean {
-        if (text.isNullOrBlank() != other.text.isNullOrBlank()) return false
-        val a = attachment ?: return other.attachment == null
-        val b = other.attachment ?: return false
-        return (a is SupportChatAttachment.Image && b is SupportChatAttachment.Image) ||
-            (a is SupportChatAttachment.Document && b is SupportChatAttachment.Document)
-    }
+    // endregion
 
     private companion object {
         val TYPING_TIMEOUT = 5.seconds
         val READ_FLUSH_DELAY = 300.milliseconds
+        val RETRYABLE = setOf(SupportChatMessageStatus.Failed)
+        val PENDING = setOf(SupportChatMessageStatus.Pending)
+        val SENT = setOf(SupportChatMessageStatus.Sent)
+        const val LOCAL_ID_PREFIX = "local-"
+        const val HISTORY_ERROR = "History load failed"
     }
-
 }
