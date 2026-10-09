@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.platform
 
+import kotlinx.coroutines.flow.Flow
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
 /**
@@ -13,19 +14,30 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFi
  * - копирование файла — вне main-потока (большой файл не должен вешать UI);
  * - размер проверяется **до** копирования: больше [SupportChatAttachmentLimits.MAX_BYTES] →
  *   [SupportChatPickedFileResult.TooLarge];
- * - [onPicked][launchImage] вызывается на main-потоке ровно один раз.
+ * - на каждый `launch*` — ровно один результат в [results], доставка на main;
+ * - результаты буферизуются до появления подписчика.
+ *
+ * Контракт — поток, а не колбэк: на Android системный пикер — отдельная activity, и пока
+ * она открыта, система может убить наш процесс. Колбэк при этом теряется, а registry
+ * доставляет результат уже в новый процесс — реализация кладёт его в буфер, экран
+ * забирает, когда снова подпишется.
  */
 interface SupportChatFilePicker {
-    fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit)
-    fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit)
+    val results: Flow<SupportChatPickedFileResult>
+
+    fun launchImage()
+    fun launchDocument()
 }
+
+/** Источник выбора: тип вложения задаёт он, а не содержимое файла. */
+enum class SupportChatPickKind { Image, Document }
 
 /**
  * Результат работы пикера. Отмена — не ошибка и ничего не сообщает пользователю;
  * [TooLarge] и [Failed] — показываются снекбаром.
  */
 sealed interface SupportChatPickedFileResult {
-    data class Picked(val file: SupportChatPickedFile) : SupportChatPickedFileResult
+    data class Picked(val file: SupportChatPickedFile, val kind: SupportChatPickKind) : SupportChatPickedFileResult
     data object Cancelled : SupportChatPickedFileResult
     data object TooLarge : SupportChatPickedFileResult
     data object Failed : SupportChatPickedFileResult

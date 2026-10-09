@@ -5,6 +5,9 @@ package ru.alarmtrade.specmp.filepicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.uikit.LocalUIViewController
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSNumber
@@ -30,6 +33,7 @@ import platform.darwin.dispatch_get_main_queue
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 
 @Composable
@@ -46,7 +50,12 @@ private class IosSupportChatFilePicker(
 
     private var activeDelegate: NSObject? = null
 
-    override fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit) {
+    // Делегаты отдают результат на main; буфер — до подписки экрана.
+    private val channel = Channel<SupportChatPickedFileResult>(Channel.UNLIMITED)
+    override val results: Flow<SupportChatPickedFileResult> = channel.receiveAsFlow()
+    private val onPicked: (SupportChatPickedFileResult) -> Unit = { channel.trySend(it) }
+
+    override fun launchImage() {
         val configuration = PHPickerConfiguration().apply {
             filter = PHPickerFilter.imagesFilter()
             selectionLimit = 1
@@ -65,17 +74,11 @@ private class IosSupportChatFilePicker(
         )
     }
 
-    override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
-        launchPicker(
-            documentTypes = listOf(DATA_UTI),
-            onPicked = onPicked,
-        )
+    override fun launchDocument() {
+        launchPicker(documentTypes = listOf(DATA_UTI))
     }
 
-    private fun launchPicker(
-        documentTypes: List<String>,
-        onPicked: (SupportChatPickedFileResult) -> Unit,
-    ) {
+    private fun launchPicker(documentTypes: List<String>) {
         val picker = UIDocumentPickerViewController(
             documentTypes = documentTypes,
             inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen,
@@ -118,7 +121,7 @@ private class PhotoPickerDelegate(
         // Колбэк itemProvider приходит на фоновой очереди; временный url валиден
         // только внутри него — копируем здесь, результат отдаём на main.
         result.itemProvider.loadFileRepresentationForTypeIdentifier(IMAGE_UTI) { url, _ ->
-            val picked = url?.copyToAttachments() ?: SupportChatPickedFileResult.Failed
+            val picked = url?.copyToAttachments(SupportChatPickKind.Image) ?: SupportChatPickedFileResult.Failed
             dispatch_async(dispatch_get_main_queue()) {
                 onPicked(picked)
                 onFinished()
@@ -144,7 +147,7 @@ private class DocumentPickerDelegate(
         }
         // Копирование большого документа не должно вешать main-поток.
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
-            val picked = url.copyToAttachments()
+            val picked = url.copyToAttachments(SupportChatPickKind.Document)
             dispatch_async(dispatch_get_main_queue()) {
                 onPicked(picked)
                 onFinished()
@@ -163,7 +166,7 @@ private class DocumentPickerDelegate(
  * она нужна outbox'у после рестарта, а tmp система вправе вычистить. Удаляет копию
  * [rememberSupportChatAttachmentFiles], когда сообщение подтверждено или удалено.
  */
-private fun NSURL.copyToAttachments(): SupportChatPickedFileResult {
+private fun NSURL.copyToAttachments(kind: SupportChatPickKind): SupportChatPickedFileResult {
     val canAccess = startAccessingSecurityScopedResource()
     return try {
         val fileManager = NSFileManager.defaultManager
@@ -203,7 +206,8 @@ private fun NSURL.copyToAttachments(): SupportChatPickedFileResult {
                 path = destinationPath,
                 mimeType = mimeTypeForName(originalName),
                 sizeBytes = sizeBytes,
-            )
+            ),
+            kind,
         )
     } finally {
         if (canAccess) stopAccessingSecurityScopedResource()

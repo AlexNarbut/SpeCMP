@@ -5,11 +5,16 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
@@ -18,58 +23,63 @@ import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 import java.io.File
 import java.util.UUID
 
 /**
- * Колбэки ожидающего выбора живут вне композиции: пока открыта галерея, Activity
- * может пересоздаться (поворот, «не сохранять действия»), и `remember` потерял бы
- * колбэк — выбранный файл молча пропал бы. Процесс при этом жив, per-entry VM
- * тоже, поэтому колбэк (ссылка на интент VM) остаётся валидным. Очищаются сразу
- * после доставки результата.
+ * Буфер результатов выбора — на уровне процесса, а не в `remember`:
+ * - пока открыт системный пикер, процесс могут убить; registry доставит результат
+ *   лаунчеру уже в новом процессе — он попадёт сюда и дождётся, пока экран подпишется;
+ * - копирование большого файла может пережить пересоздание Activity — результат не
+ *   должен уйти в канал старой композиции.
+ * Подписчик один — экран чата (`SupportChatEntry`).
  */
-private object PendingPickerCallbacks {
-    var image: ((SupportChatPickedFileResult) -> Unit)? = null
-    var document: ((SupportChatPickedFileResult) -> Unit)? = null
+private object PickerResults {
+    val channel = Channel<SupportChatPickedFileResult>(Channel.UNLIMITED)
 }
 
+/**
+ * Картинки — системный Photo Picker (`PickVisualMedia`), документы — SAF (`OpenDocument`).
+ * `GetContent` не годится: часть галерей возвращает выбор в `clipData`, а не в
+ * `intent.data`, — успешный выбор приходил как `null`, то есть как «тихая» отмена.
+ */
 @Composable
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
     val appContext = LocalContext.current.applicationContext
     val dispatchers = koinInject<AppDispatchers>()
     val appScope = koinInject<CoroutineScope>(qualifier = appScopeQualifier)
 
-    fun deliver(uri: Uri?, take: () -> ((SupportChatPickedFileResult) -> Unit)?) {
-        val callback = take() ?: return
+    fun deliver(uri: Uri?, kind: SupportChatPickKind) {
         if (uri == null) {
-            callback(SupportChatPickedFileResult.Cancelled)
+            PickerResults.channel.trySend(SupportChatPickedFileResult.Cancelled)
             return
         }
-        // Копирование — вне main (большой файл не должен давать ANR); колбэк — на main.
+        // Копирование — вне main (большой файл не должен давать ANR).
         appScope.launch {
-            val result = withContext(dispatchers.io) { uri.copyToAttachments(appContext) }
-            withContext(dispatchers.main) { callback(result) }
+            val result = withContext(dispatchers.io) { uri.copyToAttachments(appContext, kind) }
+            PickerResults.channel.trySend(result)
         }
     }
 
-    val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        deliver(uri) { PendingPickerCallbacks.image.also { PendingPickerCallbacks.image = null } }
+    val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        deliver(uri, SupportChatPickKind.Image)
     }
-    val documentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        deliver(uri) { PendingPickerCallbacks.document.also { PendingPickerCallbacks.document = null } }
+    val documentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        deliver(uri, SupportChatPickKind.Document)
     }
 
     return remember(imageLauncher, documentLauncher) {
         object : SupportChatFilePicker {
-            override fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit) {
-                PendingPickerCallbacks.image = onPicked
-                imageLauncher.launch(IMAGE_MIME)
+            override val results: Flow<SupportChatPickedFileResult> = PickerResults.channel.receiveAsFlow()
+
+            override fun launchImage() {
+                imageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
 
-            override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
-                PendingPickerCallbacks.document = onPicked
-                documentLauncher.launch(ANY_MIME)
+            override fun launchDocument() {
+                documentLauncher.launch(arrayOf(ANY_MIME))
             }
         }
     }
@@ -83,7 +93,7 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
  * Каждая копия — в своём подкаталоге `<uuid>/<исходное имя>`: SDK берёт имя файла
  * для сервера из пути, и префикс в имени увидела бы поддержка.
  */
-private fun Uri.copyToAttachments(context: Context): SupportChatPickedFileResult {
+private fun Uri.copyToAttachments(context: Context, kind: SupportChatPickKind): SupportChatPickedFileResult {
     val resolver = context.contentResolver
     val metadata = resolver.queryMetadata(this)
     if ((metadata.sizeBytes ?: 0L) > SupportChatAttachmentLimits.MAX_BYTES) {
@@ -95,13 +105,17 @@ private fun Uri.copyToAttachments(context: Context): SupportChatPickedFileResult
         val directory = File(supportChatAttachmentsDir(context), UUID.randomUUID().toString()).apply { mkdirs() }
         File(directory, name)
     } catch (e: Exception) {
+        logger.w(e) { "Failed to create attachment copy for '$name'" }
         return SupportChatPickedFileResult.Failed
     }
 
     return try {
         val copied = resolver.openInputStream(this)?.use { input ->
             target.outputStream().use { output -> input.copyTo(output) }
-        } ?: return SupportChatPickedFileResult.Failed.also { target.deleteWithDirectory() }
+        } ?: return SupportChatPickedFileResult.Failed.also {
+            logger.w { "Cannot open input stream for picked uri: $this" }
+            target.deleteWithDirectory()
+        }
         // Провайдер мог не отдать SIZE — проверяем фактический размер.
         if (copied > SupportChatAttachmentLimits.MAX_BYTES) {
             target.deleteWithDirectory()
@@ -114,9 +128,11 @@ private fun Uri.copyToAttachments(context: Context): SupportChatPickedFileResult
                 path = target.absolutePath,
                 mimeType = resolver.getType(this),
                 sizeBytes = copied,
-            )
+            ),
+            kind,
         )
     } catch (e: Exception) {
+        logger.w(e) { "Failed to copy picked attachment '$name'" }
         target.deleteWithDirectory()
         SupportChatPickedFileResult.Failed
     }
@@ -127,6 +143,8 @@ internal fun File.deleteWithDirectory() {
     delete()
     parentFile?.delete()
 }
+
+private val logger = Logger.withTag("SupportChatFilePicker")
 
 internal fun supportChatAttachmentsDir(context: Context): File {
     return File(context.filesDir, ATTACHMENTS_DIR)
@@ -155,7 +173,6 @@ private data class PickedFileMetadata(
     val sizeBytes: Long? = null,
 )
 
-private const val IMAGE_MIME = "image/*"
 private const val ANY_MIME = "*/*"
 private const val DEFAULT_NAME = "attachment"
 private const val ATTACHMENTS_DIR = "support-chat-attachments"

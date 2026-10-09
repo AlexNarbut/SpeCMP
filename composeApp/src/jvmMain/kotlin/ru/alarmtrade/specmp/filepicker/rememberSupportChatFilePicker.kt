@@ -2,10 +2,14 @@ package ru.alarmtrade.specmp.filepicker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 import specmp.composeapp.generated.resources.Res
 import specmp.composeapp.generated.resources.composeapp_picker_label_images
@@ -36,7 +40,11 @@ private class DesktopSupportChatFilePicker(
     private val fileTitle: String,
 ) : SupportChatFilePicker {
 
-    override fun launchImage(onPicked: (SupportChatPickedFileResult) -> Unit) {
+    // Диалог модальный и синхронный: результат кладётся в буфер сразу после закрытия.
+    private val channel = Channel<SupportChatPickedFileResult>(Channel.UNLIMITED)
+    override val results: Flow<SupportChatPickedFileResult> = channel.receiveAsFlow()
+
+    override fun launchImage() {
         val file = showDialog(
             title = imageTitle,
             filter = FileNameExtensionFilter(
@@ -44,15 +52,15 @@ private class DesktopSupportChatFilePicker(
                 "jpg", "jpeg", "png", "gif", "webp", "bmp",
             ),
         )
-        onPicked(file.toPickerResult())
+        channel.trySend(file.toPickerResult(SupportChatPickKind.Image))
     }
 
-    override fun launchDocument(onPicked: (SupportChatPickedFileResult) -> Unit) {
+    override fun launchDocument() {
         val file = showDialog(
             title = fileTitle,
             filter = null,
         )
-        onPicked(file.toPickerResult())
+        channel.trySend(file.toPickerResult(SupportChatPickKind.Document))
     }
 
     private fun showDialog(
@@ -71,11 +79,11 @@ private class DesktopSupportChatFilePicker(
 
     // Desktop отправляет оригинал пользователя, без копии — поэтому размер
     // проверяется по самому файлу, а удалять его после отправки нельзя.
-    private fun File?.toPickerResult(): SupportChatPickedFileResult {
+    private fun File?.toPickerResult(kind: SupportChatPickKind): SupportChatPickedFileResult {
         val file = this ?: return SupportChatPickedFileResult.Cancelled
         if (!file.isFile) return SupportChatPickedFileResult.Failed
         if (file.length() > SupportChatAttachmentLimits.MAX_BYTES) return SupportChatPickedFileResult.TooLarge
-        return SupportChatPickedFileResult.Picked(file.toPickedFile())
+        return SupportChatPickedFileResult.Picked(file.toPickedFile(), kind)
     }
 
     private fun File.toPickedFile(): SupportChatPickedFile {

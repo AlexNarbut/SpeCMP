@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -9,12 +10,12 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreen
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.SupportChatScreenViewModel
@@ -49,19 +50,17 @@ fun SupportChatEntry(
     val currentOnBack by rememberUpdatedState(onBack)
     val currentPicker by rememberUpdatedState(filePicker)
 
+    // Проброс результатов платформенного пикера в VM. Поток, а не колбэк: на Android
+    // результат может прийти уже в новый процесс (см. SupportChatFilePicker).
+    LaunchedEffect(filePicker, viewModel) {
+        filePicker.results.collect { viewModel.onPickerResult(it) }
+    }
+
     val actions = remember(viewModel) {
         SupportChatActions(
             onBack = { currentOnBack() },
-            onAttachFile = {
-                currentPicker.launchDocument { result ->
-                    viewModel.onPickerResult(result, viewModel::onDocumentPicked)
-                }
-            },
-            onAttachPhoto = {
-                currentPicker.launchImage { result ->
-                    viewModel.onPickerResult(result, viewModel::onImagePicked)
-                }
-            },
+            onAttachFile = { currentPicker.launchDocument() },
+            onAttachPhoto = { currentPicker.launchImage() },
             onRemoveAttachment = viewModel::onRemoveAttachment,
             onSend = viewModel::onSend,
             onRetry = viewModel::onRetry,
@@ -81,12 +80,12 @@ fun SupportChatEntry(
     )
 }
 
-private fun SupportChatScreenViewModel.onPickerResult(
-    result: SupportChatPickedFileResult,
-    onPicked: (SupportChatPickedFile) -> Unit,
-) {
+private fun SupportChatScreenViewModel.onPickerResult(result: SupportChatPickedFileResult) {
     when (result) {
-        is SupportChatPickedFileResult.Picked -> onPicked(result.file)
+        is SupportChatPickedFileResult.Picked -> when (result.kind) {
+            SupportChatPickKind.Image -> onImagePicked(result.file)
+            SupportChatPickKind.Document -> onDocumentPicked(result.file)
+        }
         SupportChatPickedFileResult.Cancelled -> Unit
         SupportChatPickedFileResult.TooLarge -> onAttachmentRejected(tooLarge = true)
         SupportChatPickedFileResult.Failed -> onAttachmentRejected(tooLarge = false)
