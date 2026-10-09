@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Пути, которые чат техподдержки отдаёт внешним приложениям через FileProvider. -->
+<paths>
+    <!-- Скачанные для открытия вложения (временные). -->
+    <cache-path name="support_chat_open" path="support-chat-open/" />
+    <!-- Локальные копии своих неподтверждённых вложений. -->
+    <files-path name="support_chat_attachments" path="support-chat-attachments/" />
+</paths>

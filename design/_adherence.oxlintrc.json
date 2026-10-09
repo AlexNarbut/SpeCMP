@@ -27,6 +27,7 @@
               "features/auth/**",
               "features/calculator/**",
               "features/home/**",
+              "features/support-chat/**",
               "res/**",
               "res/icons/**"
             ],

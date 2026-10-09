@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"0d6435223dd7","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/app-update/AppUpdateScreen.jsx":"e61af0c29b73","features/auth/Auth.jsx":"730fafddac89","features/auth/AuthScreens.jsx":"4986c79933ee","features/auth/i18n.js":"9e4ecc677e9e","features/calculator/Calculator.jsx":"778bbbf9b839","features/home/Home.jsx":"75522ab51ddd","features/home/HomeScreens.jsx":"f315b6354eec","res/icons/cmp-icons.js":"8c00925c86ca","res/icons/main-icons.js":"a5ee0c0aad77","res/nav.js":"930eac4f60c2"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
+/* @ds-bundle: {"format":4,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"0d6435223dd7","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/app-update/AppUpdateScreen.jsx":"e61af0c29b73","features/auth/Auth.jsx":"730fafddac89","features/auth/AuthScreens.jsx":"4986c79933ee","features/auth/i18n.js":"9e4ecc677e9e","features/calculator/Calculator.jsx":"778bbbf9b839","features/home/Home.jsx":"cf9a3018334e","features/home/HomeScreens.jsx":"6a3e476e5f55","features/support-chat/SupportChat.jsx":"119d6686fd2c","features/support-chat/SupportChatScreens.jsx":"e8b12bf0ce32","res/icons/cmp-icons.js":"8c00925c86ca","res/icons/main-icons.js":"a5ee0c0aad77","res/nav.js":"4d4558bb4964"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
 
 (() => {
 
@@ -5017,6 +5017,11 @@ function HomeApp({
   const onNav = key => {
     // Prototype: real routing lands here. Close the drawer on selection.
     if (key === "settings" || key === "logout") setMenuOpen(false);
+    if (key === "support" || key === "requests") {
+      // «Заявки на техпомощь» / карточка «Заявки» → support chat mockup for this platform.
+      const target = isDesktop ? "support-chat-desktop" : "support-chat";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
   };
 
   // Desktop: check for a newer app build, then surface the update banner.
@@ -5111,6 +5116,7 @@ const ICON = {
   themeLight: "light_mode",
   status: "check_circle",
   person: "person",
+  support: "support_agent",
   appUpdate: "system_update",
   download: "download"
 };
@@ -5637,6 +5643,10 @@ function HomeDrawer({
       strokeWidth: 2.5
     }) : null
   }), /*#__PURE__*/React.createElement(DrawerRow, {
+    icon: ICON.support,
+    label: "\u0417\u0430\u044F\u0432\u043A\u0438 \u043D\u0430 \u0442\u0435\u0445\u043F\u043E\u043C\u043E\u0449\u044C",
+    onClick: () => onNav("support")
+  }), /*#__PURE__*/React.createElement(DrawerRow, {
     icon: ICON.settings,
     label: "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438",
     onClick: () => onNav("settings")
@@ -6111,6 +6121,1261 @@ window.HomeScreens = {
 };
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/home/HomeScreens.jsx", error: String((e && e.message) || e) }); }
 
+// features/support-chat/SupportChat.jsx
+try { (() => {
+// SupportChat.jsx — Pandora Spec support-chat controller.
+//   • SupportChatApp — live, interactive screen. Owns the message list, draft,
+//     pending attachments, delivery statuses (sent → read), the "specialist is
+//     typing…" simulation and the offline queue. Presentational blocks come
+//     from SupportChatScreens.jsx.
+//
+// scenario prop (host toggle):
+//   "dialog"  — full demo history, live sending.
+//   "empty"   — no messages yet (empty state), first send starts the dialog.
+//   "loading" — history skeleton ~1.8s, then the dialog appears.
+//   "offline" — no-connection banner; sends queue as "pending" until Повторить.
+
+const SCS = window.SupportChatScreens;
+const {
+  ChatScreen,
+  SC_HISTORY,
+  SC_AGENTS,
+  SC_REPLIES,
+  SC_MOCK_FILES,
+  SC_MOCK_PHOTOS
+} = SCS;
+function scNow() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+function SupportChatApp({
+  variant = "tonal",
+  scenario = "dialog",
+  platform = "mobile",
+  loadMs = 1800
+}) {
+  const {
+    useState,
+    useRef,
+    useEffect
+  } = React;
+  const [rows, setRows] = useState(scenario === "empty" ? [] : SC_HISTORY);
+  const [loading, setLoading] = useState(scenario === "loading");
+  const [offline, setOffline] = useState(scenario === "offline");
+  const [typing, setTyping] = useState(null);
+  const [draft, setDraft] = useState("");
+  const [attachments, setAttachments] = useState([]);
+  const seq = useRef(0);
+  const replyIdx = useRef(0);
+  const fileIdx = useRef(0);
+  const photoIdx = useRef(0);
+  const timers = useRef([]);
+  const later = (fn, ms) => {
+    const t = setTimeout(fn, ms);
+    timers.current.push(t);
+    return t;
+  };
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  // "loading" — simulate history fetch, then reveal the dialog.
+  useEffect(() => {
+    if (scenario !== "loading") return;
+    later(() => setLoading(false), loadMs);
+  }, [scenario, loadMs]);
+  const nextId = () => `m${++seq.current}`;
+  const setStatus = (ids, status) => setRows(rs => rs.map(r => ids.includes(r.id) ? {
+    ...r,
+    status
+  } : r));
+
+  // Support side: typing indicator with the specialist's email, then a reply.
+  const scheduleReply = () => {
+    const author = SC_AGENTS.ivan;
+    later(() => setTyping(author), 900);
+    later(() => {
+      setTyping(null);
+      const text = SC_REPLIES[replyIdx.current++ % SC_REPLIES.length];
+      setRows(rs => [...rs, {
+        id: nextId(),
+        from: "support",
+        author,
+        kind: "text",
+        text,
+        time: scNow()
+      }]);
+    }, 3200);
+  };
+  const deliver = ids => {
+    later(() => setStatus(ids, "sent"), 500);
+    later(() => setStatus(ids, "read"), 1700);
+    scheduleReply();
+  };
+  const onSend = () => {
+    const text = draft.trim();
+    if (!text && attachments.length === 0) return;
+    const time = scNow();
+    const status = offline ? "pending" : undefined; // undefined → "sent" after delivery tick
+    const out = [];
+    attachments.forEach(att => {
+      out.push(att.kind === "image" ? {
+        id: nextId(),
+        from: "me",
+        kind: "image",
+        image: {
+          name: att.name
+        },
+        time,
+        status: status || "sent"
+      } : {
+        id: nextId(),
+        from: "me",
+        kind: "doc",
+        file: {
+          name: att.name,
+          size: att.size,
+          ext: att.ext
+        },
+        time,
+        status: status || "sent"
+      });
+    });
+    if (text) out.push({
+      id: nextId(),
+      from: "me",
+      kind: "text",
+      text,
+      time,
+      status: status || "sent"
+    });
+    setRows(rs => [...rs, ...out]);
+    setDraft("");
+    setAttachments([]);
+    if (!offline) deliver(out.map(m => m.id));
+  };
+
+  // Offline → Повторить: connection restored, queued messages get delivered.
+  const onRetry = () => {
+    setOffline(false);
+    const ids = [];
+    setRows(rs => {
+      rs.forEach(r => {
+        if (r.status === "pending") ids.push(r.id);
+      });
+      return rs;
+    });
+    later(() => {
+      setRows(rs => {
+        const pend = rs.filter(r => r.status === "pending").map(r => r.id);
+        if (pend.length) {
+          later(() => setStatus(pend, "read"), 1400);
+          scheduleReply();
+          return rs.map(r => r.status === "pending" ? {
+            ...r,
+            status: "sent"
+          } : r);
+        }
+        return rs;
+      });
+    }, 600);
+  };
+
+  // Mock pickers (the real app opens system file / photo pickers).
+  const onAttachFile = () => {
+    const f = SC_MOCK_FILES[fileIdx.current++ % SC_MOCK_FILES.length];
+    setAttachments(a => [...a, {
+      id: `a${Date.now()}${a.length}`,
+      kind: "doc",
+      ...f
+    }]);
+  };
+  const onAttachPhoto = () => {
+    const p = SC_MOCK_PHOTOS[photoIdx.current++ % SC_MOCK_PHOTOS.length];
+    setAttachments(a => [...a, {
+      id: `a${Date.now()}${a.length}`,
+      kind: "image",
+      ...p
+    }]);
+  };
+  const onRemoveAttachment = id => setAttachments(a => a.filter(x => x.id !== id));
+  const onBack = () => {
+    const key = platform === "desktop" ? "home-desktop" : platform === "tablet" ? "home-tablet" : "home";
+    if (window.psHas && window.psHas(key)) window.psGo(key);
+  };
+  return /*#__PURE__*/React.createElement(ChatScreen, {
+    variant: variant,
+    rows: rows,
+    typing: typing,
+    loading: loading,
+    offline: offline,
+    onRetry: onRetry,
+    onBack: onBack,
+    draft: draft,
+    onDraft: setDraft,
+    onSend: onSend,
+    attachments: attachments,
+    onAttachFile: onAttachFile,
+    onAttachPhoto: onAttachPhoto,
+    onRemoveAttachment: onRemoveAttachment,
+    isDesktop: platform === "desktop"
+  });
+}
+window.SupportChatApp = SupportChatApp;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/support-chat/SupportChat.jsx", error: String((e && e.message) || e) }); }
+
+// features/support-chat/SupportChatScreens.jsx
+try { (() => {
+// SupportChatScreens — presentational support-chat screen for Pandora Spec,
+// built ONLY from design-system Cmp* components (window.PandoraSpecDesignSystem_b8d6e1).
+//
+// The screen is a support conversation: top app bar + message history + composer.
+// Incoming messages are labelled with the support specialist's EMAIL (specialists
+// rotate, the email identifies who is answering right now). Outgoing messages
+// carry delivery status: sent (✓) / read (✓✓) / pending (clock, offline queue).
+//
+// Bubble variants (host toggle): "tonal" (filled containers) | "flat" (outlined).
+//
+// Adaptivity — Window Size Classes by container width (CLAUDE.md):
+//   • compact  (<600)   — full-width column, bubbles ≤78%.
+//   • medium   (600–839)— column max-width 720, centered.
+//   • expanded (≥840)   — column max-width 840, centered.
+// Touch targets ≥48dp everywhere; correct in light and dark themes.
+
+const SC_DS = window.PandoraSpecDesignSystem_b8d6e1;
+const {
+  CmpTopAppBar,
+  CmpIconButton,
+  CmpText,
+  CmpIcon,
+  CmpSurface,
+  CmpLinearProgressIndicator
+} = SC_DS;
+
+// ── Icons (Material Icons filled ligatures / catalog names) ──────────────────
+const SC_ICON = {
+  back: "ArrowBack",
+  attachFile: "attach_file",
+  attachPhoto: "image",
+  send: "Send",
+  doc: "description",
+  photo: "image",
+  pending: "Schedule",
+  sent: "Done",
+  read: "done_all",
+  offline: "wifi_off",
+  empty: "forum",
+  close: "Close",
+  support: "support_agent"
+};
+
+// ── Demo data ─────────────────────────────────────────────────────────────────
+// Support side of the dialog: specialists rotate; each message carries the
+// email of the person who wrote it.
+const SC_AGENTS = {
+  elena: "elena.support@pandora.pro",
+  ivan: "ivan.support@pandora.pro"
+};
+
+// Flat list; rows are either { kind: "date", label } or message objects:
+// { id, from: "me"|"support", author?, kind: "text"|"doc"|"image",
+//   text?, file?: {name,size,ext}, image?: {name, caption?}, time, status? }
+const SC_HISTORY = [{
+  kind: "date",
+  label: "12 июля"
+}, {
+  id: "h1",
+  from: "me",
+  kind: "text",
+  text: "Здравствуйте! Pandora DX-4GS, Kia Sportage 2024. После монтажа не читается CAN-шина — статус «нет связи».",
+  time: "14:02",
+  status: "read"
+}, {
+  id: "h2",
+  from: "me",
+  kind: "doc",
+  file: {
+    name: "монтажная_схема_sportage.pdf",
+    size: "2,4 МБ",
+    ext: "PDF"
+  },
+  time: "14:03",
+  status: "read"
+}, {
+  id: "h3",
+  from: "support",
+  author: SC_AGENTS.elena,
+  kind: "text",
+  text: "Здравствуйте! Схему получила, посмотрю. Уточните, пожалуйста, куда подключали CAN-High — к разъёму OBD или к жгуту за блоком BCM?",
+  time: "14:11"
+}, {
+  kind: "date",
+  label: "Сегодня"
+}, {
+  id: "h4",
+  from: "support",
+  author: SC_AGENTS.ivan,
+  kind: "text",
+  text: "Добрый день, я продолжаю по вашей заявке. Подключение по схеме корректное. Пришлите, пожалуйста, фото точки подключения CAN-шины.",
+  time: "09:40"
+}, {
+  id: "h5",
+  from: "me",
+  kind: "image",
+  image: {
+    name: "IMG_4312.jpg",
+    caption: "Точка подключения за блоком BCM"
+  },
+  time: "09:52",
+  status: "read"
+}, {
+  id: "h6",
+  from: "me",
+  kind: "text",
+  text: "Прикрепил фото. Провод — коричневый с белой полосой, скрутка пропаяна.",
+  time: "09:53",
+  status: "sent"
+}];
+
+// Cycled mock replies for the live prototype.
+const SC_REPLIES = ["Принято, проверяю по схеме подключения. Ответ дам в течение 10 минут.", "Спасибо, информации достаточно. Передал вопрос инженеру, он подключится к чату.", "Проверьте, пожалуйста, версию прошивки базового блока — обновление вышло вчера."];
+
+// Cycled mock attachments (the real app opens a file/photo picker).
+const SC_MOCK_FILES = [{
+  name: "схема_подключения.pdf",
+  size: "1,8 МБ",
+  ext: "PDF"
+}, {
+  name: "лог_ошибок_can.txt",
+  size: "64 КБ",
+  ext: "TXT"
+}, {
+  name: "акт_установки.docx",
+  size: "312 КБ",
+  ext: "DOCX"
+}];
+const SC_MOCK_PHOTOS = [{
+  name: "IMG_4313.jpg"
+}, {
+  name: "IMG_4314.jpg"
+}, {
+  name: "IMG_4315.jpg"
+}];
+
+// ── Container-width hook → Window Size Class ─────────────────────────────────
+function useChatMode() {
+  const ref = React.useRef(null);
+  const [w, setW] = React.useState(0);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const remeasure = () => setW(el.offsetWidth);
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(el);
+    window.addEventListener("resize", remeasure);
+    remeasure();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", remeasure);
+    };
+  }, []);
+  let mode = "compact";
+  if (w >= 840) mode = "expanded";else if (w >= 600) mode = "medium";
+  return [ref, mode];
+}
+function chatColumnMax(mode) {
+  return mode === "expanded" ? 840 : mode === "medium" ? 720 : "none";
+}
+
+// ── Date divider ──────────────────────────────────────────────────────────────
+function DateDivider({
+  label
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center",
+      padding: "6px 0"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "6px 14px",
+      borderRadius: 999,
+      background: "var(--surface-variant)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--on-surface-variant)"
+  }, label)));
+}
+
+// ── Delivery status (outgoing only) ──────────────────────────────────────────
+function MsgStatus({
+  status,
+  tone = "var(--on-surface-variant)"
+}) {
+  if (!status) return null;
+  const icon = status === "read" ? SC_ICON.read : status === "pending" ? SC_ICON.pending : SC_ICON.sent;
+  const color = status === "read" ? "var(--primary)" : tone;
+  const label = status === "read" ? "Прочитано" : status === "pending" ? "Ожидает отправки" : "Отправлено";
+  return /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 16,
+    color: color,
+    title: label
+  });
+}
+
+// Time + status row, bottom-right inside a bubble.
+function MetaRow({
+  time,
+  status,
+  mine,
+  tone
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: 4,
+      marginTop: 2
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelSmall",
+    color: tone
+  }, time), mine && /*#__PURE__*/React.createElement(MsgStatus, {
+    status: status,
+    tone: tone
+  }));
+}
+
+// ── Attachments ───────────────────────────────────────────────────────────────
+function DocAttachment({
+  file
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      minWidth: 200
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 44,
+      height: 44,
+      borderRadius: "var(--radius-s)",
+      background: "color-mix(in srgb, currentColor 12%, transparent)",
+      display: "grid",
+      placeItems: "center",
+      flex: "0 0 auto"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: SC_ICON.doc,
+    size: 24,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 2,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    weight: 500,
+    maxLines: 1,
+    color: "currentColor",
+    style: {
+      wordBreak: "break-all"
+    }
+  }, file.name), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelSmall",
+    color: "color-mix(in srgb, currentColor 70%, transparent)"
+  }, file.size, file.ext ? ` · ${file.ext}` : "")));
+}
+
+// Image placeholder (real app renders the photo; mockup uses a striped slot).
+function ImageAttachment({
+  image,
+  width = 260,
+  height = 170
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-label": `Фото ${image.name}`,
+    style: {
+      width,
+      maxWidth: "100%",
+      height,
+      borderRadius: "var(--radius-m)",
+      background: "repeating-linear-gradient(45deg, color-mix(in srgb, var(--on-surface) 7%, transparent) 0 12px, transparent 12px 24px), var(--surface-variant)",
+      border: "1px solid var(--outline-variant)",
+      display: "grid",
+      placeItems: "center",
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      padding: "6px 12px",
+      borderRadius: 999,
+      background: "color-mix(in srgb, var(--surface) 82%, transparent)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: SC_ICON.photo,
+    size: 16,
+    color: "var(--on-surface-variant)"
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--on-surface-variant)",
+    style: {
+      fontFamily: "var(--font-mono)"
+    }
+  }, image.name)));
+}
+
+// ── Message bubble ────────────────────────────────────────────────────────────
+// variant: "tonal" (filled) | "flat" (outlined, transparent)
+function MessageBubble({
+  msg,
+  variant = "tonal"
+}) {
+  const mine = msg.from === "me";
+  const tonal = variant === "tonal";
+  const isImage = msg.kind === "image";
+  const bg = !tonal ? "transparent" : mine ? "var(--primary-container)" : "var(--surface-container-low)";
+  const fg = tonal && mine ? "var(--on-primary-container)" : "var(--on-surface)";
+  const metaTone = tonal && mine ? "color-mix(in srgb, var(--on-primary-container) 70%, transparent)" : "var(--on-surface-variant)";
+  const border = !tonal ? `1px solid ${mine ? "color-mix(in srgb, var(--primary) 45%, transparent)" : "var(--outline-variant)"}` : mine ? "none" : "1px solid var(--outline-variant)";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: mine ? "flex-end" : "flex-start",
+      gap: 3
+    }
+  }, !mine && msg.author && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 6px"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--primary)"
+  }, msg.author)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: "min(560px, 82%)",
+      boxSizing: "border-box",
+      padding: isImage ? "6px 6px 8px" : "10px 14px 8px",
+      borderRadius: 16,
+      borderBottomRightRadius: mine ? 4 : 16,
+      borderBottomLeftRadius: mine ? 16 : 4,
+      background: bg,
+      color: fg,
+      border
+    }
+  }, msg.kind === "text" && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyLarge",
+    color: "currentColor",
+    style: {
+      textWrap: "pretty",
+      overflowWrap: "anywhere"
+    }
+  }, msg.text), msg.kind === "doc" && /*#__PURE__*/React.createElement(DocAttachment, {
+    file: msg.file
+  }), msg.kind === "image" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement(ImageAttachment, {
+    image: msg.image
+  }), msg.image.caption && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 8px"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "currentColor",
+    style: {
+      textWrap: "pretty"
+    }
+  }, msg.image.caption))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: isImage ? "0 8px" : 0
+    }
+  }, /*#__PURE__*/React.createElement(MetaRow, {
+    time: msg.time,
+    status: msg.status,
+    mine: mine,
+    tone: metaTone
+  }))));
+}
+
+// ── Typing indicator — “<email> печатает…” + animated dots ───────────────────
+function TypingIndicator({
+  author,
+  variant = "tonal"
+}) {
+  const tonal = variant === "tonal";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-start",
+      gap: 3
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 6px"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--primary)"
+  }, author, " \xB7 \u043F\u0435\u0447\u0430\u0442\u0430\u0435\u0442\u2026")), /*#__PURE__*/React.createElement("div", {
+    "aria-label": `${author} печатает сообщение`,
+    style: {
+      padding: "14px 18px",
+      borderRadius: 16,
+      borderBottomLeftRadius: 4,
+      background: tonal ? "var(--surface-container-low)" : "transparent",
+      border: "1px solid var(--outline-variant)",
+      display: "flex",
+      gap: 5,
+      alignItems: "center"
+    }
+  }, [0, 1, 2].map(i => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "sc-dot ps-anim",
+    style: {
+      width: 8,
+      height: 8,
+      borderRadius: 999,
+      background: "var(--on-surface-variant)",
+      animationDelay: `${i * 0.18}s`
+    }
+  }))));
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+// Ghost mini-dialog: a quiet preview of what the conversation will look like.
+function GhostBubble({
+  mine = false,
+  w = "62%",
+  delay = 0
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sc-float ps-anim",
+    style: {
+      display: "flex",
+      justifyContent: mine ? "flex-end" : "flex-start",
+      animationDelay: `${delay}s`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: w,
+      height: 34,
+      boxSizing: "border-box",
+      borderRadius: 14,
+      borderBottomRightRadius: mine ? 4 : 14,
+      borderBottomLeftRadius: mine ? 14 : 4,
+      background: mine ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "color-mix(in srgb, var(--on-surface) 7%, transparent)",
+      border: `1px dashed ${mine ? "color-mix(in srgb, var(--primary) 35%, transparent)" : "var(--outline-variant)"}`,
+      display: "flex",
+      alignItems: "center",
+      padding: "0 12px",
+      gap: 6,
+      color: "var(--on-surface)"
+    }
+  }, [0.5, 0.3, 0.4].map((op, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    style: {
+      height: 6,
+      borderRadius: 999,
+      flex: `${op} 1 0`,
+      background: "currentColor",
+      opacity: 0.18
+    }
+  }))));
+}
+function EmptyHintChip({
+  icon,
+  label
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "8px 14px",
+      borderRadius: 999,
+      background: "var(--surface-container-low)",
+      border: "1px solid var(--outline-variant)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 18,
+    color: "var(--primary)"
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelLarge",
+    color: "var(--on-surface-variant)"
+  }, label));
+}
+function EmptyChat() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 22,
+      padding: "40px 24px",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      width: "min(300px, 82%)",
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      position: "relative",
+      paddingBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement(GhostBubble, {
+    mine: true,
+    w: "58%",
+    delay: 0
+  }), /*#__PURE__*/React.createElement(GhostBubble, {
+    w: "70%",
+    delay: 0.35
+  }), /*#__PURE__*/React.createElement(GhostBubble, {
+    mine: true,
+    w: "44%",
+    delay: 0.7
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sc-float ps-anim",
+    style: {
+      position: "absolute",
+      right: "8%",
+      bottom: -14,
+      animationDelay: "0.5s",
+      width: 56,
+      height: 56,
+      borderRadius: 18,
+      background: "var(--primary-container)",
+      border: "1px solid color-mix(in srgb, var(--primary) 25%, transparent)",
+      boxShadow: "var(--elevation-2)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: SC_ICON.support,
+    size: 30,
+    color: "var(--on-primary-container)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      maxWidth: 340
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleLarge",
+    weight: 600,
+    align: "center"
+  }, "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)",
+    align: "center",
+    style: {
+      textWrap: "pretty"
+    }
+  }, "\u041E\u043F\u0438\u0448\u0438\u0442\u0435 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0443 \u2014 \u0441\u043F\u0435\u0446\u0438\u0430\u043B\u0438\u0441\u0442 \u0442\u0435\u0445\u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438 \u043E\u0442\u0432\u0435\u0442\u0438\u0442 \u0432 \u044D\u0442\u043E\u043C \u0447\u0430\u0442\u0435.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement(EmptyHintChip, {
+    icon: SC_ICON.attachFile,
+    label: "\u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B"
+  }), /*#__PURE__*/React.createElement(EmptyHintChip, {
+    icon: SC_ICON.photo,
+    label: "\u0424\u043E\u0442\u043E \u043C\u043E\u043D\u0442\u0430\u0436\u0430"
+  })));
+}
+
+// ── History-loading skeleton ─────────────────────────────────────────────────
+function BubbleSkeleton({
+  mine = false,
+  w = 240,
+  h = 64
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: mine ? "flex-end" : "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ps-skel",
+    style: {
+      width: w,
+      maxWidth: "78%",
+      height: h,
+      borderRadius: 16,
+      borderBottomRightRadius: mine ? 4 : 16,
+      borderBottomLeftRadius: mine ? 16 : 4
+    }
+  }));
+}
+function ChatSkeleton() {
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-busy": "true",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+      paddingTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ps-skel",
+    style: {
+      width: 96,
+      height: 28,
+      borderRadius: 999
+    }
+  })), /*#__PURE__*/React.createElement(BubbleSkeleton, {
+    mine: true,
+    w: 280,
+    h: 72
+  }), /*#__PURE__*/React.createElement(BubbleSkeleton, {
+    mine: true,
+    w: 220,
+    h: 56
+  }), /*#__PURE__*/React.createElement(BubbleSkeleton, {
+    w: 320,
+    h: 88
+  }), /*#__PURE__*/React.createElement(BubbleSkeleton, {
+    mine: true,
+    w: 260,
+    h: 180
+  }), /*#__PURE__*/React.createElement(BubbleSkeleton, {
+    w: 300,
+    h: 72
+  }));
+}
+
+// ── Offline banner ────────────────────────────────────────────────────────────
+function OfflineBanner({
+  onRetry
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    role: "status",
+    style: {
+      flex: "0 0 auto",
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "10px 16px",
+      background: "var(--error-container)",
+      color: "var(--on-error-container)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: SC_ICON.offline,
+    size: 22,
+    color: "currentColor"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    weight: 500,
+    color: "currentColor",
+    style: {
+      textWrap: "pretty"
+    }
+  }, "\u041D\u0435\u0442 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F. \u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F \u0431\u0443\u0434\u0443\u0442 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u044B \u043F\u0440\u0438 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0438.")), onRetry && /*#__PURE__*/React.createElement(CmpSurface, {
+    onClick: onRetry,
+    color: "color-mix(in srgb, currentColor 12%, transparent)",
+    contentColor: "currentColor",
+    radius: 999,
+    className: "ps-focusable",
+    role: "button",
+    tabIndex: 0,
+    style: {
+      minHeight: 44,
+      display: "flex",
+      alignItems: "center",
+      padding: "0 18px",
+      cursor: "pointer",
+      flex: "0 0 auto"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelLarge",
+    weight: 600,
+    color: "var(--on-error-container)"
+  }, "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C")));
+}
+
+// ── Pending attachment chip (above the input row) ────────────────────────────
+function PendingAttachment({
+  att,
+  onRemove
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "6px 6px 6px 12px",
+      borderRadius: 999,
+      background: "var(--surface-variant)",
+      maxWidth: "100%",
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: att.kind === "image" ? SC_ICON.photo : SC_ICON.doc,
+    size: 20,
+    color: "var(--on-surface-variant)"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelLarge",
+    maxLines: 1,
+    style: {
+      wordBreak: "break-all"
+    }
+  }, att.name)), att.size && /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelMedium",
+    color: "var(--on-surface-variant)",
+    style: {
+      flex: "0 0 auto"
+    }
+  }, att.size), /*#__PURE__*/React.createElement(CmpIconButton, {
+    icon: SC_ICON.close,
+    contentDescription: `Убрать ${att.name}`,
+    onClick: onRemove,
+    style: {
+      width: 40,
+      height: 40
+    }
+  }));
+}
+
+// ── Composer: photo + file buttons, auto-growing input, 48dp send ────────────
+function Composer({
+  value,
+  onChange,
+  onSend,
+  onAttachFile,
+  onAttachPhoto,
+  attachments = [],
+  onRemoveAttachment = () => {},
+  disabled = false,
+  maxW = "none",
+  isDesktop = false
+}) {
+  const taRef = React.useRef(null);
+  const canSend = !disabled && (value.trim().length > 0 || attachments.length > 0);
+  const autoGrow = () => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+  };
+  React.useEffect(autoGrow, [value]);
+  const onKeyDown = e => {
+    // Desktop: Enter sends, Shift+Enter — new line. Mobile keeps Enter as newline.
+    if (isDesktop && e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (canSend) onSend();
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: "0 0 auto",
+      borderTop: "1px solid var(--outline-variant)",
+      background: "var(--surface)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: maxW,
+      margin: "0 auto",
+      padding: "8px 8px 10px",
+      boxSizing: "border-box",
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, attachments.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 8,
+      padding: "2px 4px 0"
+    }
+  }, attachments.map(att => /*#__PURE__*/React.createElement(PendingAttachment, {
+    key: att.id,
+    att: att,
+    onRemove: () => onRemoveAttachment(att.id)
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-end",
+      gap: 2
+    }
+  }, /*#__PURE__*/React.createElement(CmpIconButton, {
+    icon: SC_ICON.attachFile,
+    contentDescription: "\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442",
+    onClick: onAttachFile,
+    disabled: disabled
+  }), /*#__PURE__*/React.createElement(CmpIconButton, {
+    icon: SC_ICON.attachPhoto,
+    contentDescription: "\u041F\u0440\u0438\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u0444\u043E\u0442\u043E",
+    onClick: onAttachPhoto,
+    disabled: disabled
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      alignItems: "center",
+      background: "var(--surface-container-highest)",
+      borderRadius: 24,
+      padding: "11px 16px",
+      boxSizing: "border-box",
+      minHeight: 48
+    }
+  }, /*#__PURE__*/React.createElement("textarea", {
+    ref: taRef,
+    rows: 1,
+    value: value,
+    disabled: disabled,
+    placeholder: "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435\u2026",
+    "aria-label": "\u0422\u0435\u043A\u0441\u0442 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F",
+    onChange: e => onChange(e.target.value),
+    onKeyDown: onKeyDown,
+    style: {
+      flex: 1,
+      minWidth: 0,
+      resize: "none",
+      border: "none",
+      outline: "none",
+      background: "transparent",
+      color: "var(--on-surface)",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--body-large-size)",
+      lineHeight: "var(--body-large-line)",
+      padding: 0,
+      maxHeight: 120
+    }
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: canSend ? onSend : undefined,
+    disabled: !canSend,
+    "aria-label": "\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435",
+    className: "ps-focusable",
+    style: {
+      width: 48,
+      height: 48,
+      flex: "0 0 auto",
+      marginLeft: 4,
+      border: "none",
+      borderRadius: 999,
+      cursor: canSend ? "pointer" : "default",
+      background: canSend ? "var(--primary)" : "color-mix(in srgb, var(--on-surface) 10%, transparent)",
+      color: canSend ? "var(--on-primary)" : "color-mix(in srgb, var(--on-surface) 38%, transparent)",
+      display: "grid",
+      placeItems: "center",
+      transition: "background var(--motion-fast)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: SC_ICON.send,
+    size: 22,
+    color: "currentColor"
+  })))));
+}
+
+// ── Wallpaper tile: tiny keys scattered at random angles ─────────────────
+// Used as a CSS mask, so the tint comes from theme tokens (color-mix below).
+// One open-end wrench silhouette in the reference style (round C-head + long
+// rounded handle), drawn as two thick strokes; reused 6× per tile.
+const SC_KEYS_TILE = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><defs><g id='k' fill='none' stroke='black' stroke-linecap='round'><line x1='3' y1='10' x2='17' y2='10' stroke-width='5'/><path d='M27.2 6.5 A5.5 5.5 0 1 0 27.2 13.5' stroke-width='4.5'/></g></defs><use href='%23k' transform='translate(22 26) rotate(28)'/><use href='%23k' transform='translate(148 40) rotate(-38)'/><use href='%23k' transform='translate(66 106) rotate(82)'/><use href='%23k' transform='translate(188 128) rotate(-64)'/><use href='%23k' transform='translate(38 184) rotate(12)'/><use href='%23k' transform='translate(136 200) rotate(-18)'/></svg>")`;
+
+// ── Full screen ───────────────────────────────────────────────────────────────
+function ChatScreen({
+  variant = "tonal",
+  rows = [],
+  // [{kind:"date"...} | message]
+  typing = null,
+  // email of the specialist typing, or null
+  loading = false,
+  offline = false,
+  onRetry,
+  onBack = () => {},
+  // composer
+  draft = "",
+  onDraft = () => {},
+  onSend = () => {},
+  attachments = [],
+  onAttachFile = () => {},
+  onAttachPhoto = () => {},
+  onRemoveAttachment = () => {},
+  isDesktop = false
+}) {
+  const [rootRef, mode] = useChatMode();
+  const listRef = React.useRef(null);
+  const maxW = chatColumnMax(mode);
+  const pad = mode === "compact" ? 12 : mode === "medium" ? 24 : 32;
+  const empty = !loading && rows.length === 0;
+
+  // Keep the newest message in view (plain scrollTop — never scrollIntoView).
+  React.useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [rows.length, typing, loading]);
+  return /*#__PURE__*/React.createElement("div", {
+    ref: rootRef,
+    "data-screen-label": "\u0427\u0430\u0442 \u0442\u0435\u0445\u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438",
+    style: {
+      position: "relative",
+      height: "100%",
+      width: "100%",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden",
+      background: "var(--background)",
+      color: "var(--on-background)"
+    }
+  }, /*#__PURE__*/React.createElement("style", null, `
+        @keyframes scTyping { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+        @keyframes psShimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+        .sc-dot { animation: scTyping 1.2s ease-in-out infinite; }
+        @keyframes scFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        .sc-float { animation: scFloat 4.5s ease-in-out infinite; }
+        .ps-skel { background: linear-gradient(90deg, var(--surface-variant) 25%, var(--surface-container-highest) 37%, var(--surface-variant) 63%); background-size: 400% 100%; animation: psShimmer 1.4s ease infinite; }
+        .ps-focusable:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        @media (prefers-reduced-motion: reduce) { .ps-anim, .sc-dot, .ps-skel { animation: none !important; } }
+      `), /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    centered: isDesktop,
+    title: "\u0422\u0435\u0445\u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430",
+    style: {
+      flex: "0 0 auto"
+    },
+    navigationIcon: /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: SC_ICON.back,
+      contentDescription: "\u041D\u0430\u0437\u0430\u0434",
+      onClick: onBack
+    })
+  }), loading && /*#__PURE__*/React.createElement(CmpLinearProgressIndicator, null), offline && /*#__PURE__*/React.createElement(OfflineBanner, {
+    onRetry: onRetry
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      inset: 0,
+      pointerEvents: "none",
+      background: "color-mix(in srgb, var(--on-surface) 60%, var(--primary))",
+      opacity: 0.05,
+      WebkitMaskImage: SC_KEYS_TILE,
+      maskImage: SC_KEYS_TILE,
+      WebkitMaskSize: "240px 240px",
+      maskSize: "240px 240px"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      inset: 0,
+      pointerEvents: "none",
+      background: "radial-gradient(120% 70% at 50% -20%, color-mix(in srgb, var(--primary) 6%, transparent), transparent 70%)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    ref: listRef,
+    style: {
+      position: "absolute",
+      inset: 0,
+      overflow: "auto",
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: maxW,
+      width: "100%",
+      margin: "0 auto",
+      padding: `${pad}px ${pad}px 16px`,
+      boxSizing: "border-box",
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+      flex: empty ? 1 : "0 0 auto"
+    }
+  }, loading && /*#__PURE__*/React.createElement(ChatSkeleton, null), empty && /*#__PURE__*/React.createElement(EmptyChat, null), !loading && rows.map((row, i) => row.kind === "date" ? /*#__PURE__*/React.createElement(DateDivider, {
+    key: `d${i}`,
+    label: row.label
+  }) : /*#__PURE__*/React.createElement(MessageBubble, {
+    key: row.id,
+    msg: row,
+    variant: variant
+  })), !loading && typing && /*#__PURE__*/React.createElement(TypingIndicator, {
+    author: typing,
+    variant: variant
+  })))), /*#__PURE__*/React.createElement(Composer, {
+    value: draft,
+    onChange: onDraft,
+    onSend: onSend,
+    onAttachFile: onAttachFile,
+    onAttachPhoto: onAttachPhoto,
+    attachments: attachments,
+    onRemoveAttachment: onRemoveAttachment,
+    disabled: loading,
+    maxW: maxW,
+    isDesktop: isDesktop
+  }));
+}
+window.SupportChatScreens = {
+  useChatMode,
+  ChatScreen,
+  Composer,
+  MessageBubble,
+  TypingIndicator,
+  DateDivider,
+  MsgStatus,
+  DocAttachment,
+  ImageAttachment,
+  EmptyChat,
+  ChatSkeleton,
+  OfflineBanner,
+  PendingAttachment,
+  SC_ICON,
+  SC_AGENTS,
+  SC_HISTORY,
+  SC_REPLIES,
+  SC_MOCK_FILES,
+  SC_MOCK_PHOTOS
+};
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/support-chat/SupportChatScreens.jsx", error: String((e && e.message) || e) }); }
+
 // res/icons/cmp-icons.js
 try { (() => {
 // Pandora Spec — icon catalog (CmpIcons).
@@ -6254,7 +7519,10 @@ try { (() => {
     'auth-tablet': 'features/auth/AuthTablet.html',
     'auth-desktop': 'features/auth/AuthDesktop.html',
     'auth-states': 'features/auth/AuthStates.html',
-    'auth-flow': 'features/auth/AuthFlow.html'
+    'auth-flow': 'features/auth/AuthFlow.html',
+    'support-chat': 'features/support-chat/SupportChat.html',
+    'support-chat-tablet': 'features/support-chat/SupportChatTablet.html',
+    'support-chat-desktop': 'features/support-chat/SupportChatDesktop.html'
   };
   window.PS_ROOT = ROOT;
   window.PS_LINKS = LINKS;

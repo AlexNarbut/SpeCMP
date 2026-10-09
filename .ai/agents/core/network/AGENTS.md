@@ -3,3 +3,5 @@
 - Область: общий HTTP-клиент, общая конфигурация Ktor и shared network infrastructure в `core/network`.
 - Перед изменениями читай `docs/architecture.md`; при правке зависимостей, client plugins и платформенной конфигурации — `docs/build.md`.
 - DTO, mapper-ы и feature-репозитории ищи в `feature/*/data`, а не в `core/network`.
+- `networkModule` (Koin, подключается в `composeApp/App.kt`): `HttpClient` из `HttpClientFactory`.
+- `monitor/NetworkMonitor` — доступность сети процесса (`isAvailable: StateFlow<Boolean>`). Реализации push-based: `AndroidNetworkMonitor(context)` (`ConnectivityManager` default callback, включая `onBlockedStatusChanged` — блокировку сети в фоне Android 15+; нужен `ACCESS_NETWORK_STATE`), `IosNetworkMonitor` (`NWPathMonitor`); на JVM реализации нет. Экземпляр — синглтон процесса, в Koin его кладёт корень приложения (`composeApp/di/rememberPlatformModule()`), а не этот модуль: Android-реализации нужен `applicationContext`.

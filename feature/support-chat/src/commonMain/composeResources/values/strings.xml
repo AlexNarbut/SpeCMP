@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="supportchat_chat_title_screen">Tech support</string>
+    <string name="supportchat_common_a11y_back">Back</string>
+    <string name="supportchat_chat_a11y_attach_file">Attach file</string>
+    <string name="supportchat_chat_a11y_attach_photo">Attach photo</string>
+    <string name="supportchat_chat_a11y_send">Send</string>
+    <string name="supportchat_chat_a11y_remove_attachment">Remove attachment</string>
+    <string name="supportchat_chat_a11y_download">Download</string>
+    <string name="supportchat_chat_a11y_close_viewer">Close image</string>
+    <string name="supportchat_chat_label_message_hint">Message</string>
+    <string name="supportchat_chat_label_document_meta">%1$s · %2$s</string>
+    <string name="supportchat_chat_msg_empty_title">How can we help?</string>
+    <string name="supportchat_chat_msg_empty_subtitle">Ask a question — a support agent will reply shortly.</string>
+    <string name="supportchat_chat_hint_documents">Documents</string>
+    <string name="supportchat_chat_hint_installation_photos">Installation photos</string>
+    <string name="supportchat_chat_msg_typing_author">%s is typing…</string>
+    <string name="supportchat_common_btn_retry">Retry</string>
+    <string name="supportchat_chat_error_send">Failed to send message. Tap to retry.</string>
+    <string name="supportchat_chat_error_load_history">Failed to load chat history.</string>
+    <string name="supportchat_chat_error_history_title">Failed to load the conversation</string>
+    <string name="supportchat_chat_msg_download_success">File saved to Downloads/Pandora Spec</string>
+    <string name="supportchat_chat_error_download">Failed to download file</string>
+    <string name="supportchat_chat_a11y_status_sending">Sending</string>
+    <string name="supportchat_chat_a11y_status_sent">Sent</string>
+    <string name="supportchat_chat_a11y_status_read">Read</string>
+    <string name="supportchat_chat_a11y_status_pending">Waiting for connection</string>
+    <string name="supportchat_chat_a11y_status_failed">Failed</string>
+    <string name="supportchat_chat_label_size_bytes">%1$s B</string>
+    <string name="supportchat_chat_label_size_kb">%1$s KB</string>
+    <string name="supportchat_chat_label_size_mb">%1$s.%2$s MB</string>
+    <string name="supportchat_chat_label_size_gb">%1$s.%2$s GB</string>
+    <string name="supportchat_chat_title_connecting">Connecting…</string>
+    <string name="supportchat_chat_error_send_no_file">The attachment file is no longer available. Delete the message and attach the file again.</string>
+    <string name="supportchat_chat_btn_delete">Delete</string>
+    <string name="supportchat_chat_error_attachment_too_large">File is too large. The maximum size is %1$d MB.</string>
+    <string name="supportchat_chat_error_attach">Couldn’t attach the file.</string>
+    <string name="supportchat_chat_btn_open">Open</string>
+    <string name="supportchat_chat_btn_download">Download</string>
+    <string name="supportchat_chat_a11y_document_actions">File actions</string>
+    <string name="supportchat_chat_error_open">Couldn’t open the file.</string>
+    <string name="supportchat_chat_error_open_no_app">No app to open this file.</string>
+    <string name="supportchat_chat_error_save_permission">No permission to save to Downloads. Allow storage access in settings.</string>
+    <string name="supportchat_chat_msg_reconnecting">No connection · reconnecting…</string>
+    <string name="supportchat_chat_error_chat_auth">Couldn’t sign in to the chat. Reopen the chat.</string>
+</resources>

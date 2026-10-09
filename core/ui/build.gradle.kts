@@ -21,6 +21,8 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+        // обязательно для модулей с compose resources (см. docs/build.md)
+        androidResources.enable = true
     }
 
     listOf(
@@ -47,12 +49,17 @@ kotlin {
             // Каталог material-иконок для CmpIcons (резолвится в CmpIconsResolver)
             implementation(compose.materialIconsExtended)
 
+            // Image loading — единый ImageLoader приложения, обёртки CmpAsyncImage/CmpSubcomposeAsyncImage
+            implementation(libs.coil)
+            implementation(libs.coil.network.ktor)
+
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
 
             // Kotlinx
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
 
             // Логирование: Logger — часть protected API BaseViewModel, поэтому api
             api(libs.kermit)
@@ -75,4 +82,10 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+// Общие строковые ресурсы (см. docs/localization.md, правило 2)
+compose.resources {
+    publicResClass = false
+    generateResClass = always
 }

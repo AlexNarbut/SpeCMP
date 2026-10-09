@@ -29,7 +29,7 @@ fun AppNavigation(
 
 Экраны не навигируют между зонами сами: успешный login и logout меняют состояние сессии, `AuthStateNavGraph` подхватывает изменение и переключает зону.
 
-Nav3 back stack используется **внутри каждой зоны**: `LoginNavGraph` (`feature/login`) в неавторизованной, `MainNavGraph` (`composeApp`) в авторизованной.
+Nav3 back stack используется **внутри каждой зоны**: `LoginNavGraph` (`feature/login`) в неавторизованной, `MainNavGraph` (`composeApp`) в авторизованной. `MainNavGraph` подключает `feature/support-chat` целиком и хранит app-level переход между `MainRoute` и `SupportChatRoute`.
 
 | Route | Экран | Граф |
 |---|---|---|
@@ -37,12 +37,19 @@ Nav3 back stack используется **внутри каждой зоны**:
 | `RegistrationRoute` | `RegistrationScreen` (`feature/login`) | `LoginNavGraph` |
 | `ForgotPasswordRoute` | `ForgotPasswordScreen` (`feature/login`) | `LoginNavGraph` |
 | `MainRoute` | `MainScreen` (`feature/main`) | `MainNavGraph` |
+| `SupportChatRoute` | `SupportChatEntry` (`feature/support-chat`) | `MainNavGraph` |
+
+Из главного экрана в `SupportChatRoute` ведут карточки `Requests` и `TechSupportChat`. В drawer перехода в чат нет. `feature/main` только эмитит `MainNavigationTarget`; изменение app-level back stack остаётся ответственностью `composeApp`.
 
 ## Навигация внутри feature
 
 Фича с несколькими экранами обязана иметь **собственный nav3-граф** внутри модуля:
 `feature/<name>/.../presentation/navigation/<Name>NavGraph.kt` — свои `NavKey`-роуты,
 свой `SavedStateConfiguration`, `rememberNavBackStack` + `NavDisplay`.
+
+Фича с **одним экраном** граф не создаёт: её точка входа — публичный composable
+(`<Name>Entry`), который `composeApp` размещает как entry в корневом `NavDisplay`
+(как `SupportChatEntry`). При появлении второго экрана — вводить собственный граф.
 
 - `composeApp` подключает граф фичи целиком (один composable-вызов в слоте/entry),
   а не отдельные экраны фичи.
@@ -87,6 +94,14 @@ private fun MainNavGraph() {
                 backStack.removeLastOrNull()
             }
         },
+        entryDecorators = listOf(
+            // Дефолтный декоратор: без него не работает SavedStateHandle.
+            rememberSaveableStateHolderNavEntryDecorator(),
+            // Per-entry ViewModelStoreOwner: VM entry живёт ровно столько,
+            // сколько запись бэкстека (init/onCleared вместо DisposableEffect
+            // и ручного сброса state).
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
                 MainScreen()
@@ -95,6 +110,13 @@ private fun MainNavGraph() {
     )
 }
 ```
+
+**Оба декоратора обязательны в каждом `NavDisplay`** — корневом и во вложенных графах фич.
+Без `rememberViewModelStoreNavEntryDecorator()` `koinViewModel()` отдаёт app-level инстанс,
+который переживает уход с экрана и смену аккаунта, — отсюда соблазн чинить жизненный цикл
+`DisposableEffect`'ами и ручным сбросом state (см. `docs/patterns.md`, «Жизненный цикл ViewModel
+и сессии»). Без `rememberSaveableStateHolderNavEntryDecorator()` не работает `SavedStateHandle`.
+Зависимость — `libs.androidx.lifecycle.viewmodel.nav3`.
 
 ## Навигационные действия
 

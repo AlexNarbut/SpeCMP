@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
@@ -30,7 +31,7 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.mapContent
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
+import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
@@ -41,7 +42,7 @@ import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSu
 import kotlin.time.Duration.Companion.seconds
 
 class MainScreenViewModel(
-    private val authStateRepository: AuthStateRepository,
+    private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
@@ -121,6 +122,11 @@ class MainScreenViewModel(
     fun onMenuClicked() {
         if (state.value.isInitialLoading) return
 
+        val profile = state.value.profileState
+        if (profile !is LCEState.Content && profile !is LCEState.Loading) {
+            safeLaunch { loadUserProfile() }
+        }
+
         _state.update { it.copy(isMenuOpen = !it.isMenuOpen) }
     }
 
@@ -170,7 +176,7 @@ class MainScreenViewModel(
                 )
             }
 
-            when (withContext(dispatchers.io) { authStateRepository.logout() }) {
+            when (withContext(dispatchers.io) { logoutUseCase.execute() }) {
                 is Response.Success -> {
                     logger.d { "Logout succeeded" }
                     _state.update {
@@ -202,7 +208,7 @@ class MainScreenViewModel(
     private suspend fun loadUserProfile() {
         _state.update { it.copy(profileState = LCEState.Loading()) }
 
-        val response = withContext(dispatchers.io) { mainRepository.currentUserProfile() }
+        val response = loadWithTimeout { mainRepository.currentUserProfile() }
         _state.update {
             it.copy(
                 profileState = response.asLCEState { e -> e.message ?: "Error" }
@@ -216,7 +222,7 @@ class MainScreenViewModel(
     private suspend fun loadUserAppFeatures() {
         _state.update { it.copy(appFeaturesState = LCEState.Loading()) }
 
-        val response = withContext(dispatchers.io) { mainRepository.currentUserAppFeatures() }
+        val response = loadWithTimeout { mainRepository.currentUserAppFeatures() }
         _state.update {
             it.copy(
                 appFeaturesState = response.asLCEState { e -> e.message ?: "Error" },
@@ -227,7 +233,7 @@ class MainScreenViewModel(
     private suspend fun loadUserCommercial() {
         _state.update { it.copy(userCommercialState = LCEState.Loading()) }
 
-        val response = withContext(dispatchers.io) { mainRepository.currentUserCommercial() }
+        val response = loadWithTimeout { mainRepository.currentUserCommercial() }
         _state.update {
             it.copy(
                 userCommercialState = response.asLCEState { e -> e.message ?: "Error" },
@@ -271,7 +277,7 @@ class MainScreenViewModel(
         _state.update { it.copy(appUpdateState = LCEState.Loading()) }
         logger.d { "Checking for app update" }
 
-        val response = withContext(dispatchers.io) { mainRepository.checkAppUpdate() }
+        val response = loadWithTimeout { mainRepository.checkAppUpdate() }
         _state.update {
             it.copy(
                 appUpdateState = response.asLCEState { e -> e.message ?: "Error" },
@@ -292,7 +298,14 @@ class MainScreenViewModel(
         }
     }
 
+    private suspend fun <T> loadWithTimeout(block: suspend () -> Response<T>): Response<T> {
+        return withContext(dispatchers.io) {
+            withTimeoutOrNull(STARTUP_LOAD_TIMEOUT) { block() }
+        } ?: Response.Error(Exception("Request timed out"))
+    }
+
     private companion object {
         val STOP_TIMEOUT = 5.seconds
+        val STARTUP_LOAD_TIMEOUT = 10.seconds
     }
 }

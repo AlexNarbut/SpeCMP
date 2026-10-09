@@ -5,6 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
@@ -35,7 +36,13 @@ class SpecialistAuthStateRepository(
     }
 
     private suspend fun checkIsLoggedIn(): Response<Boolean> {
-        return when (val response = authInteractor.checkIfUserLoggedInUseCase.execute()) {
+        val response = withTimeoutOrNull(CHECK_TIMEOUT) {
+            authInteractor.checkIfUserLoggedInUseCase.execute()
+        } ?: return Response.Error(
+            exception = Exception("Auth check timed out"),
+            message = "Auth check timed out",
+        )
+        return when (response) {
             is SpecialistResponse.Success -> Response.Success(response.value.boolean)
             is SpecialistResponse.Error -> response.toProjectError()
         }
@@ -50,5 +57,6 @@ class SpecialistAuthStateRepository(
 
     private companion object {
         val POLL_INTERVAL = 2.seconds
+        val CHECK_TIMEOUT = 10.seconds
     }
 }

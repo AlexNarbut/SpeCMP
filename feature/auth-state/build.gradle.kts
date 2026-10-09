@@ -42,6 +42,11 @@ kotlin {
 
             implementation(libs.alarmtrade.specialist)
         }
+
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+        }
     }
 }
 

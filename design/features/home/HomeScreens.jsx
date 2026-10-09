@@ -28,6 +28,7 @@ const ICON = {
   requests: "assignment", feedback: "feedback", product: "info",
   menu: "menu", sync: "sync", settings: "settings", logout: "logout",
   themeDark: "dark_mode", themeLight: "light_mode", status: "check_circle", person: "person",
+  support: "support_agent",
   appUpdate: "system_update", download: "download",
 };
 
@@ -331,6 +332,7 @@ function HomeDrawer({ variant = "modal", profile, dark, onDark, syncing, onSync,
             trailing={appUpdate.state === "checking" ? <CmpCircularProgressIndicator size={20} strokeWidth={2.5} /> : null}
           />
         )}
+        <DrawerRow icon={ICON.support} label="Заявки на техпомощь" onClick={() => onNav("support")} />
         <DrawerRow icon={ICON.settings} label="Настройки" onClick={() => onNav("settings")} />
         <DrawerRow icon={ICON.logout} label="Выход" onClick={() => onNav("logout")} />
       </div>

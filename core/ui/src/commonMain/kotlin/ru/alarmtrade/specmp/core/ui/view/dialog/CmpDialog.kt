@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.core.ui.view.dialog
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -26,6 +27,6 @@ fun CmpDialog(
         title = title,
         text = text,
         icon = icon?.let { { CmpIcon(imageVector = it, contentDescription = null) } },
-        shape = shape ?: androidx.compose.material3.AlertDialogDefaults.shape,
+        shape = shape ?: AlertDialogDefaults.shape,
     )
 }

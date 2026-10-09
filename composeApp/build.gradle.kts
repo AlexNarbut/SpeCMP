@@ -40,6 +40,7 @@ kotlin {
             implementation(project(":feature:auth-state"))
             implementation(project(":feature:login"))
             implementation(project(":feature:main"))
+            implementation(project(":feature:support-chat"))
 
             // Compose
             implementation(libs.compose.runtime)
@@ -52,6 +53,7 @@ kotlin {
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
+            implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
             // Navigation
             implementation(libs.compose.nav3)
