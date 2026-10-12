@@ -11,6 +11,7 @@ import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.di.commonModule
+import ru.alarmtrade.specmp.core.network.di.networkModule
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
@@ -22,6 +23,8 @@ import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
 import ru.alarmtrade.specmp.core.specialist.specialistModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
+import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
+import ru.alarmtrade.specmp.core.ui.view.image.rememberCmpImageLoader
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
@@ -62,8 +65,9 @@ fun App(
     KoinApplication(application = {
         modules(
             buildList {
-                add(commonModule)
                 addAll(platformModules)
+                add(commonModule)
+                add(networkModule)
                 add(specialistModule)
                 overrideAppVersionModule?.let { add(it) }
                 add(permissionsModule())
@@ -82,13 +86,17 @@ fun App(
         BindEffect(koinInject<PermissionsProvider>().getController())
 
         CompositionLocalProvider(LocalAppLocale provides appLocale) {
-            AppTheme(onThemeChanged) {
-                AppNavigation(
-                    onLocaleChanged = { locale ->
-                        applyAppLocale(locale)
-                        appLocale = locale
-                    },
-                )
+            // Единый ImageLoader приложения: memory/disk-кэш Coil общий для
+            // всех экранов (U-1).
+            ProvideCmpImageLoader(rememberCmpImageLoader()) {
+                AppTheme(onThemeChanged) {
+                    AppNavigation(
+                        onLocaleChanged = { locale ->
+                            applyAppLocale(locale)
+                            appLocale = locale
+                        },
+                    )
+                }
             }
         }
     }

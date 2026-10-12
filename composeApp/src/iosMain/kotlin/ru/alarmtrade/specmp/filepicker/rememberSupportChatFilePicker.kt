@@ -5,10 +5,15 @@ package ru.alarmtrade.specmp.filepicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.uikit.LocalUIViewController
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSNumber
-import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSApplicationSupportDirectory
+import platform.Foundation.NSSearchPathForDirectoriesInDomains
+import platform.Foundation.NSUserDomainMask
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
 import platform.PhotosUI.PHPickerConfiguration
@@ -21,10 +26,15 @@ import platform.UIKit.UIDocumentPickerMode
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
 import platform.darwin.NSObject
+import platform.darwin.DISPATCH_QUEUE_PRIORITY_DEFAULT
 import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatFilePicker
-import ru.alarmtrade.specmp.feature.supportchat.domain.picker.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 
 @Composable
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
@@ -40,7 +50,12 @@ private class IosSupportChatFilePicker(
 
     private var activeDelegate: NSObject? = null
 
-    override fun launchImage(onPicked: (SupportChatPickedFile?) -> Unit) {
+    // Делегаты отдают результат на main; буфер — до подписки экрана.
+    private val channel = Channel<SupportChatPickedFileResult>(Channel.UNLIMITED)
+    override val results: Flow<SupportChatPickedFileResult> = channel.receiveAsFlow()
+    private val onPicked: (SupportChatPickedFileResult) -> Unit = { channel.trySend(it) }
+
+    override fun launchImage() {
         val configuration = PHPickerConfiguration().apply {
             filter = PHPickerFilter.imagesFilter()
             selectionLimit = 1
@@ -59,17 +74,11 @@ private class IosSupportChatFilePicker(
         )
     }
 
-    override fun launchDocument(onPicked: (SupportChatPickedFile?) -> Unit) {
-        launchPicker(
-            documentTypes = listOf(DATA_UTI),
-            onPicked = onPicked,
-        )
+    override fun launchDocument() {
+        launchPicker(documentTypes = listOf(DATA_UTI))
     }
 
-    private fun launchPicker(
-        documentTypes: List<String>,
-        onPicked: (SupportChatPickedFile?) -> Unit,
-    ) {
+    private fun launchPicker(documentTypes: List<String>) {
         val picker = UIDocumentPickerViewController(
             documentTypes = documentTypes,
             inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen,
@@ -97,7 +106,7 @@ private class IosSupportChatFilePicker(
 private const val IMAGE_UTI = "public.image"
 
 private class PhotoPickerDelegate(
-    private val onPicked: (SupportChatPickedFile?) -> Unit,
+    private val onPicked: (SupportChatPickedFileResult) -> Unit,
     private val onFinished: () -> Unit,
 ) : NSObject(), PHPickerViewControllerDelegateProtocol {
 
@@ -105,12 +114,14 @@ private class PhotoPickerDelegate(
         picker.dismissViewControllerAnimated(true, null)
         val result = didFinishPicking.firstOrNull() as? PHPickerResult
         if (result == null) {
-            onPicked(null)
+            onPicked(SupportChatPickedFileResult.Cancelled)
             onFinished()
             return
         }
+        // Колбэк itemProvider приходит на фоновой очереди; временный url валиден
+        // только внутри него — копируем здесь, результат отдаём на main.
         result.itemProvider.loadFileRepresentationForTypeIdentifier(IMAGE_UTI) { url, _ ->
-            val picked = url?.copyToTemporaryFile()
+            val picked = url?.copyToAttachments(SupportChatPickKind.Image) ?: SupportChatPickedFileResult.Failed
             dispatch_async(dispatch_get_main_queue()) {
                 onPicked(picked)
                 onFinished()
@@ -120,7 +131,7 @@ private class PhotoPickerDelegate(
 }
 
 private class DocumentPickerDelegate(
-    private val onPicked: (SupportChatPickedFile?) -> Unit,
+    private val onPicked: (SupportChatPickedFileResult) -> Unit,
     private val onFinished: () -> Unit,
 ) : NSObject(), UIDocumentPickerDelegateProtocol {
 
@@ -129,42 +140,96 @@ private class DocumentPickerDelegate(
         didPickDocumentsAtURLs: List<*>,
     ) {
         val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
-        onPicked(url?.copyToTemporaryFile())
-        onFinished()
+        if (url == null) {
+            onPicked(SupportChatPickedFileResult.Cancelled)
+            onFinished()
+            return
+        }
+        // Копирование большого документа не должно вешать main-поток.
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
+            val picked = url.copyToAttachments(SupportChatPickKind.Document)
+            dispatch_async(dispatch_get_main_queue()) {
+                onPicked(picked)
+                onFinished()
+            }
+        }
     }
 
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
-        onPicked(null)
+        onPicked(SupportChatPickedFileResult.Cancelled)
         onFinished()
     }
 }
 
-private fun NSURL.copyToTemporaryFile(): SupportChatPickedFile? {
+/**
+ * Копия в `Application Support/support-chat-attachments`, а не во временный каталог:
+ * она нужна outbox'у после рестарта, а tmp система вправе вычистить. Удаляет копию
+ * [rememberSupportChatAttachmentFiles], когда сообщение подтверждено или удалено.
+ */
+private fun NSURL.copyToAttachments(kind: SupportChatPickKind): SupportChatPickedFileResult {
     val canAccess = startAccessingSecurityScopedResource()
     return try {
-        val originalName = lastPathComponent ?: "attachment"
-        val safeName = originalName.replace('/', '_')
-        val destinationPath = "${NSTemporaryDirectory()}${NSUUID().UUIDString}_$safeName"
-        val destinationUrl = NSURL.fileURLWithPath(destinationPath)
         val fileManager = NSFileManager.defaultManager
+        val sourceSize = path?.let { sourcePath ->
+            (fileManager.attributesOfItemAtPath(sourcePath, error = null)?.get(NSFileSize) as? NSNumber)?.longLongValue
+        }
+        if ((sourceSize ?: 0L) > SupportChatAttachmentLimits.MAX_BYTES) return SupportChatPickedFileResult.TooLarge
 
-        if (!fileManager.copyItemAtURL(this, destinationUrl, error = null)) return null
+        val root = supportChatAttachmentsDirectory() ?: return SupportChatPickedFileResult.Failed
+        val originalName = safeFileName(lastPathComponent ?: DEFAULT_NAME)
+        // Своя папка на копию: SDK берёт имя для сервера из пути — без префиксов в имени.
+        val directory = "$root/${NSUUID().UUIDString}"
+        val destinationPath = "$directory/$originalName"
+        val created = fileManager.createDirectoryAtPath(
+            path = directory,
+            withIntermediateDirectories = true,
+            attributes = null,
+            error = null,
+        )
+        if (!created || !fileManager.copyItemAtURL(this, NSURL.fileURLWithPath(destinationPath), error = null)) {
+            fileManager.removeItemAtPath(directory, error = null)
+            return SupportChatPickedFileResult.Failed
+        }
 
         val sizeBytes = (fileManager.attributesOfItemAtPath(destinationPath, error = null)
             ?.get(NSFileSize) as? NSNumber)
             ?.longLongValue
+        if ((sizeBytes ?: 0L) > SupportChatAttachmentLimits.MAX_BYTES) {
+            fileManager.removeItemAtPath(directory, error = null)
+            return SupportChatPickedFileResult.TooLarge
+        }
 
-        SupportChatPickedFile(
-            id = NSUUID().UUIDString,
-            name = originalName,
-            path = destinationPath,
-            mimeType = mimeTypeForName(originalName),
-            sizeBytes = sizeBytes,
+        SupportChatPickedFileResult.Picked(
+            SupportChatPickedFile(
+                id = NSUUID().UUIDString,
+                name = originalName,
+                path = destinationPath,
+                mimeType = mimeTypeForName(originalName),
+                sizeBytes = sizeBytes,
+            ),
+            kind,
         )
     } finally {
         if (canAccess) stopAccessingSecurityScopedResource()
     }
 }
+
+/** Каталог копий вложений; создаётся при первом обращении. `null` — недоступен. */
+internal fun supportChatAttachmentsDirectory(): String? {
+    val base = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)
+        .firstOrNull() as? String ?: return null
+    val directory = "$base/$ATTACHMENTS_DIR"
+    val created = NSFileManager.defaultManager.createDirectoryAtPath(
+        path = directory,
+        withIntermediateDirectories = true,
+        attributes = null,
+        error = null,
+    )
+    return directory.takeIf { created }
+}
+
+private const val DEFAULT_NAME = "attachment"
+private const val ATTACHMENTS_DIR = "support-chat-attachments"
 
 private fun mimeTypeForName(name: String): String? {
     return when (name.substringAfterLast('.', "").lowercase()) {

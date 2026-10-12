@@ -27,6 +27,19 @@ CmpButton(text = "Hello", onClick = { })
 CmpText(text = "Hello")
 ```
 
+### Нет нужного `Cmp*` — расширяем `core/ui`, а не обходим
+
+Правило распространяется на **любую** стороннюю UI-библиотеку (Coil, `androidx.compose.ui.window.Dialog`,
+`foundation.Image` и т.п.), а не только на Material3. Если `Cmp*` не покрывает сценарий
+(полноэкранный диалог, картинка по url, box без контента, типографическая роль):
+
+1. Проверь карту компонентов ниже — возможно, обёртка уже есть (`CmpImage` вместо `foundation.Image`).
+2. Нет — добавь обёртку/параметр в `core/ui` (см. «Добавление нового компонента») и обнови карту.
+3. Молчаливый обход в фиче запрещён. Осознанные исключения перечислены в «Исключения из „только Cmp*“».
+
+Инфраструктура сторонних UI-библиотек (`ImageLoader`, кэши, сетевой стек) создаётся один раз в
+`core/ui`/`composeApp` и провайдится над деревом — фича не строит свой `ImageLoader`.
+
 ---
 
 ## Каркас экрана и навигация
@@ -143,8 +156,11 @@ commonMain.dependencies {
 | Иконка | `icon/CmpIcon.kt` |
 | Каталог иконок (enum) | `icon/CmpIcons.kt` |
 | Резолвер иконок (@Composable) | `icon/CmpIconsResolver.kt` |
-| Изображение | `image/CmpImage.kt` |
+| Изображение (painter) | `image/CmpImage.kt` |
+| Загрузка изображения по url (Coil) | `image/CmpAsyncImage.kt` |
+| Загрузка с кастомным placeholder'ом (Coil) | `image/CmpAsyncImage.kt` |
 | Диалог | `dialog/CmpDialog.kt` |
+| Полноэкранный диалог | `dialog/CmpFullScreenDialog.kt` |
 | Snackbar | `dialog/CmpSnackbar.kt` |
 | Badge | `badge/CmpBadge.kt` |
 | Разделитель | `divider/CmpDivider.kt` |
@@ -153,6 +169,20 @@ commonMain.dependencies {
 | Column | `layout/CmpColumn.kt` |
 | Row | `layout/CmpRow.kt` |
 | Spacer | `layout/CmpSpacer.kt` |
+
+## Исключения из «только Cmp*»
+
+Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — сознательное
+исключение (U-5): осмысленная обёртка неизбежно протечёт наружу `LazyListScope`/
+`DrawScope`, поэтому фичи используют их напрямую. Coil в фичах запрещён — только
+`CmpAsyncImage`/`CmpSubcomposeAsyncImage` (общий `ImageLoader` провайдится из
+`composeApp`).
+
+## Типографика
+
+`CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`Body`/`Caption`) с
+маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
+в фичах числами не задаются. Параметр `fontSize` остаётся для исключений.
 
 ---
 

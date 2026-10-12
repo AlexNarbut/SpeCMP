@@ -6,9 +6,11 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.authstate.data.repository.SpecialistAuthStateRepository
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
+import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.authstate.presentation.logic.AuthStateViewModel
 
 val authStateModule = module {
     singleOf(::SpecialistAuthStateRepository) bind AuthStateRepository::class
+    single { LogoutUseCase(get(), getAll()) }
     viewModelOf(::AuthStateViewModel)
 }

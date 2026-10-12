@@ -28,8 +28,10 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
-import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatNavGraph
+import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
+import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileSaver
 
@@ -67,13 +69,14 @@ private fun AuthedNavGraph() {
 
     NavDisplay(
         backStack = backStack,
-        // ViewModel-store декоратор: у каждого entry свой ViewModelStore, поэтому при
-        // уходе с экрана (pop) его ViewModel очищается (onCleared), а не живёт на уровне Activity.
+        onBack = { backStack.popSafe() },
         entryDecorators = listOf(
+            // Дефолтный декоратор NavDisplay: без него не работает SavedStateHandle.
             rememberSaveableStateHolderNavEntryDecorator(),
+            // Per-entry ViewModelStoreOwner: VM живёт ровно столько, сколько запись
+            // бэкстека, и очищается при pop (см. docs/navigation.md).
             rememberViewModelStoreNavEntryDecorator(),
         ),
-        onBack = { backStack.popSafe() },
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
                 MainNavGraph(
@@ -83,12 +86,12 @@ private fun AuthedNavGraph() {
                 )
             }
             entry<SupportChatRoute> { _ ->
-                val filePicker = rememberSupportChatFilePicker()
-                val fileSaver = rememberSupportChatFileSaver()
-                SupportChatNavGraph(
+                SupportChatEntry(
                     onBack = { backStack.popSafe() },
-                    filePicker = filePicker,
-                    fileSaver = fileSaver,
+                    filePicker = rememberSupportChatFilePicker(),
+                    fileSaver = rememberSupportChatFileSaver(),
+                    attachmentFiles = rememberSupportChatAttachmentFiles(),
+                    fileOpener = rememberSupportChatFileOpener(),
                 )
             }
             entry<DeviceSelectionRoute> { _ ->

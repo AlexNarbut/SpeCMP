@@ -96,13 +96,57 @@ name      — краткое описание содержимого
    stringResource(Res.string.login_common_msg_email_sent, email)
    ```
 
-6. **Plurals** не поддерживаются CMP напрямую. Используйте несколько ключей или `when` в коде:
+6. **Не склеивать UI-текст в коде.** Один видимый пользователю текст — **один ключ**
+   с плейсхолдерами, а не конкатенация из `stringResource` и литералов. Разделители
+   (`·`, `—`, `, `), предлоги и порядок слов — часть перевода: в другом языке они другие
+   или не нужны вовсе.
+
+   ```kotlin
+   // ❌ Плохо — разделитель и порядок слов зашиты в коде
+   CmpText(text = "$author · ${stringResource(Res.string.supportchat_chat_msg_typing)}")
+
+   // ✅ Хорошо — целая фраза в ресурсе
+   CmpText(text = stringResource(Res.string.supportchat_chat_msg_typing_author, author))
+   ```
+   ```xml
+   <string name="supportchat_chat_msg_typing_author">%s is typing…</string>
+   ```
+
+   То же касается **единиц измерения** (`KB`, `MB`, `Б`, `шт.`) и форматов размеров/дат:
+   это UI-текст, он переводится — значит живёт в ресурсе (`<string name="..._size_kb">%s KB</string>`),
+   а не в Kotlin-литерале.
+
+   - Разделитель между частями (`размер · тип`) — тоже в ресурсе (`%1$s · %2$s`); если известна
+     только одна часть — это отдельная ветка без разделителя, а не `joinToString(" · ")`.
+   - Десятичный разделитель зависит от языка (`1.5` / `1,5`) — не собирать дробь через `"."`
+     вручную.
+   - **Даты не собираются из ключей месяцев и `buildString`** — используй общий
+     `rememberCmpDateLabeler()` из `core/ui` («Сегодня»/«Вчера»/«14 марта»). Нужен новый формат —
+     расширяй хелпер в `core/ui`, а не заводи свои 12 ключей месяцев в фиче.
+
+7. **Технические строки — не в ресурсах, но и не inline.** В `strings.xml` попадает только то,
+   что видит пользователь. URI-схемы и пути (`file://`), префиксы ключей `LazyColumn`,
+   log-теги, `label` у Compose-анимаций, ключи хранилищ — не переводятся и в ресурсы
+   **не выносятся**; они объявляются `private const val` рядом с использованием, а не пишутся
+   литералом в месте вызова (см. `docs/patterns.md`, «строки для логики — через `const val`»).
+
+   ```kotlin
+   // ❌ Плохо — техническая строка литералом в коде
+   model = localPath?.let { "file://$it" } ?: url
+   key = { "typing_${item.author}" }
+
+   // ✅ Хорошо
+   private const val FILE_URI_SCHEME = "file://"
+   private const val TYPING_KEY_PREFIX = "typing_"
+   ```
+
+8. **Plurals** не поддерживаются CMP напрямую. Используйте несколько ключей или `when` в коде:
    ```xml
    <string name="login_common_one_attempt">%d attempt</string>
    <string name="login_common_other_attempts">%d attempts</string>
    ```
 
-7. **App-level локаль живёт в `core/localization` и `composeApp`.**
+9. **App-level локаль живёт в `core/localization` и `composeApp`.**
    Feature-модули не читают системный язык и не сохраняют выбранный язык самостоятельно.
    Composition root вызывает `prepareAppLocale()` на старте, хранит `AppLocale` в Compose state,
    провайдит его через `LocalAppLocale` и передаёт в фичи только callback `onLocaleChanged`.
@@ -179,6 +223,19 @@ CMP-парсер обрабатывает **только** эти последо
 
 Всё остальное проходит **как есть** — бэкслеш остаётся в строке.
 
+- **Прямой слеш `/` экранировать не нужно** — он обычный символ и пишется как есть
+  (`Downloads/Pandora Spec`). Экранируется только **обратный** слеш `\`, и только в четырёх
+  последовательностях из таблицы выше; любой другой `\x` попадёт в UI дословно, вместе с
+  бэкслешем. Литеральный `\` в тексте — это `\\`.
+
+  ```xml
+  <!-- ПРАВИЛЬНО -->
+  <string name="supportchat_chat_msg_download_success">File saved to Downloads/Pandora Spec</string>
+
+  <!-- НЕПРАВИЛЬНО — \/ не распознаётся, в UI будет "Downloads\/Pandora Spec" -->
+  <string name="supportchat_chat_msg_download_success">File saved to Downloads\/Pandora Spec</string>
+  ```
+
 - **Апострофы и кавычки пишутся сырыми**, без бэкслеша. `\'` и `\"` НЕ
   распознаются: бэкслеш попадёт в UI (`What\'s` вместо `What's`).
 
@@ -200,7 +257,7 @@ CMP-парсер обрабатывает **только** эти последо
 ### Прочие отличия
 
 - **`%`-аргументы.** Поддерживаются `%s` / `%d` (и позиционные `%1$s`); plurals — нет
-  (см. п. 6 выше).
+  (см. п. 8 выше).
 - **HTML/разметка не интерпретируется.** `<b>`, `<i>`, `&lt;` и т.п. в текст не
   превращаются в стили — для форматирования используйте `AnnotatedString` в коде.
 
@@ -211,6 +268,7 @@ CMP-парсер обрабатывает **только** эти последо
 
 1. Создать `values/strings.xml` и `values-ru/strings.xml` в `composeResources/` модуля (если ещё нет)
 2. Добавить все видимые строки с ключами по конвенции
-3. Убедиться что в Kotlin-коде нет захардкоженных строк (кроме технических: log tags, debug)
+3. Убедиться что в Kotlin-коде нет захардкоженных строк (кроме технических: log tags, debug);
+   технические строки — в `private const val`, UI-текст не собирается конкатенацией (п. 6, 7)
 4. Проверить что `compose.resources` доступен (транзитивно через `core/ui` или явно)
 5. Убедиться что в `build.gradle.kts` модуля указано `androidResources.enable = true` (см. `docs/build.md`)

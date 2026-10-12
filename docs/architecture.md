@@ -95,6 +95,9 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - `Response<T>` — результат бизнес-операции: `Success<T>` | `Error`
 - `ResponseExt` — функции-расширения
 - `AppDispatchers` — обёртка над корутин-диспетчерами
+- `AuthCloseable` — контракт компонентов, обязанных чистить состояние при смене аккаунта (`release()` вызывает `LogoutUseCase`)
+- `appScopeQualifier` — application-scoped `CoroutineScope` для работы, переживающей инициатора
+- `AppSettingsFactory` — именованные key-value хранилища (multiplatform-settings, `api`-зависимость)
 - Без UI-зависимостей
 
 ### core/network

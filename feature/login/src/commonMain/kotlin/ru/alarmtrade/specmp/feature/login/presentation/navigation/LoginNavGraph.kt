@@ -8,10 +8,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
@@ -120,6 +122,12 @@ private fun LoginNavDisplay(
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),
         onBack = { backStack.popSafe() },
+        entryDecorators = listOf(
+            // Дефолтный декоратор NavDisplay: без него не работает SavedStateHandle.
+            rememberSaveableStateHolderNavEntryDecorator(),
+            // Per-entry ViewModelStoreOwner (см. docs/navigation.md).
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
                 AuthBody(

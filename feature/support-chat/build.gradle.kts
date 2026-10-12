@@ -36,6 +36,8 @@ kotlin {
             implementation(project(":core:ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
+            // LifecycleEventEffect: проброс ON_START/ON_STOP экрана в VM (автопереподключение)
+            implementation(libs.androidx.lifecycle.runtime)
 
             // Nav3-граф фичи (см. docs/navigation.md)
             implementation(libs.compose.nav3)
@@ -43,6 +45,7 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.collections.immutable)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
@@ -52,9 +55,6 @@ kotlin {
 
             implementation(libs.kermit)
 
-            // Image loading
-            implementation(libs.coil)
-            implementation(libs.coil.network.ktor)
         }
 
         commonTest.dependencies {

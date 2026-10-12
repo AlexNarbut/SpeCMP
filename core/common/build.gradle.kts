@@ -35,6 +35,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kermit)
             implementation(libs.koin.core)
+            // Settings — публичный тип AppSettingsFactory, поэтому api
+            api(libs.multiplatformSettings)
         }
 
         commonTest.dependencies {

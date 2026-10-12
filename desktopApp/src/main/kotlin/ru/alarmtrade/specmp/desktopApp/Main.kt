@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.desktopApp
 
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -16,6 +17,7 @@ fun main() = application {
             height = 800.dp,
         ),
         title = "SpeCMP",
+        icon = painterResource("icon.png"),
     ) {
         App(
             appVersionName = versionName,

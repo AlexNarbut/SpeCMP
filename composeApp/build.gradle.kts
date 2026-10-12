@@ -57,6 +57,7 @@ kotlin {
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
+            implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
             // Navigation
             implementation(libs.compose.nav3)

@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -18,20 +19,21 @@ internal fun SupportChatWallpaper(
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
 ) {
-    Canvas(modifier = modifier) {
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    colors.primary.copy(alpha = 0.06f),
-                    Color.Transparent,
-                ),
-                center = Offset(size.width / 2f, -size.height * 0.12f),
-                radius = size.maxDimension * 0.72f,
+    // drawWithCache: раскладка тайлов и градиент считаются один раз на размер,
+    // а не на каждый проход фазы Draw (U-19).
+    val drawCacheColors = colors
+    Canvas(modifier = modifier.drawWithCache {
+        val gradient = Brush.radialGradient(
+            colors = listOf(
+                drawCacheColors.primary.copy(alpha = 0.06f),
+                Color.Transparent,
             ),
+            center = Offset(size.width / 2f, -size.height * 0.12f),
+            radius = size.maxDimension * 0.72f,
         )
 
         val tile = 240.dp.toPx()
-        val wrenchColor = colors.onSurface.copy(alpha = 0.045f)
+        val wrenchColor = drawCacheColors.onSurface.copy(alpha = 0.045f)
         val placements = listOf(
             WrenchPlacement(0.12f, 0.14f, 28f),
             WrenchPlacement(0.70f, 0.19f, -38f),
@@ -41,24 +43,37 @@ internal fun SupportChatWallpaper(
             WrenchPlacement(0.61f, 0.90f, -18f),
         )
 
-        var tileY = 0f
-        while (tileY < size.height + tile) {
-            var tileX = 0f
-            while (tileX < size.width + tile) {
-                placements.forEach { placement ->
-                    drawWrench(
-                        center = Offset(
-                            x = tileX + tile * placement.x,
-                            y = tileY + tile * placement.y,
-                        ),
-                        degrees = placement.degrees,
-                        color = wrenchColor,
-                    )
+        val areaSize = size
+        val wrenches = buildList {
+            var tileY = 0f
+            while (tileY < areaSize.height + tile) {
+                var tileX = 0f
+                while (tileX < areaSize.width + tile) {
+                    placements.forEach { placement ->
+                        add(
+                            WrenchDraw(
+                                center = Offset(
+                                    x = tileX + tile * placement.x,
+                                    y = tileY + tile * placement.y,
+                                ),
+                                degrees = placement.degrees,
+                            )
+                        )
+                    }
+                    tileX += tile
                 }
-                tileX += tile
+                tileY += tile
             }
-            tileY += tile
         }
+
+        onDrawBehind {
+            drawRect(brush = gradient)
+            wrenches.forEach { wrench ->
+                drawWrench(center = wrench.center, degrees = wrench.degrees, color = wrenchColor)
+            }
+        }
+    }) {
+        // Весь контент рисуется через drawWithCache-обёртку выше.
     }
 }
 
@@ -99,5 +114,10 @@ private fun DrawScope.drawWrench(
 private data class WrenchPlacement(
     val x: Float,
     val y: Float,
+    val degrees: Float,
+)
+
+private data class WrenchDraw(
+    val center: Offset,
     val degrees: Float,
 )

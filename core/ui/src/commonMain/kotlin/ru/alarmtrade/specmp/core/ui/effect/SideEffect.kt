@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
@@ -21,8 +22,12 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
  * Создаёт [MutableSharedFlow] для one-shot эффектов со стандартной конфигурацией проекта:
- * `extraBufferCapacity = 1` + `tryEmit` (см. `docs/patterns.md`). `replay = 0` —
+ * `extraBufferCapacity = SIDE_EFFECT_BUFFER` + `tryEmit` (см. `docs/patterns.md`). `replay = 0` —
  * повтор события после пересоздания экрана не нужен (иначе двойная навигация).
+ *
+ * Буфер больше одного: обработчик в [collectSideEffect] может надолго suspend'иться
+ * (показ снекбара), и эффекты, эмитнутые в это время, не должны теряться. При
+ * переполнении отбрасываются самые старые — `tryEmit` никогда не возвращает `false`.
  *
  *
  * ```kotlin
@@ -33,7 +38,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
  * ```
  */
 fun <T> sideEffectFlow(): MutableSharedFlow<T> =
-    MutableSharedFlow(replay = 0, extraBufferCapacity = 1)
+    MutableSharedFlow(
+        replay = 0,
+        extraBufferCapacity = SIDE_EFFECT_BUFFER,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+private const val SIDE_EFFECT_BUFFER = 16
 
 /**
  * Lifecycle-aware сбор one-shot эффектов в Compose.

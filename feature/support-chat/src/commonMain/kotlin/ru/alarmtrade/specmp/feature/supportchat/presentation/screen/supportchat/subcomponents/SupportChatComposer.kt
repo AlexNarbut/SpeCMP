@@ -20,6 +20,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -31,12 +32,12 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPendingAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_attach_file
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_attach_photo
-import specmp.feature.support_chat.generated.resources.support_chat_a11y_send
-import specmp.feature.support_chat.generated.resources.support_chat_label_message_hint
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_attach_file
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_attach_photo
+import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_send
+import specmp.feature.support_chat.generated.resources.supportchat_chat_label_message_hint
 
 @Composable
 internal fun SupportChatComposer(
@@ -45,12 +46,14 @@ internal fun SupportChatComposer(
     onSend: () -> Unit,
     onAttachFile: () -> Unit,
     onAttachPhoto: () -> Unit,
-    pendingAttachments: List<SupportChatPendingAttachment>,
+    pendingAttachments: ImmutableList<SupportChatUiAttachment>,
     onRemoveAttachment: (String) -> Unit,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    // Владелец черновика — composer, поэтому «есть что отправить» считается
+    // здесь; доступность ввода (только Online) приходит из state единственным источником.
     val canSend = enabled && (draftText.isNotBlank() || pendingAttachments.isNotEmpty())
 
     CmpColumn(
@@ -75,14 +78,14 @@ internal fun SupportChatComposer(
             CmpIconButton(
                 onClick = onAttachFile,
                 icon = CmpIcons.AttachFile,
-                contentDescription = stringResource(Res.string.support_chat_a11y_attach_file),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_file),
                 enabled = enabled,
             )
 
             CmpIconButton(
                 onClick = onAttachPhoto,
                 icon = CmpIcons.Image,
-                contentDescription = stringResource(Res.string.support_chat_a11y_attach_photo),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_photo),
                 enabled = enabled,
             )
 
@@ -104,7 +107,7 @@ internal fun SupportChatComposer(
                             false
                         }
                     },
-                placeholder = stringResource(Res.string.support_chat_label_message_hint),
+                placeholder = stringResource(Res.string.supportchat_chat_label_message_hint),
                 enabled = enabled,
                 singleLine = false,
                 maxLines = 4,
@@ -130,7 +133,7 @@ internal fun SupportChatComposer(
 
 @Composable
 private fun PendingAttachmentsRow(
-    attachments: List<SupportChatPendingAttachment>,
+    attachments: ImmutableList<SupportChatUiAttachment>,
     onRemove: (String) -> Unit,
     colors: CmpThemeColors,
 ) {
@@ -172,7 +175,7 @@ private fun SendButton(
         CmpBox(contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = CmpIcons.Send,
-                contentDescription = stringResource(Res.string.support_chat_a11y_send),
+                contentDescription = stringResource(Res.string.supportchat_chat_a11y_send),
             )
         }
     }

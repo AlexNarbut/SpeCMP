@@ -17,16 +17,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+
+private const val SKELETON_TRANSITION_LABEL = "support_chat_skeleton"
+private const val SKELETON_ALPHA_LABEL = "support_chat_skeleton_alpha"
 
 @Composable
 internal fun SupportChatLoadingSkeleton(
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
 ) {
-    val transition = rememberInfiniteTransition(label = "support_chat_skeleton")
+    val transition = rememberInfiniteTransition(label = SKELETON_TRANSITION_LABEL)
     val alpha by transition.animateFloat(
         initialValue = 0.45f,
         targetValue = 0.85f,
@@ -34,7 +39,7 @@ internal fun SupportChatLoadingSkeleton(
             animation = tween(durationMillis = 900),
             repeatMode = RepeatMode.Reverse,
         ),
-        label = "support_chat_skeleton_alpha",
+        label = SKELETON_ALPHA_LABEL,
     )
     val skeletonColor = colors.surfaceVariant.copy(alpha = alpha)
 
@@ -50,7 +55,7 @@ internal fun SupportChatLoadingSkeleton(
                 .width(96.dp)
                 .height(28.dp)
                 .background(skeletonColor, RoundedCornerShape(percent = 50)),
-        ) {}
+        )
         SkeletonBubble(widthFraction = 0.78f, height = 72.dp, isMine = true, color = skeletonColor)
         SkeletonBubble(widthFraction = 0.62f, height = 56.dp, isMine = true, color = skeletonColor)
         SkeletonBubble(widthFraction = 0.88f, height = 88.dp, isMine = false, color = skeletonColor)
@@ -62,9 +67,9 @@ internal fun SupportChatLoadingSkeleton(
 @Composable
 private fun SkeletonBubble(
     widthFraction: Float,
-    height: androidx.compose.ui.unit.Dp,
+    height: Dp,
     isMine: Boolean,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
 ) {
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
@@ -83,6 +88,6 @@ private fun SkeletonBubble(
                         bottomEnd = if (isMine) 4.dp else 16.dp,
                     ),
                 ),
-        ) {}
+        )
     }
 }
