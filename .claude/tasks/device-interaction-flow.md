@@ -205,3 +205,26 @@
   - системное «Назад» во время подключения игнорируется, подключение доходит до `Session created`;
   - повторный вход находит DX4G (старая сессия закрыта);
   - «Назад» на поиске (системное и стрелка) закрывает экран.
+
+### Возврат отмены (2026-10-12, после фикса SDK P0-2 в 2.0.94)
+
+Ошибка SDK P0-2 исправлена в `alarmtrade-common` 2.0.94 (`alarmtrade-common-device-fixes.md`), поэтому «Отмену» и «Назад» во время подключения возвращаем.
+
+Поведение:
+- кнопка «Отмена» — `onCancelConnecting()`: отменить подключение, затем `closeSessions()`, затем снова поиск;
+- «Назад» (системное и стрелка, всегда видна) идёт через `viewModel.onBack()`:
+  - во время подключения — то же, что «Отмена» (возврат к списку, а не выход);
+  - иначе — `ScanDeviceEffect.Close`.
+
+Прочее:
+- SpeCMP: `alarmtrade-permissions` 2.0.93 → 2.0.94; specialist 1.2.0 перепубликован в mavenLocal и тянет 2.0.94.
+- Тесты: «назад во время подключения» = отмена + перезапуск поиска; тест отмены.
+
+### Desktop: USB требует x86_64-JDK на macOS (апрув 2026-10-12)
+
+**Причина.** `usb4java` 1.3.0 (USB-слой SDK на JVM) содержит нативную библиотеку только для `darwin-x86-64`. `:desktopApp:run` запускается на JDK Gradle (arm64), библиотека не грузится, и USB-блоки молча не находятся. `specialistDesktop` решает это через `compose.jvmHome` (x86_64 corretto-17.0.7).
+
+Правки:
+- `desktopApp/build.gradle.kts`: `compose.desktop.application.javaHome` из `compose.jvmHome`: Gradle-свойство (`-P`) либо `local.properties`; если ключа нет — как сейчас. `local.properties` правит пользователь.
+- `docs/build.md` и `.ai/agents/desktopApp/AGENTS.md` (+ `.ai/generate.sh`): заметка про x86_64-JDK.
+- Проверка: десктоп с `-Pcompose.jvmHome=…corretto-17.0.7…` — поиск и подключение по USB.

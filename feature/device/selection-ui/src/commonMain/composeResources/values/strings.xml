@@ -13,6 +13,7 @@
     <string name="device_select_fix_android_2">Enable “Nearby devices” and “Bluetooth”</string>
     <string name="device_select_fix_ios_1">Settings → Pandora Spec → Bluetooth → enable</string>
     <string name="device_select_btn_open_settings">Open settings</string>
+    <string name="device_select_btn_cancel">Cancel</string>
     <string name="device_select_btn_retry">Retry</string>
 
     <!-- Adapter off -->

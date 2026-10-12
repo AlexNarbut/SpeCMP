@@ -13,6 +13,7 @@
     <string name="device_select_fix_android_2">Включите «Устройства поблизости» и «Bluetooth»</string>
     <string name="device_select_fix_ios_1">Настройки → Pandora Spec → Bluetooth → включить</string>
     <string name="device_select_btn_open_settings">Открыть настройки</string>
+    <string name="device_select_btn_cancel">Отмена</string>
     <string name="device_select_btn_retry">Повторить</string>
 
     <!-- Bluetooth выключен -->

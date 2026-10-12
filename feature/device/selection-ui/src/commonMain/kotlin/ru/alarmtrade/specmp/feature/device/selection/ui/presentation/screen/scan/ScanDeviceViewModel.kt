@@ -211,14 +211,23 @@ class ScanDeviceViewModel(
         connect(selected)
     }
 
-    /**
-     * «Назад» (системное и в заголовке). Во время подключения игнорируется: отмена подписки
-     * на connect SDK после установки GATT оставляет блок подключённым (не закрывает GATT),
-     * и он пропадает из поиска до перезапуска приложения. Попытка завершается сама (или по таймауту).
-     */
+    /** «Назад» (системное и в заголовке): во время подключения — отмена, иначе — выход. */
     fun onBack() {
-        if (_step.value is ScanStep.Connecting) return
-        _effect.tryEmit(ScanDeviceEffect.Close)
+        if (_step.value is ScanStep.Connecting) {
+            onCancelConnecting()
+        } else {
+            _effect.tryEmit(ScanDeviceEffect.Close)
+        }
+    }
+
+    /** Отмена подключения — назад к списку. */
+    fun onCancelConnecting() {
+        connectJob?.cancel()
+        connectJob = safeLaunch {
+            // Сначала закрыть сессию, затем вернуться к поиску (он стартует заново).
+            connectionRepository.closeSessions()
+            _step.update { ScanStep.Scanning }
+        }
     }
 
     fun connect(item: DeviceUiItem) {

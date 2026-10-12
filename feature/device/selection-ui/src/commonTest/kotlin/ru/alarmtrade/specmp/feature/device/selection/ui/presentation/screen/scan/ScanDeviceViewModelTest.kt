@@ -181,7 +181,31 @@ class ScanDeviceViewModelTest {
     }
 
     @Test
-    fun `back while connecting is ignored`() = runTest(testDispatcher) {
+    fun `cancel connecting closes session and restarts scan`() = runTest(testDispatcher) {
+        val scan = FakeDeviceScanRepository()
+        val connection = FakeDeviceConnectionRepository(
+            states = listOf(Response.Success(DeviceConnectionState.CONNECTING)),
+            hangAfterStates = true,
+        )
+        val viewModel = viewModel(scan = scan, connection = connection)
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+        val scansBefore = scan.bleScanStarts
+        val closesBefore = connection.closeCount
+
+        viewModel.connect(bleItem())
+        assertTrue(viewModel.state.value.step is ScanStep.Connecting)
+
+        viewModel.onCancelConnecting()
+        advanceUntilIdle()
+
+        assertEquals(ScanStep.Scanning, viewModel.state.value.step)
+        assertEquals(closesBefore + 1, connection.closeCount)
+        assertEquals(scansBefore + 1, scan.bleScanStarts)
+    }
+
+    @Test
+    fun `back while connecting cancels and stays on screen`() = runTest(testDispatcher) {
         val effects = mutableListOf<ScanDeviceEffect>()
         val connection = FakeDeviceConnectionRepository(
             states = listOf(Response.Success(DeviceConnectionState.CONNECTING)),
@@ -191,12 +215,15 @@ class ScanDeviceViewModelTest {
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
         advanceUntilIdle()
+        val closesBefore = connection.closeCount
 
         viewModel.connect(bleItem())
         viewModel.onBack()
+        advanceUntilIdle()
 
         assertTrue(effects.none { it is ScanDeviceEffect.Close })
-        assertTrue(viewModel.state.value.step is ScanStep.Connecting)
+        assertEquals(ScanStep.Scanning, viewModel.state.value.step)
+        assertEquals(closesBefore + 1, connection.closeCount)
     }
 
     @Test

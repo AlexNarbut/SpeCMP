@@ -53,6 +53,7 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_a11y
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_connect
+import specmp.feature.device.selection_ui.generated.resources.device_select_btn_cancel
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_bluetooth
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_location
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_settings
@@ -123,7 +124,7 @@ internal fun DeviceSelectionScreen(
         }
     }
 
-    // Выход решает VM (во время подключения «Назад» запрещён).
+    // «Назад» решает VM: во время подключения — отмена, иначе — выход.
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
         onBackCompleted = viewModel::onBack,
@@ -134,13 +135,11 @@ internal fun DeviceSelectionScreen(
             CmpTopAppBar(
                 title = { CmpText(text = stringResource(Res.string.device_select_title_screen)) },
                 navigationIcon = {
-                    if (state.step !is ScanStep.Connecting) {
-                        CmpIconButton(
-                            onClick = viewModel::onBack,
-                            icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Res.string.device_select_a11y_back),
-                        )
-                    }
+                    CmpIconButton(
+                        onClick = viewModel::onBack,
+                        icon = CmpIcons.ArrowBack,
+                        contentDescription = stringResource(Res.string.device_select_a11y_back),
+                    )
                 },
             )
         },
@@ -161,6 +160,7 @@ internal fun DeviceSelectionScreen(
                 onOpenLocationSettings = viewModel::onOpenLocationSettings,
                 onSelect = { item -> viewModel.onDeviceSelected(item, isSplit = layout == DeviceSelectLayout.Split) },
                 onConnectSelected = viewModel::onConnectSelected,
+                onCancelConnecting = viewModel::onCancelConnecting,
             )
         }
     }
@@ -176,6 +176,7 @@ private fun StepBody(
     onOpenLocationSettings: () -> Unit,
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelected: () -> Unit,
+    onCancelConnecting: () -> Unit,
 ) {
     when (val step = state.step) {
         ScanStep.PermissionCheck -> CenterState { CmpCircularProgressIndicator() }
@@ -204,7 +205,7 @@ private fun StepBody(
 
         ScanStep.Scanning -> ScanningOrListBody(state, layout, onSelect, onConnectSelected)
 
-        is ScanStep.Connecting -> ConnectingBody(step.device)
+        is ScanStep.Connecting -> ConnectingBody(step.device, onCancelConnecting)
     }
 }
 
@@ -313,7 +314,7 @@ private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
 }
 
 @Composable
-private fun ConnectingBody(device: DeviceUiItem) {
+private fun ConnectingBody(device: DeviceUiItem, onCancel: () -> Unit) {
     val colors = cmpThemeColors()
     CenterState {
         Hero(icon = device.typeIcon)
@@ -323,6 +324,7 @@ private fun ConnectingBody(device: DeviceUiItem) {
             CmpText(text = device.address, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
         }
         CmpCircularProgressIndicator()
+        CmpOutlinedButton(text = stringResource(Res.string.device_select_btn_cancel), onClick = onCancel)
     }
 }
 

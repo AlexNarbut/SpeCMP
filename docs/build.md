@@ -29,6 +29,11 @@ APK: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
 
 Desktop-пакет: `desktopApp/build/compose/binaries/main/`
 
+**Desktop + USB на macOS (Apple Silicon).** USB-слой SDK на JVM (`usb4java` 1.3.0) содержит нативную библиотеку
+только для `darwin-x86-64`: на arm64-JDK USB-устройства молча не находятся. Запускать на x86_64-JDK через
+`compose.jvmHome` — в `local.properties` (`compose.jvmHome=/path/to/x86_64-jdk-17/Contents/Home`) или
+`./gradlew :desktopApp:run -Pcompose.jvmHome=…`. Без ключа используется JDK Gradle.
+
 ---
 
 ## Добавление зависимостей
