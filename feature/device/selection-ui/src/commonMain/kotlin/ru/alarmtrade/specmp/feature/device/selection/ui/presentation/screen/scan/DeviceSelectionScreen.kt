@@ -22,6 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
@@ -49,7 +52,6 @@ import specmp.feature.device.selection_ui.generated.resources.Res
 import specmp.feature.device.selection_ui.generated.resources.device_select_a11y_back
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_title
-import specmp.feature.device.selection_ui.generated.resources.device_select_btn_cancel
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_connect
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_bluetooth
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_open_location
@@ -110,6 +112,7 @@ internal fun DeviceSelectionScreen(
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
             is ScanDeviceEffect.Connected -> onDeviceConnected(effect.result)
+            ScanDeviceEffect.Close -> onClose()
             ScanDeviceEffect.ConnectionFailed -> snackbarHostState.showSnackbar(connectionFailedText)
             is ScanDeviceEffect.BondConflict -> snackbarHostState.showSnackbar(
                 when (effect.kind) {
@@ -120,16 +123,24 @@ internal fun DeviceSelectionScreen(
         }
     }
 
+    // Выход решает VM (во время подключения «Назад» запрещён).
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        onBackCompleted = viewModel::onBack,
+    )
+
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
                 title = { CmpText(text = stringResource(Res.string.device_select_title_screen)) },
                 navigationIcon = {
-                    CmpIconButton(
-                        onClick = onClose,
-                        icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.device_select_a11y_back),
-                    )
+                    if (state.step !is ScanStep.Connecting) {
+                        CmpIconButton(
+                            onClick = viewModel::onBack,
+                            icon = CmpIcons.ArrowBack,
+                            contentDescription = stringResource(Res.string.device_select_a11y_back),
+                        )
+                    }
                 },
             )
         },
@@ -150,7 +161,6 @@ internal fun DeviceSelectionScreen(
                 onOpenLocationSettings = viewModel::onOpenLocationSettings,
                 onSelect = { item -> viewModel.onDeviceSelected(item, isSplit = layout == DeviceSelectLayout.Split) },
                 onConnectSelected = viewModel::onConnectSelected,
-                onCancelConnecting = viewModel::onCancelConnecting,
             )
         }
     }
@@ -166,7 +176,6 @@ private fun StepBody(
     onOpenLocationSettings: () -> Unit,
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelected: () -> Unit,
-    onCancelConnecting: () -> Unit,
 ) {
     when (val step = state.step) {
         ScanStep.PermissionCheck -> CenterState { CmpCircularProgressIndicator() }
@@ -195,7 +204,7 @@ private fun StepBody(
 
         ScanStep.Scanning -> ScanningOrListBody(state, layout, onSelect, onConnectSelected)
 
-        is ScanStep.Connecting -> ConnectingBody(step.device, onCancelConnecting)
+        is ScanStep.Connecting -> ConnectingBody(step.device)
     }
 }
 
@@ -304,7 +313,7 @@ private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
 }
 
 @Composable
-private fun ConnectingBody(device: DeviceUiItem, onCancel: () -> Unit) {
+private fun ConnectingBody(device: DeviceUiItem) {
     val colors = cmpThemeColors()
     CenterState {
         Hero(icon = device.typeIcon)
@@ -314,7 +323,6 @@ private fun ConnectingBody(device: DeviceUiItem, onCancel: () -> Unit) {
             CmpText(text = device.address, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
         }
         CmpCircularProgressIndicator()
-        CmpOutlinedButton(text = stringResource(Res.string.device_select_btn_cancel), onClick = onCancel)
     }
 }
 

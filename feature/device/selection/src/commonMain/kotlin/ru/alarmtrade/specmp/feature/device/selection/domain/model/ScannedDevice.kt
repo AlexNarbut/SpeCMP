@@ -17,7 +17,8 @@ sealed interface ScannedDevice {
         val deviceType: String,
         val mode: ScannedDeviceMode,
         val hasDeviceBond: Boolean,
-        val hasPhoneBond: Boolean,
+        /** Сопряжено ли устройство с телефоном; `null` — платформа этого не сообщает (iOS). */
+        val hasPhoneBond: Boolean?,
     ) : ScannedDevice {
         override val transport: DeviceTransport get() = DeviceTransport.BLE
     }

@@ -26,7 +26,8 @@ sealed interface DeviceUiItem {
         override val address: String,
         val mode: ScannedDeviceMode,
         val hasDeviceBond: Boolean,
-        val hasPhoneBond: Boolean,
+        /** `null` — платформа не сообщает о сопряжении с телефоном (iOS). */
+        val hasPhoneBond: Boolean?,
     ) : DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.BLE
         override val typeIcon: CmpIcons get() = CmpIcons.Sensors

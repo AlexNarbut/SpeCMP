@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.scan.ScannedDeviceState
+import ru.alarmtrade.common.core.PlatformType
+import ru.alarmtrade.common.core.platformType
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
@@ -49,6 +51,10 @@ class SpecialistDeviceScanRepository(
             emit(Response.Success(emptyList()))
             return@flow
         }
+        // Сканер SDK один на приложение с единственным ScanCallback: если поиск уже идёт
+        // (например, внутренний поиск connect), новый startScan Android молча игнорирует.
+        // Поэтому сначала сбрасываем текущий поиск.
+        interactor.stopBluetoothScanUseCase.execute()
         emitAll(
             safeFlowRun {
                 interactor.scanBluetoothDevicesUseCase.execute()
@@ -97,7 +103,8 @@ class SpecialistDeviceScanRepository(
         deviceType = deviceType.name,
         mode = state.toMode(),
         hasDeviceBond = hasDeviceBond,
-        hasPhoneBond = hasPhoneBond,
+        // На iOS SDK не знает о сопряжении с телефоном (isBonded всегда false).
+        hasPhoneBond = hasPhoneBond.takeIf { platformType() == PlatformType.ANDROID },
     )
 
     private fun AttachedUsbDeviceInformation.toDomain(): ScannedDevice.Usb = ScannedDevice.Usb(

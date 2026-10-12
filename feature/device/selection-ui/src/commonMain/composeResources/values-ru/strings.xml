@@ -50,7 +50,6 @@
 
     <!-- Подключение -->
     <string name="device_select_connecting_title">Подключение…</string>
-    <string name="device_select_btn_cancel">Отмена</string>
 
     <!-- Карточка (master-detail) -->
     <string name="device_select_detail_empty">Выберите устройство из списка</string>

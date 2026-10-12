@@ -1,7 +1,11 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import ru.alarmtrade.permissions.common.Permission
 import ru.alarmtrade.permissions.common.PermissionState
@@ -18,30 +22,50 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 
 class FakeDeviceScanRepository(
-    private val ble: List<ScannedDevice.Ble> = emptyList(),
-    private val usb: List<ScannedDevice.Usb> = emptyList(),
+    ble: List<ScannedDevice.Ble> = emptyList(),
+    usb: List<ScannedDevice.Usb> = emptyList(),
     private val transports: Set<DeviceTransport> = setOf(DeviceTransport.BLE, DeviceTransport.USB),
+    private val bleResponse: Response<List<ScannedDevice.Ble>> = Response.Success(ble),
+    private val usbResponse: Response<List<ScannedDevice.Usb>> = Response.Success(usb),
 ) : DeviceScanRepository {
+    // Число подписок на BLE-поиск (перезапуски поиска).
+    var bleScanStarts: Int = 0
+        private set
+
     override fun supportedTransports(): Set<DeviceTransport> = transports
-    override fun scanBluetooth(): Flow<Response<List<ScannedDevice.Ble>>> = flowOf(Response.Success(ble))
-    override fun scanUsb(): Flow<Response<List<ScannedDevice.Usb>>> = flowOf(Response.Success(usb))
+    override fun scanBluetooth(): Flow<Response<List<ScannedDevice.Ble>>> = flow {
+        bleScanStarts++
+        emit(bleResponse)
+    }
+    override fun scanUsb(): Flow<Response<List<ScannedDevice.Usb>>> = flowOf(usbResponse)
     override suspend fun stopScan() = Unit
 }
 
 class FakeDeviceConnectionRepository(
     private val states: List<Response<DeviceConnectionState>> =
         listOf(Response.Success(DeviceConnectionState.CONNECTED)),
+    // true — после states поток не завершается (SDK так и не дал финального статуса).
+    private val hangAfterStates: Boolean = false,
+    // Задержка до первого статуса: реальное подключение не мгновенно.
+    private val connectDelayMillis: Long = 0,
 ) : DeviceConnectionRepository {
-    var closed: Boolean = false
+    var closeCount: Int = 0
         private set
+    val closed: Boolean get() = closeCount > 0
 
     override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
-        states.asFlow()
+        connectFlow()
 
-    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = states.asFlow()
+    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = connectFlow()
 
     override suspend fun closeSessions() {
-        closed = true
+        closeCount++
+    }
+
+    private fun connectFlow(): Flow<Response<DeviceConnectionState>> = flow {
+        if (connectDelayMillis > 0) delay(connectDelayMillis)
+        emitAll(states.asFlow())
+        if (hangAfterStates) awaitCancellation()
     }
 }
 

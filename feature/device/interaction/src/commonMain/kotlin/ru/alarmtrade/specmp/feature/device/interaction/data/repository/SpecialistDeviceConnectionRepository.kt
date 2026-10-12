@@ -1,10 +1,13 @@
 package ru.alarmtrade.specmp.feature.device.interaction.data.repository
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.withContext
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.ConnectingStatus
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.ConnectionParameters
 import ru.alarmtrade.bluetoothControl.interactors.bluetoothConnector.requests.ConnectToBluetoothDeviceRequest
@@ -44,6 +47,10 @@ class SpecialistDeviceConnectionRepository(
                         ),
                     )
                     .map { response -> response.toStateResponse() }
+            }.onCompletion {
+                // connect SDK внутри запускает свой поиск (manufacturer data) и не останавливает
+                // его. Подписку обычно отменяют (первый финальный статус, отмена, таймаут).
+                withContext(NonCancellable) { interactor.stopBluetoothScanUseCase.execute() }
             },
         )
     }
@@ -92,9 +99,13 @@ class SpecialistDeviceConnectionRepository(
         else -> DeviceConnectionState.CONNECTING
     }
 
-    // TODO: уточнить набор значений UsbConnectingState и явно разметить failure-состояния.
-    private fun UsbConnectingState.toDomain(): DeviceConnectionState =
-        if (this == UsbConnectingState.READY) DeviceConnectionState.CONNECTED else DeviceConnectionState.CONNECTING
+    private fun UsbConnectingState.toDomain(): DeviceConnectionState = when (this) {
+        UsbConnectingState.READY -> DeviceConnectionState.CONNECTED
+        UsbConnectingState.FAILED -> DeviceConnectionState.FAILED
+        UsbConnectingState.ASKING_PERMISSIONS,
+        UsbConnectingState.INITIALIZING,
+        -> DeviceConnectionState.CONNECTING
+    }
 }
 
 private fun <T> (() -> T).resolveOrNull(): T? = try {

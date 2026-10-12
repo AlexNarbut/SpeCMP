@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.permissions.common.DeniedAlwaysException
 import ru.alarmtrade.permissions.common.DeniedException
 import ru.alarmtrade.permissions.common.PermissionState
@@ -77,6 +78,9 @@ class ScanDeviceViewModel(
     // Init-источник: один раз за жизнь VM (Lazily) запрашивает разрешения при первой
     // подписке на state и переводит на скан/adapterOff/denied. Не «работа из UI».
     private val permissionGate: StateFlow<Boolean> = flow {
+        // Прошлая сессия могла закрыться неудачно: подключённое устройство не рекламируется
+        // и не появится в поиске.
+        connectionRepository.closeSessions()
         checkPermissionAndProceed()
         emit(true)
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
@@ -207,12 +211,14 @@ class ScanDeviceViewModel(
         connect(selected)
     }
 
-    /** Отмена подключения — назад к списку. */
-    fun onCancelConnecting() {
-        connectJob?.cancel()
-        connectJob = null
-        safeLaunch { connectionRepository.closeSessions() }
-        _step.update { ScanStep.Scanning }
+    /**
+     * «Назад» (системное и в заголовке). Во время подключения игнорируется: отмена подписки
+     * на connect SDK после установки GATT оставляет блок подключённым (не закрывает GATT),
+     * и он пропадает из поиска до перезапуска приложения. Попытка завершается сама (или по таймауту).
+     */
+    fun onBack() {
+        if (_step.value is ScanStep.Connecting) return
+        _effect.tryEmit(ScanDeviceEffect.Close)
     }
 
     fun connect(item: DeviceUiItem) {
@@ -242,14 +248,12 @@ class ScanDeviceViewModel(
                 return null
             }
         }
-        val terminal = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS)
-            .firstOrNull { it.isTerminal() }
+        val terminal = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal()
         return terminal.toResultOrNull(item.mode)
     }
 
     private suspend fun connectUsb(item: DeviceUiItem.Usb): DeviceConnectionResult? {
-        val terminal = connectionRepository.connectUsb(item.id)
-            .firstOrNull { it.isTerminal() }
+        val terminal = connectionRepository.connectUsb(item.id).awaitTerminal()
         return terminal.toResultOrNull(ScannedDeviceMode.BASE)
     }
 
@@ -279,33 +283,44 @@ class ScanDeviceViewModel(
         }
     }
 
+    // Общий предел ожидания: SDK переподключается по кругу, а USB может не дать финального статуса.
+    // null (таймаут или поток завершился без финала) — неудача.
+    private suspend fun Flow<Response<DeviceConnectionState>>.awaitTerminal(): Response<DeviceConnectionState>? =
+        withTimeoutOrNull(CONNECT_FLOW_TIMEOUT_MILLIS) { firstOrNull { it.isTerminal() } }
+
     private fun Response<DeviceConnectionState>.isTerminal(): Boolean =
         this is Response.Error ||
             (this is Response.Success && value != DeviceConnectionState.CONNECTING)
 
-    private fun bondConflictOf(item: DeviceUiItem.Ble): BondConflictKind? = when {
-        item.hasDeviceBond && item.hasPhoneBond -> null
-        !item.hasDeviceBond && !item.hasPhoneBond -> null
-        item.hasPhoneBond -> BondConflictKind.REMOVE_FROM_PHONE
-        else -> BondConflictKind.REMOVE_FROM_DEVICE
+    private fun bondConflictOf(item: DeviceUiItem.Ble): BondConflictKind? {
+        // Платформа не сообщает о сопряжении с телефоном (iOS) — конфликт не определить.
+        val hasPhoneBond = item.hasPhoneBond ?: return null
+        return when {
+            item.hasDeviceBond == hasPhoneBond -> null
+            hasPhoneBond -> BondConflictKind.REMOVE_FROM_PHONE
+            else -> BondConflictKind.REMOVE_FROM_DEVICE
+        }
     }
 
     private fun mergeDevices(
         bleResponse: Response<List<ScannedDevice.Ble>>,
         usbResponse: Response<List<ScannedDevice.Usb>>,
     ): LCEState<List<DeviceUiItem>> {
-        (bleResponse as? Response.Error)?.let { return LCEState.Error(it.message ?: DEFAULT_SCAN_ERROR) }
-        (usbResponse as? Response.Error)?.let { return LCEState.Error(it.message ?: DEFAULT_SCAN_ERROR) }
-        val ble = (bleResponse as Response.Success).value
-        val usb = (usbResponse as Response.Success).value
+        // Ошибка одного транспорта не прячет устройства, найденные другим.
+        val ble = (bleResponse as? Response.Success)?.value.orEmpty()
+        val usb = (usbResponse as? Response.Success)?.value.orEmpty()
         val items = ble.map(ScannedDevice::toUiItem) + usb.map(ScannedDevice::toUiItem)
-        return if (items.isEmpty()) LCEState.Loading() else LCEState.Content(items)
+        if (items.isNotEmpty()) return LCEState.Content(items)
+        val error = (bleResponse as? Response.Error) ?: (usbResponse as? Response.Error)
+        // Текст ошибки экран не показывает: Error рисуется как продолжающийся поиск.
+        return if (error != null) LCEState.Error(error.message.orEmpty()) else LCEState.Loading()
     }
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val CONNECT_TIMEOUT_MILLIS = 20_000L
+        // Поиск внутри connect (до 8 с) + сопряжение с подтверждением (до ~30 с) + соединение (20 с).
+        const val CONNECT_FLOW_TIMEOUT_MILLIS = 60_000L
         const val EMPTY_HINT_DELAY_MILLIS = 10_000L
-        const val DEFAULT_SCAN_ERROR = "Не удалось выполнить поиск устройств"
     }
 }

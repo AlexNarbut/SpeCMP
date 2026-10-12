@@ -50,7 +50,6 @@
 
     <!-- Connecting -->
     <string name="device_select_connecting_title">Connecting…</string>
-    <string name="device_select_btn_cancel">Cancel</string>
 
     <!-- Detail (master-detail) -->
     <string name="device_select_detail_empty">Select a device from the list</string>

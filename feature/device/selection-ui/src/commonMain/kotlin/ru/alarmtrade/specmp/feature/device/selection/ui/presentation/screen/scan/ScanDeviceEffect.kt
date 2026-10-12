@@ -19,6 +19,9 @@ sealed interface ScanDeviceEffect {
     /** Подключение не удалось. */
     data object ConnectionFailed : ScanDeviceEffect
 
+    /** Выход из поиска. */
+    data object Close : ScanDeviceEffect
+
     /** Обнаружен конфликт сопряжения — подключение невозможно без снятия bond. */
     data class BondConflict(val kind: BondConflictKind) : ScanDeviceEffect
 }
