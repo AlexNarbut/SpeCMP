@@ -414,7 +414,7 @@ internal fun Hero(icon: CmpIcons, tone: HeroTone = HeroTone.Primary) {
     }
     CmpSurface(modifier = Modifier.size(96.dp), shape = CircleShape, color = bg) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CmpIcon(icon = icon, contentDescription = null, tint = fg)
+            CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(48.dp), tint = fg)
         }
     }
 }

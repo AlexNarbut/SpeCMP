@@ -479,7 +479,7 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
         ) {
             CmpSurface(modifier = Modifier.size(72.dp), shape = CircleShape, color = colors.surfaceVariant) {
                 CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CmpIcon(icon = CmpIcons.TouchApp, contentDescription = null, tint = colors.onSurfaceVariant)
+                    CmpIcon(icon = CmpIcons.TouchApp, contentDescription = null, modifier = Modifier.size(36.dp), tint = colors.onSurfaceVariant)
                 }
             }
             CmpText(

@@ -206,7 +206,7 @@ private fun StatusHero(icon: CmpIcons, error: Boolean) {
         color = if (error) colors.errorContainer else colors.primaryContainer,
     ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CmpIcon(icon = icon, contentDescription = null, tint = if (error) colors.onErrorContainer else colors.onPrimaryContainer)
+            CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(48.dp), tint = if (error) colors.onErrorContainer else colors.onPrimaryContainer)
         }
     }
 }
