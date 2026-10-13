@@ -75,6 +75,7 @@
                   initialStep={step}
                   demoEmpty={step === "empty"}
                   onBack={() => window.psGo("home-tablet")}
+                  onConnected={(d) => window.psGo("advanced-mount-tablet", d.transport === "usb" ? "module" : "alarm")}
                 />
               </div>
             </div>

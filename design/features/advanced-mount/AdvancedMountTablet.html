@@ -1,0 +1,91 @@
+
+<!-- @dsCard group="Расширенный монтаж" viewport="860x900" name="Расширенный монтаж (tablet)" subtitle="Планшет — портрет 800×1280 (Medium, сетка 2 колонки) и ландшафт 1280×800 (Expanded, панель устройства + сетка)" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Расширенный монтаж (tablet)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+  .seg { display: flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 16px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .scaler { transform-origin: top left; }
+  .tablet { background: #1b1d1e; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); box-sizing: content-box; }
+  .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script src="../../res/icons/main-icons.js"></script>
+<script type="text/babel" src="./AdvancedMount.jsx"></script>
+<script type="text/babel">
+  const PROFILE_OPTS = [["alarm","Сигнализация CAN"],["module","Модуль USB"],["legacy","Не поддерживается"]];
+  const STATE_OPTS = [["ready","Готово"],["loading","Загрузка"],["error","Ошибка"],["denied","Доступ запрещён"],["empty","Пусто"],["lost","Связь потеряна"],["can","CAN-диалог"]];
+  function Seg({ items, value, onChange }) {
+    return <div className="seg">{items.map(([k, l]) => <button key={k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}</div>;
+  }
+  function useCtl() {
+    const [dark, setDark] = React.useState(false);
+    const [profile, setProfile] = React.useState(new URLSearchParams(location.search).get("profile") || "alarm");
+    const [st, setSt] = React.useState("ready");
+    const [factory, setFactory] = React.useState(true);
+    const [unread, setUnread] = React.useState(0);
+    const p = AM_PROFILES[profile];
+    const props = {
+      profile, initialState: st === "lost" || st === "can" ? (profile === "legacy" ? "unsupported" : "ready") : (st === "ready" && profile === "legacy" ? "unsupported" : st),
+      canFactory: factory, unread, showCanDialog: st === "can", lostTransport: st === "lost" ? p.transport : undefined,
+    };
+    const bar = (
+      <React.Fragment>
+        <div className="toolbar">
+          <Seg items={[["l","Светлая"],["d","Тёмная"]]} value={dark ? "d" : "l"} onChange={(v) => setDark(v === "d")} />
+          <Seg items={PROFILE_OPTS} value={profile} onChange={setProfile} />
+          <Seg items={[["y","CAN: заводской"],["n","CAN: обновлён"]]} value={factory ? "y" : "n"} onChange={(v) => setFactory(v === "y")} />
+          <Seg items={[["0","Чат: нет новых"],["3","Чат: 3"]]} value={String(unread)} onChange={(v) => setUnread(+v)} />
+        </div>
+        <div className="toolbar"><Seg items={STATE_OPTS} value={st} onChange={setSt} /></div>
+      </React.Fragment>
+    );
+    return { dark, props, bar, key: [profile, st, factory, unread].join() };
+  }
+
+  const SIZES = { portrait: { w: 800, h: 1280 }, landscape: { w: 1280, h: 800 } };
+  function App() {
+    const c = useCtl();
+    const [orient, setOrient] = React.useState("landscape");
+    const { w, h } = SIZES[orient];
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const fit = () => setScale(Math.min(1, (window.innerWidth - 64) / w, (window.innerHeight - 260) / h));
+      fit(); window.addEventListener("resize", fit);
+      return () => window.removeEventListener("resize", fit);
+    }, [w, h]);
+    return (
+      <React.Fragment>
+        {c.bar}
+        <div className="toolbar"><Seg items={[["portrait","Портрет 800×1280"],["landscape","Ландшафт 1280×800"]]} value={orient} onChange={setOrient} /></div>
+        <div style={{ width: (w + 32) * scale, height: (h + 32) * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="tablet">
+              <div className="screen" data-theme={c.dark ? "dark" : undefined} style={{ width: w, height: h }}>
+                <window.AdvancedMountScreen key={orient + c.key} {...c.props} onBack={() => window.psGo("device-select-tablet")} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

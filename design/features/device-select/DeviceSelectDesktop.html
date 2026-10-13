@@ -84,6 +84,7 @@
                     demoEmpty={step === "empty"}
                     showBack={true}
                     onBack={() => window.psGo("home-desktop")}
+                    onConnected={(d) => window.psGo("advanced-mount-desktop", d.transport === "usb" ? "module" : "alarm")}
                   />
                 </div>
               </div>

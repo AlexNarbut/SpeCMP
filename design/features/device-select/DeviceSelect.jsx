@@ -26,15 +26,58 @@ const {
 
 // ── Демо-данные найденных устройств (BLE + USB-HID) ──────────────────────────
 const DEVICES = [
-  { id: "dx4gs",  name: "Pandora DX-4GS",  transport: "ble", address: "AC:23:3F:A1:0C:7D", rssi: -48, type: "Основной блок", icon: "sensors" },
-  { id: "dxl5000",name: "Pandora DXL-5000", transport: "ble", address: "C8:FD:19:22:8B:04", rssi: -67, type: "Основной блок", icon: "sensors" },
-  { id: "rmd5",   name: "Pandora RMD-5",    transport: "usb", address: "HID · 0483:5750",    rssi: null, type: "Модуль обхода", icon: "memory" },
-  { id: "d032",   name: "Pandora D-032",    transport: "ble", address: "7A:11:0D:5E:C3:90", rssi: -75, type: "Метка",         icon: "vpn_key" },
-  { id: "vx4g",   name: "Pandora VX-4G",    transport: "ble", address: "3C:2E:FF:90:11:AA", rssi: -83, type: "Основной блок", icon: "sensors" },
+  { id: "dx4gs",  name: "Pandora DX-4GS",  transport: "ble", address: "AC:23:3F:A1:0C:7D", rssi: -48, type: "Сигнализация", mode: "normal",     phoneLink: true,  bound: true,  icon: "sensors" },
+  { id: "dxl5000",name: "Pandora DXL-5000", transport: "ble", address: "C8:FD:19:22:8B:04", rssi: -67, type: "Сигнализация", mode: "pairing",    phoneLink: false, bound: false, icon: "sensors" },
+  { id: "rmd5",   name: "Pandora RMD-5",    transport: "usb", address: "HID · 0483:5750",    systemId: "107131313131", vendor: "NPO Telemetry", vidPid: "0483:5750", firmware: "3.57", mode: "work",       type: "Модуль", icon: "memory" },
+  { id: "rmd4",   name: "Pandora RMD-4",    transport: "usb", address: "HID · 0483:5751",    systemId: null,           vendor: "NPO Telemetry", vidPid: "0483:5751", firmware: "3.42", mode: "bootloader", type: "Модуль", icon: "memory" },
+  { id: "d032",   name: "Pandora D-032",    transport: "ble", address: "7A:11:0D:5E:C3:90", rssi: -75, type: "Метка",        mode: "normal",     phoneLink: false, bound: false, icon: "vpn_key" },
+  { id: "vx4g",   name: "Pandora VX-4G",    transport: "ble", address: "3C:2E:FF:90:11:AA", rssi: -83, type: "Сигнализация", mode: "bootloader", phoneLink: true,  bound: true,  icon: "sensors" },
 ];
 
+// Поля «до подключения» (значения из эфира / USB-дескриптора).
+const MODE_LABEL = { normal: "Обычный", pairing: "Сопряжение", bootloader: "Загрузчик", work: "Рабочий" };
+function infoRows(d, platform) {
+  const strong = d.mode === "pairing" || d.mode === "bootloader";
+  if (d.transport === "usb") {
+    return [
+      { label: "ID блока (systemId)", value: d.systemId || "не определён", mono: true },
+      { label: "Производитель", value: d.vendor },
+      { label: "VID:PID", value: d.vidPid, mono: true },
+      { label: "Версия прошивки", value: d.firmware, mono: true },
+      { label: "Режим", value: MODE_LABEL[d.mode], strong },
+    ];
+  }
+  const rows = [
+    { label: platform === "ios" ? "ID (UUID)" : "MAC-адрес", value: d.address, mono: true },
+    { label: "Тип устройства", value: d.type },
+    { label: "Уровень сигнала", value: `${d.rssi} dBm`, mono: true },
+    { label: "Режим", value: MODE_LABEL[d.mode], strong },
+  ];
+  if (platform === "android") rows.push({ label: "Связь с телефоном", value: d.phoneLink ? "есть" : "нет" });
+  rows.push({ label: "Связь у самого устройства", value: d.bound ? "есть" : "нет" });
+  return rows;
+}
+const INFO_NOTE = { ble: "Версия прошивки и ID блока в эфире не передаются — они появятся после подключения.", usb: "" };
+
+// Список полей «ключ — значение».
+function InfoRows({ rows }) {
+  return (
+    <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+      {rows.map((r, i) => (
+        <React.Fragment key={r.label}>
+          {i > 0 && <CmpDivider />}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 2px" }}>
+            <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{r.label}</CmpText>
+            <span style={{ fontFamily: r.mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: 14, fontWeight: r.strong ? 700 : 500, color: r.strong ? "var(--primary)" : "var(--on-surface)", textAlign: "right" }}>{r.value}</span>
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
 const TRANSPORT = {
-  ble: { icon: "bluetooth", label: "Bluetooth" },
+  ble: { icon: "bluetooth", label: "Bluetooth", short: "BLE" },
   usb: { icon: "usb",       label: "USB" },
 };
 
@@ -93,23 +136,15 @@ function DeviceTile({ icon, size = 56, radius = 12, showCaption = false }) {
   );
 }
 
-// Уровень сигнала BLE — три столбика (простые прямоугольники).
-function SignalBars({ rssi }) {
-  const level = rssi >= -55 ? 3 : rssi >= -72 ? 2 : 1;
+// Правая метка карточки: RSSI (BLE) или systemId / «HID» (USB).
+function MetaLabel({ text, selected }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 16 }} title={`${rssi} dBm`}>
-      {[0, 1, 2].map((i) => (
-        <div key={i} style={{
-          width: 4, height: 6 + i * 5, borderRadius: 1,
-          background: i < level ? "var(--primary)" : "color-mix(in srgb, var(--on-surface-variant) 28%, transparent)",
-        }} />
-      ))}
-    </div>
+    <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", color: selected ? "inherit" : "var(--on-surface-variant)" }}>{text}</span>
   );
 }
 
 // Чип транспорта (Bluetooth / USB).
-function TransportChip({ transport }) {
+function TransportChip({ transport, short }) {
   const t = TRANSPORT[transport];
   return (
     <span style={{
@@ -117,13 +152,13 @@ function TransportChip({ transport }) {
       borderRadius: 999, background: "var(--secondary-container)", color: "var(--on-secondary-container)",
       fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 500, flex: "0 0 auto",
     }}>
-      <CmpIcon icon={t.icon} size={14} />{t.label}
+      <CmpIcon icon={t.icon} size={14} />{short && t.short ? t.short : t.label}
     </span>
   );
 }
 
 // Строка устройства в списке.
-function DeviceRow({ device, selected, onClick, tileSize = 56 }) {
+function DeviceRow({ device, selected, onClick, onInfo, tileSize = 56 }) {
   const { hover, focus, active, opacity, handlers } = DS.useStateLayer ? DS.useStateLayer() : { opacity: 0, handlers: {} };
   return (
     <CmpSurface
@@ -136,20 +171,27 @@ function DeviceRow({ device, selected, onClick, tileSize = 56 }) {
     >
       <div {...handlers} role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick && onClick(); } }}
-        style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", minHeight: 72, boxSizing: "border-box" }}>
+        style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 14px", minHeight: 64, boxSizing: "border-box" }}>
         <div style={{ position: "absolute", inset: 0, background: "var(--on-surface)", opacity, pointerEvents: "none" }} />
         <DeviceTile icon={device.icon} size={tileSize} />
         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
-          <CmpText variant="titleMedium" maxLines={1}>{device.name}</CmpText>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+            <CmpText variant="titleMedium" maxLines={1}>{device.name}</CmpText>
+            {device.transport === "ble" && <MetaLabel text={`${device.rssi} dBm`} selected={selected} />}
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
-            <TransportChip transport={device.transport} />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: selected ? "inherit" : "var(--on-surface-variant)" }}>{device.address}</span>
+            <TransportChip transport={device.transport} short />
+            {device.transport === "ble"
+              ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: selected ? "inherit" : "var(--on-surface-variant)" }}>{device.address}</span>
+              : <MetaLabel text={device.systemId || device.address} selected={selected} />}
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, position: "relative", flex: "0 0 auto" }}>
-          {device.transport === "ble"
-            ? <SignalBars rssi={device.rssi} />
-            : <CmpIcon icon="usb" size={18} color="var(--on-surface-variant)" />}
+        <div style={{ display: "flex", alignItems: "center", position: "relative", flex: "0 0 auto", marginRight: onInfo ? -6 : 0 }}>
+          {onInfo && (
+            <div onClick={(e) => { e.stopPropagation(); onInfo(); }} onKeyDown={(e) => e.stopPropagation()}>
+              <CmpIconButton icon="MoreVert" contentDescription="Информация об устройстве" />
+            </div>
+          )}
           <CmpIcon icon="chevron_right" size={22} color={selected ? "inherit" : "var(--on-surface-variant)"} />
         </div>
       </div>
@@ -214,13 +256,14 @@ const PERMS = {
 };
 
 // ── Главный экран ─────────────────────────────────────────────────────────────
-function DeviceSelectScreen({ platform = "android", initialStep, demoEmpty = false, showBack = true, onBack = () => {} }) {
+function DeviceSelectScreen({ platform = "android", initialStep, demoEmpty = false, showBack = true, onBack = () => {}, onConnected }) {
   const { useState, useEffect, useRef } = React;
   const [rootRef, mode] = useLayout();
   const firstStep = initialStep || (platform === "desktop" ? "scanning" : "permission");
   const [step, setStep] = useState(firstStep);
   const [selectedId, setSelectedId] = useState(null);
   const [connectingId, setConnectingId] = useState(null);
+  const [infoId, setInfoId] = useState(null);
   const scanTimer = useRef(null);
 
   // Сканирование: авто-переход в список (или «пусто») через задержку.
@@ -231,6 +274,13 @@ function DeviceSelectScreen({ platform = "android", initialStep, demoEmpty = fal
     return () => clearTimeout(scanTimer.current);
   }, [step, demoEmpty]);
 
+  // Подключение (заглушка) → переход в «Расширенный монтаж» только после реального выбора устройства.
+  useEffect(() => {
+    if (step !== "connecting" || !connectingId || !onConnected) return;
+    const t = setTimeout(() => onConnected(DEVICES.find((x) => x.id === connectingId)), 1800);
+    return () => clearTimeout(t);
+  }, [step, connectingId]);
+
   const selectDevice = (d) => {
     if (mode === "split") setSelectedId(d.id);
     else { setConnectingId(d.id); setStep("connecting"); }
@@ -238,7 +288,7 @@ function DeviceSelectScreen({ platform = "android", initialStep, demoEmpty = fal
   const connectSelected = () => { setConnectingId(selectedId); setStep("connecting"); };
 
   const perms = PERMS[platform] || PERMS.android;
-  const tileSize = mode === "compact" ? 56 : 60;
+  const tileSize = mode === "compact" ? 44 : 48;
 
   // ── содержимое по шагу ──
   let body;
@@ -355,16 +405,24 @@ function DeviceSelectScreen({ platform = "android", initialStep, demoEmpty = fal
     );
   } else {
     // step === "list"
-    body = <ListBody mode={mode} tileSize={tileSize} selectedId={selectedId} onSelect={selectDevice} onConnect={connectSelected} />;
+    body = <ListBody mode={mode} platform={platform} tileSize={tileSize} selectedId={selectedId} onSelect={selectDevice} onConnect={connectSelected} onInfo={setInfoId} />;
   }
 
+  const infoDev = DEVICES.find((x) => x.id === infoId);
   return (
-    <div ref={rootRef} style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)" }}>
+    <div ref={rootRef} style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)" }}>
       <CmpTopAppBar
         title="Выбор устройства"
         navigationIcon={showBack ? <CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={onBack} /> : undefined}
       />
       {body}
+      {infoDev && (
+        <DS.CmpDialog open onDismissRequest={() => setInfoId(null)}
+          title={infoDev.name}
+          text={<><InfoRows rows={infoRows(infoDev, platform)} />{INFO_NOTE[infoDev.transport] && <span style={{ display: "block", marginTop: 8 }}>{INFO_NOTE[infoDev.transport]}</span>}</>}
+          dismissButton={<CmpTextButtonSafe text="Закрыть" onClick={() => setInfoId(null)} />}
+          confirmButton={<CmpTextButtonSafe text="Подключить" onClick={() => { const id = infoDev.id; setInfoId(null); selectDevice(DEVICES.find((x) => x.id === id)); }} />} />
+      )}
     </div>
   );
 }
@@ -391,7 +449,7 @@ function FixSteps({ platform = "android", empty = false }) {
 }
 
 // Список найденных устройств: compact/stacked — один столбец; split — master-detail.
-function ListBody({ mode, tileSize, selectedId, onSelect, onConnect }) {
+function ListBody({ mode, platform, tileSize, selectedId, onSelect, onConnect, onInfo }) {
   const selected = DEVICES.find((d) => d.id === selectedId) || null;
 
   const listHeader = (
@@ -408,7 +466,7 @@ function ListBody({ mode, tileSize, selectedId, onSelect, onConnect }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {DEVICES.map((d, i) => (
         <div key={d.id} className="ds-row" style={{ animation: "dsRowIn .28s ease both", animationDelay: `${i * 45}ms` }}>
-          <DeviceRow device={d} tileSize={tileSize} selected={mode === "split" && d.id === selectedId} onClick={() => onSelect(d)} />
+          <DeviceRow device={d} tileSize={tileSize} selected={mode === "split" && d.id === selectedId} onClick={() => onSelect(d)} onInfo={mode === "split" ? undefined : () => onInfo(d.id)} />
         </div>
       ))}
     </div>
@@ -423,7 +481,7 @@ function ListBody({ mode, tileSize, selectedId, onSelect, onConnect }) {
         </div>
         <CmpDivider orientation="vertical" />
         <div style={{ flex: "1 1 0", maxWidth: 420, minWidth: 300, minHeight: 0, overflow: "auto" }}>
-          <DetailPanel device={selected} onConnect={onConnect} />
+          <DetailPanel device={selected} platform={platform} onConnect={onConnect} />
         </div>
       </div>
     );
@@ -442,7 +500,7 @@ function ListBody({ mode, tileSize, selectedId, onSelect, onConnect }) {
 }
 
 // Правая колонка master-detail: карточка выбранного устройства + «Подключить».
-function DetailPanel({ device, onConnect }) {
+function DetailPanel({ device, platform, onConnect }) {
   if (!device) {
     return (
       <div style={{ height: "100%", minHeight: 260, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, textAlign: "center", padding: 24 }}>
@@ -453,12 +511,7 @@ function DetailPanel({ device, onConnect }) {
       </div>
     );
   }
-  const rows = [
-    { label: "Тип", value: device.type },
-    { label: "Связь", value: TRANSPORT[device.transport].label },
-    { label: device.transport === "ble" ? "MAC-адрес" : "Адрес", value: device.address, mono: true },
-  ];
-  if (device.transport === "ble") rows.push({ label: "Сигнал", value: `${device.rssi} dBm` });
+  const rows = infoRows(device, platform);
   return (
     <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box" }}>
       <div style={{ padding: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
@@ -469,17 +522,8 @@ function DetailPanel({ device, onConnect }) {
             <TransportChip transport={device.transport} />
           </div>
         </div>
-        <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-          {rows.map((r, i) => (
-            <React.Fragment key={r.label}>
-              {i > 0 && <CmpDivider />}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 2px" }}>
-                <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{r.label}</CmpText>
-                <span style={{ fontFamily: r.mono ? "var(--font-mono)" : "var(--font-sans)", fontSize: 14, fontWeight: 500, color: "var(--on-surface)", textAlign: "right" }}>{r.value}</span>
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
+        <InfoRows rows={rows} />
+        {INFO_NOTE[device.transport] && <CmpText variant="bodySmall" color="var(--on-surface-variant)">{INFO_NOTE[device.transport]}</CmpText>}
         <CmpButton text="Подключить" icon="link" fullWidth onClick={onConnect} />
       </div>
     </CmpSurface>
