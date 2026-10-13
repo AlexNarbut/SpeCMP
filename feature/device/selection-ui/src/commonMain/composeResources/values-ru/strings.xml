@@ -55,9 +55,29 @@
     <!-- Карточка (master-detail) -->
     <string name="device_select_detail_empty">Выберите устройство из списка</string>
     <string name="device_select_detail_label_link">Связь</string>
-    <string name="device_select_detail_label_address">Адрес</string>
     <string name="device_select_detail_label_mac">MAC-адрес</string>
     <string name="device_select_btn_connect">Подключить</string>
+    <string name="device_select_detail_label_type">Тип</string>
+    <string name="device_select_detail_label_mode">Режим</string>
+    <string name="device_select_detail_label_signal">Сигнал</string>
+    <string name="device_select_detail_label_manufacturer">Производитель</string>
+    <string name="device_select_detail_label_vid_pid">VID:PID</string>
+    <string name="device_select_detail_label_system_id">ID блока</string>
+    <string name="device_select_detail_label_firmware">Прошивка</string>
+    <string name="device_select_rssi">%1$d dBm</string>
+    <string name="device_select_firmware_short">Прошивка %1$s</string>
+    <string name="device_select_mode_main">Рабочий</string>
+    <string name="device_select_mode_pairing">Сопряжение</string>
+    <string name="device_select_mode_boot">Загрузчик</string>
+    <string name="device_select_kind_alarm">Сигнализация</string>
+    <string name="device_select_kind_tag">Метка</string>
+    <string name="device_select_kind_relay">Реле</string>
+    <string name="device_select_kind_immobilizer">Иммобилайзер</string>
+    <string name="device_select_kind_remote_control">Пульт</string>
+    <string name="device_select_kind_navigation">Навигация</string>
+    <string name="device_select_kind_module">Модуль</string>
+    <string name="device_select_kind_sensor">Датчик</string>
+    <string name="device_select_kind_other">Устройство</string>
 
     <!-- Транспорт -->
     <string name="device_select_transport_ble">Bluetooth</string>

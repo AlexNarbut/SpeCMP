@@ -45,10 +45,19 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import specmp.feature.device.selection_ui.generated.resources.Res
+import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_type
+import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_mode
+import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_signal
+import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_manufacturer
+import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_vid_pid
+import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_system_id
+import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_firmware
+import specmp.feature.device.selection_ui.generated.resources.device_select_rssi
 import specmp.feature.device.selection_ui.generated.resources.device_select_a11y_back
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_title
@@ -62,7 +71,6 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_conn
 import specmp.feature.device.selection_ui.generated.resources.device_select_denied_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_denied_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_detail_empty
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_address
 import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_link
 import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_mac
 import specmp.feature.device.selection_ui.generated.resources.device_select_empty_ble_1
@@ -99,7 +107,7 @@ private enum class DeviceSelectLayout { Compact, Stacked, Split }
  */
 @Composable
 internal fun DeviceSelectionScreen(
-    onDeviceConnected: (DeviceConnectionResult) -> Unit,
+    onSessionCreated: (ConnectedDevice) -> Unit,
     onClose: () -> Unit,
 ) {
     val viewModel = koinViewModel<ScanDeviceViewModel>()
@@ -112,7 +120,7 @@ internal fun DeviceSelectionScreen(
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
-            is ScanDeviceEffect.Connected -> onDeviceConnected(effect.result)
+            is ScanDeviceEffect.SessionCreated -> onSessionCreated(effect.device)
             ScanDeviceEffect.Close -> onClose()
             ScanDeviceEffect.ConnectionFailed -> snackbarHostState.showSnackbar(connectionFailedText)
             is ScanDeviceEffect.BondConflict -> snackbarHostState.showSnackbar(
@@ -451,21 +459,43 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
             DeviceTile(icon = device.typeIcon, sizeDp = 128)
             CmpColumn(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CmpText(text = device.name, fontSize = DsType.HeadlineSmall, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
-                TransportChip(transport = device.transport)
+                CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    TransportChip(transport = device.transport)
+                    device.notableMode?.let { ModeBadge(it) }
+                }
             }
             CmpColumn(modifier = Modifier.fillMaxWidth()) {
                 DetailRow(
                     label = stringResource(Res.string.device_select_detail_label_link),
                     value = transportLabel(device.transport),
                 )
-                DetailRow(
-                    label = if (device.transport == DeviceTransport.BLE) {
-                        stringResource(Res.string.device_select_detail_label_mac)
-                    } else {
-                        stringResource(Res.string.device_select_detail_label_address)
-                    },
-                    value = device.address,
-                )
+                when (device) {
+                    is DeviceUiItem.Ble -> {
+                        DetailRow(stringResource(Res.string.device_select_detail_label_mac), device.address)
+                        DetailRow(stringResource(Res.string.device_select_detail_label_type), kindLabel(device.kind))
+                        DetailRow(stringResource(Res.string.device_select_detail_label_mode), modeLabel(device.mode))
+                        DetailRow(
+                            stringResource(Res.string.device_select_detail_label_signal),
+                            stringResource(Res.string.device_select_rssi, device.rssi),
+                        )
+                    }
+                    is DeviceUiItem.Usb -> {
+                        device.systemId?.let {
+                            DetailRow(stringResource(Res.string.device_select_detail_label_system_id), it.toString())
+                        }
+                        DetailRow(stringResource(Res.string.device_select_detail_label_manufacturer), device.manufacturerName)
+                        DetailRow(stringResource(Res.string.device_select_detail_label_vid_pid), device.vidPid)
+                        device.firmwareVersion?.let {
+                            DetailRow(stringResource(Res.string.device_select_detail_label_firmware), it)
+                        }
+                        device.isBootMode?.let { isBoot ->
+                            DetailRow(
+                                stringResource(Res.string.device_select_detail_label_mode),
+                                modeLabel(if (isBoot) ScannedDeviceMode.BOOT else ScannedDeviceMode.BASE),
+                            )
+                        }
+                    }
+                }
             }
             IconedButton(
                 text = stringResource(Res.string.device_select_btn_connect),

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="advanced_mount_title">Advanced installation</string>
+    <string name="advanced_mount_a11y_back">Back</string>
+    <string name="advanced_mount_device_firmware">Firmware %1$s</string>
+    <string name="advanced_mount_section_settings">Unit settings</string>
+    <string name="advanced_mount_section_firmware_update">Firmware check</string>
+    <string name="advanced_mount_section_voice_firmware">Voice firmware</string>
+    <string name="advanced_mount_section_bypass_learning">Bypass learning</string>
+    <string name="advanced_mount_section_clone">Clone</string>
+    <string name="advanced_mount_section_dynamic_devices">Wireless devices</string>
+    <string name="advanced_mount_section_stub">This section is under development.</string>
+</resources>

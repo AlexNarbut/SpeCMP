@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 
 /** Тип конфликта сопряжения BLE (нужно снять bond перед подключением). */
 enum class BondConflictKind {
@@ -13,8 +13,8 @@ enum class BondConflictKind {
 
 /** One-shot события экрана поиска (см. docs/patterns.md — «One-shot события»). */
 sealed interface ScanDeviceEffect {
-    /** Устройство подключено — передать результат навигации приложения. */
-    data class Connected(val result: DeviceConnectionResult) : ScanDeviceEffect
+    /** Сессия с устройством создана — дальше flow работы с устройством (решает навигация приложения). */
+    data class SessionCreated(val device: ConnectedDevice) : ScanDeviceEffect
 
     /** Подключение не удалось. */
     data object ConnectionFailed : ScanDeviceEffect

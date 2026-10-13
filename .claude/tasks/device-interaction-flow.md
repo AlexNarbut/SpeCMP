@@ -228,3 +228,105 @@
 - `desktopApp/build.gradle.kts`: `compose.desktop.application.javaHome` из `compose.jvmHome`: Gradle-свойство (`-P`) либо `local.properties`; если ключа нет — как сейчас. `local.properties` правит пользователь.
 - `docs/build.md` и `.ai/agents/desktopApp/AGENTS.md` (+ `.ai/generate.sh`): заметка про x86_64-JDK.
 - Проверка: десктоп с `-Pcompose.jvmHome=…corretto-17.0.7…` — поиск и подключение по USB.
+
+---
+
+## Детальный план этапов 1–5 (2026-10-12, ждёт апрува)
+
+Предлагаемые ответы на открытые вопросы:
+- **В2.** Композиция, не наследование.
+- **В3.** BOOT — экран-заглушка.
+- **В4.** Корень монтажа — информация о блоке и меню по features; разделы — заглушки.
+- **В5.** Инструкции подключения — позже.
+
+### Этап 1. Поиск отдаёт «сессия создана», а не данные устройства
+
+- `ScanDeviceViewModel` больше не читает информацию об устройстве: убрать `AlarmDeviceRepository`, `readConnectionResult`, `DeviceConnectionResult`.
+- На `CONNECTED` / `READY` эффект `SessionCreated(ConnectedDevice)`.
+  - `ConnectedDevice(transport, id, name)` — домен `device:interaction`.
+- `DeviceSelectionNavGraph(onSessionCreated: (ConnectedDevice) -> Unit, onClose)`.
+- Остальное (сброс сессии, разрешения, все транспорты, проверки) — как сейчас.
+- **USB в списке и карточке** (просьба пользователя 2026-10-12):
+  - SDK при подключении опрашивает блок (`PcBaseInformationExtractor`) и кладёт в `AttachedUsbDeviceInformation`:
+    - `id = systemId`;
+    - `productName = systemName`;
+    - из USB-дескриптора: `manufacturerName`, `vendorId`, `productId`.
+  - `ScannedDevice.Usb`: `systemId: Long?` (`id`, если он числовой; на Android при неудачном опросе `id` — путь `/dev/bus/usb/…`, тогда `null`) и `vendorId`.
+  - Строка списка: после имени — `systemId` (для USB, если известен), вторая строка — чип USB + `manufacturerName · VID:PID` (hex, `0483:5710`).
+  - Карточка справа (split): строки «Производитель», «VID:PID», «systemId».
+  - BLE: `systemId` в данных поиска нет — не выводим.
+
+### Этап 2. Сессия и устройство (`feature/device/interaction`, логика)
+
+**`DeviceSessionRepository`** — тонкий, над `bluetoothAlarmDeviceInteractor`:
+- `connectionState(): Flow<Response<DeviceLinkState>>` поверх `getDeviceConnectionStateFlowUseCase`:
+  `READY` → `Ready`, `CONNECTING` / `CONNECTED` → `Connecting`, `DISCONNECTED` / `UNKNOWN` → `Disconnected`;
+- `suspend readDevice(): Response<AlarmDevice>` — `getAlarmDeviceInformationUseCase` + `getAlarmDeviceAppFeaturesUseCase`;
+- `suspend closeSession()`.
+
+Существующие `AlarmDeviceRepository` / `DeviceConnectionRepository` объединить с ним по смыслу. Лишнее убрать.
+
+**Домен:**
+- `AlarmDevice(systemId, systemName, firmwareVersion, mode: Main | Boot, features: Set<DeviceFeature>)`;
+- `DeviceFeature`: `FIRMWARE_UPDATE`, `VOICE_FIRMWARE`, `SETTINGS`, `BYPASS_LEARNING`, `CLONE`, `DYNAMIC_DEVICES` — подмножество `SubsystemFeature`, SDK-типы наружу не выходят.
+
+**`DeviceSession`** — app-scoped single, единственный держатель состояния подключения (аналог `DeviceInteractorViewModel` и `AlarmDeviceViewModel` вместе):
+- `state: StateFlow<DeviceSessionState>` = `Disconnected | Connecting | Ready(AlarmDevice)`;
+- на `READY` читает устройство с повтором;
+- горячий, пока есть подписчики (`WhileSubscribed`).
+
+**`DeviceScope`** для VM, работающих с устройством (вместо базового класса):
+- `DeviceScope(viewModelScope, deviceSession)`;
+- `state`;
+- `launch { }` — работа отменяется на дисконнекте;
+- `onReady { device -> }`.
+
+### Этап 3. Обёртка interaction (`feature/device/interaction-ui`, новый модуль)
+
+**`DeviceInteractionHost(onExit, content: @Composable (AlarmDevice) -> Unit)`** и `DeviceInteractionViewModel` (состояние из `DeviceSession`):
+
+- **Ready(Main)** → `content(device)` — граф дочернего flow.
+- **Disconnected / Connecting** → экран «Устройство отключено» / «Подключение…» **поверх** `content`.
+  - Content остаётся в композиции: его back stack и VM живы. На `Ready` оверлей уходит, и пользователь оказывается на том же месте.
+  - Первый вход, когда `content` ещё ни разу не показывался, — просто экран подключения.
+- **Ready(Boot)** → экран-заглушка «Блок в режиме загрузчика» вместо `content`.
+- **«Назад» на оверлее** (`NavigationBackHandler`, включён, только пока оверлей виден; регистрируется после `content`, поэтому приоритетнее) → VM → `closeSession()` → эффект `Exit` → `onExit()`. Выход из всего flow.
+- Выход из flow любым путём (`onExit`) закрывает сессию.
+
+### Этап 4. Расширенный монтаж (`feature/advanced-mount`, новый UI-модуль)
+
+- `AdvancedMountNavGraph(device, onExit)` — свой `NavDisplay`, корень `AdvancedMountRootRoute`.
+- Корневой экран:
+  - шапка: имя, `systemId`, версия прошивки;
+  - сетка меню по `device.features`, как `AdvanceMountUtils.getMenuItems`;
+  - пункт открывает экран-заглушку раздела в графе монтажа, чтобы проверить сохранение места после переподключения.
+- VM корня использует `DeviceScope`.
+- «Назад» с корня → `onExit` (закрыть сессию).
+
+### Этап 5. Интеграция (`composeApp`)
+
+- `AdvancedMount` → `DeviceSelectionRoute`.
+- `onSessionCreated` → заменить запись поиска на `AdvancedMountRoute`: «Назад» из монтажа не возвращает в поиск.
+- Запись `AdvancedMountRoute` = `DeviceInteractionHost(onExit = { popSafe() }) { device -> AdvancedMountNavGraph(device, onExit) }`.
+- Быстрый монтаж позже — тот же хост.
+
+### Этап 6 — как в общем плане
+
+- тесты;
+- документация (`.ai/agents/feature/device/**`, `docs/navigation.md`);
+- прогон на Pixel 8 (BLE + USB) и desktop (USB): выдернуть или выключить блок в разделе → оверлей → вернуть → то же место; «Назад» на оверлее → выход и закрытие сессии.
+
+### Апрув этапов 1–5 (2026-10-12)
+
+- Вопросы В2–В5 — как предложено: композиция, BOOT — заглушка, корень монтажа — инфо + меню, инструкции — позже.
+
+Поля в поиске:
+- **USB:**
+  - `systemId` после имени;
+  - производитель · VID:PID;
+  - **версия прошивки и метка «Загрузчик»** — через доработку SDK 2.0.95 (`alarmtrade-common-usb-scan-info.md`).
+- **BLE:**
+  - **уровень сигнала (RSSI)**;
+  - **метки режима** «Сопряжение» / «Загрузчик»;
+  - **тип устройства** (`DeviceType` SDK → доменный `DeviceKind`: сигнализация, метка, реле, иммобилайзер, пульт, навигация, модуль, датчик, прочее).
+- Где показываются: строка списка (компактно: имя + systemId, вторая строка — чип транспорта + адрес/производитель, метки) и карточка split (все поля строками).

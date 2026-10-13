@@ -26,7 +26,6 @@ import ru.alarmtrade.permissions.common.PermissionState
 import ru.alarmtrade.permissions.common.RequestCanceledException
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.permissions.deviceAccessRequirements
@@ -34,10 +33,11 @@ import ru.alarmtrade.specmp.core.permissions.isBluetoothEnabled
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.AlarmDeviceRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
@@ -59,7 +59,6 @@ import kotlin.coroutines.cancellation.CancellationException
 class ScanDeviceViewModel(
     private val scanRepository: DeviceScanRepository,
     private val connectionRepository: DeviceConnectionRepository,
-    private val alarmDeviceRepository: AlarmDeviceRepository,
     private val permissionsProvider: PermissionsProvider,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
@@ -235,12 +234,13 @@ class ScanDeviceViewModel(
         connectJob = safeLaunch {
             executeWithProceedLock {
                 _step.update { ScanStep.Connecting(item) }
-                val result = when (item) {
+                val connected = when (item) {
                     is DeviceUiItem.Ble -> connectBle(item)
                     is DeviceUiItem.Usb -> connectUsb(item)
                 }
-                if (result != null) {
-                    _effect.tryEmit(ScanDeviceEffect.Connected(result))
+                if (connected) {
+                    // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
+                    _effect.tryEmit(ScanDeviceEffect.SessionCreated(item.toConnectedDevice()))
                 } else {
                     connectionRepository.closeSessions()
                     _step.update { ScanStep.Scanning }
@@ -249,48 +249,34 @@ class ScanDeviceViewModel(
         }
     }
 
-    private suspend fun connectBle(item: DeviceUiItem.Ble): DeviceConnectionResult? {
+    private suspend fun connectBle(item: DeviceUiItem.Ble): Boolean {
         if (item.mode != ScannedDeviceMode.BOOT) {
             val bondConflict = bondConflictOf(item)
             if (bondConflict != null) {
                 _effect.tryEmit(ScanDeviceEffect.BondConflict(bondConflict))
-                return null
+                return false
             }
         }
-        val terminal = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal()
-        return terminal.toResultOrNull(item.mode)
+        return connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal().isConnected()
     }
 
-    private suspend fun connectUsb(item: DeviceUiItem.Usb): DeviceConnectionResult? {
-        val terminal = connectionRepository.connectUsb(item.id).awaitTerminal()
-        return terminal.toResultOrNull(ScannedDeviceMode.BASE)
-    }
+    private suspend fun connectUsb(item: DeviceUiItem.Usb): Boolean =
+        connectionRepository.connectUsb(item.id).awaitTerminal().isConnected()
 
-    private suspend fun Response<DeviceConnectionState>?.toResultOrNull(
-        mode: ScannedDeviceMode,
-    ): DeviceConnectionResult? {
+    private fun Response<DeviceConnectionState>?.isConnected(): Boolean {
         val connected = this is Response.Success && value == DeviceConnectionState.CONNECTED
-        if (!connected) {
-            _effect.tryEmit(ScanDeviceEffect.ConnectionFailed)
-            return null
-        }
-        return readConnectionResult(mode)
+        if (!connected) _effect.tryEmit(ScanDeviceEffect.ConnectionFailed)
+        return connected
     }
 
-    private suspend fun readConnectionResult(mode: ScannedDeviceMode): DeviceConnectionResult? {
-        val response: Response<DeviceConnectionResult> = if (mode == ScannedDeviceMode.BOOT) {
-            alarmDeviceRepository.getBootData().map { DeviceConnectionResult.Boot(it) }
-        } else {
-            alarmDeviceRepository.getAlarmDeviceInformation().map { DeviceConnectionResult.Working(it) }
-        }
-        return when (response) {
-            is Response.Success -> response.value
-            is Response.Error -> {
-                _effect.tryEmit(ScanDeviceEffect.ConnectionFailed)
-                null
-            }
-        }
-    }
+    private fun DeviceUiItem.toConnectedDevice() = ConnectedDevice(
+        id = id,
+        name = name,
+        transport = when (transport) {
+            DeviceTransport.BLE -> ConnectionTransport.BLE
+            DeviceTransport.USB -> ConnectionTransport.USB
+        },
+    )
 
     // Общий предел ожидания: SDK переподключается по кругу, а USB может не дать финального статуса.
     // null (таймаут или поток завершился без финала) — неудача.

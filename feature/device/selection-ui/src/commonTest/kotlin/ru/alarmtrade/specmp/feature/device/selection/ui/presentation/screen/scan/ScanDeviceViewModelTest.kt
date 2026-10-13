@@ -12,8 +12,10 @@ import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
@@ -46,9 +48,8 @@ class ScanDeviceViewModelTest {
     private fun viewModel(
         scan: FakeDeviceScanRepository = FakeDeviceScanRepository(),
         connection: FakeDeviceConnectionRepository = FakeDeviceConnectionRepository(),
-        alarm: FakeAlarmDeviceRepository = FakeAlarmDeviceRepository(),
         permissions: FakePermissionsProvider = FakePermissionsProvider(),
-    ) = ScanDeviceViewModel(scan, connection, alarm, permissions, dispatchers())
+    ) = ScanDeviceViewModel(scan, connection, permissions, dispatchers())
 
     @Test
     fun `scanning shows found devices as content`() = runTest(testDispatcher) {
@@ -57,8 +58,9 @@ class ScanDeviceViewModelTest {
         val bleDevice = ScannedDevice.Ble(
             id = "AA:BB",
             name = "Pandora",
-            deviceType = "ALARM",
+            kind = DeviceKind.ALARM,
             mode = ScannedDeviceMode.BASE,
+            rssi = -50,
             hasDeviceBond = false,
             hasPhoneBond = false,
         )
@@ -73,7 +75,7 @@ class ScanDeviceViewModelTest {
     }
 
     @Test
-    fun `connecting to working ble device emits Connected with device info`() = runTest(testDispatcher) {
+    fun `connecting to ble device emits SessionCreated`() = runTest(testDispatcher) {
         val effects = mutableListOf<ScanDeviceEffect>()
         val viewModel = viewModel()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
@@ -85,15 +87,17 @@ class ScanDeviceViewModelTest {
                 name = "Pandora",
                 address = "AC:BB:CC:DD:EE:FF",
                 mode = ScannedDeviceMode.BASE,
+                kind = DeviceKind.ALARM,
+                rssi = -50,
                 hasDeviceBond = false,
                 hasPhoneBond = false,
             ),
         )
         advanceUntilIdle()
 
-        val connected = effects.filterIsInstance<ScanDeviceEffect.Connected>().singleOrNull()
-        assertTrue(connected != null)
-        assertTrue(connected.result is DeviceConnectionResult.Working)
+        val created = effects.filterIsInstance<ScanDeviceEffect.SessionCreated>().singleOrNull()
+        assertTrue(created != null)
+        assertEquals(ConnectedDevice("AA:BB", "Pandora", ConnectionTransport.BLE), created.device)
     }
 
     @Test
@@ -110,6 +114,8 @@ class ScanDeviceViewModelTest {
                 name = "Pandora",
                 address = "AC:BB:CC:DD:EE:FF",
                 mode = ScannedDeviceMode.BASE,
+                kind = DeviceKind.ALARM,
+                rssi = -50,
                 hasDeviceBond = false,
                 hasPhoneBond = true,
             ),
@@ -119,7 +125,7 @@ class ScanDeviceViewModelTest {
         val conflict = effects.filterIsInstance<ScanDeviceEffect.BondConflict>().singleOrNull()
         assertTrue(conflict != null)
         assertEquals(BondConflictKind.REMOVE_FROM_PHONE, conflict.kind)
-        assertTrue(effects.none { it is ScanDeviceEffect.Connected })
+        assertTrue(effects.none { it is ScanDeviceEffect.SessionCreated })
     }
 
     @Test
@@ -138,6 +144,8 @@ class ScanDeviceViewModelTest {
                 name = "Pandora",
                 address = "AC:BB:CC:DD:EE:FF",
                 mode = ScannedDeviceMode.BASE,
+                kind = DeviceKind.ALARM,
+                rssi = -50,
                 hasDeviceBond = false,
                 hasPhoneBond = false,
             ),
@@ -274,16 +282,36 @@ class ScanDeviceViewModelTest {
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
         advanceUntilIdle()
 
-        viewModel.connect(DeviceUiItem.Usb(id = "usb-1", name = "Pandora USB", address = "Pandora"))
+        viewModel.connect(
+            DeviceUiItem.Usb(
+                id = "usb-1",
+                name = "Pandora USB",
+                address = "Pandora · 0483:5710",
+                manufacturerName = "Pandora",
+                vidPid = "0483:5710",
+                systemId = null,
+                firmwareVersion = null,
+                isBootMode = null,
+            ),
+        )
         advanceUntilIdle()
 
         assertTrue(effects.any { it is ScanDeviceEffect.ConnectionFailed })
-        assertTrue(effects.none { it is ScanDeviceEffect.Connected })
+        assertTrue(effects.none { it is ScanDeviceEffect.SessionCreated })
     }
 
     @Test
     fun `error of one transport keeps devices found by another`() = runTest(testDispatcher) {
-        val usbDevice = ScannedDevice.Usb(id = "usb-1", name = "Pandora USB", manufacturerName = "Pandora", productId = 1)
+        val usbDevice = ScannedDevice.Usb(
+            id = "usb-1",
+            name = "Pandora USB",
+            manufacturerName = "Pandora",
+            vendorId = 0x0483,
+            productId = 0x5710,
+            systemId = null,
+            firmwareVersion = null,
+            isBootMode = null,
+        )
         val viewModel = viewModel(
             scan = FakeDeviceScanRepository(
                 bleResponse = Response.Error(IllegalStateException("BLE scan failed")),
@@ -310,7 +338,7 @@ class ScanDeviceViewModelTest {
         advanceUntilIdle()
 
         assertTrue(effects.none { it is ScanDeviceEffect.BondConflict })
-        assertTrue(effects.any { it is ScanDeviceEffect.Connected })
+        assertTrue(effects.any { it is ScanDeviceEffect.SessionCreated })
     }
 
     private fun bleItem(
@@ -321,6 +349,8 @@ class ScanDeviceViewModelTest {
         name = "Pandora",
         address = "AC:BB:CC:DD:EE:FF",
         mode = ScannedDeviceMode.BASE,
+        kind = DeviceKind.ALARM,
+        rssi = -50,
         hasDeviceBond = hasDeviceBond,
         hasPhoneBond = hasPhoneBond,
     )

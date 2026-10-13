@@ -55,9 +55,29 @@
     <!-- Detail (master-detail) -->
     <string name="device_select_detail_empty">Select a device from the list</string>
     <string name="device_select_detail_label_link">Connection</string>
-    <string name="device_select_detail_label_address">Address</string>
     <string name="device_select_detail_label_mac">MAC address</string>
     <string name="device_select_btn_connect">Connect</string>
+    <string name="device_select_detail_label_type">Type</string>
+    <string name="device_select_detail_label_mode">Mode</string>
+    <string name="device_select_detail_label_signal">Signal</string>
+    <string name="device_select_detail_label_manufacturer">Manufacturer</string>
+    <string name="device_select_detail_label_vid_pid">VID:PID</string>
+    <string name="device_select_detail_label_system_id">Unit ID</string>
+    <string name="device_select_detail_label_firmware">Firmware</string>
+    <string name="device_select_rssi">%1$d dBm</string>
+    <string name="device_select_firmware_short">Firmware %1$s</string>
+    <string name="device_select_mode_main">Normal</string>
+    <string name="device_select_mode_pairing">Pairing</string>
+    <string name="device_select_mode_boot">Bootloader</string>
+    <string name="device_select_kind_alarm">Alarm</string>
+    <string name="device_select_kind_tag">Tag</string>
+    <string name="device_select_kind_relay">Relay</string>
+    <string name="device_select_kind_immobilizer">Immobilizer</string>
+    <string name="device_select_kind_remote_control">Remote</string>
+    <string name="device_select_kind_navigation">Navigation</string>
+    <string name="device_select_kind_module">Module</string>
+    <string name="device_select_kind_sensor">Sensor</string>
+    <string name="device_select_kind_other">Device</string>
 
     <!-- Transport -->
     <string name="device_select_transport_ble">Bluetooth</string>

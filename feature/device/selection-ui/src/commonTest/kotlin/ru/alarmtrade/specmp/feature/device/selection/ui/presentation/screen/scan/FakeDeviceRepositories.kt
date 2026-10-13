@@ -12,10 +12,7 @@ import ru.alarmtrade.permissions.common.PermissionState
 import ru.alarmtrade.permissions.common.PermissionsController
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDeviceInfo
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootData
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.AlarmDeviceRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
@@ -90,13 +87,4 @@ class FakePermissionsProvider(
     override fun openLocationSettings() = Unit
     override fun openBluetoothSettings() = Unit
     // observe* методов больше нет в интерфейсе (revert реактивного варианта)
-}
-
-class FakeAlarmDeviceRepository(
-    private val info: AlarmDeviceInfo = AlarmDeviceInfo("1", "Pandora", "1.0"),
-    private val boot: BootData = BootData("device", "firmware", "1.0"),
-) : AlarmDeviceRepository {
-    override suspend fun getAlarmDeviceInformation(): Response<AlarmDeviceInfo> = Response.Success(info)
-    override suspend fun getBootData(): Response<BootData> = Response.Success(boot)
-    override suspend fun disconnect() = Unit
 }

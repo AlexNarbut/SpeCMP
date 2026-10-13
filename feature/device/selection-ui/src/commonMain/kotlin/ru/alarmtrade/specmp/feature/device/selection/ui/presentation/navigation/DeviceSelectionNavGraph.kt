@@ -14,7 +14,7 @@ import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.DeviceSelectionScreen
 
 /** Внутренний роут графа фичи — экран поиска устройства. */
@@ -35,12 +35,12 @@ private val navConfig = SavedStateConfiguration {
  * и собственный back stack — граф расширяется новыми экранами (напр. инструкции подключения)
  * без изменений в `composeApp`.
  *
- * @param onDeviceConnected устройство подключено — навигация приложения решает, куда вести.
+ * @param onSessionCreated сессия с устройством создана — навигация приложения решает, куда вести.
  * @param onClose выход из графа поиска.
  */
 @Composable
 fun DeviceSelectionNavGraph(
-    onDeviceConnected: (DeviceConnectionResult) -> Unit,
+    onSessionCreated: (ConnectedDevice) -> Unit,
     onClose: () -> Unit,
 ) {
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
@@ -58,7 +58,7 @@ fun DeviceSelectionNavGraph(
         entryProvider = entryProvider<NavKey> {
             entry<ScanDeviceRoute> { _ ->
                 DeviceSelectionScreen(
-                    onDeviceConnected = onDeviceConnected,
+                    onSessionCreated = onSessionCreated,
                     onClose = onClose,
                 )
             }

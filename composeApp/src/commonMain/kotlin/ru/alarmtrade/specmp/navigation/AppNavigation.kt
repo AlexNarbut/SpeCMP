@@ -17,15 +17,19 @@ import kotlinx.serialization.modules.polymorphic
 import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountNavGraph
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
@@ -41,6 +45,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(MainRoute::class, MainRoute.serializer())
             subclass(SupportChatRoute::class, SupportChatRoute.serializer())
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
+            subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
         }
     }
 }
@@ -96,11 +101,17 @@ private fun AuthedNavGraph() {
             }
             entry<DeviceSelectionRoute> { _ ->
                 DeviceSelectionNavGraph(
-                    // TODO(device:interaction-ui): вести в flow работы с подключённым
-                    //  устройством. Пока подключение завершает поиск и возвращает на main.
-                    onDeviceConnected = { _ -> backStack.popSafe() },
+                    // Сессия создана — поиск заменяется flow работы с устройством:
+                    // «Назад» из монтажа не возвращает в поиск.
+                    onSessionCreated = { _ -> backStack.replaceCurrent(AdvancedMountRoute) },
                     onClose = { backStack.popSafe() },
                 )
+            }
+            entry<AdvancedMountRoute> { _ ->
+                // Обёртка interaction: дисконнект — экран поверх графа, выход — закрытие сессии.
+                DeviceInteractionHost(onExit = { backStack.popSafe() }) { _, onExit ->
+                    AdvancedMountNavGraph(onExit = onExit)
+                }
             }
         }
     )

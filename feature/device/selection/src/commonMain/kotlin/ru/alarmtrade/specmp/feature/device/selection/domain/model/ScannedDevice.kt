@@ -14,8 +14,10 @@ sealed interface ScannedDevice {
     data class Ble(
         override val id: String,
         override val name: String,
-        val deviceType: String,
+        val kind: DeviceKind,
         val mode: ScannedDeviceMode,
+        /** Уровень сигнала, dBm. */
+        val rssi: Int,
         val hasDeviceBond: Boolean,
         /** Сопряжено ли устройство с телефоном; `null` — платформа этого не сообщает (iOS). */
         val hasPhoneBond: Boolean?,
@@ -27,7 +29,14 @@ sealed interface ScannedDevice {
         override val id: String,
         override val name: String,
         val manufacturerName: String,
+        val vendorId: Int,
         val productId: Int,
+        /** systemId блока из опроса SDK; null — блок не опрошен (на Android тогда id — путь устройства). */
+        val systemId: Long?,
+        /** Версия прошивки из опроса; null — неизвестна. */
+        val firmwareVersion: String?,
+        /** Блок в загрузчике; null — неизвестно. */
+        val isBootMode: Boolean?,
     ) : ScannedDevice {
         override val transport: DeviceTransport get() = DeviceTransport.USB
     }
@@ -41,3 +50,6 @@ enum class DeviceTransport { BLE, USB }
  * загрузчик (BOOT) → работа с manufacturer data / прошивкой.
  */
 enum class ScannedDeviceMode { BASE, PAIRING, BOOT }
+
+/** Вид BLE-устройства Pandora (группа типов SDK `DeviceType`) — для подписи в списке. */
+enum class DeviceKind { ALARM, TAG, RELAY, IMMOBILIZER, REMOTE_CONTROL, NAVIGATION, MODULE, SENSOR, OTHER }

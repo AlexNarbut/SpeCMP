@@ -31,9 +31,25 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import specmp.feature.device.selection_ui.generated.resources.Res
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_alarm
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_tag
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_relay
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_immobilizer
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_remote_control
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_navigation
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_module
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_sensor
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_other
+import specmp.feature.device.selection_ui.generated.resources.device_select_mode_main
+import specmp.feature.device.selection_ui.generated.resources.device_select_mode_pairing
+import specmp.feature.device.selection_ui.generated.resources.device_select_mode_boot
+import specmp.feature.device.selection_ui.generated.resources.device_select_rssi
+import specmp.feature.device.selection_ui.generated.resources.device_select_firmware_short
 import specmp.feature.device.selection_ui.generated.resources.device_select_transport_ble
 import specmp.feature.device.selection_ui.generated.resources.device_select_transport_usb
 
@@ -45,6 +61,7 @@ internal object DsType {
     val BodyLarge = 16.sp
     val BodyMedium = 14.sp
     val LabelLarge = 14.sp
+    val LabelSmall = 12.sp
 }
 
 internal enum class HeroTone { Primary, Error, Neutral }
@@ -53,6 +70,64 @@ internal enum class HeroTone { Primary, Error, Neutral }
 internal fun transportLabel(transport: DeviceTransport): String = when (transport) {
     DeviceTransport.BLE -> stringResource(Res.string.device_select_transport_ble)
     DeviceTransport.USB -> stringResource(Res.string.device_select_transport_usb)
+}
+
+@Composable
+internal fun kindLabel(kind: DeviceKind): String = stringResource(
+    when (kind) {
+        DeviceKind.ALARM -> Res.string.device_select_kind_alarm
+        DeviceKind.TAG -> Res.string.device_select_kind_tag
+        DeviceKind.RELAY -> Res.string.device_select_kind_relay
+        DeviceKind.IMMOBILIZER -> Res.string.device_select_kind_immobilizer
+        DeviceKind.REMOTE_CONTROL -> Res.string.device_select_kind_remote_control
+        DeviceKind.NAVIGATION -> Res.string.device_select_kind_navigation
+        DeviceKind.MODULE -> Res.string.device_select_kind_module
+        DeviceKind.SENSOR -> Res.string.device_select_kind_sensor
+        DeviceKind.OTHER -> Res.string.device_select_kind_other
+    },
+)
+
+@Composable
+internal fun modeLabel(mode: ScannedDeviceMode): String = stringResource(
+    when (mode) {
+        ScannedDeviceMode.BASE -> Res.string.device_select_mode_main
+        ScannedDeviceMode.PAIRING -> Res.string.device_select_mode_pairing
+        ScannedDeviceMode.BOOT -> Res.string.device_select_mode_boot
+    },
+)
+
+/** Режим, который стоит заметить в списке: сопряжение или загрузчик (рабочий — без метки). */
+internal val DeviceUiItem.notableMode: ScannedDeviceMode?
+    get() = when (this) {
+        is DeviceUiItem.Ble -> mode.takeIf { it != ScannedDeviceMode.BASE }
+        is DeviceUiItem.Usb -> ScannedDeviceMode.BOOT.takeIf { isBootMode == true }
+    }
+
+/** Метка режима блока (сопряжение / загрузчик). */
+@Composable
+internal fun ModeBadge(mode: ScannedDeviceMode) {
+    val colors = cmpThemeColors()
+    val (bg, fg) = if (mode == ScannedDeviceMode.BOOT) {
+        colors.errorContainer to colors.onErrorContainer
+    } else {
+        colors.tertiaryContainer to colors.onTertiaryContainer
+    }
+    CmpSurface(shape = CircleShape, color = bg, contentColor = fg) {
+        CmpText(
+            text = modeLabel(mode),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            fontSize = DsType.LabelSmall,
+            fontWeight = FontWeight.Medium,
+            color = fg,
+        )
+    }
+}
+
+/** Детали под адресом: BLE — тип и сигнал, USB — прошивка. */
+@Composable
+internal fun deviceMeta(item: DeviceUiItem): String? = when (item) {
+    is DeviceUiItem.Ble -> "${kindLabel(item.kind)} · ${stringResource(Res.string.device_select_rssi, item.rssi)}"
+    is DeviceUiItem.Usb -> item.firmwareVersion?.let { stringResource(Res.string.device_select_firmware_short, it) }
 }
 
 internal fun DeviceTransport.icon(): CmpIcons = when (this) {
@@ -119,7 +194,20 @@ internal fun DeviceRow(
         ) {
             DeviceTile(icon = item.typeIcon, sizeDp = tileSize)
             CmpColumn(modifier = Modifier.weight(1f)) {
-                CmpText(text = item.name, fontSize = DsType.TitleMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                val secondary = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
+                CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CmpText(
+                        text = item.name,
+                        modifier = Modifier.weight(1f, fill = false),
+                        fontSize = DsType.TitleMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    item.systemId?.let { systemId ->
+                        CmpText(text = systemId.toString(), fontSize = DsType.BodyMedium, color = secondary, maxLines = 1)
+                    }
+                }
                 CmpRow(
                     modifier = Modifier.padding(top = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -129,10 +217,24 @@ internal fun DeviceRow(
                     CmpText(
                         text = item.address,
                         fontSize = DsType.BodyMedium,
-                        color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                        color = secondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                }
+                val meta = deviceMeta(item)
+                val mode = item.notableMode
+                if (meta != null || mode != null) {
+                    CmpRow(
+                        modifier = Modifier.padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        mode?.let { ModeBadge(it) }
+                        meta?.let {
+                            CmpText(text = it, fontSize = DsType.LabelSmall, color = secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
                 }
             }
             CmpIcon(

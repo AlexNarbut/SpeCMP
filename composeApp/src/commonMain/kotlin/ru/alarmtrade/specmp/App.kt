@@ -25,8 +25,10 @@ import ru.alarmtrade.specmp.core.specialist.specialistModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
 import ru.alarmtrade.specmp.core.ui.view.image.rememberCmpImageLoader
+import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
+import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
 import ru.alarmtrade.specmp.feature.device.selection.ui.di.deviceSelectionUiModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
@@ -78,6 +80,8 @@ fun App(
                 add(deviceSelectionModule)
                 add(deviceInteractionModule)
                 add(deviceSelectionUiModule)
+                add(deviceInteractionUiModule)
+                add(advancedMountModule)
             }
         )
     }) {

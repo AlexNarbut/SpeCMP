@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="advanced_mount_title">Расширенный монтаж</string>
+    <string name="advanced_mount_a11y_back">Назад</string>
+    <string name="advanced_mount_device_firmware">Прошивка %1$s</string>
+    <string name="advanced_mount_section_settings">Настройки блока</string>
+    <string name="advanced_mount_section_firmware_update">Проверка прошивки</string>
+    <string name="advanced_mount_section_voice_firmware">Голосовая прошивка</string>
+    <string name="advanced_mount_section_bypass_learning">Обучение обходчика</string>
+    <string name="advanced_mount_section_clone">Клон</string>
+    <string name="advanced_mount_section_dynamic_devices">Беспроводные устройства</string>
+    <string name="advanced_mount_section_stub">Раздел в разработке.</string>
+</resources>

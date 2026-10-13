@@ -13,6 +13,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.DeviceConnectionType
 import ru.alarmtrade.specmp.core.specialist.supportedConnectionTypes
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
@@ -100,8 +101,9 @@ class SpecialistDeviceScanRepository(
     private fun BleDeviceScanResult.toDomain(): ScannedDevice.Ble = ScannedDevice.Ble(
         id = uuid,
         name = name,
-        deviceType = deviceType.name,
+        kind = deviceType.name.toDeviceKind(),
         mode = state.toMode(),
+        rssi = rssi,
         hasDeviceBond = hasDeviceBond,
         // На iOS SDK не знает о сопряжении с телефоном (isBonded всегда false).
         hasPhoneBond = hasPhoneBond.takeIf { platformType() == PlatformType.ANDROID },
@@ -111,8 +113,27 @@ class SpecialistDeviceScanRepository(
         id = id,
         name = productName,
         manufacturerName = manufacturerName,
+        vendorId = vendorId,
         productId = productId,
+        // После опроса блока SDK кладёт в id его systemId (до опроса — путь устройства).
+        systemId = id.toLongOrNull(),
+        firmwareVersion = firmwareVersion?.takeIf { it.isNotBlank() },
+        isBootMode = isBootMode,
     )
+
+    // По имени, а не по enum SDK: набор типов растёт, неизвестные уходят в OTHER.
+    private fun String.toDeviceKind(): DeviceKind = when {
+        this == "ALARM" || this == "MICROBOT" -> DeviceKind.ALARM
+        startsWith("TAG_") || this == "BAND" || this == "WATCH" -> DeviceKind.TAG
+        startsWith("RELAY_") -> DeviceKind.RELAY
+        this == "IMMOBILIZER" -> DeviceKind.IMMOBILIZER
+        startsWith("REMOTE_CONTROL") -> DeviceKind.REMOTE_CONTROL
+        startsWith("NAV_") || startsWith("GPS_NAV") -> DeviceKind.NAVIGATION
+        endsWith("_SENSOR") || this == "TPMS" -> DeviceKind.SENSOR
+        startsWith("DOOR_MODULE") || startsWith("RHM") || this == "DI_04" || this == "RF_MODULE" ||
+            this == "VS_MODULE" || this == "HOOD_LOCK" || this == "SIREN" -> DeviceKind.MODULE
+        else -> DeviceKind.OTHER
+    }
 
     private fun ScannedDeviceState.toMode(): ScannedDeviceMode = when (this) {
         ScannedDeviceState.BOOT -> ScannedDeviceMode.BOOT

@@ -15,6 +15,6 @@ interface DeviceConnectionRepository {
     /** Открыть USB-сессию с устройством; поток статусов до терминального. */
     fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>>
 
-    /** Закрыть временные сессии сканера/подключения (BLE и USB). */
+    /** Закрыть текущую сессию (в SDK она одна на BLE и USB). */
     suspend fun closeSessions()
 }

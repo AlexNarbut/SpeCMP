@@ -1,14 +1,15 @@
 package ru.alarmtrade.specmp.feature.device.interaction.di
 
 import org.koin.dsl.module
-import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistAlarmDeviceRepository
+import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.AlarmDeviceRepository
+import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 /**
- * Koin-модуль логической фичи `feature/device/interaction`.
- * Репозитории-фасады сессии подключения и работы с alarm-устройством;
+ * Koin-модуль логической фичи `feature/device/interaction`: подключение, сессия и устройство.
  * SDK-интеракторы берутся из `core/specialist`.
  */
 val deviceInteractionModule = module {
@@ -20,9 +21,8 @@ val deviceInteractionModule = module {
             usbConnectorInteractor = { get() },
         )
     }
-    single<AlarmDeviceRepository> {
-        SpecialistAlarmDeviceRepository(
-            bluetoothAlarmDeviceInteractor = { get() },
-        )
+    single<DeviceSessionRepository> {
+        SpecialistDeviceSessionRepository(bluetoothAlarmDeviceInteractor = { get() })
     }
+    single { DeviceSession(get(), get(), get(appScopeQualifier)) }
 }
