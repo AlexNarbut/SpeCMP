@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -29,14 +30,39 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
 
     override fun linkState(): Flow<DeviceLinkState> = link
 
-    override suspend fun readDevice(): Response<AlarmDevice> =
-        readResults[minOf(readCount++, readResults.lastIndex)]
+    override suspend fun readDevice(): Response<AlarmDevice> {
+        if (readHangs) {
+            readCount++
+            awaitCancellation()
+        }
+        return readResults[minOf(readCount++, readResults.lastIndex)]
+    }
 
     var imei: Response<String> = Response.Success("351756051523999")
     var bootModeCount = 0
         private set
 
     override suspend fun readImei(): Response<String> = imei
+
+    var reconnectCount = 0
+        private set
+
+    var disconnectCount = 0
+        private set
+
+    /** true — readDevice «зависает» (блок не ответил). */
+    var readHangs = false
+
+    override suspend fun disconnect(): Response<Unit> {
+        disconnectCount++
+        link.value = DeviceLinkState.DISCONNECTED
+        return Response.Success(Unit)
+    }
+
+    override suspend fun reconnect(): Response<Unit> {
+        reconnectCount++
+        return Response.Success(Unit)
+    }
 
     override suspend fun setBootMode(): Response<Unit> {
         bootModeCount++

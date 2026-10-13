@@ -35,6 +35,8 @@ class DeviceInteractionViewModelTest {
         override fun linkState(): Flow<DeviceLinkState> = link
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
         override suspend fun readImei(): Response<String> = Response.Success("")
+        override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
+        override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun setBootMode(): Response<Unit> = Response.Success(Unit)
     }
     private var closeCount = 0

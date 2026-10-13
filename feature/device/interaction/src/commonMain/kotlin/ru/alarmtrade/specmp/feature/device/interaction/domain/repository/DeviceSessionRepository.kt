@@ -20,6 +20,12 @@ interface DeviceSessionRepository {
     /** Прочитать IMEI GSM-модема блока. */
     suspend fun readImei(): Response<String>
 
+    /** Повторно подключиться к блоку текущей сессии после обрыва (ошибка — например, выключен Bluetooth). */
+    suspend fun reconnect(): Response<Unit>
+
+    /** Разорвать соединение текущей сессии, не закрывая её (дальше — переподключение). */
+    suspend fun disconnect(): Response<Unit>
+
     /** Перевести блок в режим загрузчика (для прошивки); блок переподключится уже в загрузчике. */
     suspend fun setBootMode(): Response<Unit>
 }

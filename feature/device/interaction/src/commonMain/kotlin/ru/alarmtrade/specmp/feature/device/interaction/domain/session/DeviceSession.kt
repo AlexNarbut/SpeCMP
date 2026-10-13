@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,16 +31,31 @@ class DeviceSession(
     appScope: CoroutineScope,
 ) {
 
+    private val _transport = MutableStateFlow<ConnectionTransport?>(null)
+
+    /** Транспорт текущей сессии (для текстов «связь потеряна»); `null` — сессии нет. */
+    val transport: StateFlow<ConnectionTransport?> = _transport.asStateFlow()
+
     val state: StateFlow<DeviceSessionState> = sessionRepository.linkState()
         .distinctUntilChanged()
         .transformLatest { link ->
             when (link) {
                 DeviceLinkState.CONNECTING -> emit(DeviceSessionState.Connecting)
-                DeviceLinkState.DISCONNECTED -> emit(DeviceSessionState.Disconnected)
+                DeviceLinkState.DISCONNECTED -> {
+                    emit(DeviceSessionState.Disconnected)
+                    reconnectWhileBle()
+                }
                 DeviceLinkState.READY -> {
                     emit(DeviceSessionState.Connecting)
                     val device = readWithRetry(sessionRepository)
-                    emit(if (device != null) DeviceSessionState.Ready(device) else DeviceSessionState.Disconnected)
+                    if (device != null) {
+                        emit(DeviceSessionState.Ready(device))
+                    } else {
+                        // Связь «готова», а блок не отвечает (сессия SDK не поднялась) — рвём соединение:
+                        // связь уйдёт в DISCONNECTED, и BLE-цикл переподключения подключится заново.
+                        emit(DeviceSessionState.Disconnected)
+                        sessionRepository.disconnect()
+                    }
                 }
             }
         }
@@ -48,11 +64,6 @@ class DeviceSession(
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0),
             initialValue = DeviceSessionState.Connecting,
         )
-
-    private val _transport = MutableStateFlow<ConnectionTransport?>(null)
-
-    /** Транспорт текущей сессии (для текстов «связь потеряна»); `null` — сессии нет. */
-    val transport: StateFlow<ConnectionTransport?> = _transport.asStateFlow()
 
     /** Сессия создана поиском устройства — запомнить, по какому транспорту. */
     fun attach(transport: ConnectionTransport) {
@@ -79,9 +90,22 @@ class DeviceSession(
         return response
     }
 
+    /**
+     * BLE: SDK после обрыва (блок выключен или далеко, выключили Bluetooth) сам не переподключается — повторяем
+     * подключение, пока связь не вернётся. Цикл отменяется сменой состояния связи (`transformLatest`) и отпиской;
+     * после [close] транспорта нет — повторов тоже нет. USB переподключает SDK при повторном подключении кабеля.
+     */
+    private suspend fun reconnectWhileBle() {
+        while (_transport.value == ConnectionTransport.BLE) {
+            delay(RECONNECT_INTERVAL_MILLIS)
+            if (_transport.value == ConnectionTransport.BLE) sessionRepository.reconnect()
+        }
+    }
+
     private suspend fun readWithRetry(repository: DeviceSessionRepository): AlarmDevice? {
         repeat(READ_ATTEMPTS) { attempt ->
-            val response = repository.readDevice()
+            // Без тайм-аута зависший запрос (блок не ответил) держал бы «Подключение…» бесконечно.
+            val response = withTimeoutOrNull(READ_TIMEOUT_MILLIS) { repository.readDevice() }
             if (response is Response.Success) return response.value
             if (attempt < READ_ATTEMPTS - 1) delay(READ_RETRY_DELAY_MILLIS)
         }
@@ -92,6 +116,8 @@ class DeviceSession(
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val READ_ATTEMPTS = 3
         const val READ_RETRY_DELAY_MILLIS = 500L
+        const val READ_TIMEOUT_MILLIS = 10_000L
         const val BOOT_MODE_RETRY_DELAY_MILLIS = 3_000L
+        const val RECONNECT_INTERVAL_MILLIS = 1_000L
     }
 }

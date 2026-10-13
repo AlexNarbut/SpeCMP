@@ -41,6 +41,28 @@ class DeviceSessionTest {
 
         assertEquals(DeviceSessionState.Disconnected, session.state.value)
         assertEquals(3, repository.readCount)
+        // Блок не прочитался при «готовой» связи — соединение разорвано, дальше переподключение.
+        assertEquals(1, repository.disconnectCount)
+    }
+
+    @Test
+    fun `hanging device read times out and drops the link for reconnect`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply { readHangs = true }
+        val session = DeviceSession(repository, FakeDeviceConnectionRepository(), backgroundScope)
+        session.attach(ConnectionTransport.BLE)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        assertEquals(DeviceSessionState.Connecting, session.state.value)
+
+        // 3 попытки × 10 с тайм-аута + паузы.
+        advanceTimeBy(31_500)
+        runCurrent()
+
+        assertEquals(3, repository.readCount)
+        assertEquals(1, repository.disconnectCount)
+        assertEquals(DeviceSessionState.Disconnected, session.state.value)
+        advanceTimeBy(1_001)
+        assertTrue(repository.reconnectCount >= 1)
     }
 
     @Test
@@ -128,5 +150,49 @@ class DeviceSessionTest {
 
         assertTrue(response is Response.Success)
         assertEquals(2, repository.bootModeCount)
+    }
+
+    @Test
+    fun `ble link loss is reconnected until the link returns`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = DeviceSession(repository, FakeDeviceConnectionRepository(), backgroundScope)
+        session.attach(ConnectionTransport.BLE)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+
+        repository.link.value = DeviceLinkState.DISCONNECTED
+        advanceTimeBy(3_001)
+        assertEquals(3, repository.reconnectCount)
+
+        repository.link.value = DeviceLinkState.READY
+        runCurrent()
+        advanceTimeBy(3_001)
+        assertEquals(3, repository.reconnectCount)
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+    }
+
+    @Test
+    fun `usb link loss is not reconnected by the app`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.DISCONNECTED)
+        val session = DeviceSession(repository, FakeDeviceConnectionRepository(), backgroundScope)
+        session.attach(ConnectionTransport.USB)
+        backgroundScope.launch { session.state.collect {} }
+
+        advanceTimeBy(9_001)
+        assertEquals(0, repository.reconnectCount)
+    }
+
+    @Test
+    fun `closed session is not reconnected`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.DISCONNECTED)
+        val session = DeviceSession(repository, FakeDeviceConnectionRepository(), backgroundScope)
+        session.attach(ConnectionTransport.BLE)
+        backgroundScope.launch { session.state.collect {} }
+        advanceTimeBy(1_001)
+        assertEquals(1, repository.reconnectCount)
+
+        session.close()
+        advanceTimeBy(9_001)
+        assertEquals(1, repository.reconnectCount)
     }
 }

@@ -26,7 +26,7 @@ android-targetSdk = "36"
 
 alarmtrade-common-specialist = "1.2.0"
 alarmtrade-common = "2.0.42"
-alarmtrade-permissions = "2.0.96"
+alarmtrade-permissions = "2.0.97"
 
 [libraries]
 

@@ -59,6 +59,8 @@ class AdvancedMountRootViewModelTest {
         override fun linkState(): Flow<DeviceLinkState> = link
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
         override suspend fun readImei(): Response<String> = Response.Success("351756051523999")
+        override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
+        override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun setBootMode(): Response<Unit> {
             bootModeCount++
             return Response.Success(Unit)

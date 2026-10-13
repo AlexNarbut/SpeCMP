@@ -84,6 +84,24 @@ class SpecialistDeviceSessionRepository(
         }
     }
 
+    override suspend fun reconnect(): Response<Unit> {
+        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
+            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
+        return when (val response = interactor.connectUseCase.execute()) {
+            is SpecialistResponse.Success -> Response.Success(Unit)
+            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
+        }
+    }
+
+    override suspend fun disconnect(): Response<Unit> {
+        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
+            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
+        return when (val response = interactor.disconnectUseCase.execute()) {
+            is SpecialistResponse.Success -> Response.Success(Unit)
+            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
+        }
+    }
+
     override suspend fun setBootMode(): Response<Unit> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
             ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
