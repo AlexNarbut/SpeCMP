@@ -59,6 +59,8 @@ val specialistModule = module {
     single { get<SpecialistApp>().bluetoothConnectorInteractor }
     single { get<SpecialistApp>().usbConnectorInteractor }
     single { get<SpecialistApp>().bluetoothAlarmDeviceInteractor }
+    // Проверка подключённого блока на сервере (feature/advanced-mount).
+    single { get<SpecialistApp>().verificationInteractor }
     singleOf(::SpecialistAccountRepository) bind AccountRepository::class
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }

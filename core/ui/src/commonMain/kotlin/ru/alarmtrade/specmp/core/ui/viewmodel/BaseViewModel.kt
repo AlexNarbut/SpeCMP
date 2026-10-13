@@ -9,6 +9,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.koin.mp.KoinPlatformTools
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -20,6 +23,7 @@ import kotlin.coroutines.CoroutineContext
  *   в контекст добавлен [CoroutineExceptionHandler], который логирует необработанные
  *   исключения. Ожидаемые ошибки сюда не попадают — они возвращаются как
  *   `Response.Error` и живут в state; handler ловит именно сбои контракта.
+ * - Жизненный цикл приложения — колбэки [onAppForeground] / [onAppBackground] (модуль `core:lifecycle`).
  */
 abstract class BaseViewModel : ViewModel() {
 
@@ -30,6 +34,30 @@ abstract class BaseViewModel : ViewModel() {
     }
 
     private val proceedMutex = Mutex()
+
+    init {
+        // Жизненный цикл приложения (core:lifecycle) из Koin; без DI (unit-тесты) — без событий.
+        // Подписка приостанавливается сразу, колбэки не вызываются до конца конструктора наследника.
+        KoinPlatformTools.defaultContext().getOrNull()?.getOrNull<AppLifecycle>()?.let { appLifecycle ->
+            viewModelScope.launch(exceptionHandler) {
+                appLifecycle.events.collect { event ->
+                    when (event) {
+                        AppLifecycleEvent.FOREGROUND -> onAppForeground()
+                        AppLifecycleEvent.BACKGROUND -> onAppBackground()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Приложение вернулось на передний план (из системных настроек, другого приложения, после блокировки).
+     * Не вызывается при открытии экрана и при возврате с другого экрана приложения.
+     */
+    protected open fun onAppForeground() = Unit
+
+    /** Приложение ушло в фон. */
+    protected open fun onAppBackground() = Unit
 
     protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job {
         return viewModelScope.launch(exceptionHandler, block = block)

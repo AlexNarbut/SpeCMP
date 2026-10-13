@@ -92,7 +92,7 @@ class SpecialistDeviceConnectionRepository(
 
     private fun ConnectingStatus.toDomain(): DeviceConnectionState = when (this) {
         ConnectingStatus.CONNECTED -> DeviceConnectionState.CONNECTED
-        ConnectingStatus.BONDING_FAIL,
+        ConnectingStatus.BONDING_FAIL -> DeviceConnectionState.PAIRING_REQUIRED
         ConnectingStatus.CONNECTING_FAIL,
         ConnectingStatus.FAIL,
         -> DeviceConnectionState.FAILED

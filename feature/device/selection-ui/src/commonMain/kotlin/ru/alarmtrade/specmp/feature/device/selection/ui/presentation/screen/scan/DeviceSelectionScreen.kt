@@ -77,7 +77,7 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_empt
 import specmp.feature.device.selection_ui.generated.resources.device_select_empty_usb_3
 import specmp.feature.device.selection_ui.generated.resources.device_select_empty_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_error_bond_remove_device
-import specmp.feature.device.selection_ui.generated.resources.device_select_error_bond_remove_phone
+import specmp.feature.device.selection_ui.generated.resources.device_select_error_pairing_required
 import specmp.feature.device.selection_ui.generated.resources.device_select_error_connection_failed
 import specmp.feature.device.selection_ui.generated.resources.device_select_fix_android_1
 import specmp.feature.device.selection_ui.generated.resources.device_select_fix_android_2
@@ -107,20 +107,16 @@ internal fun DeviceSelectionScreen(
     val snackbarHostState = rememberCmpSnackbarHostState()
 
     val connectionFailedText = stringResource(Res.string.device_select_error_connection_failed)
-    val bondRemovePhoneText = stringResource(Res.string.device_select_error_bond_remove_phone)
-    val bondRemoveDeviceText = stringResource(Res.string.device_select_error_bond_remove_device)
+    val boundToAnotherPhoneText = stringResource(Res.string.device_select_error_bond_remove_device)
+    val pairingRequiredText = stringResource(Res.string.device_select_error_pairing_required)
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
             is ScanDeviceEffect.SessionCreated -> onSessionCreated(effect.device)
             ScanDeviceEffect.Close -> onClose()
             ScanDeviceEffect.ConnectionFailed -> snackbarHostState.showSnackbar(connectionFailedText)
-            is ScanDeviceEffect.BondConflict -> snackbarHostState.showSnackbar(
-                when (effect.kind) {
-                    BondConflictKind.REMOVE_FROM_PHONE -> bondRemovePhoneText
-                    BondConflictKind.REMOVE_FROM_DEVICE -> bondRemoveDeviceText
-                },
-            )
+            ScanDeviceEffect.BoundToAnotherPhone -> snackbarHostState.showSnackbar(boundToAnotherPhoneText)
+            ScanDeviceEffect.PairingRequired -> snackbarHostState.showSnackbar(pairingRequiredText)
         }
     }
 
@@ -130,20 +126,60 @@ internal fun DeviceSelectionScreen(
         onBackCompleted = viewModel::onBack,
     )
 
+    DeviceSelectionContent(
+        state = state,
+        actions = DeviceSelectionActions(
+            onBack = viewModel::onBack,
+            onRetry = viewModel::onRetry,
+            onOpenSettings = viewModel::openAppSettings,
+            onOpenBluetoothSettings = viewModel::onOpenBluetoothSettings,
+            onOpenLocationSettings = viewModel::onOpenLocationSettings,
+            onSelect = viewModel::onDeviceSelected,
+            onConnectSelected = viewModel::onConnectSelected,
+            onCancelConnecting = viewModel::onCancelConnecting,
+        ),
+        snackbarHost = { CmpSnackbarHost(snackbarHostState) },
+    )
+}
+
+/** Действия экрана поиска (stateless-контент получает их от VM или заглушки в галерее состояний). */
+internal class DeviceSelectionActions(
+    val onBack: () -> Unit = {},
+    val onRetry: () -> Unit = {},
+    val onOpenSettings: () -> Unit = {},
+    val onOpenBluetoothSettings: () -> Unit = {},
+    val onOpenLocationSettings: () -> Unit = {},
+    /** Выбор устройства; `isSplit` — широкая раскладка (выбор без подключения). */
+    val onSelect: (DeviceUiItem, Boolean) -> Unit = { _, _ -> },
+    val onConnectSelected: () -> Unit = {},
+    val onCancelConnecting: () -> Unit = {},
+)
+
+/**
+ * Stateless-контент экрана поиска: адаптивная раскладка (compact / stacked / split).
+ * [initialInfoId] — открытый диалог «⋮» (для галереи состояний).
+ */
+@Composable
+internal fun DeviceSelectionContent(
+    state: ScanDeviceState,
+    actions: DeviceSelectionActions,
+    snackbarHost: @Composable () -> Unit = {},
+    initialInfoId: String? = null,
+) {
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
                 title = { CmpText(text = stringResource(Res.string.device_select_title_screen)) },
                 navigationIcon = {
                     CmpIconButton(
-                        onClick = viewModel::onBack,
+                        onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
                         contentDescription = stringResource(Res.string.device_select_a11y_back),
                     )
                 },
             )
         },
-        snackbarHost = { CmpSnackbarHost(snackbarHostState) },
+        snackbarHost = snackbarHost,
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = when {
@@ -154,13 +190,14 @@ internal fun DeviceSelectionScreen(
             StepBody(
                 state = state,
                 layout = layout,
-                onRetry = viewModel::onRetry,
-                onOpenSettings = viewModel::openAppSettings,
-                onOpenBluetoothSettings = viewModel::onOpenBluetoothSettings,
-                onOpenLocationSettings = viewModel::onOpenLocationSettings,
-                onSelect = { item -> viewModel.onDeviceSelected(item, isSplit = layout == DeviceSelectLayout.Split) },
-                onConnectSelected = viewModel::onConnectSelected,
-                onCancelConnecting = viewModel::onCancelConnecting,
+                onRetry = actions.onRetry,
+                onOpenSettings = actions.onOpenSettings,
+                onOpenBluetoothSettings = actions.onOpenBluetoothSettings,
+                onOpenLocationSettings = actions.onOpenLocationSettings,
+                onSelect = { item -> actions.onSelect(item, layout == DeviceSelectLayout.Split) },
+                onConnectSelected = actions.onConnectSelected,
+                onCancelConnecting = actions.onCancelConnecting,
+                initialInfoId = initialInfoId,
             )
         }
     }
@@ -177,6 +214,7 @@ private fun StepBody(
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelected: () -> Unit,
     onCancelConnecting: () -> Unit,
+    initialInfoId: String?,
 ) {
     when (val step = state.step) {
         ScanStep.PermissionCheck -> CenterState { CmpCircularProgressIndicator() }
@@ -203,7 +241,7 @@ private fun StepBody(
             onRetry = onRetry,
         )
 
-        ScanStep.Scanning -> ScanningOrListBody(state, layout, onSelect, onConnectSelected)
+        ScanStep.Scanning -> ScanningOrListBody(state, layout, onSelect, onConnectSelected, initialInfoId)
 
         is ScanStep.Connecting -> ConnectingBody(step.device, onCancelConnecting)
     }
@@ -334,13 +372,14 @@ private fun ScanningOrListBody(
     layout: DeviceSelectLayout,
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelected: () -> Unit,
+    initialInfoId: String?,
 ) {
     when (val devices = state.devices) {
         is LCEState.Content ->
             if (devices.content.isEmpty()) {
                 if (state.searchedLongEnough) EmptyBody(state.supportedTransports) else ScanningBody()
             } else {
-                DeviceList(devices.content, state.selectedId, layout, onSelect, onConnectSelected)
+                DeviceList(devices.content, state.selectedId, layout, onSelect, onConnectSelected, initialInfoId)
             }
 
         is LCEState.Error -> ScanningBody()
@@ -356,6 +395,7 @@ private fun DeviceList(
     layout: DeviceSelectLayout,
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelected: () -> Unit,
+    initialInfoId: String?,
 ) {
     val tileSize = if (layout == DeviceSelectLayout.Compact) 44 else 48
 
@@ -384,7 +424,7 @@ private fun DeviceList(
     }
 
     // Диалог «⋮» — состояние экрана; устройство пропало из списка — диалог закрывается сам.
-    var infoId by rememberSaveable { mutableStateOf<String?>(null) }
+    var infoId by rememberSaveable { mutableStateOf(initialInfoId) }
     devices.firstOrNull { it.id == infoId }?.let { info ->
         DeviceInfoDialog(
             item = info,

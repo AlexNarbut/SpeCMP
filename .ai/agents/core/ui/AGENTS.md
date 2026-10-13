@@ -1,7 +1,7 @@
 # core/ui
 
 - Область: `LCEState`, `BaseViewModel`, тема, `Cmp*` UI Kit и механизм SideEffect в `core/ui`.
-- `BaseViewModel` (`ru.alarmtrade.specmp.core.ui.viewmodel`) — базовый класс всех ViewModel: protected `logger` (тег = имя класса), `safeLaunch` с `CoroutineExceptionHandler` для необработанных исключений и `executeWithProceedLock` (skip-дубль по умолчанию / сериализация при `needSkipAnother = false`; от отмены не защищает). Фичи наследуются от него, а не от androidx `ViewModel`; правила — `docs/patterns.md`.
+- `BaseViewModel` (`ru.alarmtrade.specmp.core.ui.viewmodel`) — базовый класс всех ViewModel: protected `logger` (тег = имя класса), `safeLaunch` с `CoroutineExceptionHandler` для необработанных исключений и `executeWithProceedLock` (skip-дубль по умолчанию / сериализация при `needSkipAnother = false`; от отмены не защищает) и колбэки жизненного цикла приложения `onAppForeground()`/`onAppBackground()` (из `core/lifecycle`, `AppLifecycle` берётся из Koin; без Koin — не вызываются). Фичи наследуются от него, а не от androidx `ViewModel`; правила — `docs/patterns.md`.
 - Перед изменениями читай `docs/ui-kit.md`; для Compose-поведения и производительности — `docs/compose-best-prac.md`.
 - Если меняешь публичные компоненты, тему или соглашения UI Kit, обновляй `docs/ui-kit.md`.
 - Если фиче не хватает возможностей `Cmp*` (полноэкранный режим, загрузка по url, роль текста) — расширяй компонент здесь и обновляй карту в `docs/ui-kit.md`; обход через Material3/Foundation/Coil в фиче не допускается.

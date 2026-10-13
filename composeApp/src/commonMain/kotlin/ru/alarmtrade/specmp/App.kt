@@ -15,6 +15,7 @@ import ru.alarmtrade.specmp.core.network.di.networkModule
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
+import ru.alarmtrade.specmp.core.lifecycle.appLifecycleModule
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.core.localization.LocalAppLocale
 import ru.alarmtrade.specmp.core.localization.applyAppLocale
@@ -73,6 +74,7 @@ fun App(
                 add(specialistModule)
                 overrideAppVersionModule?.let { add(it) }
                 add(permissionsModule())
+                add(appLifecycleModule)
                 add(authStateModule)
                 add(loginModule)
                 add(mainModule)

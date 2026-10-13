@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.map
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
@@ -52,20 +53,44 @@ class SpecialistDeviceSessionRepository(
             is SpecialistResponse.Success -> response.value
             is SpecialistResponse.Error -> return Response.Error(response.exception, response.message)
         }
-        // Возможности — со справочника по имени системы; недоступны — меню по умолчанию (как в старом приложении).
-        val features = when (val response = interactor.getAlarmDeviceAppFeaturesUseCase.execute()) {
-            is SpecialistResponse.Success -> response.value.mapNotNullTo(mutableSetOf()) { it.toDomain() }
-            is SpecialistResponse.Error -> emptySet()
+        // Возможности — со справочника по имени системы; не прочитаны — `null` (блок не поддерживается).
+        val sdkFeatures = when (val response = interactor.getAlarmDeviceAppFeaturesUseCase.execute()) {
+            is SpecialistResponse.Success -> response.value
+            is SpecialistResponse.Error -> null
         }
+        val can = information.canInformation
         return Response.Success(
             AlarmDevice(
                 systemId = information.systemId,
                 systemName = information.systemName,
                 firmwareVersion = information.firmwareVersion,
                 mode = if (information.operationMode.isBoot()) DeviceOperationMode.BOOT else DeviceOperationMode.MAIN,
-                features = features,
+                features = sdkFeatures?.mapNotNullTo(mutableSetOf()) { it.toDomain() },
+                can = if (sdkFeatures?.contains(SubsystemFeature.SINGLE_CAN_FIRMWARE) == true) {
+                    CanInfo(firmwareVersion = can.canVersionString, code = can.canCode, isFactory = can.isFactoryCanSettings)
+                } else {
+                    null
+                },
             ),
         )
+    }
+
+    override suspend fun readImei(): Response<String> {
+        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
+            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
+        return when (val response = interactor.getModemInformationUseCase.execute()) {
+            is SpecialistResponse.Success -> Response.Success(response.value.imei)
+            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
+        }
+    }
+
+    override suspend fun setBootMode(): Response<Unit> {
+        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
+            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
+        return when (val response = interactor.setAlarmDeviceBootModeUseCase.execute()) {
+            is SpecialistResponse.Success -> Response.Success(Unit)
+            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
+        }
     }
 
     private fun ConnectionState.toDomain(): DeviceLinkState = when (this) {

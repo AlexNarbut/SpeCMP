@@ -94,6 +94,6 @@
 
     <!-- Ошибки / эффекты -->
     <string name="device_select_error_connection_failed">Не удалось подключиться к устройству</string>
-    <string name="device_select_error_bond_remove_phone">Устройство сопряжено с телефоном. Удалите его в настройках Bluetooth телефона и повторите.</string>
+    <string name="device_select_error_pairing_required">Переведите блок в режим сопряжения и повторите подключение.</string>
     <string name="device_select_error_bond_remove_device">Устройство сопряжено с другим телефоном. Сбросьте сопряжение на приборе и повторите.</string>
 </resources>

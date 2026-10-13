@@ -37,6 +37,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            // Жизненный цикл приложения для BaseViewModel (onAppForeground / onAppBackground)
+            implementation(project(":core:lifecycle"))
 
             // Compose — api so consumers get runtime/foundation/ui transitively
             // material3 stays implementation: feature modules use Cmp* wrappers, not material3 directly

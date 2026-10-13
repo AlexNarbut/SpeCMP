@@ -4,9 +4,24 @@ package ru.alarmtrade.specmp.feature.device.interaction.domain.model
 data class AlarmDevice(
     val systemId: Long,
     val systemName: String,
+    /** Версия ПО как её отдаёт блок (`VER3.57`) — так же уходит на сервер; для показа — [displayFirmwareVersion]. */
     val firmwareVersion: String,
     val mode: DeviceOperationMode,
-    val features: Set<DeviceFeature>,
+    /** Возможности блока; `null` — прочитать не удалось (блок не поддерживается приложением). */
+    val features: Set<DeviceFeature>?,
+    /** CAN-прошивка — только у блоков с отдельной CAN-прошивкой (`SINGLE_CAN_FIRMWARE`). */
+    val can: CanInfo?,
+)
+
+/** Версия ПО для показа: без префикса `VER` (`3.57`). */
+val AlarmDevice.displayFirmwareVersion: String
+    get() = firmwareVersion.removePrefix("VER").trim()
+
+/** Данные CAN-прошивки блока. [isFactory] — заводские CAN-настройки: сначала нужно прошить блок под CAN-код авто. */
+data class CanInfo(
+    val firmwareVersion: String,
+    val code: String,
+    val isFactory: Boolean,
 )
 
 /** Режим работы блока: рабочий или загрузчик (прошивка/восстановление). */

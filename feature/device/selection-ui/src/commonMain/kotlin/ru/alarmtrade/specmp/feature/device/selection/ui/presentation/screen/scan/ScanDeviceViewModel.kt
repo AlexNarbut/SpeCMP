@@ -37,6 +37,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDev
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
@@ -59,6 +60,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class ScanDeviceViewModel(
     private val scanRepository: DeviceScanRepository,
     private val connectionRepository: DeviceConnectionRepository,
+    private val deviceSession: DeviceSession,
     private val permissionsProvider: PermissionsProvider,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
@@ -68,6 +70,10 @@ class ScanDeviceViewModel(
 
     private val _step = MutableStateFlow<ScanStep>(ScanStep.PermissionCheck)
     private val _selectedId = MutableStateFlow<String?>(null)
+
+    // Перезапуск поиска без смены шага (Scanning → Scanning при возврате в приложение):
+    // StateFlow шага одинаковые значения склеивает, поэтому нужен отдельный счётчик.
+    private val _scanRestarts = MutableStateFlow(0)
 
     private val _effect = sideEffectFlow<ScanDeviceEffect>()
     val effect: SharedFlow<ScanDeviceEffect> = _effect.asSharedFlow()
@@ -84,7 +90,7 @@ class ScanDeviceViewModel(
         emit(true)
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    private val devicesState: Flow<LCEState<List<DeviceUiItem>>> = _step
+    private val devicesState: Flow<LCEState<List<DeviceUiItem>>> = combine(_step, _scanRestarts) { step, _ -> step }
         .flatMapLatest { step ->
             if (step !is ScanStep.Scanning) {
                 flowOf(LCEState.None())
@@ -145,6 +151,20 @@ class ScanDeviceViewModel(
     }
 
     /** Открыть системные настройки приложения (случай «отклонено навсегда»). */
+    /**
+     * Вернулись в приложение (из системных настроек, шторки на iOS, другого приложения): заново проверяем
+     * разрешения, Bluetooth и геолокацию и запускаем поиск. Подключение и системный запрос разрешения не трогаем.
+     */
+    override fun onAppForeground() {
+        when (_step.value) {
+            is ScanStep.Connecting, ScanStep.PermissionCheck -> Unit
+            else -> safeLaunch {
+                checkPermissionAndProceed()
+                _scanRestarts.update { it + 1 }
+            }
+        }
+    }
+
     fun openAppSettings() {
         permissionsProvider.getController().openAppSettings()
     }
@@ -240,7 +260,9 @@ class ScanDeviceViewModel(
                 }
                 if (connected) {
                     // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
-                    _effect.tryEmit(ScanDeviceEffect.SessionCreated(item.toConnectedDevice()))
+                    val device = item.toConnectedDevice()
+                    deviceSession.attach(device.transport)
+                    _effect.tryEmit(ScanDeviceEffect.SessionCreated(device))
                 } else {
                     connectionRepository.closeSessions()
                     _step.update { ScanStep.Scanning }
@@ -249,16 +271,32 @@ class ScanDeviceViewModel(
         }
     }
 
+    /**
+     * Сопряжение решает SDK: блок в режиме сопряжения — сам снимет старое сопряжение на телефоне и сопряжётся заново;
+     * блок «забыл» телефон — снимет старое сопряжение и вернёт [DeviceConnectionState.PAIRING_REQUIRED].
+     * До подключения отсекаем только блок, привязанный к другому телефону: с этого телефона это не исправить.
+     */
     private suspend fun connectBle(item: DeviceUiItem.Ble): Boolean {
-        if (item.mode != ScannedDeviceMode.BOOT) {
-            val bondConflict = bondConflictOf(item)
-            if (bondConflict != null) {
-                _effect.tryEmit(ScanDeviceEffect.BondConflict(bondConflict))
+        if (item.mode != ScannedDeviceMode.BOOT && item.isBoundToAnotherPhone()) {
+            _effect.tryEmit(ScanDeviceEffect.BoundToAnotherPhone)
+            return false
+        }
+        repeat(BLE_CONNECT_ATTEMPTS) { attempt ->
+            val result = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal()
+            if (result is Response.Success && result.value == DeviceConnectionState.PAIRING_REQUIRED) {
+                // Старое сопряжение снято; если блок уже в режиме сопряжения — повторяем, SDK сопряжётся заново.
+                if (attempt < BLE_CONNECT_ATTEMPTS - 1 && scannedMode(item.id) == ScannedDeviceMode.PAIRING) return@repeat
+                _effect.tryEmit(ScanDeviceEffect.PairingRequired)
                 return false
             }
+            return result.isConnected()
         }
-        return connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal().isConnected()
+        return false
     }
+
+    /** Режим блока по последним данным поиска. */
+    private fun scannedMode(id: String): ScannedDeviceMode? =
+        ((state.value.devices as? LCEState.Content)?.content?.firstOrNull { it.id == id } as? DeviceUiItem.Ble)?.mode
 
     private suspend fun connectUsb(item: DeviceUiItem.Usb): Boolean =
         connectionRepository.connectUsb(item.id).awaitTerminal().isConnected()
@@ -287,15 +325,8 @@ class ScanDeviceViewModel(
         this is Response.Error ||
             (this is Response.Success && value != DeviceConnectionState.CONNECTING)
 
-    private fun bondConflictOf(item: DeviceUiItem.Ble): BondConflictKind? {
-        // Платформа не сообщает о сопряжении с телефоном (iOS) — конфликт не определить.
-        val hasPhoneBond = item.hasPhoneBond ?: return null
-        return when {
-            item.hasDeviceBond == hasPhoneBond -> null
-            hasPhoneBond -> BondConflictKind.REMOVE_FROM_PHONE
-            else -> BondConflictKind.REMOVE_FROM_DEVICE
-        }
-    }
+    /** У блока есть контекст (привязка), а телефон с ним не сопряжён. iOS не сообщает о сопряжении — не определить. */
+    private fun DeviceUiItem.Ble.isBoundToAnotherPhone(): Boolean = hasDeviceBond && hasPhoneBond == false
 
     private fun mergeDevices(
         bleResponse: Response<List<ScannedDevice.Ble>>,
@@ -314,6 +345,8 @@ class ScanDeviceViewModel(
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val CONNECT_TIMEOUT_MILLIS = 20_000L
+        /** Повтор BLE-подключения после снятия старого сопряжения, если блок в режиме сопряжения. */
+        const val BLE_CONNECT_ATTEMPTS = 2
         // Поиск внутри connect (до 8 с) + сопряжение с подтверждением (до ~30 с) + соединение (20 с).
         const val CONNECT_FLOW_TIMEOUT_MILLIS = 60_000L
         const val EMPTY_HINT_DELAY_MILLIS = 10_000L

@@ -30,6 +30,7 @@ dependencyResolutionManagement {
 }
 // Core modules
 include(":core:common")
+include(":core:lifecycle")
 include(":core:localization")
 include(":core:network")
 include(":core:permissions")

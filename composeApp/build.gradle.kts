@@ -34,6 +34,7 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:network"))
             implementation(project(":core:permissions"))
+            implementation(project(":core:lifecycle"))
             implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
 

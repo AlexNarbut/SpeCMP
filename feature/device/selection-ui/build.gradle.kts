@@ -54,8 +54,15 @@ kotlin {
         }
 
         commonTest.dependencies {
+            // Фейковый жизненный цикл приложения для BaseViewModel (Koin)
+            implementation(project(":core:lifecycle"))
+            implementation(libs.koin.core)
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+        }
+        // Галерея состояний экранов (headless-рендер в PNG)
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs)
         }
     }
 }

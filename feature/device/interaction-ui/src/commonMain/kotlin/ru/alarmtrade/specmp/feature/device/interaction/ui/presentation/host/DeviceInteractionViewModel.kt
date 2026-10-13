@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -30,6 +31,7 @@ class DeviceInteractionViewModel(
                 device = (session as? DeviceSessionState.Ready)?.device ?: previous.device,
             )
         }
+        .combine(deviceSession.transport) { state, transport -> state.copy(transport = transport ?: state.transport) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, DeviceInteractionState())
 
     private val _effect = sideEffectFlow<DeviceInteractionEffect>()

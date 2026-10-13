@@ -7,14 +7,43 @@ import kotlin.test.assertEquals
 class MountSectionTest {
 
     @Test
-    fun `sections follow device features in menu order`() {
-        val sections = setOf(DeviceFeature.CLONE, DeviceFeature.SETTINGS, DeviceFeature.FIRMWARE_UPDATE).toSections()
-
-        assertEquals(listOf(MountSection.SETTINGS, MountSection.FIRMWARE_UPDATE, MountSection.CLONE), sections)
+    fun `all features give all sections in grid order`() {
+        assertEquals(MountSection.entries.toList(), DeviceFeature.entries.toSet().toSections())
     }
 
     @Test
-    fun `unknown features give default menu`() {
-        assertEquals(listOf(MountSection.FIRMWARE_UPDATE), emptySet<DeviceFeature>().toSections())
+    fun `settings feature brings tech requests and community maps`() {
+        assertEquals(
+            listOf(
+                MountSection.FIRMWARE_UPDATE,
+                MountSection.SETTINGS,
+                MountSection.TECH_REQUESTS,
+                MountSection.SUPPORT_CHAT,
+                MountSection.COMMUNITY_MAPS,
+                MountSection.VEHICLES,
+            ),
+            setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS).toSections(),
+        )
+    }
+
+    @Test
+    fun `chat and vehicles are always shown`() {
+        assertEquals(listOf(MountSection.SUPPORT_CHAT, MountSection.VEHICLES), emptySet<DeviceFeature>().toSections())
+    }
+
+    @Test
+    fun `unread features give the unsupported fallback`() {
+        assertEquals(
+            listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
+            (null as Set<DeviceFeature>?).toSections(),
+        )
+    }
+
+    @Test
+    fun `only device configuration sections need CAN firmware`() {
+        assertEquals(
+            setOf(MountSection.SETTINGS, MountSection.BYPASS_LEARNING, MountSection.CLONE, MountSection.DYNAMIC_DEVICES),
+            MountSection.entries.filter { it.needsCan }.toSet(),
+        )
     }
 }

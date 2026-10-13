@@ -94,6 +94,6 @@
 
     <!-- Errors / effects -->
     <string name="device_select_error_connection_failed">Failed to connect to the device</string>
-    <string name="device_select_error_bond_remove_phone">The device is paired with the phone. Remove it in the phone\'s Bluetooth settings and try again.</string>
+    <string name="device_select_error_pairing_required">Put the unit into pairing mode and connect again.</string>
     <string name="device_select_error_bond_remove_device">The device is paired with another phone. Reset the pairing on the unit and try again.</string>
 </resources>

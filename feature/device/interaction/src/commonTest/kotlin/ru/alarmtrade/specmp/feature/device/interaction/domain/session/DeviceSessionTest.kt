@@ -8,10 +8,12 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DeviceSessionTest {
@@ -101,5 +103,30 @@ class DeviceSessionTest {
         repository.link.value = DeviceLinkState.READY
         advanceUntilIdle()
         assertEquals(listOf(testDevice.systemId, testDevice.systemId), readyCalls)
+    }
+
+    @Test
+    fun `transport is attached by the scan and cleared on close`() = runTest(UnconfinedTestDispatcher()) {
+        val connection = FakeDeviceConnectionRepository()
+        val session = DeviceSession(FakeDeviceSessionRepository(), connection, backgroundScope)
+        assertNull(session.transport.value)
+
+        session.attach(ConnectionTransport.USB)
+        assertEquals(ConnectionTransport.USB, session.transport.value)
+
+        session.close()
+        assertNull(session.transport.value)
+        assertEquals(1, connection.closeCount)
+    }
+
+    @Test
+    fun `boot mode command is repeated after a pause`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository()
+        val session = DeviceSession(repository, FakeDeviceConnectionRepository(), backgroundScope)
+
+        val response = session.setBootMode()
+
+        assertTrue(response is Response.Success)
+        assertEquals(2, repository.bootModeCount)
     }
 }

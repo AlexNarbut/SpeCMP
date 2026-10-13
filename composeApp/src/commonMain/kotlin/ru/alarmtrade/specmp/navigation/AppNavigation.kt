@@ -110,7 +110,10 @@ private fun AuthedNavGraph() {
             entry<AdvancedMountRoute> { _ ->
                 // Обёртка interaction: дисконнект — экран поверх графа, выход — закрытие сессии.
                 DeviceInteractionHost(onExit = { backStack.popSafe() }) { _, onExit ->
-                    AdvancedMountNavGraph(onExit = onExit)
+                    AdvancedMountNavGraph(
+                        onExit = onExit,
+                        onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
+                    )
                 }
             }
         }

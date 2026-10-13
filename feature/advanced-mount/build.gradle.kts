@@ -49,11 +49,19 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+
+            // Specialist SDK: проверка блока, чат (непрочитанные, удалённый монтаж), возможности пользователя
+            implementation(libs.alarmtrade.specialist)
+            implementation(libs.kermit)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+        }
+        // Галерея состояний экранов (headless-рендер в PNG, см. docs task device-ui-design-update)
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs)
         }
     }
 }

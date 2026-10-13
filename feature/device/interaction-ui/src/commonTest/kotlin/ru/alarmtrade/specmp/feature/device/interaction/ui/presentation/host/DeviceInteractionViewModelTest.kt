@@ -28,12 +28,14 @@ import kotlin.test.assertEquals
 class DeviceInteractionViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
-    private val device = AlarmDevice(1, "DX4G", "3.57", DeviceOperationMode.MAIN, emptySet())
+    private val device = AlarmDevice(1, "DX4G", "3.57", DeviceOperationMode.MAIN, emptySet(), can = null)
 
     private val link = MutableStateFlow(DeviceLinkState.READY)
     private val sessionRepository = object : DeviceSessionRepository {
         override fun linkState(): Flow<DeviceLinkState> = link
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
+        override suspend fun readImei(): Response<String> = Response.Success("")
+        override suspend fun setBootMode(): Response<Unit> = Response.Success(Unit)
     }
     private var closeCount = 0
     private val connectionRepository = object : DeviceConnectionRepository {

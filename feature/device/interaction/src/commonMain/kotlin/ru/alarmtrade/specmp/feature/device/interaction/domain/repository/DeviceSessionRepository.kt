@@ -16,4 +16,10 @@ interface DeviceSessionRepository {
 
     /** Прочитать информацию и возможности подключённого блока. */
     suspend fun readDevice(): Response<AlarmDevice>
+
+    /** Прочитать IMEI GSM-модема блока. */
+    suspend fun readImei(): Response<String>
+
+    /** Перевести блок в режим загрузчика (для прошивки); блок переподключится уже в загрузчике. */
+    suspend fun setBootMode(): Response<Unit>
 }

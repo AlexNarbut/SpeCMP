@@ -17,6 +17,7 @@ val testDevice = AlarmDevice(
     firmwareVersion = "3.57",
     mode = DeviceOperationMode.MAIN,
     features = emptySet(),
+    can = null,
 )
 
 class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DISCONNECTED) : DeviceSessionRepository {
@@ -30,6 +31,17 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
 
     override suspend fun readDevice(): Response<AlarmDevice> =
         readResults[minOf(readCount++, readResults.lastIndex)]
+
+    var imei: Response<String> = Response.Success("351756051523999")
+    var bootModeCount = 0
+        private set
+
+    override suspend fun readImei(): Response<String> = imei
+
+    override suspend fun setBootMode(): Response<Unit> {
+        bootModeCount++
+        return Response.Success(Unit)
+    }
 }
 
 class FakeDeviceConnectionRepository : DeviceConnectionRepository {

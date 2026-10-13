@@ -15,8 +15,10 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.AdvancedMountRootScreen
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.ExtraStubScreen
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.SectionStubScreen
 
 /** App-level ключ расширенного монтажа (регистрируется в графе `composeApp`). */
@@ -26,14 +28,19 @@ data object AdvancedMountRoute : NavKey
 @Serializable
 internal data object AdvancedMountRootRoute : NavKey
 
+/** Раздел; [deviceTitle] — «Название  ID» блока для подзаголовка. */
 @Serializable
-internal data class AdvancedMountSectionRoute(val section: MountSection) : NavKey
+internal data class AdvancedMountSectionRoute(val section: MountSection, val deviceTitle: String) : NavKey
+
+@Serializable
+internal data class AdvancedMountExtraRoute(val extra: MountExtra, val deviceTitle: String) : NavKey
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(AdvancedMountRootRoute::class, AdvancedMountRootRoute.serializer())
             subclass(AdvancedMountSectionRoute::class, AdvancedMountSectionRoute.serializer())
+            subclass(AdvancedMountExtraRoute::class, AdvancedMountExtraRoute.serializer())
         }
     }
 }
@@ -44,9 +51,10 @@ private val navConfig = SavedStateConfiguration {
  * экраном дисконнекта, после переподключения — тот же экран.
  *
  * @param onExit выход из монтажа (с корня) — закрывает сессию через обёртку.
+ * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
  */
 @Composable
-fun AdvancedMountNavGraph(onExit: () -> Unit) {
+fun AdvancedMountNavGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
 
     NavDisplay(
@@ -62,12 +70,17 @@ fun AdvancedMountNavGraph(onExit: () -> Unit) {
         entryProvider = entryProvider<NavKey> {
             entry<AdvancedMountRootRoute> { _ ->
                 AdvancedMountRootScreen(
-                    onSectionClick = { section -> backStack.navigateSafe(AdvancedMountSectionRoute(section)) },
+                    onSectionClick = { section, title -> backStack.navigateSafe(AdvancedMountSectionRoute(section, title)) },
+                    onExtraClick = { extra, title -> backStack.navigateSafe(AdvancedMountExtraRoute(extra, title)) },
+                    onOpenSupportChat = onOpenSupportChat,
                     onBack = onExit,
                 )
             }
             entry<AdvancedMountSectionRoute> { key ->
-                SectionStubScreen(section = key.section, onBack = { backStack.popSafe() })
+                SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = { backStack.popSafe() })
+            }
+            entry<AdvancedMountExtraRoute> { key ->
+                ExtraStubScreen(extra = key.extra, deviceTitle = key.deviceTitle, onBack = { backStack.popSafe() })
             }
         },
     )

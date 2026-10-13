@@ -7,6 +7,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import org.jetbrains.compose.resources.painterResource
+import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_btn_disconnect
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_ble
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_usb
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_waiting
+import specmp.feature.device.interaction_ui.generated.resources.device_link_lost
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,38 +87,43 @@ fun DeviceInteractionHost(
         if (device != null && device.mode == DeviceOperationMode.MAIN) {
             content(device, viewModel::onExit)
         }
-        when {
-            state.session !is DeviceSessionState.Ready -> StatusScreen(
-                status = if (state.session is DeviceSessionState.Disconnected) Status.Disconnected else Status.Connecting,
-                deviceName = device?.systemName,
-                onExit = viewModel::onExit,
+        val status = when {
+            state.session !is DeviceSessionState.Ready ->
+                if (state.session is DeviceSessionState.Disconnected) DeviceStatus.Disconnected else DeviceStatus.Connecting
+            device?.mode == DeviceOperationMode.BOOT -> DeviceStatus.Boot
+            else -> null
+        }
+        status?.let {
+            NavigationBackHandler(
+                state = rememberNavigationEventState(NavigationEventInfo.None),
+                onBackCompleted = viewModel::onExit,
             )
-
-            device?.mode == DeviceOperationMode.BOOT -> StatusScreen(
-                status = Status.Boot,
-                deviceName = device.systemName,
-                onExit = viewModel::onExit,
-            )
+            DeviceStatusContent(status = it, transport = state.transport, deviceName = device?.systemName, onExit = viewModel::onExit)
         }
     }
 }
 
-private enum class Status { Connecting, Disconnected, Boot }
+/** Состояние связи, при котором поверх дочернего flow показывается экран обёртки. */
+internal enum class DeviceStatus { Connecting, Disconnected, Boot }
 
-/** Полноэкранное состояние поверх дочернего flow; перехватывает «Назад» (регистрируется позже content). */
+/**
+ * Stateless-экран состояния поверх дочернего flow («Назад» перехватывает [DeviceInteractionHost]).
+ * Потеря связи — по макету: иллюстрация, текст по транспорту, ожидание возврата блока, «Отключиться».
+ */
 @Composable
-private fun StatusScreen(status: Status, deviceName: String?, onExit: () -> Unit) {
-    NavigationBackHandler(
-        state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = onExit,
-    )
+internal fun DeviceStatusContent(
+    status: DeviceStatus,
+    transport: ConnectionTransport?,
+    deviceName: String?,
+    onExit: () -> Unit,
+) {
     val colors = cmpThemeColors()
     // Surface поверх content перехватывает касания.
     CmpSurface(modifier = Modifier.fillMaxSize(), color = colors.background) {
         CmpScaffold(
             topBar = {
                 CmpTopAppBar(
-                    title = { CmpText(text = deviceName.orEmpty()) },
+                    title = { CmpText(text = if (status == DeviceStatus.Disconnected) "" else deviceName.orEmpty()) },
                     navigationIcon = {
                         CmpIconButton(
                             onClick = onExit,
@@ -118,32 +134,19 @@ private fun StatusScreen(status: Status, deviceName: String?, onExit: () -> Unit
                 )
             },
         ) { padding ->
-            CmpBox(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            CmpBox(
+                modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
+                contentAlignment = Alignment.Center,
+            ) {
                 CmpColumn(
                     modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    val isError = status != Status.Connecting
-                    CmpSurface(
-                        modifier = Modifier.size(96.dp),
-                        shape = CircleShape,
-                        color = if (isError) colors.errorContainer else colors.primaryContainer,
-                    ) {
-                        CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CmpIcon(
-                                icon = when (status) {
-                                    Status.Connecting -> CmpIcons.Link
-                                    Status.Disconnected -> CmpIcons.BluetoothDisabled
-                                    Status.Boot -> CmpIcons.Memory
-                                },
-                                contentDescription = null,
-                                tint = if (isError) colors.onErrorContainer else colors.onPrimaryContainer,
-                            )
-                        }
-                    }
                     when (status) {
-                        Status.Connecting -> {
+                        DeviceStatus.Disconnected -> DisconnectedBody(transport, onExit)
+                        DeviceStatus.Connecting -> {
+                            StatusHero(CmpIcons.Link, error = false)
                             CmpText(
                                 text = stringResource(Res.string.device_interaction_connecting_title),
                                 fontSize = 24.sp,
@@ -151,25 +154,59 @@ private fun StatusScreen(status: Status, deviceName: String?, onExit: () -> Unit
                                 textAlign = TextAlign.Center,
                             )
                             CmpCircularProgressIndicator()
+                            CmpButton(text = stringResource(Res.string.device_interaction_btn_exit), onClick = onExit, modifier = Modifier.fillMaxWidth())
                         }
-
-                        Status.Disconnected -> Headline(
-                            title = stringResource(Res.string.device_interaction_disconnected_title),
-                            subtitle = stringResource(Res.string.device_interaction_disconnected_subtitle),
-                        )
-
-                        Status.Boot -> Headline(
-                            title = stringResource(Res.string.device_interaction_boot_title),
-                            subtitle = stringResource(Res.string.device_interaction_boot_subtitle),
-                        )
+                        DeviceStatus.Boot -> {
+                            StatusHero(CmpIcons.Memory, error = true)
+                            Headline(
+                                title = stringResource(Res.string.device_interaction_boot_title),
+                                subtitle = stringResource(Res.string.device_interaction_boot_subtitle),
+                            )
+                            CmpButton(text = stringResource(Res.string.device_interaction_btn_exit), onClick = onExit, modifier = Modifier.fillMaxWidth())
+                        }
                     }
-                    CmpButton(
-                        text = stringResource(Res.string.device_interaction_btn_exit),
-                        onClick = onExit,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit) {
+    val colors = cmpThemeColors()
+    CmpIcon(
+        painter = painterResource(Res.drawable.device_link_lost),
+        contentDescription = null,
+        modifier = Modifier.size(width = 176.dp, height = 121.dp),
+        tint = colors.primary,
+    )
+    Headline(
+        title = stringResource(Res.string.device_interaction_disconnected_title),
+        subtitle = stringResource(
+            when (transport) {
+                ConnectionTransport.USB -> Res.string.device_interaction_disconnected_usb
+                ConnectionTransport.BLE -> Res.string.device_interaction_disconnected_ble
+                null -> Res.string.device_interaction_disconnected_subtitle
+            },
+        ),
+    )
+    CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
+        CmpText(text = stringResource(Res.string.device_interaction_waiting), fontSize = 14.sp, color = colors.onSurfaceVariant)
+    }
+    CmpOutlinedButton(text = stringResource(Res.string.device_interaction_btn_disconnect), onClick = onExit, modifier = Modifier.fillMaxWidth())
+}
+
+@Composable
+private fun StatusHero(icon: CmpIcons, error: Boolean) {
+    val colors = cmpThemeColors()
+    CmpSurface(
+        modifier = Modifier.size(96.dp),
+        shape = CircleShape,
+        color = if (error) colors.errorContainer else colors.primaryContainer,
+    ) {
+        CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CmpIcon(icon = icon, contentDescription = null, tint = if (error) colors.onErrorContainer else colors.onPrimaryContainer)
         }
     }
 }

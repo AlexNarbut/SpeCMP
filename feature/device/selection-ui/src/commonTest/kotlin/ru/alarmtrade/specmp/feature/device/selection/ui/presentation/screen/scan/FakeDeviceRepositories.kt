@@ -13,7 +13,10 @@ import ru.alarmtrade.permissions.common.PermissionsController
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
@@ -45,23 +48,29 @@ class FakeDeviceConnectionRepository(
     private val hangAfterStates: Boolean = false,
     // Задержка до первого статуса: реальное подключение не мгновенно.
     private val connectDelayMillis: Long = 0,
+    // Статусы по попыткам BLE-подключения (последняя повторяется); по умолчанию — [states].
+    private val bleAttempts: List<List<Response<DeviceConnectionState>>> = listOf(states),
 ) : DeviceConnectionRepository {
     var closeCount: Int = 0
         private set
     val closed: Boolean get() = closeCount > 0
+    var bleConnectCount: Int = 0
+        private set
 
-    override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
-        connectFlow()
+    override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> {
+        val attemptStates = bleAttempts[minOf(bleConnectCount++, bleAttempts.lastIndex)]
+        return connectFlow(attemptStates)
+    }
 
-    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = connectFlow()
+    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = connectFlow(states)
 
     override suspend fun closeSessions() {
         closeCount++
     }
 
-    private fun connectFlow(): Flow<Response<DeviceConnectionState>> = flow {
+    private fun connectFlow(attemptStates: List<Response<DeviceConnectionState>>): Flow<Response<DeviceConnectionState>> = flow {
         if (connectDelayMillis > 0) delay(connectDelayMillis)
-        emitAll(states.asFlow())
+        emitAll(attemptStates.asFlow())
         if (hangAfterStates) awaitCancellation()
     }
 }
@@ -87,4 +96,12 @@ class FakePermissionsProvider(
     override fun openLocationSettings() = Unit
     override fun openBluetoothSettings() = Unit
     // observe* методов больше нет в интерфейсе (revert реактивного варианта)
+}
+
+/** Сессия устройства в тестах поиска не подписывается — связь и чтение блока не нужны. */
+class FakeDeviceSessionRepository : DeviceSessionRepository {
+    override fun linkState(): Flow<DeviceLinkState> = flowOf(DeviceLinkState.DISCONNECTED)
+    override suspend fun readDevice(): Response<AlarmDevice> = Response.Error(IllegalStateException("not used"))
+    override suspend fun readImei(): Response<String> = Response.Error(IllegalStateException("not used"))
+    override suspend fun setBootMode(): Response<Unit> = Response.Error(IllegalStateException("not used"))
 }

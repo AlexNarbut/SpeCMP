@@ -2,9 +2,13 @@
 <resources>
     <string name="device_interaction_a11y_back">Back</string>
     <string name="device_interaction_connecting_title">Connecting to the unit…</string>
-    <string name="device_interaction_disconnected_title">Connection lost</string>
+    <string name="device_interaction_disconnected_title">No connection to the device</string>
     <string name="device_interaction_disconnected_subtitle">Check the unit power and the cable or Bluetooth. You will return to the same screen once the connection is restored.</string>
     <string name="device_interaction_boot_title">Unit in bootloader mode</string>
     <string name="device_interaction_boot_subtitle">Working with the bootloader is not available yet. Exit and reconnect the unit in normal mode.</string>
     <string name="device_interaction_btn_exit">Exit</string>
+    <string name="device_interaction_disconnected_usb">Check the USB connection to the device.</string>
+    <string name="device_interaction_disconnected_ble">The unit is off or too far away. Move the phone closer and check the unit power.</string>
+    <string name="device_interaction_waiting">Waiting for the unit to return…</string>
+    <string name="device_interaction_btn_disconnect">Disconnect</string>
 </resources>

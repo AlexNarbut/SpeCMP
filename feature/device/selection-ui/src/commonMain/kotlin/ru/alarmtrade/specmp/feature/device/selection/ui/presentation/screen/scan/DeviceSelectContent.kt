@@ -339,7 +339,11 @@ internal fun DeviceRow(
             DeviceTile(icon = item.typeIcon, sizeDp = tileSize)
             CmpColumn(modifier = Modifier.weight(1f)) {
                 val secondary = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
-                CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                CmpRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     // У BLE имя занимает всю ширину, чтобы RSSI прижался вправо.
                     CmpText(
                         text = item.name,
