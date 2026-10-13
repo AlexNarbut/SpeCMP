@@ -54,19 +54,27 @@
 
     <!-- Detail (master-detail) -->
     <string name="device_select_detail_empty">Select a device from the list</string>
-    <string name="device_select_detail_label_link">Connection</string>
     <string name="device_select_detail_label_mac">MAC address</string>
     <string name="device_select_btn_connect">Connect</string>
-    <string name="device_select_detail_label_type">Type</string>
+    <string name="device_select_detail_label_type">Device type</string>
     <string name="device_select_detail_label_mode">Mode</string>
-    <string name="device_select_detail_label_signal">Signal</string>
+    <string name="device_select_detail_label_signal">Signal strength</string>
     <string name="device_select_detail_label_manufacturer">Manufacturer</string>
     <string name="device_select_detail_label_vid_pid">VID:PID</string>
-    <string name="device_select_detail_label_system_id">Unit ID</string>
-    <string name="device_select_detail_label_firmware">Firmware</string>
+    <string name="device_select_detail_label_system_id">Unit ID (systemId)</string>
+    <string name="device_select_detail_label_firmware">Firmware version</string>
+    <string name="device_select_detail_label_uuid">ID (UUID)</string>
+    <string name="device_select_detail_label_phone_bond">Paired with phone</string>
+    <string name="device_select_detail_label_device_bond">Device has a bond</string>
+    <string name="device_select_detail_note_ble">Firmware version and unit ID are not broadcast — they appear after connecting.</string>
+    <string name="device_select_value_yes">yes</string>
+    <string name="device_select_value_no">no</string>
+    <string name="device_select_value_unknown">unknown</string>
+    <string name="device_select_btn_close">Close</string>
+    <string name="device_select_a11y_device_info">Device information</string>
+    <string name="device_select_mode_normal">Normal</string>
     <string name="device_select_rssi">%1$d dBm</string>
-    <string name="device_select_firmware_short">Firmware %1$s</string>
-    <string name="device_select_mode_main">Normal</string>
+    <string name="device_select_mode_main">Operating</string>
     <string name="device_select_mode_pairing">Pairing</string>
     <string name="device_select_mode_boot">Bootloader</string>
     <string name="device_select_kind_alarm">Alarm</string>
@@ -81,6 +89,7 @@
 
     <!-- Transport -->
     <string name="device_select_transport_ble">Bluetooth</string>
+    <string name="device_select_transport_ble_short">BLE</string>
     <string name="device_select_transport_usb">USB</string>
 
     <!-- Errors / effects -->

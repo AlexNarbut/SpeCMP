@@ -15,7 +15,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceM
 sealed interface DeviceUiItem {
     val id: String
     val name: String
-    /** Вторая строка: MAC для BLE, «производитель · VID:PID» для USB. */
+    /** Вторая строка карточки рядом с чипом: MAC для BLE; systemId для USB, без него — `HID · VID:PID`. */
     val address: String
     val transport: DeviceTransport
     val typeIcon: CmpIcons
@@ -70,18 +70,20 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
 
     is ScannedDevice.Usb -> {
         val vidPid = "${vendorId.toHex4()}:${productId.toHex4()}"
-        val manufacturer = manufacturerName.ifBlank { "USB" }
         DeviceUiItem.Usb(
             id = id,
             name = name,
-            address = "$manufacturer · $vidPid",
-            manufacturerName = manufacturer,
+            address = systemId?.toString() ?: "HID · $vidPid",
+            manufacturerName = manufacturerName.ifBlank { "USB" },
             vidPid = vidPid,
             systemId = systemId,
-            firmwareVersion = firmwareVersion,
+            firmwareVersion = firmwareVersion?.toDisplayFirmware(),
             isBootMode = isBootMode,
         )
     }
 }
+
+/** Блок отдаёт версию как `VER3.57` — показываем `3.57`. */
+internal fun String.toDisplayFirmware(): String = removePrefix("VER").trim()
 
 private fun Int.toHex4(): String = toString(16).uppercase().padStart(4, '0')

@@ -17,6 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -47,17 +50,8 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
-import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import specmp.feature.device.selection_ui.generated.resources.Res
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_type
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_mode
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_signal
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_manufacturer
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_vid_pid
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_system_id
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_firmware
-import specmp.feature.device.selection_ui.generated.resources.device_select_rssi
 import specmp.feature.device.selection_ui.generated.resources.device_select_a11y_back
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_adapter_title
@@ -71,8 +65,6 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_conn
 import specmp.feature.device.selection_ui.generated.resources.device_select_denied_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_denied_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_detail_empty
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_link
-import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_mac
 import specmp.feature.device.selection_ui.generated.resources.device_select_empty_ble_1
 import specmp.feature.device.selection_ui.generated.resources.device_select_empty_ble_2
 import specmp.feature.device.selection_ui.generated.resources.device_select_empty_ble_3
@@ -365,7 +357,7 @@ private fun DeviceList(
     onSelect: (DeviceUiItem) -> Unit,
     onConnectSelected: () -> Unit,
 ) {
-    val tileSize = if (layout == DeviceSelectLayout.Compact) 56 else 60
+    val tileSize = if (layout == DeviceSelectLayout.Compact) 44 else 48
 
     if (layout == DeviceSelectLayout.Split) {
         val colors = cmpThemeColors()
@@ -380,7 +372,7 @@ private fun DeviceList(
                     modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    devices.forEach { d -> DeviceRow(d, d.id == selectedId, { onSelect(d) }, tileSize) }
+                    devices.forEach { d -> DeviceRow(d, d.id == selectedId, { onSelect(d) }, tileSize, showMode = true) }
                 }
             }
             CmpSurface(modifier = Modifier.width(1.dp).fillMaxHeight(), color = colors.outlineVariant) {}
@@ -391,6 +383,19 @@ private fun DeviceList(
         return
     }
 
+    // Диалог «⋮» — состояние экрана; устройство пропало из списка — диалог закрывается сам.
+    var infoId by rememberSaveable { mutableStateOf<String?>(null) }
+    devices.firstOrNull { it.id == infoId }?.let { info ->
+        DeviceInfoDialog(
+            item = info,
+            onDismiss = { infoId = null },
+            onConnect = {
+                infoId = null
+                onSelect(info)
+            },
+        )
+    }
+
     val maxW = if (layout == DeviceSelectLayout.Stacked) 620.dp else Int.MAX_VALUE.dp
     CmpColumn(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 16.dp),
@@ -399,7 +404,9 @@ private fun DeviceList(
         CmpColumn(modifier = Modifier.widthIn(max = maxW).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             ListHeader(devices.size)
             CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                devices.forEach { d -> DeviceRow(d, selected = false, { onSelect(d) }, tileSize) }
+                devices.forEach { d ->
+                    DeviceRow(d, selected = false, onClick = { onSelect(d) }, tileSize = tileSize, onInfo = { infoId = d.id })
+                }
             }
         }
     }
@@ -459,43 +466,11 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
             DeviceTile(icon = device.typeIcon, sizeDp = 128)
             CmpColumn(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CmpText(text = device.name, fontSize = DsType.HeadlineSmall, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
-                CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    TransportChip(transport = device.transport)
-                    device.notableMode?.let { ModeBadge(it) }
-                }
+                TransportChip(transport = device.transport)
             }
-            CmpColumn(modifier = Modifier.fillMaxWidth()) {
-                DetailRow(
-                    label = stringResource(Res.string.device_select_detail_label_link),
-                    value = transportLabel(device.transport),
-                )
-                when (device) {
-                    is DeviceUiItem.Ble -> {
-                        DetailRow(stringResource(Res.string.device_select_detail_label_mac), device.address)
-                        DetailRow(stringResource(Res.string.device_select_detail_label_type), kindLabel(device.kind))
-                        DetailRow(stringResource(Res.string.device_select_detail_label_mode), modeLabel(device.mode))
-                        DetailRow(
-                            stringResource(Res.string.device_select_detail_label_signal),
-                            stringResource(Res.string.device_select_rssi, device.rssi),
-                        )
-                    }
-                    is DeviceUiItem.Usb -> {
-                        device.systemId?.let {
-                            DetailRow(stringResource(Res.string.device_select_detail_label_system_id), it.toString())
-                        }
-                        DetailRow(stringResource(Res.string.device_select_detail_label_manufacturer), device.manufacturerName)
-                        DetailRow(stringResource(Res.string.device_select_detail_label_vid_pid), device.vidPid)
-                        device.firmwareVersion?.let {
-                            DetailRow(stringResource(Res.string.device_select_detail_label_firmware), it)
-                        }
-                        device.isBootMode?.let { isBoot ->
-                            DetailRow(
-                                stringResource(Res.string.device_select_detail_label_mode),
-                                modeLabel(if (isBoot) ScannedDeviceMode.BOOT else ScannedDeviceMode.BASE),
-                            )
-                        }
-                    }
-                }
+            DeviceInfoRows(deviceInfoRows(device))
+            deviceInfoNote(device)?.let {
+                CmpText(text = it, fontSize = DsType.LabelSmall, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
             }
             IconedButton(
                 text = stringResource(Res.string.device_select_btn_connect),
@@ -504,18 +479,5 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    val colors = cmpThemeColors()
-    CmpRow(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CmpText(text = label, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
-        CmpText(text = value, fontSize = DsType.BodyMedium, fontWeight = FontWeight.Medium, textAlign = TextAlign.End)
     }
 }

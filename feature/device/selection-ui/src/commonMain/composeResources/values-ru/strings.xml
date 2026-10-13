@@ -54,18 +54,26 @@
 
     <!-- Карточка (master-detail) -->
     <string name="device_select_detail_empty">Выберите устройство из списка</string>
-    <string name="device_select_detail_label_link">Связь</string>
     <string name="device_select_detail_label_mac">MAC-адрес</string>
     <string name="device_select_btn_connect">Подключить</string>
-    <string name="device_select_detail_label_type">Тип</string>
+    <string name="device_select_detail_label_type">Тип устройства</string>
     <string name="device_select_detail_label_mode">Режим</string>
-    <string name="device_select_detail_label_signal">Сигнал</string>
+    <string name="device_select_detail_label_signal">Уровень сигнала</string>
     <string name="device_select_detail_label_manufacturer">Производитель</string>
     <string name="device_select_detail_label_vid_pid">VID:PID</string>
-    <string name="device_select_detail_label_system_id">ID блока</string>
-    <string name="device_select_detail_label_firmware">Прошивка</string>
+    <string name="device_select_detail_label_system_id">ID блока (systemId)</string>
+    <string name="device_select_detail_label_firmware">Версия прошивки</string>
+    <string name="device_select_detail_label_uuid">ID (UUID)</string>
+    <string name="device_select_detail_label_phone_bond">Связь с телефоном</string>
+    <string name="device_select_detail_label_device_bond">Связь у самого устройства</string>
+    <string name="device_select_detail_note_ble">Версия прошивки и ID блока в эфире не передаются — они появятся после подключения.</string>
+    <string name="device_select_value_yes">есть</string>
+    <string name="device_select_value_no">нет</string>
+    <string name="device_select_value_unknown">не определён</string>
+    <string name="device_select_btn_close">Закрыть</string>
+    <string name="device_select_a11y_device_info">Информация об устройстве</string>
+    <string name="device_select_mode_normal">Обычный</string>
     <string name="device_select_rssi">%1$d dBm</string>
-    <string name="device_select_firmware_short">Прошивка %1$s</string>
     <string name="device_select_mode_main">Рабочий</string>
     <string name="device_select_mode_pairing">Сопряжение</string>
     <string name="device_select_mode_boot">Загрузчик</string>
@@ -81,6 +89,7 @@
 
     <!-- Транспорт -->
     <string name="device_select_transport_ble">Bluetooth</string>
+    <string name="device_select_transport_ble_short">BLE</string>
     <string name="device_select_transport_usb">USB</string>
 
     <!-- Ошибки / эффекты -->
