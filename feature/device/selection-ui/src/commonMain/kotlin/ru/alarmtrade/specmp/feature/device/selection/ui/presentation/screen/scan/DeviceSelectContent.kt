@@ -210,7 +210,7 @@ internal fun deviceInfoNote(item: DeviceUiItem): String? = when (item) {
     is DeviceUiItem.Usb -> null
 }
 
-/** Поля устройства с разделителями. */
+/** Поля устройства с разделителями: подпись всегда целиком в одну строку, значение занимает остаток и переносится. */
 @Composable
 internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
     val colors = cmpThemeColors()
@@ -220,11 +220,12 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
-                CmpText(text = row.label, modifier = Modifier.weight(1f), fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
+                CmpText(text = row.label, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
                 CmpText(
                     text = row.value,
+                    modifier = Modifier.weight(1f),
                     fontSize = DsType.BodyMedium,
                     fontWeight = if (row.strong) FontWeight.Bold else FontWeight.Medium,
                     color = if (row.strong) colors.primary else colors.onSurface,
