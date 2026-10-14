@@ -28,7 +28,9 @@
 
     <!-- Сканирование -->
     <string name="device_select_scanning_title">Поиск устройств…</string>
-    <string name="device_select_scanning_subtitle">Держите блок сигнализации рядом. Bluetooth и USB-устройства появятся в списке автоматически.</string>
+    <string name="device_select_scanning_subtitle_ble">Держите устройство Pandora рядом. Bluetooth-устройства появятся в списке автоматически.</string>
+    <string name="device_select_scanning_subtitle_usb">Подключите устройство Pandora кабелем. USB-устройства появятся в списке автоматически.</string>
+    <string name="device_select_scanning_subtitle_both">Держите устройство Pandora рядом. Bluetooth- и USB-устройства появятся в списке автоматически.</string>
 
     <!-- Пусто -->
     <string name="device_select_empty_title">Устройства не найдены</string>

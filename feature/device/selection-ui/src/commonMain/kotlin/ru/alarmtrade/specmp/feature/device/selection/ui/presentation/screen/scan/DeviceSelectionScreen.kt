@@ -86,7 +86,9 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_list
 import specmp.feature.device.selection_ui.generated.resources.device_select_list_searching_short
 import specmp.feature.device.selection_ui.generated.resources.device_select_location_subtitle
 import specmp.feature.device.selection_ui.generated.resources.device_select_location_title
-import specmp.feature.device.selection_ui.generated.resources.device_select_scanning_subtitle
+import specmp.feature.device.selection_ui.generated.resources.device_select_scanning_subtitle_ble
+import specmp.feature.device.selection_ui.generated.resources.device_select_scanning_subtitle_both
+import specmp.feature.device.selection_ui.generated.resources.device_select_scanning_subtitle_usb
 import specmp.feature.device.selection_ui.generated.resources.device_select_scanning_title
 import specmp.feature.device.selection_ui.generated.resources.device_select_searching
 import specmp.feature.device.selection_ui.generated.resources.device_select_title_screen
@@ -310,10 +312,17 @@ private fun OffStateBody(
 }
 
 @Composable
-private fun ScanningBody() {
+private fun ScanningBody(supportedTransports: Set<DeviceTransport>) {
+    val hasBle = supportedTransports.contains(DeviceTransport.BLE)
+    val hasUsb = supportedTransports.contains(DeviceTransport.USB)
+    val (icon, subtitle) = when {
+        hasBle && !hasUsb -> CmpIcons.BluetoothSearching to Res.string.device_select_scanning_subtitle_ble
+        hasUsb && !hasBle -> CmpIcons.Usb to Res.string.device_select_scanning_subtitle_usb
+        else -> CmpIcons.Sensors to Res.string.device_select_scanning_subtitle_both
+    }
     CenterState {
-        Hero(icon = CmpIcons.BluetoothSearching)
-        StateHeadline(stringResource(Res.string.device_select_scanning_title), stringResource(Res.string.device_select_scanning_subtitle))
+        Hero(icon = icon)
+        StateHeadline(stringResource(Res.string.device_select_scanning_title), stringResource(subtitle))
         CmpCircularProgressIndicator()
     }
 }
@@ -377,14 +386,14 @@ private fun ScanningOrListBody(
     when (val devices = state.devices) {
         is LCEState.Content ->
             if (devices.content.isEmpty()) {
-                if (state.searchedLongEnough) EmptyBody(state.supportedTransports) else ScanningBody()
+                if (state.searchedLongEnough) EmptyBody(state.supportedTransports) else ScanningBody(state.supportedTransports)
             } else {
                 DeviceList(devices.content, state.selectedId, layout, onSelect, onConnectSelected, initialInfoId)
             }
 
-        is LCEState.Error -> ScanningBody()
+        is LCEState.Error -> ScanningBody(state.supportedTransports)
 
-        else -> if (state.searchedLongEnough) EmptyBody(state.supportedTransports) else ScanningBody()
+        else -> if (state.searchedLongEnough) EmptyBody(state.supportedTransports) else ScanningBody(state.supportedTransports)
     }
 }
 

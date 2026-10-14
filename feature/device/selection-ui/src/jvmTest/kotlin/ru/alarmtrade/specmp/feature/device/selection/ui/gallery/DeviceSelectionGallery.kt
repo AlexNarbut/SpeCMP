@@ -57,6 +57,12 @@ class DeviceSelectionGallery {
     fun scanning() = render("06_scanning", base)
 
     @Test
+    fun scanningBleOnly() = render("06b_scanning_ble_only", base.copy(supportedTransports = setOf(DeviceTransport.BLE)))
+
+    @Test
+    fun scanningUsbOnly() = render("06c_scanning_usb_only", base.copy(supportedTransports = setOf(DeviceTransport.USB)))
+
+    @Test
     fun empty() = render("07_empty", base.copy(devices = LCEState.Content(emptyList()), searchedLongEnough = true))
 
     @Test

@@ -28,7 +28,9 @@
 
     <!-- Scanning -->
     <string name="device_select_scanning_title">Searching for devices…</string>
-    <string name="device_select_scanning_subtitle">Keep the alarm unit nearby. Bluetooth and USB devices will appear in the list automatically.</string>
+    <string name="device_select_scanning_subtitle_ble">Keep your Pandora device nearby. Bluetooth devices will appear in the list automatically.</string>
+    <string name="device_select_scanning_subtitle_usb">Connect your Pandora device with a cable. USB devices will appear in the list automatically.</string>
+    <string name="device_select_scanning_subtitle_both">Keep your Pandora device nearby. Bluetooth and USB devices will appear in the list automatically.</string>
 
     <!-- Empty -->
     <string name="device_select_empty_title">No devices found</string>
