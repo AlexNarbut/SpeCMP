@@ -1,6 +1,3 @@
-// scrollToNewestRequests — счётчик-сигнал, читается только в ленте (отложенное чтение), пишется по «Отправить»
-@file:Suppress("ktlint:compose:mutable-state-param-check")
-
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
 import androidx.compose.foundation.layout.Arrangement
@@ -189,6 +186,8 @@ fun SupportChatScreen(
     }
 }
 
+// scrollToNewestRequests — счётчик-сигнал: читается только в ленте (отложенное чтение), пишется по «Отправить»
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatScaffold(
     state: State<SupportChatScreenState>,
@@ -242,6 +241,7 @@ private fun SupportChatScaffold(
  * лента, композер) читает только своё — индикатор набора или прогресс
  * скачивания не рекомпозируют композер, а символ ввода — ленту.
  */
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatBody(
     state: State<SupportChatScreenState>,
@@ -362,6 +362,7 @@ private fun SupportChatComposerSection(
     )
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatHistory(
     state: State<SupportChatScreenState>,
@@ -414,6 +415,7 @@ private fun SupportChatHistory(
     }
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatMessageList(
     state: State<SupportChatScreenState>,
@@ -525,6 +527,7 @@ private fun SupportChatMessageList(
  * Анимация мягкая: издалека сначала мгновенный переход на несколько элементов от низа,
  * затем плавно до конца — без долгого пролёта через всю историю.
  */
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatFollowNewestEffect(
     listState: LazyListState,

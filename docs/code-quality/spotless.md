@@ -15,7 +15,7 @@ Gradle-плагин [`com.diffplug.spotless`](https://github.com/diffplug/spotle
 |---|---|
 | `./gradlew spotlessCheck` | Проверка. Подходит для CI и pre-commit |
 | `./gradlew spotlessApply` | Переписывает файлы по правилам |
-| `./gradlew spotlessCheck -PspotlessRatchetFrom=main` | Проверка всего, что изменено относительно `main` |
+| `./gradlew spotlessCheck -PspotlessRatchetFrom=origin/develop` | Проверка всего, что изменено относительно `origin/develop` |
 
 `spotlessCheck` подключается к `check` корневого проекта, поэтому `./gradlew check` тоже упадёт на плохом форматировании.
 
@@ -52,12 +52,12 @@ subprojects {
 
 ```kotlin
 spotless {
-    ratchetFrom("main")
+    ratchetFrom("origin/develop")
     kotlin { /* ... */ }
 }
 ```
 
-Файлы, не тронутые относительно `main`, не проверяются. Старый код не блокирует, новый должен быть чистым. У нас по умолчанию ratchet от `HEAD` (ровно коммитимое), база переопределяется свойством `-PspotlessRatchetFrom=<ref>`; в CI ветка должна быть доступна (`git fetch`).
+Файлы, не тронутые относительно `origin/develop`, не проверяются. Старый код не блокирует, новый должен быть чистым. У нас по умолчанию ratchet от `HEAD` (ровно коммитимое), база переопределяется свойством `-PspotlessRatchetFrom=<ref>`; в CI ветка должна быть доступна (`git fetch`).
 
 ### Подключение правил compose-rules через ktlint
 

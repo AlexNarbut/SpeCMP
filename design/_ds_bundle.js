@@ -1297,7 +1297,7 @@ function CmpDropdown({
   selectedValue = null,
   placeholder = "Выберите",
   options = [],
-  onOptionSelected,
+  onOptionSelect,
   disabled = false,
   rootStyle
 }) {
@@ -1368,7 +1368,7 @@ function CmpDropdown({
     key: i,
     type: "button",
     onClick: () => {
-      onOptionSelected && onOptionSelected(i, opt);
+      onOptionSelect && onOptionSelect(i, opt);
       setOpen(false);
     },
     style: {
@@ -1814,7 +1814,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 function CmpTabRow({
   tabs = [],
   selectedTabIndex = 0,
-  onTabSelected,
+  onTabSelect,
   scrollable = false,
   style,
   ...rest
@@ -1836,7 +1836,7 @@ function CmpTabRow({
       role: "tab",
       "aria-selected": selected,
       type: "button",
-      onClick: () => onTabSelected && onTabSelected(i),
+      onClick: () => onTabSelect && onTabSelect(i),
       style: {
         position: "relative",
         flex: scrollable ? "0 0 auto" : 1,

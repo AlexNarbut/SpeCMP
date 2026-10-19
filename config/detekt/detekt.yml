@@ -1,5 +1,6 @@
 # Только отличия от дефолтов detekt (buildUponDefaultConfig = true).
-# Форматирование, импорты и длину строк проверяет ktlint (.editorconfig), здесь их нет.
+# Форматирование и импорты проверяет ktlint (.editorconfig); MaxLineLength и WildcardImport включены здесь
+# дополнительно как страховка.
 # Описание и принятые решения — docs/code-quality.md.
 
 complexity:

@@ -69,8 +69,10 @@ buildscript {
 
 // Качество кода: docs/code-quality.md.
 // Один корневой Spotless на весь репозиторий (ktlint + compose-rules). По умолчанию проверяются только файлы,
-// изменённые относительно HEAD; для проверки ветки — -PspotlessRatchetFrom=main.
+// изменённые относительно HEAD; для проверки ветки — -PspotlessRatchetFrom=origin/develop.
+// В check/build не входит: запускается только spotlessCheck / spotlessApply.
 spotless {
+    isEnforceCheck = false
     ratchetFrom(providers.gradleProperty("spotlessRatchetFrom").getOrElse("HEAD"))
     kotlin {
         target(
@@ -101,6 +103,15 @@ subprojects {
         buildUponDefaultConfig.set(true)
         config.setFrom(rootProject.file("config/detekt/detekt.yml"))
         parallel.set(true)
+    }
+
+    // Плагин detekt вешает обычный `detekt` на check — отвязываем: анализ запускается только через detektCheck.
+    tasks.matching { it.name == "check" }.configureEach {
+        setDependsOn(
+            dependsOn.filterNot {
+                (it as? TaskProvider<*>)?.name == "detekt" || (it as? Task)?.name == "detekt"
+            }
+        )
     }
 
     // Compose Resources, BuildConfig и прочий генерируемый код лежат в build/ и попадают в type-resolution задачи.

@@ -64,10 +64,13 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
   | `desktopApp` | `detektMain`, `detektTest` | `main` и `test` |
 
   Dev-компиляция Compose Hot Reload (`detektDevJvm`, `detektDev`) не анализируется — это служебная компиляция с
-  тем же кодом. В `check` и в сборку APK detekt не входит.
+  тем же кодом. В `check`/`build` и в сборку APK ни detekt, ни Spotless не входят: плагин detekt по умолчанию
+  вешает `detekt` на `check`, Spotless — `spotlessCheck`; обе связи отключены в корневом `build.gradle.kts`
+  (`isEnforceCheck = false`, фильтр зависимостей `check`), чтобы `./gradlew build` не падал на стиле
+  незакоммиченных файлов.
 - **Ratchet у Spotless.** По умолчанию проверяются только файлы, изменённые относительно `HEAD` — ровно то, что
   разработчик собирается коммитить; старый код не блокирует. Для проверки ветки целиком:
-  `-PspotlessRatchetFrom=main`.
+  `-PspotlessRatchetFrom=origin/develop`.
 
 ---
 
@@ -89,7 +92,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 |---|---|
 | Проверить стиль изменённых файлов | `./gradlew spotlessCheck` |
 | Исправить стиль и импорты автоматически | `./gradlew spotlessApply` |
-| Проверить стиль относительно ветки | `./gradlew spotlessCheck -PspotlessRatchetFrom=main` |
+| Проверить стиль относительно ветки | `./gradlew spotlessCheck -PspotlessRatchetFrom=origin/develop` |
 | Смысловая проверка всего проекта | `./gradlew detektCheck` |
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
 
@@ -200,6 +203,8 @@ ViewModel через несколько composable, эффекты читают 
 - detekt 2.0 — альфа. alpha.6 собран под Kotlin 2.4.10, у нас Kotlin 2.4.0 — проверено, анализ с type resolution
   работает. Обновление Kotlin выше версии сборки detekt может ломать анализ: при апгрейде Kotlin прогнать
   `detektCheck` и при необходимости поднять detekt.
+- Состав `detektCheck` — фиксированный список имён задач. Новые source set'ы (`androidHostTest`, `iosTest`,
+  `appleMain` и т. п.) сами в анализ не попадут: добавить их задачи в список в корневом `build.gradle.kts`.
 - Хук для агентов и `spotlessCheck` в pre-commit показывают нарушения всех файлов, изменённых с `HEAD`, поэтому
   чужая незакоммиченная работа с нарушениями будет мешать, пока не будет исправлена.
 
@@ -208,7 +213,7 @@ ViewModel через несколько composable, эффекты читают 
 ## Как менять правила
 
 1. **Стиль и Compose:** править `.editorconfig` (`ktlint_standard_<правило> = disabled`,
-   `ktlint_compose_<правило> = disabled`), затем прогнать `./gradlew spotlessCheck -PspotlessRatchetFrom=main`.
+   `ktlint_compose_<правило> = disabled`), затем прогнать `./gradlew spotlessCheck -PspotlessRatchetFrom=origin/develop`.
 2. **Смысловые проверки:** править `config/detekt/detekt.yml` (в 2.0 неверное имя параметра валит запуск —
    detekt сам назовёт допустимые). Исключения (`excludes`) делать узкими — по конкретному модулю или файлу — и
    описывать причину здесь.

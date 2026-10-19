@@ -12,6 +12,7 @@ esac
 rel=${file#"$PWD"/}
 
 out=$(./gradlew -q spotlessCheck --continue 2>&1)
+status=$?
 
 report=$(python3 - "$rel" "$out" <<'PY'
 import sys
@@ -40,5 +41,13 @@ if [ -n "$report" ]; then
         echo "Правила и подавления — docs/code-quality.md."
     } >&2
     exit 2
+fi
+
+# Gradle упал не из-за нарушений стиля (конфигурация, сеть, демон) — не молчим, показываем хвост лога.
+if [ "$status" -ne 0 ] && ! printf '%s' "$out" | grep -qiE 'format violations|ktlint'; then
+    {
+        echo "Spotless: spotlessCheck не выполнился (exit $status), проверка $rel не сделана. Хвост лога:"
+        printf '%s\n' "$out" | tail -n 30
+    } >&2
 fi
 exit 0
