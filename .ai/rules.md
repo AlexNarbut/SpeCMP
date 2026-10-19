@@ -27,6 +27,7 @@
 - Compose UI: `docs/ui-kit.md`, `docs/compose-best-prac.md`
 - Navigation: `docs/navigation.md`
 - Локализация / строковые ресурсы: `docs/localization.md`
+- Качество кода (ktlint/compose-rules через Spotless, detekt, git-хуки, хук агентов) — перед коммитом Kotlin-кода: `docs/code-quality.md`
 
 ## Build / Platform
 
@@ -36,3 +37,4 @@
 ## Validation
 
 - После изменений кода запускай `./gradlew build`; для чисто документационных и agent-config правок это не требуется.
+- Качество кода (обязательная стадия, перед коммитом): `./gradlew spotlessApply && ./gradlew spotlessCheck && ./gradlew detektCheck` — без замечаний. Подробности — `docs/code-quality.md`.

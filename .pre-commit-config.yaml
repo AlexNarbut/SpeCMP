@@ -1,0 +1,20 @@
+# Качество кода: docs/code-quality.md. Активация: pre-commit install --hook-type pre-commit --hook-type pre-push
+# Spotless проверяет только файлы, изменённые с HEAD (pre-commit перед хуками прячет неиндексированные правки,
+# так что это ровно коммитимое).
+repos:
+  - repo: local
+    hooks:
+      - id: spotless-check
+        name: spotless (ktlint + compose-rules)
+        entry: ./gradlew spotlessCheck
+        language: system
+        files: \.(kt|kts)$
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: detekt-check
+        name: detekt
+        entry: ./gradlew detektCheck
+        language: system
+        files: \.kt$
+        pass_filenames: false
+        stages: [pre-push]

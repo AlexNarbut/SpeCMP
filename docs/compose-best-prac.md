@@ -480,6 +480,35 @@ role = Role.Button) { … }`. Иначе скринридер озвучит б�
 
 ---
 
+## 10. Требования анализаторов (compose-rules)
+
+Compose-код проверяется `./gradlew spotlessCheck` (ktlint + compose-rules), это обязательная стадия
+([`code-quality.md`](code-quality.md)). Чтобы не получать замечаний, пиши сразу так:
+
+| ✅ Делай | ❌ Не делай | Правило |
+|---|---|---|
+| Параметры: данные → обязательные лямбды → `modifier` → необязательные → контентный слот | `modifier` в начале или после параметров с дефолтами | `param-order-check` |
+| Лямбды событий в настоящем времени: `onClick`, `onTabSelect` | `onClicked`, `onTabSelected` | `parameter-naming` |
+| Событийная лямбда не последняя, последним — `content` | Событийная лямбда последним параметром composable с контентом | `lambda-param-event-trailing` |
+| Один корневой узел; `modifier` применён на корне один раз | Несколько соседних эмиттеров; один `modifier` у нескольких узлов | `multiple-emitters-check`, `modifier-reused-check`, `modifier-not-used-at-root` |
+| ViewModel только в Screen, вниз — значения и колбэки | `viewModel` параметром в дочерних composable | `vm-forwarding-check` |
+| Лямбда-параметр в эффекте — через `rememberUpdatedState` | Вызов лямбды напрямую внутри `LaunchedEffect(Unit)` | `lambda-param-in-effect` |
+| `mutableIntStateOf` / `mutableFloatStateOf` / `mutableLongStateOf` для примитивов | `mutableStateOf(0)` / `mutableStateOf(0f)` | `mutable-state-autoboxing` |
+| `State<T>` / `() -> T` в параметре — можно | `MutableState<T>` в параметре | `mutable-state-param-check` |
+| `@Preview`-функции `private` | публичное превью | `preview-public-check` |
+| Composable, возвращающий значение, — `camelCase` (`rememberX`); эмитящий UI — `PascalCase`-существительное | Composable-фабрика в `PascalCase`, эмитящий composable в `camelCase` | `naming-check` |
+| Один вызов `content()` в теле | `content()` в нескольких ветках `if/when` | `content-slot-reused` |
+| Новый `CompositionLocal` — сначала подумай о параметре; если нужен, добавь имя в `compose_allowed_composition_locals` в [`.editorconfig`](../.editorconfig) (сейчас: `LocalAppLocale`, `LocalCmpImageLoader`, `LocalThemeIsDark`) | Создавать `compositionLocalOf` без регистрации | `compositionlocal-allowlist` |
+
+Исключения (осознанно выключены, не нужно добавлять `modifier` ради правила): `modifier-missing-check`,
+`modifier-without-default-check`, `state-param-check`.
+
+Подавление конкретного правила: `@Suppress("ktlint:compose:<правило>")` на функции. Для `multiple-emitters-check` и
+`lambda-param-in-effect` аннотация на функции не работает — только `@file:Suppress(...)` перед `package`. Подробнее —
+[`code-quality.md`](code-quality.md#подавления).
+
+---
+
 ## Быстрый справочник
 
 | Паттерн | Использовать когда | Пропустить когда |

@@ -20,6 +20,12 @@ buildConfig = "6.0.10"
 materialKolor = "4.1.1"
 koin = "4.2.2"
 
+# Качество кода: docs/code-quality.md
+detekt = "2.0.0-alpha.6"
+spotless = "8.10.4"
+ktlint = "1.8.0"
+composeRules = "0.6.7"
+
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
@@ -92,3 +98,6 @@ android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 buildConfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig" }
+# Качество кода: detekt (смысл) и Spotless (ktlint + compose-rules)
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

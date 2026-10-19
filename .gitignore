@@ -101,7 +101,9 @@ replay_pid*
 # Profiler
 *.hprof
 
-# Claude Code: в git только skills и agents (задачи, локальные настройки — нет)
+# Claude Code: в git только skills, agents и общий хук качества кода (задачи, локальные настройки — нет)
 /.claude/*
 !/.claude/skills/
 !/.claude/agents/
+!/.claude/hooks/
+!/.claude/settings.json

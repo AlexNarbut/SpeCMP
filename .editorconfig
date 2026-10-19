@@ -1,0 +1,18 @@
+root = true
+
+[*.{kt,kts}]
+ktlint_code_style = android_studio
+max_line_length = 120
+indent_size = 4
+insert_final_newline = true
+ktlint_function_naming_ignore_when_annotated_with = Composable
+
+# В ktlint 1.8 правило по умолчанию выключено
+ktlint_standard_no-unused-imports = enabled
+
+# compose-rules: модификатор нужен переиспользуемым компонентам, а не Screen-функциям
+ktlint_compose_modifier-missing-check = disabled
+ktlint_compose_modifier-without-default-check = disabled
+# State<T> передаём осознанно: отложенное чтение без рекомпозиции родителя
+ktlint_compose_state-param-check = disabled
+compose_allowed_composition_locals = LocalAppLocale,LocalCmpImageLoader,LocalThemeIsDark

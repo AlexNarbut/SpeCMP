@@ -1,0 +1,82 @@
+# Только отличия от дефолтов detekt (buildUponDefaultConfig = true).
+# Форматирование, импорты и длину строк проверяет ktlint (.editorconfig), здесь их нет.
+# Описание и принятые решения — docs/code-quality.md.
+
+complexity:
+  LongMethod:
+    active: true
+    allowedLines: 120
+  LongParameterList:
+    active: false
+  CyclomaticComplexMethod:
+    active: true
+  NestedBlockDepth:
+    active: false
+  TooManyFunctions:
+    active: false
+  LargeClass:
+    active: false
+
+exceptions:
+  # Границы, где ловится всё и нормализуется в Response.Error: сетевой слой и safe*-хелперы ResponseExt.
+  # Сознательно игнорируемое исключение называется `ignored` (allowedExceptionNameRegex) — без исключений в конфиге.
+  TooGenericExceptionCaught:
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/core/network/**', '**/core/common/src/commonMain/**/ResponseExt.kt']
+  SwallowedException:
+    ignoredExceptionTypes:
+      - 'InterruptedException'
+      - 'MalformedURLException'
+      - 'NumberFormatException'
+      - 'ParseException'
+
+coroutines:
+  InjectDispatcher:
+    active: false
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+
+style:
+  ThrowsCount:
+    max: 4
+    excludeGuardClauses: true
+  UnusedPrivateFunction:
+    ignoreAnnotated: ['Preview']
+  AbstractClassCanBeConcreteClass:
+    active: false
+  AbstractClassCanBeInterface:
+    active: false
+  UseOrEmpty:
+    active: false
+  ReturnCount:
+    active: false
+  MagicNumber:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/*.kts']
+  MaxLineLength:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  NewLineAtEndOfFile:
+    active: true
+  WildcardImport:
+    active: true
+    excludeImports: ['java.util.*', '*.generated.resources.*', 'androidx.compose.*']
+  ForbiddenComment:
+    active: true
+    comments:
+      - value: 'FIXME:'
+      - value: 'STOPSHIP:'
+  # Тестовые фейки пишут MutableStateFlow.value напрямую (docs/patterns.md), поэтому тесты исключены
+  ForbiddenMethodCall:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+    methods:
+      - reason: 'Используйте safeRun (docs/patterns.md)'
+        value: 'kotlin.runCatching'
+      - reason: 'Используйте логгер (Kermit)'
+        value: 'kotlin.io.println'
+      - reason: 'Используйте логгер (Kermit)'
+        value: 'kotlin.io.print'
+      - reason: 'Пишите состояние через MutableStateFlow.update { } (docs/patterns.md)'
+        value: 'kotlinx.coroutines.flow.MutableStateFlow.value'
