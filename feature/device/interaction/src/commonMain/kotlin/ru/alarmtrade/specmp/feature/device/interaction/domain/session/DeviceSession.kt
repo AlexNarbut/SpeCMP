@@ -1,9 +1,12 @@
 package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
+import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -11,25 +14,52 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
- * Единственный держатель состояния подключённого устройства (app-scoped). На `READY` читает блок
- * (с повтором) и отдаёт [DeviceSessionState.Ready]; обрыв — [DeviceSessionState.Disconnected].
+ * Единственный держатель состояния подключённого устройства (app-scoped). На каждом `READY` определяет режим
+ * блока (с повтором): рабочий — [DeviceSessionState.Ready], загрузчик BLE-модуля — [DeviceSessionState.BluetoothBoot],
+ * загрузчик основной программы — [DeviceSessionState.FirmwareBoot]; обрыв — [DeviceSessionState.Disconnected].
+ * Вход в загрузчик и выход из него проходят через переподключение блока — режим определяется заново.
  * Горячий, пока есть подписчики; после ухода всех подписчиков значение сбрасывается.
+ *
+ * Владеет собственным скоупом (фоновая логика: переподключение, закрытие сессии), он переживает экраны.
+ * Закрытие сессии и переподключение BLE сериализованы [sessionMutex]: закрытие не переплетается с
+ * идущим `reconnect()`, а новое подключение (через [close]`.join()`) не стартует до конца закрытия.
+ *
+ * @param parentContext родитель скоупа — только для тестов (привязка к `backgroundScope`).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DeviceSession(
     private val sessionRepository: DeviceSessionRepository,
     private val connectionRepository: DeviceConnectionRepository,
-    appScope: CoroutineScope,
+    dispatchers: AppDispatchers,
+    parentContext: CoroutineContext = EmptyCoroutineContext,
 ) {
+
+    private val logger = Logger.withTag(LOG_TAG)
+
+    private val scope = CoroutineScope(
+        parentContext + SupervisorJob(parentContext[Job]) + dispatchers.io +
+            CoroutineExceptionHandler { _, throwable -> logger.e(throwable) { "Unhandled session exception" } },
+    )
+
+    private val sessionMutex = Mutex()
 
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
 
@@ -47,9 +77,9 @@ class DeviceSession(
                 }
                 DeviceLinkState.READY -> {
                     emit(DeviceSessionState.Connecting)
-                    val device = readWithRetry(sessionRepository)
-                    if (device != null) {
-                        emit(DeviceSessionState.Ready(device))
+                    val mode = detectMode()
+                    if (mode != null) {
+                        emit(mode)
                     } else {
                         // Связь «готова», а блок не отвечает (сессия SDK не поднялась) — рвём соединение:
                         // связь уйдёт в DISCONNECTED, и BLE-цикл переподключения подключится заново.
@@ -60,20 +90,29 @@ class DeviceSession(
             }
         }
         .stateIn(
-            scope = appScope,
+            scope = scope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0),
             initialValue = DeviceSessionState.Connecting,
         )
 
     /** Сессия создана поиском устройства — запомнить, по какому транспорту. */
     fun attach(transport: ConnectionTransport) {
-        _transport.value = transport
+        _transport.update { transport }
     }
 
-    /** Закрыть сессию с устройством (выход из flow работы с устройством). */
-    suspend fun close() {
-        _transport.value = null
-        connectionRepository.closeSessions()
+    /**
+     * Закрыть сессию с устройством. Не ждёт: транспорт снимается сразу (переподключений больше не будет),
+     * само закрытие идёт в скоупе сессии и переживает экран. Кто открывает новую сессию — дожидается
+     * возвращённого [Job] (`join`), иначе отложенное закрытие оборвёт новую сессию.
+     */
+    fun close(): Job {
+        _transport.update { null }
+        return scope.launch {
+            sessionMutex.withLock {
+                val response = connectionRepository.closeSessions()
+                if (response is Response.Error) logger.w(response.exception) { "Failed to close device session" }
+            }
+        }
     }
 
     /** IMEI GSM-модема подключённого блока. */
@@ -94,18 +133,40 @@ class DeviceSession(
      * BLE: SDK после обрыва (блок выключен или далеко, выключили Bluetooth) сам не переподключается — повторяем
      * подключение, пока связь не вернётся. Цикл отменяется сменой состояния связи (`transformLatest`) и отпиской;
      * после [close] транспорта нет — повторов тоже нет. USB переподключает SDK при повторном подключении кабеля.
+     * Проверка транспорта и `reconnect()` — под [sessionMutex], чтобы не пересечься с закрытием; тайм-аут не даёт
+     * зависшему подключению держать закрытие.
      */
     private suspend fun reconnectWhileBle() {
         while (_transport.value == ConnectionTransport.BLE) {
             delay(RECONNECT_INTERVAL_MILLIS)
-            if (_transport.value == ConnectionTransport.BLE) sessionRepository.reconnect()
+            sessionMutex.withLock {
+                if (_transport.value == ConnectionTransport.BLE) {
+                    withTimeoutOrNull(RECONNECT_TIMEOUT_MILLIS) { sessionRepository.reconnect() }
+                }
+            }
         }
     }
 
-    private suspend fun readWithRetry(repository: DeviceSessionRepository): AlarmDevice? {
+    /**
+     * Режим блока на этом подключении (как в старом приложении). BLE: сначала Bluetooth-модуль (мануфактура + режим) —
+     * в его загрузчике основная программа недоступна; USB — сразу основная программа. `null` — блок не ответил.
+     */
+    private suspend fun detectMode(): DeviceSessionState? {
+        if (_transport.value == ConnectionTransport.BLE) {
+            val module = readWithRetry { sessionRepository.readBluetoothModule() } ?: return null
+            if (module.mode == BluetoothModuleMode.BOOT) return DeviceSessionState.BluetoothBoot(module.manufacturer)
+        }
+        val device = readWithRetry { sessionRepository.readDevice() } ?: return null
+        return when (device.mode) {
+            DeviceOperationMode.MAIN -> DeviceSessionState.Ready(device)
+            DeviceOperationMode.BOOT -> DeviceSessionState.FirmwareBoot(device)
+        }
+    }
+
+    private suspend fun <T> readWithRetry(read: suspend () -> Response<T>): T? {
         repeat(READ_ATTEMPTS) { attempt ->
             // Без тайм-аута зависший запрос (блок не ответил) держал бы «Подключение…» бесконечно.
-            val response = withTimeoutOrNull(READ_TIMEOUT_MILLIS) { repository.readDevice() }
+            val response = withTimeoutOrNull(READ_TIMEOUT_MILLIS) { read() }
             if (response is Response.Success) return response.value
             if (attempt < READ_ATTEMPTS - 1) delay(READ_RETRY_DELAY_MILLIS)
         }
@@ -113,11 +174,13 @@ class DeviceSession(
     }
 
     private companion object {
+        const val LOG_TAG = "DeviceSession"
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val READ_ATTEMPTS = 3
         const val READ_RETRY_DELAY_MILLIS = 500L
         const val READ_TIMEOUT_MILLIS = 10_000L
         const val BOOT_MODE_RETRY_DELAY_MILLIS = 3_000L
         const val RECONNECT_INTERVAL_MILLIS = 1_000L
+        const val RECONNECT_TIMEOUT_MILLIS = 15_000L
     }
 }

@@ -8,7 +8,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessio
 @Immutable
 data class DeviceInteractionState(
     val session: DeviceSessionState = DeviceSessionState.Connecting,
-    /** Последний подключённый блок; null — связи ещё не было. */
+    /** Последний блок в рабочем режиме — дочерний flow; null — связи ещё не было или блок в загрузчике. */
     val device: AlarmDevice? = null,
     /** Транспорт сессии — тексты экрана «связь потеряна»; null — неизвестен. */
     val transport: ConnectionTransport? = null,

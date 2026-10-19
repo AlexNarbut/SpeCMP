@@ -6,6 +6,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
+import ru.alarmtrade.specmp.core.common.AppDispatchers
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -23,6 +26,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
@@ -57,6 +61,7 @@ class AdvancedMountRootViewModelTest {
         val link = MutableStateFlow(DeviceLinkState.READY)
         var bootModeCount = 0
         override fun linkState(): Flow<DeviceLinkState> = link
+        override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException("usb only"))
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
         override suspend fun readImei(): Response<String> = Response.Success("351756051523999")
         override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
@@ -70,7 +75,7 @@ class AdvancedMountRootViewModelTest {
     private class FakeConnectionRepository : DeviceConnectionRepository {
         override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
         override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-        override suspend fun closeSessions() = Unit
+        override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
     }
 
     private class FakeMountRepository : AdvancedMountRepository {
@@ -81,7 +86,12 @@ class AdvancedMountRootViewModelTest {
             verifyCount++
             return access
         }
-        override suspend fun unreadChatCount(): Response<Int> = Response.Success(unread)
+        override fun observeUnreadChatCount(): Flow<Response<Int>> = flow {
+            while (true) {
+                emit(Response.Success(unread))
+                delay(60_000)
+            }
+        }
         override fun remoteMountAvailable(): Flow<Boolean> = flowOf(true)
         override suspend fun isProductInfoEnabled(): Response<Boolean> = Response.Success(true)
     }
@@ -107,9 +117,11 @@ class AdvancedMountRootViewModelTest {
     }
 
     private fun TestScope.viewModel(): Pair<AdvancedMountRootViewModel, MutableList<AdvancedMountRootEffect>> {
-        val session = DeviceSession(sessionRepository, FakeConnectionRepository(), backgroundScope)
+        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val session = DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
         session.attach(ConnectionTransport.USB)
-        val vm = AdvancedMountRootViewModel(session, mountRepository).also { viewModels += it }
+        val vm = AdvancedMountRootViewModel(session, mountRepository, dispatchers).also { viewModels += it }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<AdvancedMountRootEffect>()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
         runCurrent()

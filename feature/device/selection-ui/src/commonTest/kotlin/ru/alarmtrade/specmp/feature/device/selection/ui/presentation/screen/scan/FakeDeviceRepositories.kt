@@ -14,6 +14,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
@@ -38,7 +39,6 @@ class FakeDeviceScanRepository(
         emit(bleResponse)
     }
     override fun scanUsb(): Flow<Response<List<ScannedDevice.Usb>>> = flowOf(usbResponse)
-    override suspend fun stopScan() = Unit
 }
 
 class FakeDeviceConnectionRepository(
@@ -64,8 +64,9 @@ class FakeDeviceConnectionRepository(
 
     override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = connectFlow(states)
 
-    override suspend fun closeSessions() {
+    override suspend fun closeSessions(): Response<Unit> {
         closeCount++
+        return Response.Success(Unit)
     }
 
     private fun connectFlow(attemptStates: List<Response<DeviceConnectionState>>): Flow<Response<DeviceConnectionState>> = flow {
@@ -101,6 +102,7 @@ class FakePermissionsProvider(
 /** Сессия устройства в тестах поиска не подписывается — связь и чтение блока не нужны. */
 class FakeDeviceSessionRepository : DeviceSessionRepository {
     override fun linkState(): Flow<DeviceLinkState> = flowOf(DeviceLinkState.DISCONNECTED)
+    override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException("not used"))
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Error(IllegalStateException("not used"))
     override suspend fun readImei(): Response<String> = Response.Error(IllegalStateException("not used"))
     override suspend fun reconnect(): Response<Unit> = Response.Error(IllegalStateException("not used"))

@@ -16,5 +16,5 @@ interface DeviceConnectionRepository {
     fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>>
 
     /** Закрыть текущую сессию (в SDK она одна на BLE и USB). */
-    suspend fun closeSessions()
+    suspend fun closeSessions(): Response<Unit>
 }

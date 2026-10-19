@@ -2,16 +2,25 @@ package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
@@ -26,24 +35,43 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  *
  * На каждом подключении блока: IMEI; для нового блока — проверка на сервере → разделы по возможностям
  * и подписка на удалённый монтаж. После переподключения того же блока разделы не перезагружаются
- * (пользователь возвращается туда, где был). Непрочитанные в чате опрашиваются раз в минуту.
+ * (пользователь возвращается туда, где был). Непрочитанные в чате опрашивает репозиторий, пока экран на виду.
  * Работа с блоком — через [DeviceScope] (отменяется при потере связи).
  */
 class AdvancedMountRootViewModel(
     private val deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
+    dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
     private val deviceScope = DeviceScope(viewModelScope, deviceSession)
 
     private val _state = MutableStateFlow(AdvancedMountRootState())
-    val state: StateFlow<AdvancedMountRootState> = _state.asStateFlow()
+
+    // Поллинг непрочитанных живёт в репозитории; WhileSubscribed общего state останавливает его, пока корень
+    // перекрыт дочерним экраном. Ошибка опроса не сбрасывает последнее известное значение.
+    private val unreadCount: Flow<Int> = repository.observeUnreadChatCount()
+        .mapNotNull { it.getValueIfSuccess() }
+        .onStart { emit(0) }
+
+    // Удалённый монтаж приходит по каналу чата (сессия): подписываемся один раз после первой успешной проверки
+    // блока и держим подписку всю жизнь VM (Lazily), без WhileSubscribed.
+    private val remoteAvailable: StateFlow<Boolean> = flow {
+        _state.first { it.content is MountContent.Ready }
+        emitAll(repository.remoteMountAvailable())
+    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+    val state: StateFlow<AdvancedMountRootState> = combine(_state, unreadCount, remoteAvailable) { state, unread, remote ->
+        state.copy(unreadCount = unread, remoteAvailable = remote)
+    }
+        .flowOn(dispatchers.default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
     private val _effect = sideEffectFlow<AdvancedMountRootEffect>()
     val effect: SharedFlow<AdvancedMountRootEffect> = _effect.asSharedFlow()
 
+    // Отменяет предыдущую проверку при повторе или новом блоке. Пишется и читается только на main.
     private var loadJob: Job? = null
-    private var remoteJob: Job? = null
 
     init {
         safeLaunch {
@@ -53,14 +81,6 @@ class AdvancedMountRootViewModel(
         safeLaunch {
             val enabled = (repository.isProductInfoEnabled() as? Response.Success)?.value ?: false
             _state.update { it.copy(productInfo = enabled) }
-        }
-        safeLaunch {
-            while (isActive) {
-                (repository.unreadChatCount() as? Response.Success)?.let { count ->
-                    _state.update { it.copy(unreadCount = count.value) }
-                }
-                delay(UNREAD_POLL_MILLIS)
-            }
         }
     }
 
@@ -87,14 +107,6 @@ class AdvancedMountRootViewModel(
                 }
             }
             _state.update { it.copy(content = content) }
-            if (content is MountContent.Ready) listenRemoteMount()
-        }
-    }
-
-    private fun listenRemoteMount() {
-        if (remoteJob?.isActive == true) return
-        remoteJob = safeLaunch {
-            repository.remoteMountAvailable().collect { available -> _state.update { it.copy(remoteAvailable = available) } }
         }
     }
 
@@ -135,7 +147,7 @@ class AdvancedMountRootViewModel(
     }
 
     private companion object {
-        const val UNREAD_POLL_MILLIS = 60_000L
+        const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
 

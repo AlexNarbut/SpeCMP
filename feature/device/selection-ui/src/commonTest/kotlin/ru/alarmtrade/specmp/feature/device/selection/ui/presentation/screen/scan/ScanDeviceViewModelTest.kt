@@ -6,7 +6,6 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
 import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
-import kotlinx.coroutines.CoroutineScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +57,7 @@ class ScanDeviceViewModelTest {
     private var lastSession: DeviceSession? = null
 
     private fun deviceSession(connection: FakeDeviceConnectionRepository) =
-        DeviceSession(FakeDeviceSessionRepository(), connection, CoroutineScope(testDispatcher)).also { lastSession = it }
+        DeviceSession(FakeDeviceSessionRepository(), connection, dispatchers()).also { lastSession = it }
 
     private fun viewModel(
         scan: FakeDeviceScanRepository = FakeDeviceScanRepository(),
@@ -279,6 +278,28 @@ class ScanDeviceViewModelTest {
         assertEquals(ScanStep.Scanning, viewModel.state.value.step)
         assertEquals(closesBefore + 1, connection.closeCount)
         assertEquals(scansBefore + 1, scan.bleScanStarts)
+    }
+
+    @Test
+    fun `second connect tap does not interrupt the running attempt`() = runTest(testDispatcher) {
+        val connection = FakeDeviceConnectionRepository(
+            states = listOf(Response.Success(DeviceConnectionState.CONNECTING)),
+            hangAfterStates = true,
+        )
+        val viewModel = viewModel(connection = connection)
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        viewModel.connect(bleItem())
+        viewModel.connect(bleItem())
+        runCurrent()
+
+        assertEquals(1, connection.bleConnectCount)
+        assertTrue(viewModel.state.value.step is ScanStep.Connecting)
+
+        viewModel.onCancelConnecting()
+        advanceUntilIdle()
+        assertEquals(ScanStep.Scanning, viewModel.state.value.step)
     }
 
     @Test

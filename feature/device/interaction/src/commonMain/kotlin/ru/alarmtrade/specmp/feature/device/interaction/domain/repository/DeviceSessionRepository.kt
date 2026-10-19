@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.interaction.domain.repository
 import kotlinx.coroutines.flow.Flow
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 
 /**
@@ -13,6 +14,9 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkSt
 interface DeviceSessionRepository {
     /** Поток состояния связи текущей сессии; ошибки SDK — как [DeviceLinkState.DISCONNECTED]. */
     fun linkState(): Flow<DeviceLinkState>
+
+    /** BLE: прочитать Bluetooth-модуль (мануфактура + режим) — до чтения основной программы. */
+    suspend fun readBluetoothModule(): Response<BluetoothModule>
 
     /** Прочитать информацию и возможности подключённого блока. */
     suspend fun readDevice(): Response<AlarmDevice>

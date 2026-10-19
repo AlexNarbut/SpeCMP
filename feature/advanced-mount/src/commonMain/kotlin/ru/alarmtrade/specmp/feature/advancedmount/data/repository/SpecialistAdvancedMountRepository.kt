@@ -2,6 +2,9 @@ package ru.alarmtrade.specmp.feature.advancedmount.data.repository
 
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -9,6 +12,8 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specialist.domain.user.UserAppFeature
@@ -28,20 +33,17 @@ class SpecialistAdvancedMountRepository(
 
     override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<DeviceAccess> {
         val request = VerifyDeviceRequest(systemId = systemId, systemName = systemName, firmwareVersion = firmwareVersion)
-        return when (val response = verificationInteractor.verifyDeviceUseCase.execute(request)) {
-            is SpecialistResponse.Success -> Response.Success(DeviceAccess(response.value.hasAccess, response.value.message))
-            is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to verify device" }
-                Response.Error(response.exception, response.message)
-            }
-        }
+        return verificationInteractor.verifyDeviceUseCase.execute(request).toResponse()
+            .onError { logger.e(it) { "Failed to verify device" } }
+            .map { DeviceAccess(it.hasAccess, it.message) }
     }
 
-    override suspend fun unreadChatCount(): Response<Int> =
-        when (val response = chatInteractor.getUnreadMessagesCountUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(response.value.int)
-            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
+    override fun observeUnreadChatCount(): Flow<Response<Int>> = flow {
+        while (currentCoroutineContext().isActive) {
+            emit(chatInteractor.getUnreadMessagesCountUseCase.execute().toResponse().map { it.int })
+            delay(UNREAD_POLL_INTERVAL_MILLIS)
         }
+    }
 
     override fun remoteMountAvailable(): Flow<Boolean> = flow {
         // Статус удалённого монтажа приходит по каналу чата — открываем его, как старое приложение.
@@ -58,8 +60,14 @@ class SpecialistAdvancedMountRepository(
         }
 
     override suspend fun isProductInfoEnabled(): Response<Boolean> =
-        when (val response = userInteractor.getUserAppFeaturesUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(UserAppFeature.PRODUCT_SEARCH in response.value)
-            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
-        }
+        userInteractor.getUserAppFeaturesUseCase.execute().toResponse().map { UserAppFeature.PRODUCT_SEARCH in it }
+
+    private fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
+        is SpecialistResponse.Success -> Response.Success(value)
+        is SpecialistResponse.Error -> Response.Error(exception, message)
+    }
+
+    private companion object {
+        const val UNREAD_POLL_INTERVAL_MILLIS = 60_000L
+    }
 }

@@ -78,15 +78,16 @@ class ScanDeviceViewModel(
     private val _effect = sideEffectFlow<ScanDeviceEffect>()
     val effect: SharedFlow<ScanDeviceEffect> = _effect.asSharedFlow()
 
+    // Только подключение (не отмена): по нему «Отмена» прерывает попытку. Пишется и читается на main.
     private var connectJob: Job? = null
 
     // Init-источник: один раз за жизнь VM (Lazily) запрашивает разрешения при первой
     // подписке на state и переводит на скан/adapterOff/denied. Не «работа из UI».
     private val permissionGate: StateFlow<Boolean> = flow {
-        // Прошлая сессия могла закрыться неудачно: подключённое устройство не рекламируется
-        // и не появится в поиске.
-        connectionRepository.closeSessions()
-        checkPermissionAndProceed()
+        // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
+        // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
+        deviceSession.close().join()
+        checkPermissionsExclusively()
         emit(true)
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
@@ -137,7 +138,7 @@ class ScanDeviceViewModel(
 
     /** Повтор: заново запросить доступ / перепроверить адаптер и геолокацию. */
     fun onRetry() {
-        safeLaunch { checkPermissionAndProceed() }
+        safeLaunch { checkPermissionsExclusively() }
     }
 
     /** Открыть системные настройки Bluetooth (случай выключенного адаптера). */
@@ -156,9 +157,11 @@ class ScanDeviceViewModel(
      * разрешения, Bluetooth и геолокацию и запускаем поиск. Подключение и системный запрос разрешения не трогаем.
      */
     override fun onAppForeground() {
-        when (_step.value) {
-            is ScanStep.Connecting, ScanStep.PermissionCheck -> Unit
-            else -> safeLaunch {
+        safeLaunch {
+            executeWithProceedLock {
+                // Подключение и идущая проверка держат lock — сюда не попадут. Остаётся шаг Connecting после
+                // успешного подключения (экран уже ушёл во flow устройства): поиск не перезапускаем.
+                if (_step.value is ScanStep.Connecting) return@executeWithProceedLock
                 checkPermissionAndProceed()
                 _scanRestarts.update { it + 1 }
             }
@@ -167,6 +170,14 @@ class ScanDeviceViewModel(
 
     fun openAppSettings() {
         permissionsProvider.getController().openAppSettings()
+    }
+
+    /**
+     * Проверка разрешений из любого триггера (старт, «Повторить», возврат в приложение) — под общим lock:
+     * параллельная вторая проверка показала бы второй системный запрос, дубль пропускается.
+     */
+    private suspend fun checkPermissionsExclusively() {
+        executeWithProceedLock { checkPermissionAndProceed() }
     }
 
     private suspend fun checkPermissionAndProceed() {
@@ -181,10 +192,9 @@ class ScanDeviceViewModel(
                 if (controller.getPermissionState(permission) != PermissionState.Granted) {
                     controller.providePermission(permission)
                 }
-            }catch (e : CancellationException){
+            } catch (e: CancellationException) {
                 throw e
-            }
-            catch (e: DeniedAlwaysException) {
+            } catch (e: DeniedAlwaysException) {
                 _step.update { ScanStep.Denied(canOpenSettings = true) }
                 return false
             } catch (e: DeniedException) {
@@ -242,15 +252,19 @@ class ScanDeviceViewModel(
     /** Отмена подключения — назад к списку. */
     fun onCancelConnecting() {
         connectJob?.cancel()
-        connectJob = safeLaunch {
-            // Сначала закрыть сессию, затем вернуться к поиску (он стартует заново).
-            connectionRepository.closeSessions()
-            _step.update { ScanStep.Scanning }
+        safeLaunch {
+            // Дожидаемся, пока отменённое подключение отпустит lock; новое «Подключить» до конца закрытия
+            // пропускается. Сначала закрыть сессию, затем вернуться к поиску (он стартует заново).
+            executeWithProceedLock(needSkipAnother = false) {
+                deviceSession.close().join()
+                _step.update { ScanStep.Scanning }
+            }
         }
     }
 
     fun connect(item: DeviceUiItem) {
-        connectJob?.cancel()
+        // Дубль (двойное нажатие) не отменяет идущую попытку; одновременную проверку разрешений отсекает lock.
+        if (connectJob?.isActive == true) return
         connectJob = safeLaunch {
             executeWithProceedLock {
                 _step.update { ScanStep.Connecting(item) }
@@ -264,7 +278,7 @@ class ScanDeviceViewModel(
                     deviceSession.attach(device.transport)
                     _effect.tryEmit(ScanDeviceEffect.SessionCreated(device))
                 } else {
-                    connectionRepository.closeSessions()
+                    deviceSession.close().join()
                     _step.update { ScanStep.Scanning }
                 }
             }

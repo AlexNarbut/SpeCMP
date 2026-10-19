@@ -6,9 +6,17 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothManufacturerData
+import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothOperationMode
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
@@ -46,18 +54,33 @@ class SpecialistDeviceSessionRepository(
         emit(DeviceLinkState.DISCONNECTED)
     }
 
+    override suspend fun readBluetoothModule(): Response<BluetoothModule> {
+        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
+            ?: return interactorUnavailable()
+        // Мануфактура — обмен с модулем (заодно проверка, что он отвечает). Режима в ней нет: SDK определяет его
+        // при подключении и отдаёт из кэша, к блоку этот вызов не ходит.
+        val manufacturer = when (val response = interactor.getBluetoothManufacturerDataUseCase.execute().toResponse()) {
+            is Response.Success -> response.value.toDomain()
+            is Response.Error -> return response
+        }
+        return interactor.getBluetoothOperationModeUseCase.execute().toResponse().mapIfSuccess { mode ->
+            when (mode) {
+                BluetoothOperationMode.BLE_MAIN_MODE -> Response.Success(BluetoothModule(BluetoothModuleMode.MAIN, manufacturer))
+                BluetoothOperationMode.BLE_BOOT_MODE -> Response.Success(BluetoothModule(BluetoothModuleMode.BOOT, manufacturer))
+                BluetoothOperationMode.ERROR -> Response.Error(IllegalStateException("Bluetooth module mode is unknown"))
+            }
+        }
+    }
+
     override suspend fun readDevice(): Response<AlarmDevice> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
-        val information = when (val response = interactor.getAlarmDeviceInformationUseCase.execute()) {
-            is SpecialistResponse.Success -> response.value
-            is SpecialistResponse.Error -> return Response.Error(response.exception, response.message)
+            ?: return interactorUnavailable()
+        val information = when (val response = interactor.getAlarmDeviceInformationUseCase.execute().toResponse()) {
+            is Response.Success -> response.value
+            is Response.Error -> return response
         }
         // Возможности — со справочника по имени системы; не прочитаны — `null` (блок не поддерживается).
-        val sdkFeatures = when (val response = interactor.getAlarmDeviceAppFeaturesUseCase.execute()) {
-            is SpecialistResponse.Success -> response.value
-            is SpecialistResponse.Error -> null
-        }
+        val sdkFeatures = interactor.getAlarmDeviceAppFeaturesUseCase.execute().toResponse().getValueIfSuccess()
         val can = information.canInformation
         return Response.Success(
             AlarmDevice(
@@ -77,39 +100,43 @@ class SpecialistDeviceSessionRepository(
 
     override suspend fun readImei(): Response<String> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
-        return when (val response = interactor.getModemInformationUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(response.value.imei)
-            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
-        }
+            ?: return interactorUnavailable()
+        return interactor.getModemInformationUseCase.execute().toResponse().map { it.imei }
     }
 
     override suspend fun reconnect(): Response<Unit> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
-        return when (val response = interactor.connectUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
-        }
+            ?: return interactorUnavailable()
+        return interactor.connectUseCase.execute().toResponse().map { }
     }
 
     override suspend fun disconnect(): Response<Unit> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
-        return when (val response = interactor.disconnectUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
-        }
+            ?: return interactorUnavailable()
+        return interactor.disconnectUseCase.execute().toResponse().map { }
     }
 
     override suspend fun setBootMode(): Response<Unit> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
-        return when (val response = interactor.setAlarmDeviceBootModeUseCase.execute()) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
-        }
+            ?: return interactorUnavailable()
+        return interactor.setAlarmDeviceBootModeUseCase.execute().toResponse().map { }
     }
+
+    private fun interactorUnavailable(): Response.Error =
+        Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
+
+    private fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
+        is SpecialistResponse.Success -> Response.Success(value)
+        is SpecialistResponse.Error -> Response.Error(exception, message)
+    }
+
+    private fun BluetoothManufacturerData.toDomain(): BluetoothManufacturer = BluetoothManufacturer(
+        serialNumber = serialNumber,
+        firmwareName = firmwareName,
+        deviceName = deviceName,
+        bootFirmwareVersion = bootFirmwareVersion,
+        mainFirmwareVersion = mainFirmwareVersion,
+    )
 
     private fun ConnectionState.toDomain(): DeviceLinkState = when (this) {
         ConnectionState.READY -> DeviceLinkState.READY
@@ -131,12 +158,4 @@ class SpecialistDeviceSessionRepository(
         SubsystemFeature.DYNAMIC_PERIPHERAL_DEVICES -> DeviceFeature.DYNAMIC_DEVICES
         else -> null
     }
-}
-
-private fun <T> (() -> T).resolveOrNull(): T? = try {
-    invoke()
-} catch (e: CancellationException) {
-    throw e
-} catch (e: Throwable) {
-    null
 }

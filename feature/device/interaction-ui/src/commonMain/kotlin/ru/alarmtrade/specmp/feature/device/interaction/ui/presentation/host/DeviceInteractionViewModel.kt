@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host
 
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -9,26 +9,30 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 /**
- * VM обёртки flow работы с устройством: состояние сессии + последний подключённый блок
- * (по нему остаётся в композиции дочерний flow, пока связь потеряна) и выход из flow.
+ * VM обёртки flow работы с устройством: состояние сессии + последний блок в рабочем режиме
+ * (по нему остаётся в композиции дочерний flow, пока связь потеряна; загрузчик его сбрасывает) и выход из flow.
  */
 class DeviceInteractionViewModel(
     private val deviceSession: DeviceSession,
-    private val appScope: CoroutineScope,
 ) : BaseViewModel() {
 
     val state: StateFlow<DeviceInteractionState> = deviceSession.state
         .runningFold(DeviceInteractionState()) { previous, session ->
             DeviceInteractionState(
                 session = session,
-                device = (session as? DeviceSessionState.Ready)?.device ?: previous.device,
+                // Рабочий режим — блок для дочернего flow; загрузчик сбрасывает его: дочерний flow уходит из композиции
+                // и после возврата в рабочий режим стартует заново. Обрыв/подключение блок не трогают.
+                device = when (session) {
+                    is DeviceSessionState.Ready -> session.device
+                    is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> null
+                    DeviceSessionState.Connecting, DeviceSessionState.Disconnected -> previous.device
+                },
             )
         }
         .combine(deviceSession.transport) { state, transport -> state.copy(transport = transport ?: state.transport) }
@@ -37,23 +41,22 @@ class DeviceInteractionViewModel(
     private val _effect = sideEffectFlow<DeviceInteractionEffect>()
     val effect: SharedFlow<DeviceInteractionEffect> = _effect.asSharedFlow()
 
-    private var exited = false
+    private val exitRequested = MutableStateFlow(false)
 
-    /** Выход из всего flow: закрыть сессию, затем уйти. */
+    /**
+     * Выход из всего flow: закрыть сессию и сразу уйти. Закрытие идёт в скоупе сессии и не ждётся здесь —
+     * следующее подключение (экран поиска) само дождётся его. Повторное нажатие не даёт второго Exit.
+     */
     fun onExit() {
-        safeLaunch {
-            executeWithProceedLock {
-                exited = true
-                deviceSession.close()
-                _effect.tryEmit(DeviceInteractionEffect.Exit)
-            }
-        }
+        if (!exitRequested.compareAndSet(expect = false, update = true)) return
+        deviceSession.close()
+        _effect.tryEmit(DeviceInteractionEffect.Exit)
     }
 
     override fun onCleared() {
-        // Запись ушла не через onExit (например, сброс навигации при выходе из аккаунта) —
-        // сессию всё равно закрываем; viewModelScope уже отменён.
-        if (!exited) appScope.launch { deviceSession.close() }
+        // Запись могла уйти не через onExit (например, сброс навигации при выходе из аккаунта) — закрываем
+        // сессию всегда; повторное закрытие безопасно и сериализовано внутри сессии.
+        deviceSession.close()
         super.onCleared()
     }
 }

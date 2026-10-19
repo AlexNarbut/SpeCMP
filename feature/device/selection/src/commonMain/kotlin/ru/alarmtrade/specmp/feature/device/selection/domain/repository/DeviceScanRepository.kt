@@ -18,7 +18,4 @@ interface DeviceScanRepository {
 
     /** Непрерывный поток подключённых USB-устройств. */
     fun scanUsb(): Flow<Response<List<ScannedDevice.Usb>>>
-
-    /** Остановить активное BLE-сканирование. */
-    suspend fun stopScan()
 }

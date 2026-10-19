@@ -4,6 +4,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import platform.Network.nw_path_get_status
 import platform.Network.nw_path_monitor_create
 import platform.Network.nw_path_monitor_set_queue
@@ -25,7 +26,7 @@ class IosNetworkMonitor : NetworkMonitor {
 
     init {
         nw_path_monitor_set_update_handler(monitor) { path ->
-            _isAvailable.value = nw_path_get_status(path) == nw_path_status_satisfied
+            _isAvailable.update { nw_path_get_status(path) == nw_path_status_satisfied }
         }
         nw_path_monitor_set_queue(monitor, dispatch_get_main_queue())
         nw_path_monitor_start(monitor)

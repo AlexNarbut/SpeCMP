@@ -9,8 +9,8 @@ interface AdvancedMountRepository {
     /** Проверить блок на сервере (доступ монтажника к блоку). */
     suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<DeviceAccess>
 
-    /** Количество непрочитанных сообщений в чате техподдержки. */
-    suspend fun unreadChatCount(): Response<Int>
+    /** Количество непрочитанных сообщений в чате техподдержки — опрос с интервалом, пока есть подписчик. */
+    fun observeUnreadChatCount(): Flow<Response<Int>>
 
     /** Доступен ли удалённый монтаж (специалист может подключиться к блоку); открывает чат при подписке. */
     fun remoteMountAvailable(): Flow<Boolean>

@@ -46,12 +46,13 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import specmp.feature.device.interaction_ui.generated.resources.Res
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_a11y_back
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_boot_subtitle
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_boot_title
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_bluetooth_boot_subtitle
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_bluetooth_boot_title
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_firmware_boot_subtitle
+import specmp.feature.device.interaction_ui.generated.resources.device_interaction_firmware_boot_title
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_btn_exit
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_connecting_title
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_subtitle
@@ -64,7 +65,8 @@ import specmp.feature.device.interaction_ui.generated.resources.device_interacti
  * - Связь потеряна или ещё устанавливается — экран состояния **поверх** [content]: дочерний flow
  *   остаётся в композиции (его back stack и VM живы), после переподключения пользователь там же.
  * - «Назад» на экране состояния — выход из всего flow (сессия закрывается), а не из подэкрана.
- * - Блок в загрузчике — экран режима загрузчика вместо [content].
+ * - Блок в загрузчике (BLE-модуля или основной программы) — экран режима загрузчика вместо [content];
+ *   режим определяется на каждом подключении, после возврата в рабочий режим [content] стартует заново.
  *
  * @param content дочерний flow; получает блок и выход из flow (закрывает сессию).
  */
@@ -84,27 +86,34 @@ fun DeviceInteractionHost(
 
     val device = state.device
     CmpBox(modifier = Modifier.fillMaxSize()) {
-        if (device != null && device.mode == DeviceOperationMode.MAIN) {
+        if (device != null) {
             content(device, viewModel::onExit)
         }
-        val status = when {
-            state.session !is DeviceSessionState.Ready ->
-                if (state.session is DeviceSessionState.Disconnected) DeviceStatus.Disconnected else DeviceStatus.Connecting
-            device?.mode == DeviceOperationMode.BOOT -> DeviceStatus.Boot
-            else -> null
+        val session = state.session
+        val status = when (session) {
+            is DeviceSessionState.Ready -> null
+            DeviceSessionState.Connecting -> DeviceStatus.Connecting
+            DeviceSessionState.Disconnected -> DeviceStatus.Disconnected
+            is DeviceSessionState.BluetoothBoot -> DeviceStatus.BluetoothBoot
+            is DeviceSessionState.FirmwareBoot -> DeviceStatus.FirmwareBoot
+        }
+        val deviceName = when (session) {
+            is DeviceSessionState.BluetoothBoot -> session.manufacturer.deviceName
+            is DeviceSessionState.FirmwareBoot -> session.device.systemName
+            else -> device?.systemName
         }
         status?.let {
             NavigationBackHandler(
                 state = rememberNavigationEventState(NavigationEventInfo.None),
                 onBackCompleted = viewModel::onExit,
             )
-            DeviceStatusContent(status = it, transport = state.transport, deviceName = device?.systemName, onExit = viewModel::onExit)
+            DeviceStatusContent(status = it, transport = state.transport, deviceName = deviceName, onExit = viewModel::onExit)
         }
     }
 }
 
 /** Состояние связи, при котором поверх дочернего flow показывается экран обёртки. */
-internal enum class DeviceStatus { Connecting, Disconnected, Boot }
+internal enum class DeviceStatus { Connecting, Disconnected, BluetoothBoot, FirmwareBoot }
 
 /**
  * Stateless-экран состояния поверх дочернего flow («Назад» перехватывает [DeviceInteractionHost]).
@@ -156,14 +165,18 @@ internal fun DeviceStatusContent(
                             CmpCircularProgressIndicator()
                             CmpButton(text = stringResource(Res.string.device_interaction_btn_exit), onClick = onExit, modifier = Modifier.fillMaxWidth())
                         }
-                        DeviceStatus.Boot -> {
-                            StatusHero(CmpIcons.Memory, error = true)
-                            Headline(
-                                title = stringResource(Res.string.device_interaction_boot_title),
-                                subtitle = stringResource(Res.string.device_interaction_boot_subtitle),
-                            )
-                            CmpButton(text = stringResource(Res.string.device_interaction_btn_exit), onClick = onExit, modifier = Modifier.fillMaxWidth())
-                        }
+                        DeviceStatus.BluetoothBoot -> BootBody(
+                            icon = CmpIcons.Bluetooth,
+                            title = stringResource(Res.string.device_interaction_bluetooth_boot_title),
+                            subtitle = stringResource(Res.string.device_interaction_bluetooth_boot_subtitle),
+                            onExit = onExit,
+                        )
+                        DeviceStatus.FirmwareBoot -> BootBody(
+                            icon = CmpIcons.Memory,
+                            title = stringResource(Res.string.device_interaction_firmware_boot_title),
+                            subtitle = stringResource(Res.string.device_interaction_firmware_boot_subtitle),
+                            onExit = onExit,
+                        )
                     }
                 }
             }
@@ -195,6 +208,14 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
         CmpText(text = stringResource(Res.string.device_interaction_waiting), fontSize = 14.sp, color = colors.onSurfaceVariant)
     }
     CmpOutlinedButton(text = stringResource(Res.string.device_interaction_btn_disconnect), onClick = onExit, modifier = Modifier.fillMaxWidth())
+}
+
+/** Режим загрузчика (сам загрузчик пока не реализован): что с блоком и выход. */
+@Composable
+private fun BootBody(icon: CmpIcons, title: String, subtitle: String, onExit: () -> Unit) {
+    StatusHero(icon, error = true)
+    Headline(title = title, subtitle = subtitle)
+    CmpButton(text = stringResource(Res.string.device_interaction_btn_exit), onClick = onExit, modifier = Modifier.fillMaxWidth())
 }
 
 @Composable

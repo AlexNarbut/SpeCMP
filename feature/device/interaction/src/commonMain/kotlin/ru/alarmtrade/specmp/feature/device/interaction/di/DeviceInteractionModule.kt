@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.interaction.di
 
 import org.koin.dsl.module
-import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
@@ -24,5 +23,5 @@ val deviceInteractionModule = module {
     single<DeviceSessionRepository> {
         SpecialistDeviceSessionRepository(bluetoothAlarmDeviceInteractor = { get() })
     }
-    single { DeviceSession(get(), get(), get(appScopeQualifier)) }
+    single { DeviceSession(get(), get(), get()) }
 }

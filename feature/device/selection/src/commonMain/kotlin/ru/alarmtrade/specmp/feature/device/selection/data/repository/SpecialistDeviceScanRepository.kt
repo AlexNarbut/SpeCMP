@@ -10,6 +10,7 @@ import ru.alarmtrade.common.core.PlatformType
 import ru.alarmtrade.common.core.platformType
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.DeviceConnectionType
 import ru.alarmtrade.specmp.core.specialist.supportedConnectionTypes
@@ -59,7 +60,7 @@ class SpecialistDeviceScanRepository(
         emitAll(
             safeFlowRun {
                 interactor.scanBluetoothDevicesUseCase.execute()
-                    .map { response -> response.toBleResponse() }
+                    .map { response -> response.toResponse().map { devices -> devices.map { it.toDomain() } } }
             },
         )
     }
@@ -77,26 +78,15 @@ class SpecialistDeviceScanRepository(
         emitAll(
             safeFlowRun {
                 interactor.scanUsbDevicesUseCase.execute()
-                    .map { response -> response.toUsbResponse() }
+                    .map { response -> response.toResponse().map { devices -> devices.map { it.toDomain() } } }
             },
         )
     }
 
-    override suspend fun stopScan() {
-        bluetoothConnectorInteractor.resolveOrNull()?.stopBluetoothScanUseCase?.execute()
+    private fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
+        is SpecialistResponse.Success -> Response.Success(value)
+        is SpecialistResponse.Error -> Response.Error(exception, message)
     }
-
-    private fun SpecialistResponse<List<BleDeviceScanResult>>.toBleResponse(): Response<List<ScannedDevice.Ble>> =
-        when (this) {
-            is SpecialistResponse.Success -> Response.Success(value.map { it.toDomain() })
-            is SpecialistResponse.Error -> Response.Error(exception, message)
-        }
-
-    private fun SpecialistResponse<List<AttachedUsbDeviceInformation>>.toUsbResponse(): Response<List<ScannedDevice.Usb>> =
-        when (this) {
-            is SpecialistResponse.Success -> Response.Success(value.map { it.toDomain() })
-            is SpecialistResponse.Error -> Response.Error(exception, message)
-        }
 
     private fun BleDeviceScanResult.toDomain(): ScannedDevice.Ble = ScannedDevice.Ble(
         id = uuid,
