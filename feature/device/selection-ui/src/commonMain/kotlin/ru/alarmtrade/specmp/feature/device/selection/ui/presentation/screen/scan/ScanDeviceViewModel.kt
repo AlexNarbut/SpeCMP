@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
 import androidx.lifecycle.viewModelScope
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -44,7 +45,6 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceM
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiItem
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * ViewModel экрана поиска устройства.
@@ -58,22 +58,22 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScanDeviceViewModel(
-    private val scanRepository: DeviceScanRepository,
+    scanRepository: DeviceScanRepository,
     private val connectionRepository: DeviceConnectionRepository,
     private val deviceSession: DeviceSession,
     private val permissionsProvider: PermissionsProvider,
-    private val dispatchers: AppDispatchers,
+    dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
     private val requirements = deviceAccessRequirements()
     private val supportedTransports = scanRepository.supportedTransports()
 
-    private val _step = MutableStateFlow<ScanStep>(ScanStep.PermissionCheck)
-    private val _selectedId = MutableStateFlow<String?>(null)
+    private val stepFlow = MutableStateFlow<ScanStep>(ScanStep.PermissionCheck)
+    private val selectedIdFlow = MutableStateFlow<String?>(null)
 
     // Перезапуск поиска без смены шага (Scanning → Scanning при возврате в приложение):
     // StateFlow шага одинаковые значения склеивает, поэтому нужен отдельный счётчик.
-    private val _scanRestarts = MutableStateFlow(0)
+    private val scanRestartsFlow = MutableStateFlow(0)
 
     private val _effect = sideEffectFlow<ScanDeviceEffect>()
     val effect: SharedFlow<ScanDeviceEffect> = _effect.asSharedFlow()
@@ -91,19 +91,21 @@ class ScanDeviceViewModel(
         emit(true)
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    private val devicesState: Flow<LCEState<List<DeviceUiItem>>> = combine(_step, _scanRestarts) { step, _ -> step }
+    private val devicesState: Flow<LCEState<List<DeviceUiItem>>> = combine(stepFlow, scanRestartsFlow) { step, _ ->
+        step
+    }
         .flatMapLatest { step ->
             if (step !is ScanStep.Scanning) {
                 flowOf(LCEState.None())
             } else {
                 combine(
                     scanRepository.scanBluetooth().onStart { emit(Response.Success(emptyList())) },
-                    scanRepository.scanUsb().onStart { emit(Response.Success(emptyList())) },
+                    scanRepository.scanUsb().onStart { emit(Response.Success(emptyList())) }
                 ) { bleResponse, usbResponse -> mergeDevices(bleResponse, usbResponse) }
             }
         }
 
-    private val searchedLongEnough: Flow<Boolean> = _step.flatMapLatest { step ->
+    private val searchedLongEnough: Flow<Boolean> = stepFlow.flatMapLatest { step ->
         if (step is ScanStep.Scanning) {
             flow {
                 emit(false)
@@ -116,11 +118,11 @@ class ScanDeviceViewModel(
     }
 
     val state: StateFlow<ScanDeviceState> = combine(
-        _step,
+        stepFlow,
         devicesState,
-        _selectedId,
+        selectedIdFlow,
         searchedLongEnough,
-        permissionGate,
+        permissionGate
     ) { step, devices, selectedId, searchedLong, _ ->
         ScanDeviceState(
             step = step,
@@ -128,7 +130,7 @@ class ScanDeviceViewModel(
             supportedTransports = supportedTransports,
             devices = devices,
             selectedId = selectedId,
-            searchedLongEnough = searchedLong,
+            searchedLongEnough = searchedLong
         )
     }
         .flowOn(dispatchers.default)
@@ -151,7 +153,6 @@ class ScanDeviceViewModel(
         permissionsProvider.openLocationSettings()
     }
 
-    /** Открыть системные настройки приложения (случай «отклонено навсегда»). */
     /**
      * Вернулись в приложение (из системных настроек, шторки на iOS, другого приложения): заново проверяем
      * разрешения, Bluetooth и геолокацию и запускаем поиск. Подключение и системный запрос разрешения не трогаем.
@@ -161,13 +162,14 @@ class ScanDeviceViewModel(
             executeWithProceedLock {
                 // Подключение и идущая проверка держат lock — сюда не попадут. Остаётся шаг Connecting после
                 // успешного подключения (экран уже ушёл во flow устройства): поиск не перезапускаем.
-                if (_step.value is ScanStep.Connecting) return@executeWithProceedLock
+                if (stepFlow.value is ScanStep.Connecting) return@executeWithProceedLock
                 checkPermissionAndProceed()
-                _scanRestarts.update { it + 1 }
+                scanRestartsFlow.update { it + 1 }
             }
         }
     }
 
+    /** Открыть системные настройки приложения (случай «отклонено навсегда»). */
     fun openAppSettings() {
         permissionsProvider.getController().openAppSettings()
     }
@@ -185,7 +187,7 @@ class ScanDeviceViewModel(
     }
 
     private suspend fun checkPermission(): Boolean {
-        _step.update { ScanStep.PermissionCheck }
+        stepFlow.update { ScanStep.PermissionCheck }
         val controller = permissionsProvider.getController()
         permissionsProvider.getBlePermission().forEach { permission ->
             try {
@@ -194,14 +196,14 @@ class ScanDeviceViewModel(
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: DeniedAlwaysException) {
-                _step.update { ScanStep.Denied(canOpenSettings = true) }
+            } catch (ignored: DeniedAlwaysException) {
+                stepFlow.update { ScanStep.Denied(canOpenSettings = true) }
                 return false
-            } catch (e: DeniedException) {
-                _step.update { ScanStep.Denied(canOpenSettings = false) }
+            } catch (ignored: DeniedException) {
+                stepFlow.update { ScanStep.Denied(canOpenSettings = false) }
                 return false
-            } catch (e: RequestCanceledException) {
-                _step.update { ScanStep.Denied(canOpenSettings = false) }
+            } catch (ignored: RequestCanceledException) {
+                stepFlow.update { ScanStep.Denied(canOpenSettings = false) }
                 return false
             }
         }
@@ -212,7 +214,7 @@ class ScanDeviceViewModel(
     // ещё и включённой службы геолокации (иначе скан молча ничего не находит).
     private fun proceedAfterPermission() {
         val bluetoothNeeded = requirements.contains(DeviceAccessRequirement.BLUETOOTH)
-        _step.update {
+        stepFlow.update {
             when {
                 bluetoothNeeded && !isBluetoothEnabled() -> ScanStep.AdapterOff
                 bluetoothNeeded && !permissionsProvider.isLocationEnabled() -> ScanStep.LocationOff
@@ -226,7 +228,7 @@ class ScanDeviceViewModel(
     /** Выбор устройства: в split — выделяем (карточка справа), иначе — подключаемся сразу. */
     fun onDeviceSelected(item: DeviceUiItem, isSplit: Boolean) {
         if (isSplit) {
-            _selectedId.update { item.id }
+            selectedIdFlow.update { item.id }
         } else {
             connect(item)
         }
@@ -235,14 +237,14 @@ class ScanDeviceViewModel(
     /** «Подключить» в split-раскладке для выбранного устройства. */
     fun onConnectSelected() {
         val selected = (state.value.devices as? LCEState.Content)?.content
-            ?.firstOrNull { it.id == _selectedId.value }
+            ?.firstOrNull { it.id == selectedIdFlow.value }
             ?: return
         connect(selected)
     }
 
     /** «Назад» (системное и в заголовке): во время подключения — отмена, иначе — выход. */
     fun onBack() {
-        if (_step.value is ScanStep.Connecting) {
+        if (stepFlow.value is ScanStep.Connecting) {
             onCancelConnecting()
         } else {
             _effect.tryEmit(ScanDeviceEffect.Close)
@@ -257,7 +259,7 @@ class ScanDeviceViewModel(
             // пропускается. Сначала закрыть сессию, затем вернуться к поиску (он стартует заново).
             executeWithProceedLock(needSkipAnother = false) {
                 deviceSession.close().join()
-                _step.update { ScanStep.Scanning }
+                stepFlow.update { ScanStep.Scanning }
             }
         }
     }
@@ -267,7 +269,7 @@ class ScanDeviceViewModel(
         if (connectJob?.isActive == true) return
         connectJob = safeLaunch {
             executeWithProceedLock {
-                _step.update { ScanStep.Connecting(item) }
+                stepFlow.update { ScanStep.Connecting(item) }
                 val connected = when (item) {
                     is DeviceUiItem.Ble -> connectBle(item)
                     is DeviceUiItem.Usb -> connectUsb(item)
@@ -279,7 +281,7 @@ class ScanDeviceViewModel(
                     _effect.tryEmit(ScanDeviceEffect.SessionCreated(device))
                 } else {
                     deviceSession.close().join()
-                    _step.update { ScanStep.Scanning }
+                    stepFlow.update { ScanStep.Scanning }
                 }
             }
         }
@@ -299,7 +301,11 @@ class ScanDeviceViewModel(
             val result = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal()
             if (result is Response.Success && result.value == DeviceConnectionState.PAIRING_REQUIRED) {
                 // Старое сопряжение снято; если блок уже в режиме сопряжения — повторяем, SDK сопряжётся заново.
-                if (attempt < BLE_CONNECT_ATTEMPTS - 1 && scannedMode(item.id) == ScannedDeviceMode.PAIRING) return@repeat
+                if (attempt < BLE_CONNECT_ATTEMPTS - 1 &&
+                    scannedMode(item.id) == ScannedDeviceMode.PAIRING
+                ) {
+                    return@repeat
+                }
                 _effect.tryEmit(ScanDeviceEffect.PairingRequired)
                 return false
             }
@@ -327,7 +333,7 @@ class ScanDeviceViewModel(
         transport = when (transport) {
             DeviceTransport.BLE -> ConnectionTransport.BLE
             DeviceTransport.USB -> ConnectionTransport.USB
-        },
+        }
     )
 
     // Общий предел ожидания: SDK переподключается по кругу, а USB может не дать финального статуса.
@@ -335,16 +341,15 @@ class ScanDeviceViewModel(
     private suspend fun Flow<Response<DeviceConnectionState>>.awaitTerminal(): Response<DeviceConnectionState>? =
         withTimeoutOrNull(CONNECT_FLOW_TIMEOUT_MILLIS) { firstOrNull { it.isTerminal() } }
 
-    private fun Response<DeviceConnectionState>.isTerminal(): Boolean =
-        this is Response.Error ||
-            (this is Response.Success && value != DeviceConnectionState.CONNECTING)
+    private fun Response<DeviceConnectionState>.isTerminal(): Boolean = this is Response.Error ||
+        (this is Response.Success && value != DeviceConnectionState.CONNECTING)
 
     /** У блока есть контекст (привязка), а телефон с ним не сопряжён. iOS не сообщает о сопряжении — не определить. */
     private fun DeviceUiItem.Ble.isBoundToAnotherPhone(): Boolean = hasDeviceBond && hasPhoneBond == false
 
     private fun mergeDevices(
         bleResponse: Response<List<ScannedDevice.Ble>>,
-        usbResponse: Response<List<ScannedDevice.Usb>>,
+        usbResponse: Response<List<ScannedDevice.Usb>>
     ): LCEState<List<DeviceUiItem>> {
         // Ошибка одного транспорта не прячет устройства, найденные другим.
         val ble = (bleResponse as? Response.Success)?.value.orEmpty()
@@ -359,8 +364,10 @@ class ScanDeviceViewModel(
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val CONNECT_TIMEOUT_MILLIS = 20_000L
+
         /** Повтор BLE-подключения после снятия старого сопряжения, если блок в режиме сопряжения. */
         const val BLE_CONNECT_ATTEMPTS = 2
+
         // Поиск внутри connect (до 8 с) + сопряжение с подтверждением (до ~30 с) + соединение (20 с).
         const val CONNECT_FLOW_TIMEOUT_MILLIS = 60_000L
         const val EMPTY_HINT_DELAY_MILLIS = 10_000L

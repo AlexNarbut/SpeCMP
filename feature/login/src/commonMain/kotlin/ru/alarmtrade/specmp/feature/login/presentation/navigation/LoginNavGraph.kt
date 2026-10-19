@@ -16,14 +16,14 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
-import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
-import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
+import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -63,9 +63,7 @@ private val navConfig = SavedStateConfiguration {
 }
 
 @Composable
-fun LoginNavGraph(
-    onLocaleChanged: (AppLocale) -> Unit,
-) {
+fun LoginNavGraph(onLocaleChange: (AppLocale) -> Unit) {
     val viewModel = koinViewModel<LoginScreenViewModel>()
     val state = viewModel.state.collectAsState()
     val colors = cmpThemeColors()
@@ -80,7 +78,7 @@ fun LoginNavGraph(
                 CmpText(
                     text = routeTitle(currentRoute),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Medium
                 )
             }
         },
@@ -89,23 +87,23 @@ fun LoginNavGraph(
                 CmpIconButton(
                     onClick = { backStack.popSafe() },
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Res.string.login_common_a11y_back),
+                    contentDescription = stringResource(Res.string.login_common_a11y_back)
                 )
             }
         },
         actions = {
             AuthLanguageSegment(
-                onLocaleChanged = onLocaleChanged,
-                colors = colors,
+                onLocaleChange = onLocaleChange,
+                colors = colors
             )
-        },
+        }
     ) { layoutMode ->
         LoginNavDisplay(
             backStack = backStack,
             state = state,
             colors = colors,
             layoutMode = layoutMode,
-            viewModel = viewModel,
+            viewModel = viewModel
         )
     }
 }
@@ -116,7 +114,7 @@ private fun LoginNavDisplay(
     state: State<LoginScreenState>,
     colors: CmpThemeColors,
     layoutMode: AuthLayoutMode,
-    viewModel: LoginScreenViewModel,
+    viewModel: LoginScreenViewModel
 ) {
     NavDisplay(
         backStack = backStack,
@@ -126,22 +124,22 @@ private fun LoginNavDisplay(
             // Дефолтный декоратор NavDisplay: без него не работает SavedStateHandle.
             rememberSaveableStateHolderNavEntryDecorator(),
             // Per-entry ViewModelStoreOwner (см. docs/navigation.md).
-            rememberViewModelStoreNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
                 AuthBody(
                     layoutMode = layoutMode,
                     modifier = Modifier.fillMaxSize(),
-                    colors = colors,
+                    colors = colors
                 ) {
                     LoginScreen(
                         state = state.value,
                         colors = colors,
                         layoutMode = layoutMode,
-                        onLoginChanged = viewModel::onLoginChanged,
-                        onPasswordChanged = viewModel::onPasswordChanged,
-                        onPasswordVisibilityChanged = viewModel::onPasswordVisibilityChanged,
+                        onLoginChange = viewModel::onLoginChanged,
+                        onPasswordChange = viewModel::onPasswordChanged,
+                        onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
                         onSubmit = viewModel::submit,
                         onOpenRegistration = {
                             viewModel.resetLoginForm()
@@ -153,7 +151,7 @@ private fun LoginNavDisplay(
                         },
                         onResendActivationEmail = viewModel::resendActivationEmail,
                         onDismissActivationRequest = viewModel::dismissActivationRequest,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -162,11 +160,11 @@ private fun LoginNavDisplay(
                     layoutMode = layoutMode,
                     modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    showCompactBrand = false,
+                    showCompactBrand = false
                 ) {
                     RegistrationScreen(
                         colors = colors,
-                        onBackToLogin = { backStack.popSafe() },
+                        onBackToLogin = { backStack.popSafe() }
                     )
                 }
             }
@@ -175,23 +173,21 @@ private fun LoginNavDisplay(
                     layoutMode = layoutMode,
                     modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    showCompactBrand = false,
+                    showCompactBrand = false
                 ) {
                     ForgotPasswordScreen(
                         colors = colors,
-                        onBackToLogin = { backStack.popSafe() },
+                        onBackToLogin = { backStack.popSafe() }
                     )
                 }
             }
-        },
+        }
     )
 }
 
 @Composable
-private fun routeTitle(route: NavKey): String {
-    return when (route) {
-        RegistrationRoute -> stringResource(Res.string.login_registration_title_screen)
-        ForgotPasswordRoute -> stringResource(Res.string.login_forgot_title_screen)
-        else -> ""
-    }
+private fun routeTitle(route: NavKey): String = when (route) {
+    RegistrationRoute -> stringResource(Res.string.login_registration_title_screen)
+    ForgotPasswordRoute -> stringResource(Res.string.login_forgot_title_screen)
+    else -> ""
 }

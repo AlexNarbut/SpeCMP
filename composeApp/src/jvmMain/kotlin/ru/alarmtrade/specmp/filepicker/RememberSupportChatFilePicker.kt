@@ -2,6 +2,10 @@ package ru.alarmtrade.specmp.filepicker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import java.io.File
+import java.util.UUID
+import javax.swing.JFileChooser
+import javax.swing.filechooser.FileNameExtensionFilter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -15,10 +19,6 @@ import specmp.composeapp.generated.resources.Res
 import specmp.composeapp.generated.resources.composeapp_picker_label_images
 import specmp.composeapp.generated.resources.composeapp_picker_title_file
 import specmp.composeapp.generated.resources.composeapp_picker_title_image
-import java.io.File
-import java.util.UUID
-import javax.swing.JFileChooser
-import javax.swing.filechooser.FileNameExtensionFilter
 
 @Composable
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
@@ -29,7 +29,7 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
         DesktopSupportChatFilePicker(
             imageTitle = imageTitle,
             imagesLabel = imagesLabel,
-            fileTitle = fileTitle,
+            fileTitle = fileTitle
         )
     }
 }
@@ -37,7 +37,7 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
 private class DesktopSupportChatFilePicker(
     private val imageTitle: String,
     private val imagesLabel: String,
-    private val fileTitle: String,
+    private val fileTitle: String
 ) : SupportChatFilePicker {
 
     // Диалог модальный и синхронный: результат кладётся в буфер сразу после закрытия.
@@ -49,8 +49,13 @@ private class DesktopSupportChatFilePicker(
             title = imageTitle,
             filter = FileNameExtensionFilter(
                 imagesLabel,
-                "jpg", "jpeg", "png", "gif", "webp", "bmp",
-            ),
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "webp",
+                "bmp"
+            )
         )
         channel.trySend(file.toPickerResult(SupportChatPickKind.Image))
     }
@@ -58,15 +63,12 @@ private class DesktopSupportChatFilePicker(
     override fun launchDocument() {
         val file = showDialog(
             title = fileTitle,
-            filter = null,
+            filter = null
         )
         channel.trySend(file.toPickerResult(SupportChatPickKind.Document))
     }
 
-    private fun showDialog(
-        title: String,
-        filter: FileNameExtensionFilter?,
-    ): File? {
+    private fun showDialog(title: String, filter: FileNameExtensionFilter?): File? {
         val chooser = JFileChooser().apply {
             dialogTitle = title
             fileSelectionMode = JFileChooser.FILES_ONLY
@@ -105,7 +107,7 @@ private class DesktopSupportChatFilePicker(
             name = name,
             path = absolutePath,
             mimeType = mimeType,
-            sizeBytes = length(),
+            sizeBytes = length()
         )
     }
 }

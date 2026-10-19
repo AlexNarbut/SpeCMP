@@ -25,13 +25,13 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.Advanc
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
-import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
-import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
@@ -51,18 +51,16 @@ private val navConfig = SavedStateConfiguration {
 }
 
 @Composable
-fun AppNavigation(
-    onLocaleChanged: (AppLocale) -> Unit,
-) {
+fun AppNavigation(onLocaleChange: (AppLocale) -> Unit) {
     AuthStateNavGraph(
         waitingState = { AppStartLoading() },
         noAuthState = {
-            LoginNavGraph(onLocaleChanged = onLocaleChanged)
+            LoginNavGraph(onLocaleChange = onLocaleChange)
         },
         authedState = { AuthedNavGraph() },
         errorState = { onRetry ->
             SessionCheckErrorScreen(onRetry = onRetry)
-        },
+        }
     )
 }
 
@@ -80,14 +78,14 @@ private fun AuthedNavGraph() {
             rememberSaveableStateHolderNavEntryDecorator(),
             // Per-entry ViewModelStoreOwner: VM живёт ровно столько, сколько запись
             // бэкстека, и очищается при pop (см. docs/navigation.md).
-            rememberViewModelStoreNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
                 MainNavGraph(
                     onNavigateToFeature = { target ->
                         navigateFromMain(target, backStack)
-                    },
+                    }
                 )
             }
             entry<SupportChatRoute> { _ ->
@@ -96,15 +94,15 @@ private fun AuthedNavGraph() {
                     filePicker = rememberSupportChatFilePicker(),
                     fileSaver = rememberSupportChatFileSaver(),
                     attachmentFiles = rememberSupportChatAttachmentFiles(),
-                    fileOpener = rememberSupportChatFileOpener(),
+                    fileOpener = rememberSupportChatFileOpener()
                 )
             }
             entry<DeviceSelectionRoute> { _ ->
                 DeviceSelectionNavGraph(
                     // Сессия создана — поиск заменяется flow работы с устройством:
                     // «Назад» из монтажа не возвращает в поиск.
-                    onSessionCreated = { _ -> backStack.replaceCurrent(AdvancedMountRoute) },
-                    onClose = { backStack.popSafe() },
+                    onSessionCreate = { _ -> backStack.replaceCurrent(AdvancedMountRoute) },
+                    onClose = { backStack.popSafe() }
                 )
             }
             entry<AdvancedMountRoute> { _ ->
@@ -112,7 +110,7 @@ private fun AuthedNavGraph() {
                 DeviceInteractionHost(onExit = { backStack.popSafe() }) { _, onExit ->
                     AdvancedMountNavGraph(
                         onExit = onExit,
-                        onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
+                        onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) }
                     )
                 }
             }
@@ -142,7 +140,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 private fun AppStartLoading() {
     CmpBox(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         CmpCircularProgressIndicator(color = cmpThemeColors().primary)
     }

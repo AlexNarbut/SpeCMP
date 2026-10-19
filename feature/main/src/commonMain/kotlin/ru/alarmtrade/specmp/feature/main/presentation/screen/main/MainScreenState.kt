@@ -7,18 +7,18 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
+import ru.alarmtrade.specmp.feature.main.presentation.model.MAIN_UNKNOWN_APP_VERSION
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainUnknownAppVersion
 
 @Immutable
 data class MainScreenState(
     val isInitialLoading: Boolean = true,
     val isMenuOpen: Boolean = false,
     val isAppUpdateSupported: Boolean = false,
-    val appVersionName: String = MainUnknownAppVersion,
+    val appVersionName: String = MAIN_UNKNOWN_APP_VERSION,
     val profileState: LCEState<MainProfile> = LCEState.None(),
     val databaseSyncState: LCEState<MainDatabaseSyncStatus> = LCEState.None(),
     val databaseVersion: Long? = null,

@@ -39,6 +39,8 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
+private const val SHIMMER_BAND_WIDTH = 600f
+
 @Composable
 internal fun MainHomeSkeleton(
     mode: MainHomeMode,
@@ -156,7 +158,7 @@ private fun MainCardSkeleton(
                 ) {
                     SkeletonBlock(width = 180.dp, height = 18.dp, shimmerBrush = shimmerBrush)
                     SkeletonBlock(
-                        modifier = Modifier.fillMaxWidth(0.8f),
+                        modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                         height = 13.dp,
                         shimmerBrush = shimmerBrush
                     )
@@ -194,7 +196,7 @@ private fun ToolCardSkeleton(
                 ) {
                     SkeletonBlock(width = 140.dp, height = 15.dp, shimmerBrush = shimmerBrush)
                     SkeletonBlock(
-                        modifier = Modifier.fillMaxWidth(0.7f),
+                        modifier = Modifier.fillMaxWidth(fraction = 0.7f),
                         height = 12.dp,
                         shimmerBrush = shimmerBrush
                     )
@@ -254,7 +256,7 @@ private fun rememberMainHomeSkeletonBrush(colors: CmpThemeColors): Brush {
         ),
         label = "MainHomeSkeletonShimmerProgress"
     )
-    val startX = -600f + progress * 1_200f
+    val startX = -SHIMMER_BAND_WIDTH + progress * 1_200f
 
     return Brush.linearGradient(
         colors = listOf(
@@ -263,7 +265,7 @@ private fun rememberMainHomeSkeletonBrush(colors: CmpThemeColors): Brush {
             colors.surfaceVariant
         ),
         start = Offset(startX, 0f),
-        end = Offset(startX + 600f, 0f)
+        end = Offset(startX + SHIMMER_BAND_WIDTH, 0f)
     )
 }
 

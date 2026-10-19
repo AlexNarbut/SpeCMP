@@ -66,7 +66,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
             val response = if (credentials.isValid()) {
                 withContext(dispatchers.io) { repository.login(credentials) }
             } else {
-                Response.Error(IllegalArgumentException())
+                Response.Error(IllegalArgumentException("Invalid credentials"))
             }
 
             when (response) {
@@ -96,7 +96,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
             val response = if (credentials.isValid()) {
                 withContext(dispatchers.io) { repository.resendActivationEmail(credentials) }
             } else {
-                Response.Error(IllegalArgumentException())
+                Response.Error(IllegalArgumentException("Invalid credentials"))
             }
 
             when (response) {

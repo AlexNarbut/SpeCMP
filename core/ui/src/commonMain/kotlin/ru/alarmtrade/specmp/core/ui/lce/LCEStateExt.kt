@@ -6,20 +6,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.Response
 
-/**
+/*
  * Extension functions for LCEState.
  */
 
 /**
  * Maps content of LCEState to another type.
  */
-fun <T, R> LCEState<T>.mapContent(mapper: (T) -> R): LCEState<R> {
-    return when (this) {
-        is LCEState.Content -> LCEState.Content(mapper(content))
-        is LCEState.Error -> this
-        is LCEState.Loading -> this
-        is LCEState.None -> this
-    }
+fun <T, R> LCEState<T>.mapContent(mapper: (T) -> R): LCEState<R> = when (this) {
+    is LCEState.Content -> LCEState.Content(mapper(content))
+    is LCEState.Error -> this
+    is LCEState.Loading -> this
+    is LCEState.None -> this
 }
 
 /**
@@ -49,6 +47,7 @@ suspend fun <R, L> MutableStateFlow<LCEState<L>>.applyFromExecuting(
                 val content = withContext(dispatcher) { map(response.value) }
                 LCEState.Content(content)
             }
+
             is Response.Error -> createLCEError(errorMapper.invoke(response.exception))
         }
     }
@@ -57,9 +56,7 @@ suspend fun <R, L> MutableStateFlow<LCEState<L>>.applyFromExecuting(
 /**
  * Creates an LCEState.Error with the given error message.
  */
-fun createLCEError(error: String): LCEState.Error {
-    return LCEState.Error(error)
-}
+fun createLCEError(error: String): LCEState.Error = LCEState.Error(error)
 
 /**
  * Executes action if state is Content.
@@ -78,30 +75,22 @@ inline fun <T> LCEState<T>.ifSuccess(action: (T) -> Unit) {
 /**
  * Returns true if state is Error.
  */
-fun <T> LCEState<T>.isError(): Boolean {
-    return this is LCEState.Error
-}
+fun <T> LCEState<T>.isError(): Boolean = this is LCEState.Error
 
 /**
  * Returns true if state is Content.
  */
-fun <T> LCEState<T>.isSuccess(): Boolean {
-    return this is LCEState.Content
-}
+fun <T> LCEState<T>.isSuccess(): Boolean = this is LCEState.Content
 
 /**
  * Returns true if state is not Loading (i.e., it's a final state).
  */
-fun <T> LCEState<T>.isFinalState(): Boolean {
-    return this !is LCEState.Loading
-}
+fun <T> LCEState<T>.isFinalState(): Boolean = this !is LCEState.Loading
 
 /**
  * Returns true if state is Loading.
  */
-fun <T> LCEState<T>.isLoading(): Boolean {
-    return this is LCEState.Loading
-}
+fun <T> LCEState<T>.isLoading(): Boolean = this is LCEState.Loading
 
 /**
  * Wraps value in LCEState.Content.

@@ -83,6 +83,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * Резолвит [CmpIcons] enum в [ImageVector] из material-icons (без IO).
  */
+@Suppress("CyclomaticComplexMethod") // таблица-маппер enum → ImageVector
 @Composable
 fun CmpIcons.imageVector(): ImageVector = when (this) {
     // Navigation

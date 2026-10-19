@@ -448,6 +448,7 @@ private const val MIN_IMAGE_RATIO = 0.75f
 private const val MAX_IMAGE_RATIO = 2f
 
 private const val FILE_URI_SCHEME = "file://"
+private const val TENTHS_PER_UNIT = 10L
 
 private fun SupportChatUiAttachment.imageSource(): String? = localPath?.let { FILE_URI_SCHEME + it } ?: url
 
@@ -500,6 +501,6 @@ private fun formatFileSize(sizeBytes: Long): String {
 
 @Composable
 private fun formatWithTenths(value: Long, unit: Long, resource: StringResource): String {
-    val tenths = value * 10L / unit
-    return stringResource(resource, tenths / 10L, tenths % 10L)
+    val tenths = value * TENTHS_PER_UNIT / unit
+    return stringResource(resource, tenths / TENTHS_PER_UNIT, tenths % TENTHS_PER_UNIT)
 }

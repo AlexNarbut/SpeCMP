@@ -8,14 +8,14 @@ import androidx.compose.ui.uikit.LocalUIViewController
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
+import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSNumber
-import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
-import platform.Foundation.NSUserDomainMask
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
+import platform.Foundation.NSUserDomainMask
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
@@ -25,8 +25,8 @@ import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerMode
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
-import platform.darwin.NSObject
 import platform.darwin.DISPATCH_QUEUE_PRIORITY_DEFAULT
+import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
@@ -44,9 +44,7 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
     }
 }
 
-private class IosSupportChatFilePicker(
-    private val viewController: UIViewController,
-) : SupportChatFilePicker {
+private class IosSupportChatFilePicker(private val viewController: UIViewController) : SupportChatFilePicker {
 
     private var activeDelegate: NSObject? = null
 
@@ -63,14 +61,14 @@ private class IosSupportChatFilePicker(
         val picker = PHPickerViewController(configuration)
         val delegate = PhotoPickerDelegate(
             onPicked = onPicked,
-            onFinished = { activeDelegate = null },
+            onFinished = { activeDelegate = null }
         )
         activeDelegate = delegate
         picker.delegate = delegate
         viewController.presentViewController(
             viewControllerToPresent = picker,
             animated = true,
-            completion = null,
+            completion = null
         )
     }
 
@@ -81,20 +79,20 @@ private class IosSupportChatFilePicker(
     private fun launchPicker(documentTypes: List<String>) {
         val picker = UIDocumentPickerViewController(
             documentTypes = documentTypes,
-            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen,
+            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen
         ).apply {
             allowsMultipleSelection = false
         }
         val delegate = DocumentPickerDelegate(
             onPicked = onPicked,
-            onFinished = { activeDelegate = null },
+            onFinished = { activeDelegate = null }
         )
         activeDelegate = delegate
         picker.delegate = delegate
         viewController.presentViewController(
             viewControllerToPresent = picker,
             animated = true,
-            completion = null,
+            completion = null
         )
     }
 
@@ -107,8 +105,9 @@ private const val IMAGE_UTI = "public.image"
 
 private class PhotoPickerDelegate(
     private val onPicked: (SupportChatPickedFileResult) -> Unit,
-    private val onFinished: () -> Unit,
-) : NSObject(), PHPickerViewControllerDelegateProtocol {
+    private val onFinished: () -> Unit
+) : NSObject(),
+    PHPickerViewControllerDelegateProtocol {
 
     override fun picker(picker: PHPickerViewController, didFinishPicking: List<*>) {
         picker.dismissViewControllerAnimated(true, null)
@@ -132,13 +131,11 @@ private class PhotoPickerDelegate(
 
 private class DocumentPickerDelegate(
     private val onPicked: (SupportChatPickedFileResult) -> Unit,
-    private val onFinished: () -> Unit,
-) : NSObject(), UIDocumentPickerDelegateProtocol {
+    private val onFinished: () -> Unit
+) : NSObject(),
+    UIDocumentPickerDelegateProtocol {
 
-    override fun documentPicker(
-        controller: UIDocumentPickerViewController,
-        didPickDocumentsAtURLs: List<*>,
-    ) {
+    override fun documentPicker(controller: UIDocumentPickerViewController, didPickDocumentsAtURLs: List<*>) {
         val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
         if (url == null) {
             onPicked(SupportChatPickedFileResult.Cancelled)
@@ -184,15 +181,17 @@ private fun NSURL.copyToAttachments(kind: SupportChatPickKind): SupportChatPicke
             path = directory,
             withIntermediateDirectories = true,
             attributes = null,
-            error = null,
+            error = null
         )
         if (!created || !fileManager.copyItemAtURL(this, NSURL.fileURLWithPath(destinationPath), error = null)) {
             fileManager.removeItemAtPath(directory, error = null)
             return SupportChatPickedFileResult.Failed
         }
 
-        val sizeBytes = (fileManager.attributesOfItemAtPath(destinationPath, error = null)
-            ?.get(NSFileSize) as? NSNumber)
+        val sizeBytes = (
+            fileManager.attributesOfItemAtPath(destinationPath, error = null)
+                ?.get(NSFileSize) as? NSNumber
+            )
             ?.longLongValue
         if ((sizeBytes ?: 0L) > SupportChatAttachmentLimits.MAX_BYTES) {
             fileManager.removeItemAtPath(directory, error = null)
@@ -205,9 +204,9 @@ private fun NSURL.copyToAttachments(kind: SupportChatPickKind): SupportChatPicke
                 name = originalName,
                 path = destinationPath,
                 mimeType = mimeTypeForName(originalName),
-                sizeBytes = sizeBytes,
+                sizeBytes = sizeBytes
             ),
-            kind,
+            kind
         )
     } finally {
         if (canAccess) stopAccessingSecurityScopedResource()
@@ -223,7 +222,7 @@ internal fun supportChatAttachmentsDirectory(): String? {
         path = directory,
         withIntermediateDirectories = true,
         attributes = null,
-        error = null,
+        error = null
     )
     return directory.takeIf { created }
 }
@@ -231,17 +230,15 @@ internal fun supportChatAttachmentsDirectory(): String? {
 private const val DEFAULT_NAME = "attachment"
 private const val ATTACHMENTS_DIR = "support-chat-attachments"
 
-private fun mimeTypeForName(name: String): String? {
-    return when (name.substringAfterLast('.', "").lowercase()) {
-        "jpg", "jpeg" -> "image/jpeg"
-        "png" -> "image/png"
-        "gif" -> "image/gif"
-        "webp" -> "image/webp"
-        "heic" -> "image/heic"
-        "pdf" -> "application/pdf"
-        "txt" -> "text/plain"
-        "doc" -> "application/msword"
-        "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        else -> null
-    }
+private fun mimeTypeForName(name: String): String? = when (name.substringAfterLast('.', "").lowercase()) {
+    "jpg", "jpeg" -> "image/jpeg"
+    "png" -> "image/png"
+    "gif" -> "image/gif"
+    "webp" -> "image/webp"
+    "heic" -> "image/heic"
+    "pdf" -> "application/pdf"
+    "txt" -> "text/plain"
+    "doc" -> "application/msword"
+    "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    else -> null
 }

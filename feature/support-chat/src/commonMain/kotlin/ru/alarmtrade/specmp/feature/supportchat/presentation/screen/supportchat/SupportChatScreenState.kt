@@ -46,7 +46,7 @@ data class SupportChatScreenState(
     val typingAuthor: String? = null,
     // Вложения композера — сразу в presentation-модели, маппинг на границе VM.
     val pendingAttachments: ImmutableList<SupportChatUiAttachment> = persistentListOf(),
-    val downloadingAttachmentId: String? = null,
+    val downloadingAttachmentId: String? = null
 ) {
     /** Лента текущего состояния; пустая в None/Loading/Error. */
     val timeline: SupportChatTimeline
@@ -60,8 +60,12 @@ data class SupportChatScreenState(
     val connectionBanner: SupportChatConnectionBanner?
         get() = when {
             connection == SupportChatConnection.Online -> null
+
             isChatAuthFailed -> SupportChatConnectionBanner.AuthFailed
-            hasConnectionIssue || connection == SupportChatConnection.Offline -> SupportChatConnectionBanner.Reconnecting
+
+            hasConnectionIssue || connection == SupportChatConnection.Offline ->
+                SupportChatConnectionBanner.Reconnecting
+
             else -> SupportChatConnectionBanner.Connecting
         }
 

@@ -54,11 +54,11 @@ private object ActiveDocumentPreview {
     var delegate: PreviewDelegate? = null
 }
 
-private class PreviewDelegate(
-    private val presenter: UIViewController,
-) : NSObject(), UIDocumentInteractionControllerDelegateProtocol {
+private class PreviewDelegate(private val presenter: UIViewController) :
+    NSObject(),
+    UIDocumentInteractionControllerDelegateProtocol {
     override fun documentInteractionControllerViewControllerForPreview(
-        controller: UIDocumentInteractionController,
+        controller: UIDocumentInteractionController
     ): UIViewController = presenter
 }
 
@@ -77,8 +77,10 @@ private suspend fun present(url: NSURL): SupportChatFileOpenResult = suspendCanc
 
         val result = when {
             controller.presentPreviewAnimated(true) -> SupportChatFileOpenResult.Opened
+
             controller.presentOpenInMenuFromRect(presenter.view.bounds, inView = presenter.view, animated = true) ->
                 SupportChatFileOpenResult.Opened
+
             else -> SupportChatFileOpenResult.NoApp
         }
         cont.resumeWith(Result.success(result))
@@ -91,7 +93,7 @@ private fun writeOpenFile(fileName: String, bytes: ByteArray): NSURL? {
         path = directory,
         withIntermediateDirectories = true,
         attributes = null,
-        error = null,
+        error = null
     )
     if (!created) return null
     val url = NSURL.fileURLWithPath("$directory/${safeFileName(fileName)}")

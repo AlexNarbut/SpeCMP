@@ -60,7 +60,7 @@ fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
             entry<HomeRoute> { _ ->
                 MainScreen(
                     isDarkTheme = isDark,
-                    onThemeChanged = { isDarkState.value = it },
+                    onThemeChange = { isDarkState.value = it },
                     onNavigateToFeature = onNavigateToFeature
                 )
             }

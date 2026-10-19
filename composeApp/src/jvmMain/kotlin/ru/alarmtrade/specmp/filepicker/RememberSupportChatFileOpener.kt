@@ -2,12 +2,12 @@ package ru.alarmtrade.specmp.filepicker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 import java.awt.Desktop
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 
 /** Desktop: временный файл + приложение по умолчанию (`java.awt.Desktop.open`). */
 @Composable
@@ -21,7 +21,7 @@ actual fun rememberSupportChatFileOpener(): SupportChatFileOpener {
                         writeBytes(bytes)
                         deleteOnExit()
                     }
-                } catch (e: Exception) {
+                } catch (ignored: Exception) {
                     return SupportChatFileOpenResult.Failed
                 }
                 return openWithDesktop(file)
@@ -42,10 +42,10 @@ private fun openWithDesktop(file: File): SupportChatFileOpenResult {
     return try {
         Desktop.getDesktop().open(file)
         SupportChatFileOpenResult.Opened
-    } catch (e: IOException) {
+    } catch (ignored: IOException) {
         // Нет ассоциированного приложения для типа файла.
         SupportChatFileOpenResult.NoApp
-    } catch (e: Exception) {
+    } catch (ignored: Exception) {
         SupportChatFileOpenResult.Failed
     }
 }

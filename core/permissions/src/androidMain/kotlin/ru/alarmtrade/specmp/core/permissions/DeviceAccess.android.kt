@@ -8,7 +8,7 @@ actual fun deviceAccessRequirements(): List<DeviceAccessRequirement> =
 @Suppress("DEPRECATION")
 actual fun isBluetoothEnabled(): Boolean = try {
     BluetoothAdapter.getDefaultAdapter()?.isEnabled == true
-} catch (e: Throwable) {
+} catch (ignored: Throwable) {
     // Нет адаптера / нет доступа к состоянию — не блокируем поток.
     true
 }

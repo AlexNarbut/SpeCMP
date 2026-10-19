@@ -30,6 +30,8 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_typing_author
 
+private const val TYPING_DOT_COUNT = 3
+
 @Composable
 internal fun SupportChatTypingIndicator(author: String, colors: CmpThemeColors, modifier: Modifier = Modifier) {
     CmpColumn(
@@ -64,7 +66,7 @@ internal fun SupportChatTypingIndicator(author: String, colors: CmpThemeColors, 
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                repeat(3) { index ->
+                repeat(TYPING_DOT_COUNT) { index ->
                     TypingDot(
                         color = colors.onSurfaceVariant,
                         delayMillis = index * 180

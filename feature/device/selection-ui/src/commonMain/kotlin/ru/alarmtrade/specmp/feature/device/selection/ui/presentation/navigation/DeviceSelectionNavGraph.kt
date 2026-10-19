@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,10 +12,10 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
-import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.DeviceSelectionScreen
 
@@ -35,14 +37,11 @@ private val navConfig = SavedStateConfiguration {
  * и собственный back stack — граф расширяется новыми экранами (напр. инструкции подключения)
  * без изменений в `composeApp`.
  *
- * @param onSessionCreated сессия с устройством создана — навигация приложения решает, куда вести.
+ * @param onSessionCreate сессия с устройством создана — навигация приложения решает, куда вести.
  * @param onClose выход из графа поиска.
  */
 @Composable
-fun DeviceSelectionNavGraph(
-    onSessionCreated: (ConnectedDevice) -> Unit,
-    onClose: () -> Unit,
-) {
+fun DeviceSelectionNavGraph(onSessionCreate: (ConnectedDevice) -> Unit, onClose: () -> Unit) {
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
 
     NavDisplay(
@@ -50,7 +49,7 @@ fun DeviceSelectionNavGraph(
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         onBack = {
             if (!backStack.popSafe()) onClose()
@@ -58,10 +57,10 @@ fun DeviceSelectionNavGraph(
         entryProvider = entryProvider<NavKey> {
             entry<ScanDeviceRoute> { _ ->
                 DeviceSelectionScreen(
-                    onSessionCreated = onSessionCreated,
-                    onClose = onClose,
+                    onSessionCreate = onSessionCreate,
+                    onClose = onClose
                 )
             }
-        },
+        }
     )
 }

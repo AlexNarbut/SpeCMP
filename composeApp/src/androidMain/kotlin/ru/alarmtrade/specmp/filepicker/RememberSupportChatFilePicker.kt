@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import co.touchlab.kermit.Logger
+import java.io.File
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -25,8 +27,6 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
-import java.io.File
-import java.util.UUID
 
 /**
  * Буфер результатов выбора — на уровне процесса, а не в `remember`:
@@ -93,6 +93,8 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
  * Каждая копия — в своём подкаталоге `<uuid>/<исходное имя>`: SDK берёт имя файла
  * для сервера из пути, и префикс в имени увидела бы поддержка.
  */
+// Граница платформенного I/O: любой сбой копирования логируется и превращается в Failed
+@Suppress("TooGenericExceptionCaught")
 private fun Uri.copyToAttachments(context: Context, kind: SupportChatPickKind): SupportChatPickedFileResult {
     val resolver = context.contentResolver
     val metadata = resolver.queryMetadata(this)
@@ -127,9 +129,9 @@ private fun Uri.copyToAttachments(context: Context, kind: SupportChatPickKind): 
                 name = name,
                 path = target.absolutePath,
                 mimeType = resolver.getType(this),
-                sizeBytes = copied,
+                sizeBytes = copied
             ),
-            kind,
+            kind
         )
     } catch (e: Exception) {
         logger.w(e) { "Failed to copy picked attachment '$name'" }
@@ -146,9 +148,7 @@ internal fun File.deleteWithDirectory() {
 
 private val logger = Logger.withTag("SupportChatFilePicker")
 
-internal fun supportChatAttachmentsDir(context: Context): File {
-    return File(context.filesDir, ATTACHMENTS_DIR)
-}
+internal fun supportChatAttachmentsDir(context: Context): File = File(context.filesDir, ATTACHMENTS_DIR)
 
 private fun ContentResolver.queryMetadata(uri: Uri): PickedFileMetadata {
     val cursor = query(uri, null, null, null, null) ?: return PickedFileMetadata()
@@ -160,7 +160,7 @@ private fun ContentResolver.queryMetadata(uri: Uri): PickedFileMetadata {
                 name = nameIndex.takeIf { index -> index != -1 }?.let(it::getString),
                 sizeBytes = sizeIndex
                     .takeIf { index -> index != -1 && !it.isNull(index) }
-                    ?.let(it::getLong),
+                    ?.let(it::getLong)
             )
         } else {
             PickedFileMetadata()
@@ -168,10 +168,7 @@ private fun ContentResolver.queryMetadata(uri: Uri): PickedFileMetadata {
     }
 }
 
-private data class PickedFileMetadata(
-    val name: String? = null,
-    val sizeBytes: Long? = null,
-)
+private data class PickedFileMetadata(val name: String? = null, val sizeBytes: Long? = null)
 
 private const val ANY_MIME = "*/*"
 private const val DEFAULT_NAME = "attachment"

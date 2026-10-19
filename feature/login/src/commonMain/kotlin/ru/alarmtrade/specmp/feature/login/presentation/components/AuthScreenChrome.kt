@@ -94,7 +94,7 @@ private fun Modifier.authBrandBackdrop(colors: CmpThemeColors): Modifier = drawB
                 colors.primaryContainer.copy(alpha = 0.88f),
                 Color.Transparent
             ),
-            center = Offset(size.width * 1.02f, -size.height * 0.15f),
+            center = Offset(x = size.width * 1.02f, y = -size.height * 0.15f),
             radius = size.maxDimension * 0.72f
         )
     )
@@ -104,7 +104,7 @@ private fun Modifier.authBrandBackdrop(colors: CmpThemeColors): Modifier = drawB
                 colors.tertiaryContainer.copy(alpha = 0.78f),
                 Color.Transparent
             ),
-            center = Offset(-size.width * 0.2f, size.height * 1.12f),
+            center = Offset(x = -size.width * 0.2f, y = size.height * 1.12f),
             radius = size.maxDimension * 0.68f
         )
     )

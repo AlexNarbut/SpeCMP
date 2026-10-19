@@ -264,7 +264,7 @@ private fun RemoteSyncAction(onClick: () -> Unit) {
         CmpIcon(
             painter = painterResource(Res.drawable.mount_remote_sync),
             contentDescription = stringResource(Res.string.advanced_mount_a11y_remote_sync),
-            modifier = Modifier.size(30.dp).alpha(pulseAlpha(1_800)),
+            modifier = Modifier.size(30.dp).alpha(pulseAlpha(periodMillis = 1_800)),
             tint = colors.primary
         )
     }
@@ -272,6 +272,7 @@ private fun RemoteSyncAction(onClick: () -> Unit) {
 
 // ── Шапка блока ─────────────────────────────────────────────────────────────
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun DeviceHeaderCard(
     device: AlarmDevice,
@@ -379,7 +380,7 @@ private fun DeviceHeaderCard(
                             CmpIcon(
                                 icon = CmpIcons.Warning,
                                 contentDescription = stringResource(Res.string.advanced_mount_a11y_can_hint),
-                                modifier = Modifier.size(22.dp).alpha(pulseAlpha(1_600)),
+                                modifier = Modifier.size(22.dp).alpha(pulseAlpha(periodMillis = 1_600)),
                                 tint = colors.error
                             )
                         }

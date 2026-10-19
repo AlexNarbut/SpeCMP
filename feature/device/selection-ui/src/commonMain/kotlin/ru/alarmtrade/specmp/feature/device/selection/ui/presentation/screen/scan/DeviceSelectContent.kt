@@ -78,6 +78,8 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_valu
 import specmp.feature.device.selection_ui.generated.resources.device_select_value_unknown
 import specmp.feature.device.selection_ui.generated.resources.device_select_value_yes
 
+private const val LARGE_TILE_MIN_SIZE_DP = 96
+
 // M3-подобные размеры типографики (CmpText не принимает variant).
 internal object DsType {
     val HeadlineSmall = 24.sp
@@ -294,7 +296,7 @@ internal fun DeviceTile(icon: CmpIcons, sizeDp: Int) {
     val colors = cmpThemeColors()
     CmpSurface(
         modifier = Modifier.size(sizeDp.dp),
-        shape = RoundedCornerShape(if (sizeDp >= 96) 20.dp else 12.dp),
+        shape = RoundedCornerShape(if (sizeDp >= LARGE_TILE_MIN_SIZE_DP) 20.dp else 12.dp),
         color = colors.surfaceVariant,
         border = BorderStroke(1.dp, colors.outlineVariant)
     ) {

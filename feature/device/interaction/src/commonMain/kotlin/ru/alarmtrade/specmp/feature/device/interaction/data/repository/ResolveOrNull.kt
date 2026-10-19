@@ -10,6 +10,6 @@ internal fun <T> (() -> T).resolveOrNull(): T? = try {
     invoke()
 } catch (e: CancellationException) {
     throw e
-} catch (e: Throwable) {
+} catch (ignored: Throwable) {
     null
 }

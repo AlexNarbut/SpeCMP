@@ -17,6 +17,8 @@ class LogoutUseCase(private val authStateRepository: AuthStateRepository, privat
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
+    // Сбой release() одного AuthCloseable не должен сорвать выход: ловим всё и логируем
+    @Suppress("TooGenericExceptionCaught")
     suspend fun execute(): Response<Unit> = when (val response = authStateRepository.logout()) {
         is Response.Success -> {
             closeables.forEach { closeable ->

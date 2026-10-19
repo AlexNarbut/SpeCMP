@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.login.presentation.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -16,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.localization.LocalAppLocale
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -23,8 +24,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.core.localization.AppLocale
-import ru.alarmtrade.specmp.core.localization.LocalAppLocale
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_a11y_language_en
 import specmp.feature.login.generated.resources.login_common_a11y_language_ru
@@ -33,9 +32,9 @@ import specmp.feature.login.generated.resources.login_common_btn_language_ru
 
 @Composable
 fun AuthLanguageSegment(
-    onLocaleChanged: (AppLocale) -> Unit,
+    onLocaleChange: (AppLocale) -> Unit,
     modifier: Modifier = Modifier,
-    colors: CmpThemeColors = cmpThemeColors(),
+    colors: CmpThemeColors = cmpThemeColors()
 ) {
     val appLocale = LocalAppLocale.current
 
@@ -43,25 +42,25 @@ fun AuthLanguageSegment(
         modifier = modifier,
         shape = CircleShape,
         color = colors.surfaceVariant,
-        contentColor = colors.onSurfaceVariant,
+        contentColor = colors.onSurfaceVariant
     ) {
         CmpRow(
             modifier = Modifier.padding(3.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AuthLanguageSegmentItem(
                 text = stringResource(Res.string.login_common_btn_language_en),
                 contentDescription = stringResource(Res.string.login_common_a11y_language_en),
                 selected = appLocale == AppLocale.English,
                 colors = colors,
-                onClick = { onLocaleChanged(AppLocale.English) },
+                onClick = { onLocaleChange(AppLocale.English) }
             )
             AuthLanguageSegmentItem(
                 text = stringResource(Res.string.login_common_btn_language_ru),
                 contentDescription = stringResource(Res.string.login_common_a11y_language_ru),
                 selected = appLocale == AppLocale.Russian,
                 colors = colors,
-                onClick = { onLocaleChanged(AppLocale.Russian) },
+                onClick = { onLocaleChange(AppLocale.Russian) }
             )
         }
     }
@@ -73,7 +72,7 @@ private fun AuthLanguageSegmentItem(
     contentDescription: String,
     selected: Boolean,
     colors: CmpThemeColors,
-    onClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     // Размеры кнопки (38dp) заданы дизайном segmented control;
     // стандартная M3-инфляция до 48dp здесь отключена, иначе трек раздувается.
@@ -88,19 +87,19 @@ private fun AuthLanguageSegmentItem(
         shape = CircleShape,
         color = if (selected) colors.primary else Color.Transparent,
         contentColor = if (selected) colors.onPrimary else colors.onSurfaceVariant,
-        enforceMinimumTouchTarget = false,
+        enforceMinimumTouchTarget = false
     ) {
         CmpBox(
             modifier = Modifier
                 .heightIn(min = 38.dp)
                 .widthIn(min = 46.dp)
                 .padding(horizontal = 14.dp),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             CmpText(
                 text = text,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }

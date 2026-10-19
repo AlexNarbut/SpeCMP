@@ -39,7 +39,7 @@ class AppActivity : FragmentActivity() {
             App(
                 appVersionName = versionName,
                 appVersionCode = versionCode,
-                onThemeChanged = { ThemeChanged(it) }
+                onThemeChange = { ThemeChanged(it) }
             )
         }
     }

@@ -26,6 +26,9 @@ fun main() = application {
     }
 }
 
+private const val DEFAULT_VERSION_NAME = "2.0.40"
+private const val DEFAULT_VERSION_CODE = 240
+
 private fun loadDesktopAppVersion(): Pair<String, Int> = try {
     val properties = java.util.Properties().apply {
         val stream = Thread.currentThread().contextClassLoader
@@ -34,9 +37,10 @@ private fun loadDesktopAppVersion(): Pair<String, Int> = try {
             load(stream)
         }
     }
-    val versionName = properties.getProperty("versionName", "2.0.40")
-    val versionCode = properties.getProperty("versionCode", "240").toIntOrNull() ?: 240
+    val versionName = properties.getProperty("versionName", DEFAULT_VERSION_NAME)
+    val versionCode = properties.getProperty("versionCode", DEFAULT_VERSION_CODE.toString()).toIntOrNull()
+        ?: DEFAULT_VERSION_CODE
     versionName to versionCode
-} catch (e: Throwable) {
-    "2.0.40" to 240
+} catch (ignored: Throwable) {
+    DEFAULT_VERSION_NAME to DEFAULT_VERSION_CODE
 }

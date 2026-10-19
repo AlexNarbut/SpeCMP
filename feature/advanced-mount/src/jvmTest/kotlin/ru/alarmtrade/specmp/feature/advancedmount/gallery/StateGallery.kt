@@ -51,7 +51,7 @@ internal object StateGallery {
 
     private fun shot(width: Int, height: Int, dark: Boolean, content: @Composable () -> Unit): Image {
         val scene = ImageComposeScene(width, height, Density(1f)) {
-            AppTheme(onThemeChanged = {}) {
+            AppTheme(onThemeChange = {}) {
                 val isDark = LocalThemeIsDark.current
                 SideEffect { isDark.value = dark }
                 content()

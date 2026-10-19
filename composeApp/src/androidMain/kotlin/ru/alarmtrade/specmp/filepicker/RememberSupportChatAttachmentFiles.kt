@@ -3,8 +3,8 @@ package ru.alarmtrade.specmp.filepicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
 import java.io.File
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
 
 /**
  * Удаляет копии вложений, созданные пикером, — только внутри собственного каталога

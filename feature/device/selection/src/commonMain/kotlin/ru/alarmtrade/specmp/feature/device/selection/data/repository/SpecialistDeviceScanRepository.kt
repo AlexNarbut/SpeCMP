@@ -112,6 +112,7 @@ class SpecialistDeviceScanRepository(
     )
 
     // По имени, а не по enum SDK: набор типов растёт, неизвестные уходят в OTHER.
+    @Suppress("CyclomaticComplexMethod") // таблица-маппер
     private fun String.toDeviceKind(): DeviceKind = when {
         this == "ALARM" || this == "MICROBOT" -> DeviceKind.ALARM
 
@@ -148,6 +149,6 @@ private fun <T> (() -> T).resolveOrNull(): T? = try {
     invoke()
 } catch (e: CancellationException) {
     throw e
-} catch (e: Throwable) {
+} catch (ignored: Throwable) {
     null
 }

@@ -18,6 +18,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import java.io.File
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -25,7 +26,6 @@ import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
-import java.io.File
 
 /**
  * Сейвер передаётся в конструктор per-entry VM, а VM переживает пересоздание
@@ -68,16 +68,14 @@ actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
     }
 }
 
-private fun saveToDownloads(context: Context, fileName: String, bytes: ByteArray): String? {
-    return try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            saveViaMediaStore(context, fileName, bytes)
-        } else {
-            saveToPublicDownloads(fileName, bytes)
-        }
-    } catch (e: Exception) {
-        null
+private fun saveToDownloads(context: Context, fileName: String, bytes: ByteArray): String? = try {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        saveViaMediaStore(context, fileName, bytes)
+    } else {
+        saveToPublicDownloads(fileName, bytes)
     }
+} catch (ignored: Exception) {
+    null
 }
 
 /**
@@ -96,20 +94,19 @@ private fun saveViaMediaStore(context: Context, fileName: String, bytes: ByteArr
     val resolver = context.contentResolver
     val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
     return try {
-        resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: throw IllegalStateException("No output stream")
+        resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: error("No output stream")
         resolver.update(uri, ContentValues().apply { put(MediaStore.Downloads.IS_PENDING, 0) }, null, null)
         "$relativePath/${resolver.displayName(uri) ?: fileName}"
-    } catch (e: Exception) {
+    } catch (ignored: Exception) {
         resolver.delete(uri, null, null)
         null
     }
 }
 
-private fun ContentResolver.displayName(uri: Uri): String? {
-    return query(uri, arrayOf(MediaStore.Downloads.DISPLAY_NAME), null, null, null)?.use { cursor ->
+private fun ContentResolver.displayName(uri: Uri): String? =
+    query(uri, arrayOf(MediaStore.Downloads.DISPLAY_NAME), null, null, null)?.use { cursor ->
         if (cursor.moveToFirst()) cursor.getString(0) else null
     }
-}
 
 // API < 29: требуется WRITE_EXTERNAL_STORAGE; без него вернём null — ошибка уйдёт в снекбар.
 private fun saveToPublicDownloads(fileName: String, bytes: ByteArray): String? {

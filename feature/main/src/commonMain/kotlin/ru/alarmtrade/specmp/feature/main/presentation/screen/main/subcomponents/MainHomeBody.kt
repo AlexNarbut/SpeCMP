@@ -41,9 +41,10 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
 
-private const val DrawerAnimationDurationMillis = 220
-private const val DrawerScrimAnimationDurationMillis = 180
+private const val DRAWER_ANIMATION_DURATION_MILLIS = 220
+private const val DRAWER_SCRIM_ANIMATION_DURATION_MILLIS = 180
 
+@Suppress("LongMethod")
 @Composable
 fun MainHomeBody(
     state: State<MainScreenState>,
@@ -55,9 +56,9 @@ fun MainHomeBody(
     onHomeActionClick: (MainHomeAction) -> Unit,
     onSettingsClick: () -> Unit,
     isDarkTheme: Boolean,
-    onThemeChanged: (Boolean) -> Unit,
+    onThemeChange: (Boolean) -> Unit,
     onLogout: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val value = state.value
     val colors = cmpThemeColors()
@@ -65,7 +66,7 @@ fun MainHomeBody(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .mainHomeBrandBackdrop(colors),
+            .mainHomeBrandBackdrop(colors)
     ) {
         val mode = mainHomeMode(maxWidth.value)
         val layoutDirection = LocalLayoutDirection.current
@@ -83,17 +84,17 @@ fun MainHomeBody(
                         isCompact = mode == MainHomeMode.Compact,
                         isLoading = value.isInitialLoading,
                         databaseSyncBadge = value.databaseSyncBadge,
-                        onMenuClick = onMenuClick,
+                        onMenuClick = onMenuClick
                     )
                     if (value.isInitialLoading) {
                         CmpLinearProgressIndicator(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(2.dp),
+                                .height(2.dp)
                         )
                     }
                 }
-            },
+            }
         ) { paddingValues ->
             val scaffoldStartPadding = paddingValues.calculateStartPadding(layoutDirection)
             val scaffoldEndPadding = paddingValues.calculateEndPadding(layoutDirection)
@@ -102,36 +103,36 @@ fun MainHomeBody(
             val contentStartPadding = if (showSidePanel) 0.dp else scaffoldStartPadding
             val sidePanelDrawerPadding = PaddingValues(
                 start = scaffoldStartPadding,
-                bottom = scaffoldBottomPadding,
+                bottom = scaffoldBottomPadding
             )
             val modalDrawerPadding = PaddingValues(
                 start = scaffoldStartPadding,
                 top = scaffoldTopPadding,
-                bottom = scaffoldBottomPadding,
+                bottom = scaffoldBottomPadding
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = scaffoldTopPadding),
+                        .padding(top = scaffoldTopPadding)
                 ) {
                     AnimatedVisibility(
                         visible = showSidePanel,
                         enter = sidePanelEnterTransition(),
-                        exit = sidePanelExitTransition(),
+                        exit = sidePanelExitTransition()
                     ) {
                         MainHomeDrawer(
                             state = value,
                             isDark = isDarkTheme,
-                            onThemeChanged = onThemeChanged,
+                            onThemeChange = onThemeChange,
                             onDatabaseSyncClick = onDatabaseSyncClick,
                             onAppUpdateCheckClick = onAppUpdateCheckClick,
                             onAppUpdateOpenClick = onAppUpdateOpenClick,
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             contentPadding = sidePanelDrawerPadding,
-                            modifier = Modifier.width(312.dp),
+                            modifier = Modifier.width(312.dp)
                         )
                     }
 
@@ -142,7 +143,7 @@ fun MainHomeBody(
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f)
                         )
                     } else {
                         MainHomeContent(
@@ -153,7 +154,7 @@ fun MainHomeBody(
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -161,33 +162,33 @@ fun MainHomeBody(
                 Box(modifier = Modifier.fillMaxSize()) {
                     AnimatedVisibility(
                         visible = showModalDrawer,
-                        enter = fadeIn(animationSpec = tween(DrawerScrimAnimationDurationMillis)),
-                        exit = fadeOut(animationSpec = tween(DrawerScrimAnimationDurationMillis)),
+                        enter = fadeIn(animationSpec = tween(DRAWER_SCRIM_ANIMATION_DURATION_MILLIS)),
+                        exit = fadeOut(animationSpec = tween(DRAWER_SCRIM_ANIMATION_DURATION_MILLIS))
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(colors.scrim.copy(alpha = 0.42f))
-                                .clickable(onClick = onMenuDismiss),
+                                .clickable(onClick = onMenuDismiss)
                         )
                     }
 
                     AnimatedVisibility(
                         visible = showModalDrawer,
                         enter = drawerEnterTransition(),
-                        exit = drawerExitTransition(),
+                        exit = drawerExitTransition()
                     ) {
                         MainHomeDrawer(
                             state = value,
                             isDark = isDarkTheme,
-                            onThemeChanged = onThemeChanged,
+                            onThemeChange = onThemeChange,
                             onDatabaseSyncClick = onDatabaseSyncClick,
                             onAppUpdateCheckClick = onAppUpdateCheckClick,
                             onAppUpdateOpenClick = onAppUpdateOpenClick,
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             contentPadding = modalDrawerPadding,
-                            modifier = Modifier.width(320.dp),
+                            modifier = Modifier.width(320.dp)
                         )
                     }
                 }
@@ -197,23 +198,23 @@ fun MainHomeBody(
 }
 
 private fun drawerEnterTransition() = slideInHorizontally(
-    animationSpec = tween(DrawerAnimationDurationMillis),
-    initialOffsetX = { -it },
-) + fadeIn(animationSpec = tween(DrawerAnimationDurationMillis))
+    animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
+    initialOffsetX = { -it }
+) + fadeIn(animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS))
 
 private fun drawerExitTransition() = slideOutHorizontally(
-    animationSpec = tween(DrawerAnimationDurationMillis),
-    targetOffsetX = { -it },
-) + fadeOut(animationSpec = tween(DrawerAnimationDurationMillis))
+    animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
+    targetOffsetX = { -it }
+) + fadeOut(animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS))
 
 private fun sidePanelEnterTransition() = drawerEnterTransition() + expandHorizontally(
-    animationSpec = tween(DrawerAnimationDurationMillis),
-    expandFrom = Alignment.Start,
+    animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
+    expandFrom = Alignment.Start
 )
 
 private fun sidePanelExitTransition() = drawerExitTransition() + shrinkHorizontally(
-    animationSpec = tween(DrawerAnimationDurationMillis),
-    shrinkTowards = Alignment.Start,
+    animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
+    shrinkTowards = Alignment.Start
 )
 
 @Composable
@@ -225,12 +226,12 @@ private fun MainHomeContent(
     startContentPadding: Dp,
     endContentPadding: Dp,
     bottomContentPadding: Dp,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val actions = MainHomeAction.visibleActions(
         features = state.appFeatures,
         commercial = state.userCommercial,
-        showChat = state.chatAvailability,
+        showChat = state.chatAvailability
     )
 
     MainHomeDashboard(
@@ -241,32 +242,30 @@ private fun MainHomeContent(
         endContentPadding = endContentPadding,
         bottomContentPadding = bottomContentPadding,
         actions = actions,
-        modifier = modifier,
+        modifier = modifier
     )
 }
 
-private fun Modifier.mainHomeBrandBackdrop(colors: CmpThemeColors): Modifier {
-    return drawBehind {
-        drawRect(colors.background)
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    colors.primaryContainer.copy(alpha = 0.82f),
-                    Color.Transparent,
-                ),
-                center = Offset(size.width * 1.04f, -size.height * 0.18f),
-                radius = size.maxDimension * 0.76f,
+private fun Modifier.mainHomeBrandBackdrop(colors: CmpThemeColors): Modifier = drawBehind {
+    drawRect(colors.background)
+    drawRect(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                colors.primaryContainer.copy(alpha = 0.82f),
+                Color.Transparent
             ),
+            center = Offset(x = size.width * 1.04f, y = -size.height * 0.18f),
+            radius = size.maxDimension * 0.76f
         )
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    colors.tertiaryContainer.copy(alpha = 0.72f),
-                    Color.Transparent,
-                ),
-                center = Offset(-size.width * 0.18f, size.height * 1.1f),
-                radius = size.maxDimension * 0.7f,
+    )
+    drawRect(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                colors.tertiaryContainer.copy(alpha = 0.72f),
+                Color.Transparent
             ),
+            center = Offset(x = -size.width * 0.18f, y = size.height * 1.1f),
+            radius = size.maxDimension * 0.7f
         )
-    }
+    )
 }

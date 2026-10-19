@@ -8,7 +8,10 @@ enum class DeviceConnectionState {
     /** Идёт подключение/сопряжение (промежуточные статусы). */
     CONNECTING,
 
-    /** Сессия установлена — дальше устройством владеет [DeviceSession][ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession]. */
+    /**
+     * Сессия установлена — дальше устройством владеет
+     * [DeviceSession][ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession].
+     */
     CONNECTED,
 
     /** Подключение не удалось. */

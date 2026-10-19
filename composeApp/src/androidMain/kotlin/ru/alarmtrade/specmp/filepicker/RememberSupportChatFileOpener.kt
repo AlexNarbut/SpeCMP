@@ -8,10 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 import java.io.File
 import java.util.UUID
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
+import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 
 /**
  * Открытие во внешнем приложении через `FileProvider` (`<provider>` и пути —
@@ -28,10 +28,13 @@ actual fun rememberSupportChatFileOpener(): SupportChatFileOpener {
                 val file = try {
                     // Временная копия в cacheDir: система вправе её вычистить, повторное
                     // открытие скачает файл заново. Старые копии чистим перед записью.
-                    val root = File(appContext.cacheDir, OPEN_DIR).apply { deleteRecursively(); mkdirs() }
+                    val root = File(appContext.cacheDir, OPEN_DIR).apply {
+                        deleteRecursively()
+                        mkdirs()
+                    }
                     val directory = File(root, UUID.randomUUID().toString()).apply { mkdirs() }
                     File(directory, safeFileName(fileName)).apply { writeBytes(bytes) }
-                } catch (e: Exception) {
+                } catch (ignored: Exception) {
                     return SupportChatFileOpenResult.Failed
                 }
                 return appContext.openInExternalApp(file)
@@ -46,24 +49,22 @@ actual fun rememberSupportChatFileOpener(): SupportChatFileOpener {
     }
 }
 
-private fun Context.openInExternalApp(file: File): SupportChatFileOpenResult {
-    return try {
-        val uri = FileProvider.getUriForFile(this, "$packageName$FILE_PROVIDER_SUFFIX", file)
-        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase()) ?: ANY_MIME
-        // Без chooser: при нескольких приложениях система сама предложит выбор, а
-        // отсутствие обработчика — ActivityNotFoundException (resolveActivity на API 30+
-        // без <queries> ненадёжен).
-        startActivity(
-            Intent(Intent.ACTION_VIEW)
-                .setDataAndType(uri, mimeType)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-        SupportChatFileOpenResult.Opened
-    } catch (e: ActivityNotFoundException) {
-        SupportChatFileOpenResult.NoApp
-    } catch (e: Exception) {
-        SupportChatFileOpenResult.Failed
-    }
+private fun Context.openInExternalApp(file: File): SupportChatFileOpenResult = try {
+    val uri = FileProvider.getUriForFile(this, "$packageName$FILE_PROVIDER_SUFFIX", file)
+    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase()) ?: ANY_MIME
+    // Без chooser: при нескольких приложениях система сама предложит выбор, а
+    // отсутствие обработчика — ActivityNotFoundException (resolveActivity на API 30+
+    // без <queries> ненадёжен).
+    startActivity(
+        Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uri, mimeType)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    )
+    SupportChatFileOpenResult.Opened
+} catch (ignored: ActivityNotFoundException) {
+    SupportChatFileOpenResult.NoApp
+} catch (ignored: Exception) {
+    SupportChatFileOpenResult.Failed
 }
 
 /** Совпадает с `android:authorities="${applicationId}.supportchat.files"` в манифесте androidApp. */

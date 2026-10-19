@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
 import androidx.compose.ui.unit.Dp
@@ -10,10 +12,14 @@ internal enum class MainHomeMode {
     Large
 }
 
+private const val LARGE_MIN_WIDTH_DP = 1_200f
+private const val EXPANDED_MIN_WIDTH_DP = 840f
+private const val MEDIUM_MIN_WIDTH_DP = 600f
+
 internal fun mainHomeMode(widthDp: Float): MainHomeMode = when {
-    widthDp >= 1_200f -> MainHomeMode.Large
-    widthDp >= 840f -> MainHomeMode.Expanded
-    widthDp >= 600f -> MainHomeMode.Medium
+    widthDp >= LARGE_MIN_WIDTH_DP -> MainHomeMode.Large
+    widthDp >= EXPANDED_MIN_WIDTH_DP -> MainHomeMode.Expanded
+    widthDp >= MEDIUM_MIN_WIDTH_DP -> MainHomeMode.Medium
     else -> MainHomeMode.Compact
 }
 

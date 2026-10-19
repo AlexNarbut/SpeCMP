@@ -11,7 +11,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-/**
+/*
  * One-shot события (навигация, snackbar и т.п.) из ViewModel в UI.
  * См. `docs/patterns.md` — раздел «One-shot события (Effects)».
  *
@@ -37,12 +37,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
  * private fun emitEffect(effect: LoginEffect) { _effect.tryEmit(effect) }
  * ```
  */
-fun <T> sideEffectFlow(): MutableSharedFlow<T> =
-    MutableSharedFlow(
-        replay = 0,
-        extraBufferCapacity = SIDE_EFFECT_BUFFER,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
+fun <T> sideEffectFlow(): MutableSharedFlow<T> = MutableSharedFlow(
+    replay = 0,
+    extraBufferCapacity = SIDE_EFFECT_BUFFER,
+    onBufferOverflow = BufferOverflow.DROP_OLDEST
+)
 
 private const val SIDE_EFFECT_BUFFER = 16
 
@@ -67,7 +66,7 @@ private const val SIDE_EFFECT_BUFFER = 16
 @Composable
 fun <T> Flow<T>.collectSideEffect(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
-    onEffect: suspend (effect: T) -> Unit,
+    onEffect: suspend (effect: T) -> Unit
 ) {
     val effectFlow = this
     val lifecycleOwner = LocalLifecycleOwner.current

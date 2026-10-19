@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.core.permissions
 
 /** Тип доступа, который поясняется пользователю на экране-обосновании (зависит от платформы). */

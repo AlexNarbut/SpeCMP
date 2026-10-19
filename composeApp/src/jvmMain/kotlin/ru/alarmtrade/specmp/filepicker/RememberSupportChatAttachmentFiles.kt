@@ -6,10 +6,8 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 
 /** Desktop отправляет оригинал пользователя без копии — удалять нечего. */
 @Composable
-actual fun rememberSupportChatAttachmentFiles(): SupportChatAttachmentFiles {
-    return remember {
-        object : SupportChatAttachmentFiles {
-            override fun discard(path: String) = Unit
-        }
+actual fun rememberSupportChatAttachmentFiles(): SupportChatAttachmentFiles = remember {
+    object : SupportChatAttachmentFiles {
+        override fun discard(path: String) = Unit
     }
 }

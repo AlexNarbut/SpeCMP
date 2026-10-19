@@ -1034,7 +1034,7 @@ val text = when (error) {
 KoinApplication(application = {
     modules(commonModule, specialistModule, loginModule)
 }) {
-    AppTheme(onThemeChanged) { AppNavigation() }
+    AppTheme(onThemeChange) { AppNavigation() }
 }
 
 // DI-модуль в feature/*/di/

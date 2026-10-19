@@ -29,7 +29,10 @@ interface SupportChatRepository : AuthCloseable {
      */
     suspend fun loadHistoryPage(cursor: SupportChatHistoryCursor?): Response<SupportChatHistoryPage>
 
-    /** Вне `Ready` — `Response.Error` с [ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatNotConnectedException]. */
+    /**
+     * Вне `Ready` — `Response.Error` с
+     * [ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatNotConnectedException].
+     */
     suspend fun sendMessage(text: String): Response<Unit>
     suspend fun sendImage(file: SupportChatPickedFile): Response<Unit>
     suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit>

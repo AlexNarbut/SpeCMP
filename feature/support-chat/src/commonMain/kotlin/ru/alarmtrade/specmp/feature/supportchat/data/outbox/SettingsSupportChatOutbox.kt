@@ -68,7 +68,7 @@ class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOut
         val raw = settings.getStringOrNull(KEY) ?: return emptyList()
         return try {
             json.decodeFromString<List<SupportChatOutboxEntry>>(raw)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             // Битый снимок — не повод ломать экран: начинаем с чистой очереди.
             emptyList()
         }

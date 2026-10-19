@@ -96,11 +96,10 @@ internal fun SupportChatComposer(
                     .weight(1f)
                     .padding(horizontal = 4.dp)
                     .onPreviewKeyEvent { event ->
-                        if (event.type == KeyEventType.KeyDown &&
+                        val isPlainEnter = event.type == KeyEventType.KeyDown &&
                             event.key == Key.Enter &&
-                            !event.isShiftPressed &&
-                            canSend
-                        ) {
+                            !event.isShiftPressed
+                        if (isPlainEnter && canSend) {
                             onSend()
                             true
                         } else {

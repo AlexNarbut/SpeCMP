@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.feature.supportchat.presentation.navigation
 
 import androidx.compose.runtime.Composable

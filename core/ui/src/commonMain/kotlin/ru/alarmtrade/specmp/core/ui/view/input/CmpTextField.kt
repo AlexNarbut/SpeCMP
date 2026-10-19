@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.core.ui.view.input
 
 import androidx.compose.foundation.text.KeyboardActions

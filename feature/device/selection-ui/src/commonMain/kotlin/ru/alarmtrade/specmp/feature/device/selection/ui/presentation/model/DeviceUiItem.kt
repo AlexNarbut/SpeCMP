@@ -88,4 +88,4 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
 /** Блок отдаёт версию как `VER3.57` — показываем `3.57`. */
 internal fun String.toDisplayFirmware(): String = removePrefix("VER").trim()
 
-private fun Int.toHex4(): String = toString(16).uppercase().padStart(4, '0')
+private fun Int.toHex4(): String = toString(radix = 16).uppercase().padStart(length = 4, padChar = '0')

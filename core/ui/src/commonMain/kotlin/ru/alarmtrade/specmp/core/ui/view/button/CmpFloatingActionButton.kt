@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.core.ui.view.button
 
 import androidx.compose.material3.FloatingActionButton

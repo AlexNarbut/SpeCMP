@@ -11,9 +11,9 @@ import ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents.
 @Composable
 internal fun MainScreen(
     isDarkTheme: Boolean,
-    onThemeChanged: (Boolean) -> Unit,
+    onThemeChange: (Boolean) -> Unit,
     onNavigateToFeature: (MainNavigationTarget) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val viewModel = koinViewModel<MainScreenViewModel>()
     val state = viewModel.state.collectAsState()
@@ -34,8 +34,8 @@ internal fun MainScreen(
         onHomeActionClick = viewModel::onHomeActionClicked,
         onSettingsClick = viewModel::onSettingsClicked,
         isDarkTheme = isDarkTheme,
-        onThemeChanged = onThemeChanged,
+        onThemeChange = onThemeChange,
         onLogout = viewModel::logout,
-        modifier = modifier,
+        modifier = modifier
     )
 }

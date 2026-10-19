@@ -157,6 +157,8 @@ inline fun <R> safeResponseRun(block: () -> Response<R>): Response<R> = try {
     Response.Error(e, e.message)
 }
 
+// suspend нужен: block — suspend-фабрика Flow, вызывается здесь же
+@Suppress("SuspendFunWithFlowReturnType")
 suspend inline fun <R> safeFlowResponseRun(noinline block: suspend () -> Flow<R>): Flow<Response<R>> = try {
     block()
         .transform<R, Response<R>> { emit(Response.Success(it)) }
@@ -167,6 +169,8 @@ suspend inline fun <R> safeFlowResponseRun(noinline block: suspend () -> Flow<R>
     flowOf(Response.Error(e, e.message))
 }
 
+// suspend нужен: block — suspend-фабрика Flow, вызывается здесь же
+@Suppress("SuspendFunWithFlowReturnType")
 suspend inline fun <R> safeFlowRun(noinline block: suspend () -> Flow<Response<R>>): Flow<Response<R>> = try {
     block().catch { e ->
         emit(Response.Error(e, e.message))
@@ -186,7 +190,7 @@ suspend inline fun <R> safeFlowRun(noinline block: suspend () -> Flow<Response<R
  * Returns the first successful Response, or the last error if all attempts fail.
  */
 suspend inline fun <T> retry(retryCount: Int = 5, delay: Long = 0, block: suspend () -> Response<T>): Response<T> {
-    for (currentTry in 0 until retryCount - 1) {
+    repeat(retryCount - 1) {
         val response = block()
         if (response is Response.Success) return response
         if (delay > 0) delay(delay)

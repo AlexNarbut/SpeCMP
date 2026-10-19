@@ -10,8 +10,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
-import platform.Foundation.NSUUID
 import platform.Foundation.NSURL
+import platform.Foundation.NSUUID
 import platform.Foundation.create
 import platform.Foundation.writeToURL
 import platform.UIKit.UIApplication
@@ -38,7 +38,7 @@ actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
                     } finally {
                         NSFileManager.defaultManager.removeItemAtURL(tempUrl, error = null)
                     }
-                } catch (e: Throwable) {
+                } catch (ignored: Throwable) {
                     SupportChatFileSaveResult.Failed
                 }
             }
@@ -46,14 +46,11 @@ actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
     }
 }
 
-private class ExportDelegate(
-    private val onResult: (NSURL?) -> Unit,
-) : NSObject(), UIDocumentPickerDelegateProtocol {
+private class ExportDelegate(private val onResult: (NSURL?) -> Unit) :
+    NSObject(),
+    UIDocumentPickerDelegateProtocol {
 
-    override fun documentPicker(
-        controller: UIDocumentPickerViewController,
-        didPickDocumentsAtURLs: List<*>,
-    ) {
+    override fun documentPicker(controller: UIDocumentPickerViewController, didPickDocumentsAtURLs: List<*>) {
         onResult(didPickDocumentsAtURLs.firstOrNull() as? NSURL)
     }
 
@@ -68,35 +65,36 @@ private class ExportDelegate(
  * корутины пикер закрывается: иначе `finally` удалил бы временный файл, пока
  * пользователь ещё выбирает место экспорта.
  */
-private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResult = suspendCancellableCoroutine { cont ->
-    dispatch_async(dispatch_get_main_queue()) {
-        val presenter = topViewController()
-        if (presenter == null) {
-            cont.resumeWith(Result.success(SupportChatFileSaveResult.Failed))
-            return@dispatch_async
-        }
-        val delegate = ExportDelegate { pickedUrl ->
-            if (cont.isActive) {
-                val result = when {
-                    pickedUrl == null -> SupportChatFileSaveResult.Cancelled
-                    pickedUrl.path != null -> SupportChatFileSaveResult.Saved(pickedUrl.path!!)
-                    else -> SupportChatFileSaveResult.Failed
+private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResult =
+    suspendCancellableCoroutine { cont ->
+        dispatch_async(dispatch_get_main_queue()) {
+            val presenter = topViewController()
+            if (presenter == null) {
+                cont.resumeWith(Result.success(SupportChatFileSaveResult.Failed))
+                return@dispatch_async
+            }
+            val delegate = ExportDelegate { pickedUrl ->
+                if (cont.isActive) {
+                    val result = when {
+                        pickedUrl == null -> SupportChatFileSaveResult.Cancelled
+                        pickedUrl.path != null -> SupportChatFileSaveResult.Saved(pickedUrl.path!!)
+                        else -> SupportChatFileSaveResult.Failed
+                    }
+                    cont.resumeWith(Result.success(result))
                 }
-                cont.resumeWith(Result.success(result))
             }
-        }
-        val picker = UIDocumentPickerViewController(forExportingURLs = listOf(fileUrl), asCopy = true)
-        picker.delegate = delegate
-        cont.invokeOnCancellation {
-            dispatch_async(dispatch_get_main_queue()) {
-                // Захват delegate здесь и удерживает его до закрытия пикера.
-                if (picker.delegate === delegate) picker.delegate = null
-                picker.dismissViewControllerAnimated(true, null)
+            val picker = UIDocumentPickerViewController(forExportingURLs = listOf(fileUrl), asCopy = true)
+            picker.delegate = delegate
+            cont.invokeOnCancellation {
+                dispatch_async(dispatch_get_main_queue()) {
+                    // Захват delegate здесь и удерживает его до закрытия пикера.
+                    if (picker.delegate === delegate) picker.delegate = null
+                    picker.dismissViewControllerAnimated(true, null)
+                }
             }
+            presenter.presentViewController(picker, animated = true, completion = null)
         }
-        presenter.presentViewController(picker, animated = true, completion = null)
     }
-}
 
 /** Верхний показанный контроллер — точка показа системных экранов (экспорт, QuickLook). */
 internal fun topViewController(): UIViewController? {
