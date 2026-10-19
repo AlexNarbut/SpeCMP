@@ -98,7 +98,7 @@ class DeviceInteractionViewModelTest {
     }
 
     @Test
-    fun `bootloader drops the child flow, return to main brings it back`() = runTest(dispatcher) {
+    fun `bootloader drops the child flow and return to main brings it back`() = runTest(dispatcher) {
         val viewModel = DeviceInteractionViewModel(session())
         advanceUntilIdle()
         assertEquals(device, viewModel.state.value.device)

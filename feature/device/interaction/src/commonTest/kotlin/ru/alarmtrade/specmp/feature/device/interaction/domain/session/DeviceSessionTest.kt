@@ -32,7 +32,7 @@ class DeviceSessionTest {
     }
 
     @Test
-    fun `read failures are retried, then disconnected`() = runTest(UnconfinedTestDispatcher()) {
+    fun `read failures are retried then disconnected`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             readResults = listOf(Response.Error(IllegalStateException("no answer")))
         }
