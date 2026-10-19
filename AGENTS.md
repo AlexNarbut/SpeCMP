@@ -13,6 +13,7 @@
 - Локальные workflow-артефакты не являются source of truth проекта.
 - Если изменение затрагивает архитектуру, публичные соглашения модуля или правила разработки, обновляй соответствующую документацию проекта и локальные `AGENTS.md`.
 - Документация модулей и подсистем ведётся в `.ai/agents/**/AGENTS.md` (источник) → `.ai/generate.sh`. НЕ создавай новые `README.md` ради документации: ключевые моменты вноси в соответствующий `.ai/agents/**/AGENTS.md`. Существующие `README.md` не являются source of truth.
+- Скиллы и субагенты для всех агентов (Claude Code, Codex, Kimi Code, Gemini CLI) ведутся в `.ai/skills/<skill>/` (`SKILL.md`, `roles/*.md`, ресурсы) → `.ai/generate.sh` раскладывает их в `.agents/skills/`, `.claude/skills/`, `.claude/agents/`, `.codex/agents/`, `.agents/agents/`, `.gemini/agents/`. Сгенерированное вручную не правь. Скилл UI-тестирования — `ui-test`; результаты прогонов — в `.ai-qa/` (не в git).
 
 ## Project Map
 
@@ -31,6 +32,7 @@
 - Navigation: `docs/navigation.md`
 - Локализация / строковые ресурсы: `docs/localization.md`
 - Качество кода (ktlint/compose-rules через Spotless, detekt, git-хуки, хук агентов) — перед коммитом Kotlin-кода: `docs/code-quality.md`
+- UI-тестирование агентами (скилл `ui-test`, `ui.sh`, платформы, правка скилла): `docs/test/ui/index.md`
 
 ## Build / Platform
 

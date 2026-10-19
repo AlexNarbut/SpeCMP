@@ -107,3 +107,7 @@ replay_pid*
 !/.claude/agents/
 !/.claude/hooks/
 !/.claude/settings.json
+
+# UI-тесты: локальные креды скилла ui-test (шаблон — credentials.properties.example) и результаты прогонов
+/.agents/skills/ui-test/*.properties
+/.ai-qa/

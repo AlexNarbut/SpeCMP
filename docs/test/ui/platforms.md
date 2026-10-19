@@ -1,0 +1,42 @@
+# Платформы: требования и особенности
+
+Общее: `python3`, JDK 17, креды в `.agents/skills/ui-test/credentials.properties`.
+
+## Android
+
+- `adb` в `PATH`, запущенный эмулятор или телефон с USB-отладкой; Maestro
+  (`brew tap mobile-dev-inc/tap && brew install mobile-dev-inc/tap/maestro`).
+- app id `ru.alarmtrade.specmp.androidApp`, APK — `androidApp/build/outputs/apk/debug/`.
+- `adb input` вводит только ASCII — тестовые данные латиницей.
+- Тексты в планах — английские: эмулятор на en.
+
+## iOS-симулятор
+
+- Xcode, AXe (`brew install cameroncooke/axe/axe`), Maestro, запущенный симулятор и открытый Simulator.app.
+- `ui.sh use ios` переключает симулятор на en и включает app accessibility (без неё Compose не строит дерево).
+- **Сейчас не собирается под симулятор.** Таргет `iosSimulatorArm64` убран (коммит `820800a`): Specialist SDK
+  (`ru.alarmtrade.common:*`) публикует только `iosarm64` (устройство) и `iosx64` (Intel-симулятор).
+  `ui.sh build` на iOS падает с `ios_simulator_arm64 … not configured in Gradle`. Варианты: сборка SDK под
+  `iossimulatorarm64`, таргет `iosX64` + x86_64-симулятор, или реальное устройство (в `ui.sh` не поддержано).
+
+## Desktop (macOS)
+
+- `swiftc` (Xcode Command Line Tools) — `ax.swift` собирается автоматически в `$TMPDIR/ui-test-SpeCMP/ax`
+  при первом вызове и после правки исходника.
+- **Разрешение Accessibility** для приложения, из которого запущен агент (Терминал / IDE):
+  Системные настройки → Конфиденциальность и безопасность → Универсальный доступ. `doctor desktop` проверяет.
+- `launch` — `./gradlew :desktopApp:run` в фоне; уже запущенное приложение переиспользуется
+  (поиск по процессу `ru.alarmtrade.specmp.desktopApp.MainKt`). Перед действием окно поднимается наверх —
+  во время прогона мышь и клавиатуру не трогать.
+
+Особенности Compose Desktop под Accessibility:
+
+| Что | Как ведёт себя | Как с этим работать |
+|---|---|---|
+| Язык | Gradle передаёт JVM локаль своего демона, приложение берёт язык из своих настроек | runner переключает язык на English через UI перед этапом |
+| Поле ввода | неотличимо от кликабельного текста (`AXStaticText` + `AXPress`) | в `tree` — `btn` с плейсхолдером или введённым текстом; `tap` → `type` |
+| Кликабельность | `AXPress` есть только у кликабельных узлов | такие узлы показываются как `btn` (строки списков тоже) |
+| Назад | системной «назад» нет | `tap` по кнопке «Back»; `key back` без testTag жмёт Escape |
+| Сброс данных | путь хранения сессии SDK неизвестен | `reset` не поддерживается — разлогин шагами UI |
+| Maestro | не поддерживает desktop | кейсы вручную через `do` / `expect` |
+| Координаты | от левого верхнего угла окна | `@x,y` из `tree` подходят для `tap x,y` |
