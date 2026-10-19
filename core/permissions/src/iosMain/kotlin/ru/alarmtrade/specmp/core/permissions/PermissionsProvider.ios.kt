@@ -12,6 +12,7 @@ internal class IosPermissionsProvider : PermissionsProvider {
     override fun getBlePermission(): List<Permission> = blePermissions()
     override fun isLocationEnabled(): Boolean = true
     override fun openLocationSettings() = Unit
+
     // iOS: программно открыть системные настройки Bluetooth нельзя — состояние адаптера
     // показывает сам CoreBluetooth. No-op.
     override fun openBluetoothSettings() = Unit

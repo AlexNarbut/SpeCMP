@@ -1,14 +1,13 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
-import kotlinx.coroutines.flow.MutableSharedFlow
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
-import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -17,22 +16,23 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiItem
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ScanDeviceViewModelTest {
 
@@ -51,7 +51,7 @@ class ScanDeviceViewModelTest {
     private fun dispatchers() = AppDispatchers(
         io = testDispatcher,
         default = testDispatcher,
-        main = testDispatcher,
+        main = testDispatcher
     )
 
     private var lastSession: DeviceSession? = null
@@ -62,7 +62,7 @@ class ScanDeviceViewModelTest {
     private fun viewModel(
         scan: FakeDeviceScanRepository = FakeDeviceScanRepository(),
         connection: FakeDeviceConnectionRepository = FakeDeviceConnectionRepository(),
-        permissions: FakePermissionsProvider = FakePermissionsProvider(),
+        permissions: FakePermissionsProvider = FakePermissionsProvider()
     ) = ScanDeviceViewModel(scan, connection, deviceSession(connection), permissions, dispatchers())
 
     @Test
@@ -76,7 +76,7 @@ class ScanDeviceViewModelTest {
             mode = ScannedDeviceMode.BASE,
             rssi = -50,
             hasDeviceBond = false,
-            hasPhoneBond = false,
+            hasPhoneBond = false
         )
         val viewModel = viewModel(scan = FakeDeviceScanRepository(ble = listOf(bleDevice)))
         backgroundScope.launch { viewModel.state.collect {} }
@@ -104,8 +104,8 @@ class ScanDeviceViewModelTest {
                 kind = DeviceKind.ALARM,
                 rssi = -50,
                 hasDeviceBond = false,
-                hasPhoneBond = false,
-            ),
+                hasPhoneBond = false
+            )
         )
         advanceUntilIdle()
 
@@ -151,7 +151,7 @@ class ScanDeviceViewModelTest {
     fun `pairing required in normal mode asks to enable pairing`() = runTest(testDispatcher) {
         val effects = mutableListOf<ScanDeviceEffect>()
         val connection = FakeDeviceConnectionRepository(
-            states = listOf(Response.Success(DeviceConnectionState.PAIRING_REQUIRED)),
+            states = listOf(Response.Success(DeviceConnectionState.PAIRING_REQUIRED))
         )
         val viewModel = viewModel(connection = connection)
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
@@ -175,13 +175,13 @@ class ScanDeviceViewModelTest {
             mode = ScannedDeviceMode.PAIRING,
             rssi = -50,
             hasDeviceBond = false,
-            hasPhoneBond = true,
+            hasPhoneBond = true
         )
         val connection = FakeDeviceConnectionRepository(
             bleAttempts = listOf(
                 listOf(Response.Success(DeviceConnectionState.PAIRING_REQUIRED)),
-                listOf(Response.Success(DeviceConnectionState.CONNECTED)),
-            ),
+                listOf(Response.Success(DeviceConnectionState.CONNECTED))
+            )
         )
         val viewModel = viewModel(scan = FakeDeviceScanRepository(ble = listOf(pairingDevice)), connection = connection)
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.state.collect {} }
@@ -200,7 +200,7 @@ class ScanDeviceViewModelTest {
     fun `failed ble connection emits ConnectionFailed`() = runTest(testDispatcher) {
         val effects = mutableListOf<ScanDeviceEffect>()
         val connection = FakeDeviceConnectionRepository(
-            states = listOf(Response.Success(DeviceConnectionState.FAILED)),
+            states = listOf(Response.Success(DeviceConnectionState.FAILED))
         )
         val viewModel = viewModel(connection = connection)
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
@@ -215,8 +215,8 @@ class ScanDeviceViewModelTest {
                 kind = DeviceKind.ALARM,
                 rssi = -50,
                 hasDeviceBond = false,
-                hasPhoneBond = false,
-            ),
+                hasPhoneBond = false
+            )
         )
         advanceUntilIdle()
 
@@ -240,7 +240,7 @@ class ScanDeviceViewModelTest {
         val scan = FakeDeviceScanRepository()
         val connection = FakeDeviceConnectionRepository(
             states = listOf(Response.Success(DeviceConnectionState.FAILED)),
-            connectDelayMillis = 1_000,
+            connectDelayMillis = 1_000
         )
         val viewModel = viewModel(scan = scan, connection = connection)
         backgroundScope.launch { viewModel.state.collect {} }
@@ -261,7 +261,7 @@ class ScanDeviceViewModelTest {
         val scan = FakeDeviceScanRepository()
         val connection = FakeDeviceConnectionRepository(
             states = listOf(Response.Success(DeviceConnectionState.CONNECTING)),
-            hangAfterStates = true,
+            hangAfterStates = true
         )
         val viewModel = viewModel(scan = scan, connection = connection)
         backgroundScope.launch { viewModel.state.collect {} }
@@ -284,7 +284,7 @@ class ScanDeviceViewModelTest {
     fun `second connect tap does not interrupt the running attempt`() = runTest(testDispatcher) {
         val connection = FakeDeviceConnectionRepository(
             states = listOf(Response.Success(DeviceConnectionState.CONNECTING)),
-            hangAfterStates = true,
+            hangAfterStates = true
         )
         val viewModel = viewModel(connection = connection)
         backgroundScope.launch { viewModel.state.collect {} }
@@ -307,7 +307,7 @@ class ScanDeviceViewModelTest {
         val effects = mutableListOf<ScanDeviceEffect>()
         val connection = FakeDeviceConnectionRepository(
             states = listOf(Response.Success(DeviceConnectionState.CONNECTING)),
-            hangAfterStates = true,
+            hangAfterStates = true
         )
         val viewModel = viewModel(connection = connection)
         backgroundScope.launch { viewModel.state.collect {} }
@@ -342,7 +342,7 @@ class ScanDeviceViewModelTest {
         val effects = mutableListOf<ScanDeviceEffect>()
         val connection = FakeDeviceConnectionRepository(
             states = listOf(Response.Success(DeviceConnectionState.CONNECTING)),
-            hangAfterStates = true,
+            hangAfterStates = true
         )
         val viewModel = viewModel(connection = connection)
         backgroundScope.launch { viewModel.state.collect {} }
@@ -365,8 +365,8 @@ class ScanDeviceViewModelTest {
         val connection = FakeDeviceConnectionRepository(
             states = listOf(
                 Response.Success(DeviceConnectionState.CONNECTING),
-                Response.Success(DeviceConnectionState.FAILED),
-            ),
+                Response.Success(DeviceConnectionState.FAILED)
+            )
         )
         val viewModel = viewModel(connection = connection)
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
@@ -381,8 +381,8 @@ class ScanDeviceViewModelTest {
                 vidPid = "0483:5710",
                 systemId = null,
                 firmwareVersion = null,
-                isBootMode = null,
-            ),
+                isBootMode = null
+            )
         )
         advanceUntilIdle()
 
@@ -400,13 +400,13 @@ class ScanDeviceViewModelTest {
             productId = 0x5710,
             systemId = null,
             firmwareVersion = null,
-            isBootMode = null,
+            isBootMode = null
         )
         val viewModel = viewModel(
             scan = FakeDeviceScanRepository(
                 bleResponse = Response.Error(IllegalStateException("BLE scan failed")),
-                usb = listOf(usbDevice),
-            ),
+                usb = listOf(usbDevice)
+            )
         )
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
@@ -431,10 +431,7 @@ class ScanDeviceViewModelTest {
         assertTrue(effects.any { it is ScanDeviceEffect.SessionCreated })
     }
 
-    private fun bleItem(
-        hasDeviceBond: Boolean = false,
-        hasPhoneBond: Boolean? = false,
-    ) = DeviceUiItem.Ble(
+    private fun bleItem(hasDeviceBond: Boolean = false, hasPhoneBond: Boolean? = false) = DeviceUiItem.Ble(
         id = "AA:BB",
         name = "Pandora",
         address = "AC:BB:CC:DD:EE:FF",
@@ -442,7 +439,7 @@ class ScanDeviceViewModelTest {
         kind = DeviceKind.ALARM,
         rssi = -50,
         hasDeviceBond = hasDeviceBond,
-        hasPhoneBond = hasPhoneBond,
+        hasPhoneBond = hasPhoneBond
     )
 
     @Test
@@ -485,7 +482,17 @@ class ScanDeviceViewModelTest {
     /** BaseViewModel берёт AppLifecycle из Koin: поднимаем Koin с фейком на время теста. */
     private fun withAppLifecycle(block: (MutableSharedFlow<AppLifecycleEvent>) -> Unit) {
         val events = MutableSharedFlow<AppLifecycleEvent>()
-        startKoin { modules(module { single<AppLifecycle> { object : AppLifecycle { override val events = events } } }) }
+        startKoin {
+            modules(
+                module {
+                    single<AppLifecycle> {
+                        object : AppLifecycle {
+                            override val events = events
+                        }
+                    }
+                }
+            )
+        }
         try {
             block(events)
         } finally {

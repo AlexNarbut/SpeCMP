@@ -14,5 +14,5 @@ enum class SupportChatMessageStatus {
     Sent,
     Read,
     Pending,
-    Failed,
+    Failed
 }

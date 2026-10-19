@@ -1,10 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.interaction.ui.gallery
 
+import java.io.File
+import kotlin.test.Test
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceStatus
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceStatusContent
-import java.io.File
-import kotlin.test.Test
 
 /** Состояния обёртки поверх дочернего flow; PNG — в `build/state-gallery/interaction`. */
 class DeviceStatusGallery {

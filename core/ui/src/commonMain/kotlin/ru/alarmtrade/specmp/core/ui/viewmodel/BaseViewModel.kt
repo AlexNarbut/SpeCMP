@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.core.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -12,7 +13,6 @@ import kotlinx.coroutines.sync.withLock
 import org.koin.mp.KoinPlatformTools
 import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
 import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Базовый класс всех ViewModel проекта.
@@ -59,16 +59,11 @@ abstract class BaseViewModel : ViewModel() {
     /** Приложение ушло в фон. */
     protected open fun onAppBackground() = Unit
 
-    protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job {
-        return viewModelScope.launch(exceptionHandler, block = block)
-    }
+    protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job =
+        viewModelScope.launch(exceptionHandler, block = block)
 
-    protected fun safeLaunch(
-        coroutineContext: CoroutineContext,
-        block: suspend CoroutineScope.() -> Unit,
-    ): Job {
-        return viewModelScope.launch(coroutineContext + exceptionHandler, block = block)
-    }
+    protected fun safeLaunch(coroutineContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit): Job =
+        viewModelScope.launch(coroutineContext + exceptionHandler, block = block)
 
     /**
      * Выполняет [block] под общим для этой ViewModel mutex'ом (один lock на все вызовы
@@ -83,10 +78,7 @@ abstract class BaseViewModel : ViewModel() {
      * вместе с ней (например, при очистке viewModelScope). Работа, которая должна пережить
      * экран, выносится в app-scoped singleton (см. docs/patterns.md).
      */
-    protected suspend fun executeWithProceedLock(
-        needSkipAnother: Boolean = true,
-        block: suspend () -> Unit,
-    ) {
+    protected suspend fun executeWithProceedLock(needSkipAnother: Boolean = true, block: suspend () -> Unit) {
         if (needSkipAnother) {
             // tryLock атомарен: проверка isLocked + withLock допускала бы гонку,
             // при которой оба конкурентных вызова выполнились бы последовательно.

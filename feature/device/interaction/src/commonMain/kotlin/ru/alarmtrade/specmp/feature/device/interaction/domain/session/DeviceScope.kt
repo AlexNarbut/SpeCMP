@@ -7,7 +7,6 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -21,10 +20,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessio
  * - [launch] — работа с устройством, отменяется при потере связи (на дисконнекте не стартует);
  * - [onReady] — действие на каждое (пере)подключение.
  */
-class DeviceScope(
-    private val scope: CoroutineScope,
-    deviceSession: DeviceSession,
-) {
+class DeviceScope(private val scope: CoroutineScope, deviceSession: DeviceSession) {
     val state: StateFlow<DeviceSessionState> = deviceSession.state
 
     private val deviceJob = SupervisorJob(scope.coroutineContext[Job])

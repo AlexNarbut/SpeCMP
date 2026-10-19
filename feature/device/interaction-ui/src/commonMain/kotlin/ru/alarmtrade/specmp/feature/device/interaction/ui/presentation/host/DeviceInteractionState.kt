@@ -11,7 +11,7 @@ data class DeviceInteractionState(
     /** Последний блок в рабочем режиме — дочерний flow; null — связи ещё не было или блок в загрузчике. */
     val device: AlarmDevice? = null,
     /** Транспорт сессии — тексты экрана «связь потеряна»; null — неизвестен. */
-    val transport: ConnectionTransport? = null,
+    val transport: ConnectionTransport? = null
 )
 
 sealed interface DeviceInteractionEffect {

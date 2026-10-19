@@ -42,7 +42,7 @@ compose.desktop {
             targetFormats(
                 TargetFormat.Dmg,
                 TargetFormat.Msi,
-                TargetFormat.Deb,
+                TargetFormat.Deb
             )
             packageName = "SpeCMP"
             packageVersion = "2.0.40"

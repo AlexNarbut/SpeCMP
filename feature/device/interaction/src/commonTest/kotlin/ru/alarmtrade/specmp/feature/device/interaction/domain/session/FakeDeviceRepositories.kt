@@ -2,12 +2,12 @@ package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
@@ -25,16 +25,21 @@ val testDevice = AlarmDevice(
     firmwareVersion = "3.57",
     mode = DeviceOperationMode.MAIN,
     features = emptySet(),
-    can = null,
+    can = null
 )
 
 /** Сессия на тестовом планировщике; скоуп сессии — дочерний к `backgroundScope` (гасится в конце теста). */
 fun TestScope.testSession(
     repository: DeviceSessionRepository = FakeDeviceSessionRepository(),
-    connection: DeviceConnectionRepository = FakeDeviceConnectionRepository(),
+    connection: DeviceConnectionRepository = FakeDeviceConnectionRepository()
 ): DeviceSession {
     val dispatcher = UnconfinedTestDispatcher(testScheduler)
-    return DeviceSession(repository, connection, AppDispatchers(dispatcher, dispatcher, dispatcher), backgroundScope.coroutineContext)
+    return DeviceSession(
+        repository,
+        connection,
+        AppDispatchers(dispatcher, dispatcher, dispatcher),
+        backgroundScope.coroutineContext
+    )
 }
 
 val testManufacturer = BluetoothManufacturer(
@@ -42,11 +47,12 @@ val testManufacturer = BluetoothManufacturer(
     firmwareName = "BT-DX4G",
     deviceName = "DX4G",
     bootFirmwareVersion = "1.02",
-    mainFirmwareVersion = "2.15",
+    mainFirmwareVersion = "2.15"
 )
 
 class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DISCONNECTED) : DeviceSessionRepository {
     val link = MutableStateFlow(initial)
+
     /** Ответы readDevice по порядку; последний повторяется. */
     var readResults: List<Response<AlarmDevice>> = listOf(Response.Success(testDevice))
     var readCount = 0
@@ -55,7 +61,9 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
     override fun linkState(): Flow<DeviceLinkState> = link
 
     /** Ответ readBluetoothModule (BLE). */
-    var bluetoothModule: Response<BluetoothModule> = Response.Success(BluetoothModule(BluetoothModuleMode.MAIN, testManufacturer))
+    var bluetoothModule: Response<BluetoothModule> = Response.Success(
+        BluetoothModule(BluetoothModuleMode.MAIN, testManufacturer)
+    )
     var bluetoothReadCount = 0
         private set
 

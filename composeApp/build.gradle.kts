@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.kotlinx.serialization)
-
 }
 
 kotlin {
@@ -87,7 +86,6 @@ kotlin {
             implementation(libs.compose.ui.tooling)
             implementation(libs.androidx.activityCompose)
         }
-
     }
 
     targets

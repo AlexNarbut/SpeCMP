@@ -12,9 +12,9 @@ import ru.alarmtrade.permissions.common.PermissionState
 import ru.alarmtrade.permissions.common.PermissionsController
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
@@ -27,7 +27,7 @@ class FakeDeviceScanRepository(
     usb: List<ScannedDevice.Usb> = emptyList(),
     private val transports: Set<DeviceTransport> = setOf(DeviceTransport.BLE, DeviceTransport.USB),
     private val bleResponse: Response<List<ScannedDevice.Ble>> = Response.Success(ble),
-    private val usbResponse: Response<List<ScannedDevice.Usb>> = Response.Success(usb),
+    private val usbResponse: Response<List<ScannedDevice.Usb>> = Response.Success(usb)
 ) : DeviceScanRepository {
     // Число подписок на BLE-поиск (перезапуски поиска).
     var bleScanStarts: Int = 0
@@ -49,7 +49,7 @@ class FakeDeviceConnectionRepository(
     // Задержка до первого статуса: реальное подключение не мгновенно.
     private val connectDelayMillis: Long = 0,
     // Статусы по попыткам BLE-подключения (последняя повторяется); по умолчанию — [states].
-    private val bleAttempts: List<List<Response<DeviceConnectionState>>> = listOf(states),
+    private val bleAttempts: List<List<Response<DeviceConnectionState>>> = listOf(states)
 ) : DeviceConnectionRepository {
     var closeCount: Int = 0
         private set
@@ -69,19 +69,18 @@ class FakeDeviceConnectionRepository(
         return Response.Success(Unit)
     }
 
-    private fun connectFlow(attemptStates: List<Response<DeviceConnectionState>>): Flow<Response<DeviceConnectionState>> = flow {
+    private fun connectFlow(
+        attemptStates: List<Response<DeviceConnectionState>>
+    ): Flow<Response<DeviceConnectionState>> = flow {
         if (connectDelayMillis > 0) delay(connectDelayMillis)
         emitAll(attemptStates.asFlow())
         if (hangAfterStates) awaitCancellation()
     }
 }
 
-class FakePermissionsController(
-    private val state: PermissionState = PermissionState.Granted,
-) : PermissionsController {
+class FakePermissionsController(private val state: PermissionState = PermissionState.Granted) : PermissionsController {
     override suspend fun providePermission(permission: Permission) = Unit
-    override suspend fun isPermissionGranted(permission: Permission): Boolean =
-        state == PermissionState.Granted
+    override suspend fun isPermissionGranted(permission: Permission): Boolean = state == PermissionState.Granted
     override suspend fun getPermissionState(permission: Permission): PermissionState = state
     override fun openAppSettings() = Unit
 }
@@ -89,7 +88,7 @@ class FakePermissionsController(
 class FakePermissionsProvider(
     private val controller: PermissionsController = FakePermissionsController(),
     private val blePermissions: List<Permission> = emptyList(),
-    private val locationEnabled: Boolean = true,
+    private val locationEnabled: Boolean = true
 ) : PermissionsProvider {
     override fun getController(): PermissionsController = controller
     override fun getBlePermission(): List<Permission> = blePermissions
@@ -102,7 +101,8 @@ class FakePermissionsProvider(
 /** Сессия устройства в тестах поиска не подписывается — связь и чтение блока не нужны. */
 class FakeDeviceSessionRepository : DeviceSessionRepository {
     override fun linkState(): Flow<DeviceLinkState> = flowOf(DeviceLinkState.DISCONNECTED)
-    override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException("not used"))
+    override suspend fun readBluetoothModule(): Response<BluetoothModule> =
+        Response.Error(IllegalStateException("not used"))
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Error(IllegalStateException("not used"))
     override suspend fun readImei(): Response<String> = Response.Error(IllegalStateException("not used"))
     override suspend fun reconnect(): Response<Unit> = Response.Error(IllegalStateException("not used"))

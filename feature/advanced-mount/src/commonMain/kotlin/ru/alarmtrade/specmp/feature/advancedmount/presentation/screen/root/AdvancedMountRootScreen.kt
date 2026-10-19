@@ -120,7 +120,7 @@ internal class AdvancedMountRootActions(
     val onDialogDismiss: () -> Unit = {},
     val onCanUpdateConfirm: () -> Unit = {},
     val onRemoteSyncClick: () -> Unit = {},
-    val onProductInfoClick: () -> Unit = {},
+    val onProductInfoClick: () -> Unit = {}
 )
 
 /** «Название  ID» блока — подзаголовок экранов разделов (как в старом приложении). */
@@ -132,7 +132,7 @@ internal fun AdvancedMountRootScreen(
     onSectionClick: (MountSection, String) -> Unit,
     onExtraClick: (MountExtra, String) -> Unit,
     onOpenSupportChat: () -> Unit,
-    onBack: () -> Unit,
+    onBack: () -> Unit
 ) {
     val viewModel = koinViewModel<AdvancedMountRootViewModel>()
     val state by viewModel.state.collectAsState()
@@ -157,8 +157,8 @@ internal fun AdvancedMountRootScreen(
             onDialogDismiss = viewModel::onDialogDismiss,
             onCanUpdateConfirm = viewModel::onCanUpdateConfirm,
             onRemoteSyncClick = viewModel::onRemoteSyncClick,
-            onProductInfoClick = viewModel::onProductInfoClick,
-        ),
+            onProductInfoClick = viewModel::onProductInfoClick
+        )
     )
 }
 
@@ -173,12 +173,12 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.advanced_mount_a11y_back),
+                        contentDescription = stringResource(Res.string.advanced_mount_a11y_back)
                     )
                 },
-                actions = { if (state.remoteAvailable) RemoteSyncAction(actions.onRemoteSyncClick) },
+                actions = { if (state.remoteAvailable) RemoteSyncAction(actions.onRemoteSyncClick) }
             )
-        },
+        }
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = when {
@@ -192,9 +192,11 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
             if (layout == MountLayout.Expanded) {
                 CmpRow(
                     modifier = Modifier.fillMaxSize().widthIn(max = 1180.dp).padding(24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    CmpBox(modifier = Modifier.width(340.dp).fillMaxHeight().verticalScroll(rememberScrollState())) { header() }
+                    CmpBox(modifier = Modifier.width(340.dp).fillMaxHeight().verticalScroll(rememberScrollState())) {
+                        header()
+                    }
                     CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
                         SectionsArea(state, layout, actions)
                     }
@@ -202,12 +204,12 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
             } else {
                 CmpColumn(
                     modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     CmpColumn(
                         modifier = Modifier.widthIn(max = 760.dp).fillMaxWidth()
                             .padding(if (layout == MountLayout.Compact) 14.dp else 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         header()
                         SectionsArea(state, layout, actions)
@@ -224,16 +226,18 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
             confirmText = stringResource(Res.string.advanced_mount_btn_go_update),
             onConfirm = actions.onCanUpdateConfirm,
             dismissText = stringResource(Res.string.advanced_mount_btn_cancel),
-            onDismiss = actions.onDialogDismiss,
+            onDismiss = actions.onDialogDismiss
         )
+
         MountDialog.CAN_HINT -> WarningDialog(
             title = stringResource(Res.string.advanced_mount_dialog_can_hint_title),
             text = stringResource(Res.string.advanced_mount_dialog_can_hint),
             confirmText = stringResource(Res.string.advanced_mount_btn_ok),
             onConfirm = actions.onDialogDismiss,
             dismissText = null,
-            onDismiss = actions.onDialogDismiss,
+            onDismiss = actions.onDialogDismiss
         )
+
         null -> Unit
     }
 }
@@ -245,7 +249,7 @@ private fun pulseAlpha(periodMillis: Int): Float {
     val alpha by transition.animateFloat(
         initialValue = 1f,
         targetValue = 0.45f,
-        animationSpec = infiniteRepeatable(tween(periodMillis / 2, easing = LinearEasing), RepeatMode.Reverse),
+        animationSpec = infiniteRepeatable(tween(periodMillis / 2, easing = LinearEasing), RepeatMode.Reverse)
     )
     return alpha
 }
@@ -255,13 +259,13 @@ private fun RemoteSyncAction(onClick: () -> Unit) {
     val colors = cmpThemeColors()
     CmpBox(
         modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         CmpIcon(
             painter = painterResource(Res.drawable.mount_remote_sync),
             contentDescription = stringResource(Res.string.advanced_mount_a11y_remote_sync),
             modifier = Modifier.size(30.dp).alpha(pulseAlpha(1_800)),
-            tint = colors.primary,
+            tint = colors.primary
         )
     }
 }
@@ -273,7 +277,7 @@ private fun DeviceHeaderCard(
     device: AlarmDevice,
     state: AdvancedMountRootState,
     layout: MountLayout,
-    actions: AdvancedMountRootActions,
+    actions: AdvancedMountRootActions
 ) {
     val colors = cmpThemeColors()
     val wide = layout == MountLayout.Expanded
@@ -281,25 +285,34 @@ private fun DeviceHeaderCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(if (wide) 24.dp else 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            CmpRow(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 val tile = if (wide) 72.dp else 56.dp
                 CmpSurface(
                     modifier = Modifier.size(tile),
                     shape = RoundedCornerShape(16.dp),
                     color = colors.surfaceVariant,
-                    border = BorderStroke(1.dp, colors.outlineVariant),
+                    border = BorderStroke(1.dp, colors.outlineVariant)
                 ) {
                     CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CmpIcon(
-                            icon = if (state.transport == ConnectionTransport.BLE) CmpIcons.Sensors else CmpIcons.Memory,
+                            icon = if (state.transport ==
+                                ConnectionTransport.BLE
+                            ) {
+                                CmpIcons.Sensors
+                            } else {
+                                CmpIcons.Memory
+                            },
                             contentDescription = null,
-                            tint = colors.onSurfaceVariant,
+                            tint = colors.onSurfaceVariant
                         )
                     }
                 }
@@ -310,12 +323,12 @@ private fun DeviceHeaderCard(
                         fontWeight = FontWeight.Medium,
                         color = colors.primary,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                     CmpText(
                         text = stringResource(Res.string.advanced_mount_header_id, device.systemId.toString()),
                         fontSize = 14.sp,
-                        color = colors.onSurfaceVariant,
+                        color = colors.onSurfaceVariant
                     )
                 }
             }
@@ -324,10 +337,16 @@ private fun DeviceHeaderCard(
                     HeaderChip(
                         icon = if (transport == ConnectionTransport.BLE) CmpIcons.Bluetooth else CmpIcons.Usb,
                         text = stringResource(
-                            if (transport == ConnectionTransport.BLE) Res.string.advanced_mount_transport_ble else Res.string.advanced_mount_transport_usb,
+                            if (transport ==
+                                ConnectionTransport.BLE
+                            ) {
+                                Res.string.advanced_mount_transport_ble
+                            } else {
+                                Res.string.advanced_mount_transport_usb
+                            }
                         ),
                         bg = colors.secondaryContainer,
-                        fg = colors.onSecondaryContainer,
+                        fg = colors.onSecondaryContainer
                     )
                 }
                 val boot = device.mode == DeviceOperationMode.BOOT
@@ -335,10 +354,12 @@ private fun DeviceHeaderCard(
                     icon = if (boot) CmpIcons.Download else CmpIcons.CheckCircle,
                     text = stringResource(
                         Res.string.advanced_mount_header_mode,
-                        stringResource(if (boot) Res.string.advanced_mount_mode_boot else Res.string.advanced_mount_mode_main),
+                        stringResource(
+                            if (boot) Res.string.advanced_mount_mode_boot else Res.string.advanced_mount_mode_main
+                        )
                     ),
                     bg = if (boot) colors.tertiaryContainer else colors.primaryContainer,
-                    fg = if (boot) colors.onTertiaryContainer else colors.onPrimaryContainer,
+                    fg = if (boot) colors.onTertiaryContainer else colors.onPrimaryContainer
                 )
             }
             CmpColumn {
@@ -350,14 +371,16 @@ private fun DeviceHeaderCard(
                     CmpDivider()
                     HeaderRow(stringResource(Res.string.advanced_mount_row_can_code), can.code) {
                         CmpBox(
-                            modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = actions.onCanHintClick),
-                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.size(
+                                40.dp
+                            ).clip(CircleShape).clickable(onClick = actions.onCanHintClick),
+                            contentAlignment = Alignment.Center
                         ) {
                             CmpIcon(
                                 icon = CmpIcons.Warning,
                                 contentDescription = stringResource(Res.string.advanced_mount_a11y_can_hint),
                                 modifier = Modifier.size(22.dp).alpha(pulseAlpha(1_600)),
-                                tint = colors.error,
+                                tint = colors.error
                             )
                         }
                     }
@@ -369,12 +392,17 @@ private fun DeviceHeaderCard(
             }
             if (state.productInfo) {
                 CmpOutlinedButton(onClick = actions.onProductInfoClick, modifier = Modifier.fillMaxWidth()) {
-                    CmpIcon(icon = CmpIcons.Info, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.primary)
+                    CmpIcon(
+                        icon = CmpIcons.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = colors.primary
+                    )
                     CmpText(
                         text = stringResource(Res.string.advanced_mount_btn_product_info),
                         modifier = Modifier.padding(start = 8.dp),
                         fontWeight = FontWeight.Medium,
-                        color = colors.primary,
+                        color = colors.primary
                     )
                 }
             }
@@ -383,12 +411,17 @@ private fun DeviceHeaderCard(
 }
 
 @Composable
-private fun HeaderChip(icon: CmpIcons, text: String, bg: androidx.compose.ui.graphics.Color, fg: androidx.compose.ui.graphics.Color) {
+private fun HeaderChip(
+    icon: CmpIcons,
+    text: String,
+    bg: androidx.compose.ui.graphics.Color,
+    fg: androidx.compose.ui.graphics.Color
+) {
     CmpSurface(shape = CircleShape, color = bg, contentColor = fg) {
         CmpRow(
             modifier = Modifier.height(28.dp).padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = fg)
             CmpText(text = text, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = fg, maxLines = 1)
@@ -402,10 +435,16 @@ private fun HeaderRow(label: String, value: String, trailing: (@Composable () ->
     CmpRow(
         modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         CmpText(text = label, modifier = Modifier.weight(1f), fontSize = 14.sp, color = colors.onSurfaceVariant)
-        CmpText(text = value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = colors.primary, textAlign = TextAlign.End)
+        CmpText(
+            text = value,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.primary,
+            textAlign = TextAlign.End
+        )
         trailing?.invoke()
     }
 }
@@ -421,27 +460,40 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
                 text = stringResource(Res.string.advanced_mount_loading),
                 fontSize = 16.sp,
                 color = cmpThemeColors().onSurfaceVariant,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
         }
 
         MountContent.VerifyError -> CenterBlock {
             Hero(CmpIcons.WifiOff, error = false)
-            CmpText(text = stringResource(Res.string.advanced_mount_error_title), fontSize = 22.sp, textAlign = TextAlign.Center)
+            CmpText(
+                text = stringResource(Res.string.advanced_mount_error_title),
+                fontSize = 22.sp,
+                textAlign = TextAlign.Center
+            )
             CmpText(
                 text = stringResource(Res.string.advanced_mount_error_subtitle),
                 fontSize = 16.sp,
                 color = cmpThemeColors().onSurfaceVariant,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
             RefreshButton(stringResource(Res.string.advanced_mount_btn_fix), actions.onRetry)
         }
 
         is MountContent.Denied -> CenterBlock {
             Hero(CmpIcons.Lock, error = true)
-            CmpText(text = stringResource(Res.string.advanced_mount_denied_title), fontSize = 22.sp, textAlign = TextAlign.Center)
+            CmpText(
+                text = stringResource(Res.string.advanced_mount_denied_title),
+                fontSize = 22.sp,
+                textAlign = TextAlign.Center
+            )
             if (content.message.isNotBlank()) {
-                CmpText(text = content.message, fontSize = 16.sp, color = cmpThemeColors().onSurfaceVariant, textAlign = TextAlign.Center)
+                CmpText(
+                    text = content.message,
+                    fontSize = 16.sp,
+                    color = cmpThemeColors().onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
             }
             RefreshButton(stringResource(Res.string.advanced_mount_btn_retry), actions.onRetry)
         }
@@ -455,11 +507,14 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
 
 @Composable
 private fun CenterBlock(content: @Composable () -> Unit) {
-    CmpBox(modifier = Modifier.fillMaxWidth().heightIn(min = 240.dp).padding(horizontal = 16.dp, vertical = 24.dp), contentAlignment = Alignment.Center) {
+    CmpBox(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 240.dp).padding(horizontal = 16.dp, vertical = 24.dp),
+        contentAlignment = Alignment.Center
+    ) {
         CmpColumn(
             modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) { content() }
     }
 }
@@ -470,14 +525,14 @@ private fun Hero(icon: CmpIcons, error: Boolean) {
     CmpSurface(
         modifier = Modifier.size(88.dp),
         shape = CircleShape,
-        color = if (error) colors.errorContainer else colors.surfaceVariant,
+        color = if (error) colors.errorContainer else colors.surfaceVariant
     ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = icon,
                 contentDescription = null,
                 modifier = Modifier.size(42.dp),
-                tint = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
+                tint = if (error) colors.onErrorContainer else colors.onSurfaceVariant
             )
         }
     }
@@ -498,12 +553,26 @@ private fun UnsupportedBanner() {
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            CmpIcon(icon = CmpIcons.Warning, contentDescription = null, modifier = Modifier.size(28.dp), tint = colors.onErrorContainer)
+            CmpIcon(
+                icon = CmpIcons.Warning,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                tint = colors.onErrorContainer
+            )
             CmpColumn {
-                CmpText(text = stringResource(Res.string.advanced_mount_unsupported_title), fontSize = 16.sp, fontWeight = FontWeight.Medium, color = colors.onErrorContainer)
-                CmpText(text = stringResource(Res.string.advanced_mount_unsupported_subtitle), fontSize = 14.sp, color = colors.onErrorContainer)
+                CmpText(
+                    text = stringResource(Res.string.advanced_mount_unsupported_title),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = colors.onErrorContainer
+                )
+                CmpText(
+                    text = stringResource(Res.string.advanced_mount_unsupported_subtitle),
+                    fontSize = 14.sp,
+                    color = colors.onErrorContainer
+                )
             }
         }
     }
@@ -515,12 +584,15 @@ private fun SectionsGrid(
     layout: MountLayout,
     canLocked: Boolean,
     unreadCount: Int,
-    onClick: (MountSection) -> Unit,
+    onClick: (MountSection) -> Unit
 ) {
     val columns = if (layout == MountLayout.Compact) 1 else 2
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         sections.chunked(columns).forEachIndexed { rowIndex, row ->
-            CmpRow(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpRow(
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 row.forEachIndexed { columnIndex, section ->
                     SectionTile(
                         section = section,
@@ -529,7 +601,7 @@ private fun SectionsGrid(
                         big = layout != MountLayout.Compact,
                         appearIndex = rowIndex * columns + columnIndex,
                         onClick = { onClick(section) },
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
                 repeat(columns - row.size) { CmpBox(modifier = Modifier.weight(1f)) {} }
@@ -546,7 +618,7 @@ private fun SectionTile(
     big: Boolean,
     appearIndex: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val colors = cmpThemeColors()
     // Появление плиток лесенкой (как в макете): 260 мс, задержка 35 мс на плитку.
@@ -563,23 +635,29 @@ private fun SectionTile(
             .clickable(onClick = onClick),
         shape = shape,
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = if (big) 96.dp else 84.dp)
                 .padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             SectionIconBox(section, locked, unreadCount)
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 val unread = section == MountSection.SUPPORT_CHAT && unreadCount > 0
                 CmpText(
-                    text = if (unread) stringResource(Res.string.advanced_mount_section_support_chat_unread) else sectionTitle(section),
+                    text = if (unread) {
+                        stringResource(
+                            Res.string.advanced_mount_section_support_chat_unread
+                        )
+                    } else {
+                        sectionTitle(section)
+                    },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (locked) {
                     CmpText(
@@ -588,15 +666,21 @@ private fun SectionTile(
                         fontWeight = FontWeight.Bold,
                         color = colors.onTertiaryContainer,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                 } else {
                     CmpText(
-                        text = if (unread) stringResource(Res.string.advanced_mount_section_support_chat_unread_sub) else sectionSubtitle(section),
+                        text = if (unread) {
+                            stringResource(
+                                Res.string.advanced_mount_section_support_chat_unread_sub
+                            )
+                        } else {
+                            sectionSubtitle(section)
+                        },
                         fontSize = 14.sp,
                         color = colors.onSurfaceVariant,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -613,36 +697,43 @@ private fun SectionIconBox(section: MountSection, locked: Boolean, unreadCount: 
         CmpSurface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(14.dp),
-            color = if (locked) colors.tertiaryContainer else colors.primaryContainer,
+            color = if (locked) colors.tertiaryContainer else colors.primaryContainer
         ) {
             CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CmpIcon(
                     painter = sectionPainter(section),
                     contentDescription = null,
                     modifier = Modifier.size(32.dp),
-                    tint = if (locked) colors.onTertiaryContainer else colors.onPrimaryContainer,
+                    tint = if (locked) colors.onTertiaryContainer else colors.onPrimaryContainer
                 )
             }
         }
         if (locked) {
             Badge(
                 modifier = Modifier.align(Alignment.BottomEnd).offset(x = 7.dp, y = 7.dp).size(26.dp),
-                color = colors.tertiary,
+                color = colors.tertiary
             ) {
-                CmpIcon(icon = CmpIcons.Lock, contentDescription = null, modifier = Modifier.size(15.dp), tint = colors.onTertiary)
+                CmpIcon(
+                    icon = CmpIcons.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(15.dp),
+                    tint = colors.onTertiary
+                )
             }
         }
         if (unreadCount > 0) {
             Badge(
-                modifier = Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp).heightIn(min = 24.dp).widthIn(min = 24.dp),
-                color = colors.error,
+                modifier = Modifier.align(
+                    Alignment.TopStart
+                ).offset(x = (-6).dp, y = (-6).dp).heightIn(min = 24.dp).widthIn(min = 24.dp),
+                color = colors.error
             ) {
                 CmpText(
                     text = unreadCount.toString(),
                     modifier = Modifier.padding(horizontal = 6.dp),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colors.onError,
+                    color = colors.onError
                 )
             }
         }
@@ -657,7 +748,7 @@ private fun Badge(modifier: Modifier, color: androidx.compose.ui.graphics.Color,
         modifier = modifier,
         shape = CircleShape,
         color = color,
-        border = BorderStroke(2.dp, colors.surfaceContainerLow),
+        border = BorderStroke(2.dp, colors.surfaceContainerLow)
     ) {
         CmpBox(contentAlignment = Alignment.Center) { content() }
     }
@@ -672,24 +763,27 @@ private fun WarningDialog(
     confirmText: String,
     onConfirm: () -> Unit,
     dismissText: String?,
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     val colors = cmpThemeColors()
     CmpDialog(
         onDismissRequest = onDismiss,
         title = {
-            CmpColumn(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpColumn(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 CmpIcon(
                     painter = painterResource(Res.drawable.mount_dialog_warning),
                     contentDescription = null,
                     modifier = Modifier.size(36.dp),
-                    tint = colors.error,
+                    tint = colors.error
                 )
                 CmpText(text = title)
             }
         },
         text = { CmpText(text = text) },
         confirmButton = { CmpTextButton(text = confirmText, onClick = onConfirm) },
-        dismissButton = dismissText?.let { { CmpTextButton(text = it, onClick = onDismiss) } },
+        dismissButton = dismissText?.let { { CmpTextButton(text = it, onClick = onDismiss) } }
     )
 }

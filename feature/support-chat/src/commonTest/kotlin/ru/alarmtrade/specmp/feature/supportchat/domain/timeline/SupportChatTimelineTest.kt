@@ -1,21 +1,21 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.timeline
 
-import kotlinx.datetime.Instant
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlinx.datetime.Instant
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 
 class SupportChatTimelineTest {
 
     @Test
     fun `messages are kept in ascending time order`() {
         val timeline = SupportChatTimeline.of(
-            listOf(incoming(id = 3, second = 30), incoming(id = 1, second = 10), incoming(id = 2, second = 20)),
+            listOf(incoming(id = 3, second = 30), incoming(id = 1, second = 10), incoming(id = 2, second = 20))
         )
 
         assertEquals(listOf(1L, 2L, 3L), timeline.messages.map { it.serverId })
@@ -42,7 +42,7 @@ class SupportChatTimelineTest {
     @Test
     fun `echo replaces the earliest matching optimistic message`() {
         val timeline = SupportChatTimeline.Empty.withOptimistic(
-            listOf(optimistic(id = "a", second = 10, text = "Same"), optimistic(id = "b", second = 11, text = "Same")),
+            listOf(optimistic(id = "a", second = 10, text = "Same"), optimistic(id = "b", second = 11, text = "Same"))
         )
 
         val updated = timeline.withIncoming(incoming(id = 100, second = 12, text = "Same", isMine = true))
@@ -53,7 +53,7 @@ class SupportChatTimelineTest {
     @Test
     fun `transition happens only once from the expected status`() {
         val timeline = SupportChatTimeline.Empty.withOptimistic(
-            listOf(optimistic(id = "a", second = 10, text = "x", status = SupportChatMessageStatus.Failed)),
+            listOf(optimistic(id = "a", second = 10, text = "x", status = SupportChatMessageStatus.Failed))
         )
         val retryable = setOf(SupportChatMessageStatus.Failed)
 
@@ -70,7 +70,7 @@ class SupportChatTimelineTest {
 
         assertEquals(
             listOf(SupportChatMessageStatus.Sent, SupportChatMessageStatus.Read),
-            read.messages.map { it.status },
+            read.messages.map { it.status }
         )
     }
 
@@ -85,7 +85,7 @@ class SupportChatTimelineTest {
     @Test
     fun `history page confirms a fresh optimistic message but not with an old namesake`() {
         val timeline = SupportChatTimeline.Empty.withOptimistic(
-            listOf(optimistic(id = "local", second = 10_000, text = "ok", status = SupportChatMessageStatus.Pending)),
+            listOf(optimistic(id = "local", second = 10_000, text = "ok", status = SupportChatMessageStatus.Pending))
         )
 
         // Моё старое «ok» неделей раньше — не подтверждение свежего.
@@ -101,10 +101,14 @@ class SupportChatTimelineTest {
     fun `history does not confirm a queued text with another own text from the skew window`() {
         // Эмулятор: «QA offline» (Pending после рестарта) съедало моё «QA doc caption» за 1,5 мин до него.
         val timeline = SupportChatTimeline.Empty.withOptimistic(
-            listOf(optimistic(id = "local", second = 1_000, text = "QA offline", status = SupportChatMessageStatus.Pending)),
+            listOf(
+                optimistic(id = "local", second = 1_000, text = "QA offline", status = SupportChatMessageStatus.Pending)
+            )
         )
 
-        val merged = timeline.withHistoryPage(listOf(incoming(id = 1, second = 910, text = "QA doc caption", isMine = true)))
+        val merged = timeline.withHistoryPage(
+            listOf(incoming(id = 1, second = 910, text = "QA doc caption", isMine = true))
+        )
 
         assertEquals(listOf("1", "local"), merged.messages.map { it.id })
         assertEquals(SupportChatMessageStatus.Pending, merged.find("local")?.status)
@@ -113,7 +117,7 @@ class SupportChatTimelineTest {
     @Test
     fun `live echo of another text does not confirm a waiting text`() {
         val timeline = SupportChatTimeline.Empty.withOptimistic(
-            listOf(optimistic(id = "local", second = 10, text = "Waiting", status = SupportChatMessageStatus.Pending)),
+            listOf(optimistic(id = "local", second = 10, text = "Waiting", status = SupportChatMessageStatus.Pending))
         )
 
         val updated = timeline.withIncoming(incoming(id = 7, second = 11, text = "From another device", isMine = true))
@@ -124,11 +128,11 @@ class SupportChatTimelineTest {
     @Test
     fun `renamed attachment is still confirmed by shape`() {
         val timeline = SupportChatTimeline.Empty.withOptimistic(
-            listOf(optimistic(id = "local", second = 10, text = null, attachment = image("local.png"))),
+            listOf(optimistic(id = "local", second = 10, text = null, attachment = image("local.png")))
         )
 
         val updated = timeline.withIncoming(
-            incoming(id = 8, second = 11, text = null, isMine = true).copy(attachment = image("server-renamed.png")),
+            incoming(id = 8, second = 11, text = null, isMine = true).copy(attachment = image("server-renamed.png"))
         )
 
         assertEquals(listOf("8"), updated.messages.map { it.id })
@@ -136,13 +140,8 @@ class SupportChatTimelineTest {
 
     private fun image(name: String) = SupportChatAttachment.Image(id = name, name = name, url = null)
 
-    private fun incoming(
-        id: Long,
-        second: Long,
-        text: String? = "m$id",
-        isMine: Boolean = false,
-    ): SupportChatMessage {
-        return SupportChatMessage(
+    private fun incoming(id: Long, second: Long, text: String? = "m$id", isMine: Boolean = false): SupportChatMessage =
+        SupportChatMessage(
             id = id.toString(),
             serverId = id,
             text = text,
@@ -150,26 +149,23 @@ class SupportChatTimelineTest {
             time = Instant.fromEpochSeconds(second),
             isMine = isMine,
             authorEmail = null,
-            status = SupportChatMessageStatus.Sent,
+            status = SupportChatMessageStatus.Sent
         )
-    }
 
     private fun optimistic(
         id: String,
         second: Long,
         text: String?,
         status: SupportChatMessageStatus = SupportChatMessageStatus.Sending,
-        attachment: SupportChatAttachment? = null,
-    ): SupportChatMessage {
-        return SupportChatMessage(
-            id = id,
-            serverId = null,
-            text = text,
-            attachment = attachment,
-            time = Instant.fromEpochSeconds(second),
-            isMine = true,
-            authorEmail = null,
-            status = status,
-        )
-    }
+        attachment: SupportChatAttachment? = null
+    ): SupportChatMessage = SupportChatMessage(
+        id = id,
+        serverId = null,
+        text = text,
+        attachment = attachment,
+        time = Instant.fromEpochSeconds(second),
+        isMine = true,
+        authorEmail = null,
+        status = status
+    )
 }

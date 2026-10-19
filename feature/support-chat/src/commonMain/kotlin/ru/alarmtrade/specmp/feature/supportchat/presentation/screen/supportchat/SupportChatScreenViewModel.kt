@@ -1,5 +1,9 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
@@ -43,10 +47,6 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * ViewModel экрана чата. Соединением владеет SDK: VM держит сессию, пока жива (уход с экрана
@@ -69,7 +69,7 @@ class SupportChatScreenViewModel(
     private val fileSaver: SupportChatFileSaver,
     private val attachmentFiles: SupportChatAttachmentFiles,
     private val fileOpener: SupportChatFileOpener,
-    private val outbox: SupportChatOutbox,
+    private val outbox: SupportChatOutbox
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
@@ -151,7 +151,7 @@ class SupportChatScreenViewModel(
         _state.update {
             it.copy(
                 history = LCEState.Content(it.timeline.withOptimistic(outgoing)),
-                pendingAttachments = persistentListOf(),
+                pendingAttachments = persistentListOf()
             )
         }
 
@@ -207,6 +207,7 @@ class SupportChatScreenViewModel(
                 updateStatus(messageId, SupportChatMessageStatus.Sent)
                 withContext(dispatchers.io) { outbox.markSent(messageId) }
             }
+
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to send message" }
                 if (response.exception is SupportChatNotConnectedException || !_state.value.isInputEnabled) {
@@ -246,7 +247,7 @@ class SupportChatScreenViewModel(
             name = attachment.name,
             path = localPath,
             mimeType = (attachment as? SupportChatAttachment.Document)?.mimeType,
-            sizeBytes = (attachment as? SupportChatAttachment.Document)?.sizeBytes,
+            sizeBytes = (attachment as? SupportChatAttachment.Document)?.sizeBytes
         )
         return withContext(dispatchers.io) {
             when (attachment) {
@@ -300,11 +301,14 @@ class SupportChatScreenViewModel(
     private suspend fun handleEvent(event: SupportChatEvent) {
         when (event) {
             is SupportChatEvent.Connection -> handleConnection(event.state)
+
             is SupportChatEvent.TypingChanged -> {
                 // Своё событие набора (SDK эхит его обратно) не рисуем.
                 if (!event.isMine) handleTypingChanged(event.authorEmail, event.isTyping)
             }
+
             is SupportChatEvent.MessageReceived -> handleMessageReceived(event.message)
+
             is SupportChatEvent.MessagesRead -> updateTimeline { it.withRead(event.ids) }
         }
     }
@@ -314,17 +318,19 @@ class SupportChatScreenViewModel(
         when (state) {
             SupportChatConnectionState.Connecting ->
                 _state.update { it.copy(connection = SupportChatConnection.Connecting) }
+
             SupportChatConnectionState.Ready -> {
                 _state.update {
                     it.copy(
                         connection = SupportChatConnection.Online,
                         hasConnectionIssue = false,
-                        isChatAuthFailed = false,
+                        isChatAuthFailed = false
                     )
                 }
                 // Пока соединения не было, могли прийти сообщения; очередь — после страницы.
                 loadFirstHistoryPage()
             }
+
             SupportChatConnectionState.Reconnecting,
             SupportChatConnectionState.WaitingForNetwork,
             SupportChatConnectionState.AuthFailed -> {
@@ -333,11 +339,12 @@ class SupportChatScreenViewModel(
                     it.copy(
                         connection = SupportChatConnection.Offline,
                         hasConnectionIssue = true,
-                        isChatAuthFailed = state == SupportChatConnectionState.AuthFailed,
+                        isChatAuthFailed = state == SupportChatConnectionState.AuthFailed
                     )
                 }
                 requeueUnconfirmed()
             }
+
             SupportChatConnectionState.Unavailable -> {
                 logger.d { "Chat session unavailable" }
                 _state.update {
@@ -345,7 +352,7 @@ class SupportChatScreenViewModel(
                         connection = SupportChatConnection.Offline,
                         hasConnectionIssue = true,
                         // Показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии).
-                        history = if (it.history is LCEState.Content) it.history else LCEState.Error(HISTORY_ERROR),
+                        history = if (it.history is LCEState.Content) it.history else LCEState.Error(HISTORY_ERROR)
                     )
                 }
             }
@@ -391,7 +398,7 @@ class SupportChatScreenViewModel(
      */
     private fun updateTimelineConfirming(
         transform: (SupportChatTimeline) -> SupportChatTimeline,
-        extra: (SupportChatScreenState) -> SupportChatScreenState = { it },
+        extra: (SupportChatScreenState) -> SupportChatScreenState = { it }
     ): List<SupportChatMessage> {
         var confirmed = emptyList<SupportChatMessage>()
         _state.update { current ->
@@ -422,7 +429,9 @@ class SupportChatScreenViewModel(
                 _state.update { it.copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading()) }
                 sessionJob = safeLaunch { collectSession() }
             }
+
             !_state.value.isInitialHistoryLoaded -> if (_state.value.isInputEnabled) loadFirstHistoryPage()
+
             else -> {
                 _state.update { it.copy(isHistoryPagingFailed = false) }
                 onLoadMore()
@@ -445,7 +454,7 @@ class SupportChatScreenViewModel(
                     LCEState.Loading()
                 } else {
                     current.history
-                },
+                }
             )
         }
         historyJob = safeLaunch { loadHistoryPage(cursor = null) }
@@ -467,12 +476,13 @@ class SupportChatScreenViewModel(
                             isLoadingMore = false,
                             isHistoryPagingFailed = false,
                             historyCursor = if (resetPaging) page.nextCursor else current.historyCursor,
-                            hasMoreHistory = if (resetPaging) page.nextCursor != null else current.hasMoreHistory,
+                            hasMoreHistory = if (resetPaging) page.nextCursor != null else current.hasMoreHistory
                         )
-                    },
+                    }
                 )
                 confirmed.forEach { forget(it) }
             }
+
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to load history page" }
                 var hadContent = false
@@ -482,7 +492,7 @@ class SupportChatScreenViewModel(
                         isLoadingMore = false,
                         isHistoryPagingFailed = true,
                         // Показывать нечего — полноэкранная ошибка с «Повторить».
-                        history = if (hadContent) current.history else LCEState.Error(HISTORY_ERROR),
+                        history = if (hadContent) current.history else LCEState.Error(HISTORY_ERROR)
                     )
                 }
                 if (hadContent) _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
@@ -550,6 +560,7 @@ class SupportChatScreenViewModel(
             try {
                 when (val response = withContext(dispatchers.io) { repository.downloadFile(url) }) {
                     is Response.Success -> saveDownloaded(attachment.name, response.value)
+
                     is Response.Error -> {
                         logger.d(response.exception) { "Failed to download attachment" }
                         _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
@@ -576,17 +587,21 @@ class SupportChatScreenViewModel(
                 val result = withContext(dispatchers.io) {
                     when {
                         localPath != null -> fileOpener.openLocal(localPath, attachment.name)
+
                         url != null -> when (val response = repository.downloadFile(url)) {
                             is Response.Success -> fileOpener.openBytes(attachment.name, response.value)
                             is Response.Error -> SupportChatFileOpenResult.Failed
                         }
+
                         else -> SupportChatFileOpenResult.Failed
                     }
                 }
                 when (result) {
                     SupportChatFileOpenResult.Opened -> Unit
+
                     SupportChatFileOpenResult.NoApp ->
                         _effect.tryEmit(SupportChatEffect.AttachmentOpenFailed(noApp = true))
+
                     SupportChatFileOpenResult.Failed ->
                         _effect.tryEmit(SupportChatEffect.AttachmentOpenFailed(noApp = false))
                 }
@@ -616,10 +631,13 @@ class SupportChatScreenViewModel(
         when (val result = withContext(dispatchers.io) { fileSaver.saveToDownloads(fileName, bytes) }) {
             is SupportChatFileSaveResult.Saved ->
                 _effect.tryEmit(SupportChatEffect.AttachmentDownloaded(result.path))
+
             // Пользователь сам отменил системный диалог — не ошибка.
             SupportChatFileSaveResult.Cancelled -> Unit
+
             SupportChatFileSaveResult.PermissionDenied ->
                 _effect.tryEmit(SupportChatEffect.AttachmentSavePermissionDenied)
+
             SupportChatFileSaveResult.Failed ->
                 _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
         }
@@ -643,11 +661,7 @@ class SupportChatScreenViewModel(
         updateTimeline { it.withStatus(id, status) }
     }
 
-    private fun tryTransition(
-        id: String,
-        from: Set<SupportChatMessageStatus>,
-        to: SupportChatMessageStatus,
-    ): Boolean {
+    private fun tryTransition(id: String, from: Set<SupportChatMessageStatus>, to: SupportChatMessageStatus): Boolean {
         var transitioned = false
         _state.update { current ->
             val next = current.timeline.tryTransition(id, from, to)
@@ -661,20 +675,18 @@ class SupportChatScreenViewModel(
     private fun optimisticMessage(
         timestamp: Instant,
         text: String? = null,
-        attachment: SupportChatAttachment? = null,
-    ): SupportChatMessage {
-        return SupportChatMessage(
-            // Глобально уникален: переживает пересоздание VM и процесса (ключ outbox).
-            id = "$LOCAL_ID_PREFIX${Uuid.random()}",
-            serverId = null,
-            text = text,
-            attachment = attachment,
-            time = timestamp,
-            isMine = true,
-            authorEmail = null,
-            status = SupportChatMessageStatus.Sending,
-        )
-    }
+        attachment: SupportChatAttachment? = null
+    ): SupportChatMessage = SupportChatMessage(
+        // Глобально уникален: переживает пересоздание VM и процесса (ключ outbox).
+        id = "$LOCAL_ID_PREFIX${Uuid.random()}",
+        serverId = null,
+        text = text,
+        attachment = attachment,
+        time = timestamp,
+        isMine = true,
+        authorEmail = null,
+        status = SupportChatMessageStatus.Sending
+    )
 
     // endregion
 

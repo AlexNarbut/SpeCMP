@@ -26,7 +26,7 @@ data class SupportChatUiMessage(
     // локальный файл). Без файла повтор бессмыслен — остаётся только удаление.
     val canRetry: Boolean,
     // Неподтверждённое моё сообщение в Failed можно удалить из ленты и outbox.
-    val canDelete: Boolean,
+    val canDelete: Boolean
 )
 
 /**
@@ -44,7 +44,7 @@ fun SupportChatMessage.toUiMessage(localTime: LocalDateTime): SupportChatUiMessa
         authorEmail = authorEmail,
         status = status,
         canRetry = isFailedMine && isResendable(),
-        canDelete = isFailedMine,
+        canDelete = isFailedMine
     )
 }
 

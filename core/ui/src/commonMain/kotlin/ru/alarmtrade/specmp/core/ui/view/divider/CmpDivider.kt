@@ -9,29 +9,27 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CmpDivider(
-    modifier: Modifier = Modifier,
-    thickness: Dp = 1.dp,
-    color: Color = Color.Unspecified,
-) {
+fun CmpDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp, color: Color = Color.Unspecified) {
     HorizontalDivider(
         modifier = modifier,
         thickness = thickness,
-        color = if (color != Color.Unspecified) color
-        else androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant,
+        color = if (color != Color.Unspecified) {
+            color
+        } else {
+            androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant
+        }
     )
 }
 
 @Composable
-fun CmpVerticalDivider(
-    modifier: Modifier = Modifier,
-    thickness: Dp = 1.dp,
-    color: Color = Color.Unspecified,
-) {
+fun CmpVerticalDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp, color: Color = Color.Unspecified) {
     VerticalDivider(
         modifier = modifier,
         thickness = thickness,
-        color = if (color != Color.Unspecified) color
-        else androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant,
+        color = if (color != Color.Unspecified) {
+            color
+        } else {
+            androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant
+        }
     )
 }

@@ -6,13 +6,11 @@ import androidx.compose.ui.unit.dp
 enum class AuthLayoutMode {
     Compact,
     Medium,
-    Expanded,
+    Expanded
 }
 
-fun authLayoutModeForWidth(width: Dp): AuthLayoutMode {
-    return when {
-        width < 600.dp -> AuthLayoutMode.Compact
-        width < 960.dp -> AuthLayoutMode.Medium
-        else -> AuthLayoutMode.Expanded
-    }
+fun authLayoutModeForWidth(width: Dp): AuthLayoutMode = when {
+    width < 600.dp -> AuthLayoutMode.Compact
+    width < 960.dp -> AuthLayoutMode.Medium
+    else -> AuthLayoutMode.Expanded
 }

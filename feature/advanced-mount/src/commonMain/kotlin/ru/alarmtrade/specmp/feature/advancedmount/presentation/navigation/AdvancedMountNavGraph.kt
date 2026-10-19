@@ -62,7 +62,7 @@ fun AdvancedMountNavGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         onBack = {
             if (!backStack.popSafe()) onExit()
@@ -70,18 +70,22 @@ fun AdvancedMountNavGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
         entryProvider = entryProvider<NavKey> {
             entry<AdvancedMountRootRoute> { _ ->
                 AdvancedMountRootScreen(
-                    onSectionClick = { section, title -> backStack.navigateSafe(AdvancedMountSectionRoute(section, title)) },
+                    onSectionClick = { section, title ->
+                        backStack.navigateSafe(AdvancedMountSectionRoute(section, title))
+                    },
                     onExtraClick = { extra, title -> backStack.navigateSafe(AdvancedMountExtraRoute(extra, title)) },
                     onOpenSupportChat = onOpenSupportChat,
-                    onBack = onExit,
+                    onBack = onExit
                 )
             }
             entry<AdvancedMountSectionRoute> { key ->
-                SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = { backStack.popSafe() })
+                SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = {
+                    backStack.popSafe()
+                })
             }
             entry<AdvancedMountExtraRoute> { key ->
                 ExtraStubScreen(extra = key.extra, deviceTitle = key.deviceTitle, onBack = { backStack.popSafe() })
             }
-        },
+        }
     )
 }

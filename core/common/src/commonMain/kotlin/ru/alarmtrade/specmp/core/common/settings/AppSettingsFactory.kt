@@ -11,9 +11,7 @@ import com.russhwolf.settings.Settings
  * [Settings.clear] и [Settings.keys] именованного хранилища затрагивают только
  * его собственные ключи.
  */
-class AppSettingsFactory(
-    private val root: Settings,
-) {
+class AppSettingsFactory(private val root: Settings) {
 
     fun create(name: String): Settings {
         require(name.isNotBlank() && NAME_SEPARATOR !in name) { "Invalid settings name: '$name'" }
@@ -25,10 +23,7 @@ class AppSettingsFactory(
     }
 }
 
-private class NamespacedSettings(
-    private val root: Settings,
-    private val prefix: String,
-) : Settings {
+private class NamespacedSettings(private val root: Settings, private val prefix: String) : Settings {
 
     override val keys: Set<String>
         get() = root.keys.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }.toSet()

@@ -20,7 +20,7 @@ sealed interface ScannedDevice {
         val rssi: Int,
         val hasDeviceBond: Boolean,
         /** Сопряжено ли устройство с телефоном; `null` — платформа этого не сообщает (iOS). */
-        val hasPhoneBond: Boolean?,
+        val hasPhoneBond: Boolean?
     ) : ScannedDevice {
         override val transport: DeviceTransport get() = DeviceTransport.BLE
     }
@@ -36,7 +36,7 @@ sealed interface ScannedDevice {
         /** Версия прошивки из опроса; null — неизвестна. */
         val firmwareVersion: String?,
         /** Блок в загрузчике; null — неизвестно. */
-        val isBootMode: Boolean?,
+        val isBootMode: Boolean?
     ) : ScannedDevice {
         override val transport: DeviceTransport get() = DeviceTransport.USB
     }

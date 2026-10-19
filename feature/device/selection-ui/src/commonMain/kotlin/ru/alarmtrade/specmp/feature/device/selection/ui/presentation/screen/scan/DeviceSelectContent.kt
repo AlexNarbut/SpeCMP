@@ -42,20 +42,6 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTranspor
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import specmp.feature.device.selection_ui.generated.resources.Res
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_alarm
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_tag
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_relay
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_immobilizer
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_remote_control
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_navigation
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_module
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_sensor
-import specmp.feature.device.selection_ui.generated.resources.device_select_kind_other
-import specmp.feature.device.selection_ui.generated.resources.device_select_mode_main
-import specmp.feature.device.selection_ui.generated.resources.device_select_mode_pairing
-import specmp.feature.device.selection_ui.generated.resources.device_select_mode_boot
-import specmp.feature.device.selection_ui.generated.resources.device_select_mode_normal
-import specmp.feature.device.selection_ui.generated.resources.device_select_rssi
 import specmp.feature.device.selection_ui.generated.resources.device_select_a11y_device_info
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_close
 import specmp.feature.device.selection_ui.generated.resources.device_select_btn_connect
@@ -71,12 +57,26 @@ import specmp.feature.device.selection_ui.generated.resources.device_select_deta
 import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_uuid
 import specmp.feature.device.selection_ui.generated.resources.device_select_detail_label_vid_pid
 import specmp.feature.device.selection_ui.generated.resources.device_select_detail_note_ble
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_alarm
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_immobilizer
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_module
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_navigation
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_other
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_relay
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_remote_control
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_sensor
+import specmp.feature.device.selection_ui.generated.resources.device_select_kind_tag
+import specmp.feature.device.selection_ui.generated.resources.device_select_mode_boot
+import specmp.feature.device.selection_ui.generated.resources.device_select_mode_main
+import specmp.feature.device.selection_ui.generated.resources.device_select_mode_normal
+import specmp.feature.device.selection_ui.generated.resources.device_select_mode_pairing
+import specmp.feature.device.selection_ui.generated.resources.device_select_rssi
+import specmp.feature.device.selection_ui.generated.resources.device_select_transport_ble
 import specmp.feature.device.selection_ui.generated.resources.device_select_transport_ble_short
+import specmp.feature.device.selection_ui.generated.resources.device_select_transport_usb
 import specmp.feature.device.selection_ui.generated.resources.device_select_value_no
 import specmp.feature.device.selection_ui.generated.resources.device_select_value_unknown
 import specmp.feature.device.selection_ui.generated.resources.device_select_value_yes
-import specmp.feature.device.selection_ui.generated.resources.device_select_transport_ble
-import specmp.feature.device.selection_ui.generated.resources.device_select_transport_usb
 
 // M3-подобные размеры типографики (CmpText не принимает variant).
 internal object DsType {
@@ -109,7 +109,7 @@ internal fun kindLabel(kind: DeviceKind): String = stringResource(
         DeviceKind.MODULE -> Res.string.device_select_kind_module
         DeviceKind.SENSOR -> Res.string.device_select_kind_sensor
         DeviceKind.OTHER -> Res.string.device_select_kind_other
-    },
+    }
 )
 
 /** Подпись режима. Обычный режим у BLE — «Обычный», у USB — «Рабочий». */
@@ -120,9 +120,11 @@ internal fun modeLabel(mode: ScannedDeviceMode, transport: DeviceTransport): Str
             DeviceTransport.BLE -> Res.string.device_select_mode_normal
             DeviceTransport.USB -> Res.string.device_select_mode_main
         }
+
         ScannedDeviceMode.PAIRING -> Res.string.device_select_mode_pairing
+
         ScannedDeviceMode.BOOT -> Res.string.device_select_mode_boot
-    },
+    }
 )
 
 /** Режим устройства, если известен (у USB — только после опроса блока). */
@@ -151,7 +153,7 @@ internal fun ModeBadge(mode: ScannedDeviceMode) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             fontSize = DsType.LabelSmall,
             fontWeight = FontWeight.Medium,
-            color = fg,
+            color = fg
         )
     }
 }
@@ -172,33 +174,49 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
         DeviceInfoRow(
             label = stringResource(Res.string.device_select_detail_label_mode),
             value = modeLabel(mode, item.transport),
-            strong = mode != ScannedDeviceMode.BASE,
+            strong = mode != ScannedDeviceMode.BASE
         )
     }
     return when (item) {
         is DeviceUiItem.Ble -> listOfNotNull(
             DeviceInfoRow(
                 label = stringResource(
-                    if (item.hasPhoneBond == null) Res.string.device_select_detail_label_uuid else Res.string.device_select_detail_label_mac,
+                    if (item.hasPhoneBond ==
+                        null
+                    ) {
+                        Res.string.device_select_detail_label_uuid
+                    } else {
+                        Res.string.device_select_detail_label_mac
+                    }
                 ),
-                value = item.address,
+                value = item.address
             ),
             DeviceInfoRow(stringResource(Res.string.device_select_detail_label_type), kindLabel(item.kind)),
-            DeviceInfoRow(stringResource(Res.string.device_select_detail_label_signal), stringResource(Res.string.device_select_rssi, item.rssi)),
+            DeviceInfoRow(
+                stringResource(Res.string.device_select_detail_label_signal),
+                stringResource(Res.string.device_select_rssi, item.rssi)
+            ),
             modeRow,
-            item.hasPhoneBond?.let { DeviceInfoRow(stringResource(Res.string.device_select_detail_label_phone_bond), if (it) yes else no) },
-            DeviceInfoRow(stringResource(Res.string.device_select_detail_label_device_bond), if (item.hasDeviceBond) yes else no),
+            item.hasPhoneBond?.let {
+                DeviceInfoRow(stringResource(Res.string.device_select_detail_label_phone_bond), if (it) yes else no)
+            },
+            DeviceInfoRow(
+                stringResource(Res.string.device_select_detail_label_device_bond),
+                if (item.hasDeviceBond) yes else no
+            )
         )
 
         is DeviceUiItem.Usb -> listOfNotNull(
             DeviceInfoRow(
                 stringResource(Res.string.device_select_detail_label_system_id),
-                item.systemId?.toString() ?: stringResource(Res.string.device_select_value_unknown),
+                item.systemId?.toString() ?: stringResource(Res.string.device_select_value_unknown)
             ),
             DeviceInfoRow(stringResource(Res.string.device_select_detail_label_manufacturer), item.manufacturerName),
             DeviceInfoRow(stringResource(Res.string.device_select_detail_label_vid_pid), item.vidPid),
-            item.firmwareVersion?.let { DeviceInfoRow(stringResource(Res.string.device_select_detail_label_firmware), it) },
-            modeRow,
+            item.firmwareVersion?.let {
+                DeviceInfoRow(stringResource(Res.string.device_select_detail_label_firmware), it)
+            },
+            modeRow
         )
     }
 }
@@ -220,7 +238,7 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.Top
             ) {
                 CmpText(text = row.label, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
                 CmpText(
@@ -229,7 +247,7 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
                     fontSize = DsType.BodyMedium,
                     fontWeight = if (row.strong) FontWeight.Bold else FontWeight.Medium,
                     color = if (row.strong) colors.primary else colors.onSurface,
-                    textAlign = TextAlign.End,
+                    textAlign = TextAlign.End
                 )
             }
         }
@@ -247,12 +265,21 @@ internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConne
             CmpColumn(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 DeviceInfoRows(deviceInfoRows(item))
                 deviceInfoNote(item)?.let {
-                    CmpText(text = it, modifier = Modifier.padding(top = 8.dp), fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
+                    CmpText(
+                        text = it,
+                        modifier = Modifier.padding(top = 8.dp),
+                        fontSize = DsType.BodyMedium,
+                        color = colors.onSurfaceVariant
+                    )
                 }
             }
         },
-        dismissButton = { CmpTextButton(text = stringResource(Res.string.device_select_btn_close), onClick = onDismiss) },
-        confirmButton = { CmpTextButton(text = stringResource(Res.string.device_select_btn_connect), onClick = onConnect) },
+        dismissButton = {
+            CmpTextButton(text = stringResource(Res.string.device_select_btn_close), onClick = onDismiss)
+        },
+        confirmButton = {
+            CmpTextButton(text = stringResource(Res.string.device_select_btn_connect), onClick = onConnect)
+        }
     )
 }
 
@@ -269,7 +296,7 @@ internal fun DeviceTile(icon: CmpIcons, sizeDp: Int) {
         modifier = Modifier.size(sizeDp.dp),
         shape = RoundedCornerShape(if (sizeDp >= 96) 20.dp else 12.dp),
         color = colors.surfaceVariant,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant)
@@ -284,18 +311,18 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
     CmpSurface(
         shape = CircleShape,
         color = colors.secondaryContainer,
-        contentColor = colors.onSecondaryContainer,
+        contentColor = colors.onSecondaryContainer
     ) {
         CmpRow(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             CmpIcon(
                 icon = transport.icon(),
                 contentDescription = null,
                 modifier = Modifier.size(if (short) 14.dp else 18.dp),
-                tint = colors.onSecondaryContainer,
+                tint = colors.onSecondaryContainer
             )
             CmpText(
                 text = if (short && transport == DeviceTransport.BLE) {
@@ -304,7 +331,7 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
                     transportLabel(transport)
                 },
                 fontSize = if (short) DsType.LabelSmall else DsType.BodyMedium,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -322,7 +349,7 @@ internal fun DeviceRow(
     onClick: () -> Unit,
     tileSize: Int,
     showMode: Boolean = false,
-    onInfo: (() -> Unit)? = null,
+    onInfo: (() -> Unit)? = null
 ) {
     val colors = cmpThemeColors()
     CmpSurface(
@@ -330,12 +357,23 @@ internal fun DeviceRow(
         shape = RoundedCornerShape(16.dp),
         color = if (selected) colors.primaryContainer else colors.surfaceContainerLow,
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
-        border = if (selected) null else BorderStroke(1.dp, colors.outlineVariant),
+        border = if (selected) null else BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpRow(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 14.dp, end = if (onInfo != null) 8.dp else 14.dp, top = 10.dp, bottom = 10.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(
+                start = 14.dp,
+                end = if (onInfo !=
+                    null
+                ) {
+                    8.dp
+                } else {
+                    14.dp
+                },
+                top = 10.dp,
+                bottom = 10.dp
+            ),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             DeviceTile(icon = item.typeIcon, sizeDp = tileSize)
             CmpColumn(modifier = Modifier.weight(1f)) {
@@ -343,7 +381,7 @@ internal fun DeviceRow(
                 CmpRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     // У BLE имя занимает всю ширину, чтобы RSSI прижался вправо.
                     CmpText(
@@ -352,7 +390,7 @@ internal fun DeviceRow(
                         fontSize = DsType.TitleMedium,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (showMode) item.notableMode?.let { ModeBadge(it) }
                     if (item is DeviceUiItem.Ble) {
@@ -361,14 +399,14 @@ internal fun DeviceRow(
                             fontSize = DsType.LabelLarge,
                             fontWeight = FontWeight.Medium,
                             color = secondary,
-                            maxLines = 1,
+                            maxLines = 1
                         )
                     }
                 }
                 CmpRow(
                     modifier = Modifier.padding(top = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     TransportChip(transport = item.transport, short = true)
                     CmpText(
@@ -376,7 +414,7 @@ internal fun DeviceRow(
                         fontSize = DsType.LabelSmall,
                         color = secondary,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -386,13 +424,13 @@ internal fun DeviceRow(
                         onClick = it,
                         icon = CmpIcons.MoreVert,
                         contentDescription = stringResource(Res.string.device_select_a11y_device_info),
-                        tint = colors.onSurfaceVariant,
+                        tint = colors.onSurfaceVariant
                     )
                 }
                 CmpIcon(
                     icon = CmpIcons.ChevronRight,
                     contentDescription = null,
-                    tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                    tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
                 )
             }
         }
@@ -424,13 +462,15 @@ internal fun Hero(icon: CmpIcons, tone: HeroTone = HeroTone.Primary) {
 @Composable
 internal fun CenterState(content: @Composable () -> Unit) {
     CmpBox(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
-        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize().verticalScroll(
+            rememberScrollState()
+        ).padding(horizontal = 24.dp, vertical = 32.dp),
+        contentAlignment = Alignment.Center
     ) {
         CmpColumn(
             modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(22.dp),
+            verticalArrangement = Arrangement.spacedBy(22.dp)
         ) { content() }
     }
 }
@@ -443,18 +483,18 @@ internal fun PermissionRow(icon: CmpIcons, label: String, desc: String) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             CmpSurface(
                 modifier = Modifier.size(44.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = colors.secondaryContainer,
-                contentColor = colors.onSecondaryContainer,
+                contentColor = colors.onSecondaryContainer
             ) {
                 CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CmpIcon(icon = icon, contentDescription = null, tint = colors.onSecondaryContainer)
@@ -476,18 +516,18 @@ internal fun FixSteps(items: List<String>, done: Boolean) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items.forEach { text ->
                 CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CmpIcon(
                         icon = if (done) CmpIcons.CheckCircle else CmpIcons.ChevronRight,
                         contentDescription = null,
-                        tint = colors.primary,
+                        tint = colors.primary
                     )
                     CmpText(text = text, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
                 }
@@ -513,9 +553,19 @@ internal fun StateHeadline(title: String, subtitle: String) {
     val colors = cmpThemeColors()
     CmpColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        CmpText(text = title, fontSize = DsType.HeadlineSmall, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
-        CmpText(text = subtitle, fontSize = DsType.BodyLarge, color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
+        CmpText(
+            text = title,
+            fontSize = DsType.HeadlineSmall,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center
+        )
+        CmpText(
+            text = subtitle,
+            fontSize = DsType.BodyLarge,
+            color = colors.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }

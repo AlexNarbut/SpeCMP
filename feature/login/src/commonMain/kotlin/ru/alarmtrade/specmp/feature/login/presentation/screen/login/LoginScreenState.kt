@@ -13,7 +13,7 @@ data class LoginScreenState(
     val authState: LCEState<LoginResult> = LCEState.None(),
     val authError: AuthFormError? = null,
     val activationResendState: LCEState<Unit> = LCEState.None(),
-    val activationResendError: AuthFormError? = null,
+    val activationResendError: AuthFormError? = null
 ) {
     val isAuthLoading: Boolean get() = authState is LCEState.Loading
     val isAuthError: Boolean get() = authError != null

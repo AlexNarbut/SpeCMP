@@ -1,5 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host
 
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -23,11 +28,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessio
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class DeviceInteractionViewModelTest {
 
@@ -38,7 +38,8 @@ class DeviceInteractionViewModelTest {
     private var readDevice = device
     private val sessionRepository = object : DeviceSessionRepository {
         override fun linkState(): Flow<DeviceLinkState> = link
-        override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException("usb only"))
+        override suspend fun readBluetoothModule(): Response<BluetoothModule> =
+            Response.Error(IllegalStateException("usb only"))
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(readDevice)
         override suspend fun readImei(): Response<String> = Response.Success("")
         override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
@@ -47,7 +48,8 @@ class DeviceInteractionViewModelTest {
     }
     private var closeCount = 0
     private val connectionRepository = object : DeviceConnectionRepository {
-        override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
+        override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
+            emptyFlow()
         override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
         override suspend fun closeSessions(): Response<Unit> {
             closeCount++
@@ -59,7 +61,7 @@ class DeviceInteractionViewModelTest {
         sessionRepository,
         connectionRepository,
         AppDispatchers(dispatcher, dispatcher, dispatcher),
-        backgroundScope.coroutineContext,
+        backgroundScope.coroutineContext
     )
 
     @BeforeTest

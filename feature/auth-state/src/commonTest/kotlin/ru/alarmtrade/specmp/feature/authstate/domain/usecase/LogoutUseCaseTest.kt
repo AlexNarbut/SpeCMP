@@ -1,14 +1,13 @@
 package ru.alarmtrade.specmp.feature.authstate.domain.usecase
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class LogoutUseCaseTest {
 
@@ -28,7 +27,7 @@ class LogoutUseCaseTest {
         val closeable = RecordingAuthCloseable()
         val useCase = LogoutUseCase(
             FakeAuthStateRepository(Response.Error(IllegalStateException("logout failed"))),
-            listOf(closeable),
+            listOf(closeable)
         )
 
         val result = useCase.execute()
@@ -60,9 +59,7 @@ class LogoutUseCaseTest {
         }
     }
 
-    private class FakeAuthStateRepository(
-        private val logoutResponse: Response<Unit>,
-    ) : AuthStateRepository {
+    private class FakeAuthStateRepository(private val logoutResponse: Response<Unit>) : AuthStateRepository {
         override fun observeIsLoggedIn() = throw NotImplementedError()
 
         override suspend fun logout(): Response<Unit> = logoutResponse

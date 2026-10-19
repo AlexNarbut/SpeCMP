@@ -1,5 +1,7 @@
 package ru.alarmtrade.specmp.feature.advancedmount.gallery
 
+import java.io.File
+import kotlin.test.Test
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.UnsupportedSections
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
@@ -15,8 +17,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
-import java.io.File
-import kotlin.test.Test
 
 /** Все состояния главного экрана расширенного монтажа; PNG — в `build/state-gallery/advanced-mount`. */
 class AdvancedMountStatesGallery {
@@ -29,7 +29,7 @@ class AdvancedMountStatesGallery {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = DeviceFeature.entries.toSet(),
-        can = CanInfo(firmwareVersion = "12.05", code = "0A1F", isFactory = true),
+        can = CanInfo(firmwareVersion = "12.05", code = "0A1F", isFactory = true)
     )
     private val module = AlarmDevice(
         systemId = 1076884189,
@@ -37,7 +37,7 @@ class AdvancedMountStatesGallery {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS, DeviceFeature.DYNAMIC_DEVICES),
-        can = null,
+        can = null
     )
 
     private val alarmReady = AdvancedMountRootState(
@@ -47,7 +47,7 @@ class AdvancedMountStatesGallery {
         content = MountContent.Ready(MountSection.entries.toList(), unsupported = false),
         unreadCount = 3,
         remoteAvailable = true,
-        productInfo = true,
+        productInfo = true
     )
     private val moduleBase = AdvancedMountRootState(device = module, transport = ConnectionTransport.USB)
 
@@ -63,19 +63,25 @@ class AdvancedMountStatesGallery {
     @Test
     fun denied() = render(
         "03_denied",
-        moduleBase.copy(content = MountContent.Denied("Блок заблокирован для данной учётной записи монтажника.")),
+        moduleBase.copy(content = MountContent.Denied("Блок заблокирован для данной учётной записи монтажника."))
     )
 
     @Test
     fun unsupported() = render(
         "04_unsupported",
-        moduleBase.copy(device = module.copy(features = null), content = MountContent.Ready(UnsupportedSections, unsupported = true)),
+        moduleBase.copy(
+            device = module.copy(features = null),
+            content = MountContent.Ready(UnsupportedSections, unsupported = true)
+        )
     )
 
     @Test
     fun moduleReady() = render(
         "05_usb_module_ready",
-        moduleBase.copy(imei = "351756051523999", content = MountContent.Ready(module.features.toSections(), unsupported = false)),
+        moduleBase.copy(
+            imei = "351756051523999",
+            content = MountContent.Ready(module.features.toSections(), unsupported = false)
+        )
     )
 
     @Test
@@ -84,7 +90,11 @@ class AdvancedMountStatesGallery {
     @Test
     fun alarmCanFlashed() = render(
         "07_ble_alarm_can_flashed",
-        alarmReady.copy(device = alarm.copy(can = CanInfo("12.05", "0A1F", isFactory = false)), unreadCount = 0, remoteAvailable = false),
+        alarmReady.copy(
+            device = alarm.copy(can = CanInfo("12.05", "0A1F", isFactory = false)),
+            unreadCount = 0,
+            remoteAvailable = false
+        )
     )
 
     @Test
@@ -94,7 +104,10 @@ class AdvancedMountStatesGallery {
     fun canHintDialog() = render("09_dialog_can_hint", alarmReady.copy(dialog = MountDialog.CAN_HINT))
 
     @Test
-    fun bootMode() = render("10_header_boot_mode", moduleBase.copy(device = module.copy(mode = DeviceOperationMode.BOOT), content = MountContent.Loading))
+    fun bootMode() = render(
+        "10_header_boot_mode",
+        moduleBase.copy(device = module.copy(mode = DeviceOperationMode.BOOT), content = MountContent.Loading)
+    )
 
     @Test
     fun sectionStub() = StateGallery.render(outDir, "11_section_stub") {

@@ -115,5 +115,5 @@ enum class CmpIcons {
     NightsStay,
     Lightbulb,
     Moon,
-    Sun,
+    Sun
 }

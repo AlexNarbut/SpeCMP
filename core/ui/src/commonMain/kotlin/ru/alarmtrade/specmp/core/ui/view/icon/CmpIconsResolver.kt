@@ -9,26 +9,12 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AttachFile
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.DoneAll
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.SupportAgent
-import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothDisabled
 import androidx.compose.material.icons.filled.BluetoothSearching
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.SearchOff
-import androidx.compose.material.icons.filled.Sensors
-import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.Usb
-import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
@@ -39,21 +25,28 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
@@ -67,16 +60,23 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Sell
+import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -87,98 +87,168 @@ import androidx.compose.ui.graphics.vector.ImageVector
 fun CmpIcons.imageVector(): ImageVector = when (this) {
     // Navigation
     CmpIcons.ArrowBack -> Icons.AutoMirrored.Filled.ArrowBack
+
     CmpIcons.ArrowForward -> Icons.AutoMirrored.Filled.ArrowForward
+
     CmpIcons.ArrowDropDown -> Icons.Filled.ArrowDropDown
+
     CmpIcons.ChevronLeft -> Icons.AutoMirrored.Filled.KeyboardArrowLeft
+
     CmpIcons.ChevronRight -> Icons.AutoMirrored.Filled.KeyboardArrowRight
+
     CmpIcons.KeyboardArrowDown -> Icons.Filled.KeyboardArrowDown
+
     CmpIcons.KeyboardArrowUp -> Icons.Filled.KeyboardArrowUp
+
     CmpIcons.Menu -> Icons.Filled.Menu
+
     CmpIcons.MoreVert -> Icons.Filled.MoreVert
+
     CmpIcons.Close -> Icons.Filled.Close
+
     CmpIcons.Home -> Icons.Filled.Home
 
     // Actions
     CmpIcons.Add -> Icons.Filled.Add
+
     CmpIcons.Remove -> Icons.Filled.Clear
+
     CmpIcons.Edit -> Icons.Filled.Edit
+
     CmpIcons.Create -> Icons.Filled.Create
+
     CmpIcons.Delete -> Icons.Filled.Delete
+
     CmpIcons.Search -> Icons.Filled.Search
+
     CmpIcons.Refresh -> Icons.Filled.Refresh
+
     CmpIcons.Share -> Icons.Filled.Share
+
     CmpIcons.Send -> Icons.AutoMirrored.Filled.Send
+
     CmpIcons.Done -> Icons.Filled.Done
+
     CmpIcons.Check -> Icons.Filled.Check
+
     CmpIcons.CheckCircle -> Icons.Filled.CheckCircle
+
     CmpIcons.Clear -> Icons.Filled.Clear
+
     CmpIcons.PlayArrow -> Icons.Filled.PlayArrow
+
     CmpIcons.Pause -> Icons.Filled.Pause
+
     CmpIcons.Build -> Icons.Filled.Build
 
     // Content
     CmpIcons.Favorite -> Icons.Filled.Favorite
+
     CmpIcons.FavoriteBorder -> Icons.Filled.FavoriteBorder
+
     CmpIcons.Star -> Icons.Filled.Star
+
     CmpIcons.ThumbUp -> Icons.Filled.ThumbUp
+
     CmpIcons.List -> Icons.AutoMirrored.Filled.List
+
     CmpIcons.Tag -> Icons.Filled.Sell
+
     CmpIcons.AttachFile -> Icons.Filled.AttachFile
+
     CmpIcons.Image -> Icons.Filled.Image
+
     CmpIcons.Description -> Icons.Filled.Description
+
     CmpIcons.DoneAll -> Icons.Filled.DoneAll
+
     CmpIcons.Download -> Icons.Filled.Download
 
     // Communication
     CmpIcons.Email -> Icons.Filled.Email
+
     CmpIcons.Phone -> Icons.Filled.Phone
+
     CmpIcons.Call -> Icons.Filled.Call
+
     CmpIcons.Notifications -> Icons.Filled.Notifications
+
     CmpIcons.Mic -> Icons.Filled.Mic
+
     CmpIcons.Forum -> Icons.Filled.Forum
+
     CmpIcons.SupportAgent -> Icons.Filled.SupportAgent
 
     // User
     CmpIcons.Person -> Icons.Filled.Person
+
     CmpIcons.AccountCircle -> Icons.Filled.AccountCircle
+
     CmpIcons.Face -> Icons.Filled.Face
 
     // Status
     CmpIcons.Info -> Icons.Filled.Info
+
     CmpIcons.Warning -> Icons.Filled.Warning
+
     CmpIcons.AlertTriangle -> Icons.Filled.Warning
+
     CmpIcons.AlertCircle -> Icons.Filled.Error
+
     CmpIcons.Lock -> Icons.Filled.Lock
+
     CmpIcons.Visibility -> Icons.Filled.Visibility
+
     CmpIcons.VisibilityOff -> Icons.Filled.VisibilityOff
+
     CmpIcons.WifiOff -> Icons.Filled.WifiOff
 
     // Places
     CmpIcons.LocationOn -> Icons.Filled.LocationOn
+
     CmpIcons.Place -> Icons.Filled.Place
 
     // Devices / Connectivity
     CmpIcons.Bluetooth -> Icons.Filled.Bluetooth
+
     CmpIcons.BluetoothSearching -> Icons.Filled.BluetoothSearching
+
     CmpIcons.BluetoothDisabled -> Icons.Filled.BluetoothDisabled
+
     CmpIcons.Usb -> Icons.Filled.Usb
+
     CmpIcons.Sensors -> Icons.Filled.Sensors
+
     CmpIcons.Memory -> Icons.Filled.Memory
+
     CmpIcons.VpnKey -> Icons.Filled.VpnKey
+
     CmpIcons.SearchOff -> Icons.Filled.SearchOff
+
     CmpIcons.TouchApp -> Icons.Filled.TouchApp
+
     CmpIcons.Link -> Icons.Filled.Link
 
     // Other
     CmpIcons.Settings -> Icons.Filled.Settings
+
     CmpIcons.DateRange -> Icons.Filled.DateRange
+
     CmpIcons.Schedule -> Icons.Filled.Schedule
+
     CmpIcons.ShoppingCart -> Icons.Filled.ShoppingCart
+
     CmpIcons.ExitToApp -> Icons.AutoMirrored.Filled.ExitToApp
+
     CmpIcons.DarkMode -> Icons.Filled.DarkMode
+
     CmpIcons.LightMode -> Icons.Filled.LightMode
+
     CmpIcons.NightsStay -> Icons.Filled.NightsStay
+
     CmpIcons.Lightbulb -> Icons.Filled.Lightbulb
+
     CmpIcons.Moon -> Icons.Filled.NightsStay
+
     CmpIcons.Sun -> Icons.Filled.WbSunny
 }

@@ -1,9 +1,6 @@
 package ru.alarmtrade.specmp.core.specialist
 
-data class SpecialistAppVersion(
-    val name: String,
-    val code: Int,
-)
+data class SpecialistAppVersion(val name: String, val code: Int)
 
 fun interface SpecialistAppVersionProvider {
     fun current(): SpecialistAppVersion
@@ -11,5 +8,5 @@ fun interface SpecialistAppVersionProvider {
 
 val CurrentSpecialistAppVersion = SpecialistAppVersion(
     name = "2.0.40",
-    code = 240,
+    code = 240
 )

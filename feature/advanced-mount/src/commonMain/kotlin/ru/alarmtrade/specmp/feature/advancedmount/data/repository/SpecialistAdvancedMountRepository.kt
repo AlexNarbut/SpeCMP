@@ -4,35 +4,36 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
-import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.map
-import ru.alarmtrade.specmp.core.common.onError
-import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
-import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.interactors.chat.requests.ConnectChatRequest
 import ru.alarmtrade.specialist.interactors.deviceVerification.VerificationInteractor
 import ru.alarmtrade.specialist.interactors.deviceVerification.request.VerifyDeviceRequest
 import ru.alarmtrade.specialist.interactors.user.UserInteractor
+import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.onError
+import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
+import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 
 class SpecialistAdvancedMountRepository(
     private val verificationInteractor: VerificationInteractor,
     private val chatInteractor: ChatInteractor,
-    private val userInteractor: UserInteractor,
+    private val userInteractor: UserInteractor
 ) : AdvancedMountRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<DeviceAccess> {
-        val request = VerifyDeviceRequest(systemId = systemId, systemName = systemName, firmwareVersion = firmwareVersion)
+        val request =
+            VerifyDeviceRequest(systemId = systemId, systemName = systemName, firmwareVersion = firmwareVersion)
         return verificationInteractor.verifyDeviceUseCase.execute(request).toResponse()
             .onError { logger.e(it) { "Failed to verify device" } }
             .map { DeviceAccess(it.hasAccess, it.message) }
@@ -50,7 +51,7 @@ class SpecialistAdvancedMountRepository(
         chatInteractor.openChatUseCase.execute(ConnectChatRequest())
         emitAll(
             chatInteractor.isAvailableRemoteMountFlowUseCase.execute()
-                .map { response -> (response as? SpecialistResponse.Success)?.value ?: false },
+                .map { response -> (response as? SpecialistResponse.Success)?.value ?: false }
         )
     }
         .catch { e ->

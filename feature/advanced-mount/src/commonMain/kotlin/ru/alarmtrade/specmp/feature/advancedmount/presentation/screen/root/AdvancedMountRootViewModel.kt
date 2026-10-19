@@ -41,7 +41,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 class AdvancedMountRootViewModel(
     private val deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
-    dispatchers: AppDispatchers,
+    dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
     private val deviceScope = DeviceScope(viewModelScope, deviceSession)
@@ -61,7 +61,11 @@ class AdvancedMountRootViewModel(
         emitAll(repository.remoteMountAvailable())
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    val state: StateFlow<AdvancedMountRootState> = combine(_state, unreadCount, remoteAvailable) { state, unread, remote ->
+    val state: StateFlow<AdvancedMountRootState> = combine(_state, unreadCount, remoteAvailable) {
+            state,
+            unread,
+            remote
+        ->
         state.copy(unreadCount = unread, remoteAvailable = remote)
     }
         .flowOn(dispatchers.default)
@@ -75,7 +79,9 @@ class AdvancedMountRootViewModel(
 
     init {
         safeLaunch {
-            deviceSession.transport.filterNotNull().collect { transport -> _state.update { it.copy(transport = transport) } }
+            deviceSession.transport.filterNotNull().collect { transport ->
+                _state.update { it.copy(transport = transport) }
+            }
         }
         deviceScope.onReady(::onDeviceReady)
         safeLaunch {
@@ -98,8 +104,15 @@ class AdvancedMountRootViewModel(
         loadJob?.cancel()
         loadJob = safeLaunch {
             _state.update { it.copy(content = MountContent.Loading, dialog = null) }
-            val content = when (val access = repository.verify(device.systemId, device.systemName, device.firmwareVersion)) {
+            val content = when (
+                val access = repository.verify(
+                    device.systemId,
+                    device.systemName,
+                    device.firmwareVersion
+                )
+            ) {
                 is Response.Error -> MountContent.VerifyError
+
                 is Response.Success -> if (access.value.hasAccess) {
                     MountContent.Ready(sections = device.features.toSections(), unsupported = device.features == null)
                 } else {

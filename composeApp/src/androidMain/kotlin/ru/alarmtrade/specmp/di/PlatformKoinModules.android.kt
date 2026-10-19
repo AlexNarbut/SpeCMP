@@ -18,7 +18,7 @@ actual fun rememberPlatformKoinModules(): List<Module> {
             module {
                 single<Context> { appContext }
                 single<NetworkMonitor> { AndroidNetworkMonitor(appContext) }
-            },
+            }
         )
     }
 }

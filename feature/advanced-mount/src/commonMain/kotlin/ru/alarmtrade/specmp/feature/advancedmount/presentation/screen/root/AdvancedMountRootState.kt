@@ -18,7 +18,7 @@ data class AdvancedMountRootState(
     val remoteAvailable: Boolean = false,
     /** Кнопка «Информация о товаре» (у пользователя включён поиск товара). */
     val productInfo: Boolean = false,
-    val dialog: MountDialog? = null,
+    val dialog: MountDialog? = null
 ) {
     /** Заводские CAN-настройки: разделы с [MountSection.needsCan] заблокированы до CAN-прошивки. */
     val canLocked: Boolean
@@ -46,5 +46,5 @@ enum class MountDialog {
     CAN_UPDATE,
 
     /** Подсказка у CAN-кода в шапке. */
-    CAN_HINT,
+    CAN_HINT
 }

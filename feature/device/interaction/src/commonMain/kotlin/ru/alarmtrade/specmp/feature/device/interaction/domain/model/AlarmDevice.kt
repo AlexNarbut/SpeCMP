@@ -10,7 +10,7 @@ data class AlarmDevice(
     /** Возможности блока; `null` — прочитать не удалось (блок не поддерживается приложением). */
     val features: Set<DeviceFeature>?,
     /** CAN-прошивка — только у блоков с отдельной CAN-прошивкой (`SINGLE_CAN_FIRMWARE`). */
-    val can: CanInfo?,
+    val can: CanInfo?
 )
 
 /** Версия ПО для показа: без префикса `VER` (`3.57`). */
@@ -18,11 +18,7 @@ val AlarmDevice.displayFirmwareVersion: String
     get() = firmwareVersion.removePrefix("VER").trim()
 
 /** Данные CAN-прошивки блока. [isFactory] — заводские CAN-настройки: сначала нужно прошить блок под CAN-код авто. */
-data class CanInfo(
-    val firmwareVersion: String,
-    val code: String,
-    val isFactory: Boolean,
-)
+data class CanInfo(val firmwareVersion: String, val code: String, val isFactory: Boolean)
 
 /** Режим работы основной программы блока: рабочий или загрузчик (прошивка/восстановление). */
 enum class DeviceOperationMode { MAIN, BOOT }
@@ -31,10 +27,7 @@ enum class DeviceOperationMode { MAIN, BOOT }
 enum class BluetoothModuleMode { MAIN, BOOT }
 
 /** Bluetooth-модуль блока на текущем BLE-подключении: режим + мануфактура. */
-data class BluetoothModule(
-    val mode: BluetoothModuleMode,
-    val manufacturer: BluetoothManufacturer,
-)
+data class BluetoothModule(val mode: BluetoothModuleMode, val manufacturer: BluetoothManufacturer)
 
 /** Мануфактура Bluetooth-модуля (нужна в загрузчике BLE: показ и обновление BLE-прошивки). */
 data class BluetoothManufacturer(
@@ -42,7 +35,7 @@ data class BluetoothManufacturer(
     val firmwareName: String,
     val deviceName: String,
     val bootFirmwareVersion: String,
-    val mainFirmwareVersion: String,
+    val mainFirmwareVersion: String
 )
 
 /** Возможности блока, от которых зависит меню работы с устройством (подмножество `SubsystemFeature` SDK). */
@@ -52,7 +45,7 @@ enum class DeviceFeature {
     SETTINGS,
     BYPASS_LEARNING,
     CLONE,
-    DYNAMIC_DEVICES,
+    DYNAMIC_DEVICES
 }
 
 /** Связь с блоком по данным SDK (`getDeviceConnectionStateFlowUseCase`). */

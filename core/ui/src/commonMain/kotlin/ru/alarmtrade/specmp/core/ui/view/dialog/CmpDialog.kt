@@ -17,7 +17,7 @@ fun CmpDialog(
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
     icon: ImageVector? = null,
-    shape: Shape? = null,
+    shape: Shape? = null
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -27,6 +27,6 @@ fun CmpDialog(
         title = title,
         text = text,
         icon = icon?.let { { CmpIcon(imageVector = it, contentDescription = null) } },
-        shape = shape ?: AlertDialogDefaults.shape,
+        shape = shape ?: AlertDialogDefaults.shape
     )
 }

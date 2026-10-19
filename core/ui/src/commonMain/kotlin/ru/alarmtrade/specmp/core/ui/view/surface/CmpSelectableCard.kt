@@ -21,7 +21,7 @@ fun CmpSelectableCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: (@Composable () -> Unit)? = null,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val borderColor by animateColorAsState(
         targetValue = if (selected) {
@@ -29,7 +29,7 @@ fun CmpSelectableCard(
         } else {
             MaterialTheme.colorScheme.outline
         },
-        animationSpec = tween(300),
+        animationSpec = tween(300)
     )
     val containerColor by animateColorAsState(
         targetValue = if (selected) {
@@ -37,7 +37,7 @@ fun CmpSelectableCard(
         } else {
             MaterialTheme.colorScheme.surface
         },
-        animationSpec = tween(300),
+        animationSpec = tween(300)
     )
 
     Surface(
@@ -46,11 +46,11 @@ fun CmpSelectableCard(
             .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.medium,
         color = containerColor,
-        border = BorderStroke(1.5.dp, borderColor),
+        border = BorderStroke(1.5.dp, borderColor)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
                 icon()

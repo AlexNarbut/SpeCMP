@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.TextUnit
 enum class CmpTextStyle {
     Title,
     Body,
-    Caption,
+    Caption
 }
 
 @Composable
@@ -33,7 +33,7 @@ fun CmpText(
     textAlign: TextAlign? = null,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
-    style: CmpTextStyle? = null,
+    style: CmpTextStyle? = null
 ) {
     if (style != null) {
         val textStyle: TextStyle = when (style) {
@@ -49,7 +49,7 @@ fun CmpText(
             overflow = overflow,
             maxLines = maxLines,
             style = textStyle,
-            fontWeight = fontWeight,
+            fontWeight = fontWeight
         )
     } else {
         Text(

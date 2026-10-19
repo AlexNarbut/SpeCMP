@@ -6,7 +6,4 @@ package ru.alarmtrade.specmp.core.specialist.account
  * Данные приходят из Specialist SDK (`userInteractor.getUserUseCase`); маппинг
  * SDK-типов выполняется в `core:specialist`, чтобы фичи не зависели от них.
  */
-data class AccountProfile(
-    val name: String,
-    val email: String,
-)
+data class AccountProfile(val name: String, val email: String)

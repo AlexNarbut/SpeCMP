@@ -15,10 +15,8 @@ import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldError
 
-class RegistrationScreenViewModel(
-    private val repository: LoginRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+class RegistrationScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
+    BaseViewModel() {
 
     private val _state = MutableStateFlow(RegistrationScreenState())
     val state: StateFlow<RegistrationScreenState> = _state.asStateFlow()
@@ -59,7 +57,7 @@ class RegistrationScreenViewModel(
             _state.update {
                 it.copy(
                     fieldErrors = fieldErrors.mapTo(mutableSetOf()) { error -> error.toFieldError() },
-                    registrationError = null,
+                    registrationError = null
                 )
             }
             return
@@ -69,7 +67,7 @@ class RegistrationScreenViewModel(
             _state.update {
                 it.copy(
                     registrationState = LCEState.Loading(),
-                    registrationError = null,
+                    registrationError = null
                 )
             }
 
@@ -81,10 +79,11 @@ class RegistrationScreenViewModel(
                 is Response.Success -> _state.update {
                     it.copy(registrationState = LCEState.Content(Unit))
                 }
+
                 is Response.Error -> _state.update {
                     it.copy(
                         registrationState = LCEState.None(),
-                        registrationError = AuthFormError.RequestFailed,
+                        registrationError = AuthFormError.RequestFailed
                     )
                 }
             }
@@ -93,30 +92,24 @@ class RegistrationScreenViewModel(
 
     private inline fun RegistrationScreenState.withFieldEdited(
         field: RegistrationFieldError,
-        edit: RegistrationScreenState.() -> RegistrationScreenState,
-    ): RegistrationScreenState {
-        return edit().copy(
-            registrationError = null,
-            fieldErrors = fieldErrors - field,
-        )
-    }
+        edit: RegistrationScreenState.() -> RegistrationScreenState
+    ): RegistrationScreenState = edit().copy(
+        registrationError = null,
+        fieldErrors = fieldErrors - field
+    )
 
-    private fun RegistrationScreenState.toCredentials(): SignUpCredentials {
-        return SignUpCredentials(
-            fullName = fullName,
-            email = email,
-            phoneNumber = phoneNumber,
-            password = password,
-            isInstallerConfirmed = isInstallerConfirmed,
-        )
-    }
+    private fun RegistrationScreenState.toCredentials(): SignUpCredentials = SignUpCredentials(
+        fullName = fullName,
+        email = email,
+        phoneNumber = phoneNumber,
+        password = password,
+        isInstallerConfirmed = isInstallerConfirmed
+    )
 
-    private fun SignUpValidationError.toFieldError(): RegistrationFieldError {
-        return when (this) {
-            SignUpValidationError.InvalidFullName -> RegistrationFieldError.FullName
-            SignUpValidationError.InvalidEmail -> RegistrationFieldError.Email
-            SignUpValidationError.InvalidPhoneNumber -> RegistrationFieldError.Phone
-            SignUpValidationError.PasswordTooShort -> RegistrationFieldError.Password
-        }
+    private fun SignUpValidationError.toFieldError(): RegistrationFieldError = when (this) {
+        SignUpValidationError.InvalidFullName -> RegistrationFieldError.FullName
+        SignUpValidationError.InvalidEmail -> RegistrationFieldError.Email
+        SignUpValidationError.InvalidPhoneNumber -> RegistrationFieldError.Phone
+        SignUpValidationError.PasswordTooShort -> RegistrationFieldError.Password
     }
 }

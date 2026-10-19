@@ -1,8 +1,8 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.model
 
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 
 class MountSectionTest {
 
@@ -20,9 +20,9 @@ class MountSectionTest {
                 MountSection.TECH_REQUESTS,
                 MountSection.SUPPORT_CHAT,
                 MountSection.COMMUNITY_MAPS,
-                MountSection.VEHICLES,
+                MountSection.VEHICLES
             ),
-            setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS).toSections(),
+            setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS).toSections()
         )
     }
 
@@ -35,15 +35,20 @@ class MountSectionTest {
     fun `unread features give the unsupported fallback`() {
         assertEquals(
             listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
-            (null as Set<DeviceFeature>?).toSections(),
+            (null as Set<DeviceFeature>?).toSections()
         )
     }
 
     @Test
     fun `only device configuration sections need CAN firmware`() {
         assertEquals(
-            setOf(MountSection.SETTINGS, MountSection.BYPASS_LEARNING, MountSection.CLONE, MountSection.DYNAMIC_DEVICES),
-            MountSection.entries.filter { it.needsCan }.toSet(),
+            setOf(
+                MountSection.SETTINGS,
+                MountSection.BYPASS_LEARNING,
+                MountSection.CLONE,
+                MountSection.DYNAMIC_DEVICES
+            ),
+            MountSection.entries.filter { it.needsCan }.toSet()
         )
     }
 }

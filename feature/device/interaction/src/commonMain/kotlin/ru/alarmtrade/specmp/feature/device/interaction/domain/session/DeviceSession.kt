@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
 import co.touchlab.kermit.Logger
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,13 +25,11 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * Единственный держатель состояния подключённого устройства (app-scoped). На каждом `READY` определяет режим
@@ -49,14 +49,14 @@ class DeviceSession(
     private val sessionRepository: DeviceSessionRepository,
     private val connectionRepository: DeviceConnectionRepository,
     dispatchers: AppDispatchers,
-    parentContext: CoroutineContext = EmptyCoroutineContext,
+    parentContext: CoroutineContext = EmptyCoroutineContext
 ) {
 
     private val logger = Logger.withTag(LOG_TAG)
 
     private val scope = CoroutineScope(
         parentContext + SupervisorJob(parentContext[Job]) + dispatchers.io +
-            CoroutineExceptionHandler { _, throwable -> logger.e(throwable) { "Unhandled session exception" } },
+            CoroutineExceptionHandler { _, throwable -> logger.e(throwable) { "Unhandled session exception" } }
     )
 
     private val sessionMutex = Mutex()
@@ -71,10 +71,12 @@ class DeviceSession(
         .transformLatest { link ->
             when (link) {
                 DeviceLinkState.CONNECTING -> emit(DeviceSessionState.Connecting)
+
                 DeviceLinkState.DISCONNECTED -> {
                     emit(DeviceSessionState.Disconnected)
                     reconnectWhileBle()
                 }
+
                 DeviceLinkState.READY -> {
                     emit(DeviceSessionState.Connecting)
                     val mode = detectMode()
@@ -92,7 +94,7 @@ class DeviceSession(
         .stateIn(
             scope = scope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0),
-            initialValue = DeviceSessionState.Connecting,
+            initialValue = DeviceSessionState.Connecting
         )
 
     /** Сессия создана поиском устройства — запомнить, по какому транспорту. */

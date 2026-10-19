@@ -10,7 +10,7 @@ enum class AppLifecycleEvent {
     FOREGROUND,
 
     /** Приложение ушло в фон. */
-    BACKGROUND,
+    BACKGROUND
 }
 
 /**

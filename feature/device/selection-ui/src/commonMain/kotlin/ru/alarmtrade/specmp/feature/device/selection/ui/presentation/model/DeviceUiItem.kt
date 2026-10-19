@@ -15,10 +15,12 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceM
 sealed interface DeviceUiItem {
     val id: String
     val name: String
+
     /** Вторая строка карточки рядом с чипом: MAC для BLE; systemId для USB, без него — `HID · VID:PID`. */
     val address: String
     val transport: DeviceTransport
     val typeIcon: CmpIcons
+
     /** systemId блока, если известен при поиске (только USB). */
     val systemId: Long?
 
@@ -32,7 +34,7 @@ sealed interface DeviceUiItem {
         val rssi: Int,
         val hasDeviceBond: Boolean,
         /** `null` — платформа не сообщает о сопряжении с телефоном (iOS). */
-        val hasPhoneBond: Boolean?,
+        val hasPhoneBond: Boolean?
     ) : DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.BLE
         override val typeIcon: CmpIcons get() = CmpIcons.Sensors
@@ -49,7 +51,7 @@ sealed interface DeviceUiItem {
         val vidPid: String,
         override val systemId: Long?,
         val firmwareVersion: String?,
-        val isBootMode: Boolean?,
+        val isBootMode: Boolean?
     ) : DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.USB
         override val typeIcon: CmpIcons get() = CmpIcons.Memory
@@ -65,7 +67,7 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
         mode = mode,
         rssi = rssi,
         hasDeviceBond = hasDeviceBond,
-        hasPhoneBond = hasPhoneBond,
+        hasPhoneBond = hasPhoneBond
     )
 
     is ScannedDevice.Usb -> {
@@ -78,7 +80,7 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
             vidPid = vidPid,
             systemId = systemId,
             firmwareVersion = firmwareVersion?.toDisplayFirmware(),
-            isBootMode = isBootMode,
+            isBootMode = isBootMode
         )
     }
 }

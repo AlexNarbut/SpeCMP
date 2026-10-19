@@ -11,13 +11,13 @@ fun CmpCheckbox(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
+    enabled: Boolean = true
 ) {
     Checkbox(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier,
-        enabled = enabled,
+        enabled = enabled
     )
 }
 
@@ -26,12 +26,12 @@ fun CmpTriStateCheckbox(
     state: ToggleableState,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
+    enabled: Boolean = true
 ) {
     TriStateCheckbox(
         state = state,
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled,
+        enabled = enabled
     )
 }

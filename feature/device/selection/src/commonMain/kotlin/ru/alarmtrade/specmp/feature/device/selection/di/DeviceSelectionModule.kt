@@ -14,7 +14,7 @@ val deviceSelectionModule = module {
         // (BLE на desktop, USB на iOS) не должен ронять создание репозитория.
         SpecialistDeviceScanRepository(
             bluetoothConnectorInteractor = { get() },
-            usbConnectorInteractor = { get() },
+            usbConnectorInteractor = { get() }
         )
     }
 }

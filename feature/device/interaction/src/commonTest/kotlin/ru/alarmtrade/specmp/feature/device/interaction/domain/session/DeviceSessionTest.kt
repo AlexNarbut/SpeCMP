@@ -1,5 +1,9 @@
 package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -11,13 +15,9 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class DeviceSessionTest {
 
@@ -108,27 +108,28 @@ class DeviceSessionTest {
     }
 
     @Test
-    fun `device scope cancels work on disconnect and reruns onReady on reconnect`() = runTest(UnconfinedTestDispatcher()) {
-        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
-        val session = testSession(repository, FakeDeviceConnectionRepository())
-        val scope = DeviceScope(backgroundScope, session)
-        val readyCalls = mutableListOf<Long>()
-        scope.onReady { readyCalls += it.systemId }
-        advanceUntilIdle()
+    fun `device scope cancels work on disconnect and reruns onReady on reconnect`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+            val session = testSession(repository, FakeDeviceConnectionRepository())
+            val scope = DeviceScope(backgroundScope, session)
+            val readyCalls = mutableListOf<Long>()
+            scope.onReady { readyCalls += it.systemId }
+            advanceUntilIdle()
 
-        val never = CompletableDeferred<Unit>()
-        val job = scope.launch { never.await() }
-        assertTrue(job != null && job.isActive)
+            val never = CompletableDeferred<Unit>()
+            val job = scope.launch { never.await() }
+            assertTrue(job != null && job.isActive)
 
-        repository.link.value = DeviceLinkState.DISCONNECTED
-        advanceUntilIdle()
-        assertTrue(job.isCancelled)
-        assertEquals(null, scope.launch { })
+            repository.link.value = DeviceLinkState.DISCONNECTED
+            advanceUntilIdle()
+            assertTrue(job.isCancelled)
+            assertEquals(null, scope.launch { })
 
-        repository.link.value = DeviceLinkState.READY
-        advanceUntilIdle()
-        assertEquals(listOf(testDevice.systemId, testDevice.systemId), readyCalls)
-    }
+            repository.link.value = DeviceLinkState.READY
+            advanceUntilIdle()
+            assertEquals(listOf(testDevice.systemId, testDevice.systemId), readyCalls)
+        }
 
     @Test
     fun `transport is attached by the scan and cleared on close`() = runTest(UnconfinedTestDispatcher()) {
@@ -222,18 +223,19 @@ class DeviceSessionTest {
     }
 
     @Test
-    fun `ble module in bootloader gives BluetoothBoot without reading the main program`() = runTest(UnconfinedTestDispatcher()) {
-        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
-            bluetoothModule = Response.Success(BluetoothModule(BluetoothModuleMode.BOOT, testManufacturer))
-        }
-        val session = testSession(repository)
-        session.attach(ConnectionTransport.BLE)
-        backgroundScope.launch { session.state.collect {} }
-        runCurrent()
+    fun `ble module in bootloader gives BluetoothBoot without reading the main program`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                bluetoothModule = Response.Success(BluetoothModule(BluetoothModuleMode.BOOT, testManufacturer))
+            }
+            val session = testSession(repository)
+            session.attach(ConnectionTransport.BLE)
+            backgroundScope.launch { session.state.collect {} }
+            runCurrent()
 
-        assertEquals(DeviceSessionState.BluetoothBoot(testManufacturer), session.state.value)
-        assertEquals(0, repository.readCount)
-    }
+            assertEquals(DeviceSessionState.BluetoothBoot(testManufacturer), session.state.value)
+            assertEquals(0, repository.readCount)
+        }
 
     @Test
     fun `ble module in main mode goes on to the main program`() = runTest(UnconfinedTestDispatcher()) {
@@ -263,7 +265,10 @@ class DeviceSessionTest {
     @Test
     fun `main program in bootloader gives FirmwareBoot`() = runTest(UnconfinedTestDispatcher()) {
         val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
-        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply { readResults = listOf(Response.Success(bootDevice)) }
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+            readResults =
+                listOf(Response.Success(bootDevice))
+        }
         val session = testSession(repository)
         session.attach(ConnectionTransport.USB)
         backgroundScope.launch { session.state.collect {} }

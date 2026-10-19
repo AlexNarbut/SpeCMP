@@ -2,11 +2,11 @@ package ru.alarmtrade.specmp.feature.supportchat.data.mapper
 
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import ru.alarmtrade.specialist.domain.chat.ChatEvent
+import ru.alarmtrade.specialist.domain.chat.ChatMessageContent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import ru.alarmtrade.specialist.domain.chat.ChatEvent
-import ru.alarmtrade.specialist.domain.chat.ChatMessageContent
 
 /**
  * Маппинг SDK-сообщений в доменную модель.
@@ -36,15 +36,17 @@ internal class SupportChatMessageMapper {
         var attachment: SupportChatAttachment? = null
         when (val content = default.messageContent) {
             is ChatMessageContent.Text -> text = content.text
+
             is ChatMessageContent.Image -> attachment = SupportChatAttachment.Image(
                 id = content.id,
                 name = content.name,
-                url = content.url,
+                url = content.url
             )
+
             is ChatMessageContent.Document -> attachment = SupportChatAttachment.Document(
                 id = content.id,
                 name = content.name,
-                url = content.url,
+                url = content.url
             )
         }
 
@@ -56,7 +58,7 @@ internal class SupportChatMessageMapper {
             time = message.time.toInstant(TimeZone.UTC),
             isMine = myEmail != null && message.sender.login == myEmail,
             authorEmail = message.sender.login,
-            status = if (message.wasRead) SupportChatMessageStatus.Read else SupportChatMessageStatus.Sent,
+            status = if (message.wasRead) SupportChatMessageStatus.Read else SupportChatMessageStatus.Sent
         )
     }
 }

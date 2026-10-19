@@ -38,5 +38,5 @@ data class ScanDeviceState(
     /** Выбранное устройство в split-раскладке (master-detail). */
     val selectedId: String? = null,
     /** На стадии Scanning без найденных устройств прошло достаточно времени → показать «пусто». */
-    val searchedLongEnough: Boolean = false,
+    val searchedLongEnough: Boolean = false
 )

@@ -1,10 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model
 
-import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 
 class DeviceUiItemTest {
 
@@ -16,7 +16,7 @@ class DeviceUiItemTest {
         productId = 0x5710,
         systemId = systemId,
         firmwareVersion = firmwareVersion,
-        isBootMode = false,
+        isBootMode = false
     )
 
     @Test

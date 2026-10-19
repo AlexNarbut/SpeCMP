@@ -1,9 +1,9 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.timeline
 
+import kotlin.time.Duration.Companion.minutes
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * Лента сообщений чата — неизменяемое значение с инвариантами, которые держатся
@@ -19,9 +19,7 @@ import kotlin.time.Duration.Companion.minutes
  * Все операции — чистые функции без корутин; конкурентность — забота вызывающего
  * (VM меняет ленту только внутри `MutableStateFlow.update {}`).
  */
-class SupportChatTimeline private constructor(
-    val messages: List<SupportChatMessage>,
-) {
+class SupportChatTimeline private constructor(val messages: List<SupportChatMessage>) {
 
     val isEmpty: Boolean get() = messages.isEmpty()
 
@@ -76,8 +74,8 @@ class SupportChatTimeline private constructor(
         return SupportChatTimeline(sorted(messages + outgoing))
     }
 
-    fun withStatus(id: String, status: SupportChatMessageStatus): SupportChatTimeline {
-        return map(id) { it.copy(status = status) }
+    fun withStatus(id: String, status: SupportChatMessageStatus): SupportChatTimeline = map(id) {
+        it.copy(status = status)
     }
 
     /** Перевод статусов по серверным id (событие «прочитано»). */
@@ -104,7 +102,7 @@ class SupportChatTimeline private constructor(
     fun tryTransition(
         id: String,
         from: Set<SupportChatMessageStatus>,
-        to: SupportChatMessageStatus,
+        to: SupportChatMessageStatus
     ): SupportChatTimeline? {
         val current = find(id) ?: return null
         if (current.status !in from) return null
@@ -121,9 +119,7 @@ class SupportChatTimeline private constructor(
         return SupportChatTimeline(messages.map { if (it.id == id) transform(it) else it })
     }
 
-    override fun equals(other: Any?): Boolean {
-        return other is SupportChatTimeline && other.messages == messages
-    }
+    override fun equals(other: Any?): Boolean = other is SupportChatTimeline && other.messages == messages
 
     override fun hashCode(): Int = messages.hashCode()
 
@@ -132,19 +128,15 @@ class SupportChatTimeline private constructor(
     companion object {
         val Empty = SupportChatTimeline(emptyList())
 
-        fun of(messages: List<SupportChatMessage>): SupportChatTimeline {
-            return Empty.withHistoryPage(messages)
-        }
+        fun of(messages: List<SupportChatMessage>): SupportChatTimeline = Empty.withHistoryPage(messages)
     }
 }
 
-private fun sorted(messages: List<SupportChatMessage>): List<SupportChatMessage> {
-    return messages.sortedBy { it.time }
-}
+private fun sorted(messages: List<SupportChatMessage>): List<SupportChatMessage> = messages.sortedBy { it.time }
 
 private fun List<SupportChatMessage>.indexOfEcho(
     echo: SupportChatMessage,
-    accepts: (SupportChatMessage) -> Boolean = { true },
+    accepts: (SupportChatMessage) -> Boolean = { true }
 ): Int {
     // Обе ветки — FIFO: порядок подтверждений сервера соответствует порядку отправки.
     val byContent = indexOfFirst { it.isAwaitingEcho() && accepts(it) && it.contentMatches(echo) }
@@ -154,13 +146,10 @@ private fun List<SupportChatMessage>.indexOfEcho(
 
 private val CLOCK_SKEW = 2.minutes
 
-private fun SupportChatMessage.isAwaitingEcho(): Boolean {
-    return isMine && serverId == null
-}
+private fun SupportChatMessage.isAwaitingEcho(): Boolean = isMine && serverId == null
 
-private fun SupportChatMessage.contentMatches(other: SupportChatMessage): Boolean {
-    return text == other.text && attachment?.name == other.attachment?.name
-}
+private fun SupportChatMessage.contentMatches(other: SupportChatMessage): Boolean =
+    text == other.text && attachment?.name == other.attachment?.name
 
 // Сервер может переименовать вложение — тогда сопоставляем по форме контента. Только
 // вложения: у текста «форма» совпадает всегда, и чужой мой текст из окна CLOCK_SKEW

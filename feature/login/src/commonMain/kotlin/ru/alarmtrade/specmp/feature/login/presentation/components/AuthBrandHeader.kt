@@ -21,19 +21,16 @@ import specmp.feature.login.generated.resources.login_authroot_subtitle_speciali
 import specmp.feature.login.generated.resources.login_authroot_title_brand
 
 @Composable
-fun AuthBrandHeader(
-    colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
-) {
+fun AuthBrandHeader(colors: CmpThemeColors, modifier: Modifier = Modifier) {
     CmpColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         CmpImage(
             painter = painterResource(Res.drawable.app_icon),
             contentDescription = null,
-            modifier = Modifier.size(72.dp),
+            modifier = Modifier.size(72.dp)
         )
 
         CmpText(
@@ -41,14 +38,14 @@ fun AuthBrandHeader(
             fontSize = 34.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.onBackground,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Center
         )
 
         CmpText(
             text = stringResource(Res.string.login_authroot_subtitle_specialist),
             fontSize = 16.sp,
             color = colors.onBackground.copy(alpha = 0.72f),
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Center
         )
     }
 }

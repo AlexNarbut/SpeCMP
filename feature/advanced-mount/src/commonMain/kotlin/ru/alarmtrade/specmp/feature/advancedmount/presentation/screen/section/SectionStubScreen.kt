@@ -72,52 +72,61 @@ private val MountSection.res: SectionRes
         MountSection.FIRMWARE_UPDATE -> SectionRes(
             Res.string.advanced_mount_section_firmware_update,
             Res.string.advanced_mount_section_firmware_update_sub,
-            Res.drawable.mount_section_firmware_update,
+            Res.drawable.mount_section_firmware_update
         )
+
         MountSection.SETTINGS -> SectionRes(
             Res.string.advanced_mount_section_settings,
             Res.string.advanced_mount_section_settings_sub,
-            Res.drawable.mount_section_settings,
+            Res.drawable.mount_section_settings
         )
+
         MountSection.BYPASS_LEARNING -> SectionRes(
             Res.string.advanced_mount_section_bypass_learning,
             Res.string.advanced_mount_section_bypass_learning_sub,
-            Res.drawable.mount_section_bypass_learning,
+            Res.drawable.mount_section_bypass_learning
         )
+
         MountSection.CLONE -> SectionRes(
             Res.string.advanced_mount_section_clone,
             Res.string.advanced_mount_section_clone_sub,
-            Res.drawable.mount_section_clone,
+            Res.drawable.mount_section_clone
         )
+
         MountSection.DYNAMIC_DEVICES -> SectionRes(
             Res.string.advanced_mount_section_dynamic_devices,
             Res.string.advanced_mount_section_dynamic_devices_sub,
-            Res.drawable.mount_section_dynamic_devices,
+            Res.drawable.mount_section_dynamic_devices
         )
+
         MountSection.TECH_REQUESTS -> SectionRes(
             Res.string.advanced_mount_section_tech_requests,
             Res.string.advanced_mount_section_tech_requests_sub,
-            Res.drawable.mount_section_tech_requests,
+            Res.drawable.mount_section_tech_requests
         )
+
         MountSection.SUPPORT_CHAT -> SectionRes(
             Res.string.advanced_mount_section_support_chat,
             Res.string.advanced_mount_section_support_chat_sub,
-            Res.drawable.mount_section_support_chat,
+            Res.drawable.mount_section_support_chat
         )
+
         MountSection.VOICE_FIRMWARE -> SectionRes(
             Res.string.advanced_mount_section_voice_firmware,
             Res.string.advanced_mount_section_voice_firmware_sub,
-            Res.drawable.mount_section_voice_firmware,
+            Res.drawable.mount_section_voice_firmware
         )
+
         MountSection.COMMUNITY_MAPS -> SectionRes(
             Res.string.advanced_mount_section_community_maps,
             Res.string.advanced_mount_section_community_maps_sub,
-            Res.drawable.mount_section_community_maps,
+            Res.drawable.mount_section_community_maps
         )
+
         MountSection.VEHICLES -> SectionRes(
             Res.string.advanced_mount_section_vehicles,
             Res.string.advanced_mount_section_vehicles_sub,
-            Res.drawable.mount_section_vehicles,
+            Res.drawable.mount_section_vehicles
         )
     }
 
@@ -135,13 +144,18 @@ private fun extraTitle(extra: MountExtra): String = stringResource(
     when (extra) {
         MountExtra.PRODUCT_INFO -> Res.string.advanced_mount_stub_product_info
         MountExtra.REMOTE_SYNC -> Res.string.advanced_mount_stub_remote_sync
-    },
+    }
 )
 
 /** Заглушка раздела: экраны разделов — отдельные задачи. [deviceTitle] — «Название  ID» блока. */
 @Composable
 internal fun SectionStubScreen(section: MountSection, deviceTitle: String, onBack: () -> Unit) {
-    StubScreen(title = sectionTitle(section), deviceTitle = deviceTitle, icon = sectionPainter(section), onBack = onBack)
+    StubScreen(
+        title = sectionTitle(section),
+        deviceTitle = deviceTitle,
+        icon = sectionPainter(section),
+        onBack = onBack
+    )
 }
 
 /** Заглушка экранов, ещё не проработанных в дизайне («Информация о товаре», «Удалённая синхронизация»). */
@@ -168,21 +182,26 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
                     CmpIconButton(
                         onClick = onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.advanced_mount_a11y_back),
+                        contentDescription = stringResource(Res.string.advanced_mount_a11y_back)
                     )
-                },
+                }
             )
-        },
+        }
     ) { padding ->
         CmpColumn(
             modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
         ) {
             CmpSurface(modifier = Modifier.size(88.dp), shape = CircleShape, color = colors.primaryContainer) {
                 CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     if (icon != null) {
-                        CmpIcon(painter = icon, contentDescription = null, modifier = Modifier.size(44.dp), tint = colors.onPrimaryContainer)
+                        CmpIcon(
+                            painter = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(44.dp),
+                            tint = colors.onPrimaryContainer
+                        )
                     } else {
                         CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.onPrimaryContainer)
                     }
@@ -192,7 +211,7 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
                 text = stringResource(Res.string.advanced_mount_section_stub),
                 fontSize = 16.sp,
                 color = colors.onSurfaceVariant,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
         }
     }

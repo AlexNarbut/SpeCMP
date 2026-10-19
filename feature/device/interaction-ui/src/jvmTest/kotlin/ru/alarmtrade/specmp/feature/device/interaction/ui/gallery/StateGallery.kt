@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.unit.Density
+import java.io.File
 import org.jetbrains.skia.Color
 import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
@@ -12,7 +13,6 @@ import org.jetbrains.skia.Rect
 import org.jetbrains.skia.Surface
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
-import java.io.File
 
 /**
  * Галерея состояний: рендерит stateless-экран headless (без окна) в PNG — для визуальной проверки
@@ -34,8 +34,13 @@ internal object StateGallery {
             images.forEach { image ->
                 sheet.canvas.drawImageRect(
                     image,
-                    Rect.makeXYWH(x.toFloat(), (GAP + row * (rowHeight + GAP)).toFloat(), image.width.toFloat(), image.height.toFloat()),
-                    Paint(),
+                    Rect.makeXYWH(
+                        x.toFloat(),
+                        (GAP + row * (rowHeight + GAP)).toFloat(),
+                        image.width.toFloat(),
+                        image.height.toFloat()
+                    ),
+                    Paint()
                 )
                 x += image.width + GAP
             }

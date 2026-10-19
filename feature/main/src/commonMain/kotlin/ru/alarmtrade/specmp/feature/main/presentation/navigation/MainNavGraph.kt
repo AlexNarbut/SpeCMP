@@ -43,9 +43,7 @@ private val navConfig = SavedStateConfiguration {
  * @param onNavigateToFeature переход в другую фичу приложения (решает `composeApp`).
  */
 @Composable
-fun MainNavGraph(
-    onNavigateToFeature: (MainNavigationTarget) -> Unit,
-) {
+fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
     val backStack = rememberNavBackStack(navConfig, HomeRoute)
     val isDarkState = LocalThemeIsDark.current
     val isDark by isDarkState
@@ -55,7 +53,7 @@ fun MainNavGraph(
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         onBack = { backStack.popSafe() },
         entryProvider = entryProvider<NavKey> {
@@ -63,9 +61,9 @@ fun MainNavGraph(
                 MainScreen(
                     isDarkTheme = isDark,
                     onThemeChanged = { isDarkState.value = it },
-                    onNavigateToFeature = onNavigateToFeature,
+                    onNavigateToFeature = onNavigateToFeature
                 )
             }
-        },
+        }
     )
 }

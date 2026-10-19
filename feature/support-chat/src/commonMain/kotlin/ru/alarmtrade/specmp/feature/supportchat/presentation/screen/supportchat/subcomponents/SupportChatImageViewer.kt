@@ -20,10 +20,7 @@ import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_close_viewer
 
 @Composable
-internal fun SupportChatImageViewer(
-    imageSource: String,
-    onDismiss: () -> Unit,
-) {
+internal fun SupportChatImageViewer(imageSource: String, onDismiss: () -> Unit) {
     val colors = cmpThemeColors()
 
     CmpFullScreenDialog(onDismissRequest = onDismiss) {
@@ -32,12 +29,12 @@ internal fun SupportChatImageViewer(
                 .fillMaxSize()
                 .background(colors.surface)
                 .clickable(onClick = onDismiss),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             CmpAsyncImage(
                 model = imageSource,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize()
             )
 
             CmpIconButton(
@@ -48,7 +45,7 @@ internal fun SupportChatImageViewer(
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
                     .size(48.dp),
-                tint = colors.onSurface,
+                tint = colors.onSurface
             )
         }
     }

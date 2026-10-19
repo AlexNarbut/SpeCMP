@@ -54,7 +54,6 @@ kotlin {
             implementation(libs.alarmtrade.specialist)
 
             implementation(libs.kermit)
-
         }
 
         commonTest.dependencies {

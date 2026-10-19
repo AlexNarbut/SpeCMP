@@ -1,5 +1,8 @@
 package ru.alarmtrade.specmp.feature.supportchat.data.outbox
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -10,9 +13,6 @@ import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class SettingsSupportChatOutboxTest {
 
@@ -27,8 +27,8 @@ class SettingsSupportChatOutboxTest {
                 name = "scheme.pdf",
                 localPath = "/files/scheme.pdf",
                 mimeType = "application/pdf",
-                sizeBytes = 42,
-            ),
+                sizeBytes = 42
+            )
         )
 
         outbox.enqueue(message)
@@ -90,16 +90,14 @@ class SettingsSupportChatOutboxTest {
         assertEquals("ru", root.getStringOrNull("app_locale"))
     }
 
-    private fun pending(id: String): SupportChatMessage {
-        return SupportChatMessage(
-            id = id,
-            serverId = null,
-            text = "text $id",
-            attachment = null,
-            time = Instant.fromEpochMilliseconds(1_000),
-            isMine = true,
-            authorEmail = null,
-            status = SupportChatMessageStatus.Pending,
-        )
-    }
+    private fun pending(id: String): SupportChatMessage = SupportChatMessage(
+        id = id,
+        serverId = null,
+        text = "text $id",
+        attachment = null,
+        time = Instant.fromEpochMilliseconds(1_000),
+        isMine = true,
+        authorEmail = null,
+        status = SupportChatMessageStatus.Pending
+    )
 }

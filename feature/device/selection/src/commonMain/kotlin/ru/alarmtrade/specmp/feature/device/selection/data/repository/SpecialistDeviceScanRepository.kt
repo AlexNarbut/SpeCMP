@@ -9,6 +9,10 @@ import ru.alarmtrade.bluetoothControl.domain.bluetooth.scan.ScannedDeviceState
 import ru.alarmtrade.common.core.PlatformType
 import ru.alarmtrade.common.core.platformType
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
+import ru.alarmtrade.specialist.domain.bluetooth.scan.BleDeviceScanResult
+import ru.alarmtrade.specialist.domain.usb.AttachedUsbDeviceInformation
+import ru.alarmtrade.specialist.interactors.bluetoothConnector.BluetoothConnectorInteractor
+import ru.alarmtrade.specialist.interactors.usbConnector.UsbConnectorInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
@@ -19,10 +23,6 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTranspor
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
-import ru.alarmtrade.specialist.domain.bluetooth.scan.BleDeviceScanResult
-import ru.alarmtrade.specialist.domain.usb.AttachedUsbDeviceInformation
-import ru.alarmtrade.specialist.interactors.bluetoothConnector.BluetoothConnectorInteractor
-import ru.alarmtrade.specialist.interactors.usbConnector.UsbConnectorInteractor
 
 /**
  * Реализация [DeviceScanRepository] над Specialist SDK.
@@ -33,7 +33,7 @@ import ru.alarmtrade.specialist.interactors.usbConnector.UsbConnectorInteractor
  */
 class SpecialistDeviceScanRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
-    private val usbConnectorInteractor: () -> UsbConnectorInteractor,
+    private val usbConnectorInteractor: () -> UsbConnectorInteractor
 ) : DeviceScanRepository {
 
     private val connectionTypes: Set<DeviceConnectionType> = supportedConnectionTypes()
@@ -61,7 +61,7 @@ class SpecialistDeviceScanRepository(
             safeFlowRun {
                 interactor.scanBluetoothDevicesUseCase.execute()
                     .map { response -> response.toResponse().map { devices -> devices.map { it.toDomain() } } }
-            },
+            }
         )
     }
 
@@ -79,7 +79,7 @@ class SpecialistDeviceScanRepository(
             safeFlowRun {
                 interactor.scanUsbDevicesUseCase.execute()
                     .map { response -> response.toResponse().map { devices -> devices.map { it.toDomain() } } }
-            },
+            }
         )
     }
 
@@ -96,7 +96,7 @@ class SpecialistDeviceScanRepository(
         rssi = rssi,
         hasDeviceBond = hasDeviceBond,
         // На iOS SDK не знает о сопряжении с телефоном (isBonded всегда false).
-        hasPhoneBond = hasPhoneBond.takeIf { platformType() == PlatformType.ANDROID },
+        hasPhoneBond = hasPhoneBond.takeIf { platformType() == PlatformType.ANDROID }
     )
 
     private fun AttachedUsbDeviceInformation.toDomain(): ScannedDevice.Usb = ScannedDevice.Usb(
@@ -108,20 +108,28 @@ class SpecialistDeviceScanRepository(
         // После опроса блока SDK кладёт в id его systemId (до опроса — путь устройства).
         systemId = id.toLongOrNull(),
         firmwareVersion = firmwareVersion?.takeIf { it.isNotBlank() },
-        isBootMode = isBootMode,
+        isBootMode = isBootMode
     )
 
     // По имени, а не по enum SDK: набор типов растёт, неизвестные уходят в OTHER.
     private fun String.toDeviceKind(): DeviceKind = when {
         this == "ALARM" || this == "MICROBOT" -> DeviceKind.ALARM
+
         startsWith("TAG_") || this == "BAND" || this == "WATCH" -> DeviceKind.TAG
+
         startsWith("RELAY_") -> DeviceKind.RELAY
+
         this == "IMMOBILIZER" -> DeviceKind.IMMOBILIZER
+
         startsWith("REMOTE_CONTROL") -> DeviceKind.REMOTE_CONTROL
+
         startsWith("NAV_") || startsWith("GPS_NAV") -> DeviceKind.NAVIGATION
+
         endsWith("_SENSOR") || this == "TPMS" -> DeviceKind.SENSOR
+
         startsWith("DOOR_MODULE") || startsWith("RHM") || this == "DI_04" || this == "RF_MODULE" ||
             this == "VS_MODULE" || this == "HOOD_LOCK" || this == "SIREN" -> DeviceKind.MODULE
+
         else -> DeviceKind.OTHER
     }
 

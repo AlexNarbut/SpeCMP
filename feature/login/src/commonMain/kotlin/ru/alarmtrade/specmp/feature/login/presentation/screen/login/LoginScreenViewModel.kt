@@ -14,10 +14,8 @@ import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 
-class LoginScreenViewModel(
-    private val repository: LoginRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+class LoginScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
+    BaseViewModel() {
 
     private val _state = MutableStateFlow(LoginScreenState())
     val state: StateFlow<LoginScreenState> = _state.asStateFlow()
@@ -28,7 +26,7 @@ class LoginScreenViewModel(
                 login = value,
                 authError = null,
                 activationResendState = LCEState.None(),
-                activationResendError = null,
+                activationResendError = null
             )
         }
     }
@@ -39,7 +37,7 @@ class LoginScreenViewModel(
                 password = value,
                 authError = null,
                 activationResendState = LCEState.None(),
-                activationResendError = null,
+                activationResendError = null
             )
         }
     }
@@ -61,7 +59,7 @@ class LoginScreenViewModel(
                     authState = LCEState.Loading(),
                     authError = null,
                     activationResendState = LCEState.None(),
-                    activationResendError = null,
+                    activationResendError = null
                 )
             }
 
@@ -73,10 +71,11 @@ class LoginScreenViewModel(
 
             when (response) {
                 is Response.Success -> handleLoginResult(response.value)
+
                 is Response.Error -> _state.update {
                     it.copy(
                         authState = LCEState.None(),
-                        authError = AuthFormError.RequestFailed,
+                        authError = AuthFormError.RequestFailed
                     )
                 }
             }
@@ -90,7 +89,7 @@ class LoginScreenViewModel(
             _state.update {
                 it.copy(
                     activationResendState = LCEState.Loading(),
-                    activationResendError = null,
+                    activationResendError = null
                 )
             }
 
@@ -104,10 +103,11 @@ class LoginScreenViewModel(
                 is Response.Success -> _state.update {
                     it.copy(activationResendState = LCEState.Content(Unit))
                 }
+
                 is Response.Error -> _state.update {
                     it.copy(
                         activationResendState = LCEState.None(),
-                        activationResendError = AuthFormError.RequestFailed,
+                        activationResendError = AuthFormError.RequestFailed
                     )
                 }
             }
@@ -120,7 +120,7 @@ class LoginScreenViewModel(
                 authState = LCEState.None(),
                 authError = null,
                 activationResendState = LCEState.None(),
-                activationResendError = null,
+                activationResendError = null
             )
         }
     }
@@ -130,16 +130,15 @@ class LoginScreenViewModel(
             // Переключение на авторизованную зону выполняет feature/auth-state,
             // здесь достаточно вернуть форму в исходное состояние.
             LoginResult.Authorized -> _state.update { LoginScreenState() }
+
             LoginResult.ActivationRequired -> {
                 _state.update { it.copy(authState = LCEState.Content(result)) }
             }
         }
     }
 
-    private fun LoginScreenState.toCredentials(): LoginCredentials {
-        return LoginCredentials(
-            login = login,
-            password = password,
-        )
-    }
+    private fun LoginScreenState.toCredentials(): LoginCredentials = LoginCredentials(
+        login = login,
+        password = password
+    )
 }

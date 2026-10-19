@@ -18,11 +18,12 @@ enum class MountSection(val needsCan: Boolean = false) {
     SUPPORT_CHAT,
     VOICE_FIRMWARE,
     COMMUNITY_MAPS,
-    VEHICLES,
+    VEHICLES
 }
 
 /** Разделы, доступные, когда возможности блока прочитать не удалось («устройство не поддерживается»). */
-internal val UnsupportedSections = listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES)
+internal val UnsupportedSections =
+    listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES)
 
 /**
  * Меню по возможностям блока (правила старого приложения). `null` — возможности не прочитаны:
@@ -33,13 +34,19 @@ internal fun Set<DeviceFeature>?.toSections(): List<MountSection> {
     return MountSection.entries.filter { section ->
         when (section) {
             MountSection.FIRMWARE_UPDATE -> DeviceFeature.FIRMWARE_UPDATE in this
+
             MountSection.SETTINGS,
             MountSection.TECH_REQUESTS,
             MountSection.COMMUNITY_MAPS -> DeviceFeature.SETTINGS in this
+
             MountSection.BYPASS_LEARNING -> DeviceFeature.BYPASS_LEARNING in this
+
             MountSection.CLONE -> DeviceFeature.CLONE in this
+
             MountSection.DYNAMIC_DEVICES -> DeviceFeature.DYNAMIC_DEVICES in this
+
             MountSection.VOICE_FIRMWARE -> DeviceFeature.VOICE_FIRMWARE in this
+
             MountSection.SUPPORT_CHAT,
             MountSection.VEHICLES -> true
         }
@@ -50,5 +57,5 @@ internal fun Set<DeviceFeature>?.toSections(): List<MountSection> {
 @Serializable
 enum class MountExtra {
     PRODUCT_INFO,
-    REMOTE_SYNC,
+    REMOTE_SYNC
 }

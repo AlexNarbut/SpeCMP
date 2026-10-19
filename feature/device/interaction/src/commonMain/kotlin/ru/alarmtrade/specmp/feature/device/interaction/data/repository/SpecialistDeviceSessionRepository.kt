@@ -9,6 +9,10 @@ import kotlinx.coroutines.flow.map
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothManufacturerData
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothOperationMode
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
+import ru.alarmtrade.specialist.domain.alarmDevice.information.AlarmDeviceOperationMode
+import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemFeature
+import ru.alarmtrade.specialist.domain.bluetooth.ConnectionState
+import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
@@ -22,17 +26,13 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeatur
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specialist.domain.alarmDevice.information.AlarmDeviceOperationMode
-import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemFeature
-import ru.alarmtrade.specialist.domain.bluetooth.ConnectionState
-import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 
 /**
  * Реализация [DeviceSessionRepository] над `bluetoothAlarmDeviceInteractor` — он работает с текущей
  * сессией SDK независимо от транспорта (BLE/USB). Интерактор резолвится лениво, как в соседних репозиториях.
  */
 class SpecialistDeviceSessionRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
+    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
 ) : DeviceSessionRepository {
 
     override fun linkState(): Flow<DeviceLinkState> = flow {
@@ -47,7 +47,7 @@ class SpecialistDeviceSessionRepository(
                     is SpecialistResponse.Success -> response.value.toDomain()
                     is SpecialistResponse.Error -> DeviceLinkState.DISCONNECTED
                 }
-            },
+            }
         )
     }.catch { e ->
         if (e is CancellationException) throw e
@@ -65,9 +65,17 @@ class SpecialistDeviceSessionRepository(
         }
         return interactor.getBluetoothOperationModeUseCase.execute().toResponse().mapIfSuccess { mode ->
             when (mode) {
-                BluetoothOperationMode.BLE_MAIN_MODE -> Response.Success(BluetoothModule(BluetoothModuleMode.MAIN, manufacturer))
-                BluetoothOperationMode.BLE_BOOT_MODE -> Response.Success(BluetoothModule(BluetoothModuleMode.BOOT, manufacturer))
-                BluetoothOperationMode.ERROR -> Response.Error(IllegalStateException("Bluetooth module mode is unknown"))
+                BluetoothOperationMode.BLE_MAIN_MODE -> Response.Success(
+                    BluetoothModule(BluetoothModuleMode.MAIN, manufacturer)
+                )
+
+                BluetoothOperationMode.BLE_BOOT_MODE -> Response.Success(
+                    BluetoothModule(BluetoothModuleMode.BOOT, manufacturer)
+                )
+
+                BluetoothOperationMode.ERROR -> Response.Error(
+                    IllegalStateException("Bluetooth module mode is unknown")
+                )
             }
         }
     }
@@ -90,11 +98,15 @@ class SpecialistDeviceSessionRepository(
                 mode = if (information.operationMode.isBoot()) DeviceOperationMode.BOOT else DeviceOperationMode.MAIN,
                 features = sdkFeatures?.mapNotNullTo(mutableSetOf()) { it.toDomain() },
                 can = if (sdkFeatures?.contains(SubsystemFeature.SINGLE_CAN_FIRMWARE) == true) {
-                    CanInfo(firmwareVersion = can.canVersionString, code = can.canCode, isFactory = can.isFactoryCanSettings)
+                    CanInfo(
+                        firmwareVersion = can.canVersionString,
+                        code = can.canCode,
+                        isFactory = can.isFactoryCanSettings
+                    )
                 } else {
                     null
-                },
-            ),
+                }
+            )
         )
     }
 
@@ -135,7 +147,7 @@ class SpecialistDeviceSessionRepository(
         firmwareName = firmwareName,
         deviceName = deviceName,
         bootFirmwareVersion = bootFirmwareVersion,
-        mainFirmwareVersion = mainFirmwareVersion,
+        mainFirmwareVersion = mainFirmwareVersion
     )
 
     private fun ConnectionState.toDomain(): DeviceLinkState = when (this) {
@@ -144,10 +156,9 @@ class SpecialistDeviceSessionRepository(
         ConnectionState.DISCONNECTED, ConnectionState.UNKNOWN -> DeviceLinkState.DISCONNECTED
     }
 
-    private fun AlarmDeviceOperationMode.isBoot(): Boolean =
-        this == AlarmDeviceOperationMode.BOOT_OLD ||
-            this == AlarmDeviceOperationMode.BOOT_MLD ||
-            this == AlarmDeviceOperationMode.BOOT_FLD
+    private fun AlarmDeviceOperationMode.isBoot(): Boolean = this == AlarmDeviceOperationMode.BOOT_OLD ||
+        this == AlarmDeviceOperationMode.BOOT_MLD ||
+        this == AlarmDeviceOperationMode.BOOT_FLD
 
     private fun SubsystemFeature.toDomain(): DeviceFeature? = when (this) {
         SubsystemFeature.FIRMWARE_UPDATE -> DeviceFeature.FIRMWARE_UPDATE

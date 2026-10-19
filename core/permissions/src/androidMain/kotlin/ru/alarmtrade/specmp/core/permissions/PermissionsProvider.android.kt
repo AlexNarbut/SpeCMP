@@ -10,9 +10,7 @@ import org.koin.dsl.module
 import ru.alarmtrade.permissions.common.Permission
 import ru.alarmtrade.permissions.common.PermissionsController
 
-internal class AndroidPermissionsProvider(
-    private val applicationContext: Context,
-) : PermissionsProvider {
+internal class AndroidPermissionsProvider(private val applicationContext: Context) : PermissionsProvider {
     private val controller = PermissionsController(applicationContext = applicationContext)
 
     override fun getController(): PermissionsController = controller

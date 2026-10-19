@@ -1,16 +1,21 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
+import androidx.lifecycle.viewModelScope
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.Flow
-import ru.alarmtrade.specmp.core.common.AppDispatchers
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
@@ -21,6 +26,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
@@ -36,12 +42,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperat
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AdvancedMountRootViewModelTest {
@@ -54,14 +54,15 @@ class AdvancedMountRootViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS, DeviceFeature.CLONE),
-        can = null,
+        can = null
     )
 
     private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
         val link = MutableStateFlow(DeviceLinkState.READY)
         var bootModeCount = 0
         override fun linkState(): Flow<DeviceLinkState> = link
-        override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException("usb only"))
+        override suspend fun readBluetoothModule(): Response<BluetoothModule> =
+            Response.Error(IllegalStateException("usb only"))
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
         override suspend fun readImei(): Response<String> = Response.Success("351756051523999")
         override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
@@ -73,7 +74,8 @@ class AdvancedMountRootViewModelTest {
     }
 
     private class FakeConnectionRepository : DeviceConnectionRepository {
-        override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
+        override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
+            emptyFlow()
         override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
         override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
     }
@@ -82,7 +84,11 @@ class AdvancedMountRootViewModelTest {
         var access: Response<DeviceAccess> = Response.Success(DeviceAccess(hasAccess = true, message = ""))
         var verifyCount = 0
         var unread = 0
-        override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<DeviceAccess> {
+        override suspend fun verify(
+            systemId: Long,
+            systemName: String,
+            firmwareVersion: String
+        ): Response<DeviceAccess> {
             verifyCount++
             return access
         }
@@ -118,7 +124,8 @@ class AdvancedMountRootViewModelTest {
 
     private fun TestScope.viewModel(): Pair<AdvancedMountRootViewModel, MutableList<AdvancedMountRootEffect>> {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
-        val session = DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+        val session =
+            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
         session.attach(ConnectionTransport.USB)
         val vm = AdvancedMountRootViewModel(session, mountRepository, dispatchers).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
@@ -170,7 +177,10 @@ class AdvancedMountRootViewModelTest {
 
         val content = assertIs<MountContent.Ready>(vm.state.value.content)
         assertTrue(content.unsupported)
-        assertEquals(listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES), content.sections)
+        assertEquals(
+            listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
+            content.sections
+        )
     }
 
     @Test
@@ -184,7 +194,10 @@ class AdvancedMountRootViewModelTest {
         assertTrue(effects.isEmpty())
 
         vm.onSectionClick(MountSection.FIRMWARE_UPDATE)
-        assertEquals(listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)), effects)
+        assertEquals(
+            listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)),
+            effects
+        )
 
         vm.onCanUpdateConfirm()
         advanceTimeBy(3_001)

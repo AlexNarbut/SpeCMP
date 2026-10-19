@@ -18,9 +18,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  * VM обёртки flow работы с устройством: состояние сессии + последний блок в рабочем режиме
  * (по нему остаётся в композиции дочерний flow, пока связь потеряна; загрузчик его сбрасывает) и выход из flow.
  */
-class DeviceInteractionViewModel(
-    private val deviceSession: DeviceSession,
-) : BaseViewModel() {
+class DeviceInteractionViewModel(private val deviceSession: DeviceSession) : BaseViewModel() {
 
     val state: StateFlow<DeviceInteractionState> = deviceSession.state
         .runningFold(DeviceInteractionState()) { previous, session ->
@@ -32,7 +30,7 @@ class DeviceInteractionViewModel(
                     is DeviceSessionState.Ready -> session.device
                     is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> null
                     DeviceSessionState.Connecting, DeviceSessionState.Disconnected -> previous.device
-                },
+                }
             )
         }
         .combine(deviceSession.transport) { state, transport -> state.copy(transport = transport ?: state.transport) }

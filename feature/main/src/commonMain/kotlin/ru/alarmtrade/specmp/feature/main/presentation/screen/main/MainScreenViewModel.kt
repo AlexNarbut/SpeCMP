@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -39,20 +40,19 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSupported
-import kotlin.time.Duration.Companion.seconds
 
 class MainScreenViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
-    private val dispatchers: AppDispatchers,
+    private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
     private val isAppUpdateSupported = isMainAppUpdateSupported()
     private val _state = MutableStateFlow(
         MainScreenState(
             isAppUpdateSupported = isAppUpdateSupported,
-            appVersionName = mainRepository.appVersion.name,
-        ),
+            appVersionName = mainRepository.appVersion.name
+        )
     )
 
     private val _effect = sideEffectFlow<MainScreenEffect>()
@@ -69,7 +69,7 @@ class MainScreenViewModel(
                 async { loadUserProfile() },
                 async { loadUserAppFeatures() },
                 async { loadUserCommercial() },
-                async { checkAppUpdate() },
+                async { checkAppUpdate() }
             )
         }
         logger.d { "Initial home data refresh completed" }
@@ -103,12 +103,12 @@ class MainScreenViewModel(
         _state,
         initialLoadingState,
         chatAvailabilityState,
-        chatUnreadState,
+        chatUnreadState
     ) { state, isInitialLoading, chatAvailability, chatUnread ->
         state.copy(
             isInitialLoading = isInitialLoading,
             chatAvailabilityState = chatAvailability,
-            chatUnreadState = chatUnread,
+            chatUnreadState = chatUnread
         )
     }
         .onStart { resetLogoutTransientState() }
@@ -116,7 +116,7 @@ class MainScreenViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT),
-            initialValue = _state.value,
+            initialValue = _state.value
         )
 
     fun onMenuClicked() {
@@ -172,7 +172,7 @@ class MainScreenViewModel(
             _state.update {
                 it.copy(
                     logoutState = LCEState.Loading(),
-                    logoutError = null,
+                    logoutError = null
                 )
             }
 
@@ -187,7 +187,7 @@ class MainScreenViewModel(
                             databaseVersion = null,
                             appFeaturesState = LCEState.None(),
                             userCommercialState = LCEState.None(),
-                            appUpdateState = LCEState.None(),
+                            appUpdateState = LCEState.None()
                         )
                     }
                 }
@@ -197,7 +197,7 @@ class MainScreenViewModel(
                     _state.update {
                         it.copy(
                             logoutState = LCEState.None(),
-                            logoutError = MainLogoutError.RequestFailed,
+                            logoutError = MainLogoutError.RequestFailed
                         )
                     }
                 }
@@ -214,7 +214,7 @@ class MainScreenViewModel(
                 profileState = response.asLCEState { e -> e.message ?: "Error" }
                     .mapContent { profile ->
                         MainProfile(name = profile.name, email = profile.email)
-                    },
+                    }
             )
         }
     }
@@ -225,7 +225,7 @@ class MainScreenViewModel(
         val response = loadWithTimeout { mainRepository.currentUserAppFeatures() }
         _state.update {
             it.copy(
-                appFeaturesState = response.asLCEState { e -> e.message ?: "Error" },
+                appFeaturesState = response.asLCEState { e -> e.message ?: "Error" }
             )
         }
     }
@@ -236,7 +236,7 @@ class MainScreenViewModel(
         val response = loadWithTimeout { mainRepository.currentUserCommercial() }
         _state.update {
             it.copy(
-                userCommercialState = response.asLCEState { e -> e.message ?: "Error" },
+                userCommercialState = response.asLCEState { e -> e.message ?: "Error" }
             )
         }
     }
@@ -280,7 +280,7 @@ class MainScreenViewModel(
         val response = loadWithTimeout { mainRepository.checkAppUpdate() }
         _state.update {
             it.copy(
-                appUpdateState = response.asLCEState { e -> e.message ?: "Error" },
+                appUpdateState = response.asLCEState { e -> e.message ?: "Error" }
             )
         }
     }
@@ -292,17 +292,16 @@ class MainScreenViewModel(
             } else {
                 it.copy(
                     logoutState = LCEState.None(),
-                    logoutError = null,
+                    logoutError = null
                 )
             }
         }
     }
 
-    private suspend fun <T> loadWithTimeout(block: suspend () -> Response<T>): Response<T> {
-        return withContext(dispatchers.io) {
+    private suspend fun <T> loadWithTimeout(block: suspend () -> Response<T>): Response<T> =
+        withContext(dispatchers.io) {
             withTimeoutOrNull(STARTUP_LOAD_TIMEOUT) { block() }
         } ?: Response.Error(Exception("Request timed out"))
-    }
 
     private companion object {
         val STOP_TIMEOUT = 5.seconds

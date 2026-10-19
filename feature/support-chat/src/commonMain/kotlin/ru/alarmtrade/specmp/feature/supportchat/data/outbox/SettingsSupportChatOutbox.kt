@@ -19,16 +19,12 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOut
  * интенты экрана). Очередь мала (единицы сообщений), поэтому полная перезапись
  * списка проще и надёжнее диффов. Диспетчер выбирает вызывающий.
  */
-class SettingsSupportChatOutbox(
-    private val settings: Settings,
-) : SupportChatOutbox {
+class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOutbox {
 
     private val mutex = Mutex()
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun load(): List<SupportChatMessage> {
-        return mutex.withLock { read() }.map { it.toMessage() }
-    }
+    override suspend fun load(): List<SupportChatMessage> = mutex.withLock { read() }.map { it.toMessage() }
 
     override suspend fun enqueue(message: SupportChatMessage) {
         val entry = message.toEntry() ?: return
@@ -46,7 +42,11 @@ class SettingsSupportChatOutbox(
             val entries = read()
             val index = entries.indexOfFirst { it.clientId == clientId }
             if (index != -1) {
-                write(entries.toMutableList().apply { set(index, get(index).copy(status = SupportChatOutboxEntry.Status.Sent)) })
+                write(
+                    entries.toMutableList().apply {
+                        set(index, get(index).copy(status = SupportChatOutboxEntry.Status.Sent))
+                    }
+                )
             }
         }
     }
@@ -93,7 +93,7 @@ internal data class SupportChatOutboxEntry(
     val timeMillis: Long,
     val text: String?,
     val attachment: Attachment?,
-    val status: Status,
+    val status: Status
 ) {
 
     @Serializable
@@ -103,7 +103,7 @@ internal data class SupportChatOutboxEntry(
         val kind: Kind,
         val localPath: String,
         val mimeType: String?,
-        val sizeBytes: Long?,
+        val sizeBytes: Long?
     )
 
     @Serializable
@@ -120,7 +120,9 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
     if (!isMine || serverId != null) return null
     val entryStatus = when (status) {
         SupportChatMessageStatus.Pending -> SupportChatOutboxEntry.Status.Pending
+
         SupportChatMessageStatus.Failed -> SupportChatOutboxEntry.Status.Failed
+
         SupportChatMessageStatus.Sending,
         SupportChatMessageStatus.Sent,
         SupportChatMessageStatus.Read -> return null
@@ -137,7 +139,7 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
             },
             localPath = localPath,
             mimeType = (source as? SupportChatAttachment.Document)?.mimeType,
-            sizeBytes = (source as? SupportChatAttachment.Document)?.sizeBytes,
+            sizeBytes = (source as? SupportChatAttachment.Document)?.sizeBytes
         )
     } else {
         null
@@ -147,39 +149,39 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
         timeMillis = time.toEpochMilliseconds(),
         text = text,
         attachment = storedAttachment,
-        status = entryStatus,
+        status = entryStatus
     )
 }
 
-private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage {
-    return SupportChatMessage(
-        id = clientId,
-        serverId = null,
-        text = text,
-        attachment = attachment?.let { stored ->
-            when (stored.kind) {
-                SupportChatOutboxEntry.Kind.Image -> SupportChatAttachment.Image(
-                    id = stored.id,
-                    name = stored.name,
-                    localPath = stored.localPath,
-                )
-                SupportChatOutboxEntry.Kind.Document -> SupportChatAttachment.Document(
-                    id = stored.id,
-                    name = stored.name,
-                    localPath = stored.localPath,
-                    mimeType = stored.mimeType,
-                    sizeBytes = stored.sizeBytes,
-                )
-            }
-        },
-        time = Instant.fromEpochMilliseconds(timeMillis),
-        isMine = true,
-        authorEmail = null,
-        status = when (status) {
-            // Доставка Sent неизвестна (эха не было) — повторяем.
-            SupportChatOutboxEntry.Status.Pending,
-            SupportChatOutboxEntry.Status.Sent -> SupportChatMessageStatus.Pending
-            SupportChatOutboxEntry.Status.Failed -> SupportChatMessageStatus.Failed
-        },
-    )
-}
+private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage = SupportChatMessage(
+    id = clientId,
+    serverId = null,
+    text = text,
+    attachment = attachment?.let { stored ->
+        when (stored.kind) {
+            SupportChatOutboxEntry.Kind.Image -> SupportChatAttachment.Image(
+                id = stored.id,
+                name = stored.name,
+                localPath = stored.localPath
+            )
+
+            SupportChatOutboxEntry.Kind.Document -> SupportChatAttachment.Document(
+                id = stored.id,
+                name = stored.name,
+                localPath = stored.localPath,
+                mimeType = stored.mimeType,
+                sizeBytes = stored.sizeBytes
+            )
+        }
+    },
+    time = Instant.fromEpochMilliseconds(timeMillis),
+    isMine = true,
+    authorEmail = null,
+    status = when (status) {
+        // Доставка Sent неизвестна (эха не было) — повторяем.
+        SupportChatOutboxEntry.Status.Pending,
+        SupportChatOutboxEntry.Status.Sent -> SupportChatMessageStatus.Pending
+
+        SupportChatOutboxEntry.Status.Failed -> SupportChatMessageStatus.Failed
+    }
+)

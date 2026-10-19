@@ -18,15 +18,11 @@ enum class DeviceConnectionState {
      * BLE: сопряжение не удалось — блок не в режиме сопряжения (старое сопряжение на телефоне SDK уже снял).
      * Монтажнику нужно перевести блок в режим сопряжения и повторить.
      */
-    PAIRING_REQUIRED,
+    PAIRING_REQUIRED
 }
 
 /** Транспорт, по которому создана сессия. */
 enum class ConnectionTransport { BLE, USB }
 
 /** Результат поиска: сессия с устройством создана — дальше flow работы с устройством. */
-data class ConnectedDevice(
-    val id: String,
-    val name: String,
-    val transport: ConnectionTransport,
-)
+data class ConnectedDevice(val id: String, val name: String, val transport: ConnectionTransport)

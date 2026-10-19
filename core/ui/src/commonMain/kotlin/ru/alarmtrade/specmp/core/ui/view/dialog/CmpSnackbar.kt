@@ -11,11 +11,7 @@ import androidx.compose.ui.Modifier
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
-data class CmpSnackbarData(
-    val message: String,
-    val actionLabel: String? = null,
-    val withDismissAction: Boolean = false,
-)
+data class CmpSnackbarData(val message: String, val actionLabel: String? = null, val withDismissAction: Boolean = false)
 
 enum class CmpSnackbarDuration { Short, Long, Indefinite }
 
@@ -32,15 +28,13 @@ class CmpSnackbarHostState {
         message: String,
         actionLabel: String? = null,
         withDismissAction: Boolean = false,
-        duration: CmpSnackbarDuration = CmpSnackbarDuration.Short,
-    ): CmpSnackbarResult {
-        return delegate.showSnackbar(
-            message = message,
-            actionLabel = actionLabel,
-            withDismissAction = withDismissAction,
-            duration = duration.toMaterial(),
-        ).toCmp()
-    }
+        duration: CmpSnackbarDuration = CmpSnackbarDuration.Short
+    ): CmpSnackbarResult = delegate.showSnackbar(
+        message = message,
+        actionLabel = actionLabel,
+        withDismissAction = withDismissAction,
+        duration = duration.toMaterial()
+    ).toCmp()
 
     private fun CmpSnackbarDuration.toMaterial(): SnackbarDuration = when (this) {
         CmpSnackbarDuration.Short -> SnackbarDuration.Short
@@ -58,13 +52,10 @@ class CmpSnackbarHostState {
 fun rememberCmpSnackbarHostState(): CmpSnackbarHostState = remember { CmpSnackbarHostState() }
 
 @Composable
-fun CmpSnackbarHost(
-    hostState: CmpSnackbarHostState,
-    modifier: Modifier = Modifier,
-) {
+fun CmpSnackbarHost(hostState: CmpSnackbarHostState, modifier: Modifier = Modifier) {
     SnackbarHost(
         hostState = hostState.delegate,
-        modifier = modifier,
+        modifier = modifier
     )
 }
 
@@ -73,16 +64,20 @@ fun CmpSnackbar(
     data: CmpSnackbarData,
     modifier: Modifier = Modifier,
     onActionClick: (() -> Unit)? = null,
-    onDismiss: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null
 ) {
     Snackbar(
         modifier = modifier,
         action = if (data.actionLabel != null && onActionClick != null) {
             { CmpTextButton(text = data.actionLabel, onClick = onActionClick) }
-        } else null,
+        } else {
+            null
+        },
         dismissAction = if (data.withDismissAction && onDismiss != null) {
             { CmpTextButton(text = "✕", onClick = onDismiss) }
-        } else null,
+        } else {
+            null
+        }
     ) {
         CmpText(text = data.message)
     }

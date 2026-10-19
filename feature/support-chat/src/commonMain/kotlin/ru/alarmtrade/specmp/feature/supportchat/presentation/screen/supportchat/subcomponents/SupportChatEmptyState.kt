@@ -36,48 +36,45 @@ import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empt
 import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empty_title
 
 @Composable
-internal fun SupportChatEmptyState(
-    colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
-) {
+internal fun SupportChatEmptyState(colors: CmpThemeColors, modifier: Modifier = Modifier) {
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(22.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(22.dp, Alignment.CenterVertically)
     ) {
         GhostPreview(colors = colors)
 
         CmpColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CmpText(
                 text = stringResource(Res.string.supportchat_chat_msg_empty_title),
                 style = CmpTextStyle.Title,
                 fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
             CmpText(
                 text = stringResource(Res.string.supportchat_chat_msg_empty_subtitle),
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 340.dp),
+                modifier = Modifier.widthIn(max = 340.dp)
             )
         }
 
         CmpRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             EmptyHintChip(
                 icon = CmpIcons.Description,
                 label = stringResource(Res.string.supportchat_chat_hint_documents),
-                colors = colors,
+                colors = colors
             )
             EmptyHintChip(
                 icon = CmpIcons.Image,
                 label = stringResource(Res.string.supportchat_chat_hint_installation_photos),
-                colors = colors,
+                colors = colors
             )
         }
     }
@@ -90,11 +87,11 @@ private fun GhostPreview(colors: CmpThemeColors) {
             .widthIn(max = 300.dp)
             .fillMaxWidth()
             .padding(bottom = 6.dp),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             GhostBubble(isMine = true, widthFraction = 0.58f, colors = colors)
             GhostBubble(isMine = false, widthFraction = 0.70f, colors = colors)
@@ -111,15 +108,15 @@ private fun GhostPreview(colors: CmpThemeColors) {
             contentColor = colors.onPrimaryContainer,
             border = BorderStroke(
                 width = 1.dp,
-                color = colors.primary.copy(alpha = 0.25f),
+                color = colors.primary.copy(alpha = 0.25f)
             ),
-            shadowElevation = 2.dp,
+            shadowElevation = 2.dp
         ) {
             CmpBox(contentAlignment = Alignment.Center) {
                 CmpIcon(
                     icon = CmpIcons.SupportAgent,
                     contentDescription = null,
-                    modifier = Modifier.size(30.dp),
+                    modifier = Modifier.size(30.dp)
                 )
             }
         }
@@ -127,14 +124,10 @@ private fun GhostPreview(colors: CmpThemeColors) {
 }
 
 @Composable
-private fun GhostBubble(
-    isMine: Boolean,
-    widthFraction: Float,
-    colors: CmpThemeColors,
-) {
+private fun GhostBubble(isMine: Boolean, widthFraction: Float, colors: CmpThemeColors) {
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart,
+        contentAlignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         CmpBox(
             modifier = Modifier
@@ -147,7 +140,7 @@ private fun GhostBubble(
                         } else {
                             colors.onSurface.copy(alpha = 0.035f)
                         },
-                        cornerRadius = CornerRadius(radius, radius),
+                        cornerRadius = CornerRadius(radius, radius)
                     )
                     drawRoundRect(
                         color = if (isMine) {
@@ -159,16 +152,16 @@ private fun GhostBubble(
                         style = Stroke(
                             width = 1.dp.toPx(),
                             pathEffect = PathEffect.dashPathEffect(
-                                intervals = floatArrayOf(6.dp.toPx(), 5.dp.toPx()),
-                            ),
-                        ),
+                                intervals = floatArrayOf(6.dp.toPx(), 5.dp.toPx())
+                            )
+                        )
                     )
                 }
-                .padding(horizontal = 12.dp, vertical = 14.dp),
+                .padding(horizontal = 12.dp, vertical = 14.dp)
         ) {
             CmpRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 val weights = listOf(0.5f, 0.3f, 0.4f)
                 weights.forEach { weight ->
@@ -177,7 +170,7 @@ private fun GhostBubble(
                             .weight(weight)
                             .size(height = 6.dp, width = 0.dp)
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(colors.onSurface.copy(alpha = 0.18f)),
+                            .background(colors.onSurface.copy(alpha = 0.18f))
                     )
                 }
             }
@@ -186,30 +179,26 @@ private fun GhostBubble(
 }
 
 @Composable
-private fun EmptyHintChip(
-    icon: CmpIcons,
-    label: String,
-    colors: CmpThemeColors,
-) {
+private fun EmptyHintChip(icon: CmpIcons, label: String, colors: CmpThemeColors) {
     CmpSurface(
         shape = RoundedCornerShape(percent = 50),
         color = colors.surfaceContainerLow,
         contentColor = colors.onSurfaceVariant,
         border = BorderStroke(
             width = 1.dp,
-            color = colors.outlineVariant,
-        ),
+            color = colors.outlineVariant
+        )
     ) {
         CmpRow(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             CmpIcon(
                 icon = icon,
                 contentDescription = null,
                 tint = colors.primary,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(18.dp)
             )
             CmpText(text = label)
         }

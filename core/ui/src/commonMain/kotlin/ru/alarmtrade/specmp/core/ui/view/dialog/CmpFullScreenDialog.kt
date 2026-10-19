@@ -12,14 +12,10 @@ import androidx.compose.ui.window.DialogProperties
  * вроде просмотра изображения на весь экран.
  */
 @Composable
-fun CmpFullScreenDialog(
-    onDismissRequest: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
+fun CmpFullScreenDialog(onDismissRequest: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false),
-        content = { Box(modifier) { content() } },
+        content = { Box(modifier) { content() } }
     )
 }

@@ -17,7 +17,7 @@ val deviceInteractionModule = module {
         // ронять создание репозитория (см. resolveOrNull в реализации).
         SpecialistDeviceConnectionRepository(
             bluetoothConnectorInteractor = { get() },
-            usbConnectorInteractor = { get() },
+            usbConnectorInteractor = { get() }
         )
     }
     single<DeviceSessionRepository> {
