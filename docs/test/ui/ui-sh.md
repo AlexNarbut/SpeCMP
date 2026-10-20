@@ -19,7 +19,7 @@
 | `build` | Android: `:androidApp:assembleDebug`; iOS: xcodebuild схемы `iosApp`; Desktop: `:desktopApp:classes` |
 | `install` | установка APK / .app (на desktop не нужна) |
 | `launch [sec]` / `stop` / `restart` | запуск / остановка; desktop — `gradlew :desktopApp:run` в фоне, лог в `desktop.log` |
-| `reset` | сброс данных приложения (разлогин). Desktop — не поддерживается |
+| `reset` | сброс данных приложения (разлогин). Desktop — `stop` + удаление узлов `SpeCMP_*` и ключей `supportchat.*` из `java.util.prefs` (`scripts/Prefs.java`) |
 | `deeplink <uri>` | Android / iOS |
 
 ## Экран
@@ -86,6 +86,31 @@ $U do "tap Email; type <QA_EMAIL>; tap Password; type <QA_PASSWORD>; key hide-ke
 | `dup-label` | несколько интерактивных элементов с одной подписью, у этого нет testTag | Тестируемость |
 
 Используется в необязательном этапе плана «Доступность и тестируемость».
+
+## Производительность
+
+`perf reset` запоминает базу, `perf` печатает метрики с базы и строку-вердикт. Exit 0 всегда: эмулятор и
+симулятор шумят, это наблюдение, а не проверка.
+
+| | Android | iOS-симулятор | Desktop |
+|---|---|---|---|
+| Кадры | `dumpsys gfxinfo` (сброс на `perf reset`): всего, janky %, p50/p90/p95, slow UI thread | — | — |
+| Память | `dumpsys meminfo`: TOTAL PSS, Java / Native heap | RSS процесса `SpeCMP` на хосте | RSS JVM |
+
+Вердикт ⚠️: janky > 25 % или p95 > 100 мс (только при ≥ 30 кадрах), прирост памяти > 30 МБ. Пороги — в начале
+`cmd_perf`.
+
+## Данные приложения (только чтение)
+
+| Команда | Android (debug-сборка, `run-as`) | iOS-симулятор (контейнер `simctl get_app_container`) | Desktop |
+|---|---|---|---|
+| `data [files]` | файлы без `cache/`, `code_cache/` | файлы без `tmp/`, `Library/Caches/` | — |
+| `data prefs [filter]` | `shared_prefs/*.xml` | `Library/Preferences/<bundle>.plist` | `java.util.prefs`: `SpeCMP_*`, `supportchat.*` |
+| `data db <file> "<SQL>"` | копия `databases/<file>` (+ журналы) → `sqlite3 -readonly` на хосте | `sqlite3 -readonly` в контейнере | — |
+| `data cat <path>` | первые 200 строк | первые 200 строк; бинарный plist — в XML | — |
+
+`prefs` маскирует значения ключей с `token`, `password`, `secret`, `session`, `auth`, `cookie`, `pin`:
+`*** (N символов)` / `(пусто)`. `db` и `cat` не маскируют. Записи нет намеренно: предусловия создаются через UI.
 
 ## Maestro (Android, iOS)
 

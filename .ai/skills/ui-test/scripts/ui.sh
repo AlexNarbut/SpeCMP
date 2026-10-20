@@ -16,13 +16,13 @@ mkdir -p "$STATE_DIR"
 export MAESTRO_CLI_NO_ANALYTICS=1
 export MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED=true
 
-PLATFORM="" DEVICE="" MARK="" APP_ID=""
+PLATFORM="" DEVICE="" MARK="" APP_ID="" PERF_MEM=""
 [[ -f "$STATE" ]] && source "$STATE"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 save_state() {
-  printf 'PLATFORM=%q\nDEVICE=%q\nMARK=%q\nAPP_ID=%q\n' \
-    "$PLATFORM" "$DEVICE" "$MARK" "$APP_ID" >"$STATE"
+  printf 'PLATFORM=%q\nDEVICE=%q\nMARK=%q\nAPP_ID=%q\nPERF_MEM=%q\n' \
+    "$PLATFORM" "$DEVICE" "$MARK" "$APP_ID" "$PERF_MEM" >"$STATE"
 }
 need_platform() {
   [[ -n "$PLATFORM" ]] || die "платформа не выбрана: ui.sh use android|ios|desktop"
@@ -240,10 +240,19 @@ cmd_stop() {
   echo "stopped"
 }
 
+# Данные desktop-приложения в java.util.prefs: узлы SDK (appName "SpeCMP") и ключи корня из AppSettingsFactory.
+DESKTOP_PREFS=(SpeCMP_ supportchat.)
+desktop_prefs() { java "$SCRIPT_DIR/Prefs.java" "$1" "${DESKTOP_PREFS[@]}"; }
+
 cmd_reset() {
   need_platform
-  [[ "$PLATFORM" == desktop ]] && die "reset на desktop не поддерживается: сессию хранит SDK — разлогинься шагами UI"
+  # Останавливаем до удаления: иначе JVM при выходе запишет prefs обратно.
   cmd_stop >/dev/null
+  if [[ "$PLATFORM" == desktop ]]; then
+    desktop_prefs remove || die "не удалось очистить java.util.prefs"
+    echo "app data cleared (запуск — ui.sh launch)"
+    return 0
+  fi
   if [[ "$PLATFORM" == android ]]; then
     adb_ shell pm clear "$(app_id)" >/dev/null
   else
@@ -629,7 +638,9 @@ app_log_since_mark() {
     if [[ -n "$pid" ]]; then adb_ logcat -d -T "$MARK" --pid="$pid" 2>/dev/null
     else adb_ logcat -d -T "$MARK" 2>/dev/null; fi | grep -v '^--------- beginning of'
   else
-    xcrun simctl spawn "$DEVICE" log show --start "$MARK" --style compact --predicate "process == \"$IOS_PRODUCT\"" 2>/dev/null
+    # Первая строка log show — заголовок колонок, не запись.
+    xcrun simctl spawn "$DEVICE" log show --start "$MARK" --style compact --predicate "process == \"$IOS_PRODUCT\"" 2>/dev/null \
+      | grep -v '^Timestamp '
   fi
 }
 
@@ -762,6 +773,184 @@ cmd_a11y() {
   python3 "$TREE" audit "$PLATFORM" "$STATE_DIR/dump.$(dump_ext)" "$STATE_DIR/tree.json" $(screen_arg) $density
 }
 
+# --- производительность ----------------------------------------------------------
+
+# Память приложения в КБ: Android — TOTAL PSS, iOS-симулятор и desktop — RSS процесса на хосте.
+app_mem_kb() {
+  if [[ "$PLATFORM" == android ]]; then
+    adb_ shell dumpsys meminfo "$(app_id)" | tr -d '\r' | awk '/TOTAL PSS:/ { print $3; exit }'
+  else
+    local pid="$DEVICE"
+    [[ "$PLATFORM" == ios ]] && pid="$(pgrep -x "$IOS_PRODUCT" | head -1)"
+    [[ -n "$pid" ]] && ps -o rss= -p "$pid" | tr -d ' '
+  fi
+}
+
+cmd_perf() {
+  need_platform
+  # Пороги подобраны под эмулятор/симулятор: они шумят, поэтому это наблюдение, а не проверка (exit 0).
+  local min_frames=30 max_janky=25 max_p95=100 max_mem_growth_mb=30
+  local mem; mem="$(app_mem_kb)"
+  [[ -n "$mem" ]] || die "процесс приложения не найден — ui.sh launch"
+  if [[ "${1:-}" == reset ]]; then
+    [[ "$PLATFORM" == android ]] && adb_ shell dumpsys gfxinfo "$(app_id)" reset >/dev/null
+    PERF_MEM="$mem"
+    save_state
+    echo "perf reset: память $((mem / 1024)) МБ"
+    return 0
+  fi
+  local warn=()
+  if [[ "$PLATFORM" == android ]]; then
+    local gfx frames janky p50 p90 p95 slow
+    gfx="$(adb_ shell dumpsys gfxinfo "$(app_id)" | tr -d '\r')"
+    frames="$(awk -F': ' '/^Total frames rendered/ { print $2; exit }' <<<"$gfx")"
+    janky="$(sed -nE 's/^Janky frames: [0-9]+ \(([0-9]+)[.,]?[0-9]*%\).*/\1/p' <<<"$gfx" | head -1)"
+    p50="$(sed -nE 's/^50th percentile: ([0-9]+)ms/\1/p' <<<"$gfx" | head -1)"
+    p90="$(sed -nE 's/^90th percentile: ([0-9]+)ms/\1/p' <<<"$gfx" | head -1)"
+    p95="$(sed -nE 's/^95th percentile: ([0-9]+)ms/\1/p' <<<"$gfx" | head -1)"
+    slow="$(awk -F': ' '/^Number Slow UI thread/ { print $2; exit }' <<<"$gfx")"
+    echo "кадры: ${frames:-0}, janky ${janky:-0}%, p50 ${p50:-?}ms p90 ${p90:-?}ms p95 ${p95:-?}ms, slow UI thread ${slow:-0}"
+    if ((${frames:-0} >= min_frames)); then
+      ((${janky:-0} > max_janky)) && warn+=("janky ${janky}% > ${max_janky}%")
+      ((${p95:-0} > max_p95)) && warn+=("p95 ${p95}ms > ${max_p95}ms")
+    else
+      echo "кадров меньше $min_frames — плавность не оценивается"
+    fi
+    adb_ shell dumpsys meminfo "$(app_id)" | tr -d '\r' \
+      | awk '/^ *Java Heap:/ { j = $3 } /^ *Native Heap:/ { n = $3 } END { printf "heap: Java %d МБ, Native %d МБ\n", j / 1024, n / 1024 }'
+  else
+    echo "кадры: на $PLATFORM не поддерживается"
+  fi
+  local line="память: $((mem / 1024)) МБ"
+  if [[ -n "$PERF_MEM" ]]; then
+    local growth=$(((mem - PERF_MEM) / 1024))
+    line+=", прирост с reset ${growth} МБ"
+    ((growth > max_mem_growth_mb)) && warn+=("память +${growth} МБ > ${max_mem_growth_mb} МБ")
+  else
+    line+=" (базы нет — ui.sh perf reset)"
+  fi
+  echo "$line"
+  if ((${#warn[@]})); then
+    local IFS=';'
+    echo "perf: ⚠️ ${warn[*]}"
+  else
+    echo "perf: ✅"
+  fi
+}
+
+# --- данные приложения (только чтение) -------------------------------------------
+
+# «key<TAB>value» → «key = value»: фильтр по подстроке ключа, секреты маскируются.
+mask_kv() {
+  python3 -c '
+import re, sys
+flt = sys.argv[1].casefold()
+secret = re.compile(r"token|password|passwd|secret|session|auth|cookie|(?<![a-z])pin(?![a-z])", re.I)
+n = 0
+for line in sys.stdin:
+    key, _, value = line.rstrip("\n").partition("\t")
+    if flt and flt not in key.casefold():
+        continue
+    if secret.search(key):
+        value = f"*** ({len(value)} символов)" if value else "(пусто)"
+    elif len(value) > 120:
+        value = value[:120] + "…"
+    print(f"{key} = {value}")
+    n += 1
+if not n:
+    print("ничего не найдено" + (f" по фильтру {sys.argv[1]!r}" if flt else ""))
+' "${1:-}"
+}
+
+run_as() {
+  local out
+  out="$(adb_ shell run-as "$(app_id)" "$@" 2>&1)"
+  [[ "$out" == *"not debuggable"* ]] && die "сборка не debuggable — run-as недоступен"
+  printf '%s\n' "$out" | LC_ALL=C tr -d '\r'
+}
+
+ios_container() {
+  xcrun simctl get_app_container "$DEVICE" "$(app_id)" data 2>/dev/null || die "приложение не установлено на симуляторе"
+}
+
+cmd_data() {
+  need_platform
+  local sub="${1:-files}"; shift || true
+  if [[ "$PLATFORM" == desktop ]]; then
+    [[ "$sub" == prefs ]] || die "data $sub на desktop не поддерживается: путь хранения SDK неизвестен — есть только data prefs"
+    desktop_prefs dump | mask_kv "${1:-}"
+    return 0
+  fi
+  local root=""
+  [[ "$PLATFORM" == ios ]] && root="$(ios_container)"
+  case "$sub" in
+    files)
+      if [[ "$PLATFORM" == android ]]; then
+        run_as sh -c "'find . -type f | grep -v -e ^./cache/ -e ^./code_cache/ | while read f; do echo \"\$(stat -c %s \"\$f\") \$f\"; done'"
+      else
+        (cd "$root" && find . -type f ! -path './tmp/*' ! -path './Library/Caches/*' -exec stat -f '%z %N' {} +)
+      fi ;;
+    prefs)
+      if [[ "$PLATFORM" == android ]]; then
+        local f
+        for f in $(run_as ls shared_prefs 2>/dev/null | grep '\.xml$'); do
+          run_as cat "shared_prefs/$f" | python3 -c '
+import sys, xml.etree.ElementTree as ET
+name = sys.argv[1][:-4]
+for el in ET.fromstring(sys.stdin.read()):
+    value = el.get("value") if el.get("value") is not None else (el.text or "")
+    if el.tag == "set":
+        value = ",".join(c.text or "" for c in el)
+    key = el.get("name")
+    print(f"{name}/{key}\t{value}")
+' "$f"
+        done | mask_kv "${1:-}"
+      else
+        local plist="$root/Library/Preferences/$(app_id).plist"
+        [[ -f "$plist" ]] || { echo "настроек нет"; return 0; }
+        plutil -convert json -o - "$plist" | python3 -c '
+import json, sys
+def walk(prefix, v):
+    if isinstance(v, dict):
+        for k, x in v.items():
+            walk(f"{prefix}{k}/" if isinstance(x, dict) else f"{prefix}{k}", x)
+    else:
+        print(f"{prefix.rstrip(chr(47))}\t{v}")
+walk("", json.load(sys.stdin))
+' | mask_kv "${1:-}"
+      fi ;;
+    db)
+      local file="${1:?data db <file> \"<SQL>\"}" sql="${2:?data db <file> \"<SQL>\"}" db
+      if [[ "$PLATFORM" == android ]]; then
+        [[ "$file" == */* ]] || file="databases/$file"
+        db="$STATE_DIR/db/$(basename "$file")"
+        rm -rf "$STATE_DIR/db"; mkdir -p "$STATE_DIR/db"
+        # sqlite3 на устройстве нет: копия базы с журналами — и чтение на хосте.
+        local existing ext
+        existing="$(run_as ls "$(dirname "$file")")"
+        grep -qx "$(basename "$file")" <<<"$existing" || die "нет базы $file (список — ui.sh data)"
+        for ext in "" -wal -journal; do
+          grep -qx "$(basename "$file$ext")" <<<"$existing" || continue
+          adb_ exec-out run-as "$(app_id)" cat "$file$ext" >"$db$ext"
+          [[ -s "$db$ext" ]] || rm -f "$db$ext"
+        done
+        [[ "$(head -c 15 "$db")" == "SQLite format 3" ]] || die "$file — не sqlite-база"
+      else
+        db="$root/$file"
+        [[ -f "$db" ]] || db="$(find "$root" -name "$(basename "$file")" -type f | head -1)"
+        [[ -f "$db" ]] || die "нет базы $file (список — ui.sh data)"
+      fi
+      sqlite3 -readonly -header -column "$db" "$sql" | head -100 ;;
+    cat)
+      local path="${1:?data cat <path>}"
+      if [[ "$PLATFORM" == android ]]; then run_as cat "$path" | head -200
+      # Бинарный plist (системные и NSUserDefaults) — в читаемый XML.
+      elif [[ "$(head -c 6 "$root/$path")" == bplist ]]; then plutil -convert xml1 -o - "$root/$path" | head -200
+      else head -200 "$root/$path"; fi ;;
+    *) die "data [files] | prefs [filter] | db <file> \"<SQL>\" | cat <path>" ;;
+  esac
+}
+
 # --- Maestro ---------------------------------------------------------------------
 
 cmd_flow() {
@@ -810,7 +999,8 @@ ui.sh — UI-тестирование Android (adb) / iOS-симулятор (si
                                     --app-id — тестировать уже установленную сборку с другим id
   build | install | launch [sec] | stop | reset (очистить данные) | deeplink <uri>
                                     desktop: build — компиляция, install — не нужен, launch — gradle run в фоне
-                                    (язык — из настроек приложения), reset / deeplink / flow / key home — не поддерживаются
+                                    (язык — из настроек приложения), reset — удаляет данные SDK и приложения из
+                                    java.util.prefs (разлогин); deeplink / flow / key home — не поддерживаются
 
 Экран:
   tree [--all]                      компактное дерево (ждёт стабильного экрана): [N] тип "текст" #testTag @x,y (флаги)
@@ -838,6 +1028,14 @@ ui.sh — UI-тестирование Android (adb) / iOS-симулятор (si
                                     Android: revoke останавливает приложение; iOS: только location; desktop — нет
   perm reset                        как «ещё не спрашивали» — системный диалог покажется снова
   net [on|off]                      Android: Wi-Fi + мобильные данные (Bluetooth не трогает); без аргумента — статус
+
+Производительность и данные:
+  perf reset | perf                 база / кадры (Android: janky, p50–p95) и память с базы; вердикт ✅/⚠️, exit 0
+  data [files]                      файлы приложения с размерами (Android — run-as, debug-сборка; iOS — контейнер)
+  data prefs [filter]               настройки key = value, секреты (token, password, …) маскируются; desktop — только это
+  data db <file> "<SQL>"            sqlite только на чтение (Android: databases/<file>)
+  data cat <path>                   файл, первые 200 строк (iOS: бинарный plist → XML); db и cat не маскируют —
+                                    секреты не выводить
 
 Maestro:
   flow [--out dir] <file.yaml> [-e K=V ...]
@@ -874,6 +1072,8 @@ case "$cmd" in
   mark) cmd_mark ;;
   logs) cmd_logs "$@" ;;
   crash) cmd_crash "$@" ;;
+  perf) cmd_perf "$@" ;;
+  data) cmd_data "$@" ;;
   wait-log) cmd_wait_log "$@" ;;
   perm) cmd_perm "$@" ;;
   net) cmd_net "$@" ;;
