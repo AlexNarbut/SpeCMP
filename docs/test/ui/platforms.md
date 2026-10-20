@@ -9,11 +9,14 @@
 - app id `ru.alarmtrade.specmp.androidApp`, APK — `androidApp/build/outputs/apk/debug/`.
 - `adb input` вводит только ASCII — тестовые данные латиницей.
 - Тексты в планах — английские: эмулятор на en.
+- `perm` и `net` работают полностью; `perm revoke`/`reset` останавливают приложение.
 
 ## iOS-симулятор
 
 - Xcode, AXe (`brew install cameroncooke/axe/axe`), Maestro, запущенный симулятор и открытый Simulator.app.
 - `ui.sh use ios` переключает симулятор на en и включает app accessibility (без неё Compose не строит дерево).
+- `perm` — только `location` (Bluetooth в `simctl privacy` нет, BLE на симуляторе тоже); `net` не поддерживается —
+  сеть хоста, офлайн-кейсы ⏭.
 - **Сейчас не собирается под симулятор.** Таргет `iosSimulatorArm64` убран (коммит `820800a`): Specialist SDK
   (`ru.alarmtrade.common:*`) публикует только `iosarm64` (устройство) и `iosx64` (Intel-симулятор).
   `ui.sh build` на iOS падает с `ios_simulator_arm64 … not configured in Gradle`. Варианты: сборка SDK под
@@ -39,4 +42,6 @@
 | Назад | системной «назад» нет | `tap` по кнопке «Back»; `key back` без testTag жмёт Escape |
 | Сброс данных | путь хранения сессии SDK неизвестен | `reset` не поддерживается — разлогин шагами UI |
 | Maestro | не поддерживает desktop | кейсы вручную через `do` / `expect` |
+| Разрешения, сеть | выдаёт macOS / сеть хоста | `perm` и `net` не поддерживаются — такие кейсы ⏭ |
+| `a11y` | мышь вместо касаний | `small-target` не проверяется |
 | Координаты | от левого верхнего угла окна | `@x,y` из `tree` подходят для `tap x,y` |

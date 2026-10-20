@@ -620,6 +620,148 @@ PY
   fi
 }
 
+# Все строки лога приложения с отметки (для wait-log).
+app_log_since_mark() {
+  if [[ "$PLATFORM" == desktop ]]; then
+    tail -n +"$((MARK + 1))" "$DESKTOP_LOG" 2>/dev/null
+  elif [[ "$PLATFORM" == android ]]; then
+    local pid; pid="$(adb_ shell pidof "$(app_id)" | tr -d '\r')"
+    if [[ -n "$pid" ]]; then adb_ logcat -d -T "$MARK" --pid="$pid" 2>/dev/null
+    else adb_ logcat -d -T "$MARK" 2>/dev/null; fi | grep -v '^--------- beginning of'
+  else
+    xcrun simctl spawn "$DEVICE" log show --start "$MARK" --style compact --predicate "process == \"$IOS_PRODUCT\"" 2>/dev/null
+  fi
+}
+
+cmd_wait_log() {
+  need_platform
+  local re="${1:?wait-log <regex> [сек]}" timeout="${2:-10}" start=$SECONDS hits
+  while :; do
+    hits="$(app_log_since_mark | grep -E -- "$re" | head -5 | cut -c1-200)"
+    [[ -n "$hits" ]] && { echo "✅ лог: $re ($((SECONDS - start))s)"; echo "$hits"; return 0; }
+    ((SECONDS - start >= timeout)) && break
+    sleep 1
+  done
+  echo "❌ нет в логе за ${timeout}s: $re"
+  return 1
+}
+
+# --- разрешения и сеть -----------------------------------------------------------
+
+# Runtime-разрешения приложения: «android.permission.X: granted=…, flags=[…]».
+android_runtime_perms() {
+  adb_ shell dumpsys package "$(app_id)" | tr -d '\r' | awk '
+    /runtime permissions:/ { rt = 1; next }
+    rt && /^ *[A-Za-z0-9_.]+: granted=/ { sub(/^ */, ""); print; next }
+    rt { rt = 0 }' | sort -u
+}
+
+android_perm_names() {
+  local name
+  for name in "$@"; do
+    case "$name" in
+      bluetooth) echo android.permission.BLUETOOTH_SCAN android.permission.BLUETOOTH_CONNECT ;;
+      location) echo android.permission.ACCESS_FINE_LOCATION android.permission.ACCESS_COARSE_LOCATION ;;
+      notifications) echo android.permission.POST_NOTIFICATIONS ;;
+      *.*) echo "$name" ;;
+      *) echo "android.permission.$name" ;;
+    esac
+  done | tr ' ' '\n'
+}
+
+cmd_perm() {
+  need_platform
+  local action="${1:-}"; shift || true
+  [[ "$PLATFORM" == desktop ]] && die "perm на desktop не поддерживается: разрешения выдаёт macOS"
+  if [[ "$PLATFORM" == ios ]]; then
+    [[ -n "$action" ]] || die "perm без аргументов на iOS не поддерживается: simctl не показывает состояние разрешений"
+    [[ "$action" =~ ^(grant|revoke|reset)$ ]] || die "perm grant|revoke|reset <name>"
+    if [[ "$action" == reset && $# -eq 0 ]]; then
+      xcrun simctl privacy "$DEVICE" reset all "$(app_id)" || exit 1
+      echo "reset all"; return 0
+    fi
+    local name
+    for name in "$@"; do
+      # Bluetooth в simctl privacy нет, да и BLE на симуляторе нет.
+      [[ "$name" == location ]] || die "perm $name на iOS-симуляторе не поддерживается (simctl privacy: только location)"
+      xcrun simctl privacy "$DEVICE" "$action" location "$(app_id)" || exit 1
+      echo "$action location"
+    done
+    return 0
+  fi
+  local runtime p applied=0 was_running
+  runtime="$(android_runtime_perms)"
+  was_running="$(adb_ shell pidof "$(app_id)" | tr -d '\r')"
+  case "$action" in
+    "")
+      [[ -n "$runtime" ]] && echo "$runtime" | sed -E 's/^android\.permission\.//' || echo "runtime-разрешений нет"
+      return 0 ;;
+    grant | revoke)
+      [[ $# -gt 0 ]] || die "perm $action <bluetooth|location|notifications|android.permission.X> ..."
+      # for, а не while read: adb shell внутри цикла съел бы его stdin.
+      for p in $(android_perm_names "$@"); do
+        if ! grep -q "^$p:" <<<"$runtime"; then
+          echo "skip ${p#android.permission.}: приложение не запрашивает его на этом API"
+          continue
+        fi
+        adb_ shell pm "$action" "$(app_id)" "$p" || exit 1
+        echo "$action ${p#android.permission.}"
+        applied=1
+      done
+      ((applied)) || die "ни одно разрешение не изменено"
+      ;;
+    reset)
+      # Отзыв + сброс «пользователь отказал / больше не спрашивать»: системный диалог покажется снова.
+      for p in $(cut -d: -f1 <<<"$runtime"); do
+        adb_ shell pm revoke "$(app_id)" "$p" 2>/dev/null
+        adb_ shell pm clear-permission-flags "$(app_id)" "$p" user-set user-fixed
+      done
+      echo "permissions reset"
+      ;;
+    *) die "perm [grant|revoke <name>... | reset]" ;;
+  esac
+  # Отзыв выданного разрешения система применяет, убивая процесс приложения.
+  [[ -n "$was_running" && -z "$(adb_ shell pidof "$(app_id)" | tr -d '\r')" ]] \
+    && echo "приложение остановлено системой — ui.sh launch"
+  return 0
+}
+
+android_online() { adb_ shell ping -c1 -W2 8.8.8.8 >/dev/null 2>&1; }
+
+cmd_net() {
+  need_platform
+  [[ "$PLATFORM" == android ]] || die "net на $PLATFORM не поддерживается: сеть хоста не отключается из ui.sh — кейс ⏭ на этой платформе"
+  local want="" i
+  case "${1:-status}" in
+    # Не авиарежим: он выключает и Bluetooth, а нужно «нет интернета, BLE работает».
+    off) adb_ shell svc wifi disable; adb_ shell svc data disable; want=offline ;;
+    on) adb_ shell svc wifi enable; adb_ shell svc data enable; want=online ;;
+    status) ;;
+    *) die "net [on|off]" ;;
+  esac
+  # Переключение сети занимает несколько секунд.
+  for ((i = 0; i < 15 && ${#want}; i++)); do
+    if android_online; then [[ "$want" == online ]] && break
+    else [[ "$want" == offline ]] && break; fi
+    sleep 1
+  done
+  local wifi data
+  wifi="$(adb_ shell settings get global wifi_on | tr -d '\r')"
+  data="$(adb_ shell settings get global mobile_data | tr -d '\r')"
+  echo "wifi=$([[ "$wifi" == 0 ]] && echo off || echo on) data=$([[ "$data" == 0 ]] && echo off || echo on) internet=$(android_online && echo yes || echo no)"
+}
+
+# --- доступность -----------------------------------------------------------------
+
+cmd_a11y() {
+  need_platform
+  settle
+  local density=""
+  # uiautomator отдаёт px — пороги в dp пересчитываются по плотности экрана.
+  [[ "$PLATFORM" == android ]] && density="--density $(adb_ shell wm density | awk -F': ' '{print $2}' | tail -1 | tr -d '\r')"
+  python3 "$TREE" audit "$PLATFORM" "$STATE_DIR/dump.$(dump_ext)" "$STATE_DIR/tree.json" $(screen_arg) $density
+}
+
 # --- Maestro ---------------------------------------------------------------------
 
 cmd_flow() {
@@ -683,10 +825,19 @@ ui.sh — UI-тестирование Android (adb) / iOS-симулятор (si
   swipe up|down|left|right          up — прокрутка контента вниз
   scroll-to <q> [max] [dir] | wait <q> [sec] | gone <q> [sec]
   shot <path.png> [maxpx]           скриншот (уменьшен до 1000px)
+  a11y                              аудит экрана: no-label | no-testtag | small-target (48dp / 44pt) | dup-label
 
 Логи:
   mark                              отметка времени (launch ставит сам)
   logs [lines] | crash              ошибки/крэши приложения с отметки
+  wait-log <regex> [sec]            ждать строку в логе приложения с отметки (10 с); ✅/❌, работает в do
+
+Разрешения и сеть:
+  perm                              runtime-разрешения приложения (Android)
+  perm grant|revoke <name>...       name: bluetooth | location | notifications | android.permission.X
+                                    Android: revoke останавливает приложение; iOS: только location; desktop — нет
+  perm reset                        как «ещё не спрашивали» — системный диалог покажется снова
+  net [on|off]                      Android: Wi-Fi + мобильные данные (Bluetooth не трогает); без аргумента — статус
 
 Maestro:
   flow [--out dir] <file.yaml> [-e K=V ...]
@@ -723,6 +874,10 @@ case "$cmd" in
   mark) cmd_mark ;;
   logs) cmd_logs "$@" ;;
   crash) cmd_crash "$@" ;;
+  wait-log) cmd_wait_log "$@" ;;
+  perm) cmd_perm "$@" ;;
+  net) cmd_net "$@" ;;
+  a11y) cmd_a11y ;;
   flow) cmd_flow "$@" ;;
   hierarchy) cmd_hierarchy ;;
   help | -h | --help) cmd_help ;;

@@ -4,6 +4,8 @@
 tree.py render <android|ios|desktop> <dump> <cache.json> [--all] [--screen WxH]  — печать дерева, индексы пишутся в cache.json
 tree.py find   <android|ios|desktop> <dump> <query> [cache.json] [--screen WxH]  — "x y" центра совпадения, exit 1 если нет
 tree.py state  <android|ios|desktop> <dump> <query> [--screen WxH]               — «kind\tlabel\tflags» элемента, exit 1 если нет
+tree.py audit  <android|ios|desktop> <dump> <cache.json> [--screen WxH] [--density dpi] — замечания доступности
+               (индексы — как у render; --density — dpi Android для пересчёта px → dp)
 --all: и безымянные контейнеры с id, и элементы за пределами экрана.
 query: @N (индекс из последнего render), #id (testTag / accessibilityIdentifier, допускает glob: #*back_button),
 иначе текст.
@@ -250,6 +252,21 @@ def fmt(i, n, label):
     return s
 
 
+def listed(items, cache):
+    """Элементы в порядке и с индексами render (повторы отброшены); индексы пишутся в cache для @N."""
+    out = []
+    seen = set()
+    for n, label in items:
+        key = (n.kind, label, n.node_id, n.center)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((n, label))
+    entries = [{"label": label, "id": n.node_id, "center": n.center} for n, label in out]
+    json.dump(entries, open(cache, "w"), ensure_ascii=False)
+    return out
+
+
 def render(platform, dump, cache, show_all, screen, keyboard=False):
     nodes, app, screen = load(platform, dump, screen)
     items = collect(nodes, screen, show_all)
@@ -259,16 +276,51 @@ def render(platform, dump, cache, show_all, screen, keyboard=False):
     print(f"screen {screen[0]}x{screen[1]} {platform} {app or ''}".rstrip())
     if keyboard:
         print("keyboard: открыта и может перекрывать элементы — key hide-keyboard перед тапом вне поля")
-    entries = []
-    seen = set()
-    for n, label in items:
-        key = (n.kind, label, n.node_id, n.center)
-        if key in seen:
-            continue
-        seen.add(key)
-        print(fmt(len(entries) + 1, n, label))
-        entries.append({"label": label, "id": n.node_id, "center": n.center})
-    json.dump(entries, open(cache, "w"), ensure_ascii=False)
+    for i, (n, label) in enumerate(listed(items, cache), 1):
+        print(fmt(i, n, label))
+
+
+# Минимальная зона касания: Material — 48dp, Apple HIG — 44pt. Desktop (мышь) не проверяется.
+TOUCH_MIN = {"android": (48, "dp"), "ios": (44, "pt")}
+AUDITED = ("btn", "input", "check", "switch", "slider")
+
+
+def audit(platform, dump, cache, screen, density):
+    """Замечания доступности и тестируемости по интерактивным элементам экрана."""
+    nodes, _, screen = load(platform, dump, screen)
+    items = [(i, n, label) for i, (n, label) in enumerate(listed(collect(nodes, screen, False), cache), 1)]
+    targets = [(i, n, label) for i, n, label in items if n.kind in AUDITED]
+    labels = {}
+    for _, n, label in targets:
+        if label:
+            labels[label.casefold()] = labels.get(label.casefold(), 0) + 1
+    counts = {}
+    # Экран совсем без testTag — одна строка вместо замечания на каждый элемент.
+    untagged = bool(targets) and not any(n.node_id for _, n, _ in targets)
+    if untagged:
+        print(f"no-testtag: на экране нет ни одного testTag ({len(targets)} интерактивных элементов)")
+        counts["no-testtag"] = 1
+    for i, n, label in targets:
+        issues = []
+        if not label and not any(f.startswith("hint=") for f in n.flags):
+            issues.append(("no-label", "нет текста / contentDescription"))
+        if not n.node_id and not untagged:
+            issues.append(("no-testtag", "нет testTag"))
+        if platform in TOUCH_MIN:
+            minimum, unit = TOUCH_MIN[platform]
+            w, h = n.frame[2] / density, n.frame[3] / density
+            if min(w, h) < minimum:
+                issues.append(("small-target", f"{w:.0f}x{h:.0f}{unit} < {minimum}{unit}"))
+        if label and labels[label.casefold()] > 1 and not n.node_id:
+            issues.append(("dup-label", f"{labels[label.casefold()]} элемента с такой подписью"))
+        for rule, detail in issues:
+            print(f"{fmt(i, n, label)} — {rule}: {detail}")
+            counts[rule] = counts.get(rule, 0) + 1
+    if counts:
+        summary = ", ".join(f"{rule} {count}" for rule, count in counts.items())
+        print(f"a11y: замечаний — {sum(counts.values())} ({summary})")
+    else:
+        print(f"a11y: ✅ замечаний нет ({len(targets)} интерактивных элементов)")
 
 
 def find_node(platform, dump, query, cache=None, screen=None):
@@ -322,12 +374,19 @@ def main():
         i = args.index("--screen")
         screen = tuple(int(v) for v in args[i + 1].split("x"))
         del args[i : i + 2]
+    density = 1.0
+    if "--density" in args:
+        i = args.index("--density")
+        density = int(args[i + 1]) / 160
+        del args[i : i + 2]
     show_all = "--all" in args
     keyboard = "--keyboard" in args
     args = [a for a in args if a not in ("--all", "--keyboard")]
     cmd, platform, dump = args[:3]
     if cmd == "render":
         render(platform, dump, args[3], show_all, screen, keyboard)
+    elif cmd == "audit":
+        audit(platform, dump, args[3], screen, density)
     elif cmd == "state":
         line = state(platform, dump, args[3], screen)
         if line is None:
