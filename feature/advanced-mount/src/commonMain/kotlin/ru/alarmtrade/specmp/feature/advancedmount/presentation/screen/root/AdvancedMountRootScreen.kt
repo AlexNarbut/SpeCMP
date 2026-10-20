@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -611,6 +612,9 @@ private fun SectionsGrid(
     }
 }
 
+/** testTag плитки «Проверка прошивок» — по ней видно, что экран расширенного монтажа открыт. */
+private const val FIRMWARE_CHECK_TAG = "advanced_mount_firmware_check"
+
 @Composable
 private fun SectionTile(
     section: MountSection,
@@ -632,6 +636,7 @@ private fun SectionTile(
                 alpha = appear.value
                 translationY = (1f - appear.value) * 6.dp.toPx()
             }
+            .then(if (section == MountSection.FIRMWARE_UPDATE) Modifier.testTag(FIRMWARE_CHECK_TAG) else Modifier)
             .clip(shape)
             .clickable(onClick = onClick),
         shape = shape,

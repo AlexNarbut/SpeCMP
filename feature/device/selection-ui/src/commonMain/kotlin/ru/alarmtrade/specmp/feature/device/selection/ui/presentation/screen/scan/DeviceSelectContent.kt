@@ -18,6 +18,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -339,6 +340,9 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
     }
 }
 
+/** testTag строки устройства — префикс, дальше id устройства (BLE — MAC). */
+internal const val DEVICE_ITEM_TAG_PREFIX = "device_item_"
+
 /**
  * Строка устройства в списке: имя (+ RSSI у BLE справа), чип транспорта и адрес.
  * [showMode] — метка «Сопряжение» / «Загрузчик» (только в широкой раскладке);
@@ -355,7 +359,8 @@ internal fun DeviceRow(
 ) {
     val colors = cmpThemeColors()
     CmpSurface(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().testTag(DEVICE_ITEM_TAG_PREFIX + item.id)
+            .clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = if (selected) colors.primaryContainer else colors.surfaceContainerLow,
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,

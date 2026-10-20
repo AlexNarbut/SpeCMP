@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -117,6 +118,12 @@ fun DeviceInteractionHost(onExit: () -> Unit, content: @Composable (device: Alar
     }
 }
 
+/** testTag кнопки «Выйти» на экране «Подключение к блоку…». */
+internal const val DEVICE_STATUS_EXIT_TAG = "device_status_exit"
+
+/** testTag кнопки «Отключиться» на экране потери связи. */
+internal const val DEVICE_STATUS_DISCONNECT_TAG = "device_status_disconnect"
+
 /** Состояние связи, при котором поверх дочернего flow показывается экран обёртки. */
 internal enum class DeviceStatus { Connecting, Disconnected, BluetoothBoot, FirmwareBoot }
 
@@ -172,7 +179,7 @@ internal fun DeviceStatusContent(
                             CmpButton(
                                 text = stringResource(Res.string.device_interaction_btn_exit),
                                 onClick = onExit,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_EXIT_TAG)
                             )
                         }
 
@@ -226,7 +233,7 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
     CmpOutlinedButton(
         text = stringResource(Res.string.device_interaction_btn_disconnect),
         onClick = onExit,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_DISCONNECT_TAG)
     )
 }
 

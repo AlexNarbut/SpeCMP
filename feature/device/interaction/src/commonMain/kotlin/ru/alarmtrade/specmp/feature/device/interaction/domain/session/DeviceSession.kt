@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 import co.touchlab.kermit.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
@@ -61,6 +63,9 @@ class DeviceSession(
 
     private val sessionMutex = Mutex()
 
+    // Начало отсчёта для таймстемпов этапов в логах: новая сессия (attach) обнуляет.
+    private val stageClock = MutableStateFlow(TimeSource.Monotonic.markNow())
+
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
 
     /** Транспорт текущей сессии (для текстов «связь потеряна»); `null` — сессии нет. */
@@ -69,6 +74,7 @@ class DeviceSession(
     val state: StateFlow<DeviceSessionState> = sessionRepository.linkState()
         .distinctUntilChanged()
         .transformLatest { link ->
+            logStage { "link=$link" }
             when (link) {
                 DeviceLinkState.CONNECTING -> emit(DeviceSessionState.Connecting)
 
@@ -79,7 +85,9 @@ class DeviceSession(
 
                 DeviceLinkState.READY -> {
                     emit(DeviceSessionState.Connecting)
+                    logStage { "detectMode start" }
                     val mode = detectMode()
+                    logStage { "detectMode result=${mode?.let { it::class.simpleName }}" }
                     if (mode != null) {
                         emit(mode)
                     } else {
@@ -91,6 +99,7 @@ class DeviceSession(
                 }
             }
         }
+        .onEach { logStage { "state=${it::class.simpleName}" } }
         .stateIn(
             scope = scope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0),
@@ -99,6 +108,8 @@ class DeviceSession(
 
     /** Сессия создана поиском устройства — запомнить, по какому транспорту. */
     fun attach(transport: ConnectionTransport) {
+        stageClock.update { TimeSource.Monotonic.markNow() }
+        logStage { "attach transport=$transport" }
         _transport.update { transport }
     }
 
@@ -108,11 +119,13 @@ class DeviceSession(
      * возвращённого [Job] (`join`), иначе отложенное закрытие оборвёт новую сессию.
      */
     fun close(): Job {
+        logStage { "close requested" }
         _transport.update { null }
         return scope.launch {
             sessionMutex.withLock {
                 val response = connectionRepository.closeSessions()
                 if (response is Response.Error) logger.w(response.exception) { "Failed to close device session" }
+                logStage { "close done" }
             }
         }
     }
@@ -139,14 +152,21 @@ class DeviceSession(
      * зависшему подключению держать закрытие.
      */
     private suspend fun reconnectWhileBle() {
+        var attempt = 0
         while (_transport.value == ConnectionTransport.BLE) {
             delay(RECONNECT_INTERVAL_MILLIS)
             sessionMutex.withLock {
                 if (_transport.value == ConnectionTransport.BLE) {
-                    withTimeoutOrNull(RECONNECT_TIMEOUT_MILLIS) { sessionRepository.reconnect() }
+                    attempt++
+                    logStage { "reconnect #$attempt start" }
+                    val response = withTimeoutOrNull(RECONNECT_TIMEOUT_MILLIS) { sessionRepository.reconnect() }
+                    logStage {
+                        "reconnect #$attempt end response=${response?.let { it::class.simpleName } ?: "timeout"}"
+                    }
                 }
             }
         }
+        logStage { "reconnect loop stopped transport=${_transport.value}" }
     }
 
     /**
@@ -169,10 +189,21 @@ class DeviceSession(
         repeat(READ_ATTEMPTS) { attempt ->
             // Без тайм-аута зависший запрос (блок не ответил) держал бы «Подключение…» бесконечно.
             val response = withTimeoutOrNull(READ_TIMEOUT_MILLIS) { read() }
+            logStage {
+                "read attempt=${attempt + 1}/$READ_ATTEMPTS response=${response?.let {
+                    it::class.simpleName
+                } ?: "timeout"}"
+            }
             if (response is Response.Success) return response.value
             if (attempt < READ_ATTEMPTS - 1) delay(READ_RETRY_DELAY_MILLIS)
         }
         return null
+    }
+
+    /** Лог этапа с временем от начала сессии: по нему замеряются подключение и переподключение. */
+    private inline fun logStage(message: () -> String) {
+        val elapsed = stageClock.value.elapsedNow().inWholeMilliseconds
+        logger.i { "+${elapsed}ms ${message()}" }
     }
 
     private companion object {

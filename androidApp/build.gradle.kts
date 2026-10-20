@@ -32,6 +32,8 @@ kotlin {
 dependencies {
     implementation(project(":composeApp"))
     implementation(libs.androidx.activityCompose)
+    // Box с testTagsAsResourceId в AppActivity
+    implementation(libs.compose.foundation)
     // AppActivity — FragmentActivity (нужно core/permissions для bind PermissionsController)
     implementation(libs.androidx.fragment)
 }

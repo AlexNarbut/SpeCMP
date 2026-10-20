@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.sca
 
 import androidx.lifecycle.viewModelScope
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -297,8 +298,14 @@ class ScanDeviceViewModel(
             _effect.tryEmit(ScanDeviceEffect.BoundToAnotherPhone)
             return false
         }
+        val startedAt = TimeSource.Monotonic.markNow()
         repeat(BLE_CONNECT_ATTEMPTS) { attempt ->
+            logger.i { "connectBle id=${item.id} attempt=${attempt + 1} start" }
             val result = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal()
+            logger.i {
+                "connectBle id=${item.id} attempt=${attempt + 1} result=$result " +
+                    "total=${startedAt.elapsedNow().inWholeMilliseconds}ms"
+            }
             if (result is Response.Success && result.value == DeviceConnectionState.PAIRING_REQUIRED) {
                 // Старое сопряжение снято; если блок уже в режиме сопряжения — повторяем, SDK сопряжётся заново.
                 if (attempt < BLE_CONNECT_ATTEMPTS - 1 &&
