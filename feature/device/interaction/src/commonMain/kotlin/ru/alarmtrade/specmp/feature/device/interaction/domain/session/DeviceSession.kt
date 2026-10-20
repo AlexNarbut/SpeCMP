@@ -66,6 +66,10 @@ class DeviceSession(
     // Начало отсчёта для таймстемпов этапов в логах: новая сессия (attach) обнуляет.
     private val stageClock = MutableStateFlow(TimeSource.Monotonic.markNow())
 
+    // Связь по BLE уже была готова в этой сессии: дальше потеря связи остаётся «Disconnected» на всё переподключение
+    // (попытки SDK и чтение режима не подменяют её на «Connecting»). Новая сессия (attach) сбрасывает.
+    private val wasReady = MutableStateFlow(false)
+
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
 
     /** Транспорт текущей сессии (для текстов «связь потеряна»); `null` — сессии нет. */
@@ -76,7 +80,7 @@ class DeviceSession(
         .transformLatest { link ->
             logStage { "link=$link" }
             when (link) {
-                DeviceLinkState.CONNECTING -> emit(DeviceSessionState.Connecting)
+                DeviceLinkState.CONNECTING -> if (!isBleReconnect()) emit(DeviceSessionState.Connecting)
 
                 DeviceLinkState.DISCONNECTED -> {
                     emit(DeviceSessionState.Disconnected)
@@ -84,7 +88,9 @@ class DeviceSession(
                 }
 
                 DeviceLinkState.READY -> {
-                    emit(DeviceSessionState.Connecting)
+                    val reconnect = isBleReconnect()
+                    wasReady.update { true }
+                    if (!reconnect) emit(DeviceSessionState.Connecting)
                     logStage { "detectMode start" }
                     val mode = detectMode()
                     logStage { "detectMode result=${mode?.let { it::class.simpleName }}" }
@@ -109,6 +115,7 @@ class DeviceSession(
     /** Сессия создана поиском устройства — запомнить, по какому транспорту. */
     fun attach(transport: ConnectionTransport) {
         stageClock.update { TimeSource.Monotonic.markNow() }
+        wasReady.update { false }
         logStage { "attach transport=$transport" }
         _transport.update { transport }
     }
@@ -199,6 +206,8 @@ class DeviceSession(
         }
         return null
     }
+
+    private fun isBleReconnect(): Boolean = wasReady.value && _transport.value == ConnectionTransport.BLE
 
     /** Лог этапа с временем от начала сессии: по нему замеряются подключение и переподключение. */
     private inline fun logStage(message: () -> String) {

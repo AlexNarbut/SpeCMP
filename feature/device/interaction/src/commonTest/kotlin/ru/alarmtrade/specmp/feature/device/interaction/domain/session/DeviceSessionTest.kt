@@ -176,6 +176,49 @@ class DeviceSessionTest {
     }
 
     @Test
+    fun `ble reconnect keeps Disconnected instead of Connecting`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.CONNECTING)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.BLE)
+        val states = mutableListOf<DeviceSessionState>()
+        backgroundScope.launch { session.state.collect { states += it } }
+        runCurrent()
+        repository.link.value = DeviceLinkState.READY
+        runCurrent()
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+
+        states.clear()
+        repository.link.value = DeviceLinkState.DISCONNECTED
+        repository.link.value = DeviceLinkState.CONNECTING
+        repository.link.value = DeviceLinkState.DISCONNECTED
+        repository.link.value = DeviceLinkState.CONNECTING
+        repository.link.value = DeviceLinkState.READY
+        runCurrent()
+
+        assertEquals(listOf(DeviceSessionState.Disconnected, DeviceSessionState.Ready(testDevice)), states)
+    }
+
+    @Test
+    fun `first ble connection and usb reconnect show Connecting`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.CONNECTING)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.BLE)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        assertEquals(DeviceSessionState.Connecting, session.state.value)
+
+        val usbRepository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val usbSession = testSession(usbRepository)
+        usbSession.attach(ConnectionTransport.USB)
+        backgroundScope.launch { usbSession.state.collect {} }
+        runCurrent()
+        usbRepository.link.value = DeviceLinkState.DISCONNECTED
+        usbRepository.link.value = DeviceLinkState.CONNECTING
+        runCurrent()
+        assertEquals(DeviceSessionState.Connecting, usbSession.state.value)
+    }
+
+    @Test
     fun `usb link loss is not reconnected by the app`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.DISCONNECTED)
         val session = testSession(repository, FakeDeviceConnectionRepository())
