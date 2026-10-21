@@ -41,7 +41,9 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLayout
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.deviceSubtitle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ConfirmBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.DataErrorBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.DownloadBody
@@ -60,7 +62,6 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exi
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exit_btn_stay
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exit_msg
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exit_title
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_subtitle_bluetooth
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_title_screen
 
 private val BodyMaxWidth = 480.dp
@@ -74,14 +75,18 @@ internal const val EXIT_DIALOG_CONFIRM_TAG = "firmware_exit_dialog_confirm"
  * системная «Назад» перехвачена: на процессе заблокирована, на выборе спрашивает подтверждение.
  */
 @Composable
-fun FirmwareUpdateScreen(onExit: () -> Unit, onOpenSupportChat: () -> Unit, onOpenArchive: () -> Unit) {
+fun FirmwareUpdateScreen(
+    onExit: () -> Unit,
+    onOpenSupportChat: () -> Unit,
+    onOpenArchive: (FirmwareArchiveArgs) -> Unit
+) {
     val viewModel = koinViewModel<FirmwareUpdateViewModel>()
     val state by viewModel.state.collectAsState()
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
             FirmwareUpdateEffect.OpenSupportChat -> onOpenSupportChat()
-            FirmwareUpdateEffect.OpenArchive -> onOpenArchive()
+            is FirmwareUpdateEffect.OpenArchive -> onOpenArchive(effect.args)
             FirmwareUpdateEffect.Exit -> onExit()
         }
     }
@@ -171,10 +176,7 @@ internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: Firmware
 }
 
 @Composable
-private fun subtitleOf(state: FirmwareUpdateState, title: String): String = when (state.profile) {
-    UpdateProfile.Main -> title
-    UpdateProfile.Bluetooth -> stringResource(Res.string.firmware_update_subtitle_bluetooth, title)
-}
+private fun subtitleOf(state: FirmwareUpdateState, title: String): String = deviceSubtitle(state.profile, title)
 
 @Composable
 private fun LockedBackIcon() {

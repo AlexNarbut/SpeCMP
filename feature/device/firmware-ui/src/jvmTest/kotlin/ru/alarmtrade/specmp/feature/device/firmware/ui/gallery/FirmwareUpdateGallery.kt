@@ -39,7 +39,7 @@ class FirmwareUpdateGallery {
     fun entering() = render("02_entering", phase(UpdatePhase.Entering))
 
     @Test
-    fun source() = render("03_source_single", base.copy(archiveVisible = true))
+    fun source() = render("03_source_single", base)
 
     @Test
     fun sourceMulti() = render(
@@ -47,8 +47,7 @@ class FirmwareUpdateGallery {
         base.copy(
             moduleTitles = listOf("Pandora DX 4G (DX4G)", "Pandora Main (MAIN)", "CAN-модуль (CAN2)"),
             selectedModule = 1,
-            channel = FirmwareChannel.BETA,
-            archiveVisible = true
+            channel = FirmwareChannel.BETA
         )
     )
 

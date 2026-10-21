@@ -113,4 +113,24 @@
     <string name="firmware_update_exit_msg">The unit will stay in update mode and will not work as an alarm until the firmware is installed or the mode is turned off.</string>
     <string name="firmware_update_exit_btn_stay">Stay</string>
     <string name="firmware_update_exit_btn_exit">Exit</string>
+    <string name="firmware_archive_title_screen">Firmware archive</string>
+    <string name="firmware_archive_a11y_refresh">Refresh list</string>
+    <string name="firmware_archive_loading">Loading the version list…</string>
+    <string name="firmware_archive_empty_title">No firmware found for this device. Try again later</string>
+    <string name="firmware_archive_btn_refresh">Refresh</string>
+    <string name="firmware_archive_error_title">No connection to the server</string>
+    <string name="firmware_archive_error_msg">Could not load the version list. Check your internet and try again.</string>
+    <string name="firmware_archive_loading_more">Loading more…</string>
+    <string name="firmware_archive_error_more">Could not load more versions</string>
+    <string name="firmware_archive_badge_installed">Installed</string>
+    <string name="firmware_archive_badge_older">Older than installed</string>
+    <string name="firmware_archive_btn_more">Show more</string>
+    <string name="firmware_archive_btn_less">Collapse</string>
+    <string name="firmware_archive_btn_select">Select</string>
+    <string name="firmware_archive_btn_install">Install</string>
+    <string name="firmware_archive_btn_reinstall">Reinstall</string>
+    <string name="firmware_archive_msg_older">The selected version is older than the installed one (%1$s)</string>
+    <string name="firmware_archive_msg_same">This version is already installed. You can reinstall it</string>
+    <string name="firmware_archive_rollback_title">Install an older version?</string>
+    <string name="firmware_archive_rollback_msg">The selected version %1$s is older than the installed %2$s. New features and fixes may be missing from it.</string>
 </resources>

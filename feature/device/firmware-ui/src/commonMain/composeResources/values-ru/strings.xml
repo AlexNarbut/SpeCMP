@@ -113,4 +113,24 @@
     <string name="firmware_update_exit_msg">Блок останется в режиме обновления и не будет работать как сигнализация, пока прошивка не установлена или режим не отключён.</string>
     <string name="firmware_update_exit_btn_stay">Остаться</string>
     <string name="firmware_update_exit_btn_exit">Выйти</string>
+    <string name="firmware_archive_title_screen">Архив прошивок</string>
+    <string name="firmware_archive_a11y_refresh">Обновить список</string>
+    <string name="firmware_archive_loading">Загружаем список версий…</string>
+    <string name="firmware_archive_empty_title">Для данного устройства не найдено прошивок. Попробуйте позже</string>
+    <string name="firmware_archive_btn_refresh">Обновить</string>
+    <string name="firmware_archive_error_title">Нет связи с сервером</string>
+    <string name="firmware_archive_error_msg">Не удалось загрузить список версий. Проверьте интернет и повторите.</string>
+    <string name="firmware_archive_loading_more">Загружаем ещё…</string>
+    <string name="firmware_archive_error_more">Не удалось загрузить ещё версии</string>
+    <string name="firmware_archive_badge_installed">Установлена</string>
+    <string name="firmware_archive_badge_older">Старее установленной</string>
+    <string name="firmware_archive_btn_more">Показать больше</string>
+    <string name="firmware_archive_btn_less">Свернуть</string>
+    <string name="firmware_archive_btn_select">Выбрать</string>
+    <string name="firmware_archive_btn_install">Установить</string>
+    <string name="firmware_archive_btn_reinstall">Переустановить</string>
+    <string name="firmware_archive_msg_older">Выбранная версия старее установленной (%1$s)</string>
+    <string name="firmware_archive_msg_same">Эта версия уже установлена. Можно переустановить</string>
+    <string name="firmware_archive_rollback_title">Установить более старую версию?</string>
+    <string name="firmware_archive_rollback_msg">Выбранная версия %1$s старее установленной %2$s. Новые функции и исправления в ней могут отсутствовать.</string>
 </resources>

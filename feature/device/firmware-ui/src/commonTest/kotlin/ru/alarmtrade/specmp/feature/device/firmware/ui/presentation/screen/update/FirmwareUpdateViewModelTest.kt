@@ -31,12 +31,14 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateP
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateTarget
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -85,6 +87,7 @@ class FirmwareUpdateViewModelTest {
     private val sessionRepository = FakeSessionRepository(bootDevice)
     private val updateRepository = FakeUpdateRepository()
     private val requester = FirmwareBootRequester()
+    private val picker = FirmwareArchivePicker()
     private val viewModels = mutableListOf<FirmwareUpdateViewModel>()
     private lateinit var session: DeviceSession
 
@@ -113,7 +116,7 @@ class FirmwareUpdateViewModelTest {
             backgroundScope.coroutineContext
         )
         session.attach(transport)
-        val vm = FirmwareUpdateViewModel(session, repository, updateRepository, requester, dispatchers)
+        val vm = FirmwareUpdateViewModel(session, repository, updateRepository, requester, picker, dispatchers)
             .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<FirmwareUpdateEffect>()
@@ -470,12 +473,38 @@ class FirmwareUpdateViewModelTest {
         vm.onSupportClick()
         runCurrent()
         assertEquals(
-            listOf(FirmwareUpdateEffect.OpenArchive, FirmwareUpdateEffect.OpenSupportChat),
+            listOf(
+                FirmwareUpdateEffect.OpenArchive(
+                    FirmwareArchiveArgs(1, FirmwareChannel.RELEASE, "3.57", "DX4G  77", UpdateProfile.Main)
+                ),
+                FirmwareUpdateEffect.OpenSupportChat
+            ),
             effects
         )
 
         vm.onDisconnect()
         runCurrent()
         assertEquals(FirmwareUpdateEffect.Exit, effects.last())
+    }
+
+    @Test
+    fun `version picked in the archive goes straight to the confirmation`() = test {
+        prepareMain()
+        val (vm, _) = viewModel()
+
+        picker.pick(version("3.55", "old notes"))
+        runCurrent()
+
+        val state = vm.state.value
+        assertEquals(UpdatePhase.Confirm, state.phase)
+        assertEquals(ConfirmUi("3.57", "3.55", "old notes", older = true), state.confirm)
+
+        // Выбор в другой фазе (например, пока идёт процесс) игнорируется.
+        vm.onConfirmUpdate()
+        runCurrent()
+        picker.pick(version("3.99"))
+        runCurrent()
+        assertEquals(UpdatePhase.Prepare, vm.state.value.phase)
+        assertEquals("3.55", vm.state.value.confirm?.newVersion)
     }
 }

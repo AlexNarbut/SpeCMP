@@ -41,12 +41,19 @@ internal class FakeFirmwareRepository : FirmwareRepository {
         return latest[moduleId to channel] ?: Response.Error(IllegalStateException("no version"))
     }
 
+    /** Страницы архива по номеру; нет страницы — ошибка сервера. */
+    val archivePages = mutableMapOf<Int, Response<FirmwareVersionPage>>()
+    val archiveCalls = mutableListOf<Int>()
+
     override suspend fun archivePage(
         moduleId: Long,
         channel: FirmwareChannel,
         page: Int,
         pageSize: Int
-    ): Response<FirmwareVersionPage> = Response.Error(IllegalStateException("not used"))
+    ): Response<FirmwareVersionPage> {
+        archiveCalls += page
+        return archivePages[page] ?: Response.Error(IllegalStateException("no page"))
+    }
 }
 
 internal class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {

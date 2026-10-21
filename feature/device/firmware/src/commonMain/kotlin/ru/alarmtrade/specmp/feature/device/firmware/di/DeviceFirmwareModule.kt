@@ -7,6 +7,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.data.repository.SpecialistFi
 import ru.alarmtrade.specmp.feature.device.firmware.data.repository.SpecialistFirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
 
@@ -23,4 +24,5 @@ val deviceFirmwareModule = module {
     // Состояние, привязанное к аккаунту, — чистится при логауте.
     single { FirmwareBootRequester() } bind AuthCloseable::class
     single { ServicePinCooldown() } bind AuthCloseable::class
+    single { FirmwareArchivePicker() }
 }

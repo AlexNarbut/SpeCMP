@@ -15,22 +15,30 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateScreen
 
 @Serializable
 internal data object FirmwareUpdateRoute : NavKey
 
+@Serializable
+internal data class FirmwareArchiveRoute(val args: FirmwareArchiveArgs) : NavKey
+
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(FirmwareUpdateRoute::class, FirmwareUpdateRoute.serializer())
+            subclass(FirmwareArchiveRoute::class, FirmwareArchiveRoute.serializer())
         }
     }
 }
 
 /**
- * Граф экранов режима загрузчика: «Обновление прошивки». Слот `bootContent` хоста устройства (`composeApp`):
+ * Граф экранов режима загрузчика: «Обновление прошивки» → «Архив прошивок».
+ * Слот `bootContent` хоста устройства (`composeApp`):
  * хост показывает граф, пока блок в загрузчике или ждёт перезагрузку, и сам решает, когда уйти.
  *
  * @param onExit выход из всего flow (закрывает сессию); на экране обновления вызывается после подтверждения.
@@ -53,8 +61,11 @@ fun FirmwareBootGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
                 FirmwareUpdateScreen(
                     onExit = onExit,
                     onOpenSupportChat = onOpenSupportChat,
-                    onOpenArchive = {}
+                    onOpenArchive = { args -> backStack.navigateSafe(FirmwareArchiveRoute(args)) }
                 )
+            }
+            entry<FirmwareArchiveRoute> { key ->
+                FirmwareArchiveScreen(args = key.args, onClose = { backStack.popSafe() })
             }
         }
     )

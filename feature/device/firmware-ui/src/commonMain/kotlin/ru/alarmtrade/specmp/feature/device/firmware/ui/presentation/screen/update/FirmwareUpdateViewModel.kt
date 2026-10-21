@@ -32,7 +32,9 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureRea
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
@@ -57,6 +59,7 @@ class FirmwareUpdateViewModel(
     private val repository: FirmwareRepository,
     private val updateRepository: FirmwareUpdateRepository,
     bootRequester: FirmwareBootRequester,
+    archivePicker: FirmwareArchivePicker,
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
@@ -119,6 +122,8 @@ class FirmwareUpdateViewModel(
         safeLaunch {
             updateRequests.collectLatest { version -> if (version != null) runUpdate(version) }
         }
+        // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
+        safeLaunch { archivePicker.picks.collect(::onArchivePicked) }
     }
 
     // ───── состояние ─────
@@ -151,8 +156,7 @@ class FirmwareUpdateViewModel(
                 )
             },
             sourceError = core.sourceError,
-            exitDialog = core.exitDialog,
-            archiveVisible = ARCHIVE_AVAILABLE
+            exitDialog = core.exitDialog
         )
     }
 
@@ -300,7 +304,28 @@ class FirmwareUpdateViewModel(
     }
 
     fun onArchiveClick() {
-        if (core.value.stage == UpdatePhase.Source) _effect.tryEmit(FirmwareUpdateEffect.OpenArchive)
+        val current = core.value
+        val profile = current.profile
+        val moduleId = current.selectedModuleId
+        if (current.stage != UpdatePhase.Source || profile == null || moduleId == null) return
+        _effect.tryEmit(
+            FirmwareUpdateEffect.OpenArchive(
+                FirmwareArchiveArgs(
+                    moduleId = moduleId,
+                    channel = current.channel,
+                    installedVersion = profile.currentVersion,
+                    deviceTitle = state.value.deviceTitle,
+                    profile = profile.kind
+                )
+            )
+        )
+    }
+
+    // Версия выбрана в архиве: сразу на подтверждение (версия, описание и ссылка уже известны — запрашивать нечего).
+    private fun onArchivePicked(version: FirmwareVersion) {
+        transition({ it.stage == UpdatePhase.Source }) {
+            it.copy(stage = UpdatePhase.Confirm, candidate = version, sourceError = false)
+        }
     }
 
     fun onCancelConfirm() {
@@ -458,9 +483,6 @@ class FirmwareUpdateViewModel(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
-
-        // Архив прошивок ещё не подключён: кнопку не показываем.
-        const val ARCHIVE_AVAILABLE = false
         val LINK_GRACE = 3.seconds
     }
 }

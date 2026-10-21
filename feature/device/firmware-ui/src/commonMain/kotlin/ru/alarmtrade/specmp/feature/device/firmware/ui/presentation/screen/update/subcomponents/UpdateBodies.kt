@@ -191,13 +191,11 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             onClick = actions.onDownloadClick,
             modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_DOWNLOAD_TAG)
         )
-        if (state.archiveVisible) {
-            CmpOutlinedButton(
-                text = stringResource(Res.string.firmware_update_btn_archive),
-                onClick = actions.onArchiveClick,
-                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG)
-            )
-        }
+        CmpOutlinedButton(
+            text = stringResource(Res.string.firmware_update_btn_archive),
+            onClick = actions.onArchiveClick,
+            modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG)
+        )
     }
 }
 
