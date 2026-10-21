@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.core.ui.view.image.rememberCmpImageLoader
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
+import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
 import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
 import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
@@ -83,6 +84,7 @@ fun App(
                 add(supportChatModule)
                 add(deviceSelectionModule)
                 add(deviceInteractionModule)
+                add(deviceFirmwareModule)
                 add(deviceSelectionUiModule)
                 add(deviceInteractionUiModule)
                 add(advancedMountModule)
