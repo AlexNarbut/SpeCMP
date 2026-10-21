@@ -155,7 +155,11 @@ class DeviceSessionTest {
 
         val response = session.setBootMode(BootModeTarget.BluetoothModule)
 
+        // Ответ — сразу после первой команды; повтор уходит через паузу в фоне.
         assertEquals(Response.Success(BootModeResult.Entered), response)
+        assertEquals(1, repository.bootModeCount)
+        advanceTimeBy(3_001)
+        runCurrent()
         assertEquals(2, repository.bootModeCount)
         assertEquals(listOf(BootModeTarget.BluetoothModule, BootModeTarget.BluetoothModule), repository.bootModeTargets)
     }
@@ -167,10 +171,14 @@ class DeviceSessionTest {
 
         repository.bootModeResults = listOf(Response.Success(BootModeResult.WrongPin))
         assertEquals(Response.Success(BootModeResult.WrongPin), session.setBootMode(BootModeTarget.MainProgram))
+        advanceTimeBy(10_000)
+        runCurrent()
         assertEquals(1, repository.bootModeCount)
 
         repository.bootModeResults = listOf(Response.Error(IllegalStateException("no answer")))
         assertTrue(session.setBootMode(BootModeTarget.MainProgram) is Response.Error)
+        advanceTimeBy(10_000)
+        runCurrent()
         // Первая команда — одна на каждый вызов: повтор с неверным PIN продлил бы блокировку ввода на блоке.
         assertEquals(2, repository.bootModeCount)
     }

@@ -165,15 +165,18 @@ class DeviceSession(
     suspend fun setServicePin(pin: ServicePin): Response<Unit> = sessionRepository.setServicePin(pin)
 
     /**
-     * Перевести [target] в загрузчик. Если блок принял команду, повторяем её через паузу: при потерянном обрыве связи
-     * повтор форсирует переподключение (как в старом приложении); после успешного перехода повтор не дойдёт до блока.
-     * Неверный PIN и ошибки не повторяем: каждая лишняя попытка с неверным PIN продлевает блокировку ввода на блоке.
+     * Перевести [target] в загрузчик. Ответ возвращается сразу после первой команды. Если блок её принял, через паузу
+     * в скоупе сессии уходит повтор: при потерянном обрыве связи он форсирует переподключение (как в старом
+     * приложении); после успешного перехода повтор не дойдёт до блока. Неверный PIN и ошибки не повторяем: каждая
+     * лишняя попытка с неверным PIN продлевает блокировку ввода на блоке.
      */
     suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
         val response = sessionRepository.setBootMode(target)
         if (response is Response.Success && response.value == BootModeResult.Entered) {
-            delay(BOOT_MODE_RETRY_DELAY_MILLIS)
-            sessionRepository.setBootMode(target)
+            scope.launch {
+                delay(BOOT_MODE_RETRY_DELAY_MILLIS)
+                sessionRepository.setBootMode(target)
+            }
         }
         return response
     }

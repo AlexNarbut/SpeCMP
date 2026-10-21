@@ -52,9 +52,15 @@ private val navConfig = SavedStateConfiguration {
  *
  * @param onExit выход из монтажа (с корня) — закрывает сессию через обёртку.
  * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
+ * @param firmwareCheck экран раздела «Проверка прошивок» (фича `device/firmware-ui`, подключается в `composeApp`);
+ *   получает выход на корень монтажа.
  */
 @Composable
-fun AdvancedMountNavGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
+fun AdvancedMountNavGraph(
+    onExit: () -> Unit,
+    onOpenSupportChat: () -> Unit,
+    firmwareCheck: @Composable (onBack: () -> Unit) -> Unit
+) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
 
     NavDisplay(
@@ -79,9 +85,13 @@ fun AdvancedMountNavGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
                 )
             }
             entry<AdvancedMountSectionRoute> { key ->
-                SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = {
-                    backStack.popSafe()
-                })
+                if (key.section == MountSection.FIRMWARE_UPDATE) {
+                    firmwareCheck { backStack.popSafe() }
+                } else {
+                    SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = {
+                        backStack.popSafe()
+                    })
+                }
             }
             entry<AdvancedMountExtraRoute> { key ->
                 ExtraStubScreen(extra = key.extra, deviceTitle = key.deviceTitle, onBack = { backStack.popSafe() })
