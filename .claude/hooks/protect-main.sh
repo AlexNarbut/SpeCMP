@@ -22,8 +22,8 @@ if [[ "$command" =~ git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?pus
   [[ "$push_args" =~ $protected ]] && block
   (( on_protected )) && block
 fi
-# слияние/rebase/reset/commit, пока HEAD на main/master
-if (( on_protected )) && [[ "$command" =~ git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?(merge|rebase|cherry-pick|reset|pull) ]]; then
+# любые изменения истории (в т.ч. commit/tag), пока HEAD на main/master
+if (( on_protected )) && [[ "$command" =~ git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?(merge|rebase|cherry-pick|reset|pull|commit|revert|tag) ]]; then
   block
 fi
 # переключение на main с последующим слиянием в одной команде
