@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowCircleUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Bluetooth
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
@@ -32,18 +34,23 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Memory
@@ -57,6 +64,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.PriorityHigh
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
@@ -68,6 +78,8 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Usb
@@ -252,4 +264,28 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.Moon -> Icons.Filled.NightsStay
 
     CmpIcons.Sun -> Icons.Filled.WbSunny
+
+    CmpIcons.SystemUpdate -> Icons.Filled.SystemUpdate
+
+    CmpIcons.History -> Icons.Filled.History
+
+    CmpIcons.FolderOpen -> Icons.Filled.FolderOpen
+
+    CmpIcons.PowerSettingsNew -> Icons.Filled.PowerSettingsNew
+
+    CmpIcons.LinkOff -> Icons.Filled.LinkOff
+
+    CmpIcons.Sync -> Icons.Filled.Sync
+
+    CmpIcons.ArrowCircleUp -> Icons.Filled.ArrowCircleUp
+
+    CmpIcons.CloudOff -> Icons.Filled.CloudOff
+
+    CmpIcons.Inventory2 -> Icons.Filled.Inventory2
+
+    CmpIcons.RecordVoiceOver -> Icons.Filled.RecordVoiceOver
+
+    CmpIcons.ErrorOutline -> Icons.Filled.ErrorOutline
+
+    CmpIcons.PriorityHigh -> Icons.Filled.PriorityHigh
 }

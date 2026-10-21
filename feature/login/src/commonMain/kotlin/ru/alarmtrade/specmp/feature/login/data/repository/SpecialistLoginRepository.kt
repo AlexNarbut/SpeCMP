@@ -1,9 +1,7 @@
 package ru.alarmtrade.specmp.feature.login.data.repository
 
-import ru.alarmtrade.common.app.interactors.appInformation.requests.SaveAppDeviceInformationRequest
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.errors.UserIsNotConfirmed
-import ru.alarmtrade.specialist.interactors.appDevice.AppDeviceInformationInteractor
 import ru.alarmtrade.specialist.interactors.auth.AuthInteractor
 import ru.alarmtrade.specialist.interactors.auth.requests.LoginRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.ResendActivationEmailRequest
@@ -11,7 +9,7 @@ import ru.alarmtrade.specialist.interactors.auth.requests.ResetPasswordRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.SignUpRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
-import ru.alarmtrade.specmp.core.specialist.SpecialistDeviceInformationProvider
+import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
@@ -20,8 +18,7 @@ import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
 class SpecialistLoginRepository(
     private val authInteractor: AuthInteractor,
-    private val appDeviceInformationInteractor: AppDeviceInformationInteractor,
-    private val deviceInformationProvider: SpecialistDeviceInformationProvider
+    private val specialistInitializer: SpecialistInitializer
 ) : LoginRepository {
 
     override suspend fun login(credentials: LoginCredentials): Response<LoginResult> =
@@ -88,14 +85,7 @@ class SpecialistLoginRepository(
             password = password
         )
 
-    private suspend fun saveDeviceInformation(): Response<Unit> = when (
-        val response = appDeviceInformationInteractor.saveAppDeviceInformationUseCase.execute(
-            SaveAppDeviceInformationRequest(deviceInformationProvider.create())
-        )
-    ) {
-        is SpecialistResponse.Success -> Response.Success(Unit)
-        is SpecialistResponse.Error -> response.toProjectError()
-    }
+    private suspend fun saveDeviceInformation(): Response<Unit> = specialistInitializer.syncClientInfo()
 
     private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> = Response.Error(
         exception = exception,

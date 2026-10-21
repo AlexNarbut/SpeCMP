@@ -3,7 +3,7 @@
 
 # core/specialist
 
-- Граница приложения с внешним Specialist SDK (`ru.alarmtrade.common:specialist`): `SpecialistModule` создаёт `SpecialistApp` (конфиг с диспетчерами) и регистрирует SDK-интеракторы как Koin-синглтоны (`authInteractor`, `userInteractor`, `chatInteractor`, `filesInteractor` и др.).
+- Граница приложения с внешним Specialist SDK (`ru.alarmtrade.common:specialist`): `SpecialistModule` создаёт `SpecialistApp` (конфиг с диспетчерами) и регистрирует SDK-интеракторы как Koin-синглтоны (`authInteractor`, `userInteractor`, `chatInteractor`, `filesInteractor`, `deviceInformationInteractor` и `firmwareFilesInteractor` для прошивки и др.).
 - Перед созданием `SpecialistApp` модуль передаёт SDK монитор сети: `getOrNull<NetworkMonitor>()` (из `core/network`, кладёт корень приложения) → адаптер → `CommonConfigurator.networkMonitor`. Без него SDK считает сеть всегда доступной и не видит блокировку сети в фоне Android 15. Нет монитора (desktop) — дефолт SDK.
 - Сетевые логи SDK выключены во всех сборках (`SpecialistConfig.Network(logLevel = NONE, logWebSocketFrames = false)`): SDK не маскирует тела ответов (переписка) и query (email).
 - SDK `ru.alarmtrade.common:specialist` 1.2.0 / `core` 2.0.93 пока тянется из `mavenLocal()` (публикация в `git.pandora.pri` — до мержа).

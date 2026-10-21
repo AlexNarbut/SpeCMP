@@ -4,7 +4,7 @@ export interface CmpDropdownProps {
   selectedValue?: string | null;
   placeholder?: string;
   options?: string[];
-  onOptionSelect?: (index: number, value: string) => void;
+  onOptionSelected?: (index: number, value: string) => void;
   disabled?: boolean;
   rootStyle?: React.CSSProperties;
 }

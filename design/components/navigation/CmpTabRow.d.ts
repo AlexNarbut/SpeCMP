@@ -9,7 +9,7 @@ export interface CmpTabItem {
 export interface CmpTabRowProps {
   tabs: CmpTabItem[];
   selectedTabIndex?: number;
-  onTabSelect?: (index: number) => void;
+  onTabSelected?: (index: number) => void;
   /** Scrollable (non-equal width) vs fixed. */
   scrollable?: boolean;
   style?: React.CSSProperties;

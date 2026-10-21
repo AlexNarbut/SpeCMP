@@ -2,5 +2,5 @@ Tab row — switch views inside one screen. Fixed (equal width) or scrollable. S
 
 ```jsx
 <CmpTabRow tabs={[{title:"Схема"},{title:"Точки"},{title:"Журнал"}]}
-  selectedTabIndex={tab} onTabSelect={setTab} />
+  selectedTabIndex={tab} onTabSelected={setTab} />
 ```

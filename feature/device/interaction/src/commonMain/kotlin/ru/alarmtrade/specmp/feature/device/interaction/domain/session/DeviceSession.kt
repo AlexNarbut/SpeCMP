@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
@@ -25,11 +26,16 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
@@ -39,6 +45,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceS
  * загрузчик основной программы — [DeviceSessionState.FirmwareBoot]; обрыв — [DeviceSessionState.Disconnected].
  * Вход в загрузчик и выход из него проходят через переподключение блока — режим определяется заново.
  * Горячий, пока есть подписчики; после ухода всех подписчиков значение сбрасывается.
+ * Ожидаемая перезагрузка блока ([expectReboot]) — отдельное состояние [reboot]: по нему экраны отличают
+ * намеренный обрыв связи (вход в загрузчик, возврат после прошивки) от потери связи.
  *
  * Владеет собственным скоупом (фоновая логика: переподключение, закрытие сессии), он переживает экраны.
  * Закрытие сессии и переподключение BLE сериализованы [sessionMutex]: закрытие не переплетается с
@@ -72,6 +80,13 @@ class DeviceSession(
 
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
 
+    private val expectation = MutableStateFlow<RebootExpectation?>(null)
+
+    /** Перезагрузка блока, которую приложение вызвало и ждёт; `null` — не ждём (раздел «ожидаемая перезагрузка»). */
+    val reboot: StateFlow<DeviceReboot?> = expectation
+        .map { it?.kind }
+        .stateIn(scope, SharingStarted.Eagerly, null)
+
     /** Транспорт текущей сессии (для текстов «связь потеряна»); `null` — сессии нет. */
     val transport: StateFlow<ConnectionTransport?> = _transport.asStateFlow()
 
@@ -96,6 +111,7 @@ class DeviceSession(
                     logStage { "detectMode result=${mode?.let { it::class.simpleName }}" }
                     if (mode != null) {
                         emit(mode)
+                        onModeReached(mode)
                     } else {
                         // Связь «готова», а блок не отвечает (сессия SDK не поднялась) — рвём соединение:
                         // связь уйдёт в DISCONNECTED, и BLE-цикл переподключения подключится заново.
@@ -116,6 +132,7 @@ class DeviceSession(
     fun attach(transport: ConnectionTransport) {
         stageClock.update { TimeSource.Monotonic.markNow() }
         wasReady.update { false }
+        expectation.update { null }
         logStage { "attach transport=$transport" }
         _transport.update { transport }
     }
@@ -128,6 +145,7 @@ class DeviceSession(
     fun close(): Job {
         logStage { "close requested" }
         _transport.update { null }
+        expectation.update { null }
         return scope.launch {
             sessionMutex.withLock {
                 val response = connectionRepository.closeSessions()
@@ -141,15 +159,102 @@ class DeviceSession(
     suspend fun readImei(): Response<String> = sessionRepository.readImei()
 
     /**
-     * Перевести блок в загрузчик. Команду повторяем через паузу: если обрыв связи не пришёл,
-     * повтор форсирует переподключение (как в старом приложении); после успешного перехода повтор не дойдёт до блока.
+     * Переподключиться сейчас (кнопка «Переподключиться» при обрыве): одна попытка под тем же [sessionMutex], что и
+     * цикл BLE и закрытие, с тем же тайм-аутом. Для BLE цикл переподключения и так идёт сам; для USB блок обычно
+     * возвращается после повторного подключения кабеля. `null` — попытка не уложилась в тайм-аут или сессия закрыта.
      */
-    suspend fun setBootMode(): Response<Unit> {
-        val response = sessionRepository.setBootMode()
-        delay(BOOT_MODE_RETRY_DELAY_MILLIS)
-        sessionRepository.setBootMode()
+    suspend fun reconnectNow(): Response<Unit>? {
+        if (_transport.value == null) return null
+        return sessionMutex.withLock {
+            if (_transport.value == null) {
+                null
+            } else {
+                withTimeoutOrNull(RECONNECT_TIMEOUT_MILLIS) {
+                    sessionRepository.reconnect()
+                }
+            }
+        }
+    }
+
+    /** Bluetooth-модуль блока (мануфактура и режим) — BLE; в рабочем режиме нужен для версии BLE-прошивки. */
+    suspend fun readBluetoothModule(): Response<BluetoothModule> = sessionRepository.readBluetoothModule()
+
+    /**
+     * Выйти из загрузчика командой (перезагрузка [target] в рабочий режим). Одна команда, без повтора; кто вызывает —
+     * сам ставит [expectReboot] ([DeviceReboot.ToMain]) до команды: блок может перезагрузиться раньше ответа.
+     */
+    suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = sessionRepository.exitBootMode(target)
+
+    /** Сохранить PIN программирования для текущего блока (после [BootModeResult.WrongPin]). */
+    suspend fun setServicePin(pin: ServicePin): Response<Unit> = sessionRepository.setServicePin(pin)
+
+    /**
+     * Перевести [target] в загрузчик. Ответ возвращается сразу после первой команды. Если блок её принял, через паузу
+     * в скоупе сессии уходит повтор: при потерянном обрыве связи он форсирует переподключение (как в старом
+     * приложении); после успешного перехода повтор не дойдёт до блока. Неверный PIN и ошибки не повторяем: каждая
+     * лишняя попытка с неверным PIN продлевает блокировку ввода на блоке.
+     */
+    suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
+        val response = sessionRepository.setBootMode(target)
+        if (response is Response.Success && response.value == BootModeResult.Entered) {
+            scope.launch {
+                delay(BOOT_MODE_RETRY_DELAY_MILLIS)
+                sessionRepository.setBootMode(target)
+            }
+        }
         return response
     }
+
+    /**
+     * Ждём перезагрузку блока: до команды ([DeviceReboot.ToBoot]) или на стадии применения прошивки
+     * ([DeviceReboot.ToMain]).
+     * - [DeviceReboot.ToBoot] снимается, когда блок вернулся в загрузчике, по тайм-ауту, при [cancelReboot], [attach] и [close].
+     * - [DeviceReboot.ToMain] держится, пока блок не вернулся в рабочий режим **и** пользователь не подтвердил
+     *   ([acknowledgeReboot]); тайм-аут действует только до возврата блока.
+     */
+    fun expectReboot(kind: DeviceReboot) {
+        val expected = RebootExpectation(kind)
+        expectation.update { expected }
+        scope.launch {
+            delay(REBOOT_TIMEOUT_MILLIS)
+            expectation.update { current -> if (current === expected && !current.reached) null else current }
+        }
+    }
+
+    /** Команда не удалась, ожидаемой перезагрузки не будет. */
+    fun cancelReboot() {
+        expectation.update { null }
+    }
+
+    /** Пользователь увидел результат прошивки: [DeviceReboot.ToMain] снимается, как только блок в рабочем режиме. */
+    fun acknowledgeReboot() {
+        expectation.update { current ->
+            when {
+                current == null || current.kind != DeviceReboot.ToMain -> current
+                current.reached -> null
+                else -> current.copy(acknowledged = true)
+            }
+        }
+    }
+
+    /** Блок вернулся в режим [mode]: снять ожидание, если оно этим исполнено. */
+    private fun onModeReached(mode: DeviceSessionState) {
+        expectation.update { current ->
+            when {
+                current == null -> null
+
+                current.kind == DeviceReboot.ToBoot && mode.isBoot() -> null
+
+                current.kind == DeviceReboot.ToMain && mode is DeviceSessionState.Ready ->
+                    if (current.acknowledged) null else current.copy(reached = true)
+
+                else -> current
+            }
+        }
+    }
+
+    private fun DeviceSessionState.isBoot(): Boolean =
+        this is DeviceSessionState.BluetoothBoot || this is DeviceSessionState.FirmwareBoot
 
     /**
      * BLE: SDK после обрыва (блок выключен или далеко, выключили Bluetooth) сам не переподключается — повторяем
@@ -215,6 +320,12 @@ class DeviceSession(
         logger.i { "+${elapsed}ms ${message()}" }
     }
 
+    private data class RebootExpectation(
+        val kind: DeviceReboot,
+        val acknowledged: Boolean = false,
+        val reached: Boolean = false
+    )
+
     private companion object {
         const val LOG_TAG = "DeviceSession"
         const val STOP_TIMEOUT_MILLIS = 5_000L
@@ -222,6 +333,7 @@ class DeviceSession(
         const val READ_RETRY_DELAY_MILLIS = 500L
         const val READ_TIMEOUT_MILLIS = 10_000L
         const val BOOT_MODE_RETRY_DELAY_MILLIS = 3_000L
+        const val REBOOT_TIMEOUT_MILLIS = 60_000L
         const val RECONNECT_INTERVAL_MILLIS = 1_000L
         const val RECONNECT_TIMEOUT_MILLIS = 15_000L
     }

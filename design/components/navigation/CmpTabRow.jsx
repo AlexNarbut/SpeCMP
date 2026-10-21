@@ -9,7 +9,7 @@ import { CmpIcon } from "../app-kit/CmpIcon.jsx";
 export function CmpTabRow({
   tabs = [],
   selectedTabIndex = 0,
-  onTabSelect,
+  onTabSelected,
   scrollable = false,
   style,
   ...rest
@@ -35,7 +35,7 @@ export function CmpTabRow({
             role="tab"
             aria-selected={selected}
             type="button"
-            onClick={() => onTabSelect && onTabSelect(i)}
+            onClick={() => onTabSelected && onTabSelected(i)}
             style={{
               position: "relative",
               flex: scrollable ? "0 0 auto" : 1,

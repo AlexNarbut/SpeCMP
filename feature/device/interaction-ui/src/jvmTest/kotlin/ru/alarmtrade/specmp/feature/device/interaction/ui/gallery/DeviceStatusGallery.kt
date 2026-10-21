@@ -25,10 +25,4 @@ class DeviceStatusGallery {
 
     @Test
     fun connecting() = render("04_connecting", DeviceStatus.Connecting, ConnectionTransport.USB)
-
-    @Test
-    fun bluetoothBoot() = render("05_bluetooth_boot", DeviceStatus.BluetoothBoot, ConnectionTransport.BLE)
-
-    @Test
-    fun firmwareBoot() = render("06_firmware_boot", DeviceStatus.FirmwareBoot, ConnectionTransport.USB)
 }

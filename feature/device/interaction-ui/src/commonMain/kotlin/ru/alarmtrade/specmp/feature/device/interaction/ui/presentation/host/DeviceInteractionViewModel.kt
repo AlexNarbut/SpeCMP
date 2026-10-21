@@ -16,7 +16,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 
 /**
  * VM обёртки flow работы с устройством: состояние сессии + последний блок в рабочем режиме
- * (по нему остаётся в композиции дочерний flow, пока связь потеряна; загрузчик его сбрасывает) и выход из flow.
+ * (по нему остаётся в композиции дочерний flow, пока связь потеряна; загрузчик его сбрасывает), признак
+ * «был загрузчик», ожидаемая перезагрузка и выход из flow.
  */
 class DeviceInteractionViewModel(private val deviceSession: DeviceSession) : BaseViewModel() {
 
@@ -30,10 +31,16 @@ class DeviceInteractionViewModel(private val deviceSession: DeviceSession) : Bas
                     is DeviceSessionState.Ready -> session.device
                     is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> null
                     DeviceSessionState.Connecting, DeviceSessionState.Disconnected -> previous.device
+                },
+                wasBoot = when (session) {
+                    is DeviceSessionState.Ready -> false
+                    is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> true
+                    DeviceSessionState.Connecting, DeviceSessionState.Disconnected -> previous.wasBoot
                 }
             )
         }
         .combine(deviceSession.transport) { state, transport -> state.copy(transport = transport ?: state.transport) }
+        .combine(deviceSession.reboot) { state, reboot -> state.copy(reboot = reboot) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, DeviceInteractionState())
 
     private val _effect = sideEffectFlow<DeviceInteractionEffect>()

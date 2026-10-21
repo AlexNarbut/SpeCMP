@@ -145,10 +145,10 @@ class AdvancedMountRootViewModel(
         _state.update { it.copy(dialog = null) }
     }
 
-    /** «Перейти к обновлению»: блок уходит в загрузчик, обёртка покажет экран загрузчика после переподключения. */
+    /** «Перейти к обновлению»: открыть проверку прошивок — вход в загрузчик (с PIN) запрашивает она. */
     fun onCanUpdateConfirm() {
         _state.update { it.copy(dialog = null) }
-        deviceScope.launch { deviceSession.setBootMode() }
+        _effect.tryEmit(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE))
     }
 
     fun onRemoteSyncClick() {

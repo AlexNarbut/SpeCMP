@@ -4,7 +4,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -21,10 +23,14 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
@@ -44,7 +50,10 @@ class DeviceInteractionViewModelTest {
         override suspend fun readImei(): Response<String> = Response.Success("")
         override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun setBootMode(): Response<Unit> = Response.Success(Unit)
+        override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
+            Response.Success(BootModeResult.Entered)
+        override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
+        override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
     }
     private var closeCount = 0
     private val connectionRepository = object : DeviceConnectionRepository {
@@ -120,6 +129,78 @@ class DeviceInteractionViewModelTest {
         link.value = DeviceLinkState.READY
         advanceUntilIdle()
         assertEquals(DeviceSessionState.Ready(device), viewModel.state.value.session)
+        assertEquals(device, viewModel.state.value.device)
+    }
+
+    @Test
+    fun `boot content is shown for the bootloader and stays through a link drop until the block is back`() =
+        runTest(dispatcher) {
+            val viewModel = DeviceInteractionViewModel(session())
+            advanceUntilIdle()
+            assertFalse(viewModel.state.value.showBootContent)
+            assertFalse(viewModel.state.value.wasBoot)
+
+            link.value = DeviceLinkState.DISCONNECTED
+            readDevice = device.copy(mode = DeviceOperationMode.BOOT)
+            advanceUntilIdle()
+            // Потеря связи в рабочем режиме — обычный оверлей, не экран загрузчика.
+            assertFalse(viewModel.state.value.showBootContent)
+
+            link.value = DeviceLinkState.READY
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.wasBoot)
+            assertTrue(viewModel.state.value.showBootContent)
+
+            // Обрыв в загрузчике (например, при передаче) — решает экран загрузчика, а не оверлей хоста.
+            link.value = DeviceLinkState.DISCONNECTED
+            advanceUntilIdle()
+            assertEquals(DeviceSessionState.Disconnected, viewModel.state.value.session)
+            assertTrue(viewModel.state.value.showBootContent)
+
+            readDevice = device
+            link.value = DeviceLinkState.READY
+            advanceUntilIdle()
+            assertFalse(viewModel.state.value.wasBoot)
+            assertFalse(viewModel.state.value.showBootContent)
+        }
+
+    @Test
+    fun `expected reboot to the bootloader shows boot content before the link drops`() = runTest(dispatcher) {
+        val session = session()
+        val viewModel = DeviceInteractionViewModel(session)
+        advanceUntilIdle()
+
+        session.expectReboot(DeviceReboot.ToBoot)
+        advanceUntilIdle()
+        assertEquals(DeviceReboot.ToBoot, viewModel.state.value.reboot)
+        assertTrue(viewModel.state.value.showBootContent)
+        // Рабочий flow остаётся под экраном: если команда не удалась, пользователь вернётся туда же.
+        assertEquals(device, viewModel.state.value.device)
+
+        session.cancelReboot()
+        advanceUntilIdle()
+        assertFalse(viewModel.state.value.showBootContent)
+    }
+
+    @Test
+    fun `reboot to main keeps boot content after the block returns until it is acknowledged`() = runTest(dispatcher) {
+        readDevice = device.copy(mode = DeviceOperationMode.BOOT)
+        val session = session()
+        val viewModel = DeviceInteractionViewModel(session)
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.showBootContent)
+
+        session.expectReboot(DeviceReboot.ToMain)
+        link.value = DeviceLinkState.DISCONNECTED
+        readDevice = device
+        link.value = DeviceLinkState.READY
+        advanceUntilIdle()
+        assertEquals(DeviceSessionState.Ready(device), viewModel.state.value.session)
+        assertTrue(viewModel.state.value.showBootContent)
+
+        session.acknowledgeReboot()
+        advanceUntilIdle()
+        assertFalse(viewModel.state.value.showBootContent)
         assertEquals(device, viewModel.state.value.device)
     }
 }

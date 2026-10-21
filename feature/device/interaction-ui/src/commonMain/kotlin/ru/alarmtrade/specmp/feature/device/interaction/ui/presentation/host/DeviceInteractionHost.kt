@@ -48,8 +48,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import specmp.feature.device.interaction_ui.generated.resources.Res
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_a11y_back
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_bluetooth_boot_subtitle
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_bluetooth_boot_title
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_btn_disconnect
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_btn_exit
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_connecting_title
@@ -57,8 +55,6 @@ import specmp.feature.device.interaction_ui.generated.resources.device_interacti
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_subtitle
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_title
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_usb
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_firmware_boot_subtitle
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_firmware_boot_title
 import specmp.feature.device.interaction_ui.generated.resources.device_interaction_waiting
 import specmp.feature.device.interaction_ui.generated.resources.device_link_lost
 
@@ -69,13 +65,20 @@ import specmp.feature.device.interaction_ui.generated.resources.device_link_lost
  * - Связь потеряна или ещё устанавливается — экран состояния **поверх** [content]: дочерний flow
  *   остаётся в композиции (его back stack и VM живы), после переподключения пользователь там же.
  * - «Назад» на экране состояния — выход из всего flow (сессия закрывается), а не из подэкрана.
- * - Блок в загрузчике (BLE-модуля или основной программы) — экран режима загрузчика вместо [content];
- *   режим определяется на каждом подключении, после возврата в рабочий режим [content] стартует заново.
+ * - Блок в загрузчике (BLE-модуля или основной программы), либо вход в загрузчик / возврат после прошивки
+ *   ожидается ([DeviceInteractionState.showBootContent]) — [bootContent] вместо оверлеев связи: он сам рисует и
+ *   обрыв связи в процессе обновления. Рабочий [content] уходит из композиции, когда блок вернулся в загрузчике,
+ *   и стартует заново после возврата в рабочий режим. Режим определяется на каждом подключении.
  *
+ * @param bootContent экран режима загрузчика (обновление прошивки); получает выход из всего flow (закрывает сессию).
  * @param content дочерний flow; получает блок и выход из flow (закрывает сессию).
  */
 @Composable
-fun DeviceInteractionHost(onExit: () -> Unit, content: @Composable (device: AlarmDevice, onExit: () -> Unit) -> Unit) {
+fun DeviceInteractionHost(
+    onExit: () -> Unit,
+    bootContent: @Composable (onExit: () -> Unit) -> Unit,
+    content: @Composable (device: AlarmDevice, onExit: () -> Unit) -> Unit
+) {
     val viewModel = koinViewModel<DeviceInteractionViewModel>()
     val state by viewModel.state.collectAsState()
 
@@ -90,30 +93,31 @@ fun DeviceInteractionHost(onExit: () -> Unit, content: @Composable (device: Alar
         if (device != null) {
             content(device, viewModel::onExit)
         }
-        val session = state.session
-        val status = when (session) {
-            is DeviceSessionState.Ready -> null
-            DeviceSessionState.Connecting -> DeviceStatus.Connecting
-            DeviceSessionState.Disconnected -> DeviceStatus.Disconnected
-            is DeviceSessionState.BluetoothBoot -> DeviceStatus.BluetoothBoot
-            is DeviceSessionState.FirmwareBoot -> DeviceStatus.FirmwareBoot
-        }
-        val deviceName = when (session) {
-            is DeviceSessionState.BluetoothBoot -> session.manufacturer.deviceName
-            is DeviceSessionState.FirmwareBoot -> session.device.systemName
-            else -> device?.systemName
-        }
-        status?.let {
-            NavigationBackHandler(
-                state = rememberNavigationEventState(NavigationEventInfo.None),
-                onBackCompleted = viewModel::onExit
-            )
-            DeviceStatusContent(
-                status = it,
-                transport = state.transport,
-                deviceName = deviceName,
-                onExit = viewModel::onExit
-            )
+        if (state.showBootContent) {
+            bootContent(viewModel::onExit)
+        } else {
+            val status = when (state.session) {
+                is DeviceSessionState.Ready -> null
+
+                DeviceSessionState.Connecting -> DeviceStatus.Connecting
+
+                DeviceSessionState.Disconnected -> DeviceStatus.Disconnected
+
+                // Загрузчик всегда обслуживает bootContent (showBootContent); сюда не попадаем.
+                is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> null
+            }
+            status?.let {
+                NavigationBackHandler(
+                    state = rememberNavigationEventState(NavigationEventInfo.None),
+                    onBackCompleted = viewModel::onExit
+                )
+                DeviceStatusContent(
+                    status = it,
+                    transport = state.transport,
+                    deviceName = device?.systemName,
+                    onExit = viewModel::onExit
+                )
+            }
         }
     }
 }
@@ -125,7 +129,7 @@ internal const val DEVICE_STATUS_EXIT_TAG = "device_status_exit"
 internal const val DEVICE_STATUS_DISCONNECT_TAG = "device_status_disconnect"
 
 /** Состояние связи, при котором поверх дочернего flow показывается экран обёртки. */
-internal enum class DeviceStatus { Connecting, Disconnected, BluetoothBoot, FirmwareBoot }
+internal enum class DeviceStatus { Connecting, Disconnected }
 
 /**
  * Stateless-экран состояния поверх дочернего flow («Назад» перехватывает [DeviceInteractionHost]).
@@ -182,20 +186,6 @@ internal fun DeviceStatusContent(
                                 modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_EXIT_TAG)
                             )
                         }
-
-                        DeviceStatus.BluetoothBoot -> BootBody(
-                            icon = CmpIcons.Bluetooth,
-                            title = stringResource(Res.string.device_interaction_bluetooth_boot_title),
-                            subtitle = stringResource(Res.string.device_interaction_bluetooth_boot_subtitle),
-                            onExit = onExit
-                        )
-
-                        DeviceStatus.FirmwareBoot -> BootBody(
-                            icon = CmpIcons.Memory,
-                            title = stringResource(Res.string.device_interaction_firmware_boot_title),
-                            subtitle = stringResource(Res.string.device_interaction_firmware_boot_subtitle),
-                            onExit = onExit
-                        )
                     }
                 }
             }
@@ -234,18 +224,6 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
         text = stringResource(Res.string.device_interaction_btn_disconnect),
         onClick = onExit,
         modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_DISCONNECT_TAG)
-    )
-}
-
-/** Режим загрузчика (сам загрузчик пока не реализован): что с блоком и выход. */
-@Composable
-private fun BootBody(icon: CmpIcons, title: String, subtitle: String, onExit: () -> Unit) {
-    StatusHero(icon, error = true)
-    Headline(title = title, subtitle = subtitle)
-    CmpButton(
-        text = stringResource(Res.string.device_interaction_btn_exit),
-        onClick = onExit,
-        modifier = Modifier.fillMaxWidth()
     )
 }
 

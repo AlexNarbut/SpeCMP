@@ -54,7 +54,12 @@ Desktop-пакет: `desktopApp/build/compose/binaries/main/`
 **Desktop + USB на macOS (Apple Silicon).** USB-слой SDK на JVM (`usb4java` 1.3.0) содержит нативную библиотеку
 только для `darwin-x86-64`: на arm64-JDK USB-устройства молча не находятся. Запускать на x86_64-JDK через
 `compose.jvmHome` — в `local.properties` (`compose.jvmHome=/path/to/x86_64-jdk-17/Contents/Home`) или
-`./gradlew :desktopApp:run -Pcompose.jvmHome=…`. Без ключа используется JDK Gradle.
+`./gradlew :desktopApp:run -Pcompose.jvmHome=…`. Без ключа на macOS arm64 `desktopApp/build.gradle.kts` сам берёт
+установленный x86_64-JDK 17 (`/usr/libexec/java_home -a x86_64 -v 17`); не нашёл — JDK Gradle (USB не заработает).
+Явный `compose.jvmHome` приоритетнее; нет x86_64-JDK — `run` предупреждает об этом при запуске.
+В репозитории есть общая Run-конфигурация `desktopApp` (`.run/`, Gradle `:desktopApp:run`): IDE подхватывает её при
+открытии проекта — запускать её, а не `main()` из гуттера (гуттер берёт JDK проекта и обходит этот выбор). Если USB не находится — проверить, на каком JDK запущено приложение (запуск
+из IDE берёт JDK из настроек Run/Gradle, а не из `desktopApp`).
 
 ---
 

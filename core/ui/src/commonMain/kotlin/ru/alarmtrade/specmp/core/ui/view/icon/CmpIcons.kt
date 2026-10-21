@@ -104,6 +104,20 @@ enum class CmpIcons {
     TouchApp,
     Link,
 
+    // ── Firmware / update ───────────────────────────────────
+    SystemUpdate,
+    History,
+    FolderOpen,
+    PowerSettingsNew,
+    LinkOff,
+    Sync,
+    ArrowCircleUp,
+    CloudOff,
+    Inventory2,
+    RecordVoiceOver,
+    ErrorOutline,
+    PriorityHigh,
+
     // ── Other ───────────────────────────────────────────────
     Settings,
     DateRange,

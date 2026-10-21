@@ -14,8 +14,11 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
@@ -107,5 +110,10 @@ class FakeDeviceSessionRepository : DeviceSessionRepository {
     override suspend fun readImei(): Response<String> = Response.Error(IllegalStateException("not used"))
     override suspend fun reconnect(): Response<Unit> = Response.Error(IllegalStateException("not used"))
     override suspend fun disconnect(): Response<Unit> = Response.Error(IllegalStateException("not used"))
-    override suspend fun setBootMode(): Response<Unit> = Response.Error(IllegalStateException("not used"))
+    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
+        Response.Error(IllegalStateException("not used"))
+    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> =
+        Response.Error(IllegalStateException("not used"))
+    override suspend fun setServicePin(pin: ServicePin): Response<Unit> =
+        Response.Error(IllegalStateException("not used"))
 }
