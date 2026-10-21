@@ -21,14 +21,20 @@ class SpecialistFirmwareUpdateRepository(
     private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
 ) : FirmwareUpdateRepository {
 
-    override fun update(target: FirmwareUpdateTarget, firmware: FirmwareVersion): Flow<FirmwareUpdateProgress> = flow {
+    override fun update(target: FirmwareUpdateTarget, firmware: FirmwareVersion): Flow<FirmwareUpdateProgress> =
+        run(target, firmware.url)
+
+    override fun updateFromFile(target: FirmwareUpdateTarget, path: String): Flow<FirmwareUpdateProgress> =
+        run(target, path)
+
+    private fun run(target: FirmwareUpdateTarget, filePathOrUrl: String): Flow<FirmwareUpdateProgress> = flow {
         emit(FirmwareUpdateProgress.Preparing)
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
         if (interactor == null) {
             emit(FirmwareUpdateProgress.Failed(FirmwareFailure.Unknown))
             return@flow
         }
-        val request = UpdateFirmwareRequest(firmware.url)
+        val request = UpdateFirmwareRequest(filePathOrUrl)
         var last: FirmwareUpdateProgress = FirmwareUpdateProgress.Preparing
         safeFlowRun {
             val source = when (target) {

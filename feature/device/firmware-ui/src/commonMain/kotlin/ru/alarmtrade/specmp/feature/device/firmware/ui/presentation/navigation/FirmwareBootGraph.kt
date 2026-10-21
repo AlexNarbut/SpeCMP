@@ -17,6 +17,8 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateScreen
@@ -43,9 +45,14 @@ private val navConfig = SavedStateConfiguration {
  *
  * @param onExit выход из всего flow (закрывает сессию); на экране обновления вызывается после подтверждения.
  * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
+ * @param filePicker выбор файла прошивки в файловом менеджере (платформа, `composeApp`).
  */
 @Composable
-fun FirmwareBootGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
+fun FirmwareBootGraph(
+    onExit: () -> Unit,
+    onOpenSupportChat: () -> Unit,
+    filePicker: FirmwareFilePicker = NoFirmwareFilePicker
+) {
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
 
     NavDisplay(
@@ -61,6 +68,7 @@ fun FirmwareBootGraph(onExit: () -> Unit, onOpenSupportChat: () -> Unit) {
                 FirmwareUpdateScreen(
                     onExit = onExit,
                     onOpenSupportChat = onOpenSupportChat,
+                    filePicker = filePicker,
                     onOpenArchive = { args -> backStack.navigateSafe(FirmwareArchiveRoute(args)) }
                 )
             }

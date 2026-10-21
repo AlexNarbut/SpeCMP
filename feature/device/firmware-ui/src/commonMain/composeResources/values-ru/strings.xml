@@ -65,6 +65,9 @@
     <string name="firmware_update_label_channel">Тип канала обновления:</string>
     <string name="firmware_update_btn_download">Скачать прошивку</string>
     <string name="firmware_update_btn_archive">Архив прошивок</string>
+    <string name="firmware_update_btn_file">Выбрать файл…</string>
+    <string name="firmware_update_error_file">Не удалось открыть выбранный файл. Выберите другой.</string>
+    <string name="firmware_update_error_file_too_large">Файл слишком большой для прошивки (до 16 МБ). Выберите другой.</string>
     <string name="firmware_update_error_source">Не удалось получить прошивку с сервера. Проверьте интернет и повторите.</string>
     <string name="firmware_update_error_data">Ошибка. Не найдена информация о подсистемах устройства</string>
     <string name="firmware_update_entering_title">Блок перезагружается в режим обновления</string>
@@ -77,6 +80,7 @@
     <string name="firmware_update_confirm_label_found">Найденная версия ПО</string>
     <string name="firmware_update_confirm_label_whats_new">Что нового</string>
     <string name="firmware_update_confirm_msg_no_description">Описание отсутствует</string>
+    <string name="firmware_update_confirm_msg_local_file">Файл не сверяется с сервером: версию и совместимость проверит только блок. Убедитесь, что это прошивка для этого устройства и подсистемы.</string>
     <string name="firmware_update_confirm_msg_older">Выбрана версия старее установленной</string>
     <string name="firmware_update_btn_update">Обновить</string>
     <string name="firmware_update_step_prepare">Подготовка</string>

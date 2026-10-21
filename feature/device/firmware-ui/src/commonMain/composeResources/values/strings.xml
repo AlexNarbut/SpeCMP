@@ -65,6 +65,9 @@
     <string name="firmware_update_label_channel">Update channel:</string>
     <string name="firmware_update_btn_download">Download firmware</string>
     <string name="firmware_update_btn_archive">Firmware archive</string>
+    <string name="firmware_update_btn_file">Choose a file…</string>
+    <string name="firmware_update_error_file">Could not open the selected file. Choose another one.</string>
+    <string name="firmware_update_error_file_too_large">The file is too large for firmware (up to 16 MB). Choose another one.</string>
     <string name="firmware_update_error_source">Could not get the firmware from the server. Check your internet and try again.</string>
     <string name="firmware_update_error_data">Error. Device subsystem information not found</string>
     <string name="firmware_update_entering_title">The unit is restarting into update mode</string>
@@ -77,6 +80,7 @@
     <string name="firmware_update_confirm_label_found">Found software version</string>
     <string name="firmware_update_confirm_label_whats_new">What\'s new</string>
     <string name="firmware_update_confirm_msg_no_description">No description</string>
+    <string name="firmware_update_confirm_msg_local_file">The file is not checked against the server: the version and compatibility are verified by the device only. Make sure it is firmware for this device and subsystem.</string>
     <string name="firmware_update_confirm_msg_older">The selected version is older than the installed one</string>
     <string name="firmware_update_btn_update">Update</string>
     <string name="firmware_update_step_prepare">Preparing</string>

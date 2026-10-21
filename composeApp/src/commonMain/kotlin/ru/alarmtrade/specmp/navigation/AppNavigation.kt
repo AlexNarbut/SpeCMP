@@ -36,6 +36,7 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.filepicker.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFilePicker
@@ -114,7 +115,8 @@ private fun AuthedNavGraph() {
                     bootContent = { onExit ->
                         FirmwareBootGraph(
                             onExit = onExit,
-                            onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) }
+                            onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
+                            filePicker = rememberFirmwareFilePicker()
                         )
                     }
                 ) { _, onExit ->

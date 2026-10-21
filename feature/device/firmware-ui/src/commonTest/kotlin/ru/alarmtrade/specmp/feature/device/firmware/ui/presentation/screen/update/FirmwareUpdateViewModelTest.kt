@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
@@ -505,6 +506,46 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
         assertEquals(UpdatePhase.Prepare, vm.state.value.phase)
         assertEquals("3.55", vm.state.value.confirm?.newVersion)
+    }
+
+    @Test
+    fun `file picked in the file manager goes to the confirmation and updates from that file`() = test {
+        prepareMain()
+        val (vm, _) = viewModel()
+
+        vm.onFilePicked(FirmwareFilePickResult.Picked("fw_3_70.bin", "/tmp/fw_3_70.bin"))
+        runCurrent()
+
+        val state = vm.state.value
+        assertEquals(UpdatePhase.Confirm, state.phase)
+        assertEquals(ConfirmUi("3.57", "fw_3_70.bin", "", older = false, localFile = true), state.confirm)
+
+        vm.onConfirmUpdate()
+        runCurrent()
+        assertEquals(listOf(FirmwareUpdateTarget.MainProgram to "/tmp/fw_3_70.bin"), updateRepository.fileCalls)
+        assertEquals(emptyList(), updateRepository.calls)
+    }
+
+    @Test
+    fun `cancelled file pick changes nothing and a rejected file shows its error until the next action`() = test {
+        prepareMain()
+        val (vm, _) = viewModel()
+
+        vm.onFilePicked(FirmwareFilePickResult.Cancelled)
+        runCurrent()
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
+        assertEquals(null, vm.state.value.fileError)
+
+        vm.onFilePicked(FirmwareFilePickResult.TooLarge)
+        runCurrent()
+        assertEquals(FileError.TooLarge, vm.state.value.fileError)
+        vm.onFilePicked(FirmwareFilePickResult.Failed)
+        runCurrent()
+        assertEquals(FileError.Failed, vm.state.value.fileError)
+
+        vm.onChannelSelected(FirmwareChannel.BETA)
+        runCurrent()
+        assertEquals(null, vm.state.value.fileError)
     }
 
     @Test

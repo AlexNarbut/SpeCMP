@@ -77,7 +77,9 @@ data class FirmwareUpdateState(
     /** Команда выхода из загрузчика (перезагрузка) доступна: только BLE. */
     val canExitBoot: Boolean = false,
     /** Команда выхода из загрузчика не прошла (баннер на выборе источника). */
-    val exitError: Boolean = false
+    val exitError: Boolean = false,
+    /** Выбранный файл не удалось взять (баннер на выборе источника). */
+    val fileError: FileError? = null
 ) {
     /** «Назад» заблокирован (замок): процесс идёт, и блок нельзя бросить на полпути. */
     val locked: Boolean
@@ -100,9 +102,21 @@ data class FirmwareUpdateState(
         }
 }
 
-/** Данные шага подтверждения. [older] — выбрана версия старее установленной. */
+/** Почему файл прошивки не принят из файлового менеджера. */
+enum class FileError { TooLarge, Failed }
+
+/**
+ * Данные шага подтверждения. [older] — выбрана версия старее установленной; [localFile] — прошивка из файла
+ * пользователя: [newVersion] тогда имя файла, описания нет, а версию и совместимость проверит только блок.
+ */
 @Immutable
-data class ConfirmUi(val currentVersion: String?, val newVersion: String, val description: String, val older: Boolean)
+data class ConfirmUi(
+    val currentVersion: String?,
+    val newVersion: String,
+    val description: String,
+    val older: Boolean,
+    val localFile: Boolean = false
+)
 
 /** Действия экрана обновления (stateless-контент получает их от VM или заглушки в галерее состояний). */
 class FirmwareUpdateActions(
@@ -111,6 +125,7 @@ class FirmwareUpdateActions(
     val onChannelSelected: (FirmwareChannel) -> Unit = {},
     val onDownloadClick: () -> Unit = {},
     val onArchiveClick: () -> Unit = {},
+    val onFileClick: () -> Unit = {},
     val onConfirmUpdate: () -> Unit = {},
     val onCancelConfirm: () -> Unit = {},
     val onResultOk: () -> Unit = {},

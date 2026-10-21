@@ -1,5 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.interaction.domain.model
 
+import kotlin.jvm.JvmInline
+
 /**
  * PIN программирования блока: ровно [LENGTH] цифры. Значение не попадает в логи: [toString] его скрывает.
  */

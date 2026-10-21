@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,6 +45,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.F
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.deviceSubtitle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ConfirmBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.DataErrorBody
@@ -79,7 +82,8 @@ internal const val EXIT_DIALOG_CONFIRM_TAG = "firmware_exit_dialog_confirm"
 fun FirmwareUpdateScreen(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
-    onOpenArchive: (FirmwareArchiveArgs) -> Unit
+    onOpenArchive: (FirmwareArchiveArgs) -> Unit,
+    filePicker: FirmwareFilePicker = NoFirmwareFilePicker
 ) {
     val viewModel = koinViewModel<FirmwareUpdateViewModel>()
     val state by viewModel.state.collectAsState()
@@ -91,6 +95,8 @@ fun FirmwareUpdateScreen(
             FirmwareUpdateEffect.Exit -> onExit()
         }
     }
+    // Результаты пикера буферизуются на уровне платформы: подписка забирает и тот, что пришёл после пересоздания.
+    LaunchedEffect(filePicker) { filePicker.results.collect(viewModel::onFilePicked) }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
         onBackCompleted = viewModel::onBackClick
@@ -104,6 +110,7 @@ fun FirmwareUpdateScreen(
             onChannelSelected = viewModel::onChannelSelected,
             onDownloadClick = viewModel::onDownloadClick,
             onArchiveClick = viewModel::onArchiveClick,
+            onFileClick = filePicker::launch,
             onConfirmUpdate = viewModel::onConfirmUpdate,
             onCancelConfirm = viewModel::onCancelConfirm,
             onResultOk = viewModel::onResultOk,

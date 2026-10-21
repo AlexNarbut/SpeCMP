@@ -42,6 +42,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.I
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FailureKind
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateActions
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateState
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdatePhase
@@ -56,6 +57,7 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_disconnect
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_download
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_exit_boot
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_file
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_ok
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_reconnect
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_support
@@ -63,6 +65,7 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_confirm_label_current
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_confirm_label_found
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_confirm_label_whats_new
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_confirm_msg_local_file
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_confirm_msg_no_description
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_confirm_msg_older
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_confirm_title
@@ -73,6 +76,8 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_update_ent
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_entering_waiting
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_data
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_exit
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_file
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_file_too_large
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_msg
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_source
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_title
@@ -114,6 +119,7 @@ private val WhatsNewMaxHeight = 220.dp
 
 internal const val SOURCE_DOWNLOAD_TAG = "firmware_source_download"
 internal const val SOURCE_ARCHIVE_TAG = "firmware_source_archive"
+internal const val SOURCE_FILE_TAG = "firmware_source_file"
 internal const val UPDATE_CONFIRM_TAG = "firmware_update_confirm"
 internal const val UPDATE_CANCEL_TAG = "firmware_update_cancel"
 internal const val UPDATE_PROGRESS_TAG = "firmware_progress"
@@ -204,6 +210,18 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
                 icon = CmpIcons.CloudOff
             )
         }
+        state.fileError?.let { error ->
+            InfoBanner(
+                text = stringResource(
+                    when (error) {
+                        FileError.TooLarge -> Res.string.firmware_update_error_file_too_large
+                        FileError.Failed -> Res.string.firmware_update_error_file
+                    }
+                ),
+                tone = BannerTone.Error,
+                icon = CmpIcons.ErrorOutline
+            )
+        }
         CmpButton(
             text = stringResource(Res.string.firmware_update_btn_download),
             onClick = actions.onDownloadClick,
@@ -213,6 +231,11 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             text = stringResource(Res.string.firmware_update_btn_archive),
             onClick = actions.onArchiveClick,
             modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG)
+        )
+        CmpOutlinedButton(
+            text = stringResource(Res.string.firmware_update_btn_file),
+            onClick = actions.onFileClick,
+            modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_FILE_TAG)
         )
         if (state.canExitBoot) {
             CmpOutlinedButton(
@@ -293,6 +316,9 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
                 modifier = Modifier.heightIn(max = WhatsNewMaxHeight).verticalScroll(rememberScrollState())
             )
         }
+    }
+    if (confirm.localFile) {
+        InfoBanner(text = stringResource(Res.string.firmware_update_confirm_msg_local_file), icon = CmpIcons.FolderOpen)
     }
     if (confirm.older) InfoBanner(text = stringResource(Res.string.firmware_update_confirm_msg_older))
     if (testChannel) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))

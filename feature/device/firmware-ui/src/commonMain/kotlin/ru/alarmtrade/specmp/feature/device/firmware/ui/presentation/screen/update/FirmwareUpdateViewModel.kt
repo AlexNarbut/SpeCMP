@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
@@ -79,6 +80,9 @@ class FirmwareUpdateViewModel(
         val selectedModuleId: Long? = null,
         val channel: FirmwareChannel = FirmwareChannel.RELEASE,
         val candidate: FirmwareVersion? = null,
+        /** Прошивка из файла пользователя (вместо [candidate]). */
+        val localFile: FirmwareFilePickResult.Picked? = null,
+        val fileError: FileError? = null,
         val sourceError: Boolean = false,
         val exitDialog: Boolean = false,
         val exitError: Boolean = false,
@@ -87,6 +91,13 @@ class FirmwareUpdateViewModel(
         /** Связь пропадала, пока шёл процесс обновления. */
         val linkDropped: Boolean = false
     )
+
+    /** Откуда берём файл прошивки: версия с сервера или файл пользователя. */
+    private sealed interface UpdateSource {
+        data class Server(val version: FirmwareVersion) : UpdateSource
+
+        data class File(val path: String) : UpdateSource
+    }
 
     private val core: MutableStateFlow<Core>
 
@@ -101,7 +112,7 @@ class FirmwareUpdateViewModel(
     }
 
     // Запуск (и отмена, `null`) обновления: collectLatest отменяет предыдущий процесс сам, без поля-Job.
-    private val updateRequests = MutableSharedFlow<FirmwareVersion?>(
+    private val updateRequests = MutableSharedFlow<UpdateSource?>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
@@ -124,7 +135,7 @@ class FirmwareUpdateViewModel(
     init {
         safeLaunch { deviceSession.state.collectLatest { onSession(it) } }
         safeLaunch {
-            updateRequests.collectLatest { version -> if (version != null) runUpdate(version) }
+            updateRequests.collectLatest { source -> if (source != null) runUpdate(source) }
         }
         // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
         safeLaunch { archivePicker.picks.collect(::onArchivePicked) }
@@ -151,20 +162,28 @@ class FirmwareUpdateViewModel(
             selectedModule = selected,
             currentVersion = current,
             channel = core.channel,
-            confirm = core.candidate?.let { version ->
-                ConfirmUi(
-                    currentVersion = current,
-                    newVersion = version.version,
-                    description = version.description,
-                    older = current != null && version.version.relationTo(current) == VersionRelation.Older
-                )
-            },
+            confirm = confirmOf(core, current),
             sourceError = core.sourceError,
             exitDialog = core.exitDialog,
             inBoot = session is DeviceSessionState.FirmwareBoot || session is DeviceSessionState.BluetoothBoot,
             canExitBoot = profile?.canExit == true,
-            exitError = core.exitError
+            exitError = core.exitError,
+            fileError = core.fileError
         )
+    }
+
+    private fun confirmOf(core: Core, current: String?): ConfirmUi? {
+        core.localFile?.let { file ->
+            return ConfirmUi(current, file.name, description = "", older = false, localFile = true)
+        }
+        return core.candidate?.let { version ->
+            ConfirmUi(
+                currentVersion = current,
+                newVersion = version.version,
+                description = version.description,
+                older = current != null && version.version.relationTo(current) == VersionRelation.Older
+            )
+        }
     }
 
     private fun phaseOf(core: Core, session: DeviceSessionState, reboot: DeviceReboot?): UpdatePhase {
@@ -216,7 +235,7 @@ class FirmwareUpdateViewModel(
             core.update { it.copy(stage = UpdatePhase.Error(FailureKind.ApplyingError), linkDropped = false) }
         } else if (current.stage.isUpdating()) {
             updateRequests.tryEmit(null)
-            core.update { it.copy(stage = UpdatePhase.Source, candidate = null, linkDropped = false) }
+            core.update { it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, linkDropped = false) }
         } else {
             core.update { it.copy(linkDropped = false) }
         }
@@ -290,7 +309,7 @@ class FirmwareUpdateViewModel(
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        core.update { it.copy(channel = channel, sourceError = false, exitError = false) }
+        core.update { it.copy(channel = channel, sourceError = false, exitError = false, fileError = null) }
     }
 
     /** «Скачать прошивку»: запросить последнюю версию выбранного канала и перейти к подтверждению. */
@@ -300,7 +319,7 @@ class FirmwareUpdateViewModel(
                 val start = core.value
                 val moduleId = start.selectedModuleId ?: return@executeWithProceedLock
                 if (!transition({ it.stage == UpdatePhase.Source }) {
-                        it.copy(stage = UpdatePhase.Download, sourceError = false)
+                        it.copy(stage = UpdatePhase.Download, sourceError = false, fileError = null)
                     }
                 ) {
                     return@executeWithProceedLock
@@ -308,7 +327,12 @@ class FirmwareUpdateViewModel(
                 val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel) }
                 transition({ it.stage == UpdatePhase.Download }) { state ->
                     when (response) {
-                        is Response.Success -> state.copy(stage = UpdatePhase.Confirm, candidate = response.value)
+                        is Response.Success -> state.copy(
+                            stage = UpdatePhase.Confirm,
+                            candidate = response.value,
+                            localFile = null
+                        )
+
                         is Response.Error -> state.copy(stage = UpdatePhase.Source, sourceError = true)
                     }
                 }
@@ -334,25 +358,51 @@ class FirmwareUpdateViewModel(
         )
     }
 
+    /** Результат выбора файла прошивки в файловом менеджере: годный файл — сразу на подтверждение. */
+    fun onFilePicked(result: FirmwareFilePickResult) {
+        transition({ it.stage == UpdatePhase.Source }) { state ->
+            when (result) {
+                FirmwareFilePickResult.Cancelled -> state
+
+                is FirmwareFilePickResult.Picked -> state.copy(
+                    stage = UpdatePhase.Confirm,
+                    candidate = null,
+                    localFile = result,
+                    sourceError = false,
+                    fileError = null
+                )
+
+                FirmwareFilePickResult.TooLarge -> state.copy(fileError = FileError.TooLarge)
+
+                FirmwareFilePickResult.Failed -> state.copy(fileError = FileError.Failed)
+            }
+        }
+    }
+
     // Версия выбрана в архиве: сразу на подтверждение (версия, описание и ссылка уже известны — запрашивать нечего).
     private fun onArchivePicked(version: FirmwareVersion) {
         transition({ it.stage == UpdatePhase.Source }) {
-            it.copy(stage = UpdatePhase.Confirm, candidate = version, sourceError = false)
+            it.copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = false)
         }
     }
 
     fun onCancelConfirm() {
-        transition({ it.stage == UpdatePhase.Confirm }) { it.copy(stage = UpdatePhase.Source, candidate = null) }
+        transition({
+            it.stage == UpdatePhase.Confirm
+        }) { it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null) }
     }
 
     /** «Обновить» на подтверждении: запуск процесса с выбранной версией. */
     fun onConfirmUpdate() {
-        val version = core.value.candidate ?: return
+        val current = core.value
+        val source = current.localFile?.let { UpdateSource.File(it.path) }
+            ?: current.candidate?.let { UpdateSource.Server(it) }
+            ?: return
         if (transition({
                 it.stage == UpdatePhase.Confirm
             }) { it.copy(stage = UpdatePhase.Prepare, linkDropped = false) }
         ) {
-            updateRequests.tryEmit(version)
+            updateRequests.tryEmit(source)
         }
     }
 
@@ -366,7 +416,13 @@ class FirmwareUpdateViewModel(
             // Блок остался в загрузчике: ожидание возврата, поставленное на «Применении», больше не нужно.
             if (deviceSession.reboot.value == DeviceReboot.ToMain) deviceSession.cancelReboot()
             core.update {
-                it.copy(stage = UpdatePhase.Source, candidate = null, sourceError = false, exitError = false)
+                it.copy(
+                    stage = UpdatePhase.Source,
+                    candidate = null,
+                    localFile = null,
+                    sourceError = false,
+                    exitError = false
+                )
             }
         } else {
             core.update { it.copy(acknowledged = true) }
@@ -410,7 +466,7 @@ class FirmwareUpdateViewModel(
         val stage = core.value.stage
         when {
             stage is UpdatePhase.Error -> core.update {
-                it.copy(stage = UpdatePhase.Source, candidate = null, sourceError = false)
+                it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = false)
             }
 
             stage == UpdatePhase.DataError -> {
@@ -456,13 +512,17 @@ class FirmwareUpdateViewModel(
 
     // ───── процесс обновления ─────
 
-    private suspend fun runUpdate(version: FirmwareVersion) {
+    private suspend fun runUpdate(source: UpdateSource) {
         val kind = core.value.profile?.kind ?: return
         val target = when (kind) {
             UpdateProfile.Main -> FirmwareUpdateTarget.MainProgram
             UpdateProfile.Bluetooth -> FirmwareUpdateTarget.BluetoothModule
         }
-        updateRepository.update(target, version).collect { progress -> onProgress(progress) }
+        val progress = when (source) {
+            is UpdateSource.Server -> updateRepository.update(target, source.version)
+            is UpdateSource.File -> updateRepository.updateFromFile(target, source.path)
+        }
+        progress.collect { onProgress(it) }
     }
 
     private suspend fun onProgress(progress: FirmwareUpdateProgress) {

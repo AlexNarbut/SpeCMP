@@ -13,4 +13,10 @@ interface FirmwareUpdateRepository {
      * и итог определяет возврат блока в рабочий режим.
      */
     fun update(target: FirmwareUpdateTarget, firmware: FirmwareVersion): Flow<FirmwareUpdateProgress>
+
+    /**
+     * То же обновление, но из локального файла [path] (выбран пользователем в файловом менеджере): файл не скачивается
+     * и не сверяется с сервером, поэтому корректность версии и модуля проверяет только блок.
+     */
+    fun updateFromFile(target: FirmwareUpdateTarget, path: String): Flow<FirmwareUpdateProgress>
 }

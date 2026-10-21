@@ -123,4 +123,11 @@ internal class FakeUpdateRepository : FirmwareUpdateRepository {
         calls += target to firmware
         return progress
     }
+
+    val fileCalls = mutableListOf<Pair<FirmwareUpdateTarget, String>>()
+
+    override fun updateFromFile(target: FirmwareUpdateTarget, path: String): Flow<FirmwareUpdateProgress> {
+        fileCalls += target to path
+        return progress
+    }
 }
