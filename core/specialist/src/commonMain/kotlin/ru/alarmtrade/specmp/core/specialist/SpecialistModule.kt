@@ -50,6 +50,7 @@ val specialistModule = module {
     }
     single { get<SpecialistApp>().authInteractor }
     single { get<SpecialistApp>().appDeviceInformationInteractor }
+    single { SpecialistLanguage(get()) }
     single { get<SpecialistApp>().appUpdatesInteractor }
     single { get<SpecialistApp>().userInteractor }
     single { get<SpecialistApp>().chatInteractor }

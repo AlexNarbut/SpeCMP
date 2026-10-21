@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +22,7 @@ import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
+import ru.alarmtrade.specmp.core.specialist.SpecialistLanguage
 import ru.alarmtrade.specmp.core.specialist.specialistModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
@@ -96,6 +98,10 @@ fun App(
         // Привязка PermissionsController к жизненному циклу корневой активити — один раз
         // на всё приложение (контроллер app-scoped, инжектится во ViewModel фич).
         BindEffect(koinInject<PermissionsProvider>().getController())
+
+        // Язык приложения — SDK: сервер отдаёт описания прошивок, названия модулей и т.п. на этом языке.
+        val specialistLanguage = koinInject<SpecialistLanguage>()
+        LaunchedEffect(appLocale) { specialistLanguage.apply(appLocale.languageTag) }
 
         CompositionLocalProvider(LocalAppLocale provides appLocale) {
             // Единый ImageLoader приложения: memory/disk-кэш Coil общий для
