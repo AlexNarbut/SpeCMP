@@ -9,9 +9,11 @@ import kotlinx.coroutines.flow.map
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothManufacturerData
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothOperationMode
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
+import ru.alarmtrade.devices.interactors.alarmDeviceInteractor.requests.SetPcBasePinRequest
 import ru.alarmtrade.specialist.domain.alarmDevice.information.AlarmDeviceOperationMode
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemFeature
 import ru.alarmtrade.specialist.domain.bluetooth.ConnectionState
+import ru.alarmtrade.specialist.domain.errors.IncorrectServicePinException
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
@@ -21,10 +23,13 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
 /**
@@ -128,10 +133,30 @@ class SpecialistDeviceSessionRepository(
         return interactor.disconnectUseCase.execute().toResponse().map { }
     }
 
-    override suspend fun setBootMode(): Response<Unit> {
+    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
             ?: return interactorUnavailable()
-        return interactor.setAlarmDeviceBootModeUseCase.execute().toResponse().map { }
+        val response = when (target) {
+            BootModeTarget.MainProgram -> interactor.setAlarmDeviceBootModeUseCase.execute().toResponse()
+            BootModeTarget.BluetoothModule -> interactor.setBluetoothModemBootModeUseCase.execute().toResponse()
+        }
+        return when (response) {
+            is Response.Success -> Response.Success(BootModeResult.Entered)
+
+            // Исход, а не сбой: экран просит PIN. Остальные ошибки (в т.ч. «блок не ответил») — Response.Error.
+            is Response.Error ->
+                if (response.exception is IncorrectServicePinException) {
+                    Response.Success(BootModeResult.WrongPin)
+                } else {
+                    response
+                }
+        }
+    }
+
+    override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
+        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
+            ?: return interactorUnavailable()
+        return interactor.setPcBasePinUseCase.execute(SetPcBasePinRequest(pin.value)).toResponse().map { }
     }
 
     private fun interactorUnavailable(): Response.Error =

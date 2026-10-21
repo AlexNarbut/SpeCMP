@@ -21,10 +21,13 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
@@ -44,7 +47,9 @@ class DeviceInteractionViewModelTest {
         override suspend fun readImei(): Response<String> = Response.Success("")
         override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun setBootMode(): Response<Unit> = Response.Success(Unit)
+        override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
+            Response.Success(BootModeResult.Entered)
+        override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
     }
     private var closeCount = 0
     private val connectionRepository = object : DeviceConnectionRepository {

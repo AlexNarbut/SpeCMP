@@ -13,9 +13,12 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
@@ -110,8 +113,18 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
         return Response.Success(Unit)
     }
 
-    override suspend fun setBootMode(): Response<Unit> {
-        bootModeCount++
+    /** Ответы setBootMode по порядку; последний повторяется. */
+    var bootModeResults: List<Response<BootModeResult>> = listOf(Response.Success(BootModeResult.Entered))
+    val bootModeTargets = mutableListOf<BootModeTarget>()
+    val savedPins = mutableListOf<ServicePin>()
+
+    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
+        bootModeTargets += target
+        return bootModeResults[minOf(bootModeCount++, bootModeResults.lastIndex)]
+    }
+
+    override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
+        savedPins += pin
         return Response.Success(Unit)
     }
 }

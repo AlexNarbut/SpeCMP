@@ -33,12 +33,15 @@ import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMoun
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
@@ -67,10 +70,11 @@ class AdvancedMountRootViewModelTest {
         override suspend fun readImei(): Response<String> = Response.Success("351756051523999")
         override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun setBootMode(): Response<Unit> {
+        override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
             bootModeCount++
-            return Response.Success(Unit)
+            return Response.Success(BootModeResult.Entered)
         }
+        override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
     }
 
     private class FakeConnectionRepository : DeviceConnectionRepository {
@@ -199,11 +203,16 @@ class AdvancedMountRootViewModelTest {
             effects
         )
 
+        effects.clear()
         vm.onCanUpdateConfirm()
-        advanceTimeBy(3_001)
         runCurrent()
         assertEquals(null, vm.state.value.dialog)
-        assertEquals(2, sessionRepository.bootModeCount)
+        // Переход к обновлению — экран проверки прошивок (он сам запрашивает PIN и вход в загрузчик), не прямая команда.
+        assertEquals(
+            listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)),
+            effects
+        )
+        assertEquals(0, sessionRepository.bootModeCount)
     }
 
     @Test
