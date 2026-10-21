@@ -158,6 +158,24 @@ class DeviceSession(
     /** IMEI GSM-модема подключённого блока. */
     suspend fun readImei(): Response<String> = sessionRepository.readImei()
 
+    /**
+     * Переподключиться сейчас (кнопка «Переподключиться» при обрыве): одна попытка под тем же [sessionMutex], что и
+     * цикл BLE и закрытие, с тем же тайм-аутом. Для BLE цикл переподключения и так идёт сам; для USB блок обычно
+     * возвращается после повторного подключения кабеля. `null` — попытка не уложилась в тайм-аут или сессия закрыта.
+     */
+    suspend fun reconnectNow(): Response<Unit>? {
+        if (_transport.value == null) return null
+        return sessionMutex.withLock {
+            if (_transport.value == null) {
+                null
+            } else {
+                withTimeoutOrNull(RECONNECT_TIMEOUT_MILLIS) {
+                    sessionRepository.reconnect()
+                }
+            }
+        }
+    }
+
     /** Bluetooth-модуль блока (мануфактура и режим) — BLE; в рабочем режиме нужен для версии BLE-прошивки. */
     suspend fun readBluetoothModule(): Response<BluetoothModule> = sessionRepository.readBluetoothModule()
 

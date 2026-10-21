@@ -25,6 +25,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.Advanc
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
@@ -108,7 +109,15 @@ private fun AuthedNavGraph() {
             }
             entry<AdvancedMountRoute> { _ ->
                 // Обёртка interaction: дисконнект — экран поверх графа, выход — закрытие сессии.
-                DeviceInteractionHost(onExit = { backStack.popSafe() }) { _, onExit ->
+                DeviceInteractionHost(
+                    onExit = { backStack.popSafe() },
+                    bootContent = { onExit ->
+                        FirmwareBootGraph(
+                            onExit = onExit,
+                            onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) }
+                        )
+                    }
+                ) { _, onExit ->
                     AdvancedMountNavGraph(
                         onExit = onExit,
                         onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },

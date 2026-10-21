@@ -495,4 +495,20 @@ class DeviceSessionTest {
         assertEquals(0, repository.readCount)
         assertEquals(1, repository.disconnectCount)
     }
+
+    @Test
+    fun `reconnect now makes one attempt and does nothing without a transport`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.DISCONNECTED)
+        val session = testSession(repository)
+
+        assertNull(session.reconnectNow())
+        assertEquals(0, repository.reconnectCount)
+
+        session.attach(ConnectionTransport.USB)
+        assertEquals(Response.Success(Unit), session.reconnectNow())
+        assertEquals(1, repository.reconnectCount)
+
+        session.close().join()
+        assertNull(session.reconnectNow())
+    }
 }

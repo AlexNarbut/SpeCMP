@@ -14,9 +14,6 @@ import kotlin.time.TestTimeSource
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -33,25 +30,20 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
-import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 class FirmwareCheckViewModelTest {
@@ -91,75 +83,6 @@ class FirmwareCheckViewModelTest {
 
     private fun version(value: String, description: String = "") =
         FirmwareVersion(0, value, LocalDate(2026, 10, 14), description, "https://fw/$value")
-
-    private class FakeFirmwareRepository : FirmwareRepository {
-        var modulesResult: Response<List<FirmwareModule>> = Response.Success(emptyList())
-        val latest = mutableMapOf<Pair<Long, FirmwareChannel>, Response<FirmwareVersion>>()
-        val latestCalls = mutableListOf<Pair<Long, FirmwareChannel>>()
-
-        override suspend fun modules(deviceName: String, transport: ConnectionTransport) = modulesResult
-
-        override suspend fun moduleById(id: Long, transport: ConnectionTransport): Response<FirmwareModule> =
-            Response.Error(IllegalStateException("not used"))
-
-        override suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion> {
-            latestCalls += moduleId to channel
-            return latest[moduleId to channel] ?: Response.Error(IllegalStateException("no version"))
-        }
-
-        override suspend fun archivePage(
-            moduleId: Long,
-            channel: FirmwareChannel,
-            page: Int,
-            pageSize: Int
-        ): Response<FirmwareVersionPage> = Response.Error(IllegalStateException("not used"))
-    }
-
-    private class FakeSessionRepository(private val device: AlarmDevice) : DeviceSessionRepository {
-        val link = MutableStateFlow(DeviceLinkState.READY)
-
-        /** Ответы readBluetoothModule по порядку; последний повторяется. */
-        var bluetoothVersions: List<Response<BluetoothModule>> = listOf(
-            Response.Success(
-                BluetoothModule(
-                    BluetoothModuleMode.MAIN,
-                    BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14")
-                )
-            )
-        )
-        var bluetoothReads = 0
-
-        /** Ответы setBootMode по порядку; последний повторяется. */
-        var bootResults: List<Response<BootModeResult>> = listOf(Response.Success(BootModeResult.Entered))
-        var bootCalls = 0
-        val bootTargets = mutableListOf<BootModeTarget>()
-        val pins = mutableListOf<ServicePin>()
-
-        override fun linkState(): Flow<DeviceLinkState> = link
-        override suspend fun readBluetoothModule() =
-            bluetoothVersions[minOf(bluetoothReads++, bluetoothVersions.lastIndex)]
-        override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
-        override suspend fun readImei(): Response<String> = Response.Success("")
-        override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-
-        override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
-            bootTargets += target
-            return bootResults[minOf(bootCalls++, bootResults.lastIndex)]
-        }
-
-        override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
-            pins += pin
-            return Response.Success(Unit)
-        }
-    }
-
-    private class FakeConnectionRepository : DeviceConnectionRepository {
-        override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
-            emptyFlow()
-        override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-        override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
-    }
 
     private val repository = FakeFirmwareRepository()
     private val sessionRepository = FakeSessionRepository(device)

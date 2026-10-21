@@ -4,10 +4,6 @@
     <string name="device_interaction_connecting_title">Подключение к блоку…</string>
     <string name="device_interaction_disconnected_title">Отсутствует соединение с устройством</string>
     <string name="device_interaction_disconnected_subtitle">Проверьте питание блока и кабель или Bluetooth. Когда связь восстановится, вы вернётесь на тот же экран.</string>
-    <string name="device_interaction_bluetooth_boot_title">Bluetooth-модуль в режиме загрузчика</string>
-    <string name="device_interaction_bluetooth_boot_subtitle">Требуется обновление прошивки Bluetooth-модуля. В приложении оно пока недоступно.</string>
-    <string name="device_interaction_firmware_boot_title">Блок в режиме загрузчика</string>
-    <string name="device_interaction_firmware_boot_subtitle">Требуется обновление основной прошивки блока. В приложении оно пока недоступно.</string>
     <string name="device_interaction_btn_exit">Выйти</string>
     <string name="device_interaction_disconnected_usb">Проверьте USB соединение с устройством.</string>
     <string name="device_interaction_disconnected_ble">Блок выключен или находится далеко. Поднесите телефон ближе и проверьте питание блока.</string>
