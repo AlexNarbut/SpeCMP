@@ -1,11 +1,11 @@
 package ru.alarmtrade.specmp.core.common.di
 
+import com.russhwolf.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import com.russhwolf.settings.Settings
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
 

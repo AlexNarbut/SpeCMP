@@ -20,7 +20,7 @@ data class SupportChatUiAttachment(
     val url: String?,
     val localPath: String?,
     val mimeType: String?,
-    val sizeBytes: Long?,
+    val sizeBytes: Long?
 ) {
     enum class Kind { Image, Document }
 }
@@ -28,61 +28,58 @@ data class SupportChatUiAttachment(
 /**
  * Маппинг доменного вложения в presentation-модель на границе UI.
  */
-fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment {
-    return when (this) {
-        is SupportChatAttachment.Image -> SupportChatUiAttachment(
-            id = id,
-            name = name,
-            kind = SupportChatUiAttachment.Kind.Image,
-            url = url,
-            localPath = localPath,
-            mimeType = null,
-            sizeBytes = null,
-        )
-        is SupportChatAttachment.Document -> SupportChatUiAttachment(
-            id = id,
-            name = name,
-            kind = SupportChatUiAttachment.Kind.Document,
-            url = url,
-            localPath = localPath,
-            mimeType = mimeType,
-            sizeBytes = sizeBytes,
-        )
-    }
+fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this) {
+    is SupportChatAttachment.Image -> SupportChatUiAttachment(
+        id = id,
+        name = name,
+        kind = SupportChatUiAttachment.Kind.Image,
+        url = url,
+        localPath = localPath,
+        mimeType = null,
+        sizeBytes = null
+    )
+
+    is SupportChatAttachment.Document -> SupportChatUiAttachment(
+        id = id,
+        name = name,
+        kind = SupportChatUiAttachment.Kind.Document,
+        url = url,
+        localPath = localPath,
+        mimeType = mimeType,
+        sizeBytes = sizeBytes
+    )
 }
 
 /** Обратный маппинг: вложение композера → доменное вложение исходящего сообщения. */
-fun SupportChatUiAttachment.toDomain(): SupportChatAttachment {
-    return when (kind) {
-        SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
-            id = id,
-            name = name,
-            url = url,
-            localPath = localPath,
-        )
-        SupportChatUiAttachment.Kind.Document -> SupportChatAttachment.Document(
-            id = id,
-            name = name,
-            url = url,
-            localPath = localPath,
-            mimeType = mimeType,
-            sizeBytes = sizeBytes,
-        )
-    }
+fun SupportChatUiAttachment.toDomain(): SupportChatAttachment = when (kind) {
+    SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
+        id = id,
+        name = name,
+        url = url,
+        localPath = localPath
+    )
+
+    SupportChatUiAttachment.Kind.Document -> SupportChatAttachment.Document(
+        id = id,
+        name = name,
+        url = url,
+        localPath = localPath,
+        mimeType = mimeType,
+        sizeBytes = sizeBytes
+    )
 }
 
 /**
  * Выбранный файл → чип композера. Тип задаёт источник выбора, а не содержимое:
  * картинка, выбранная как документ, уходит документом.
  */
-fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): SupportChatUiAttachment {
-    return SupportChatUiAttachment(
+fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): SupportChatUiAttachment =
+    SupportChatUiAttachment(
         id = id,
         name = name,
         kind = kind,
         url = null,
         localPath = path,
         mimeType = mimeType,
-        sizeBytes = sizeBytes,
+        sizeBytes = sizeBytes
     )
-}

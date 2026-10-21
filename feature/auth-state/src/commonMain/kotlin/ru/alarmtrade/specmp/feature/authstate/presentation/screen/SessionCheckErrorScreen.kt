@@ -19,61 +19,58 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.auth_state.generated.resources.Res
 import specmp.feature.auth_state.generated.resources.authstate_root_btn_retry
 import specmp.feature.auth_state.generated.resources.authstate_root_msg_error
 import specmp.feature.auth_state.generated.resources.authstate_root_title_error
-import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
 @Composable
-fun SessionCheckErrorScreen(
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun SessionCheckErrorScreen(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
 
     CmpBox(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         CmpColumn(
             modifier = Modifier
                 .widthIn(max = 360.dp)
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CmpIcon(
                 icon = CmpIcons.AlertCircle,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
-                tint = colors.error,
+                tint = colors.error
             )
             CmpText(
                 text = stringResource(Res.string.authstate_root_title_error),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Medium,
                 color = colors.onBackground,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
             CmpText(
                 text = stringResource(Res.string.authstate_root_msg_error),
                 fontSize = 14.sp,
                 color = colors.onSurfaceVariant,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
             CmpButton(
                 onClick = onRetry,
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 CmpIcon(
                     icon = CmpIcons.Refresh,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(18.dp)
                 )
                 CmpText(
                     text = stringResource(Res.string.authstate_root_btn_retry),
-                    modifier = Modifier.padding(start = 8.dp),
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }

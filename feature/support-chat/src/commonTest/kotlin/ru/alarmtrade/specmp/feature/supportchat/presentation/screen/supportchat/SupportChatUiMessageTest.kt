@@ -1,14 +1,14 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiMessage
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class SupportChatUiMessageTest {
 
@@ -40,8 +40,8 @@ class SupportChatUiMessageTest {
         assertFalse(ui.canDelete)
     }
 
-    private fun failed(text: String? = null, attachment: SupportChatAttachment? = null): SupportChatMessage {
-        return SupportChatMessage(
+    private fun failed(text: String? = null, attachment: SupportChatAttachment? = null): SupportChatMessage =
+        SupportChatMessage(
             id = "local-1",
             serverId = null,
             text = text,
@@ -49,7 +49,6 @@ class SupportChatUiMessageTest {
             time = Instant.fromEpochSeconds(0),
             isMine = true,
             authorEmail = null,
-            status = SupportChatMessageStatus.Failed,
+            status = SupportChatMessageStatus.Failed
         )
-    }
 }

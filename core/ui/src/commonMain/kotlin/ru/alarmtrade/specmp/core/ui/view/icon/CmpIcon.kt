@@ -12,14 +12,17 @@ fun CmpIcon(
     imageVector: ImageVector,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    tint: Color = Color.Unspecified,
+    tint: Color = Color.Unspecified
 ) {
     Icon(
         imageVector = imageVector,
         contentDescription = contentDescription,
         modifier = modifier,
-        tint = if (tint != Color.Unspecified) tint
-        else androidx.compose.material3.LocalContentColor.current,
+        tint = if (tint != Color.Unspecified) {
+            tint
+        } else {
+            androidx.compose.material3.LocalContentColor.current
+        }
     )
 }
 
@@ -28,14 +31,17 @@ fun CmpIcon(
     painter: Painter,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    tint: Color = Color.Unspecified,
+    tint: Color = Color.Unspecified
 ) {
     Icon(
         painter = painter,
         contentDescription = contentDescription,
         modifier = modifier,
-        tint = if (tint != Color.Unspecified) tint
-        else androidx.compose.material3.LocalContentColor.current,
+        tint = if (tint != Color.Unspecified) {
+            tint
+        } else {
+            androidx.compose.material3.LocalContentColor.current
+        }
     )
 }
 
@@ -44,12 +50,12 @@ fun CmpIcon(
     icon: CmpIcons,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    tint: Color = Color.Unspecified,
+    tint: Color = Color.Unspecified
 ) {
     CmpIcon(
         imageVector = icon.imageVector(),
         contentDescription = contentDescription,
         modifier = modifier,
-        tint = tint,
+        tint = tint
     )
 }

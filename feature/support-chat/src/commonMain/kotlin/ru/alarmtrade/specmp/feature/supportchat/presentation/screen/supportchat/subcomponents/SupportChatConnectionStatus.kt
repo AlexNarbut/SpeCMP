@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
@@ -31,7 +32,6 @@ import specmp.feature.support_chat.generated.resources.Res
 import specmp.feature.support_chat.generated.resources.supportchat_chat_error_chat_auth
 import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_reconnecting
 import specmp.feature.support_chat.generated.resources.supportchat_chat_title_connecting
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Компактная плашка соединения поверх ленты: не сдвигает сообщения и не мигает.
@@ -48,7 +48,7 @@ import kotlin.time.Duration.Companion.milliseconds
 internal fun SupportChatConnectionStatus(
     banner: SupportChatConnectionBanner?,
     colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     var shown by remember { mutableStateOf<SupportChatConnectionBanner?>(null) }
     LaunchedEffect(banner) {
@@ -66,7 +66,7 @@ internal fun SupportChatConnectionStatus(
         modifier = modifier,
         enter = fadeIn(),
         exit = fadeOut(),
-        label = VISIBILITY_LABEL,
+        label = VISIBILITY_LABEL
     ) {
         val current = shown ?: SupportChatConnectionBanner.Reconnecting
         val isProblem = current != SupportChatConnectionBanner.Connecting
@@ -74,18 +74,18 @@ internal fun SupportChatConnectionStatus(
             shape = RoundedCornerShape(percent = 50),
             color = if (isProblem) colors.errorContainer else colors.surfaceContainerHigh,
             contentColor = if (isProblem) colors.onErrorContainer else colors.onSurfaceVariant,
-            shadowElevation = 2.dp,
+            shadowElevation = 2.dp
         ) {
             CmpRow(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 if (isProblem) {
                     CmpIcon(
                         icon = CmpIcons.WifiOff,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(16.dp)
                     )
                 }
                 CmpText(
@@ -97,14 +97,14 @@ internal fun SupportChatConnectionStatus(
                         }
                     ),
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 // Попыток при AuthFailed нет — и спиннера нет.
                 if (current != SupportChatConnectionBanner.AuthFailed) {
                     CmpCircularProgressIndicator(
                         modifier = Modifier.size(14.dp),
                         strokeWidth = 2.dp,
-                        color = if (isProblem) colors.onErrorContainer else colors.onSurfaceVariant,
+                        color = if (isProblem) colors.onErrorContainer else colors.onSurfaceVariant
                     )
                 }
             }

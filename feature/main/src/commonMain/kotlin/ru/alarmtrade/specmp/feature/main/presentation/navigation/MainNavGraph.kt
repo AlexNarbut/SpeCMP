@@ -1,0 +1,69 @@
+package ru.alarmtrade.specmp.feature.main.presentation.navigation
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
+import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
+
+/** App-level ключ авторизованной зоны (стартовый маршрут). */
+@Serializable
+data object MainRoute : NavKey
+
+/** Внутренний маршрут графа — главный экран. */
+@Serializable
+internal data object HomeRoute : NavKey
+
+private val navConfig = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(HomeRoute::class, HomeRoute.serializer())
+        }
+    }
+}
+
+/**
+ * Nav3-граф фичи `main` (публичный вход для `composeApp`). Собственный `NavDisplay`
+ * с per-entry `ViewModelStore` и своим back stack — расширяется новыми экранами фичи
+ * без изменений в `composeApp`. Тему берёт из `LocalThemeIsDark`.
+ *
+ * @param onNavigateToFeature переход в другую фичу приложения (решает `composeApp`).
+ */
+@Composable
+fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
+    val backStack = rememberNavBackStack(navConfig, HomeRoute)
+    val isDarkState = LocalThemeIsDark.current
+    val isDark by isDarkState
+
+    NavDisplay(
+        backStack = backStack,
+        modifier = Modifier.fillMaxSize(),
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        onBack = { backStack.popSafe() },
+        entryProvider = entryProvider<NavKey> {
+            entry<HomeRoute> { _ ->
+                MainScreen(
+                    isDarkTheme = isDark,
+                    onThemeChange = { isDarkState.value = it },
+                    onNavigateToFeature = onNavigateToFeature
+                )
+            }
+        }
+    )
+}

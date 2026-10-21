@@ -13,15 +13,21 @@ fun CmpBadge(
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
-    content: (@Composable RowScope.() -> Unit)? = null,
+    content: (@Composable RowScope.() -> Unit)? = null
 ) {
     Badge(
         modifier = modifier,
-        containerColor = if (containerColor != Color.Unspecified) containerColor
-        else androidx.compose.material3.MaterialTheme.colorScheme.error,
-        contentColor = if (contentColor != Color.Unspecified) contentColor
-        else androidx.compose.material3.MaterialTheme.colorScheme.onError,
-        content = content,
+        containerColor = if (containerColor != Color.Unspecified) {
+            containerColor
+        } else {
+            androidx.compose.material3.MaterialTheme.colorScheme.error
+        },
+        contentColor = if (contentColor != Color.Unspecified) {
+            contentColor
+        } else {
+            androidx.compose.material3.MaterialTheme.colorScheme.onError
+        },
+        content = content
     )
 }
 
@@ -29,11 +35,11 @@ fun CmpBadge(
 fun CmpBadgedBox(
     badge: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     BadgedBox(
         badge = badge,
         modifier = modifier,
-        content = content,
+        content = content
     )
 }

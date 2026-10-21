@@ -87,12 +87,13 @@ import specmp.feature.support_chat.generated.resources.supportchat_chat_title_sc
 import specmp.feature.support_chat.generated.resources.supportchat_common_a11y_back
 import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
 
+@Suppress("CyclomaticComplexMethod")
 @Composable
 fun SupportChatScreen(
     state: State<SupportChatScreenState>,
     effect: SharedFlow<SupportChatEffect>,
     actions: SupportChatActions,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val colors = cmpThemeColors()
     val snackbarHostState = rememberCmpSnackbarHostState()
@@ -104,7 +105,7 @@ fun SupportChatScreen(
     val retryLabel = stringResource(Res.string.supportchat_common_btn_retry)
     val attachmentTooLargeText = stringResource(
         Res.string.supportchat_chat_error_attachment_too_large,
-        SupportChatAttachmentLimits.MAX_MEGABYTES,
+        SupportChatAttachmentLimits.MAX_MEGABYTES
     )
     val attachFailedText = stringResource(Res.string.supportchat_chat_error_attach)
     val openFailedText = stringResource(Res.string.supportchat_chat_error_open)
@@ -119,15 +120,21 @@ fun SupportChatScreen(
             } else {
                 snackbarHostState.showSnackbar(sendNoFileText)
             }
+
             SupportChatEffect.HistoryLoadFailed -> snackbarHostState.showSnackbar(historyLoadFailedText)
+
             is SupportChatEffect.AttachmentDownloaded -> snackbarHostState.showSnackbar(downloadSuccessText)
+
             SupportChatEffect.AttachmentDownloadFailed -> snackbarHostState.showSnackbar(downloadFailedText)
+
             is SupportChatEffect.AttachmentRejected -> snackbarHostState.showSnackbar(
                 if (event.tooLarge) attachmentTooLargeText else attachFailedText
             )
+
             is SupportChatEffect.AttachmentOpenFailed -> snackbarHostState.showSnackbar(
                 if (event.noApp) openNoAppText else openFailedText
             )
+
             SupportChatEffect.AttachmentSavePermissionDenied -> snackbarHostState.showSnackbar(savePermissionText)
         }
     }
@@ -152,13 +159,13 @@ fun SupportChatScreen(
             actions = actions,
             onImageClick = { viewerImageSource = it },
             onDocumentClick = { documentActionsFor = it },
-            scrollToNewestRequests = scrollToNewestRequests,
+            scrollToNewestRequests = scrollToNewestRequests
         )
 
         viewerImageSource?.let { source ->
             SupportChatImageViewer(
                 imageSource = source,
-                onDismiss = { viewerImageSource = null },
+                onDismiss = { viewerImageSource = null }
             )
         }
 
@@ -173,12 +180,14 @@ fun SupportChatScreen(
                     documentActionsFor = null
                     actions.onDownloadAttachment(attachment)
                 },
-                onDismiss = { documentActionsFor = null },
+                onDismiss = { documentActionsFor = null }
             )
         }
     }
 }
 
+// scrollToNewestRequests — счётчик-сигнал: читается только в ленте (отложенное чтение), пишется по «Отправить»
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatScaffold(
     state: State<SupportChatScreenState>,
@@ -188,7 +197,7 @@ private fun SupportChatScaffold(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState,
+    scrollToNewestRequests: MutableIntState
 ) {
     CmpScaffold(
         modifier = Modifier.fillMaxSize(),
@@ -202,7 +211,7 @@ private fun SupportChatScaffold(
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.supportchat_common_a11y_back),
+                        contentDescription = stringResource(Res.string.supportchat_common_a11y_back)
                     )
                 },
                 // Выравнивание заголовка — свойство раскладки, а не платформы.
@@ -210,9 +219,9 @@ private fun SupportChatScaffold(
                     CmpTopAppBarStyle.Small
                 } else {
                     CmpTopAppBarStyle.CenterAligned
-                },
+                }
             )
-        },
+        }
     ) { paddingValues ->
         SupportChatBody(
             state = state,
@@ -222,7 +231,7 @@ private fun SupportChatScaffold(
             actions = actions,
             onImageClick = onImageClick,
             onDocumentClick = onDocumentClick,
-            scrollToNewestRequests = scrollToNewestRequests,
+            scrollToNewestRequests = scrollToNewestRequests
         )
     }
 }
@@ -232,6 +241,7 @@ private fun SupportChatScaffold(
  * лента, композер) читает только своё — индикатор набора или прогресс
  * скачивания не рекомпозируют композер, а символ ввода — ленту.
  */
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatBody(
     state: State<SupportChatScreenState>,
@@ -241,7 +251,7 @@ private fun SupportChatBody(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState,
+    scrollToNewestRequests: MutableIntState
 ) {
     val columnMaxWidth = when (layoutMode) {
         SupportChatLayoutMode.Compact -> Dp.Unspecified
@@ -258,16 +268,16 @@ private fun SupportChatBody(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CmpBox(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
         ) {
             SupportChatWallpaper(
                 colors = colors,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize()
             )
 
             SupportChatHistory(
@@ -278,7 +288,7 @@ private fun SupportChatBody(
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
-                scrollToNewestRequests = scrollToNewestRequests,
+                scrollToNewestRequests = scrollToNewestRequests
             )
 
             // Статусы — поверх ленты: появление и исчезновение не сдвигают сообщения.
@@ -289,27 +299,24 @@ private fun SupportChatBody(
             state = state,
             colors = colors,
             actions = actions,
-            onSent = { scrollToNewestRequests.intValue++ },
+            onSend = { scrollToNewestRequests.intValue++ },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = contentPadding, vertical = 8.dp)
-                .widthIn(max = columnMaxWidth),
+                .widthIn(max = columnMaxWidth)
         )
     }
 }
 
 @Composable
-private fun BoxScope.SupportChatStatusOverlay(
-    state: State<SupportChatScreenState>,
-    colors: CmpThemeColors,
-) {
+private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenState>, colors: CmpThemeColors) {
     val isLoadingMore by remember(state) { derivedStateOf { state.value.isLoadingMore } }
     val banner by remember(state) { derivedStateOf { state.value.connectionBanner } }
     if (isLoadingMore) {
         CmpLinearProgressIndicator(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .fillMaxWidth(),
+                .fillMaxWidth()
         )
     }
     SupportChatConnectionStatus(
@@ -317,7 +324,7 @@ private fun BoxScope.SupportChatStatusOverlay(
         colors = colors,
         modifier = Modifier
             .align(Alignment.TopCenter)
-            .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
     )
 }
 
@@ -326,8 +333,8 @@ private fun SupportChatComposerSection(
     state: State<SupportChatScreenState>,
     colors: CmpThemeColors,
     actions: SupportChatActions,
-    onSent: () -> Unit,
-    modifier: Modifier = Modifier,
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     // Черновик — локальное UI-состояние: каждый символ не проходит через state VM
     // и не рекомпозирует ленту. В VM текст попадает только в момент отправки.
@@ -343,7 +350,7 @@ private fun SupportChatComposerSection(
         onSend = {
             actions.onSend(draftText)
             draftText = ""
-            onSent()
+            onSend()
         },
         onAttachFile = actions.onAttachFile,
         onAttachPhoto = actions.onAttachPhoto,
@@ -351,10 +358,11 @@ private fun SupportChatComposerSection(
         onRemoveAttachment = actions.onRemoveAttachment,
         colors = colors,
         modifier = modifier,
-        enabled = isInputEnabled,
+        enabled = isInputEnabled
     )
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatHistory(
     state: State<SupportChatScreenState>,
@@ -364,20 +372,20 @@ private fun SupportChatHistory(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState,
+    scrollToNewestRequests: MutableIntState
 ) {
     when (state.value.history) {
         is LCEState.None, is LCEState.Loading -> {
             CmpBox(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter,
+                contentAlignment = Alignment.TopCenter
             ) {
                 SupportChatLoadingSkeleton(
                     colors = colors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(max = columnMaxWidth)
-                        .padding(horizontal = contentPadding),
+                        .padding(horizontal = contentPadding)
                 )
             }
         }
@@ -388,7 +396,7 @@ private fun SupportChatHistory(
                 colors = colors,
                 modifier = Modifier
                     .fillMaxSize()
-                    .widthIn(max = columnMaxWidth),
+                    .widthIn(max = columnMaxWidth)
             )
         }
 
@@ -401,12 +409,13 @@ private fun SupportChatHistory(
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
-                scrollToNewestRequests = scrollToNewestRequests,
+                scrollToNewestRequests = scrollToNewestRequests
             )
         }
     }
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatMessageList(
     state: State<SupportChatScreenState>,
@@ -416,7 +425,7 @@ private fun SupportChatMessageList(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState,
+    scrollToNewestRequests: MutableIntState
 ) {
     val listState = rememberLazyListState()
     val dateLabeler = rememberCmpDateLabeler()
@@ -427,14 +436,14 @@ private fun SupportChatMessageList(
         buildListItems(
             messages = current.messages,
             dateLabeler = dateLabeler,
-            timeZone = TimeZone.currentSystemDefault(),
+            timeZone = TimeZone.currentSystemDefault()
         )
     }
 
     SupportChatFollowNewestEffect(
         listState = listState,
         newestKey = listItems.firstOrNull()?.key,
-        scrollToNewestRequests = scrollToNewestRequests,
+        scrollToNewestRequests = scrollToNewestRequests
     )
     SupportChatPaginationEffect(listState = listState, state = state, onLoadMore = actions.onLoadMore)
     SupportChatVisibilityEffect(listState = listState, onMessagesVisible = actions.onMessagesVisible)
@@ -447,10 +456,10 @@ private fun SupportChatMessageList(
             start = contentPadding,
             end = contentPadding,
             top = 8.dp,
-            bottom = 16.dp,
+            bottom = 16.dp
         ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         if (listItems.isEmpty()) {
             item {
@@ -458,7 +467,7 @@ private fun SupportChatMessageList(
                     colors = colors,
                     modifier = Modifier
                         .fillParentMaxSize()
-                        .widthIn(max = columnMaxWidth),
+                        .widthIn(max = columnMaxWidth)
                 )
             }
         } else {
@@ -467,19 +476,19 @@ private fun SupportChatMessageList(
                     SupportChatTypingIndicator(
                         author = author,
                         colors = colors,
-                        modifier = Modifier.widthIn(max = columnMaxWidth),
+                        modifier = Modifier.widthIn(max = columnMaxWidth)
                     )
                 }
             }
             items(
                 count = listItems.size,
-                key = { index -> listItems[index].key },
+                key = { index -> listItems[index].key }
             ) { index ->
                 when (val item = listItems[index]) {
                     is SupportChatListItem.DateDivider -> {
                         SupportChatDateDivider(
                             label = item.label,
-                            colors = colors,
+                            colors = colors
                         )
                     }
 
@@ -495,7 +504,7 @@ private fun SupportChatMessageList(
                             onDelete = actions.onDeleteFailed,
                             onImageClick = onImageClick,
                             onDocumentClick = onDocumentClick,
-                            onDownloadAttachment = actions.onDownloadAttachment,
+                            onDownloadAttachment = actions.onDownloadAttachment
                         )
                     }
                 }
@@ -518,11 +527,12 @@ private fun SupportChatMessageList(
  * Анимация мягкая: издалека сначала мгновенный переход на несколько элементов от низа,
  * затем плавно до конца — без долгого пролёта через всю историю.
  */
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatFollowNewestEffect(
     listState: LazyListState,
     newestKey: String?,
-    scrollToNewestRequests: MutableIntState,
+    scrollToNewestRequests: MutableIntState
 ) {
     val sendRequests = scrollToNewestRequests.intValue
     LaunchedEffect(sendRequests) {
@@ -553,7 +563,7 @@ private suspend fun LazyListState.softScrollToNewest() {
 private fun SupportChatPaginationEffect(
     listState: LazyListState,
     state: State<SupportChatScreenState>,
-    onLoadMore: () -> Unit,
+    onLoadMore: () -> Unit
 ) {
     val currentOnLoadMore by rememberUpdatedState(onLoadMore)
     LaunchedEffect(listState, state) {
@@ -564,14 +574,15 @@ private fun SupportChatPaginationEffect(
                 atHistoryEnd = !listState.canScrollForward,
                 canLoad = current.isInputEnabled && current.hasMoreHistory && !current.isLoadingMore,
                 isFailed = current.isHistoryPagingFailed,
-                messageCount = current.messages.size,
+                messageCount = current.messages.size
             )
         }
             .distinctUntilChanged()
             .collect { snapshot ->
                 val userReachedEnd = snapshot.atHistoryEnd && !wasAtHistoryEnd
                 wasAtHistoryEnd = snapshot.atHistoryEnd
-                if (snapshot.atHistoryEnd && snapshot.canLoad && (!snapshot.isFailed || userReachedEnd)) {
+                val mayRetry = !snapshot.isFailed || userReachedEnd
+                if (snapshot.atHistoryEnd && snapshot.canLoad && mayRetry) {
                     currentOnLoadMore()
                 }
             }
@@ -582,7 +593,7 @@ private data class PaginationSnapshot(
     val atHistoryEnd: Boolean,
     val canLoad: Boolean,
     val isFailed: Boolean,
-    val messageCount: Int,
+    val messageCount: Int
 )
 
 /**
@@ -592,10 +603,7 @@ private data class PaginationSnapshot(
  * сообщений (разделители дат и индикатор набора — не сообщения).
  */
 @Composable
-private fun SupportChatVisibilityEffect(
-    listState: LazyListState,
-    onMessagesVisible: (List<String>) -> Unit,
-) {
+private fun SupportChatVisibilityEffect(listState: LazyListState, onMessagesVisible: (List<String>) -> Unit) {
     val currentOnVisible by rememberUpdatedState(onMessagesVisible)
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -617,10 +625,7 @@ private fun SupportChatVisibilityEffect(
 internal sealed interface SupportChatListItem {
     val key: String
 
-    data class DateDivider(
-        val date: LocalDate,
-        val label: String,
-    ) : SupportChatListItem {
+    data class DateDivider(val date: LocalDate, val label: String) : SupportChatListItem {
         override val key: String get() = "$DATE_KEY_PREFIX$date"
     }
 
@@ -639,7 +644,7 @@ internal sealed interface SupportChatListItem {
 internal fun buildListItems(
     messages: List<SupportChatMessage>,
     dateLabeler: (LocalDate) -> String,
-    timeZone: TimeZone,
+    timeZone: TimeZone
 ): ImmutableList<SupportChatListItem> {
     val result = mutableListOf<SupportChatListItem>()
 
@@ -665,7 +670,7 @@ internal fun buildListItems(
 private enum class SupportChatLayoutMode {
     Compact,
     Medium,
-    Expanded,
+    Expanded
 }
 
 private const val FOLLOW_NEWEST_THRESHOLD = 2

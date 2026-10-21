@@ -25,5 +25,5 @@ data class SupportChatMessage(
     val time: Instant,
     val isMine: Boolean,
     val authorEmail: String?,
-    val status: SupportChatMessageStatus,
+    val status: SupportChatMessageStatus
 )

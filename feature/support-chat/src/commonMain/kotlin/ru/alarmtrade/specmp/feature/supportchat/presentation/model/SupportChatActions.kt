@@ -19,5 +19,5 @@ data class SupportChatActions(
     val onLoadMore: () -> Unit,
     val onMessagesVisible: (List<String>) -> Unit,
     val onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
-    val onOpenAttachment: (SupportChatUiAttachment) -> Unit,
+    val onOpenAttachment: (SupportChatUiAttachment) -> Unit
 )

@@ -6,5 +6,5 @@ enum class MainDatabaseSyncBadge {
     Applying,
     Updated,
     UpdateFailed,
-    AppUpdateRequired,
+    AppUpdateRequired
 }

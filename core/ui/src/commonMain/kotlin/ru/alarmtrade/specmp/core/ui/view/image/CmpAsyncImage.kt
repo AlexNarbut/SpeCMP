@@ -31,10 +31,7 @@ fun rememberCmpImageLoader(): ImageLoader {
 }
 
 @Composable
-fun ProvideCmpImageLoader(
-    imageLoader: ImageLoader,
-    content: @Composable () -> Unit,
-) {
+fun ProvideCmpImageLoader(imageLoader: ImageLoader, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalCmpImageLoader provides imageLoader, content = content)
 }
 
@@ -55,7 +52,7 @@ fun CmpAsyncImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
     alignment: Alignment = Alignment.Center,
-    imageLoader: ImageLoader = cmpImageLoader(),
+    imageLoader: ImageLoader = cmpImageLoader()
 ) {
     AsyncImage(
         model = model,
@@ -63,7 +60,7 @@ fun CmpAsyncImage(
         imageLoader = imageLoader,
         modifier = modifier,
         contentScale = contentScale,
-        alignment = alignment,
+        alignment = alignment
     )
 }
 
@@ -72,9 +69,7 @@ fun CmpAsyncImage(
  * [Painter] и intrinsic-размер, чтобы потребители не зависели от типов Coil.
  */
 @Immutable
-class CmpSubcomposeAsyncImageScope internal constructor(
-    internal val asyncPainter: AsyncImagePainter,
-) {
+class CmpSubcomposeAsyncImageScope internal constructor(internal val asyncPainter: AsyncImagePainter) {
     val painter: Painter get() = asyncPainter
     val intrinsicSize: Size get() = asyncPainter.intrinsicSize
 }
@@ -89,13 +84,13 @@ fun CmpSubcomposeAsyncImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     imageLoader: ImageLoader = cmpImageLoader(),
-    content: @Composable CmpSubcomposeAsyncImageScope.() -> Unit,
+    content: @Composable CmpSubcomposeAsyncImageScope.() -> Unit
 ) {
     SubcomposeAsyncImage(
         model = model,
         contentDescription = contentDescription,
         imageLoader = imageLoader,
-        modifier = modifier,
+        modifier = modifier
     ) {
         content(CmpSubcomposeAsyncImageScope(painter))
     }

@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.core.localization
 
-import platform.Foundation.*
+import platform.Foundation.NSLocale
+import platform.Foundation.NSUserDefaults
+import platform.Foundation.preferredLanguages
 
 actual fun systemAppLocale(): AppLocale {
     val preferredLanguage = NSLocale.preferredLanguages.firstOrNull() as? String
@@ -10,7 +12,7 @@ actual fun systemAppLocale(): AppLocale {
 internal actual fun applyPlatformAppLocale(locale: AppLocale) {
     NSUserDefaults.standardUserDefaults.setObject(
         value = listOf(locale.languageTag),
-        forKey = "AppleLanguages",
+        forKey = "AppleLanguages"
     )
     NSUserDefaults.standardUserDefaults.synchronize()
 }

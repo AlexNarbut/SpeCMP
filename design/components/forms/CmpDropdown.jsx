@@ -11,7 +11,7 @@ export function CmpDropdown({
   selectedValue = null,
   placeholder = "Выберите",
   options = [],
-  onOptionSelected,
+  onOptionSelect,
   disabled = false,
   rootStyle,
 }) {
@@ -79,7 +79,7 @@ export function CmpDropdown({
               key={i}
               type="button"
               onClick={() => {
-                onOptionSelected && onOptionSelected(i, opt);
+                onOptionSelect && onOptionSelect(i, opt);
                 setOpen(false);
               }}
               style={{

@@ -50,7 +50,7 @@ fun rememberCmpDateLabeler(): (LocalDate) -> String {
         stringResource(Res.string.coreui_common_month_september),
         stringResource(Res.string.coreui_common_month_october),
         stringResource(Res.string.coreui_common_month_november),
-        stringResource(Res.string.coreui_common_month_december),
+        stringResource(Res.string.coreui_common_month_december)
     )
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val yesterday = now.minus(DatePeriod(days = 1))
@@ -66,11 +66,7 @@ fun rememberCmpDateLabeler(): (LocalDate) -> String {
     }
 }
 
-private fun formatLocalizedDate(
-    date: LocalDate,
-    monthLabels: List<String>,
-    currentYear: Int,
-): String {
+private fun formatLocalizedDate(date: LocalDate, monthLabels: List<String>, currentYear: Int): String {
     val month = monthLabels.getOrNull(date.monthNumber - 1).orEmpty()
     return buildString {
         append(date.dayOfMonth)

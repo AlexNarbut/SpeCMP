@@ -15,7 +15,7 @@
 - **ViewModel — только через `BaseViewModel`**, корутины — через `safeLaunch` — см. «BaseViewModel».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
-- **Гонки: `MutableStateFlow` — только через `update { }`; персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
+- **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
 - **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Res.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
@@ -23,6 +23,7 @@
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
 - **Сессия экрана — `init {}` / `onCleared()` per-entry VM**, без `DisposableEffect`, полей-`Job` и `var`-флагов, которые пишутся с разных диспетчеров — см. «Жизненный цикл ViewModel и сессии».
 - **У каждого флага загрузки — гарантированный сброс; ошибка первой загрузки ≠ пустой экран; «нечего делать» ≠ `Success`** — см. «Корректность state».
+- **Код проходит `./gradlew spotlessCheck` и `./gradlew detektCheck` без замечаний** (строка ≤ 120, без `runCatching`/`!!`/`println`, generic `catch` только на границах) — см. «Что проверяют анализаторы (Spotless + detekt)» и [`code-quality.md`](code-quality.md).
 
 ---
 
@@ -44,8 +45,11 @@
 
 - **`MutableStateFlow` обновляем только через `update { }`** — это атомарный CAS,
   потокобезопасный при конкурентных обновлениях из нескольких корутин. Прямое присваивание
-  `_state.value = _state.value.copy(...)` теряет обновления при гонке. Чтение `_state.value`
-  допустимо.
+  `_state.value = _state.value.copy(...)` теряет обновления при гонке. **Запись через `.value =`
+  запрещена полностью**, в том числе простая запись без чтения (`_flag.value = true` →
+  `_flag.update { true }`): одно правило без исключений не даёт «простой» записи со временем
+  превратиться в read-modify-write. Атомарный «проверил и записал» — `compareAndSet(expect, update)`.
+  Чтение `_state.value` допустимо. Правило — для production-кода; тестовые фейки могут писать `.value`.
 - **Персистентный read-modify-write не атомарен.** Key-value-хранилища
   (Settings / DataStore / SharedPreferences) не дают атомарного «прочитал → изменил → записал»:
   при конкурентных писателях одно из изменений теряется — например,
@@ -181,6 +185,51 @@ fun submit(credentials: LoginCredentials) { }
 import androidx.compose.ui.graphics.Color as ComposeColor
 import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
 ```
+
+## Что проверяют анализаторы (Spotless + detekt)
+
+Код должен проходить `./gradlew spotlessCheck` и `./gradlew detektCheck` — это обязательная стадия
+([`code-quality.md`](code-quality.md)). Правила ниже пишутся сразу так, чтобы не получать замечаний:
+
+- **Строка ≤ 120 символов.** Длинные вызовы переносятся по аргументам, цепочки — по точкам, `if/else` длиннее строки
+  раскрывается в блоки `{ }`. Длинную строку-литерал разбивай конкатенацией `"…" + "…"` (итоговый текст тот же).
+  Комментарии тоже переносятся.
+- **Импорты.** Без неиспользуемых и без wildcard (`import a.b.*`); исключения — сгенерированные ресурсы
+  (`...generated.resources.*`) и `androidx.compose.*`. Порядок и лишние импорты приводит в порядок `spotlessApply`.
+- **Запрещённые вызовы:**
+
+  | ❌ Нельзя | ✅ Вместо этого |
+  |---|---|
+  | `runCatching { }` | `safeRun { }` / `safeResponseRun { }` из `ResponseExt` (раздел «Data — репозитории») |
+  | `println(...)` / `print(...)` | Kermit `Logger` (раздел «Логирование») |
+  | `x!!` | `requireNotNull(x) { "что отсутствует" }`, `?:`, `?.let` |
+  | `throw IllegalStateException("…")` | `error("…")` / `check(...)` |
+  | `flow.value = x` у `MutableStateFlow` | `flow.update { x }` (раздел «Корутины и Flow»); читать `.value` можно, тестовые фейки — исключение |
+  | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита |
+
+- **Исключения.** Generic `catch (e: Exception/Throwable)` допустим только на границах (`core/network`,
+  safe*-хелперы `ResponseExt`): везде ловим конкретный тип или оборачиваем вызов в `safeRun`. Если исключение
+  сознательно игнорируется — назови переменную `ignored`. Не глотай исключение молча: передай его как `cause` или
+  залогируй.
+- **Мёртвый код.** Неиспользуемые параметры, локальные переменные, приватные функции и свойства удаляй, «на будущее»
+  не оставляй. Параметр конструктора, нужный только в инициализаторе, пиши без `private val`
+  (`class X(args: XArgs) : …`), иначе `UnusedPrivateProperty`. Если заготовка действительно нужна —
+  `@Suppress("<Правило>")` на конкретном месте.
+- **Имена.** Файл называется по основной декларации; если в файле один класс и рядом функции — класс выносится в
+  свой файл (или `@file:Suppress("MatchingDeclarationName")`). Пакет совпадает с каталогом
+  (`InvalidPackageDeclaration`). Верхнеуровневые `const val` — `SCREAMING_SNAKE`. Переменная в лямбде не должна
+  затенять внешнюю (`it` внутри `it`, одноимённый параметр) — переименуй.
+- **Числа.** Литералы кроме `-1`, `0`, `1`, `2` выносятся в именованные константы (`MagicNumber`); не касается
+  тестов и `*.kts`. Литерал в именованном аргументе (`Offset(x = 4f, y = 8f)`, `pulseAlpha(periodMillis = 1_800)`)
+  правилом не считается магическим — имя параметра уже объясняет число.
+- **`suspend` и `Flow`.** Функция, возвращающая `Flow`/`StateFlow`, не помечается `suspend`, если не вызывает
+  suspend-функции внутри.
+- **Размер функций.** Функция длиннее 120 строк или со сложностью > 15 разбивается на части. Для Compose-функций и
+  таблиц-мапперов допустим `@Suppress("LongMethod", "CyclomaticComplexMethod")`.
+- **Пустое.** Класс без тела — `class X` (не `class X {}`), конструктор без параметров — без `()`,
+  файл заканчивается переводом строки.
+- **Подавления** — исключение, ставятся на конкретное место и объединяются в одну аннотацию `@Suppress(...)`;
+  правила про файловый и функциональный уровень — в [`code-quality.md`](code-quality.md#подавления).
 
 ---
 
@@ -746,6 +795,37 @@ class MainScreenViewModel(
 - Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять
   `.onStart { emit(<initial>) }`, иначе `combine` не эмитит, пока не ответят все источники.
 
+**Запрещено, без исключений (частые «оправдания», которые не работают):**
+
+- `LaunchedEffect(Unit) { viewModel.start() }` / `init()` / `load()` / `prepareX()` — **запрещено**,
+  даже если метод назван не «load». Переименование init-хука не делает его легальным: любой
+  запуск работы VM из composition side-effect нарушает правило. Триггер — подписка на `state`.
+- **«Это платформенно-зависимо, поэтому можно через `LaunchedEffect`»** — нет. Composition
+  side-effects (`LaunchedEffect`/`DisposableEffect`) допустимы **только** для (а) привязки
+  платформенных объектов, живущих в композиции (напр. `BindEffect` для `PermissionsController`),
+  и (б) проброса UI-события/сигнала в метод-интент VM (`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`).
+  Запуск собственного жизненного цикла/загрузки VM сюда не входит — привязка контроллера и старт
+  работы VM это разные вещи.
+- **Начальный шаг/режим экрана как чистая функция от входа/платформы — это НЕ «работа», а начальное
+  значение состояния.** Вычисляй его в конструкторе VM (инициализация `MutableStateFlow`), а не
+  через `start()`-интент. Реактивные источники, завязанные на этот шаг (скан, подписки), стартуют
+  сами при первой подписке на `state` (`flatMapLatest`/`combine` + `stateIn(WhileSubscribed/Lazily)`).
+
+```kotlin
+// ❌ Плохо — init-хук через LaunchedEffect, даже под именем start()
+// VM:
+fun start() { if (started) return; started = true; _step.value = if (…) Scanning else Rationale }
+// UI:
+LaunchedEffect(Unit) { viewModel.start() }
+
+// ✅ Хорошо — начальный шаг = начальное состояние; скан реактивен и стартует по подписке
+private val _step = MutableStateFlow(if (requirements.isEmpty()) Scanning else Rationale)
+private val devices = _step.flatMapLatest { if (it is Scanning) scan() else flowOf(None) }
+val state = combine(_step, devices, …) { … }.stateIn(scope, WhileSubscribed(5.seconds), initial)
+// реакция на действие пользователя — явный интент (это не init-загрузка):
+fun onAllowClicked(controller: PermissionsController) { … }
+```
+
 ### Корректность state
 
 Типовые дефекты, которые проходят компиляцию и тесты «зелёного пути», но ломают UX.
@@ -955,7 +1035,7 @@ val text = when (error) {
 KoinApplication(application = {
     modules(commonModule, specialistModule, loginModule)
 }) {
-    AppTheme(onThemeChanged) { AppNavigation() }
+    AppTheme(onThemeChange) { AppNavigation() }
 }
 
 // DI-модуль в feature/*/di/

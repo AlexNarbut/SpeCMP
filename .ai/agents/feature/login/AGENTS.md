@@ -7,5 +7,5 @@
 - Репозиторий получает только нужные SDK interactors и device information provider, не создаёт `SpecialistApp` и не содержит platform-specific DI.
 - Успешный вход не навигирует сам: смену зоны выполняет `feature/auth-state`, увидев обновление состояния сессии; ViewModel только сбрасывает форму.
 - Корень флоу — `LoginNavGraph` (`presentation/navigation`): собственный nav3-граф с маршрутами `LoginRoute` / `RegistrationRoute` / `ForgotPasswordRoute`, общий chrome и переключатель языка снаружи `NavDisplay` (см. `docs/navigation.md`).
-- Локалью фича не управляет: текущее значение читается из `LocalAppLocale` (`core/localization`), наружу отдаётся только callback `onLocaleChanged` (см. `docs/localization.md`).
+- Локалью фича не управляет: текущее значение читается из `LocalAppLocale` (`core/localization`), наружу отдаётся только callback `onLocaleChange` (см. `docs/localization.md`).
 - Ошибки submit-флоу — типизированные (`AuthFormError` в `presentation/model`), строковые коды ошибок между ViewModel и UI запрещены (см. `docs/patterns.md`).

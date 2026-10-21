@@ -6,5 +6,5 @@ package ru.alarmtrade.specmp.feature.login.presentation.model
  */
 enum class AuthFormError {
     RequiredFields,
-    RequestFailed,
+    RequestFailed
 }

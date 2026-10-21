@@ -22,12 +22,39 @@
 | Запустить Desktop | `./gradlew :desktopApp:run` |
 | Собрать Desktop пакет | `./gradlew :desktopApp:packageDistributionForCurrentOS` |
 | Тесты | `./gradlew test` |
+| Стиль и импорты (ktlint + compose-rules) | `./gradlew spotlessCheck` / автофикс — `./gradlew spotlessApply` ([`code-quality.md`](code-quality.md)) |
+| Смысловой анализ (detekt) | `./gradlew detektCheck` / модуля — `./gradlew :feature:login:detektCheck` |
 | Очистить | `./gradlew clean` |
 | Очистить Konan-кеш | `rm -rf ~/.konan/cache` |
 
 APK: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
 
 Desktop-пакет: `desktopApp/build/compose/binaries/main/`
+
+## Протокол верификации
+
+Изменение кода считается готовым, когда:
+
+1. **Сборка проходит:** `./gradlew :androidApp:assembleDebug` (точечные правки — таргетными compile-задачами
+   затронутых модулей).
+2. **Качество кода ⚠️ ОБЯЗАТЕЛЬНАЯ СТАДИЯ:**
+
+   ```bash
+   ./gradlew spotlessApply   # автофикс стиля и импортов
+   ./gradlew spotlessCheck
+   ./gradlew detektCheck
+   ```
+
+   Оба прогона должны проходить без замечаний: неиспользуемые импорты, имена, небезопасный код и ошибки Compose
+   ловятся здесь. Что именно проверяется, как это устроено и как подавлять — [`code-quality.md`](code-quality.md).
+   `spotlessCheck` запускается git-хуком pre-commit, `detektCheck` — pre-push (активация:
+   `pre-commit install --hook-type pre-commit --hook-type pre-push`).
+3. **Тесты затронутых модулей зелёные:** `./gradlew jvmTest` (или `:<module>:jvmTest`).
+
+**Desktop + USB на macOS (Apple Silicon).** USB-слой SDK на JVM (`usb4java` 1.3.0) содержит нативную библиотеку
+только для `darwin-x86-64`: на arm64-JDK USB-устройства молча не находятся. Запускать на x86_64-JDK через
+`compose.jvmHome` — в `local.properties` (`compose.jvmHome=/path/to/x86_64-jdk-17/Contents/Home`) или
+`./gradlew :desktopApp:run -Pcompose.jvmHome=…`. Без ключа используется JDK Gradle.
 
 ---
 

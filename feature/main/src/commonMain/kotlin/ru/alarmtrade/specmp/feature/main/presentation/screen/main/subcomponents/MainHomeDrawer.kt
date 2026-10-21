@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.lce.isSuccess
+import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -51,8 +51,8 @@ import specmp.feature.main.generated.resources.main_drawer_error_logout_failed
 import specmp.feature.main.generated.resources.main_drawer_label_app_update_check
 import specmp.feature.main.generated.resources.main_drawer_label_app_update_checking
 import specmp.feature.main.generated.resources.main_drawer_label_database_update
-import specmp.feature.main.generated.resources.main_drawer_label_database_version
 import specmp.feature.main.generated.resources.main_drawer_label_database_updating
+import specmp.feature.main.generated.resources.main_drawer_label_database_version
 import specmp.feature.main.generated.resources.main_drawer_label_email_missing
 import specmp.feature.main.generated.resources.main_drawer_label_name_missing
 import specmp.feature.main.generated.resources.main_drawer_label_profile
@@ -60,11 +60,12 @@ import specmp.feature.main.generated.resources.main_drawer_label_settings
 import specmp.feature.main.generated.resources.main_drawer_label_theme
 import specmp.feature.main.generated.resources.main_drawer_label_version
 
+@Suppress("LongMethod")
 @Composable
 internal fun MainHomeDrawer(
     state: MainScreenState,
     isDark: Boolean,
-    onThemeChanged: (Boolean) -> Unit,
+    onThemeChange: (Boolean) -> Unit,
     onDatabaseSyncClick: () -> Unit,
     onAppUpdateCheckClick: () -> Unit,
     onAppUpdateOpenClick: () -> Unit,
@@ -72,7 +73,7 @@ internal fun MainHomeDrawer(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    colors: CmpThemeColors = cmpThemeColors(),
+    colors: CmpThemeColors = cmpThemeColors()
 ) {
     val dividerColor = colors.outlineVariant
 
@@ -86,28 +87,28 @@ internal fun MainHomeDrawer(
                     color = dividerColor,
                     start = Offset(size.width - strokeWidth / 2f, 0f),
                     end = Offset(size.width - strokeWidth / 2f, size.height),
-                    strokeWidth = strokeWidth,
+                    strokeWidth = strokeWidth
                 )
             },
         color = colors.surface,
-        contentColor = colors.onSurface,
+        contentColor = colors.onSurface
     ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(contentPadding)
-                .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
+                .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp)
         ) {
             MainProfileBlock(
                 profile = state.profile,
-                colors = colors,
+                colors = colors
             )
 
             CmpDivider(color = colors.outlineVariant)
 
             Column(
                 modifier = Modifier.padding(top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 MainDrawerRow(
                     icon = if (isDark) CmpIcons.DarkMode else CmpIcons.LightMode,
@@ -116,10 +117,10 @@ internal fun MainHomeDrawer(
                     trailing = {
                         CmpSwitch(
                             checked = isDark,
-                            onCheckedChange = onThemeChanged,
+                            onCheckedChange = onThemeChange
                         )
                     },
-                    onClick = { onThemeChanged(!isDark) },
+                    onClick = { onThemeChange(!isDark) }
                 )
 
                 MainDrawerRow(
@@ -135,12 +136,12 @@ internal fun MainHomeDrawer(
                             CmpCircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.5.dp,
-                                color = colors.primary,
+                                color = colors.primary
                             )
                         }
                     },
                     enabled = !state.isDatabaseSyncing,
-                    onClick = onDatabaseSyncClick,
+                    onClick = onDatabaseSyncClick
                 )
 
                 if (state.isAppUpdateSupported) {
@@ -157,12 +158,12 @@ internal fun MainHomeDrawer(
                                 CmpCircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.5.dp,
-                                    color = colors.primary,
+                                    color = colors.primary
                                 )
                             }
                         },
                         enabled = !state.isAppUpdateChecking,
-                        onClick = onAppUpdateCheckClick,
+                        onClick = onAppUpdateCheckClick
                     )
                 }
 
@@ -170,7 +171,7 @@ internal fun MainHomeDrawer(
                     iconPainter = painterResource(Res.drawable.app_settings),
                     label = stringResource(Res.string.main_drawer_label_settings),
                     colors = colors,
-                    onClick = onSettingsClick,
+                    onClick = onSettingsClick
                 )
 
                 MainDrawerRow(
@@ -182,12 +183,12 @@ internal fun MainHomeDrawer(
                             CmpCircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.5.dp,
-                                color = colors.primary,
+                                color = colors.primary
                             )
                         }
                     },
                     enabled = !state.isLogoutInProgress,
-                    onClick = onLogout,
+                    onClick = onLogout
                 )
             }
 
@@ -195,7 +196,7 @@ internal fun MainHomeDrawer(
                 MainLogoutErrorMessage(
                     error = error,
                     colors = colors,
-                    modifier = Modifier.padding(top = 10.dp),
+                    modifier = Modifier.padding(top = 10.dp)
                 )
             }
 
@@ -204,18 +205,14 @@ internal fun MainHomeDrawer(
             MainDrawerFooter(
                 state = state,
                 colors = colors,
-                onAppUpdateOpenClick = onAppUpdateOpenClick,
+                onAppUpdateOpenClick = onAppUpdateOpenClick
             )
         }
     }
 }
 
 @Composable
-private fun MainProfileBlock(
-    profile: MainProfile,
-    colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
-) {
+private fun MainProfileBlock(profile: MainProfile, colors: CmpThemeColors, modifier: Modifier = Modifier) {
     val name = profile.name.trim()
     val email = profile.email.trim()
     val initials = mainProfileInitials(name)
@@ -238,19 +235,19 @@ private fun MainProfileBlock(
             .fillMaxWidth()
             .padding(start = 4.dp, end = 4.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(52.dp)
                 .clip(CircleShape),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             CmpSurface(
                 modifier = Modifier.matchParentSize(),
                 color = colors.primaryContainer,
                 contentColor = colors.onPrimaryContainer,
-                shape = CircleShape,
+                shape = CircleShape
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (initials.isBlank()) {
@@ -258,14 +255,14 @@ private fun MainProfileBlock(
                             icon = CmpIcons.Person,
                             contentDescription = null,
                             modifier = Modifier.size(28.dp),
-                            tint = colors.onPrimaryContainer,
+                            tint = colors.onPrimaryContainer
                         )
                     } else {
                         CmpText(
                             text = initials,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = colors.onPrimaryContainer,
+                            color = colors.onPrimaryContainer
                         )
                     }
                 }
@@ -274,18 +271,18 @@ private fun MainProfileBlock(
 
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             CmpText(
                 text = primary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.onSurface,
+                color = colors.onSurface
             )
             CmpText(
                 text = secondary,
                 fontSize = 14.sp,
-                color = colors.onSurfaceVariant,
+                color = colors.onSurfaceVariant
             )
         }
     }
@@ -300,7 +297,7 @@ private fun MainDrawerRow(
     icon: CmpIcons? = null,
     iconPainter: Painter? = null,
     enabled: Boolean = true,
-    trailing: @Composable () -> Unit = {},
+    trailing: @Composable () -> Unit = {}
 ) {
     CmpClickableSurface(
         onClick = onClick,
@@ -310,14 +307,14 @@ private fun MainDrawerRow(
         enabled = enabled,
         shape = RoundedCornerShape(MainHomeTokens.CardRadius),
         color = colors.surface,
-        contentColor = colors.onSurface,
+        contentColor = colors.onSurface
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             when {
                 iconPainter != null -> {
@@ -325,15 +322,16 @@ private fun MainDrawerRow(
                         painter = iconPainter,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = colors.onSurfaceVariant,
+                        tint = colors.onSurfaceVariant
                     )
                 }
+
                 icon != null -> {
                     CmpIcon(
                         icon = icon,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = colors.onSurfaceVariant,
+                        tint = colors.onSurfaceVariant
                     )
                 }
             }
@@ -341,7 +339,7 @@ private fun MainDrawerRow(
                 text = label,
                 modifier = Modifier.weight(1f),
                 fontSize = 16.sp,
-                color = colors.onSurface,
+                color = colors.onSurface
             )
             trailing()
         }
@@ -353,11 +351,11 @@ private fun MainDrawerFooter(
     state: MainScreenState,
     colors: CmpThemeColors,
     onAppUpdateOpenClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         val availableAppVersion = state.appUpdateCheckResult as? MainAppUpdateCheckResult.Available
         if (
@@ -368,7 +366,7 @@ private fun MainDrawerFooter(
             MainAppUpdateBanner(
                 version = availableAppVersion.versionName,
                 colors = colors,
-                onClick = onAppUpdateOpenClick,
+                onClick = onAppUpdateOpenClick
             )
         }
 
@@ -376,21 +374,21 @@ private fun MainDrawerFooter(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             CmpText(
                 text = stringResource(Res.string.main_drawer_label_version, state.appVersionName),
                 fontSize = 12.sp,
-                color = colors.onSurfaceVariant,
+                color = colors.onSurfaceVariant
             )
             state.databaseVersion?.let { databaseVersion ->
                 CmpText(
                     text = stringResource(
                         Res.string.main_drawer_label_database_version,
-                        databaseVersion.toString(),
+                        databaseVersion.toString()
                     ),
                     fontSize = 12.sp,
-                    color = colors.onSurfaceVariant,
+                    color = colors.onSurfaceVariant
                 )
             }
         }
@@ -402,63 +400,59 @@ private fun MainAppUpdateBanner(
     version: String,
     colors: CmpThemeColors,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     CmpClickableSurface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(MainHomeTokens.CardRadius),
         color = colors.primaryContainer,
-        contentColor = colors.onPrimaryContainer,
+        contentColor = colors.onPrimaryContainer
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             CmpIcon(
                 painter = painterResource(Res.drawable.app_update),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = colors.onPrimaryContainer,
+                tint = colors.onPrimaryContainer
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(1.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
                 CmpText(
                     text = stringResource(Res.string.main_drawer_banner_app_update_available),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.onPrimaryContainer,
+                    color = colors.onPrimaryContainer
                 )
                 CmpText(
                     text = stringResource(
                         Res.string.main_drawer_banner_app_update_subtitle,
-                        version,
+                        version
                     ),
                     fontSize = 12.sp,
-                    color = colors.onPrimaryContainer.copy(alpha = 0.78f),
+                    color = colors.onPrimaryContainer.copy(alpha = 0.78f)
                 )
             }
             CmpIcon(
                 icon = CmpIcons.ChevronRight,
                 contentDescription = null,
                 modifier = Modifier.size(22.dp),
-                tint = colors.onPrimaryContainer,
+                tint = colors.onPrimaryContainer
             )
         }
     }
 }
 
 @Composable
-private fun MainLogoutErrorMessage(
-    error: MainLogoutError,
-    colors: CmpThemeColors,
-    modifier: Modifier = Modifier,
-) {
+private fun MainLogoutErrorMessage(error: MainLogoutError, colors: CmpThemeColors, modifier: Modifier = Modifier) {
     val text = when (error) {
         MainLogoutError.RequestFailed -> stringResource(Res.string.main_drawer_error_logout_failed)
     }
@@ -467,22 +461,20 @@ private fun MainLogoutErrorMessage(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(MainHomeTokens.CardRadius),
         color = colors.errorContainer,
-        contentColor = colors.onErrorContainer,
+        contentColor = colors.onErrorContainer
     ) {
         CmpText(
             text = text,
             modifier = Modifier.padding(12.dp),
             fontSize = 14.sp,
-            color = colors.onErrorContainer,
+            color = colors.onErrorContainer
         )
     }
 }
 
-private fun mainProfileInitials(name: String): String {
-    return name
-        .split(" ")
-        .filter { it.isNotBlank() }
-        .take(2)
-        .mapNotNull { it.firstOrNull()?.uppercaseChar()?.toString() }
-        .joinToString("")
-}
+private fun mainProfileInitials(name: String): String = name
+    .split(" ")
+    .filter { it.isNotBlank() }
+    .take(2)
+    .mapNotNull { it.firstOrNull()?.uppercaseChar()?.toString() }
+    .joinToString("")

@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"0d6435223dd7","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/app-update/AppUpdateScreen.jsx":"e61af0c29b73","features/auth/Auth.jsx":"730fafddac89","features/auth/AuthScreens.jsx":"4986c79933ee","features/auth/i18n.js":"9e4ecc677e9e","features/calculator/Calculator.jsx":"778bbbf9b839","features/home/Home.jsx":"cf9a3018334e","features/home/HomeScreens.jsx":"6a3e476e5f55","features/support-chat/SupportChat.jsx":"119d6686fd2c","features/support-chat/SupportChatScreens.jsx":"e8b12bf0ce32","res/icons/cmp-icons.js":"8c00925c86ca","res/icons/main-icons.js":"a5ee0c0aad77","res/nav.js":"4d4558bb4964"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
+/* @ds-bundle: {"format":4,"namespace":"PandoraSpecDesignSystem_b8d6e1","components":[{"name":"CMP_ICONS","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpIcon","sourcePath":"components/app-kit/CmpIcon.jsx"},{"name":"CmpText","sourcePath":"components/app-kit/CmpText.jsx"},{"name":"CmpButton","sourcePath":"components/buttons/CmpButton.jsx"},{"name":"CmpFloatingActionButton","sourcePath":"components/buttons/CmpFloatingActionButton.jsx"},{"name":"CmpIconButton","sourcePath":"components/buttons/CmpIconButton.jsx"},{"name":"CmpOutlinedButton","sourcePath":"components/buttons/CmpOutlinedButton.jsx"},{"name":"CmpTextButton","sourcePath":"components/buttons/CmpTextButton.jsx"},{"name":"CmpBadge","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBadgedBox","sourcePath":"components/feedback/CmpBadge.jsx"},{"name":"CmpBottomSheet","sourcePath":"components/feedback/CmpBottomSheet.jsx"},{"name":"CmpDialog","sourcePath":"components/feedback/CmpDialog.jsx"},{"name":"CmpSnackbar","sourcePath":"components/feedback/CmpSnackbar.jsx"},{"name":"CmpCheckbox","sourcePath":"components/forms/CmpCheckbox.jsx"},{"name":"CmpDropdown","sourcePath":"components/forms/CmpDropdown.jsx"},{"name":"CmpRadioButton","sourcePath":"components/forms/CmpRadioButton.jsx"},{"name":"CmpSlider","sourcePath":"components/forms/CmpSlider.jsx"},{"name":"CmpSwitch","sourcePath":"components/forms/CmpSwitch.jsx"},{"name":"CmpTextField","sourcePath":"components/forms/CmpTextField.jsx"},{"name":"CmpNavigationBar","sourcePath":"components/navigation/CmpNavigationBar.jsx"},{"name":"CmpTabRow","sourcePath":"components/navigation/CmpTabRow.jsx"},{"name":"CmpTopAppBar","sourcePath":"components/navigation/CmpTopAppBar.jsx"},{"name":"CmpCircularProgressIndicator","sourcePath":"components/progress/CmpCircularProgressIndicator.jsx"},{"name":"CmpLinearProgressIndicator","sourcePath":"components/progress/CmpLinearProgressIndicator.jsx"},{"name":"CmpCard","sourcePath":"components/surfaces/CmpCard.jsx"},{"name":"CmpDivider","sourcePath":"components/surfaces/CmpDivider.jsx"},{"name":"CmpSelectableCard","sourcePath":"components/surfaces/CmpSelectableCard.jsx"},{"name":"CmpSurface","sourcePath":"components/surfaces/CmpSurface.jsx"}],"sourceHashes":{"components/app-kit/CmpIcon.jsx":"b3d94cf9b1e3","components/app-kit/CmpText.jsx":"cdee16d965f8","components/app-kit/PhoneFrame.jsx":"a9d47a57ac31","components/app-kit/useStateLayer.js":"2a1599d8c7c6","components/buttons/CmpButton.jsx":"5e4b9cff4fc3","components/buttons/CmpFloatingActionButton.jsx":"1158dcb8c4da","components/buttons/CmpIconButton.jsx":"6a7318af31c1","components/buttons/CmpOutlinedButton.jsx":"c1e9ba8c6875","components/buttons/CmpTextButton.jsx":"5ee3f901782e","components/feedback/CmpBadge.jsx":"547d9173e5bf","components/feedback/CmpBottomSheet.jsx":"54a97e4fb43b","components/feedback/CmpDialog.jsx":"2a1414da342e","components/feedback/CmpSnackbar.jsx":"fd293f936c21","components/forms/CmpCheckbox.jsx":"14129294474d","components/forms/CmpDropdown.jsx":"b4b6ca649867","components/forms/CmpRadioButton.jsx":"2f75844572ce","components/forms/CmpSlider.jsx":"1a752d0a3873","components/forms/CmpSwitch.jsx":"d19f299e5238","components/forms/CmpTextField.jsx":"fc85734a1a03","components/navigation/CmpNavigationBar.jsx":"24fe17d57b50","components/navigation/CmpTabRow.jsx":"76164e7ddc16","components/navigation/CmpTopAppBar.jsx":"2d8ea5fb2126","components/progress/CmpCircularProgressIndicator.jsx":"0d6435223dd7","components/progress/CmpLinearProgressIndicator.jsx":"ff47898fb86d","components/surfaces/CmpCard.jsx":"49545cb747b5","components/surfaces/CmpDivider.jsx":"a3a8fe9c2772","components/surfaces/CmpSelectableCard.jsx":"cc5403070197","components/surfaces/CmpSurface.jsx":"f8824849e0ac","features/app-update/AppUpdateScreen.jsx":"e61af0c29b73","features/auth/Auth.jsx":"6da450accbe9","features/auth/AuthScreens.jsx":"4986c79933ee","features/auth/i18n.js":"9e4ecc677e9e","features/calculator/Calculator.jsx":"778bbbf9b839","features/device-select/DeviceSelect.jsx":"d895b94043f0","features/home/Home.jsx":"b74520b8e19e","features/home/HomeScreens.jsx":"e06278dd1ea2","features/support-chat/SupportChat.jsx":"119d6686fd2c","features/support-chat/SupportChatScreens.jsx":"e8b12bf0ce32","res/icons/cmp-icons.js":"8c00925c86ca","res/icons/main-icons.js":"a5ee0c0aad77","res/nav.js":"2fe085bef38a"},"inlinedExternals":[],"unexposedExports":[{"name":"useStateLayer","sourcePath":"components/app-kit/useStateLayer.js"}]} */
 
 (() => {
 
@@ -1297,7 +1297,7 @@ function CmpDropdown({
   selectedValue = null,
   placeholder = "Выберите",
   options = [],
-  onOptionSelected,
+  onOptionSelect,
   disabled = false,
   rootStyle
 }) {
@@ -1368,7 +1368,7 @@ function CmpDropdown({
     key: i,
     type: "button",
     onClick: () => {
-      onOptionSelected && onOptionSelected(i, opt);
+      onOptionSelect && onOptionSelect(i, opt);
       setOpen(false);
     },
     style: {
@@ -1814,7 +1814,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 function CmpTabRow({
   tabs = [],
   selectedTabIndex = 0,
-  onTabSelected,
+  onTabSelect,
   scrollable = false,
   style,
   ...rest
@@ -1836,7 +1836,7 @@ function CmpTabRow({
       role: "tab",
       "aria-selected": selected,
       type: "button",
-      onClick: () => onTabSelected && onTabSelected(i),
+      onClick: () => onTabSelect && onTabSelect(i),
       style: {
         position: "relative",
         flex: scrollable ? "0 0 auto" : 1,
@@ -2721,7 +2721,8 @@ const validPhone = v => rePhone.test(v.trim());
 function AuthFlow({
   lang: langProp,
   onLang,
-  initialScreen = "login"
+  initialScreen = "login",
+  onLoggedIn = null
 }) {
   const {
     useState,
@@ -2801,7 +2802,8 @@ function AuthFlow({
       if (e.includes("fail")) setLError(true);else if (e.includes("activate") || e.includes("new")) {
         setActivationSent(false);
         setActivationOpen(true);
-      } else go("loggedIn");
+      } else if (onLoggedIn) onLoggedIn(); // app entry: hand off to the main feature
+      else go("loggedIn");
     });
   };
   const registerCanSubmit = rName.trim() && rEmail.trim() && rPhone.trim() && rPass !== "" && installer && !busy;
@@ -4946,6 +4948,1010 @@ Object.assign(window, {
 });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "features/calculator/Calculator.jsx", error: String((e && e.message) || e) }); }
 
+// features/device-select/DeviceSelect.jsx
+try { (() => {
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+// DeviceSelectScreen — поиск и выбор устройства перед монтажом.
+// Точка входа: после «Быстрый монтаж» / «Расширенный монтаж» на главном.
+// Собран только из компонентов дизайн-системы (window namespace).
+//
+// Поток (state machine):
+//   permission → (Разрешить) → scanning → list | empty
+//   permission → (Отклонить) → denied
+//   adapterOff → (Включить) → scanning
+//   list → (выбор) → connecting        (compact/stacked)
+//   list → (выбор) → detail → connecting (split/master-detail)
+//
+// Разрешения зависят от платформы:
+//   android — BLE + USB;  ios — только BLE;  desktop — без запроса (сразу scanning).
+//
+// Адаптив по Material 3 Window Size Classes (CLAUDE.md → «Размеры экранов»):
+//   compact (<600) — телефон: один столбец, строки на всю ширину.
+//   stacked (600–839 портрет) — планшет-портрет: центрированный столбец, крупнее.
+//   split (Expanded/ландшафт/Desktop) — master-detail: слева список, справа карточка+«Подключить».
+//   Класс выбирается по реальной ширине контейнера, а не по типу устройства.
+
+const DS = window.PandoraSpecDesignSystem_b8d6e1;
+const {
+  CmpTopAppBar,
+  CmpIconButton,
+  CmpButton,
+  CmpOutlinedButton,
+  CmpSurface,
+  CmpText,
+  CmpIcon,
+  CmpDivider,
+  CmpCircularProgressIndicator
+} = DS;
+
+// ── Демо-данные найденных устройств (BLE + USB-HID) ──────────────────────────
+const DEVICES = [{
+  id: "dx4gs",
+  name: "Pandora DX-4GS",
+  transport: "ble",
+  address: "AC:23:3F:A1:0C:7D",
+  rssi: -48,
+  type: "Основной блок",
+  icon: "sensors"
+}, {
+  id: "dxl5000",
+  name: "Pandora DXL-5000",
+  transport: "ble",
+  address: "C8:FD:19:22:8B:04",
+  rssi: -67,
+  type: "Основной блок",
+  icon: "sensors"
+}, {
+  id: "rmd5",
+  name: "Pandora RMD-5",
+  transport: "usb",
+  address: "HID · 0483:5750",
+  rssi: null,
+  type: "Модуль обхода",
+  icon: "memory"
+}, {
+  id: "d032",
+  name: "Pandora D-032",
+  transport: "ble",
+  address: "7A:11:0D:5E:C3:90",
+  rssi: -75,
+  type: "Метка",
+  icon: "vpn_key"
+}, {
+  id: "vx4g",
+  name: "Pandora VX-4G",
+  transport: "ble",
+  address: "3C:2E:FF:90:11:AA",
+  rssi: -83,
+  type: "Основной блок",
+  icon: "sensors"
+}];
+const TRANSPORT = {
+  ble: {
+    icon: "bluetooth",
+    label: "Bluetooth"
+  },
+  usb: {
+    icon: "usb",
+    label: "USB"
+  }
+};
+
+// Инъекция анимаций один раз (радар / появление).
+(function injectStyles() {
+  if (document.getElementById("ds-device-select-anim")) return;
+  const s = document.createElement("style");
+  s.id = "ds-device-select-anim";
+  s.textContent = "@keyframes dsPing{0%{transform:scale(.65);opacity:.55}80%{transform:scale(1.9);opacity:0}100%{opacity:0}}" + "@keyframes dsRowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" + "@media (prefers-reduced-motion: reduce){.ds-ping,.ds-row{animation:none!important}}";
+  document.head.appendChild(s);
+})();
+
+// ── Измерение контейнера → активный класс окна ───────────────────────────────
+function useLayout() {
+  const ref = React.useRef(null);
+  const [size, setSize] = React.useState({
+    w: 0,
+    h: 0
+  });
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const remeasure = () => setSize({
+      w: el.offsetWidth,
+      h: el.offsetHeight
+    });
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(el);
+    window.addEventListener("resize", remeasure);
+    remeasure();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", remeasure);
+    };
+  }, []);
+  const {
+    w,
+    h
+  } = size;
+  let mode = "compact";
+  if (w >= 600) mode = w > h * 1.1 ? "split" : "stacked";
+  return [ref, mode, size];
+}
+
+// ── Мелкие строительные блоки ────────────────────────────────────────────────
+
+// Плейсхолдер-слот фото устройства (пользователь заменит реальным снимком).
+function DeviceTile({
+  icon,
+  size = 56,
+  radius = 12,
+  showCaption = false
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: size,
+      height: size,
+      borderRadius: radius,
+      flex: "0 0 auto",
+      position: "relative",
+      overflow: "hidden",
+      display: "grid",
+      placeItems: "center",
+      border: "1px solid var(--outline-variant)",
+      background: "repeating-linear-gradient(135deg, var(--surface-variant) 0 6px, color-mix(in srgb, var(--surface-variant) 55%, var(--surface)) 6px 12px)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: Math.round(size * 0.42),
+    color: "color-mix(in srgb, var(--on-surface-variant) 78%, transparent)"
+  }), showCaption && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      padding: "2px 0",
+      fontFamily: "var(--font-mono)",
+      fontSize: 9,
+      letterSpacing: .3,
+      textAlign: "center",
+      color: "var(--on-surface-variant)",
+      background: "color-mix(in srgb, var(--surface) 70%, transparent)"
+    }
+  }, "\u0444\u043E\u0442\u043E \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430"));
+}
+
+// Уровень сигнала BLE — три столбика (простые прямоугольники).
+function SignalBars({
+  rssi
+}) {
+  const level = rssi >= -55 ? 3 : rssi >= -72 ? 2 : 1;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-end",
+      gap: 2,
+      height: 16
+    },
+    title: `${rssi} dBm`
+  }, [0, 1, 2].map(i => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      width: 4,
+      height: 6 + i * 5,
+      borderRadius: 1,
+      background: i < level ? "var(--primary)" : "color-mix(in srgb, var(--on-surface-variant) 28%, transparent)"
+    }
+  })));
+}
+
+// Чип транспорта (Bluetooth / USB).
+function TransportChip({
+  transport
+}) {
+  const t = TRANSPORT[transport];
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 4,
+      height: 22,
+      padding: "0 8px",
+      borderRadius: 999,
+      background: "var(--secondary-container)",
+      color: "var(--on-secondary-container)",
+      fontFamily: "var(--font-sans)",
+      fontSize: 12,
+      fontWeight: 500,
+      flex: "0 0 auto"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: t.icon,
+    size: 14
+  }), t.label);
+}
+
+// Строка устройства в списке.
+function DeviceRow({
+  device,
+  selected,
+  onClick,
+  tileSize = 56
+}) {
+  const {
+    hover,
+    focus,
+    active,
+    opacity,
+    handlers
+  } = DS.useStateLayer ? DS.useStateLayer() : {
+    opacity: 0,
+    handlers: {}
+  };
+  return /*#__PURE__*/React.createElement(CmpSurface, {
+    onClick: onClick,
+    color: selected ? "var(--primary-container)" : "var(--surface-container-low)",
+    contentColor: selected ? "var(--on-primary-container)" : "var(--on-surface)",
+    radius: 16,
+    border: !selected,
+    style: {
+      boxSizing: "border-box",
+      position: "relative",
+      overflow: "hidden",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("div", _extends({}, handlers, {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick && onClick();
+      }
+    },
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      padding: "12px 14px",
+      minHeight: 72,
+      boxSizing: "border-box"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "var(--on-surface)",
+      opacity,
+      pointerEvents: "none"
+    }
+  }), /*#__PURE__*/React.createElement(DeviceTile, {
+    icon: device.icon,
+    size: tileSize
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleMedium",
+    maxLines: 1
+  }, device.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 4,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement(TransportChip, {
+    transport: device.transport
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "var(--font-mono)",
+      fontSize: 12,
+      color: selected ? "inherit" : "var(--on-surface-variant)"
+    }
+  }, device.address))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      gap: 6,
+      position: "relative",
+      flex: "0 0 auto"
+    }
+  }, device.transport === "ble" ? /*#__PURE__*/React.createElement(SignalBars, {
+    rssi: device.rssi
+  }) : /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "usb",
+    size: 18,
+    color: "var(--on-surface-variant)"
+  }), /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: "chevron_right",
+    size: 22,
+    color: selected ? "inherit" : "var(--on-surface-variant)"
+  }))));
+}
+
+// Круглый герой-значок для состояний.
+function Hero({
+  icon,
+  tone = "primary",
+  radar = false
+}) {
+  const bg = tone === "error" ? "var(--error-container)" : tone === "neutral" ? "var(--surface-variant)" : "var(--primary-container)";
+  const fg = tone === "error" ? "var(--on-error-container)" : tone === "neutral" ? "var(--on-surface-variant)" : "var(--on-primary-container)";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      width: 112,
+      height: 112,
+      display: "grid",
+      placeItems: "center",
+      flex: "0 0 auto"
+    }
+  }, radar && [0, 1].map(i => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "ds-ping",
+    style: {
+      position: "absolute",
+      inset: 0,
+      borderRadius: "50%",
+      border: "2px solid var(--primary)",
+      animation: "dsPing 1.8s ease-out infinite",
+      animationDelay: `${i * 0.9}s`
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 96,
+      height: 96,
+      borderRadius: "50%",
+      background: bg,
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 44,
+    color: fg
+  })));
+}
+
+// Обёртка центрированных состояний (permission/denied/adapterOff/scanning/empty/connecting).
+function CenterState({
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflow: "auto",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 22,
+      padding: "32px 24px",
+      textAlign: "center",
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 460,
+      width: "100%",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 22
+    }
+  }, children));
+}
+
+// Строка разрешения в экране запроса.
+function PermissionRow({
+  icon,
+  label,
+  desc
+}) {
+  return /*#__PURE__*/React.createElement(CmpSurface, {
+    color: "var(--surface-container-low)",
+    radius: 14,
+    border: true,
+    style: {
+      width: "100%",
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      padding: 14,
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      background: "var(--secondary-container)",
+      color: "var(--on-secondary-container)",
+      display: "grid",
+      placeItems: "center",
+      flex: "0 0 auto"
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: icon,
+    size: 24
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleSmall"
+  }, label), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, desc))));
+}
+const PERMS = {
+  android: [{
+    icon: "bluetooth",
+    label: "Bluetooth (BLE)",
+    desc: "Поиск и связь с блоком сигнализации"
+  }, {
+    icon: "usb",
+    label: "USB",
+    desc: "Подключение модулей по проводу"
+  }],
+  ios: [{
+    icon: "bluetooth",
+    label: "Bluetooth",
+    desc: "Поиск и связь с блоком сигнализации"
+  }],
+  desktop: []
+};
+
+// ── Главный экран ─────────────────────────────────────────────────────────────
+function DeviceSelectScreen({
+  platform = "android",
+  initialStep,
+  demoEmpty = false,
+  showBack = true,
+  onBack = () => {}
+}) {
+  const {
+    useState,
+    useEffect,
+    useRef
+  } = React;
+  const [rootRef, mode] = useLayout();
+  const firstStep = initialStep || (platform === "desktop" ? "scanning" : "permission");
+  const [step, setStep] = useState(firstStep);
+  const [selectedId, setSelectedId] = useState(null);
+  const [connectingId, setConnectingId] = useState(null);
+  const scanTimer = useRef(null);
+
+  // Сканирование: авто-переход в список (или «пусто») через задержку.
+  useEffect(() => {
+    if (step !== "scanning") return;
+    clearTimeout(scanTimer.current);
+    scanTimer.current = setTimeout(() => setStep(demoEmpty ? "empty" : "list"), 2200);
+    return () => clearTimeout(scanTimer.current);
+  }, [step, demoEmpty]);
+  const selectDevice = d => {
+    if (mode === "split") setSelectedId(d.id);else {
+      setConnectingId(d.id);
+      setStep("connecting");
+    }
+  };
+  const connectSelected = () => {
+    setConnectingId(selectedId);
+    setStep("connecting");
+  };
+  const perms = PERMS[platform] || PERMS.android;
+  const tileSize = mode === "compact" ? 56 : 60;
+
+  // ── содержимое по шагу ──
+  let body;
+  if (step === "permission") {
+    body = /*#__PURE__*/React.createElement(CenterState, null, /*#__PURE__*/React.createElement(Hero, {
+      icon: "bluetooth_searching"
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "headlineSmall",
+      as: "h1"
+    }, "\u0414\u043E\u0441\u0442\u0443\u043F \u043A \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430\u043C"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, platform === "ios" ? "Чтобы найти блок сигнализации, приложению нужен доступ к Bluetooth." : "Чтобы найти блок сигнализации, приложению нужен доступ к Bluetooth и USB."))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        width: "100%"
+      }
+    }, perms.map(p => /*#__PURE__*/React.createElement(PermissionRow, _extends({
+      key: p.label
+    }, p)))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        width: "100%",
+        marginTop: 4
+      }
+    }, /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u0420\u0430\u0437\u0440\u0435\u0448\u0438\u0442\u044C",
+      fullWidth: true,
+      onClick: () => setStep("scanning")
+    }), /*#__PURE__*/React.createElement(CmpTextButtonSafe, {
+      text: "\u041D\u0435 \u0441\u0435\u0439\u0447\u0430\u0441",
+      onClick: () => setStep("denied")
+    })));
+  } else if (step === "denied") {
+    body = /*#__PURE__*/React.createElement(CenterState, null, /*#__PURE__*/React.createElement(Hero, {
+      icon: "lock",
+      tone: "error"
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "headlineSmall",
+      as: "h1"
+    }, "\u041D\u0435\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u0430"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u0411\u0435\u0437 \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u044F \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043D\u0435 \u0441\u043C\u043E\u0436\u0435\u0442 \u043D\u0430\u0439\u0442\u0438 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430. \u0412\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0434\u043E\u0441\u0442\u0443\u043F \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445."))), /*#__PURE__*/React.createElement(FixSteps, {
+      platform: platform
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        width: "100%",
+        marginTop: 4
+      }
+    }, /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438",
+      icon: "settings",
+      fullWidth: true,
+      onClick: () => setStep("permission")
+    })));
+  } else if (step === "adapterOff") {
+    body = /*#__PURE__*/React.createElement(CenterState, null, /*#__PURE__*/React.createElement(Hero, {
+      icon: "bluetooth_disabled",
+      tone: "neutral"
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "headlineSmall",
+      as: "h1"
+    }, "Bluetooth \u0432\u044B\u043A\u043B\u044E\u0447\u0435\u043D"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u0435 Bluetooth \u043D\u0430 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0435, \u0447\u0442\u043E\u0431\u044B \u043D\u0430\u0439\u0442\u0438 \u0431\u043B\u043E\u043A \u0441\u0438\u0433\u043D\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438."))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        width: "100%",
+        marginTop: 4
+      }
+    }, /*#__PURE__*/React.createElement(CmpButton, {
+      text: "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C Bluetooth",
+      icon: "bluetooth",
+      fullWidth: true,
+      onClick: () => setStep("scanning")
+    })));
+  } else if (step === "scanning") {
+    body = /*#__PURE__*/React.createElement(CenterState, null, /*#__PURE__*/React.createElement(Hero, {
+      icon: "bluetooth_searching",
+      radar: true
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "headlineSmall",
+      as: "h1"
+    }, "\u041F\u043E\u0438\u0441\u043A \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u2026"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u0414\u0435\u0440\u0436\u0438\u0442\u0435 \u0431\u043B\u043E\u043A \u0441\u0438\u0433\u043D\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u0440\u044F\u0434\u043E\u043C. Bluetooth \u0438 USB-\u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430 \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438."))), /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, null));
+  } else if (step === "empty") {
+    body = /*#__PURE__*/React.createElement(CenterState, null, /*#__PURE__*/React.createElement(Hero, {
+      icon: "search_off",
+      tone: "neutral"
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "headlineSmall",
+      as: "h1"
+    }, "\u0423\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u044B"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "bodyLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u041F\u043E\u0438\u0441\u043A \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0435\u0442\u0441\u044F. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435, \u0447\u0442\u043E \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E \u0433\u043E\u0442\u043E\u0432\u043E \u043A \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044E."))), /*#__PURE__*/React.createElement(FixSteps, {
+      empty: true,
+      platform: platform
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 10,
+        marginTop: 4
+      }
+    }, /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+      size: 18,
+      strokeWidth: 2.5
+    }), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "labelLarge",
+      color: "var(--on-surface-variant)"
+    }, "\u0418\u0434\u0451\u0442 \u043F\u043E\u0438\u0441\u043A\u2026")));
+  } else if (step === "connecting") {
+    const d = DEVICES.find(x => x.id === connectingId) || DEVICES[0];
+    body = /*#__PURE__*/React.createElement(CenterState, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "relative"
+      }
+    }, /*#__PURE__*/React.createElement(Hero, {
+      icon: d.icon,
+      radar: true
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "headlineSmall",
+      as: "h1"
+    }, "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435\u2026"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2
+      }
+    }, /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleMedium"
+    }, d.name), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: "var(--font-mono)",
+        fontSize: 13,
+        color: "var(--on-surface-variant)"
+      }
+    }, d.address))), /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, null), /*#__PURE__*/React.createElement(CmpOutlinedButton, {
+      text: "\u041E\u0442\u043C\u0435\u043D\u0430",
+      onClick: () => {
+        setConnectingId(null);
+        setStep("list");
+      }
+    }));
+  } else {
+    // step === "list"
+    body = /*#__PURE__*/React.createElement(ListBody, {
+      mode: mode,
+      tileSize: tileSize,
+      selectedId: selectedId,
+      onSelect: selectDevice,
+      onConnect: connectSelected
+    });
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    ref: rootRef,
+    style: {
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      background: "var(--background)",
+      color: "var(--on-background)"
+    }
+  }, /*#__PURE__*/React.createElement(CmpTopAppBar, {
+    title: "\u0412\u044B\u0431\u043E\u0440 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430",
+    navigationIcon: showBack ? /*#__PURE__*/React.createElement(CmpIconButton, {
+      icon: "ArrowBack",
+      contentDescription: "\u041D\u0430\u0437\u0430\u0434",
+      onClick: onBack
+    }) : undefined
+  }), body);
+}
+
+// Подсказки «как починить» / «почему пусто».
+function FixSteps({
+  platform = "android",
+  empty = false
+}) {
+  const items = empty ? ["Убедитесь, что на устройстве включено питание", "Поднесите блок ближе — в пределах 1–2 метров", "Проверьте, что Bluetooth включён"] : platform === "ios" ? ["Настройки → Pandora Spec → Bluetooth → включить"] : ["Настройки → Приложения → Pandora Spec → Разрешения", "Включите «Устройства поблизости» и «Bluetooth»"];
+  return /*#__PURE__*/React.createElement(CmpSurface, {
+    color: "var(--surface-container-low)",
+    radius: 14,
+    border: true,
+    style: {
+      width: "100%",
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+      padding: 16,
+      textAlign: "left"
+    }
+  }, items.map((t, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement(CmpIcon, {
+    icon: empty ? "check_circle" : "chevron_right",
+    size: 20,
+    color: "var(--primary)",
+    style: {
+      marginTop: 1
+    }
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, t)))));
+}
+
+// Список найденных устройств: compact/stacked — один столбец; split — master-detail.
+function ListBody({
+  mode,
+  tileSize,
+  selectedId,
+  onSelect,
+  onConnect
+}) {
+  const selected = DEVICES.find(d => d.id === selectedId) || null;
+  const listHeader = /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "titleMedium"
+  }, "\u041D\u0430\u0439\u0434\u0435\u043D\u043E \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432: ", DEVICES.length), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement(CmpCircularProgressIndicator, {
+    size: 16,
+    strokeWidth: 2.5
+  }), /*#__PURE__*/React.createElement(CmpText, {
+    variant: "labelLarge",
+    color: "var(--on-surface-variant)"
+  }, "\u043F\u043E\u0438\u0441\u043A\u2026")));
+  const rows = /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    }
+  }, DEVICES.map((d, i) => /*#__PURE__*/React.createElement("div", {
+    key: d.id,
+    className: "ds-row",
+    style: {
+      animation: "dsRowIn .28s ease both",
+      animationDelay: `${i * 45}ms`
+    }
+  }, /*#__PURE__*/React.createElement(DeviceRow, {
+    device: d,
+    tileSize: tileSize,
+    selected: mode === "split" && d.id === selectedId,
+    onClick: () => onSelect(d)
+  }))));
+  if (mode === "split") {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        gap: 20,
+        padding: 24,
+        boxSizing: "border-box",
+        maxWidth: 1100,
+        width: "100%",
+        margin: "0 auto"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: "1 1 0",
+        minWidth: 320,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: 14
+      }
+    }, listHeader, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minHeight: 0,
+        overflow: "auto",
+        paddingRight: 4
+      }
+    }, rows)), /*#__PURE__*/React.createElement(CmpDivider, {
+      orientation: "vertical"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: "1 1 0",
+        maxWidth: 420,
+        minWidth: 300,
+        minHeight: 0,
+        overflow: "auto"
+      }
+    }, /*#__PURE__*/React.createElement(DetailPanel, {
+      device: selected,
+      onConnect: onConnect
+    })));
+  }
+
+  // compact / stacked — один центрированный столбец.
+  const maxW = mode === "stacked" ? 620 : "100%";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      overflow: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: maxW,
+      width: "100%",
+      margin: "0 auto",
+      padding: mode === "stacked" ? "20px 24px 28px" : "14px 14px 22px",
+      boxSizing: "border-box",
+      display: "flex",
+      flexDirection: "column",
+      gap: 14
+    }
+  }, listHeader, rows));
+}
+
+// Правая колонка master-detail: карточка выбранного устройства + «Подключить».
+function DetailPanel({
+  device,
+  onConnect
+}) {
+  if (!device) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: "100%",
+        minHeight: 260,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 14,
+        textAlign: "center",
+        padding: 24
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 72,
+        height: 72,
+        borderRadius: "50%",
+        background: "var(--surface-variant)",
+        display: "grid",
+        placeItems: "center"
+      }
+    }, /*#__PURE__*/React.createElement(CmpIcon, {
+      icon: "touch_app",
+      size: 34,
+      color: "var(--on-surface-variant)"
+    })), /*#__PURE__*/React.createElement(CmpText, {
+      variant: "titleMedium",
+      color: "var(--on-surface-variant)"
+    }, "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u043E \u0438\u0437 \u0441\u043F\u0438\u0441\u043A\u0430"));
+  }
+  const rows = [{
+    label: "Тип",
+    value: device.type
+  }, {
+    label: "Связь",
+    value: TRANSPORT[device.transport].label
+  }, {
+    label: device.transport === "ble" ? "MAC-адрес" : "Адрес",
+    value: device.address,
+    mono: true
+  }];
+  if (device.transport === "ble") rows.push({
+    label: "Сигнал",
+    value: `${device.rssi} dBm`
+  });
+  return /*#__PURE__*/React.createElement(CmpSurface, {
+    color: "var(--surface-container-low)",
+    radius: 20,
+    border: true,
+    style: {
+      boxSizing: "border-box"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 24,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 18
+    }
+  }, /*#__PURE__*/React.createElement(DeviceTile, {
+    icon: device.icon,
+    size: 128,
+    radius: 20,
+    showCaption: true
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "headlineSmall"
+  }, device.name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6,
+      display: "flex",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement(TransportChip, {
+    transport: device.transport
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, rows.map((r, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: r.label
+  }, i > 0 && /*#__PURE__*/React.createElement(CmpDivider, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 16,
+      padding: "12px 2px"
+    }
+  }, /*#__PURE__*/React.createElement(CmpText, {
+    variant: "bodyMedium",
+    color: "var(--on-surface-variant)"
+  }, r.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: r.mono ? "var(--font-mono)" : "var(--font-sans)",
+      fontSize: 14,
+      fontWeight: 500,
+      color: "var(--on-surface)",
+      textAlign: "right"
+    }
+  }, r.value))))), /*#__PURE__*/React.createElement(CmpButton, {
+    text: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C",
+    icon: "link",
+    fullWidth: true,
+    onClick: onConnect
+  })));
+}
+
+// CmpTextButton может отсутствовать в некоторых сборках — безопасная обёртка.
+function CmpTextButtonSafe(props) {
+  const Btn = DS.CmpTextButton;
+  return Btn ? /*#__PURE__*/React.createElement(Btn, props) : /*#__PURE__*/React.createElement(CmpOutlinedButton, props);
+}
+Object.assign(window, {
+  DeviceSelectScreen
+});
+})(); } catch (e) { __ds_ns.__errors.push({ path: "features/device-select/DeviceSelect.jsx", error: String((e && e.message) || e) }); }
+
 // features/home/Home.jsx
 try { (() => {
 // Home.jsx — Pandora Spec main-screen controller.
@@ -4973,7 +5979,8 @@ function HomeApp({
   platform = "mobile",
   appVersion = "2.4.1",
   latestVersion = "2.5.0",
-  initialUpdateState = "available"
+  initialUpdateState = "available",
+  onLogout = null
 }) {
   const {
     useState,
@@ -5017,9 +6024,15 @@ function HomeApp({
   const onNav = key => {
     // Prototype: real routing lands here. Close the drawer on selection.
     if (key === "settings" || key === "logout") setMenuOpen(false);
+    if (key === "logout" && onLogout) onLogout();
     if (key === "support" || key === "requests") {
       // «Заявки на техпомощь» / карточка «Заявки» → support chat mockup for this platform.
       const target = isDesktop ? "support-chat-desktop" : "support-chat";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
+    if (key === "quick" || key === "extended") {
+      // «Быстрый / Расширенный монтаж» → экран поиска и выбора устройства.
+      const target = isDesktop ? "device-select-desktop" : "device-select";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
   };
@@ -5642,10 +6655,6 @@ function HomeDrawer({
       size: 20,
       strokeWidth: 2.5
     }) : null
-  }), /*#__PURE__*/React.createElement(DrawerRow, {
-    icon: ICON.support,
-    label: "\u0417\u0430\u044F\u0432\u043A\u0438 \u043D\u0430 \u0442\u0435\u0445\u043F\u043E\u043C\u043E\u0449\u044C",
-    onClick: () => onNav("support")
   }), /*#__PURE__*/React.createElement(DrawerRow, {
     icon: ICON.settings,
     label: "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438",
@@ -7512,6 +8521,12 @@ try { (() => {
     'home-parts': 'features/home/HomeParts.html',
     'app-update': 'features/app-update/AppUpdate.html',
     index: 'index.html',
+    'index-tablet': 'index-tablet.html',
+    'index-desktop': 'index-desktop.html',
+    'device-select': 'features/device-select/DeviceSelect.html',
+    'device-select-tablet': 'features/device-select/DeviceSelectTablet.html',
+    'device-select-desktop': 'features/device-select/DeviceSelectDesktop.html',
+    'device-select-states': 'features/device-select/DeviceSelectStates.html',
     calculator: 'features/calculator/Calculator.html',
     'calculator-tablet': 'features/calculator/CalculatorTablet.html',
     'calculator-desktop': 'features/calculator/CalculatorDesktop.html',

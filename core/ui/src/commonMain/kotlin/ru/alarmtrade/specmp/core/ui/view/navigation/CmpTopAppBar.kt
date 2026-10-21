@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.core.ui.view.navigation
 
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,8 @@ enum class CmpTopAppBarStyle { Small, CenterAligned }
 private val EdgeInset = 8.dp
 private val SlotGap = 8.dp
 
+// title() вызывается в двух взаимоисключающих ветках слота (с подзаголовком и без) — вынос сменил бы структуру узлов
+@Suppress("ktlint:compose:content-slot-reused")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CmpTopAppBar(
@@ -35,7 +39,7 @@ fun CmpTopAppBar(
     containerColor: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
     colors: TopAppBarColors = cmpTopAppBarColors(containerColor, contentColor),
-    style: CmpTopAppBarStyle = CmpTopAppBarStyle.Small,
+    style: CmpTopAppBarStyle = CmpTopAppBarStyle.Small
 ) {
     val titleSlot: @Composable () -> Unit = if (subtitle != null) {
         {
@@ -62,7 +66,7 @@ fun CmpTopAppBar(
         Row(
             modifier = Modifier.padding(start = SlotGap, end = EdgeInset),
             horizontalArrangement = Arrangement.spacedBy(SlotGap),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             actions()
         }
@@ -79,7 +83,7 @@ fun CmpTopAppBar(
             navigationIcon = navigationIconSlot,
             actions = actionsSlot,
             windowInsets = zeroInsets,
-            colors = colors,
+            colors = colors
         )
 
         CmpTopAppBarStyle.CenterAligned -> CenterAlignedTopAppBar(
@@ -88,16 +92,13 @@ fun CmpTopAppBar(
             navigationIcon = navigationIconSlot,
             actions = actionsSlot,
             windowInsets = zeroInsets,
-            colors = colors,
+            colors = colors
         )
     }
 }
 
 @Composable
-private fun cmpTopAppBarColors(
-    containerColor: Color,
-    contentColor: Color,
-): TopAppBarColors {
+private fun cmpTopAppBarColors(containerColor: Color, contentColor: Color): TopAppBarColors {
     val colorScheme = MaterialTheme.colorScheme
     val resolvedContainerColor = if (containerColor != Color.Unspecified) {
         containerColor
@@ -115,6 +116,6 @@ private fun cmpTopAppBarColors(
         scrolledContainerColor = resolvedContainerColor,
         navigationIconContentColor = resolvedContentColor,
         titleContentColor = resolvedContentColor,
-        actionIconContentColor = resolvedContentColor,
+        actionIconContentColor = resolvedContentColor
     )
 }

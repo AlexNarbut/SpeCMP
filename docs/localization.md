@@ -149,7 +149,7 @@ name      — краткое описание содержимого
 9. **App-level локаль живёт в `core/localization` и `composeApp`.**
    Feature-модули не читают системный язык и не сохраняют выбранный язык самостоятельно.
    Composition root вызывает `prepareAppLocale()` на старте, хранит `AppLocale` в Compose state,
-   провайдит его через `LocalAppLocale` и передаёт в фичи только callback `onLocaleChanged`.
+   провайдит его через `LocalAppLocale` и передаёт в фичи только callback `onLocaleChange`.
    Пользовательский выбор из switcher применяется через `applyAppLocale(locale)`: он
    сохраняется и переживает перезапуск. Если пользователь ещё ничего не выбирал,
    используется системный язык устройства.
@@ -174,9 +174,9 @@ Live-переключение языка — app-level механизм. Он о
    var appLocale by remember { mutableStateOf(prepareAppLocale()) }
 
    CompositionLocalProvider(LocalAppLocale provides appLocale) {
-       AppTheme(onThemeChanged) {
+       AppTheme(onThemeChange) {
            AppNavigation(
-               onLocaleChanged = { locale ->
+               onLocaleChange = { locale ->
                    applyAppLocale(locale)   // сначала платформенная локаль,
                    appLocale = locale       // затем инвалидация дерева
                },
@@ -193,7 +193,7 @@ Live-переключение языка — app-level механизм. Он о
 
 3. **Фичи не управляют локалью.** Feature-модуль:
    - текущую локаль читает через `LocalAppLocale.current` (или получает готовый `AppLocale` параметром);
-   - о выборе пользователя сообщает только через callback `onLocaleChanged(AppLocale)`, пришедший из composition root;
+   - о выборе пользователя сообщает только через callback `onLocaleChange(AppLocale)`, пришедший из composition root;
    - не вызывает `applyAppLocale` / `prepareAppLocale` и платформенные locale-API.
 
 4. **Платформенная мутация локали — только внутри `core/localization`**

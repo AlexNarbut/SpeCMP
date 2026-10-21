@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="device_interaction_a11y_back">Back</string>
+    <string name="device_interaction_connecting_title">Connecting to the unit…</string>
+    <string name="device_interaction_disconnected_title">No connection to the device</string>
+    <string name="device_interaction_disconnected_subtitle">Check the unit power and the cable or Bluetooth. You will return to the same screen once the connection is restored.</string>
+    <string name="device_interaction_bluetooth_boot_title">Bluetooth module in bootloader mode</string>
+    <string name="device_interaction_bluetooth_boot_subtitle">The Bluetooth module firmware needs to be updated. This is not available in the app yet.</string>
+    <string name="device_interaction_firmware_boot_title">Unit in bootloader mode</string>
+    <string name="device_interaction_firmware_boot_subtitle">The main firmware of the unit needs to be updated. This is not available in the app yet.</string>
+    <string name="device_interaction_btn_exit">Exit</string>
+    <string name="device_interaction_disconnected_usb">Check the USB connection to the device.</string>
+    <string name="device_interaction_disconnected_ble">The unit is off or too far away. Move the phone closer and check the unit power.</string>
+    <string name="device_interaction_waiting">Waiting for the unit to return…</string>
+    <string name="device_interaction_btn_disconnect">Disconnect</string>
+</resources>

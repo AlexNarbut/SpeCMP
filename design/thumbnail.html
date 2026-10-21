@@ -1,0 +1,28 @@
+<!-- @dsCard group="Brand" viewport="1280x854" name="Иконка дизайн-системы (thumbnail)" subtitle="Плитка на главной: имя на primary + полоса акцентов" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body { margin: 0; }
+  .tile { width: 1280px; height: 854px; display: flex; overflow: hidden; font-family: var(--font-sans); }
+  .main { flex: 1; background: var(--primary); color: var(--on-primary); display: flex; align-items: center; justify-content: center; padding: 0 90px; box-sizing: border-box; }
+  .name { font-size: 168px; font-weight: 700; line-height: .98; letter-spacing: -.02em; text-align: center; }
+  .name small { display: block; font-size: 92px; font-weight: 500; opacity: .9; letter-spacing: .01em; }
+  .strip { width: 300px; display: flex; flex-direction: column; }
+  .strip > div { flex: 1; }
+</style>
+</head>
+<body>
+<div class="tile">
+  <div class="main"><div class="name">Pandora<small>Spec</small></div></div>
+  <div class="strip">
+    <div style="background: var(--success)"></div>
+    <div style="background: var(--tertiary)"></div>
+    <div style="background: var(--secondary)"></div>
+    <div style="background: var(--error)"></div>
+  </div>
+</div>
+</body>
+</html>

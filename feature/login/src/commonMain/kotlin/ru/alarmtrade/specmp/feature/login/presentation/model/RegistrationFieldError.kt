@@ -8,5 +8,5 @@ enum class RegistrationFieldError {
     FullName,
     Email,
     Phone,
-    Password,
+    Password
 }

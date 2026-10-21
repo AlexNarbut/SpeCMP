@@ -29,28 +29,28 @@ fun AuthBody(
     colors: CmpThemeColors = cmpThemeColors(),
     showCompactBrand: Boolean = true,
     showExpandedBrandRail: Boolean = true,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     when (layoutMode) {
         AuthLayoutMode.Compact -> AuthCompactBody(
             modifier = modifier,
             colors = colors,
             showBrand = showCompactBrand,
-            content = content,
+            content = content
         )
 
         AuthLayoutMode.Medium -> AuthMediumBody(
             modifier = modifier,
             colors = colors,
             showBrand = showCompactBrand,
-            content = content,
+            content = content
         )
 
         AuthLayoutMode.Expanded -> AuthExpandedBody(
             modifier = modifier,
             colors = colors,
             showBrandRail = showExpandedBrandRail,
-            content = content,
+            content = content
         )
     }
 }
@@ -60,7 +60,7 @@ private fun AuthCompactBody(
     modifier: Modifier,
     colors: CmpThemeColors,
     showBrand: Boolean,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     CmpColumn(
         modifier = modifier
@@ -69,13 +69,13 @@ private fun AuthCompactBody(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
     ) {
         if (showBrand) {
             AuthBrandLockup(
                 layoutMode = AuthLayoutMode.Compact,
                 colors = colors,
-                modifier = Modifier.padding(bottom = 28.dp),
+                modifier = Modifier.padding(bottom = 28.dp)
             )
         }
 
@@ -84,7 +84,7 @@ private fun AuthCompactBody(
                 .fillMaxWidth()
                 .widthIn(max = 460.dp),
             colors = colors,
-            content = content,
+            content = content
         )
     }
 }
@@ -94,7 +94,7 @@ private fun AuthMediumBody(
     modifier: Modifier,
     colors: CmpThemeColors,
     showBrand: Boolean,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     CmpColumn(
         modifier = modifier
@@ -103,13 +103,13 @@ private fun AuthMediumBody(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
     ) {
         if (showBrand) {
             AuthBrandLockup(
                 layoutMode = AuthLayoutMode.Medium,
                 colors = colors,
-                modifier = Modifier.padding(bottom = 32.dp),
+                modifier = Modifier.padding(bottom = 32.dp)
             )
         }
 
@@ -118,7 +118,7 @@ private fun AuthMediumBody(
                 .fillMaxWidth()
                 .widthIn(max = 420.dp),
             colors = colors,
-            content = content,
+            content = content
         )
     }
 }
@@ -128,7 +128,7 @@ private fun AuthExpandedBody(
     modifier: Modifier,
     colors: CmpThemeColors,
     showBrandRail: Boolean,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     CmpRow(
         modifier = modifier
@@ -137,13 +137,13 @@ private fun AuthExpandedBody(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 56.dp, vertical = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(64.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(64.dp, Alignment.CenterHorizontally)
     ) {
         if (showBrandRail) {
             AuthBrandLockup(
                 layoutMode = AuthLayoutMode.Expanded,
                 colors = colors,
-                modifier = Modifier.widthIn(max = 420.dp).weight(1f),
+                modifier = Modifier.widthIn(max = 420.dp).weight(1f)
             )
         }
 
@@ -153,7 +153,7 @@ private fun AuthExpandedBody(
                 .widthIn(max = 440.dp)
                 .weight(1f),
             colors = colors,
-            content = content,
+            content = content
         )
     }
 }
@@ -162,7 +162,7 @@ private fun AuthExpandedBody(
 private fun AuthFormCard(
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     CmpSurface(
         modifier = modifier,
@@ -171,11 +171,11 @@ private fun AuthFormCard(
         contentColor = colors.onSurface,
         tonalElevation = 1.dp,
         shadowElevation = 2.dp,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpBox(
             modifier = Modifier.padding(AuthCardPadding),
-            content = content,
+            content = content
         )
     }
 }

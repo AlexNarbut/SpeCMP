@@ -31,12 +31,12 @@ fun AuthScreenChrome(
     isLoading: Boolean = false,
     colors: CmpThemeColors = cmpThemeColors(),
     overlay: (@Composable (AuthLayoutMode) -> Unit)? = null,
-    body: @Composable ColumnScope.(AuthLayoutMode) -> Unit,
+    body: @Composable ColumnScope.(AuthLayoutMode) -> Unit
 ) {
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .authBrandBackdrop(colors),
+            .authBrandBackdrop(colors)
     ) {
         val layoutMode = authLayoutModeForWidth(maxWidth)
 
@@ -50,31 +50,31 @@ fun AuthScreenChrome(
                     navigationIcon = navigationIcon,
                     actions = actions,
                     containerColor = Color.Transparent,
-                    contentColor = colors.onBackground,
+                    contentColor = colors.onBackground
                 )
-            },
+            }
         ) { paddingValues ->
             CmpBox(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
             ) {
                 CmpColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     CmpBox(modifier = Modifier.fillMaxWidth().height(4.dp)) {
                         if (isLoading) {
                             CmpLinearProgressIndicator(
                                 modifier = Modifier.fillMaxWidth(),
                                 color = colors.primary,
-                                trackColor = Color.Transparent,
+                                trackColor = Color.Transparent
                             )
                         }
                     }
                     CmpColumn(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
                     ) {
                         body(layoutMode)
                     }
@@ -86,28 +86,26 @@ fun AuthScreenChrome(
     }
 }
 
-private fun Modifier.authBrandBackdrop(colors: CmpThemeColors): Modifier {
-    return drawBehind {
-        drawRect(colors.background)
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    colors.primaryContainer.copy(alpha = 0.88f),
-                    Color.Transparent,
-                ),
-                center = Offset(size.width * 1.02f, -size.height * 0.15f),
-                radius = size.maxDimension * 0.72f,
+private fun Modifier.authBrandBackdrop(colors: CmpThemeColors): Modifier = drawBehind {
+    drawRect(colors.background)
+    drawRect(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                colors.primaryContainer.copy(alpha = 0.88f),
+                Color.Transparent
             ),
+            center = Offset(x = size.width * 1.02f, y = -size.height * 0.15f),
+            radius = size.maxDimension * 0.72f
         )
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    colors.tertiaryContainer.copy(alpha = 0.78f),
-                    Color.Transparent,
-                ),
-                center = Offset(-size.width * 0.2f, size.height * 1.12f),
-                radius = size.maxDimension * 0.68f,
+    )
+    drawRect(
+        brush = Brush.radialGradient(
+            colors = listOf(
+                colors.tertiaryContainer.copy(alpha = 0.78f),
+                Color.Transparent
             ),
+            center = Offset(x = -size.width * 0.2f, y = size.height * 1.12f),
+            radius = size.maxDimension * 0.68f
         )
-    }
+    )
 }

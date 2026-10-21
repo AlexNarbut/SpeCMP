@@ -23,13 +23,13 @@ fun AuthPasswordField(
     value: String,
     onValueChange: (String) -> Unit,
     isPasswordVisible: Boolean,
-    onPasswordVisibilityChanged: () -> Unit,
+    onPasswordVisibilityChange: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isError: Boolean = false,
     supportingText: (@Composable () -> Unit)? = null,
     imeAction: ImeAction = ImeAction.Done,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     CmpTextField(
         value = value,
@@ -47,26 +47,26 @@ fun AuthPasswordField(
         },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
-            imeAction = imeAction,
+            imeAction = imeAction
         ),
         keyboardActions = keyboardActions,
         leadingIcon = {
             CmpIcon(
                 icon = CmpIcons.Lock,
-                contentDescription = null,
+                contentDescription = null
             )
         },
         trailingIcon = {
             CmpIconButton(
-                onClick = onPasswordVisibilityChanged,
+                onClick = onPasswordVisibilityChange,
                 icon = if (isPasswordVisible) CmpIcons.VisibilityOff else CmpIcons.Visibility,
                 contentDescription = if (isPasswordVisible) {
                     stringResource(Res.string.login_common_a11y_hide_password)
                 } else {
                     stringResource(Res.string.login_common_a11y_show_password)
                 },
-                enabled = enabled,
+                enabled = enabled
             )
-        },
+        }
     )
 }

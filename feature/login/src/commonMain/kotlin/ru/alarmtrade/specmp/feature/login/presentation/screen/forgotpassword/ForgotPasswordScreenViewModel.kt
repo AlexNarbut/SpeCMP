@@ -13,10 +13,8 @@ import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 
-class ForgotPasswordScreenViewModel(
-    private val repository: LoginRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+class ForgotPasswordScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
+    BaseViewModel() {
 
     private val _state = MutableStateFlow(ForgotPasswordScreenState())
     val state: StateFlow<ForgotPasswordScreenState> = _state.asStateFlow()
@@ -36,7 +34,7 @@ class ForgotPasswordScreenViewModel(
             _state.update {
                 it.copy(
                     resetState = LCEState.Loading(),
-                    resetError = null,
+                    resetError = null
                 )
             }
 
@@ -44,7 +42,7 @@ class ForgotPasswordScreenViewModel(
                 _state.update {
                     it.copy(
                         resetState = LCEState.None(),
-                        resetError = AuthFormError.RequiredFields,
+                        resetError = AuthFormError.RequiredFields
                     )
                 }
                 return@safeLaunch
@@ -58,10 +56,11 @@ class ForgotPasswordScreenViewModel(
                 is Response.Success -> _state.update {
                     it.copy(resetState = LCEState.Content(Unit))
                 }
+
                 is Response.Error -> _state.update {
                     it.copy(
                         resetState = LCEState.None(),
-                        resetError = AuthFormError.RequestFailed,
+                        resetError = AuthFormError.RequestFailed
                     )
                 }
             }

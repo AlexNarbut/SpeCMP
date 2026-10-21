@@ -3,13 +3,16 @@ package ru.alarmtrade.specmp.core.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.coroutines.CoroutineContext
+import org.koin.mp.KoinPlatformTools
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
+import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
 
 /**
  * Базовый класс всех ViewModel проекта.
@@ -20,6 +23,7 @@ import kotlin.coroutines.CoroutineContext
  *   в контекст добавлен [CoroutineExceptionHandler], который логирует необработанные
  *   исключения. Ожидаемые ошибки сюда не попадают — они возвращаются как
  *   `Response.Error` и живут в state; handler ловит именно сбои контракта.
+ * - Жизненный цикл приложения — колбэки [onAppForeground] / [onAppBackground] (модуль `core:lifecycle`).
  */
 abstract class BaseViewModel : ViewModel() {
 
@@ -31,16 +35,35 @@ abstract class BaseViewModel : ViewModel() {
 
     private val proceedMutex = Mutex()
 
-    protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job {
-        return viewModelScope.launch(exceptionHandler, block = block)
+    init {
+        // Жизненный цикл приложения (core:lifecycle) из Koin; без DI (unit-тесты) — без событий.
+        // Подписка приостанавливается сразу, колбэки не вызываются до конца конструктора наследника.
+        KoinPlatformTools.defaultContext().getOrNull()?.getOrNull<AppLifecycle>()?.let { appLifecycle ->
+            viewModelScope.launch(exceptionHandler) {
+                appLifecycle.events.collect { event ->
+                    when (event) {
+                        AppLifecycleEvent.FOREGROUND -> onAppForeground()
+                        AppLifecycleEvent.BACKGROUND -> onAppBackground()
+                    }
+                }
+            }
+        }
     }
 
-    protected fun safeLaunch(
-        coroutineContext: CoroutineContext,
-        block: suspend CoroutineScope.() -> Unit,
-    ): Job {
-        return viewModelScope.launch(coroutineContext + exceptionHandler, block = block)
-    }
+    /**
+     * Приложение вернулось на передний план (из системных настроек, другого приложения, после блокировки).
+     * Не вызывается при открытии экрана и при возврате с другого экрана приложения.
+     */
+    protected open fun onAppForeground() = Unit
+
+    /** Приложение ушло в фон. */
+    protected open fun onAppBackground() = Unit
+
+    protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job =
+        viewModelScope.launch(exceptionHandler, block = block)
+
+    protected fun safeLaunch(coroutineContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit): Job =
+        viewModelScope.launch(coroutineContext + exceptionHandler, block = block)
 
     /**
      * Выполняет [block] под общим для этой ViewModel mutex'ом (один lock на все вызовы
@@ -55,10 +78,7 @@ abstract class BaseViewModel : ViewModel() {
      * вместе с ней (например, при очистке viewModelScope). Работа, которая должна пережить
      * экран, выносится в app-scoped singleton (см. docs/patterns.md).
      */
-    protected suspend fun executeWithProceedLock(
-        needSkipAnother: Boolean = true,
-        block: suspend () -> Unit,
-    ) {
+    protected suspend fun executeWithProceedLock(needSkipAnother: Boolean = true, block: suspend () -> Unit) {
         if (needSkipAnother) {
             // tryLock атомарен: проверка isLocked + withLock допускала бы гонку,
             // при которой оба конкурентных вызова выполнились бы последовательно.

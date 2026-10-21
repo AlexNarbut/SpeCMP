@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.authstate.presentation.logic
 
 import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,12 +19,8 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
-import kotlin.time.Duration.Companion.seconds
 
-class AuthStateViewModel(
-    repository: AuthStateRepository,
-    dispatchers: AppDispatchers,
-) : BaseViewModel() {
+class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispatchers) : BaseViewModel() {
 
     private val retryTrigger = MutableStateFlow(0)
 
@@ -40,17 +37,15 @@ class AuthStateViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeout = 5.seconds),
-            initialValue = AuthState.WAITING,
+            initialValue = AuthState.WAITING
         )
 
     fun retry() {
         retryTrigger.update { it + 1 }
     }
 
-    private fun Response<Boolean>.toAuthState(): AuthState {
-        return when (this) {
-            is Response.Success -> if (value) AuthState.AUTHED else AuthState.NO_AUTH
-            is Response.Error -> AuthState.CHECK_FAILED
-        }
+    private fun Response<Boolean>.toAuthState(): AuthState = when (this) {
+        is Response.Success -> if (value) AuthState.AUTHED else AuthState.NO_AUTH
+        is Response.Error -> AuthState.CHECK_FAILED
     }
 }

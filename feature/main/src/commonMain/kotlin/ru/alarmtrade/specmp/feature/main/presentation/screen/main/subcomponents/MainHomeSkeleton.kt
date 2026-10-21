@@ -39,6 +39,8 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
+private const val SHIMMER_BAND_WIDTH = 600f
+
 @Composable
 internal fun MainHomeSkeleton(
     mode: MainHomeMode,
@@ -47,7 +49,7 @@ internal fun MainHomeSkeleton(
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
-    colors: CmpThemeColors = cmpThemeColors(),
+    colors: CmpThemeColors = cmpThemeColors()
 ) {
     val contentPadding = mode.contentPadding
     val visibleActions = MainHomeAction.visibleActions()
@@ -65,7 +67,7 @@ internal fun MainHomeSkeleton(
 
     Box(
         modifier = modifier.verticalScroll(rememberScrollState()),
-        contentAlignment = Alignment.TopCenter,
+        contentAlignment = Alignment.TopCenter
     ) {
         Column(
             modifier = Modifier
@@ -74,21 +76,21 @@ internal fun MainHomeSkeleton(
                     start = contentPadding + startContentPadding,
                     top = contentPadding,
                     end = contentPadding + endContentPadding,
-                    bottom = contentPadding + bottomContentPadding,
+                    bottom = contentPadding + bottomContentPadding
                 ),
-            verticalArrangement = Arrangement.spacedBy(if (mode == MainHomeMode.Compact) 16.dp else 24.dp),
+            verticalArrangement = Arrangement.spacedBy(if (mode == MainHomeMode.Compact) 16.dp else 24.dp)
         ) {
             MainHomeSkeletonGrid(
                 columns = mainColumns,
                 gap = if (mode == MainHomeMode.Compact) 12.dp else 16.dp,
                 itemHeight = { itemWidth -> mainHomePrimaryCardHeight(mode, itemWidth) },
-                itemCount = primaryActionsCount,
+                itemCount = primaryActionsCount
             ) { itemModifier ->
                 MainCardSkeleton(
                     variant = cardVariant,
                     colors = colors,
                     shimmerBrush = shimmerBrush,
-                    modifier = itemModifier,
+                    modifier = itemModifier
                 )
             }
 
@@ -96,13 +98,13 @@ internal fun MainHomeSkeleton(
                 columns = toolColumns,
                 gap = 12.dp,
                 itemHeight = { itemWidth -> mainHomeToolCardHeight(mode, itemWidth) },
-                itemCount = toolActionsCount,
+                itemCount = toolActionsCount
             ) { itemModifier ->
                 ToolCardSkeleton(
                     isRow = isToolRow,
                     colors = colors,
                     shimmerBrush = shimmerBrush,
-                    modifier = itemModifier,
+                    modifier = itemModifier
                 )
             }
         }
@@ -114,7 +116,7 @@ private fun MainCardSkeleton(
     variant: MainCardVariant,
     colors: CmpThemeColors,
     shimmerBrush: Brush,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val isCentered = variant == MainCardVariant.Centered
 
@@ -122,7 +124,7 @@ private fun MainCardSkeleton(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(MainHomeTokens.PrimaryCardRadius),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         if (isCentered) {
             Column(
@@ -130,12 +132,12 @@ private fun MainCardSkeleton(
                     .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
             ) {
                 SkeletonBlock(size = 64.dp, shimmerBrush = shimmerBrush)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     SkeletonBlock(width = 150.dp, height = 18.dp, shimmerBrush = shimmerBrush)
                     SkeletonBlock(width = 200.dp, height = 13.dp, shimmerBrush = shimmerBrush)
@@ -147,18 +149,18 @@ private fun MainCardSkeleton(
                     .fillMaxSize()
                     .padding(24.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 SkeletonBlock(size = 64.dp, shimmerBrush = shimmerBrush)
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     SkeletonBlock(width = 180.dp, height = 18.dp, shimmerBrush = shimmerBrush)
                     SkeletonBlock(
-                        modifier = Modifier.fillMaxWidth(0.8f),
+                        modifier = Modifier.fillMaxWidth(fraction = 0.8f),
                         height = 13.dp,
-                        shimmerBrush = shimmerBrush,
+                        shimmerBrush = shimmerBrush
                     )
                 }
             }
@@ -171,13 +173,13 @@ private fun ToolCardSkeleton(
     isRow: Boolean,
     colors: CmpThemeColors,
     shimmerBrush: Brush,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     CmpSurface(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(MainHomeTokens.CardRadius),
         color = colors.surface,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         if (isRow) {
             Row(
@@ -185,18 +187,18 @@ private fun ToolCardSkeleton(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 SkeletonBlock(size = 48.dp, shimmerBrush = shimmerBrush)
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     SkeletonBlock(width = 140.dp, height = 15.dp, shimmerBrush = shimmerBrush)
                     SkeletonBlock(
-                        modifier = Modifier.fillMaxWidth(0.7f),
+                        modifier = Modifier.fillMaxWidth(fraction = 0.7f),
                         height = 12.dp,
-                        shimmerBrush = shimmerBrush,
+                        shimmerBrush = shimmerBrush
                     )
                 }
             }
@@ -206,7 +208,7 @@ private fun ToolCardSkeleton(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
             ) {
                 SkeletonBlock(size = 48.dp, shimmerBrush = shimmerBrush)
                 SkeletonBlock(width = 96.dp, height = 15.dp, shimmerBrush = shimmerBrush)
@@ -222,7 +224,7 @@ private fun SkeletonBlock(
     modifier: Modifier = Modifier,
     width: Dp? = null,
     height: Dp? = null,
-    size: Dp? = null,
+    size: Dp? = null
 ) {
     val shapedModifier = when {
         size != null -> modifier.size(size)
@@ -234,8 +236,8 @@ private fun SkeletonBlock(
     Box(
         modifier = shapedModifier.background(
             brush = shimmerBrush,
-            shape = RoundedCornerShape(8.dp),
-        ),
+            shape = RoundedCornerShape(8.dp)
+        )
     )
 }
 
@@ -248,22 +250,22 @@ private fun rememberMainHomeSkeletonBrush(colors: CmpThemeColors): Brush {
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = 1_400,
-                easing = LinearEasing,
+                easing = LinearEasing
             ),
-            repeatMode = RepeatMode.Restart,
+            repeatMode = RepeatMode.Restart
         ),
-        label = "MainHomeSkeletonShimmerProgress",
+        label = "MainHomeSkeletonShimmerProgress"
     )
-    val startX = -600f + progress * 1_200f
+    val startX = -SHIMMER_BAND_WIDTH + progress * 1_200f
 
     return Brush.linearGradient(
         colors = listOf(
             colors.surfaceVariant,
             colors.surfaceContainerHighest,
-            colors.surfaceVariant,
+            colors.surfaceVariant
         ),
         start = Offset(startX, 0f),
-        end = Offset(startX + 600f, 0f),
+        end = Offset(startX + SHIMMER_BAND_WIDTH, 0f)
     )
 }
 
@@ -273,30 +275,30 @@ private fun MainHomeSkeletonGrid(
     gap: Dp,
     itemHeight: (itemWidth: Dp) -> Dp,
     itemCount: Int,
-    itemContent: @Composable (Modifier) -> Unit,
+    itemContent: @Composable (Modifier) -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val itemWidth = mainHomeSkeletonGridItemWidth(
             containerWidth = maxWidth,
             columns = columns,
-            gap = gap,
+            gap = gap
         )
         val resolvedItemHeight = itemHeight(itemWidth)
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(gap)
         ) {
             List(itemCount) { it }.chunked(columns).forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(gap),
+                    horizontalArrangement = Arrangement.spacedBy(gap)
                 ) {
                     rowItems.forEach {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(resolvedItemHeight),
+                                .height(resolvedItemHeight)
                         ) {
                             itemContent(Modifier.fillMaxSize())
                         }
@@ -310,19 +312,13 @@ private fun MainHomeSkeletonGrid(
     }
 }
 
-private fun mainHomeSkeletonGridItemWidth(
-    containerWidth: Dp,
-    columns: Int,
-    gap: Dp,
-): Dp {
+private fun mainHomeSkeletonGridItemWidth(containerWidth: Dp, columns: Int, gap: Dp): Dp {
     val totalGap = gap * (columns - 1).toFloat()
     return (containerWidth - totalGap) / columns.toFloat()
 }
 
-private fun Modifier.mainHomeSkeletonContentWidth(maxWidth: Dp): Modifier {
-    return if (maxWidth == Dp.Unspecified) {
-        fillMaxWidth()
-    } else {
-        fillMaxWidth().widthIn(max = maxWidth)
-    }
+private fun Modifier.mainHomeSkeletonContentWidth(maxWidth: Dp): Modifier = if (maxWidth == Dp.Unspecified) {
+    fillMaxWidth()
+} else {
+    fillMaxWidth().widthIn(max = maxWidth)
 }

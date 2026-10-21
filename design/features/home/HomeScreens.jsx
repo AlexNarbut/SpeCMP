@@ -332,7 +332,6 @@ function HomeDrawer({ variant = "modal", profile, dark, onDark, syncing, onSync,
             trailing={appUpdate.state === "checking" ? <CmpCircularProgressIndicator size={20} strokeWidth={2.5} /> : null}
           />
         )}
-        <DrawerRow icon={ICON.support} label="Заявки на техпомощь" onClick={() => onNav("support")} />
         <DrawerRow icon={ICON.settings} label="Настройки" onClick={() => onNav("settings")} />
         <DrawerRow icon={ICON.logout} label="Выход" onClick={() => onNav("logout")} />
       </div>

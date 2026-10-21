@@ -12,5 +12,5 @@ data class SupportChatPickedFile(
     val name: String,
     val path: String,
     val mimeType: String?,
-    val sizeBytes: Long? = null,
+    val sizeBytes: Long? = null
 )

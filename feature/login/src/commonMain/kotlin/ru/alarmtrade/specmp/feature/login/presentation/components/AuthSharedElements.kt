@@ -33,20 +33,20 @@ fun AuthSubmitButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
-    colors: CmpThemeColors = cmpThemeColors(),
+    colors: CmpThemeColors = cmpThemeColors()
 ) {
     CmpButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp),
-        enabled = enabled && !isLoading,
+        enabled = enabled && !isLoading
     ) {
         if (isLoading) {
             CmpCircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
                 strokeWidth = 3.dp,
-                color = colors.onPrimary,
+                color = colors.onPrimary
             )
         } else {
             CmpText(text = text)
@@ -55,34 +55,30 @@ fun AuthSubmitButton(
 }
 
 @Composable
-fun AuthErrorBanner(
-    text: String,
-    modifier: Modifier = Modifier,
-    colors: CmpThemeColors = cmpThemeColors(),
-) {
+fun AuthErrorBanner(text: String, modifier: Modifier = Modifier, colors: CmpThemeColors = cmpThemeColors()) {
     CmpSurface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         color = colors.errorContainer,
         contentColor = colors.onErrorContainer,
-        border = BorderStroke(1.dp, colors.error.copy(alpha = 0.22f)),
+        border = BorderStroke(1.dp, colors.error.copy(alpha = 0.22f))
     ) {
         CmpRow(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top,
+            verticalAlignment = Alignment.Top
         ) {
             CmpIcon(
                 icon = CmpIcons.AlertCircle,
                 contentDescription = null,
                 modifier = Modifier.size(22.dp),
-                tint = colors.onErrorContainer,
+                tint = colors.onErrorContainer
             )
             CmpText(
                 text = text,
                 modifier = Modifier.weight(1f),
                 fontSize = 14.sp,
-                color = colors.onErrorContainer,
+                color = colors.onErrorContainer
             )
         }
     }
@@ -95,25 +91,25 @@ fun AuthSuccessPanel(
     modifier: Modifier = Modifier,
     icon: CmpIcons = CmpIcons.CheckCircle,
     colors: CmpThemeColors = cmpThemeColors(),
-    primaryAction: (@Composable () -> Unit)? = null,
+    primaryAction: (@Composable () -> Unit)? = null
 ) {
     CmpColumn(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         CmpSurface(
             shape = CircleShape,
             color = colors.primaryContainer,
-            contentColor = colors.onPrimaryContainer,
+            contentColor = colors.onPrimaryContainer
         ) {
             CmpIcon(
                 icon = icon,
                 contentDescription = null,
                 modifier = Modifier.padding(16.dp).size(40.dp),
-                tint = colors.onPrimaryContainer,
+                tint = colors.onPrimaryContainer
             )
         }
         CmpText(
@@ -121,13 +117,13 @@ fun AuthSuccessPanel(
             fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.onSurface,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Center
         )
         CmpText(
             text = text,
             fontSize = 14.sp,
             color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Center
         )
         primaryAction?.invoke()
     }

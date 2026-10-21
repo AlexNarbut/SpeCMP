@@ -23,6 +23,15 @@
     'home-parts':         'features/home/HomeParts.html',
     'app-update':         'features/app-update/AppUpdate.html',
     index:               'index.html',
+    'index-tablet':       'index-tablet.html',
+    'index-desktop':      'index-desktop.html',
+    'device-select':          'features/device-select/DeviceSelect.html',
+    'device-select-tablet':   'features/device-select/DeviceSelectTablet.html',
+    'device-select-desktop':  'features/device-select/DeviceSelectDesktop.html',
+    'device-select-states':   'features/device-select/DeviceSelectStates.html',
+    'advanced-mount':          'features/advanced-mount/AdvancedMount.html',
+    'advanced-mount-tablet':   'features/advanced-mount/AdvancedMountTablet.html',
+    'advanced-mount-desktop':  'features/advanced-mount/AdvancedMountDesktop.html',
     calculator:          'features/calculator/Calculator.html',
     'calculator-tablet':  'features/calculator/CalculatorTablet.html',
     'calculator-desktop': 'features/calculator/CalculatorDesktop.html',
@@ -39,8 +48,8 @@
   window.PS_ROOT = ROOT;
   window.PS_LINKS = LINKS;
   window.psHas = function (key) { return !!LINKS[key]; };
-  window.psGo = function (key) {
+  window.psGo = function (key, profile) {
     var p = LINKS[key];
-    if (p) location.href = ROOT + p;
+    if (p) location.href = ROOT + p + (profile ? '?profile=' + profile : '');
   };
 })();

@@ -28,13 +28,15 @@ class FakeSupportChatRepository : SupportChatRepository {
     // События внутри активной сессии (сообщения, прочтение, набор, смены состояния соединения).
     private val events = MutableSharedFlow<SupportChatEvent>(
         extraBufferCapacity = 64,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
     // false — сессия остаётся в Connecting, пока тест не вызовет connect().
     var autoConnect = true
+
     // true — сессию не удаётся начать (Unavailable, поток завершается).
     var sessionUnavailable = false
+
     // Страница истории на любой запрос; null — ответ loadHistoryError.
     var historyPageOnLoad: List<SupportChatMessage>? = emptyList()
     var loadHistoryError: Exception = Exception("History load failed")
@@ -44,8 +46,10 @@ class FakeSupportChatRepository : SupportChatRepository {
     var markMessagesAsReadResult: Response<Unit> = Response.Success(Unit)
     var downloadFileResult: Response<ByteArray> = Response.Success(byteArrayOf(1, 2, 3))
     var outgoingDelayMillis = 0L
+
     // Следующая отправка «обрывается»: соединение теряется посреди запроса, вызов — ошибка.
     var disconnectDuringNextSend = false
+
     // Задержка ответа loadHistoryPage (гонки пагинации с первичной загрузкой).
     var loadDelayMillis = 0L
 
@@ -59,6 +63,7 @@ class FakeSupportChatRepository : SupportChatRepository {
         get() = historyCursors.size
     var downloadFileCallCount = 0
         private set
+
     // Число начатых сессий (заявок) и отпущенных.
     var sessionCount = 0
         private set
@@ -110,11 +115,9 @@ class FakeSupportChatRepository : SupportChatRepository {
         }
     }
 
-    override suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit> {
-        return trackOutgoingCall {
-            sentDocuments.add(file)
-            sendDocumentResult
-        }
+    override suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit> = trackOutgoingCall {
+        sentDocuments.add(file)
+        sendDocumentResult
     }
 
     override suspend fun downloadFile(url: String): Response<ByteArray> {

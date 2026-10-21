@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.kotlinx.serialization)
-
 }
 
 kotlin {
@@ -33,6 +32,8 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
             implementation(project(":core:network"))
+            implementation(project(":core:permissions"))
+            implementation(project(":core:lifecycle"))
             implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
 
@@ -41,6 +42,11 @@ kotlin {
             implementation(project(":feature:login"))
             implementation(project(":feature:main"))
             implementation(project(":feature:support-chat"))
+            implementation(project(":feature:device:selection"))
+            implementation(project(":feature:device:interaction"))
+            implementation(project(":feature:device:selection-ui"))
+            implementation(project(":feature:device:interaction-ui"))
+            implementation(project(":feature:advanced-mount"))
 
             // Compose
             implementation(libs.compose.runtime)
@@ -57,6 +63,8 @@ kotlin {
 
             // Navigation
             implementation(libs.compose.nav3)
+            // ViewModelStore-декоратор Nav3: per-entry ViewModelStore → очистка VM при pop
+            implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
             // DI
             implementation(libs.koin.core)
@@ -78,7 +86,6 @@ kotlin {
             implementation(libs.compose.ui.tooling)
             implementation(libs.androidx.activityCompose)
         }
-
     }
 
     targets

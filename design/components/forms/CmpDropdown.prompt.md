@@ -2,5 +2,5 @@ Dropdown — pick one value from a list. Read-only field anchor, menu below. Pla
 
 ```jsx
 <CmpDropdown placeholder="Модель сигнализации" options={["DXL 5000","DX 91","VX 4G"]}
-  selectedValue={model} onOptionSelected={(i, v) => setModel(v)} />
+  selectedValue={model} onOptionSelect={(i, v) => setModel(v)} />
 ```

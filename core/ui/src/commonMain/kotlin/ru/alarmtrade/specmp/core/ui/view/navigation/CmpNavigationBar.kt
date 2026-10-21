@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.core.ui.view.navigation
 
 import androidx.compose.material3.NavigationBar
@@ -11,14 +13,11 @@ data class CmpNavigationItem(
     val icon: @Composable () -> Unit,
     val label: (@Composable () -> Unit)? = null,
     val enabled: Boolean = true,
-    val alwaysShowLabel: Boolean = true,
+    val alwaysShowLabel: Boolean = true
 )
 
 @Composable
-fun CmpNavigationBar(
-    items: List<CmpNavigationItem>,
-    modifier: Modifier = Modifier,
-) {
+fun CmpNavigationBar(items: List<CmpNavigationItem>, modifier: Modifier = Modifier) {
     NavigationBar(modifier = modifier) {
         items.forEach { item ->
             NavigationBarItem(
@@ -27,7 +26,7 @@ fun CmpNavigationBar(
                 icon = item.icon,
                 label = item.label,
                 enabled = item.enabled,
-                alwaysShowLabel = item.alwaysShowLabel,
+                alwaysShowLabel = item.alwaysShowLabel
             )
         }
     }

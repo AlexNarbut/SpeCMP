@@ -13,6 +13,6 @@ actual fun createSpecialistDeviceInformation(): AppDeviceInformation {
     return AppDeviceInformation(
         deviceId = deviceId,
         deviceType = DeviceType.IOS,
-        deviceDescription = "$model, $osVersion, SpeCMP",
+        deviceDescription = "$model, $osVersion, SpeCMP"
     )
 }

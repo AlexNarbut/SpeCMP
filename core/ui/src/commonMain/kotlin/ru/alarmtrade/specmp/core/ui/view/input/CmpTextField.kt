@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.core.ui.view.input
 
 import androidx.compose.foundation.text.KeyboardActions
@@ -29,7 +31,7 @@ fun CmpTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined,
+    style: CmpTextFieldStyle = CmpTextFieldStyle.Outlined
 ) {
     val labelComposable: (@Composable () -> Unit)? = label?.let { { CmpText(text = it) } }
     val placeholderComposable: (@Composable () -> Unit)? = placeholder?.let { { CmpText(text = it) } }
@@ -51,8 +53,9 @@ fun CmpTextField(
             supportingText = supportingText,
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
+            keyboardActions = keyboardActions
         )
+
         CmpTextFieldStyle.Filled -> TextField(
             value = value,
             onValueChange = onValueChange,
@@ -69,7 +72,7 @@ fun CmpTextField(
             supportingText = supportingText,
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
+            keyboardActions = keyboardActions
         )
     }
 }

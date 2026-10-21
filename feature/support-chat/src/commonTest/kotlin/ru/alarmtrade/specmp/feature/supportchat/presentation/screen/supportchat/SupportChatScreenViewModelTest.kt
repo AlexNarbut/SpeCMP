@@ -1,6 +1,12 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
 import androidx.lifecycle.viewModelScope
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancelChildren
@@ -21,24 +27,18 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SupportChatScreenViewModelTest {
@@ -62,7 +62,7 @@ class SupportChatScreenViewModelTest {
         dispatchers = AppDispatchers(
             main = testDispatcher,
             io = testDispatcher,
-            default = testDispatcher,
+            default = testDispatcher
         )
     }
 
@@ -97,7 +97,7 @@ class SupportChatScreenViewModelTest {
         repository.historyPageOnLoad = listOf(
             incomingMessageAt(id = 3, minute = 12, text = "Third"),
             incomingMessageAt(id = 2, minute = 9, text = "Second"),
-            incomingMessageAt(id = 1, minute = 5, text = "First"),
+            incomingMessageAt(id = 1, minute = 5, text = "First")
         )
         val viewModel = createViewModel()
 
@@ -108,7 +108,7 @@ class SupportChatScreenViewModelTest {
     fun `live message is placed after older history page`() = runChatTest {
         repository.historyPageOnLoad = listOf(
             incomingMessageAt(id = 2, minute = 9, text = "Second"),
-            incomingMessageAt(id = 1, minute = 5, text = "First"),
+            incomingMessageAt(id = 1, minute = 5, text = "First")
         )
         val viewModel = createViewModel()
 
@@ -428,6 +428,7 @@ class SupportChatScreenViewModelTest {
         // Success SDK — не доставка: запись ждёт серверного эха.
         assertEquals(SupportChatMessageStatus.Sent, outbox.entries.getValue(parked.id).status)
     }
+
     @Test
     fun `reconnect reloads the newest history page and keeps the session`() = runChatTest {
         repository.historyPageOnLoad = listOf(incomingMessage(id = 1, text = "Old"))
@@ -445,6 +446,7 @@ class SupportChatScreenViewModelTest {
         assertEquals(1, repository.sessionCount)
         assertEquals(0, repository.releasedSessionCount)
     }
+
     @Test
     fun `lost connection shows offline banner and keeps the session`() = runChatTest {
         val viewModel = createViewModel()
@@ -458,6 +460,7 @@ class SupportChatScreenViewModelTest {
         // Переподключается SDK: заявка на соединение не отпускается.
         assertEquals(0, repository.releasedSessionCount)
     }
+
     @Test
     fun `waiting for network and reconnecting show the same banner`() = runChatTest {
         val viewModel = createViewModel(advance = false)
@@ -469,7 +472,7 @@ class SupportChatScreenViewModelTest {
         listOf(
             SupportChatConnectionState.Reconnecting,
             SupportChatConnectionState.WaitingForNetwork,
-            SupportChatConnectionState.Reconnecting,
+            SupportChatConnectionState.Reconnecting
         ).forEach { state ->
             repository.disconnect(state)
             runCurrent()
@@ -481,6 +484,7 @@ class SupportChatScreenViewModelTest {
         runCurrent()
         assertNull(viewModel.state.value.connectionBanner)
     }
+
     @Test
     fun `reconnect does not reset already loaded history paging`() = runChatTest {
         repository.historyPageOnLoad = listOf(incomingMessage(id = 2, text = "Newest"))
@@ -498,6 +502,7 @@ class SupportChatScreenViewModelTest {
         assertEquals(cursorBeforeReconnect, viewModel.state.value.historyCursor)
         assertTrue(viewModel.state.value.hasMoreHistory)
     }
+
     @Test
     fun `auth failure shows auth banner until the connection is ready again`() = runChatTest {
         val viewModel = createViewModel()
@@ -531,6 +536,7 @@ class SupportChatScreenViewModelTest {
         assertEquals(SupportChatConnection.Online, viewModel.state.value.connection)
         assertEquals(listOf("Recovered"), viewModel.state.value.messages.map { it.text })
     }
+
     @Test
     fun `pending messages retry sequentially in queue order`() = runChatTest {
         val viewModel = createViewModel()
@@ -628,7 +634,9 @@ class SupportChatScreenViewModelTest {
         viewModel.onSend("")
         runCurrent()
 
-        repository.emitEvent(SupportChatEvent.MessageReceived(ownImageEcho(id = 100, attachmentName = "server-renamed.png")))
+        repository.emitEvent(
+            SupportChatEvent.MessageReceived(ownImageEcho(id = 100, attachmentName = "server-renamed.png"))
+        )
         advanceUntilIdle()
 
         assertEquals(1, viewModel.state.value.messages.size)
@@ -708,8 +716,8 @@ class SupportChatScreenViewModelTest {
                 name = "scheme.pdf",
                 path = "/tmp/scheme.pdf",
                 mimeType = "application/pdf",
-                sizeBytes = 2_048,
-            ),
+                sizeBytes = 2_048
+            )
         )
         viewModel.onSend("See attachments")
         advanceUntilIdle()
@@ -745,7 +753,6 @@ class SupportChatScreenViewModelTest {
 
         assertEquals(listOf<SupportChatEffect>(SupportChatEffect.AttachmentRejected(tooLarge = true)), effects)
     }
-
 
     @Test
     fun `sent message without echo is requeued on disconnect and resent after reconnect`() = runChatTest {
@@ -791,7 +798,7 @@ class SupportChatScreenViewModelTest {
         val restored = ownOptimistic(text = "Delivered", status = SupportChatMessageStatus.Pending)
         outbox.enqueue(restored)
         repository.historyPageOnLoad = listOf(
-            ownTextEcho(id = 400, text = "Delivered").copy(time = restored.time),
+            ownTextEcho(id = 400, text = "Delivered").copy(time = restored.time)
         )
 
         val viewModel = createViewModel()
@@ -911,9 +918,9 @@ class SupportChatScreenViewModelTest {
         assertEquals(
             listOf<SupportChatEffect>(
                 SupportChatEffect.AttachmentOpenFailed(noApp = true),
-                SupportChatEffect.AttachmentOpenFailed(noApp = false),
+                SupportChatEffect.AttachmentOpenFailed(noApp = false)
             ),
-            effects,
+            effects
         )
         assertEquals(1, fileOpener.openedBytes.size)
     }
@@ -975,9 +982,10 @@ class SupportChatScreenViewModelTest {
         assertEquals(1, repository.releasedSessionCount)
         assertEquals(
             listOf(FakeSupportChatRepository.ACQUIRE_CALL, FakeSupportChatRepository.RELEASE_CALL),
-            repository.connectionCalls,
+            repository.connectionCalls
         )
     }
+
     @Test
     fun `new view model instance starts a clean session`() = runChatTest {
         repository.historyPageOnLoad = listOf(incomingMessage(id = 1, text = "Previous session"))
@@ -992,8 +1000,12 @@ class SupportChatScreenViewModelTest {
 
         assertTrue(secondViewModel.state.value.messages.isEmpty())
         assertEquals(
-            listOf(FakeSupportChatRepository.ACQUIRE_CALL, FakeSupportChatRepository.RELEASE_CALL, FakeSupportChatRepository.ACQUIRE_CALL),
-            repository.connectionCalls,
+            listOf(
+                FakeSupportChatRepository.ACQUIRE_CALL,
+                FakeSupportChatRepository.RELEASE_CALL,
+                FakeSupportChatRepository.ACQUIRE_CALL
+            ),
+            repository.connectionCalls
         )
     }
 
@@ -1034,7 +1046,7 @@ class SupportChatScreenViewModelTest {
             fileSaver = saver,
             attachmentFiles = attachmentFiles,
             fileOpener = fileOpener,
-            outbox = outbox,
+            outbox = outbox
         )
         createdViewModels += viewModel
         if (advance) advanceUntilIdle()
@@ -1051,82 +1063,70 @@ class SupportChatScreenViewModelTest {
         return effects
     }
 
-    private fun incomingMessage(id: Long, text: String): SupportChatMessage {
-        return SupportChatMessage(
-            id = id.toString(),
-            serverId = id,
-            text = text,
-            attachment = null,
-            time = Clock.System.now(),
-            isMine = false,
-            authorEmail = "agent@example.com",
-            status = SupportChatMessageStatus.Sent,
+    private fun incomingMessage(id: Long, text: String): SupportChatMessage = SupportChatMessage(
+        id = id.toString(),
+        serverId = id,
+        text = text,
+        attachment = null,
+        time = Clock.System.now(),
+        isMine = false,
+        authorEmail = "agent@example.com",
+        status = SupportChatMessageStatus.Sent
+    )
+
+    private fun incomingMessageAt(id: Long, minute: Int, text: String): SupportChatMessage =
+        incomingMessage(id = id, text = text).copy(
+            time = LocalDateTime(2026, 1, 15, 10, minute).toInstant(TimeZone.UTC)
         )
-    }
 
-    private fun incomingMessageAt(id: Long, minute: Int, text: String): SupportChatMessage {
-        return incomingMessage(id = id, text = text).copy(
-            time = LocalDateTime(2026, 1, 15, 10, minute).toInstant(TimeZone.UTC),
-        )
-    }
+    private fun ownOptimistic(text: String, status: SupportChatMessageStatus): SupportChatMessage = SupportChatMessage(
+        id = "local-$text",
+        serverId = null,
+        text = text,
+        attachment = null,
+        time = Clock.System.now(),
+        isMine = true,
+        authorEmail = null,
+        status = status
+    )
 
-    private fun ownOptimistic(text: String, status: SupportChatMessageStatus): SupportChatMessage {
-        return SupportChatMessage(
-            id = "local-$text",
-            serverId = null,
-            text = text,
-            attachment = null,
-            time = Clock.System.now(),
-            isMine = true,
-            authorEmail = null,
-            status = status,
-        )
-    }
+    private fun ownTextEcho(id: Long, text: String): SupportChatMessage =
+        incomingMessage(id = id, text = text).copy(isMine = true, authorEmail = "me@example.com")
 
-    private fun ownTextEcho(id: Long, text: String): SupportChatMessage {
-        return incomingMessage(id = id, text = text).copy(isMine = true, authorEmail = "me@example.com")
-    }
-
-    private fun ownImageEcho(id: Long, attachmentName: String): SupportChatMessage {
-        return incomingMessage(id = id, text = "").copy(
+    private fun ownImageEcho(id: Long, attachmentName: String): SupportChatMessage =
+        incomingMessage(id = id, text = "").copy(
             text = null,
             attachment = SupportChatAttachment.Image(
                 id = "srv-$id",
                 name = attachmentName,
-                url = "https://example.com/files/$id",
+                url = "https://example.com/files/$id"
             ),
             isMine = true,
-            authorEmail = "me@example.com",
+            authorEmail = "me@example.com"
         )
-    }
 
-    private fun pickedImage(id: String, name: String): SupportChatPickedFile {
-        return SupportChatPickedFile(id = id, name = name, path = "/tmp/$name", mimeType = "image/png")
-    }
+    private fun pickedImage(id: String, name: String): SupportChatPickedFile =
+        SupportChatPickedFile(id = id, name = name, path = "/tmp/$name", mimeType = "image/png")
 
-    private fun documentUiAttachment(): SupportChatUiAttachment {
-        return SupportChatUiAttachment(
-            id = "doc-1",
-            name = "scheme.pdf",
-            kind = SupportChatUiAttachment.Kind.Document,
-            url = "https://files/scheme.pdf",
-            localPath = null,
-            mimeType = "application/pdf",
-            sizeBytes = 1024,
-        )
-    }
+    private fun documentUiAttachment(): SupportChatUiAttachment = SupportChatUiAttachment(
+        id = "doc-1",
+        name = "scheme.pdf",
+        kind = SupportChatUiAttachment.Kind.Document,
+        url = "https://files/scheme.pdf",
+        localPath = null,
+        mimeType = "application/pdf",
+        sizeBytes = 1024
+    )
 
-    private fun imageUiAttachment(): SupportChatUiAttachment {
-        return SupportChatUiAttachment(
-            id = "img-1",
-            name = "photo.jpg",
-            kind = SupportChatUiAttachment.Kind.Image,
-            url = "https://files/photo.jpg",
-            localPath = null,
-            mimeType = null,
-            sizeBytes = null,
-        )
-    }
+    private fun imageUiAttachment(): SupportChatUiAttachment = SupportChatUiAttachment(
+        id = "img-1",
+        name = "photo.jpg",
+        kind = SupportChatUiAttachment.Kind.Image,
+        url = "https://files/photo.jpg",
+        localPath = null,
+        mimeType = null,
+        sizeBytes = null
+    )
 
     // endregion
 }

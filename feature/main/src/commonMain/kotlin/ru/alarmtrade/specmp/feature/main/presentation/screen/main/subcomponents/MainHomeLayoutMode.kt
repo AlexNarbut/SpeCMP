@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
 import androidx.compose.ui.unit.Dp
@@ -7,22 +9,26 @@ internal enum class MainHomeMode {
     Compact,
     Medium,
     Expanded,
-    Large,
+    Large
 }
 
-internal fun mainHomeMode(widthDp: Float): MainHomeMode {
-    return when {
-        widthDp >= 1_200f -> MainHomeMode.Large
-        widthDp >= 840f -> MainHomeMode.Expanded
-        widthDp >= 600f -> MainHomeMode.Medium
-        else -> MainHomeMode.Compact
-    }
+private const val LARGE_MIN_WIDTH_DP = 1_200f
+private const val EXPANDED_MIN_WIDTH_DP = 840f
+private const val MEDIUM_MIN_WIDTH_DP = 600f
+
+internal fun mainHomeMode(widthDp: Float): MainHomeMode = when {
+    widthDp >= LARGE_MIN_WIDTH_DP -> MainHomeMode.Large
+    widthDp >= EXPANDED_MIN_WIDTH_DP -> MainHomeMode.Expanded
+    widthDp >= MEDIUM_MIN_WIDTH_DP -> MainHomeMode.Medium
+    else -> MainHomeMode.Compact
 }
 
 internal val MainHomeMode.contentPadding: Dp
     get() = when (this) {
         MainHomeMode.Compact -> 16.dp
+
         MainHomeMode.Medium -> 24.dp
+
         MainHomeMode.Expanded,
         MainHomeMode.Large -> 32.dp
     }
@@ -31,6 +37,7 @@ internal val MainHomeMode.contentMaxWidth: Dp
     get() = when (this) {
         MainHomeMode.Compact,
         MainHomeMode.Medium -> Dp.Unspecified
+
         MainHomeMode.Expanded,
         MainHomeMode.Large -> 1_040.dp
     }

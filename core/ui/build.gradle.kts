@@ -37,6 +37,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            // Жизненный цикл приложения для BaseViewModel (onAppForeground / onAppBackground)
+            implementation(project(":core:lifecycle"))
 
             // Compose — api so consumers get runtime/foundation/ui transitively
             // material3 stays implementation: feature modules use Cmp* wrappers, not material3 directly
@@ -45,6 +47,9 @@ kotlin {
             api(libs.compose.ui)
             api(libs.compose.resources)
             api(libs.compose.ui.tooling.preview)
+            // Nav3 — api: тип NavBackStack фигурирует в публичном API навигационных
+            // хелперов (core.ui.navigation.NavBackStackSafe), доступных всем фичам.
+            api(libs.compose.nav3)
             implementation(libs.compose.material3)
             // Каталог material-иконок для CmpIcons (резолвится в CmpIconsResolver)
             implementation(compose.materialIconsExtended)

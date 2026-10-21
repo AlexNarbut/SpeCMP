@@ -5,8 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun CmpSpacer(
-    modifier: Modifier = Modifier,
-) {
+fun CmpSpacer(modifier: Modifier = Modifier) {
     Spacer(modifier = modifier)
 }

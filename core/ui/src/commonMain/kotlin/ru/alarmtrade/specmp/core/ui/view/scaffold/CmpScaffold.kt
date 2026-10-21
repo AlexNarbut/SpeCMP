@@ -23,7 +23,7 @@ fun CmpScaffold(
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     containerColor: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
-    content: @Composable (PaddingValues) -> Unit,
+    content: @Composable (PaddingValues) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val resolvedContainerColor = if (containerColor != Color.Unspecified) {
@@ -42,15 +42,15 @@ fun CmpScaffold(
         topBar = {
             Box(
                 modifier = Modifier.windowInsetsPadding(
-                    contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-                ),
+                    contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                )
             ) { topBar() }
         },
         bottomBar = {
             Box(
                 modifier = Modifier.windowInsetsPadding(
-                    contentWindowInsets.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
-                ),
+                    contentWindowInsets.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+                )
             ) { bottomBar() }
         },
         snackbarHost = snackbarHost,
@@ -58,6 +58,6 @@ fun CmpScaffold(
         containerColor = resolvedContainerColor,
         contentColor = resolvedContentColor,
         contentWindowInsets = contentWindowInsets,
-        content = content,
+        content = content
     )
 }

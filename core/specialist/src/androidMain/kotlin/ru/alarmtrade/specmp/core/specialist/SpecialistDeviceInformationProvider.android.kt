@@ -7,7 +7,7 @@ import ru.alarmtrade.common.app.domain.DeviceType
 actual fun createSpecialistDeviceInformation(): AppDeviceInformation {
     val model = listOfNotNull(
         Build.MANUFACTURER,
-        Build.MODEL,
+        Build.MODEL
     )
         .joinToString(separator = " ")
         .trim()
@@ -19,6 +19,6 @@ actual fun createSpecialistDeviceInformation(): AppDeviceInformation {
     return AppDeviceInformation(
         deviceId = fingerprint,
         deviceType = DeviceType.ANDROID,
-        deviceDescription = "$model, $osVersion, SpeCMP",
+        deviceDescription = "$model, $osVersion, SpeCMP"
     )
 }
