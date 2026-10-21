@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="device_interaction_a11y_back">Назад</string>
+    <string name="device_interaction_connecting_title">Подключение к блоку…</string>
+    <string name="device_interaction_disconnected_title">Отсутствует соединение с устройством</string>
+    <string name="device_interaction_disconnected_subtitle">Проверьте питание блока и кабель или Bluetooth. Когда связь восстановится, вы вернётесь на тот же экран.</string>
+    <string name="device_interaction_btn_exit">Выйти</string>
+    <string name="device_interaction_disconnected_usb">Проверьте USB соединение с устройством.</string>
+    <string name="device_interaction_disconnected_ble">Блок выключен или находится далеко. Поднесите телефон ближе и проверьте питание блока.</string>
+    <string name="device_interaction_waiting">Ждём возвращения блока…</string>
+    <string name="device_interaction_btn_disconnect">Отключиться</string>
+</resources>

@@ -1,0 +1,165 @@
+<!-- @dsCard group="Выбор устройства" viewport="1240x1000" name="Выбор устройства (все состояния × размеры)" subtitle="Обзорный лист: каждое состояние сразу в Mobile / Планшет / Десктоп; light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Выбор устройства · состояния × размеры</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; padding: 24px 24px 60px; box-sizing: border-box; }
+  [data-theme="dark"] body, body.dark { background: #0f1420; }
+  .page { max-width: 920px; margin: 0 auto; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  .head h1 { font-size: 22px; font-weight: 700; color: var(--on-background); margin: 0; }
+  .head p { margin: 2px 0 0; font-size: 13px; color: var(--on-surface-variant); font-family: var(--font-mono); }
+  .seg { display: flex; background: var(--surface-container-lowest); border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 18px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--on-surface-variant); }
+  .seg button.on { background: var(--primary); color: var(--on-primary); }
+  .state { margin-top: 30px; }
+  .state > h2 { font-size: 16px; font-weight: 600; color: var(--on-background); margin: 0 0 4px; display: flex; align-items: baseline; gap: 10px; }
+  .state > h2 .desc { font-size: 13px; font-weight: 400; color: var(--on-surface-variant); }
+  .divider { height: 1px; background: var(--outline-variant); margin: 8px 0 16px; }
+  .cols { display: grid; grid-template-columns: 196px 300px 360px; gap: 16px; align-items: start; }
+  @media (max-width: 760px){ .cols { grid-template-columns: 1fr; } }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .cell .cap { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--on-surface-variant); display: flex; align-items: center; gap: 6px; }
+  .cell .cap .material-icons { font-size: 16px; color: var(--primary); }
+  .na { border: 1px dashed var(--outline); border-radius: 12px; color: var(--on-surface-variant); font-size: 13px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; font-family: var(--font-mono); }
+  .scaler { transform-origin: top left; }
+  .tablet { background: #1b1d1e; border-radius: 22px; padding: 12px; box-sizing: content-box; box-shadow: 0 16px 40px rgba(0,0,0,.28); }
+  .tscreen { border-radius: 12px; overflow: hidden; }
+  .win { border-radius: 9px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,.28); display: flex; flex-direction: column; }
+  .titlebar { height: 34px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); }
+  .titlebar .t { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
+  .titlebar .t .material-icons { font-size: 16px; color: var(--primary); }
+  .titlebar .dots { display: flex; gap: 6px; }
+  .titlebar .dots span { width: 11px; height: 11px; border-radius: 999px; background: var(--outline); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="../../components/app-kit/PhoneFrame.jsx"></script>
+<script type="text/babel" src="./DeviceSelect.jsx"></script>
+<script type="text/babel">
+  // Состояния экрана. desktop=false → на десктопе шаг не применяется (без разрешений).
+  const STATES = [
+    { step: "permission", title: "Запрос разрешений",   desc: "Android — BLE+USB · iOS — только BLE · Desktop — без запроса", desktop: false },
+    { step: "denied",     title: "Доступ отклонён",     desc: "как включить в настройках",        desktop: false },
+    { step: "adapterOff", title: "Bluetooth выключен",  desc: "включить адаптер",                 desktop: false },
+    { step: "scanning",   title: "Поиск устройств",     desc: "радар + авто-переход в список",     desktop: true },
+    { step: "list",       title: "Список найденных",    desc: "плоский список BLE/USB · Desktop — master-detail", desktop: true },
+    { step: "empty",      title: "Ничего не найдено",   desc: "поиск продолжается",               desktop: true },
+    { step: "connecting", title: "Подключение",         desc: "заглушка — следующий экран позже",  desktop: true },
+  ];
+
+  // ── Каркасы устройств (масштабируются, чтобы влезть в колонку) ──
+  const MOBILE = { w: 412, h: 840, target: 188 };
+  const TABLET = { w: 1280, h: 800, target: 296 };   // ландшафт — показывает split
+  const DESKTOP = { w: 1280, h: 800, target: 356 };
+
+  function Scaled({ box, children }) {
+    const s = box.target / box.w;
+    return (
+      <div style={{ width: box.w * s, height: (box.h + box.pad) * s }}>
+        <div className="scaler" style={{ transform: `scale(${s})` }}>{children}</div>
+      </div>
+    );
+  }
+
+  function MobileCell({ step, dark }) {
+    return (
+      <Scaled box={{ ...MOBILE, pad: 0 }}>
+        <window.AndroidDevice dark={dark} width={MOBILE.w} height={MOBILE.h}>
+          <div data-theme={dark ? "dark" : undefined} style={{ height: "100%" }}>
+            <window.DeviceSelectScreen key={step} platform="android" initialStep={step} demoEmpty={step === "empty"} showBack={true} />
+          </div>
+        </window.AndroidDevice>
+      </Scaled>
+    );
+  }
+
+  function TabletCell({ step, dark }) {
+    return (
+      <Scaled box={{ w: TABLET.w + 24, h: TABLET.h + 24, target: TABLET.target, pad: 0 }}>
+        <div className="tablet">
+          <div className="tscreen" data-theme={dark ? "dark" : undefined} style={{ width: TABLET.w, height: TABLET.h }}>
+            <window.DeviceSelectScreen key={step} platform="android" initialStep={step} demoEmpty={step === "empty"} showBack={true} />
+          </div>
+        </div>
+      </Scaled>
+    );
+  }
+
+  function DesktopCell({ step, dark }) {
+    return (
+      <Scaled box={{ ...DESKTOP, pad: 0 }}>
+        <div className="win" data-theme={dark ? "dark" : undefined} style={{ width: DESKTOP.w, height: DESKTOP.h }}>
+          <div className="titlebar">
+            <div className="t"><span className="material-icons">build</span>Pandora Spec — Выбор устройства</div>
+            <div className="dots"><span></span><span></span><span></span></div>
+          </div>
+          <div style={{ flex: 1, minHeight: 0, display: "flex", background: "var(--background)" }}>
+            <div style={{ flex: 1, minWidth: 0, height: "100%" }}>
+              <window.DeviceSelectScreen key={step} platform="desktop" initialStep={step} demoEmpty={step === "empty"} showBack={true} />
+            </div>
+          </div>
+        </div>
+      </Scaled>
+    );
+  }
+
+  function Cell({ icon, label, children }) {
+    return (
+      <div className="cell">
+        <div className="cap"><span className="material-icons">{icon}</span>{label}</div>
+        {children}
+      </div>
+    );
+  }
+
+  function App() {
+    const [dark, setDark] = React.useState(false);
+    return (
+      <div className="page" data-theme={dark ? "dark" : undefined}>
+        <div className="head">
+          <div>
+            <h1>Выбор устройства — состояния × размеры</h1>
+            <p>каждое состояние: Mobile · Планшет (ландшафт) · Десктоп</p>
+          </div>
+          <div className="seg">
+            <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+            <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+          </div>
+        </div>
+        {STATES.map((st) => (
+          <div className="state" key={st.step} data-theme={dark ? "dark" : undefined}>
+            <h2>{st.title}<span className="desc">{st.desc}</span></h2>
+            <div className="divider"></div>
+            <div className="cols">
+              <Cell icon="smartphone" label="Mobile · 412×840">
+                <MobileCell step={st.step} dark={dark} />
+              </Cell>
+              <Cell icon="tablet_mac" label="Планшет · 1280×800">
+                <TabletCell step={st.step} dark={dark} />
+              </Cell>
+              <Cell icon="desktop_windows" label="Десктоп · 1280×800">
+                {st.desktop
+                  ? <DesktopCell step={st.step} dark={dark} />
+                  : <div className="na" style={{ width: DESKTOP.target, height: DESKTOP.h * (DESKTOP.target / DESKTOP.w) }}>Не применимо — на Desktop разрешения не запрашиваются, поток начинается с поиска</div>}
+              </Cell>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

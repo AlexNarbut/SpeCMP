@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x130" name="Surface ladder (light)" subtitle="Derived from surface→onSurface tone (Lowest → Highest)" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: var(--background); padding: 16px; }
+  .row { display: flex; gap: 8px; }
+  .sw { flex: 1; height: 92px; border-radius: 8px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; color: var(--on-surface); border: 1px solid var(--outline-variant); }
+  .name { font-size: 11px; font-weight: 600; }
+  .hex { font-family: var(--font-mono); font-size: 10px; opacity: .7; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="sw" style="background: var(--surface-container-lowest);"><div class="name">Lowest</div><div class="hex">#FFFFFF</div></div>
+  <div class="sw" style="background: var(--surface-container-low);"><div class="name">Low</div><div class="hex">+4% tone</div></div>
+  <div class="sw" style="background: var(--surface-container);"><div class="name">Container</div><div class="hex">+6% tone</div></div>
+  <div class="sw" style="background: var(--surface-container-high);"><div class="name">High</div><div class="hex">+8% tone</div></div>
+  <div class="sw" style="background: var(--surface-container-highest);"><div class="name">Highest</div><div class="hex">+10% tone</div></div>
+</div>
+</body>
+</html>

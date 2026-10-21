@@ -1,0 +1,78 @@
+<!-- @dsCard group="Чат техподдержки" viewport="480x1000" name="Чат техподдержки (mobile)" subtitle="Android Compact 412×915 — переписка со специалистом, вложения, статусы, светлая и тёмная тема" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Спец — Чат техподдержки (mobile)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 760px; }
+  .seg { display: flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 16px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .link { border: none; background: #fff; border-radius: 999px; padding: 8px 16px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #1A3E7A; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .hint { font-family: var(--font-mono); font-size: 11px; color: #5b5f61; text-align: center; max-width: 460px; }
+  a { color: #1A3E7A; } a:hover { color: #07203F; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="../../components/app-kit/PhoneFrame.jsx"></script>
+<script type="text/babel" src="./SupportChatScreens.jsx"></script>
+<script type="text/babel" src="./SupportChat.jsx"></script>
+<script type="text/babel">
+  const SCENARIOS = [
+    ["dialog", "Диалог"],
+    ["empty", "Пустой"],
+    ["loading", "Загрузка"],
+    ["offline", "Офлайн"],
+  ];
+
+  function MobileApp() {
+    const [dark, setDark] = React.useState(true);
+    const [variant, setVariant] = React.useState("tonal");
+    const [scenario, setScenario] = React.useState("dialog");
+    const [reloadKey, setReloadKey] = React.useState(0);
+
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <div className="seg">
+            <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+            <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+          </div>
+          <div className="seg">
+            <button className={variant === "tonal" ? "on" : ""} onClick={() => setVariant("tonal")}>Пузыри: с фоном</button>
+            <button className={variant === "flat" ? "on" : ""} onClick={() => setVariant("flat")}>плоские</button>
+          </div>
+          <div className="seg">
+            {SCENARIOS.map(([key, label]) => (
+              <button key={key} className={scenario === key ? "on" : ""} onClick={() => { setScenario(key); setReloadKey((k) => k + 1); }}>{label}</button>
+            ))}
+          </div>
+          <button className="link" onClick={() => setReloadKey((k) => k + 1)}>↻ Сброс</button>
+          <button className="link" onClick={() => window.psGo("support-chat-tablet")}>Планшет →</button>
+          <button className="link" onClick={() => window.psGo("support-chat-desktop")}>Desktop →</button>
+          <button className="link" onClick={() => window.psGo("home")}>Главный →</button>
+        </div>
+        <div className="hint">Отправьте сообщение — статус пройдёт ✓ → ✓✓, затем специалист «печатает…» и отвечает. Скрепка и фото добавляют мок-вложения. В «Офлайн» отправка ставится в очередь до «Повторить».</div>
+
+        <window.AndroidDevice dark={dark} width={412} height={840}>
+          <div data-theme={dark ? "dark" : undefined} style={{ height: "100%" }}>
+            <window.SupportChatApp key={scenario + reloadKey} variant={variant} scenario={scenario} platform="mobile" />
+          </div>
+        </window.AndroidDevice>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<MobileApp />);
+</script>
+</body>
+</html>

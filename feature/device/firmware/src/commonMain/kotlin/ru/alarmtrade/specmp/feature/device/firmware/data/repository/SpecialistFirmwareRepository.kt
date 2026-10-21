@@ -1,0 +1,63 @@
+package ru.alarmtrade.specmp.feature.device.firmware.data.repository
+
+import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
+import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationByIdRequest
+import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
+import ru.alarmtrade.specialist.interactors.firmwareFiles.FirmwareFilesInteractor
+import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwareRequest
+import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwaresRequest
+import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
+import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
+
+/** [FirmwareRepository] над `deviceInformationInteractor` и `firmwareFilesInteractor`; интеракторы — лениво. */
+class SpecialistFirmwareRepository(
+    private val deviceInformation: () -> DeviceInformationInteractor,
+    private val firmwareFiles: () -> FirmwareFilesInteractor
+) : FirmwareRepository {
+
+    override suspend fun modules(deviceName: String, transport: ConnectionTransport): Response<List<FirmwareModule>> {
+        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
+        return interactor.getDeviceInformation.execute(GetDeviceInformationRequest(deviceName)).toResponse()
+            .map { information -> information.subsystems.map { it.toModule(transport) } }
+    }
+
+    override suspend fun moduleById(id: Long, transport: ConnectionTransport): Response<FirmwareModule> {
+        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
+        return interactor.getSubsystemInformationById.execute(GetDeviceInformationByIdRequest(id)).toResponse()
+            .map { it.toModule(transport) }
+    }
+
+    override suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion> {
+        val interactor = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
+        return interactor.getLatestSubsystemFirmwareUseCase
+            .execute(SubsystemFirmwareRequest(subsystemId = moduleId, type = channel.toSdk()))
+            .toResponse()
+            .map { it.toDomain() }
+    }
+
+    override suspend fun archivePage(
+        moduleId: Long,
+        channel: FirmwareChannel,
+        page: Int,
+        pageSize: Int
+    ): Response<FirmwareVersionPage> {
+        val interactor = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
+        return interactor.getSubsystemFirmwaresUseCase
+            .execute(
+                SubsystemFirmwaresRequest(
+                    subsystemId = moduleId,
+                    type = channel.toSdk(),
+                    pageNumber = page,
+                    pageSize = pageSize
+                )
+            )
+            .toResponse()
+            .map { list -> FirmwareVersionPage(items = list.map { it.toDomain() }, pageNumber = page) }
+    }
+}

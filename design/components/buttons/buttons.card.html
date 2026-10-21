@@ -1,0 +1,61 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Buttons" subtitle="Filled · Outlined · Text · Icon · FAB — with states" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: var(--background); color: var(--on-background); padding: 24px; }
+  .col { display: flex; flex-direction: column; gap: 20px; }
+  .row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .lbl { font-size: 11px; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const DS = window.PandoraSpecDesignSystem_b8d6e1;
+  const { CmpButton, CmpOutlinedButton, CmpTextButton, CmpIconButton, CmpFloatingActionButton } = DS;
+  function Demo() {
+    return (
+      <div className="col">
+        <div>
+          <div className="lbl">Filled · Outlined · Text — default &amp; disabled</div>
+          <div className="row">
+            <CmpButton text="Сохранить" />
+            <CmpButton text="С иконкой" icon="PlayArrow" />
+            <CmpButton text="Disabled" disabled />
+            <CmpOutlinedButton text="Отмена" />
+            <CmpTextButton text="Подробнее" />
+            <CmpTextButton text="Disabled" disabled />
+          </div>
+        </div>
+        <div>
+          <div className="lbl">Icon button — default · selected · disabled</div>
+          <div className="row">
+            <CmpIconButton icon="ArrowBack" contentDescription="Назад" />
+            <CmpIconButton icon="Favorite" selected contentDescription="В избранном" />
+            <CmpIconButton icon="Delete" contentDescription="Удалить" />
+            <CmpIconButton icon="MoreVert" contentDescription="Ещё" disabled />
+          </div>
+        </div>
+        <div>
+          <div className="lbl">FAB — Small · Default · Large</div>
+          <div className="row">
+            <CmpFloatingActionButton icon="Add" size="Small" contentDescription="Добавить" />
+            <CmpFloatingActionButton icon="Add" size="Default" contentDescription="Добавить" />
+            <CmpFloatingActionButton icon="Build" size="Large" contentDescription="Монтаж" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

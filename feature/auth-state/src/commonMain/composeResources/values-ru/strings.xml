@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="authstate_root_title_error">Не удалось проверить сессию</string>
+    <string name="authstate_root_msg_error">Проверьте подключение и попробуйте снова.</string>
+    <string name="authstate_root_btn_retry">Повторить</string>
+</resources>

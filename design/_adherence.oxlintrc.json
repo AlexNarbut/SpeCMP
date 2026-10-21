@@ -1,0 +1,503 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/app-kit/**",
+              "components/buttons/**",
+              "components/feedback/**",
+              "components/forms/**",
+              "components/navigation/**",
+              "components/progress/**",
+              "components/surfaces/**",
+              "features/app-update/**",
+              "features/auth/**",
+              "features/calculator/**",
+              "features/device-select/**",
+              "features/home/**",
+              "features/support-chat/**",
+              "res/**",
+              "res/icons/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Roboto|Roboto Mono|Material Icons))/i]",
+        "message": "Font not provided by the design system. Available: Roboto, Roboto Mono, Material Icons."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpBadge'] > JSXAttribute > JSXIdentifier[name!=/^(?:count|containerColor|contentColor|style|key|ref|className|style|children)$/]",
+        "message": "<CmpBadge> doesn't accept that prop. Declared props: count, containerColor, contentColor, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpBottomSheet'] > JSXAttribute > JSXIdentifier[name!=/^(?:open|onDismissRequest|children|containerColor|style|key|ref|className|style|children)$/]",
+        "message": "<CmpBottomSheet> doesn't accept that prop. Declared props: open, onDismissRequest, children, containerColor, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:text|onClick|disabled|icon|fullWidth|children|style|key|ref|className|style|children)$/]",
+        "message": "<CmpButton> doesn't accept that prop. Declared props: text, onClick, disabled, icon, fullWidth, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|onClick|elevation|border|key|ref|className|style|children)$/]",
+        "message": "<CmpCard> doesn't accept that prop. Declared props: children, onClick, elevation, border."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpCheckbox'] > JSXAttribute > JSXIdentifier[name!=/^(?:checked|indeterminate|onCheckedChange|disabled|style|key|ref|className|style|children)$/]",
+        "message": "<CmpCheckbox> doesn't accept that prop. Declared props: checked, indeterminate, onCheckedChange, disabled, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpCircularProgressIndicator'] > JSXAttribute > JSXIdentifier[name!=/^(?:progress|size|strokeWidth|color|trackColor|style|key|ref|className|style|children)$/]",
+        "message": "<CmpCircularProgressIndicator> doesn't accept that prop. Declared props: progress, size, strokeWidth, color, trackColor, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpDialog'] > JSXAttribute > JSXIdentifier[name!=/^(?:open|onDismissRequest|icon|title|text|confirmButton|dismissButton|style|key|ref|className|style|children)$/]",
+        "message": "<CmpDialog> doesn't accept that prop. Declared props: open, onDismissRequest, icon, title, text, confirmButton, dismissButton, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpDivider'] > JSXAttribute > JSXIdentifier[name!=/^(?:orientation|thickness|color|inset|key|ref|className|style|children)$/]",
+        "message": "<CmpDivider> doesn't accept that prop. Declared props: orientation, thickness, color, inset."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpDivider'] > JSXAttribute[name.name='orientation'] > Literal[value!=/^(?:horizontal|vertical)$/]",
+        "message": "<CmpDivider> orientation must be one of 'horizontal' | 'vertical'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpDropdown'] > JSXAttribute > JSXIdentifier[name!=/^(?:selectedValue|placeholder|options|onOptionSelected|disabled|rootStyle|key|ref|className|style|children)$/]",
+        "message": "<CmpDropdown> doesn't accept that prop. Declared props: selectedValue, placeholder, options, onOptionSelected, disabled, rootStyle."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpFloatingActionButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|onClick|size|contentDescription|children|style|key|ref|className|style|children)$/]",
+        "message": "<CmpFloatingActionButton> doesn't accept that prop. Declared props: icon, onClick, size, contentDescription, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpFloatingActionButton'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:Small|Default|Large)$/]",
+        "message": "<CmpFloatingActionButton> size must be one of 'Small' | 'Default' | 'Large'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpIcon'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|size|color|title|key|ref|className|style|children)$/]",
+        "message": "<CmpIcon> doesn't accept that prop. Declared props: icon, size, color, title."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpIconButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|onClick|contentDescription|disabled|selected|tint|style|key|ref|className|style|children)$/]",
+        "message": "<CmpIconButton> doesn't accept that prop. Declared props: icon, onClick, contentDescription, disabled, selected, tint, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpLinearProgressIndicator'] > JSXAttribute > JSXIdentifier[name!=/^(?:progress|color|trackColor|height|style|key|ref|className|style|children)$/]",
+        "message": "<CmpLinearProgressIndicator> doesn't accept that prop. Declared props: progress, color, trackColor, height, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpNavigationItem'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|label|selected|onClick|badge|key|ref|className|style|children)$/]",
+        "message": "<CmpNavigationItem> doesn't accept that prop. Declared props: icon, label, selected, onClick, badge."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpOutlinedButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:text|onClick|disabled|icon|fullWidth|children|style|key|ref|className|style|children)$/]",
+        "message": "<CmpOutlinedButton> doesn't accept that prop. Declared props: text, onClick, disabled, icon, fullWidth, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpRadioButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:selected|onClick|disabled|style|key|ref|className|style|children)$/]",
+        "message": "<CmpRadioButton> doesn't accept that prop. Declared props: selected, onClick, disabled, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpSelectableCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:selected|onClick|icon|children|style|key|ref|className|style|children)$/]",
+        "message": "<CmpSelectableCard> doesn't accept that prop. Declared props: selected, onClick, icon, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpSlider'] > JSXAttribute > JSXIdentifier[name!=/^(?:value|onValueChange|min|max|step|disabled|style|key|ref|className|style|children)$/]",
+        "message": "<CmpSlider> doesn't accept that prop. Declared props: value, onValueChange, min, max, step, disabled, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpSnackbar'] > JSXAttribute > JSXIdentifier[name!=/^(?:message|actionLabel|onActionClick|withDismissAction|onDismiss|style|key|ref|className|style|children)$/]",
+        "message": "<CmpSnackbar> doesn't accept that prop. Declared props: message, actionLabel, onActionClick, withDismissAction, onDismiss, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpSurface'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|onClick|color|contentColor|radius|shadowElevation|border|key|ref|className|style|children)$/]",
+        "message": "<CmpSurface> doesn't accept that prop. Declared props: children, onClick, color, contentColor, radius, shadowElevation, border."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpSwitch'] > JSXAttribute > JSXIdentifier[name!=/^(?:checked|onCheckedChange|disabled|thumbIcon|style|key|ref|className|style|children)$/]",
+        "message": "<CmpSwitch> doesn't accept that prop. Declared props: checked, onCheckedChange, disabled, thumbIcon, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpTabItem'] > JSXAttribute > JSXIdentifier[name!=/^(?:title|icon|key|ref|className|style|children)$/]",
+        "message": "<CmpTabItem> doesn't accept that prop. Declared props: title, icon."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpText'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|color|weight|align|maxLines|as|children|key|ref|className|style|children)$/]",
+        "message": "<CmpText> doesn't accept that prop. Declared props: variant, color, weight, align, maxLines, as, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpText'] > JSXAttribute[name.name='align'] > Literal[value!=/^(?:left|center|right|start|end)$/]",
+        "message": "<CmpText> align must be one of 'left' | 'center' | 'right' | 'start' | 'end'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpTextButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:text|onClick|disabled|icon|children|style|key|ref|className|style|children)$/]",
+        "message": "<CmpTextButton> doesn't accept that prop. Declared props: text, onClick, disabled, icon, children, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpTextField'] > JSXAttribute > JSXIdentifier[name!=/^(?:value|onChange|label|placeholder|style|disabled|readOnly|isError|singleLine|supportingText|leadingIcon|trailingIcon|type|rootStyle|key|ref|className|style|children)$/]",
+        "message": "<CmpTextField> doesn't accept that prop. Declared props: value, onChange, label, placeholder, style, disabled, readOnly, isError, singleLine, supportingText, leadingIcon, trailingIcon, type, rootStyle."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpTextField'] > JSXAttribute[name.name='style'] > Literal[value!=/^(?:Outlined|Filled)$/]",
+        "message": "<CmpTextField> style must be one of 'Outlined' | 'Filled'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CmpTopAppBar'] > JSXAttribute > JSXIdentifier[name!=/^(?:title|subtitle|navigationIcon|actions|centered|style|key|ref|className|style|children)$/]",
+        "message": "<CmpTopAppBar> doesn't accept that prop. Declared props: title, subtitle, navigationIcon, actions, centered, style."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "CmpBadge": {
+        "replaces": []
+      },
+      "CmpBottomSheet": {
+        "replaces": []
+      },
+      "CmpButton": {
+        "replaces": []
+      },
+      "CmpCard": {
+        "replaces": []
+      },
+      "CmpCheckbox": {
+        "replaces": []
+      },
+      "CmpCircularProgressIndicator": {
+        "replaces": []
+      },
+      "CmpDialog": {
+        "replaces": []
+      },
+      "CmpDivider": {
+        "replaces": []
+      },
+      "CmpDropdown": {
+        "replaces": []
+      },
+      "CmpFloatingActionButton": {
+        "replaces": []
+      },
+      "CmpIcon": {
+        "replaces": []
+      },
+      "CmpIconButton": {
+        "replaces": []
+      },
+      "CmpLinearProgressIndicator": {
+        "replaces": []
+      },
+      "CmpNavigationItem": {
+        "replaces": []
+      },
+      "CmpOutlinedButton": {
+        "replaces": []
+      },
+      "CmpRadioButton": {
+        "replaces": []
+      },
+      "CmpSelectableCard": {
+        "replaces": []
+      },
+      "CmpSlider": {
+        "replaces": []
+      },
+      "CmpSnackbar": {
+        "replaces": []
+      },
+      "CmpSurface": {
+        "replaces": []
+      },
+      "CmpSwitch": {
+        "replaces": []
+      },
+      "CmpTabItem": {
+        "replaces": []
+      },
+      "CmpText": {
+        "replaces": []
+      },
+      "CmpTextButton": {
+        "replaces": []
+      },
+      "CmpTextField": {
+        "replaces": []
+      },
+      "CmpTopAppBar": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--avatar-size",
+      "--background",
+      "--body-large-line",
+      "--body-large-size",
+      "--body-medium-line",
+      "--body-medium-size",
+      "--body-small-line",
+      "--body-small-size",
+      "--bus-can1",
+      "--bus-can2",
+      "--bus-can3",
+      "--bus-lin",
+      "--bus-unknown",
+      "--button-height",
+      "--card-shadow-dp",
+      "--display-large-line",
+      "--display-large-size",
+      "--display-medium-line",
+      "--display-medium-size",
+      "--display-small-line",
+      "--display-small-size",
+      "--divider-thickness",
+      "--elevation-0",
+      "--elevation-1",
+      "--elevation-2",
+      "--elevation-3",
+      "--error",
+      "--error-container",
+      "--fab-default",
+      "--fab-large",
+      "--fab-small",
+      "--field-height",
+      "--font-mono",
+      "--font-sans",
+      "--headline-large-line",
+      "--headline-large-size",
+      "--headline-medium-line",
+      "--headline-medium-size",
+      "--headline-small-line",
+      "--headline-small-size",
+      "--icon-size",
+      "--inverse-on-surface",
+      "--inverse-primary",
+      "--inverse-surface",
+      "--label-large-line",
+      "--label-large-size",
+      "--label-medium-line",
+      "--label-medium-size",
+      "--label-small-line",
+      "--label-small-size",
+      "--motion-fast",
+      "--motion-standard",
+      "--navbar-height",
+      "--on-background",
+      "--on-error",
+      "--on-error-container",
+      "--on-primary",
+      "--on-primary-container",
+      "--on-secondary",
+      "--on-secondary-container",
+      "--on-surface",
+      "--on-surface-variant",
+      "--on-tertiary",
+      "--on-tertiary-container",
+      "--outline",
+      "--outline-variant",
+      "--primary",
+      "--primary-container",
+      "--progress-arc",
+      "--radius-l",
+      "--radius-m",
+      "--radius-none",
+      "--radius-s",
+      "--radius-xl",
+      "--radius-xs",
+      "--scrim",
+      "--secondary",
+      "--secondary-container",
+      "--seed",
+      "--selectable-card-border",
+      "--shadow",
+      "--space-l",
+      "--space-m",
+      "--space-s",
+      "--space-xl",
+      "--space-xs",
+      "--space-xxl",
+      "--success",
+      "--surface",
+      "--surface-bright",
+      "--surface-container",
+      "--surface-container-high",
+      "--surface-container-highest",
+      "--surface-container-low",
+      "--surface-container-lowest",
+      "--surface-dim",
+      "--surface-tint",
+      "--surface-variant",
+      "--tertiary",
+      "--tertiary-container",
+      "--title-large-line",
+      "--title-large-size",
+      "--title-medium-line",
+      "--title-medium-size",
+      "--title-small-line",
+      "--title-small-size",
+      "--topbar-height",
+      "--touch-min",
+      "--weight-bold",
+      "--weight-light",
+      "--weight-medium",
+      "--weight-regular",
+      "--weight-semibold"
+    ],
+    "tokenKinds": {
+      "--seed": "color",
+      "--primary": "color",
+      "--on-primary": "color",
+      "--primary-container": "color",
+      "--on-primary-container": "color",
+      "--secondary": "color",
+      "--on-secondary": "color",
+      "--secondary-container": "color",
+      "--on-secondary-container": "color",
+      "--tertiary": "color",
+      "--on-tertiary": "color",
+      "--tertiary-container": "color",
+      "--on-tertiary-container": "color",
+      "--error": "color",
+      "--on-error": "color",
+      "--error-container": "color",
+      "--on-error-container": "color",
+      "--background": "color",
+      "--on-background": "color",
+      "--surface": "color",
+      "--on-surface": "color",
+      "--surface-variant": "color",
+      "--on-surface-variant": "color",
+      "--outline": "color",
+      "--outline-variant": "color",
+      "--scrim": "color",
+      "--shadow": "shadow",
+      "--surface-tint": "color",
+      "--inverse-surface": "color",
+      "--inverse-on-surface": "color",
+      "--inverse-primary": "color",
+      "--surface-container-lowest": "color",
+      "--surface-container-low": "color",
+      "--surface-container": "color",
+      "--surface-container-high": "color",
+      "--surface-container-highest": "color",
+      "--surface-dim": "color",
+      "--surface-bright": "color",
+      "--success": "color",
+      "--bus-can1": "color",
+      "--bus-can2": "color",
+      "--bus-can3": "color",
+      "--bus-lin": "color",
+      "--bus-unknown": "color",
+      "--font-sans": "font",
+      "--font-mono": "font",
+      "--weight-light": "font",
+      "--weight-regular": "font",
+      "--weight-medium": "font",
+      "--weight-semibold": "font",
+      "--weight-bold": "font",
+      "--display-large-size": "spacing",
+      "--display-large-line": "spacing",
+      "--display-medium-size": "spacing",
+      "--display-medium-line": "spacing",
+      "--display-small-size": "spacing",
+      "--display-small-line": "spacing",
+      "--headline-large-size": "spacing",
+      "--headline-large-line": "spacing",
+      "--headline-medium-size": "spacing",
+      "--headline-medium-line": "spacing",
+      "--headline-small-size": "spacing",
+      "--headline-small-line": "spacing",
+      "--title-large-size": "spacing",
+      "--title-large-line": "spacing",
+      "--title-medium-size": "spacing",
+      "--title-medium-line": "spacing",
+      "--title-small-size": "spacing",
+      "--title-small-line": "spacing",
+      "--body-large-size": "spacing",
+      "--body-large-line": "spacing",
+      "--body-medium-size": "spacing",
+      "--body-medium-line": "spacing",
+      "--body-small-size": "spacing",
+      "--body-small-line": "spacing",
+      "--label-large-size": "spacing",
+      "--label-large-line": "spacing",
+      "--label-medium-size": "spacing",
+      "--label-medium-line": "spacing",
+      "--label-small-size": "spacing",
+      "--label-small-line": "spacing",
+      "--space-xs": "spacing",
+      "--space-s": "spacing",
+      "--space-m": "spacing",
+      "--space-l": "spacing",
+      "--space-xl": "spacing",
+      "--space-xxl": "spacing",
+      "--radius-none": "radius",
+      "--radius-xs": "radius",
+      "--radius-s": "radius",
+      "--radius-m": "radius",
+      "--radius-l": "radius",
+      "--radius-xl": "radius",
+      "--touch-min": "spacing",
+      "--button-height": "spacing",
+      "--field-height": "spacing",
+      "--topbar-height": "spacing",
+      "--navbar-height": "spacing",
+      "--icon-size": "spacing",
+      "--avatar-size": "spacing",
+      "--fab-small": "spacing",
+      "--fab-default": "spacing",
+      "--fab-large": "spacing",
+      "--divider-thickness": "spacing",
+      "--card-shadow-dp": "shadow",
+      "--selectable-card-border": "spacing",
+      "--progress-arc": "spacing",
+      "--elevation-0": "shadow",
+      "--elevation-1": "shadow",
+      "--elevation-2": "shadow",
+      "--elevation-3": "shadow",
+      "--motion-standard": "other",
+      "--motion-fast": "other"
+    },
+    "fontFamilies": [
+      "Material Icons",
+      "Roboto",
+      "Roboto Mono"
+    ]
+  }
+}

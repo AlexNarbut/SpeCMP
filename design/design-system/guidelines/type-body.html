@@ -1,0 +1,29 @@
+<!-- @dsCard group="Type" viewport="700x190" name="Title & Body" subtitle="title 22/16/14 (Medium) · body 16/14/12 (Regular)" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: var(--background); color: var(--on-background); padding: 20px; }
+  .spec { display: flex; flex-direction: column; gap: 10px; }
+  .line { display: flex; align-items: baseline; gap: 14px; }
+  .meta { font-family: var(--font-mono); font-size: 11px; color: var(--on-surface-variant); width: 150px; flex: 0 0 auto; }
+  .t-l { font-size: var(--title-large-size); line-height: var(--title-large-line); font-weight: 500; }
+  .t-m { font-size: var(--title-medium-size); line-height: var(--title-medium-line); font-weight: 500; }
+  .b-l { font-size: var(--body-large-size); line-height: var(--body-large-line); }
+  .b-m { font-size: var(--body-medium-size); line-height: var(--body-medium-line); }
+  .b-s { font-size: var(--body-small-size); line-height: var(--body-small-line); color: var(--on-surface-variant); }
+</style>
+</head>
+<body>
+<div class="spec">
+  <div class="line"><span class="meta">titleLarge 22 · 500</span><span class="t-l">Заголовок верхней панели</span></div>
+  <div class="line"><span class="meta">titleMedium 16 · 500</span><span class="t-m">Заголовок карточки</span></div>
+  <div class="line"><span class="meta">bodyLarge 16 · 400</span><span class="b-l">Основной текст инструкции монтажника.</span></div>
+  <div class="line"><span class="meta">bodyMedium 14 · 400</span><span class="b-m">Вторичный текст и описания.</span></div>
+  <div class="line"><span class="meta">bodySmall 12 · 400</span><span class="b-s">Подписи, сноски, метаданные.</span></div>
+</div>
+</body>
+</html>

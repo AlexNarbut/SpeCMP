@@ -1,0 +1,61 @@
+<!-- @dsCard group="Калькулятор" viewport="800x600" name="Калькулятор (desktop)" subtitle="Compose Desktop — опорное окно 800×600, light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Калькулятор (desktop)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; }
+  .win { width: 800px; height: 600px; border-radius: 10px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); display: flex; flex-direction: column; }
+  .titlebar { height: 38px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); }
+  .title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .title .material-icons { font-size: 18px; color: var(--primary); }
+  .wctl { display: flex; align-items: center; gap: 6px; }
+  .seg { display: flex; background: var(--surface-container-highest); border-radius: 999px; padding: 3px; margin-right: 12px; }
+  .seg button { border: none; background: transparent; padding: 5px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; cursor: pointer; color: var(--on-surface-variant); }
+  .seg button.on { background: var(--primary); color: var(--on-primary); }
+  .dot { width: 13px; height: 13px; border-radius: 999px; display: grid; place-items: center; color: var(--on-surface-variant); cursor: pointer; }
+  .wbtn { width: 28px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--on-surface-variant); cursor: pointer; }
+  .wbtn .material-icons { font-size: 16px; }
+  .body { flex: 1; min-height: 0; display: flex; background: var(--background); }
+  .calc-col { flex: 1; min-width: 0; height: 100%; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./Calculator.jsx"></script>
+<script type="text/babel">
+  function DesktopApp() {
+    const [dark, setDark] = React.useState(false);
+    return (
+      <div className="win" data-theme={dark ? "dark" : undefined}>
+        <div className="titlebar">
+          <div className="title"><span className="material-icons">build</span>Pandora Spec</div>
+          <div className="wctl">
+            <div className="seg">
+              <button className={dark ? "" : "on"} onClick={() => setDark(false)}>Светлая</button>
+              <button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button>
+            </div>
+            <div className="wbtn"><span className="material-icons">remove</span></div>
+            <div className="wbtn"><span className="material-icons">crop_square</span></div>
+            <div className="wbtn"><span className="material-icons">close</span></div>
+          </div>
+        </div>
+        <div className="body">
+          <div className="calc-col">
+            <window.CalculatorScreen showBack={false} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<DesktopApp />);
+</script>
+</body>
+</html>

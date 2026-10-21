@@ -1,0 +1,113 @@
+# Local AI workflow artifacts (not project source of truth)
+agentTasks/
+.ai/requirements/
+.ai/refactoring/
+.ai/bugs/
+.ai/plans/
+.ai/tests/
+.ai/review/
+.ai/memory/
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Android Studio
+*.iml
+.idea/
+.DS_Store
+captures/
+.externalNativeBuild
+.cxx
+
+# Kotlin
+*.class
+*.log
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+.kotlin/
+
+# Kotlin/Native
+.konan/
+
+# IntelliJ
+out/
+.idea_modules/
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
+proguard/
+
+# Compose Resources
+**/build/compose_metrics/
+**/build/compose_compiler/
+
+# Generated files
+generated/
+
+# Signing files
+*.jks
+*.keystore
+keystore.properties
+
+# Log Files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Gradle wrapper jar must be committed (re-include after the *.jar rules above)
+!gradle/wrapper/gradle-wrapper.jar
+
+# virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# Profiler
+*.hprof
+
+# Claude Code: в git только skills, agents и общий хук качества кода (задачи, локальные настройки — нет)
+/.claude/*
+!/.claude/skills/
+!/.claude/agents/
+!/.claude/hooks/
+!/.claude/settings.json
+
+# UI-тесты: локальные креды скилла ui-test (шаблон — credentials.properties.example) и результаты прогонов
+/.agents/skills/ui-test/*.properties
+/.ai-qa/
