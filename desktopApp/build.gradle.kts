@@ -26,17 +26,31 @@ dependencies {
 }
 
 // USB-слой SDK на JVM (usb4java 1.3.0) содержит нативную библиотеку только для darwin-x86-64:
-// на macOS arm64 USB-устройства находятся только при запуске на x86_64-JDK. JDK для run/package —
-// `compose.jvmHome` (Gradle-свойство или local.properties), иначе JDK Gradle.
+// на macOS arm64 USB-устройства находятся только при запуске на x86_64-JDK. JDK для run/package выбирается так:
+// 1) `compose.jvmHome` (Gradle-свойство или local.properties) — явный выбор;
+// 2) на macOS arm64 — установленный x86_64-JDK 17 (`/usr/libexec/java_home -a x86_64 -v 17`), чтобы USB не пропадал,
+//    когда IDE пересоздаёт local.properties;
+// 3) иначе JDK Gradle.
 val composeJvmHome: String? = providers.gradleProperty("compose.jvmHome").orNull
     ?: rootProject.file("local.properties").takeIf { it.exists() }?.let { file ->
         Properties().apply { file.inputStream().use(::load) }.getProperty("compose.jvmHome")
     }
 
+val isMacArm = System.getProperty("os.name").startsWith("Mac") && System.getProperty("os.arch") == "aarch64"
+val macX64JvmHome: String? = if (composeJvmHome == null && isMacArm) {
+    providers.exec {
+        commandLine("/usr/libexec/java_home", "-a", "x86_64", "-v", "17")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.orNull?.trim()?.takeIf { it.startsWith("/") }
+} else {
+    null
+}
+val desktopJvmHome: String? = composeJvmHome ?: macX64JvmHome
+
 compose.desktop {
     application {
         mainClass = "ru.alarmtrade.specmp.desktopApp.MainKt"
-        composeJvmHome?.let { javaHome = it }
+        desktopJvmHome?.let { javaHome = it }
 
         nativeDistributions {
             targetFormats(
