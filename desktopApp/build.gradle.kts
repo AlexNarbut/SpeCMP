@@ -47,6 +47,18 @@ val macX64JvmHome: String? = if (composeJvmHome == null && isMacArm) {
 }
 val desktopJvmHome: String? = composeJvmHome ?: macX64JvmHome
 
+// macOS arm64 без x86_64-JDK: приложение запустится, но USB-устройства не найдутся — говорим об этом при запуске.
+if (isMacArm && desktopJvmHome == null) {
+    tasks.withType<JavaExec>().matching { it.name == "run" }.configureEach {
+        doFirst {
+            logger.warn(
+                "WARNING: macOS arm64 без x86_64-JDK 17 — USB-устройства не будут найдены (usb4java). " +
+                    "Установите x86_64-JDK 17 или задайте compose.jvmHome, см. docs/build.md."
+            )
+        }
+    }
+}
+
 compose.desktop {
     application {
         mainClass = "ru.alarmtrade.specmp.desktopApp.MainKt"
