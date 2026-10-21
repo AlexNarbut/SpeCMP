@@ -13,7 +13,7 @@ const FW_DEV = { name: "Pandora DX-4GS", id: "107131" };
 const L = (s) => (window.FW_LANG === "en" && window.FW_EN && window.FW_EN[s] != null) ? window.FW_EN[s] : s;
 const N = (s) => (window.FW_LONG && window.FW_LONGN && window.FW_LONGN[s]) || s;
 const fwSub = (profile) => profile === "bt" ? L("Bluetooth-модуль") + " · " + N("Pandora BT (BTM2)") : N(FW_DEV.name) + "  " + FW_DEV.id;
-const wrapTxt = { overflowWrap: "anywhere", minWidth: 0 };
+const wrapTxt = { overflowWrap: "break-word", minWidth: 0 };
 const FW_CHANNELS = [["release", "Готовая (протестированная)", "Готовая"], ["beta", "Beta-версия", "Beta"], ["alpha", "Alpha-версия", "Alpha"]];
 const FW_TEST_WARN = "Внимание! Эта тестовая версия. Некоторые функции могут работать нестабильно";
 const FW_POWER = "Не выключайте питание на устройстве и не разрывайте соединение с устройством";
@@ -153,6 +153,39 @@ function ModCard({ m, onDesc, onEnter, onRefresh, i }) {
   );
 }
 
+
+function ChannelChip({ channel, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+  const test = channel !== "release";
+  const cur = FW_CHANNELS.find((c) => c[0] === channel);
+  return (
+    <div ref={ref} style={{ position: "relative", flex: "0 0 auto" }}>
+      <button type="button" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}
+        style={{ height: 48, padding: "0 12px 0 14px", borderRadius: 999, border: test ? "none" : "1px solid var(--outline)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap",
+          background: test ? "var(--tertiary-container)" : "transparent", color: test ? "var(--on-tertiary-container)" : "var(--on-surface-variant)" }}>
+        {test && <CmpIcon icon="warning" size={18} color="currentColor" />}
+        <span style={{ fontWeight: 500 }}>{L("Канал")}:</span> {L(cur[2])}
+        <CmpIcon icon={open ? "expand_less" : "expand_more"} size={20} color="currentColor" />
+      </button>
+      {open && (
+        <div role="listbox" aria-label={L("Тип канала обновления")} style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 20, minWidth: 260, padding: "8px 0", borderRadius: 12, background: "var(--surface-container)", boxShadow: "var(--elevation-2)" }}>
+          {FW_CHANNELS.map(([k, name]) => (
+            <button key={k} type="button" role="option" aria-selected={k === channel} onClick={() => { setOpen(false); k !== channel && onChange(k); }}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", minHeight: 48, padding: "0 16px", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "var(--font-sans)", fontSize: 15, background: k === channel ? "var(--surface-variant)" : "transparent", color: "var(--on-surface)" }}>
+              <span style={{ width: 20, display: "inline-flex" }}>{k === channel && <CmpIcon icon="check" size={20} color="var(--primary)" />}</span>{L(name)}
+            </button>))}
+        </div>)}
+    </div>
+  );
+}
+
 function ChannelPanel({ channel, onChange, layout }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -171,10 +204,38 @@ function ChannelPanel({ channel, onChange, layout }) {
   );
 }
 
+
+// PIN программирования: нужен перед входом в загрузчик Bluetooth-модуля (и USB-сигнализаций). Демо-PIN: 1234.
+function FwPin({ err0, onCancel, onOk }) {
+  const [pin, setPin] = React.useState(err0 ? "0000" : "");
+  const [left, setLeft] = React.useState(err0 ? 2 : 3);
+  const [err, setErr] = React.useState(!!err0);
+  const inputRef = React.useRef(null);
+  React.useEffect(() => { inputRef.current && inputRef.current.focus(); }, []);
+  const change = (e) => { setErr(false); setPin(e.target.value.replace(/\D/g, "").slice(0, 4)); };
+  const submit = () => { if (pin === "1234") onOk(); else { setErr(true); setLeft((l) => Math.max(0, l - 1)); setPin(""); inputRef.current && inputRef.current.focus(); } };
+  return (
+    <CmpDialog open onDismissRequest={onCancel} icon="lock" title={L("Введите PIN-код программирования")} style={{ maxWidth: 400 }}
+      text={<span style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
+        <span>{L("PIN нужен для перехода блока в режим обновления")}</span>
+        <span style={{ position: "relative", display: "flex", gap: 10 }}>
+          {[0, 1, 2, 3].map((i) => <span key={i} aria-hidden="true" style={{ width: 56, height: 64, boxSizing: "border-box", borderRadius: 12, display: "grid", placeItems: "center", fontSize: 30, color: "var(--on-surface)", border: err ? "2px solid var(--error)" : i === Math.min(pin.length, 3) ? "2px solid var(--primary)" : "1px solid var(--outline)" }}>{i < pin.length ? "•" : ""}</span>)}
+          <input ref={inputRef} value={pin} onChange={change} onKeyDown={(e) => { if (e.key === "Enter" && pin.length === 4 && left > 0) submit(); }}
+            type="password" inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" maxLength={4} aria-label={L("PIN-код")} disabled={left === 0}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, border: "none", cursor: "text", fontSize: 16 }} />
+        </span>
+        <span style={{ minHeight: 22, color: "var(--error)", fontWeight: 600 }} aria-live="polite">{err ? L("Неверный PIN-код. Осталось попыток:") + " " + left : ""}</span>
+      </span>}
+      dismissButton={<CmpTextButton text={L("Отмена")} onClick={onCancel} style={btn48} />}
+      confirmButton={<CmpButton text={L("Продолжить")} disabled={pin.length < 4 || left === 0} onClick={submit} style={btn48} />} />
+  );
+}
+
 function FwCheck({ layout, scenario, dialog0, channel0, onBack, onEnter }) {
   const [channel, setChannel] = React.useState(channel0);
   const [state, setState] = React.useState(scenario === "loading" ? "loading" : scenario === "error" ? "error" : "ready");
   const [dialog, setDialog] = React.useState(dialog0);
+  const [target, setTarget] = React.useState(dialog0 === "pin" || dialog0 === "pinerr" ? "bt" : null);
   React.useEffect(() => { if (state !== "loading") return; const t = setTimeout(() => setState("ready"), 1600); return () => clearTimeout(t); }, [state]);
   const [mods, setMods] = React.useState(() => fwScenario(scenario, channel0));
   const changeCh = (c) => { setChannel(c); setMods(fwScenario("list", c).map((m) => m.unsupported ? m : { ...m, srv: { k: "search" } })); setTimeout(() => setMods(fwScenario("list", c)), 1200); };
@@ -187,15 +248,21 @@ function FwCheck({ layout, scenario, dialog0, channel0, onBack, onEnter }) {
   else body = (
     <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
       <div style={{ maxWidth: 1040, margin: "0 auto", padding: pad, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
-          <CmpIcon icon="sensors" size={26} color="var(--primary)" />
-          <div style={{ flex: 1, ...wrapTxt }}><CmpText variant="titleMedium">{N(FW_DEV.name)}</CmpText></div>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--on-surface-variant)", flex: "0 0 auto" }}>ID {FW_DEV.id}</span>
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 8px", padding: "8px 8px 8px 14px", borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flex: layout === "compact" ? "1 1 100%" : "1 1 0", minWidth: 0 }}>
+            <CmpIcon icon="sensors" size={26} color="var(--primary)" />
+            <div style={{ flex: 1, minWidth: 0, overflowWrap: "break-word" }}><CmpText variant="titleMedium">{N(FW_DEV.name)}</CmpText></div>
+            {layout !== "compact" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--on-surface-variant)", flex: "0 0 auto" }}>ID {FW_DEV.id}</span>}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flex: layout === "compact" ? "1 1 100%" : "0 0 auto" }}>
+            {layout === "compact" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--on-surface-variant)", paddingLeft: 38 }}>ID {FW_DEV.id}</span>}
+            <ChannelChip channel={channel} onChange={changeCh} />
+          </div>
         </div>
-        <ChannelPanel channel={channel} onChange={changeCh} layout={layout} />
+        {channel !== "release" && <Banner icon="warning">{L(FW_TEST_WARN)}</Banner>}
         <CmpText variant="titleMedium">{L("Доступные для обновления модули")}</CmpText>
         <div style={{ display: "grid", gridTemplateColumns: layout === "compact" ? "1fr" : "repeat(2, minmax(0,1fr))", gap: 14, alignItems: "start" }}>
-          {mods.map((m, i) => <ModCard key={m.id} m={m} i={i} onDesc={() => setDialog("desc")} onEnter={() => setDialog("confirm")} onRefresh={() => refresh(m.id)} />)}
+          {mods.map((m, i) => <ModCard key={m.id} m={m} i={i} onDesc={() => setDialog("desc")} onEnter={() => { setTarget(m.id); setDialog("confirm"); }} onRefresh={() => refresh(m.id)} />)}
         </div>
       </div>
     </div>
@@ -212,12 +279,13 @@ function FwCheck({ layout, scenario, dialog0, channel0, onBack, onEnter }) {
             <b style={{ color: "var(--on-surface)" }}>{L("Полное описание")}</b>
             <span style={{ whiteSpace: "pre-line" }}>{desc ? L(desc) : L("Описание отсутствует")}</span></span>}
           dismissButton={<CmpTextButton text={L("Отмена")} onClick={() => setDialog(null)} style={btn48} />}
-          confirmButton={<CmpTextButton text={L("Обновить")} onClick={() => setDialog("confirm")} style={btn48} />} />)}
+          confirmButton={<CmpTextButton text={L("Обновить")} onClick={() => { setTarget(upd.id); setDialog("confirm"); }} style={btn48} />} />)}
       {dialog === "confirm" && (
         <CmpDialog open onDismissRequest={() => setDialog(null)} icon="power_settings_new" title={L("Перейти в режим обновления?")} style={{ maxWidth: 440 }}
           text={L("Блок перезагрузится, связь с ним пропадёт на несколько секунд. Обновление нужно довести до конца: пока блок в режиме обновления, он не работает как сигнализация. Не выключайте питание и не отключайте кабель.")}
           dismissButton={<CmpTextButton text={L("Отмена")} onClick={() => setDialog(null)} style={btn48} />}
-          confirmButton={<CmpButton text={L("Перейти")} onClick={() => { setDialog(null); onEnter(channel); }} style={btn48} />} />)}
+          confirmButton={<CmpButton text={L("Перейти")} onClick={() => { if (target === "bt") setDialog("pin"); else { setDialog(null); onEnter(channel); } }} style={btn48} />} />)}
+      {(dialog === "pin" || dialog === "pinerr") && <FwPin err0={dialog === "pinerr"} onCancel={() => setDialog(null)} onOk={() => { setDialog(null); onEnter(channel); }} />}
     </React.Fragment>
   );
 }
@@ -513,13 +581,15 @@ function FirmwareApp({ view = "check", scenario = "list", dialog = null, channel
 
 // ════════ Панель управления для витрины ═══════════════════════════════════════
 function FwSeg({ items, value, onChange }) {
-  return <div className="seg">{items.map(([k, l]) => <button key={k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}</div>;
+  return <div className={"seg" + (items.length > 4 ? " wrap" : "")}>{items.map(([k, l]) => <button key={k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}</div>;
 }
-const FW_CHECK_OPTS = [["list", "Список"], ["states", "Состояния карточки"], ["loading", "Загрузка"], ["error", "Ошибка списка"], ["beta", "Beta-канал"], ["desc", "Диалог описания"], ["nodesc", "Описание пустое"], ["confirm", "Подтверждение"]];
+const FW_CHECK_OPTS = [["list", "Список"], ["states", "Состояния карточки"], ["loading", "Загрузка"], ["error", "Ошибка списка"], ["beta", "Beta-канал"], ["desc", "Диалог описания"], ["nodesc", "Описание пустое"], ["confirm", "Подтверждение"], ["pin", "PIN-диалог"], ["pinerr", "PIN: ошибка"]];
 const FW_ARCH_OPTS = [["list", "Список"], ["loading", "Загрузка"], ["more", "Догрузка"], ["moreerror", "Ошибка догрузки"], ["empty", "Пусто"], ["error", "Нет связи"], ["rollback", "Откат (диалог)"]];
 const FW_UPD_OPTS = [["entering", "Вход в загрузчик"], ["source", "Выбор источника"], ["dataerror", "Ошибка данных"], ["download", "1 Скачивание"], ["confirm", "2 Подтверждение"], ["prepare", "3 Подготовка"], ["transfer", "4 Передача"], ["verify", "5 Проверка"], ["apply", "6 Применение"], ["success", "7 Успех"], ["finishing", "Ожидание блока"], ["error", "8 Ошибка"], ["lost", "Обрыв связи"]];
 function useFwCtl() {
-  const [dark, setDark] = React.useState(false);
+  const [dark, setDarkRaw] = React.useState(() => { try { const v = localStorage.getItem("ps-theme"); return v ? v === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) { return false; } });
+  const setDark = (v) => { setDarkRaw(v); try { localStorage.setItem("ps-theme", v ? "dark" : "light"); } catch (e) {} };
+  React.useEffect(() => { document.body.classList.toggle("page-dark", dark); }, [dark]);
   const [view, setView] = React.useState("check");
   const [sc, setSc] = React.useState("list");
   const [ph, setPh] = React.useState("source");
@@ -531,11 +601,12 @@ function useFwCtl() {
   const [long, setLong] = React.useState(false);
   window.FW_LANG = lang; window.FW_LONG = long;
   const props = view === "check"
-    ? { view, scenario: sc === "beta" ? "list" : sc === "desc" || sc === "confirm" ? "list" : sc, dialog: sc === "desc" ? "desc" : sc === "nodesc" ? "desc" : sc === "confirm" ? "confirm" : null, channel: sc === "beta" ? "beta" : "release" }
+    ? { view, scenario: sc === "beta" || sc === "desc" || sc === "confirm" || sc === "pin" || sc === "pinerr" ? "list" : sc, dialog: sc === "desc" || sc === "nodesc" ? "desc" : sc === "confirm" ? "confirm" : sc === "pin" || sc === "pinerr" ? sc : null, channel: sc === "beta" ? "beta" : "release" }
     : view === "archive" ? { view, scenario: asc === "rollback" ? "list" : asc, dialog: asc === "rollback" ? "rollback" : null, channel: ach }
     : { view, phase: ph, profile, reserve };
   const bar = (
     <React.Fragment>
+      <button type="button" className="theme-fab" onClick={() => setDark(!dark)} aria-label={dark ? "Светлая тема" : "Тёмная тема"} title={dark ? "Светлая тема" : "Тёмная тема"}>{dark ? "☀" : "☾"}</button>
       <div className="toolbar">
         <FwSeg items={[["ru", "RU"], ["en", "EN"]]} value={lang} onChange={setLang} />
         <FwSeg items={[["0", "Имена: короткие"], ["1", "Имена: 40 символов"]]} value={long ? "1" : "0"} onChange={(x) => setLong(x === "1")} />

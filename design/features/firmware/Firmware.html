@@ -10,11 +10,18 @@
   html, body { margin: 0; }
   body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
   .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 760px; }
-  .seg { flex: 0 0 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: wrap; justify-content: center; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg { flex: 0 0 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: nowrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.wrap { flex-wrap: wrap; justify-content: center; }
   .seg button { white-space: nowrap; border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
   .seg button.on { background: #1A3E7A; color: #fff; }
   .scaler { transform-origin: top left; }
 
+  .theme-fab { position: fixed; top: 14px; right: 14px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; line-height: 1; background: #fff; color: #1A3E7A; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  body.page-dark { background: #101314; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .theme-fab { background: #272b2d; color: #ffd966; }
 </style>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>

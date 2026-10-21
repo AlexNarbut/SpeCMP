@@ -1,5 +1,12 @@
 // RU→EN словарь экрана прошивки и «длинные» имена (≤40 символов) для проверки вёрстки.
 window.FW_EN = {
+ "Канал": "Channel",
+ "Введите PIN-код программирования": "Enter the programming PIN",
+ "PIN нужен для перехода блока в режим обновления": "The PIN is required to put the unit into update mode",
+ "PIN-код": "PIN",
+ "Неверный PIN-код. Осталось попыток:": "Wrong PIN. Attempts left:",
+ "Стереть": "Delete",
+ "Продолжить": "Continue",
 "__a":0,
  "Установлена": "Installed",
  "Старее установленной": "Older than installed",

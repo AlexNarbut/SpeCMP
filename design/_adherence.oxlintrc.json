@@ -88,8 +88,8 @@
         "message": "<CmpDivider> orientation must be one of 'horizontal' | 'vertical'."
       },
       {
-        "selector": "JSXOpeningElement[name.name='CmpDropdown'] > JSXAttribute > JSXIdentifier[name!=/^(?:selectedValue|placeholder|options|onOptionSelect|disabled|rootStyle|key|ref|className|style|children)$/]",
-        "message": "<CmpDropdown> doesn't accept that prop. Declared props: selectedValue, placeholder, options, onOptionSelect, disabled, rootStyle."
+        "selector": "JSXOpeningElement[name.name='CmpDropdown'] > JSXAttribute > JSXIdentifier[name!=/^(?:selectedValue|placeholder|options|onOptionSelected|disabled|rootStyle|key|ref|className|style|children)$/]",
+        "message": "<CmpDropdown> doesn't accept that prop. Declared props: selectedValue, placeholder, options, onOptionSelected, disabled, rootStyle."
       },
       {
         "selector": "JSXOpeningElement[name.name='CmpFloatingActionButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|onClick|size|contentDescription|children|style|key|ref|className|style|children)$/]",
