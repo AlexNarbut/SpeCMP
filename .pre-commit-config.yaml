@@ -18,3 +18,13 @@ repos:
         files: \.kt$
         pass_filenames: false
         stages: [pre-push]
+      - id: no-push-main
+        name: no direct push to main/master (merge into develop)
+        entry: >-
+          bash -c 'case "$PRE_COMMIT_REMOTE_BRANCH" in
+          refs/heads/main|refs/heads/master) echo "Push in main/master is forbidden - merge into develop (.ai/rules.md)" >&2; exit 1;;
+          esac'
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-push]
