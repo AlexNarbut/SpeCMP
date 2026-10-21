@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
@@ -254,7 +255,7 @@ private fun PhaseBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions
 private fun ExitDialog(actions: FirmwareUpdateActions) {
     CmpDialog(
         onDismissRequest = actions.onExitDialogDismiss,
-        modifier = Modifier.widthIn(max = 440.dp),
+        width = CmpDialogWidth.Wide,
         icon = CmpIcons.Warning.imageVector(),
         title = { CmpText(text = stringResource(Res.string.firmware_update_exit_title)) },
         text = { CmpText(text = stringResource(Res.string.firmware_update_exit_msg), style = CmpTextStyle.Body) },

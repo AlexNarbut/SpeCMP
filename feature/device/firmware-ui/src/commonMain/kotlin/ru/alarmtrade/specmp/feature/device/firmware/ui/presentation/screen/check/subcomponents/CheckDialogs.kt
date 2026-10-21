@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +36,7 @@ import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
@@ -69,7 +68,6 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_common_lab
 
 private val ButtonHeight = 48.dp
 private val DialogMaxWidth = 440.dp
-private val DescriptionMaxHeight = 320.dp
 private const val PIN_LENGTH = 4
 
 internal const val ENTER_CONFIRM_TAG = "firmware_enter_confirm"
@@ -84,13 +82,10 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
     val colors = cmpThemeColors()
     CmpDialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier.widthIn(max = DialogMaxWidth),
+        width = CmpDialogWidth.Wide,
         title = { CmpText(text = stringResource(Res.string.firmware_check_dialog_title_description)) },
         text = {
-            CmpColumn(
-                modifier = Modifier.heightIn(max = DescriptionMaxHeight).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -136,7 +131,7 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
 internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier.widthIn(max = DialogMaxWidth),
+        width = CmpDialogWidth.Wide,
         icon = CmpIcons.PowerSettingsNew.imageVector(),
         title = { CmpText(text = stringResource(Res.string.firmware_check_dialog_title_confirm)) },
         text = {

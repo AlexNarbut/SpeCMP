@@ -26,6 +26,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -64,6 +65,7 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_common_btn
 
 private val CenterMaxWidth = 440.dp
 private val ButtonHeight = 48.dp
+private val DetailDescriptionMaxHeight = 300.dp
 
 internal const val ARCHIVE_INSTALL_TAG = "firmware_archive_install"
 internal const val ARCHIVE_ROLLBACK_CONFIRM_TAG = "firmware_archive_rollback_confirm"
@@ -209,7 +211,8 @@ internal fun ArchiveDetail(
                 CmpText(
                     text = row.description.ifBlank {
                         stringResource(Res.string.firmware_check_dialog_msg_no_description)
-                    }
+                    },
+                    modifier = Modifier.heightIn(max = DetailDescriptionMaxHeight).verticalScroll(rememberScrollState())
                 )
             }
             when (row.kind) {
@@ -245,7 +248,7 @@ internal fun ArchiveDetail(
 internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier.widthIn(max = 440.dp),
+        width = CmpDialogWidth.Wide,
         icon = CmpIcons.Warning.imageVector(),
         title = { CmpText(text = stringResource(Res.string.firmware_archive_rollback_title)) },
         text = {

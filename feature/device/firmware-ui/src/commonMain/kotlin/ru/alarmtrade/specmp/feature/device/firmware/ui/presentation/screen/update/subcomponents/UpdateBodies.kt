@@ -7,9 +7,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,6 +108,9 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_update_suc
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_success_title
 
 private val BigButtonHeight = 52.dp
+
+/** Предел высоты блока «Что нового»: длинный текст прокручивается внутри, кнопки остаются на экране. */
+private val WhatsNewMaxHeight = 220.dp
 
 internal const val SOURCE_DOWNLOAD_TAG = "firmware_source_download"
 internal const val SOURCE_ARCHIVE_TAG = "firmware_source_archive"
@@ -283,7 +289,8 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
                 text = confirm.description.ifBlank {
                     stringResource(Res.string.firmware_update_confirm_msg_no_description)
                 },
-                style = CmpTextStyle.Body
+                style = CmpTextStyle.Body,
+                modifier = Modifier.heightIn(max = WhatsNewMaxHeight).verticalScroll(rememberScrollState())
             )
         }
     }

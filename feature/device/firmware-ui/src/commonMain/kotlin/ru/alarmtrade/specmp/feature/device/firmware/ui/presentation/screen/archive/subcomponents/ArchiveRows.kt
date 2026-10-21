@@ -4,10 +4,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +47,7 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_bt
 import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_btn_select
 
 private val ButtonHeight = 48.dp
+private val ExpandedDescriptionMaxHeight = 200.dp
 private const val COLLAPSED_LINES = 2
 private const val DAY_MONTH_DIGITS = 2
 private const val YEAR_DIGITS = 4
@@ -149,7 +153,12 @@ internal fun ArchiveRow(
                     style = CmpTextStyle.Body,
                     color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
                     maxLines = if (expanded) Int.MAX_VALUE else COLLAPSED_LINES,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = if (expanded) {
+                        Modifier.heightIn(max = ExpandedDescriptionMaxHeight).verticalScroll(rememberScrollState())
+                    } else {
+                        Modifier
+                    }
                 )
             }
             RowActions(row, master, expanded, onToggle = { expanded = !expanded }, onPick = onPick)
