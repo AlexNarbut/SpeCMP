@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,11 +30,12 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.ChannelChip
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLayout
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ChannelPanel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ConfirmBootDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.DescriptionDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModuleCard
@@ -46,6 +48,7 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_check_titl
 import specmp.feature.device.firmware_ui.generated.resources.firmware_check_title_screen
 import specmp.feature.device.firmware_ui.generated.resources.firmware_common_a11y_back
 import specmp.feature.device.firmware_ui.generated.resources.firmware_common_label_device_id
+import specmp.feature.device.firmware_ui.generated.resources.firmware_common_msg_test_channel
 
 private val ContentMaxWidth = 1040.dp
 
@@ -131,8 +134,8 @@ private fun ReadyBody(
                     icon = CmpIcons.CloudOff
                 )
             }
-            state.deviceId?.let { DeviceRow(state.deviceName, it) }
-            ChannelPanel(channel = state.channel, layout = layout, onSelect = actions.onChannelSelected)
+            state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
+            if (state.channel.isTest) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
             CmpText(text = stringResource(Res.string.firmware_check_title_modules), style = CmpTextStyle.Title)
             content.modules.chunked(columns).forEach { rowCards ->
                 CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
@@ -157,32 +160,70 @@ private fun ReadyBody(
     }
 }
 
+/**
+ * Строка устройства: иконка, полное имя (переносится), ID и кнопка канала. В Compact — две строки: иконка и имя, затем
+ * ID и кнопка канала; на широком окне — одна.
+ */
 @Composable
-private fun DeviceRow(name: String, id: Long) {
+private fun DeviceRow(
+    name: String,
+    id: Long,
+    channel: FirmwareChannel,
+    layout: FirmwareLayout,
+    onChannelSelect: (FirmwareChannel) -> Unit
+) {
     val colors = cmpThemeColors()
+    val idText = stringResource(Res.string.firmware_common_label_device_id, id.toString())
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = colors.surfaceContainerLow
+        color = colors.surfaceContainerLow,
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
-        CmpRow(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            CmpIcon(
-                icon = CmpIcons.Sensors,
-                contentDescription = null,
-                modifier = Modifier.size(26.dp),
-                tint = colors.primary
-            )
-            CmpText(text = name, modifier = Modifier.weight(1f))
-            CmpText(
-                text = stringResource(Res.string.firmware_common_label_device_id, id.toString()),
-                color = colors.onSurfaceVariant,
-                style = CmpTextStyle.Body
-            )
+        if (layout == FirmwareLayout.Compact) {
+            CmpColumn(
+                modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                DeviceNameRow(name, idText = null)
+                CmpRow(
+                    modifier = Modifier.fillMaxWidth().padding(start = 38.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CmpText(text = idText, color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
+                    ChannelChip(channel, onChannelSelect)
+                }
+            }
+        } else {
+            CmpRow(
+                modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                DeviceNameRow(name, idText, modifier = Modifier.weight(1f))
+                ChannelChip(channel, onChannelSelect)
+            }
         }
+    }
+}
+
+@Composable
+private fun DeviceNameRow(name: String, idText: String?, modifier: Modifier = Modifier) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CmpIcon(
+            icon = CmpIcons.Sensors,
+            contentDescription = null,
+            modifier = Modifier.size(26.dp),
+            tint = colors.primary
+        )
+        CmpText(text = name, modifier = Modifier.weight(1f))
+        idText?.let { CmpText(text = it, color = colors.onSurfaceVariant, style = CmpTextStyle.Body) }
     }
 }
 

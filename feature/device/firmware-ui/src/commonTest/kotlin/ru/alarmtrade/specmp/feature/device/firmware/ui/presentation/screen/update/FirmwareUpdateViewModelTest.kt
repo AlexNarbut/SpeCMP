@@ -269,7 +269,7 @@ class FirmwareUpdateViewModelTest {
     }
 
     @Test
-    fun `update runs through the stages and a finished update waits for the reboot`() = test {
+    fun `update runs through the stages and a finished update leaves the block in the bootloader`() = test {
         val vm = startedUpdate()
         assertEquals(UpdatePhase.Prepare, vm.state.value.phase)
         assertEquals(listOf(FirmwareUpdateTarget.MainProgram), updateRepository.calls.map { it.first })
@@ -287,22 +287,21 @@ class FirmwareUpdateViewModelTest {
         updateRepository.progress.emit(FirmwareUpdateProgress.Applying)
         runCurrent()
         assertEquals(UpdatePhase.Apply, vm.state.value.phase)
-        // Блок сейчас перезагрузится: обрыв связи ожидаем.
+        // Блок мог бы перезагрузиться сам: обрыв связи на применении ожидаем.
         assertEquals(DeviceReboot.ToMain, session.reboot.value)
 
         updateRepository.progress.emit(FirmwareUpdateProgress.Finished)
         runCurrent()
         assertEquals(UpdatePhase.Success, vm.state.value.phase)
         assertTrue(vm.state.value.locked)
+        // Блок остался в загрузчике: экран успеха это показывает.
+        assertTrue(vm.state.value.inBoot)
 
+        // «OK» — обычное состояние выбора источника: можно выбрать другую прошивку или выйти командой.
         vm.onResultOk()
         runCurrent()
-        assertEquals(UpdatePhase.Finishing, vm.state.value.phase)
-
-        // Блок вернулся в рабочий режим — ожидание снято, хост уйдёт со слота.
-        linkDrop()
-        runCurrent()
-        linkBack(workDevice)
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
+        assertNull(vm.state.value.confirm)
         assertNull(session.reboot.value)
     }
 
@@ -506,5 +505,80 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
         assertEquals(UpdatePhase.Prepare, vm.state.value.phase)
         assertEquals("3.55", vm.state.value.confirm?.newVersion)
+    }
+
+    @Test
+    fun `exit command is offered over bluetooth only`() = test {
+        prepareMain()
+        val (ble, _) = viewModel(ConnectionTransport.BLE)
+        assertTrue(ble.state.value.canExitBoot)
+    }
+
+    @Test
+    fun `usb has no exit command`() = test {
+        prepareMain()
+        val (usb, _) = viewModel(ConnectionTransport.USB)
+        assertEquals(false, usb.state.value.canExitBoot)
+
+        usb.onExitBootClick()
+        runCurrent()
+        assertEquals(0, sessionRepository.exitCalls)
+    }
+
+    @Test
+    fun `exit command restarts the block and waits for it to come back`() = test {
+        prepareMain()
+        val (vm, _) = viewModel(ConnectionTransport.BLE)
+
+        vm.onExitBootClick()
+        runCurrent()
+
+        assertEquals(listOf(BootModeTarget.MainProgram), sessionRepository.exitTargets)
+        assertEquals(DeviceReboot.ToMain, session.reboot.value)
+        assertEquals(UpdatePhase.Finishing, vm.state.value.phase)
+
+        // Блок перезагрузился и вернулся в рабочий режим — ожидание снято, хост уйдёт со слота.
+        linkDrop()
+        runCurrent()
+        linkBack(workDevice)
+        assertNull(session.reboot.value)
+    }
+
+    @Test
+    fun `failed exit command with the block still in the bootloader shows an error`() = test {
+        prepareMain()
+        sessionRepository.exitResults = listOf(Response.Error(IllegalStateException("no answer")))
+        val (vm, _) = viewModel(ConnectionTransport.BLE)
+
+        vm.onExitBootClick()
+        runCurrent()
+
+        val state = vm.state.value
+        assertEquals(UpdatePhase.Source, state.phase)
+        assertEquals(true, state.exitError)
+        assertNull(session.reboot.value)
+        // Одна команда на нажатие; повтор — кнопкой.
+        assertEquals(1, sessionRepository.exitCalls)
+
+        sessionRepository.exitResults = listOf(Response.Success(Unit))
+        vm.onExitBootClick()
+        runCurrent()
+        assertEquals(false, vm.state.value.exitError)
+        assertEquals(UpdatePhase.Finishing, vm.state.value.phase)
+    }
+
+    @Test
+    fun `exit command is offered only on the source step`() = test {
+        prepareMain()
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
+        val (vm, _) = viewModel(ConnectionTransport.BLE)
+        vm.onDownloadClick()
+        runCurrent()
+        assertEquals(UpdatePhase.Confirm, vm.state.value.phase)
+
+        vm.onExitBootClick()
+        runCurrent()
+
+        assertEquals(0, sessionRepository.exitCalls)
     }
 }

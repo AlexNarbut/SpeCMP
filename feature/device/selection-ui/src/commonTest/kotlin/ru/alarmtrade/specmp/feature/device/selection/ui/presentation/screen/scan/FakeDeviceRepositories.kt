@@ -112,6 +112,8 @@ class FakeDeviceSessionRepository : DeviceSessionRepository {
     override suspend fun disconnect(): Response<Unit> = Response.Error(IllegalStateException("not used"))
     override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
         Response.Error(IllegalStateException("not used"))
+    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> =
+        Response.Error(IllegalStateException("not used"))
     override suspend fun setServicePin(pin: ServicePin): Response<Unit> =
         Response.Error(IllegalStateException("not used"))
 }

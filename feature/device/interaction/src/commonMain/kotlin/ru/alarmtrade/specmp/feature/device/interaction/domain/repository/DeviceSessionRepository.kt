@@ -40,6 +40,12 @@ interface DeviceSessionRepository {
      */
     suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult>
 
+    /**
+     * Выйти из режима загрузчика командой по связи ([target] — что перезагрузить в рабочий режим): блок перезагрузится
+     * и вернётся по обычному переподключению. Нужна после обновления прошивки, пока блок остаётся в загрузчике.
+     */
+    suspend fun exitBootMode(target: BootModeTarget): Response<Unit>
+
     /** Сохранить PIN программирования для текущего блока (его используют команды в режиме программирования). */
     suspend fun setServicePin(pin: ServicePin): Response<Unit>
 }

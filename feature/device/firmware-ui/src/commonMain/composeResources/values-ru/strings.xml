@@ -89,10 +89,10 @@
     <string name="firmware_update_status_apply">Идёт применение прошивки</string>
     <string name="firmware_update_msg_power">Не выключайте питание на устройстве и не разрывайте соединение с устройством</string>
     <string name="firmware_update_success_title">Обновление устройства завершено</string>
-    <string name="firmware_update_success_msg">Блок перезагрузится, связь пропадёт на несколько секунд. Приложение само вернётся в расширенный монтаж.</string>
+    <string name="firmware_update_success_msg">Блок перезагрузился и вернулся в рабочий режим. Приложение само вернётся в расширенный монтаж.</string>
     <string name="firmware_update_btn_ok">OK</string>
     <string name="firmware_update_finishing_title">Завершаем обновление</string>
-    <string name="firmware_update_finishing_msg">Ожидаем блок. Это займёт около 5 секунд, затем откроется расширенный монтаж.</string>
+    <string name="firmware_update_finishing_msg">Ожидаем блок. Это может занять несколько минут, затем откроется расширенный монтаж.</string>
     <string name="firmware_update_error_title">Обновление не выполнено</string>
     <string name="firmware_update_error_msg">Блок остался в режиме обновления. Повторите попытку: прошивка скачается заново.</string>
     <string name="firmware_update_failure_crc">Блок получил повреждённые данные (ошибка контрольной суммы).</string>
@@ -133,4 +133,9 @@
     <string name="firmware_archive_msg_same">Эта версия уже установлена. Можно переустановить</string>
     <string name="firmware_archive_rollback_title">Установить более старую версию?</string>
     <string name="firmware_archive_rollback_msg">Выбранная версия %1$s старее установленной %2$s. Новые функции и исправления в ней могут отсутствовать.</string>
+    <string name="firmware_update_btn_exit_boot">Выйти из обновления</string>
+    <string name="firmware_update_error_exit">Не удалось перезагрузить блок. Проверьте связь и повторите.</string>
+    <string name="firmware_update_success_msg_boot_ble">Блок остаётся в режиме обновления. Нажмите «Выйти из обновления», чтобы он перезагрузился в рабочий режим, или выберите другую прошивку.</string>
+    <string name="firmware_update_success_msg_boot_usb">Блок остаётся в режиме обновления. Перезагрузите его по питанию, чтобы вернуться в рабочий режим, или выберите другую прошивку.</string>
+    <string name="firmware_check_chip_channel">Канал: %1$s</string>
 </resources>

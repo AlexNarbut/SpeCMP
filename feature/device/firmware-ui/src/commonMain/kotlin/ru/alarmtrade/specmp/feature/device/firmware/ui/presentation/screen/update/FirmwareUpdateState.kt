@@ -71,7 +71,13 @@ data class FirmwareUpdateState(
     val confirm: ConfirmUi? = null,
     /** Последняя версия с сервера не получена (баннер на выборе источника). */
     val sourceError: Boolean = false,
-    val exitDialog: Boolean = false
+    val exitDialog: Boolean = false,
+    /** Блок сейчас в загрузчике (на экране успеха это значит «после прошивки блок остался в загрузчике»). */
+    val inBoot: Boolean = false,
+    /** Команда выхода из загрузчика (перезагрузка) доступна: только BLE. */
+    val canExitBoot: Boolean = false,
+    /** Команда выхода из загрузчика не прошла (баннер на выборе источника). */
+    val exitError: Boolean = false
 ) {
     /** «Назад» заблокирован (замок): процесс идёт, и блок нельзя бросить на полпути. */
     val locked: Boolean
@@ -112,6 +118,7 @@ class FirmwareUpdateActions(
     val onSupportClick: () -> Unit = {},
     val onReconnect: () -> Unit = {},
     val onDisconnect: () -> Unit = {},
+    val onExitBootClick: () -> Unit = {},
     val onExitDialogDismiss: () -> Unit = {},
     val onExitConfirm: () -> Unit = {}
 )

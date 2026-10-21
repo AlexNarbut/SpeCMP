@@ -37,6 +37,16 @@ class FirmwareVersionNumberTest {
     }
 
     @Test
+    fun `letter revisions of the server come after the plain version and are ordered by letter`() {
+        // Формат сервера: «3.57 A», «3.57 B», «3.57 C».
+        assertTrue(v("3.57 A") > v("3.57"))
+        assertTrue(v("3.57 B") > v("3.57 A"))
+        assertTrue(v("3.57 C") > v("3.57 B"))
+        assertTrue(v("3.58") > v("3.57 C"))
+        assertTrue(v("3.57 A") > v("3.56 C"))
+    }
+
+    @Test
     fun `text without numbers falls back to text comparison`() {
         assertEquals(v("unknown"), v("unknown"))
         assertTrue(v("b") > v("a"))
@@ -51,8 +61,21 @@ class FirmwareVersionNumberTest {
     }
 
     @Test
+    fun `revision letters do not make a version newer than the installed one`() {
+        // Блок сообщает «VER3.57» без буквы: «3.57 A» с сервера — не обновление, и «Актуальная» не должна сбиваться.
+        assertEquals(VersionRelation.Same, "3.57 A".relationTo("VER3.57"))
+        assertEquals(VersionRelation.Same, "3.57 C".relationTo("3.57"))
+        assertEquals(VersionRelation.Newer, "3.58 A".relationTo("VER3.57"))
+        assertEquals(VersionRelation.Older, "3.56 C".relationTo("3.57"))
+        // Пред-релиз по-прежнему старше релиза.
+        assertEquals(VersionRelation.Older, "3.57-beta.2".relationTo("3.57"))
+    }
+
+    @Test
     fun `archive order is newest first`() {
         val sorted = listOf("3.9", "3.10", "3.2", "3.57", "3.57-beta.1").map(::v).sortedDescending()
         assertEquals(listOf("3.57", "3.57-beta.1", "3.10", "3.9", "3.2"), sorted.map { it.toString() })
+        val withRevisions = listOf("3.36", "3.57 A", "3.57 C", "3.57 B").map(::v).sortedDescending()
+        assertEquals(listOf("3.57 C", "3.57 B", "3.57 A", "3.36"), withRevisions.map { it.toString() })
     }
 }

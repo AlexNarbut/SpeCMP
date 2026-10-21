@@ -139,7 +139,8 @@ commonMain.dependencies {
 | Кнопка с иконкой | `button/CmpIconButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
 | Текстовое поле | `input/CmpTextField.kt` |
-| Выпадающий список | `input/CmpDropdown.kt` |
+| Выпадающий список (поле) | `input/CmpDropdown.kt` |
+| Выпадающее меню у кнопки/чипа | `menu/CmpDropdownMenu.kt` |
 | Switch | `input/CmpSwitch.kt` |
 | Checkbox | `input/CmpCheckbox.kt` |
 | Radio button | `input/CmpRadioButton.kt` |

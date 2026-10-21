@@ -74,6 +74,7 @@ class AdvancedMountRootViewModelTest {
             bootModeCount++
             return Response.Success(BootModeResult.Entered)
         }
+        override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
         override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
     }
 

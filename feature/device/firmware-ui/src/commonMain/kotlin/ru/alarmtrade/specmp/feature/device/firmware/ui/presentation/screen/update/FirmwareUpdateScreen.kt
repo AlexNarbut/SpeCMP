@@ -107,6 +107,7 @@ fun FirmwareUpdateScreen(
             onCancelConfirm = viewModel::onCancelConfirm,
             onResultOk = viewModel::onResultOk,
             onRetry = viewModel::onRetry,
+            onExitBootClick = viewModel::onExitBootClick,
             onSupportClick = viewModel::onSupportClick,
             onReconnect = viewModel::onReconnect,
             onDisconnect = viewModel::onDisconnect,
@@ -238,7 +239,7 @@ private fun PhaseBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions
 
             UpdatePhase.Prepare, is UpdatePhase.Transfer, UpdatePhase.Verify, UpdatePhase.Apply -> ProgressBody(phase)
 
-            UpdatePhase.Success -> SuccessBody(actions.onResultOk)
+            UpdatePhase.Success -> SuccessBody(state.inBoot, state.canExitBoot, actions.onResultOk)
 
             UpdatePhase.Finishing -> FinishingBody()
 

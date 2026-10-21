@@ -153,6 +153,17 @@ class SpecialistDeviceSessionRepository(
         }
     }
 
+    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> {
+        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
+            ?: return interactorUnavailable()
+        return when (target) {
+            BootModeTarget.MainProgram -> interactor.exitAlarmDeviceBootModeUseCase.execute().toResponse().map { }
+
+            BootModeTarget.BluetoothModule ->
+                interactor.exitBluetoothModemBootModeUseCase.execute().toResponse().map { }
+        }
+    }
+
     override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
             ?: return interactorUnavailable()

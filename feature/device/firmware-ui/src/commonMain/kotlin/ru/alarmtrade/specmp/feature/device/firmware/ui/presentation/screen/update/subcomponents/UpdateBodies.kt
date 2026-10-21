@@ -52,6 +52,7 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_common_msg
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_archive
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_disconnect
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_download
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_exit_boot
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_ok
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_reconnect
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_btn_support
@@ -68,6 +69,7 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_update_ent
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_entering_title
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_entering_waiting
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_data
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_exit
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_msg
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_source
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_error_title
@@ -98,6 +100,8 @@ import specmp.feature.device.firmware_ui.generated.resources.firmware_update_ste
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_step_transfer
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_step_verify
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_success_msg
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_success_msg_boot_ble
+import specmp.feature.device.firmware_ui.generated.resources.firmware_update_success_msg_boot_usb
 import specmp.feature.device.firmware_ui.generated.resources.firmware_update_success_title
 
 private val BigButtonHeight = 52.dp
@@ -108,6 +112,7 @@ internal const val UPDATE_CONFIRM_TAG = "firmware_update_confirm"
 internal const val UPDATE_CANCEL_TAG = "firmware_update_cancel"
 internal const val UPDATE_PROGRESS_TAG = "firmware_progress"
 internal const val RESULT_OK_TAG = "firmware_result_ok"
+internal const val EXIT_BOOT_TAG = "firmware_exit_boot"
 internal const val ERROR_RETRY_TAG = "firmware_error_retry"
 internal const val ERROR_SUPPORT_TAG = "firmware_error_support"
 internal const val LOST_RECONNECT_TAG = "firmware_lost_reconnect"
@@ -179,6 +184,13 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             )
         }
         if (state.channel.isTest) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
+        if (state.exitError) {
+            InfoBanner(
+                text = stringResource(Res.string.firmware_update_error_exit),
+                tone = BannerTone.Error,
+                icon = CmpIcons.LinkOff
+            )
+        }
         if (state.sourceError) {
             InfoBanner(
                 text = stringResource(Res.string.firmware_update_error_source),
@@ -196,6 +208,13 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             onClick = actions.onArchiveClick,
             modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG)
         )
+        if (state.canExitBoot) {
+            CmpOutlinedButton(
+                text = stringResource(Res.string.firmware_update_btn_exit_boot),
+                onClick = actions.onExitBootClick,
+                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(EXIT_BOOT_TAG)
+            )
+        }
     }
 }
 
@@ -366,10 +385,19 @@ private fun UpdatePhase.statusRes(): StringResource = when (this) {
     else -> Res.string.firmware_update_status_apply
 }
 
+/** Успех: блок остался в загрузчике (подсказка по способу выйти зависит от связи) или уже вернулся в рабочий режим. */
 @Composable
-internal fun SuccessBody(onOk: () -> Unit) {
+internal fun SuccessBody(inBoot: Boolean, canExitBoot: Boolean, onOk: () -> Unit) {
     Headline(stringResource(Res.string.firmware_update_success_title))
-    Message(stringResource(Res.string.firmware_update_success_msg))
+    Message(
+        stringResource(
+            when {
+                !inBoot -> Res.string.firmware_update_success_msg
+                canExitBoot -> Res.string.firmware_update_success_msg_boot_ble
+                else -> Res.string.firmware_update_success_msg_boot_usb
+            }
+        )
+    )
     CmpButton(
         text = stringResource(Res.string.firmware_update_btn_ok),
         onClick = onOk,

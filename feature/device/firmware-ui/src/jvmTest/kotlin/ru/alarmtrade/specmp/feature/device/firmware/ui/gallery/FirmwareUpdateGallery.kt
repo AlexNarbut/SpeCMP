@@ -98,7 +98,16 @@ class FirmwareUpdateGallery {
     fun apply() = render("14_apply", phase(UpdatePhase.Apply))
 
     @Test
-    fun success() = render("15_success", phase(UpdatePhase.Success))
+    fun success() = render("15_success", phase(UpdatePhase.Success).copy(inBoot = true, canExitBoot = true))
+
+    @Test
+    fun successUsb() = render("15b_success_usb", phase(UpdatePhase.Success).copy(inBoot = true))
+
+    @Test
+    fun successBlockBack() = render("15c_success_block_back", phase(UpdatePhase.Success))
+
+    @Test
+    fun sourceWithExit() = render("03b_source_exit_bluetooth", base.copy(canExitBoot = true, exitError = true))
 
     @Test
     fun finishing() = render("16_finishing", phase(UpdatePhase.Finishing))

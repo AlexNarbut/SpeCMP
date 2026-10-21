@@ -36,6 +36,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchi
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
@@ -67,7 +68,9 @@ class FirmwareUpdateViewModel(
         val kind: UpdateProfile,
         val deviceTitle: String,
         val currentVersion: String,
-        val modules: List<FirmwareModule>
+        val modules: List<FirmwareModule>,
+        /** Выход из загрузчика командой доступен (BLE). */
+        val canExit: Boolean
     )
 
     private data class Core(
@@ -78,6 +81,7 @@ class FirmwareUpdateViewModel(
         val candidate: FirmwareVersion? = null,
         val sourceError: Boolean = false,
         val exitDialog: Boolean = false,
+        val exitError: Boolean = false,
         /** Пользователь подтвердил результат («OK»). */
         val acknowledged: Boolean = false,
         /** Связь пропадала, пока шёл процесс обновления. */
@@ -156,7 +160,10 @@ class FirmwareUpdateViewModel(
                 )
             },
             sourceError = core.sourceError,
-            exitDialog = core.exitDialog
+            exitDialog = core.exitDialog,
+            inBoot = session is DeviceSessionState.FirmwareBoot || session is DeviceSessionState.BluetoothBoot,
+            canExitBoot = profile?.canExit == true,
+            exitError = core.exitError
         )
     }
 
@@ -247,7 +254,13 @@ class FirmwareUpdateViewModel(
         val modules = (response as? Response.Success)?.value.orEmpty().filter { it.bootTarget == source.target }
         core.update { state ->
             state.copy(
-                profile = Profile(source.kind, source.title, source.current, modules),
+                profile = Profile(
+                    source.kind,
+                    source.title,
+                    source.current,
+                    modules,
+                    canExit = transport == ConnectionTransport.BLE
+                ),
                 selectedModuleId = state.selectedModuleId?.takeIf { id -> modules.any { it.id == id } }
                     ?: modules.firstOrNull()?.id,
                 stage = if (state.stage == UpdatePhase.Loading) {
@@ -277,7 +290,7 @@ class FirmwareUpdateViewModel(
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        core.update { it.copy(channel = channel, sourceError = false) }
+        core.update { it.copy(channel = channel, sourceError = false, exitError = false) }
     }
 
     /** «Скачать прошивку»: запросить последнюю версию выбранного канала и перейти к подтверждению. */
@@ -343,11 +356,52 @@ class FirmwareUpdateViewModel(
         }
     }
 
-    /** «OK» на успехе: подтвердить результат; хост уйдёт со слота, как только блок вернётся в рабочий режим. */
+    /**
+     * «OK» на успехе. Блок ещё в загрузчике — обычное состояние выбора источника (можно выбрать другую прошивку или
+     * выйти командой); блок уже вернулся в рабочий режим — подтверждение, хост уйдёт со слота сам.
+     */
     fun onResultOk() {
-        if (core.value.stage == UpdatePhase.Success || state.value.phase == UpdatePhase.Success) {
+        if (state.value.phase != UpdatePhase.Success) return
+        if (state.value.inBoot) {
+            // Блок остался в загрузчике: ожидание возврата, поставленное на «Применении», больше не нужно.
+            if (deviceSession.reboot.value == DeviceReboot.ToMain) deviceSession.cancelReboot()
+            core.update {
+                it.copy(stage = UpdatePhase.Source, candidate = null, sourceError = false, exitError = false)
+            }
+        } else {
             core.update { it.copy(acknowledged = true) }
             deviceSession.acknowledgeReboot()
+        }
+    }
+
+    /**
+     * «Выйти из обновления» (BLE): команда перезагрузки блока в рабочий режим. Ожидание возврата ставится до команды —
+     * блок может перезагрузиться раньше ответа. Не прошла и блок на связи — баннер; связь оборвалась — это и есть
+     * перезагрузка, ждём возврата.
+     */
+    fun onExitBootClick() {
+        val current = core.value
+        val profile = current.profile ?: return
+        if (current.stage != UpdatePhase.Source || !profile.canExit) return
+        val target = when (profile.kind) {
+            UpdateProfile.Main -> BootModeTarget.MainProgram
+            UpdateProfile.Bluetooth -> BootModeTarget.BluetoothModule
+        }
+        safeLaunch {
+            executeWithProceedLock {
+                deviceSession.expectReboot(DeviceReboot.ToMain)
+                deviceSession.acknowledgeReboot()
+                core.update { it.copy(acknowledged = true, exitError = false) }
+                val response = withContext(dispatchers.io) { deviceSession.exitBootMode(target) }
+                val stillInBoot = deviceSession.state.value.let {
+                    it is DeviceSessionState.FirmwareBoot || it is DeviceSessionState.BluetoothBoot
+                }
+                if (response is Response.Error && stillInBoot) {
+                    logger.d { "Exit boot mode failed: ${response.exception::class.simpleName}" }
+                    deviceSession.cancelReboot()
+                    core.update { it.copy(acknowledged = false, exitError = true) }
+                }
+            }
         }
     }
 
@@ -425,10 +479,8 @@ class FirmwareUpdateViewModel(
                 setStage(UpdatePhase.Apply)
             }
 
-            FirmwareUpdateProgress.Finished -> {
-                if (deviceSession.reboot.value == null) deviceSession.expectReboot(DeviceReboot.ToMain)
-                setStage(UpdatePhase.Success)
-            }
+            // После успеха блок остаётся в загрузчике: выход — отдельной командой (или блок перезагрузится сам).
+            FirmwareUpdateProgress.Finished -> setStage(UpdatePhase.Success)
 
             is FirmwareUpdateProgress.Failed -> onFailed(progress.failure)
         }

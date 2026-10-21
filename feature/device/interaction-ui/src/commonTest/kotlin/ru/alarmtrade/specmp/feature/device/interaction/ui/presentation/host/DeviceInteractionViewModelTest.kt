@@ -52,6 +52,7 @@ class DeviceInteractionViewModelTest {
         override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
             Response.Success(BootModeResult.Entered)
+        override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
         override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
     }
     private var closeCount = 0

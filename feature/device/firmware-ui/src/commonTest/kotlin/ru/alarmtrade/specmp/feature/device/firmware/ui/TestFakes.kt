@@ -92,6 +92,16 @@ internal class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRep
         return bootResults[minOf(bootCalls++, bootResults.lastIndex)]
     }
 
+    /** Ответы exitBootMode по порядку; последний повторяется. */
+    var exitResults: List<Response<Unit>> = listOf(Response.Success(Unit))
+    var exitCalls = 0
+    val exitTargets = mutableListOf<BootModeTarget>()
+
+    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> {
+        exitTargets += target
+        return exitResults[minOf(exitCalls++, exitResults.lastIndex)]
+    }
+
     override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
         pins += pin
         return Response.Success(Unit)

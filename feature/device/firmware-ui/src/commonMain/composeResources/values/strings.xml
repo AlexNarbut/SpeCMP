@@ -89,10 +89,10 @@
     <string name="firmware_update_status_apply">Applying the firmware</string>
     <string name="firmware_update_msg_power">Do not turn off the device power and do not break the connection to the device</string>
     <string name="firmware_update_success_title">Device update completed</string>
-    <string name="firmware_update_success_msg">The unit will restart and the connection will drop for a few seconds. The app will return to Advanced setup by itself.</string>
+    <string name="firmware_update_success_msg">The unit restarted and is back in work mode. The app will return to Advanced setup by itself.</string>
     <string name="firmware_update_btn_ok">OK</string>
     <string name="firmware_update_finishing_title">Finishing the update</string>
-    <string name="firmware_update_finishing_msg">Waiting for the unit. This takes about 5 seconds, then Advanced setup opens.</string>
+    <string name="firmware_update_finishing_msg">Waiting for the unit. This may take a few minutes, then Advanced setup opens.</string>
     <string name="firmware_update_error_title">Update failed</string>
     <string name="firmware_update_error_msg">The unit is still in update mode. Try again: the firmware will be downloaded anew.</string>
     <string name="firmware_update_failure_crc">The unit received corrupted data (checksum error).</string>
@@ -133,4 +133,9 @@
     <string name="firmware_archive_msg_same">This version is already installed. You can reinstall it</string>
     <string name="firmware_archive_rollback_title">Install an older version?</string>
     <string name="firmware_archive_rollback_msg">The selected version %1$s is older than the installed %2$s. New features and fixes may be missing from it.</string>
+    <string name="firmware_update_btn_exit_boot">Exit update</string>
+    <string name="firmware_update_error_exit">Could not restart the unit. Check the connection and try again.</string>
+    <string name="firmware_update_success_msg_boot_ble">The unit stays in update mode. Press “Exit update” to restart it into work mode, or choose another firmware.</string>
+    <string name="firmware_update_success_msg_boot_usb">The unit stays in update mode. Power-cycle it to return to work mode, or choose another firmware.</string>
+    <string name="firmware_check_chip_channel">Channel: %1$s</string>
 </resources>

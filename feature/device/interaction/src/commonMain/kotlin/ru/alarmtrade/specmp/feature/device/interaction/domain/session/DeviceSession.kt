@@ -179,6 +179,12 @@ class DeviceSession(
     /** Bluetooth-модуль блока (мануфактура и режим) — BLE; в рабочем режиме нужен для версии BLE-прошивки. */
     suspend fun readBluetoothModule(): Response<BluetoothModule> = sessionRepository.readBluetoothModule()
 
+    /**
+     * Выйти из загрузчика командой (перезагрузка [target] в рабочий режим). Одна команда, без повтора; кто вызывает —
+     * сам ставит [expectReboot] ([DeviceReboot.ToMain]) до команды: блок может перезагрузиться раньше ответа.
+     */
+    suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = sessionRepository.exitBootMode(target)
+
     /** Сохранить PIN программирования для текущего блока (после [BootModeResult.WrongPin]). */
     suspend fun setServicePin(pin: ServicePin): Response<Unit> = sessionRepository.setServicePin(pin)
 

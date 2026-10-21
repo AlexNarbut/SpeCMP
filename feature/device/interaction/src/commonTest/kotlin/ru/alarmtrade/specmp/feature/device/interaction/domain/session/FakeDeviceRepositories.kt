@@ -123,6 +123,13 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
         return bootModeResults[minOf(bootModeCount++, bootModeResults.lastIndex)]
     }
 
+    val exitTargets = mutableListOf<BootModeTarget>()
+
+    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> {
+        exitTargets += target
+        return Response.Success(Unit)
+    }
+
     override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
         savedPins += pin
         return Response.Success(Unit)
