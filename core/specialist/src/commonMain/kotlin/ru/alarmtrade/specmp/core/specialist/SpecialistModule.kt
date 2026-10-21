@@ -10,6 +10,7 @@ import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.SpecialistConfig
 import ru.alarmtrade.specialist.network.NetworkLogLevel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
 import ru.alarmtrade.specmp.core.specialist.account.SpecialistAccountRepository
@@ -50,7 +51,6 @@ val specialistModule = module {
     }
     single { get<SpecialistApp>().authInteractor }
     single { get<SpecialistApp>().appDeviceInformationInteractor }
-    single { SpecialistLanguage(get()) }
     single { get<SpecialistApp>().appUpdatesInteractor }
     single { get<SpecialistApp>().userInteractor }
     single { get<SpecialistApp>().chatInteractor }
@@ -66,6 +66,7 @@ val specialistModule = module {
     single { get<SpecialistApp>().deviceInformationInteractor }
     single { get<SpecialistApp>().firmwareFilesInteractor }
     singleOf(::SpecialistAccountRepository) bind AccountRepository::class
+    single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }
     }
