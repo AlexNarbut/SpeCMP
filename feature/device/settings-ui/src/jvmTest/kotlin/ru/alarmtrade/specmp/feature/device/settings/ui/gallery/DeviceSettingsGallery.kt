@@ -243,6 +243,16 @@ class DeviceSettingsGallery {
     fun outputs() = render("20_outputs", base, listOf(500))
 
     @Test
+    fun editOutput() {
+        val e = editing(501)
+        val draft = SettingValue.Output(OutputValue(listOf(true, false, true), Polarity.MINUS))
+        render("21_edit_output", base.copy(editing = e.copy(draft = draft)), listOf(500))
+    }
+
+    @Test
+    fun editInput() = render("22_edit_input", base.copy(editing = editing(401)), listOf(400))
+
+    @Test
     fun emptySection() = render("07_empty", base, listOf(700))
 
     @Test

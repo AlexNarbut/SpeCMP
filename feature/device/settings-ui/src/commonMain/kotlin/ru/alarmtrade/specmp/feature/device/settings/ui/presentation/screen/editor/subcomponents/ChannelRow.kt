@@ -71,18 +71,18 @@ internal fun ChannelRow(
     val colors = cmpThemeColors()
     val channel = channelOf(setting) ?: return
     val toggle = (setting as? SwitchOutputSetting)?.let { SettingValue.SwitchOutput(!it.value.enabled) }
+    // Переключаемый выход — переключается всей строкой; вход/выход — открывает окно функций.
+    val onClick: () -> Unit = if (toggle != null) {
+        { actions.onValueChange(setting.id, toggle) }
+    } else {
+        { actions.onEdit(setting.id) }
+    }
     CmpRow(
         modifier = modifier
             .fillMaxWidth()
             .background(if (changed) colors.tertiaryContainer.copy(alpha = CHANGED_TINT_ALPHA) else colors.surface)
             .heightIn(min = 56.dp)
-            .then(
-                if (toggle != null) {
-                    Modifier.clickable(role = Role.Switch) { actions.onValueChange(setting.id, toggle) }
-                } else {
-                    Modifier
-                }
-            )
+            .clickable(role = if (toggle != null) Role.Switch else Role.Button, onClick = onClick)
             .padding(end = 4.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

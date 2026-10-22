@@ -77,4 +77,8 @@
     <string name="settings_io_a11y_toggle_contact">Switch contact type</string>
     <string name="settings_io_a11y_toggle_polarity">Switch polarity</string>
     <string name="settings_io_a11y_locked">Can't be changed</string>
+    <string name="settings_io_label_selected">Selected %1$d of %2$d</string>
+    <string name="settings_io_label_only_selected">Selected only</string>
+    <string name="settings_io_placeholder_search">Find function</string>
+    <string name="settings_io_msg_nothing_found">Nothing found</string>
 </resources>

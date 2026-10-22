@@ -30,8 +30,10 @@ import ru.alarmtrade.specmp.core.ui.view.sheet.CmpBottomSheet
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.IntegerSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OptionSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
@@ -66,7 +68,7 @@ internal fun EditorPanel(editing: EditingSetting, wide: Boolean, actions: Editor
         CmpDialog(
             onDismissRequest = actions.onDismiss,
             width = EditorDialogWidth,
-            title = { EditorHeader(editing) },
+            title = { EditorHeader(editing, actions.onDraftChange) },
             text = { EditorBody(editing, actions.onDraftChange) },
             confirmButton = { EditorButtons(editing, actions) }
         )
@@ -76,7 +78,7 @@ internal fun EditorPanel(editing: EditingSetting, wide: Boolean, actions: Editor
                 modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                EditorHeader(editing)
+                EditorHeader(editing, actions.onDraftChange)
                 EditorBody(editing, actions.onDraftChange)
                 EditorButtons(editing, actions)
             }
@@ -85,9 +87,27 @@ internal fun EditorPanel(editing: EditingSetting, wide: Boolean, actions: Editor
 }
 
 @Composable
-private fun EditorHeader(editing: EditingSetting) {
+private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) -> Unit) {
     val setting = editing.setting
     val colors = cmpThemeColors()
+    channelHeaderOf(setting)?.let { (channel, editablePolarity) ->
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ChannelEditorHeader(
+                number = setting.number,
+                title = if (channel.name.isBlank() || channel.name == setting.name) {
+                    setting.name
+                } else {
+                    "${channel.name} · ${setting.name}"
+                },
+                channel = channel,
+                draft = editing.draft,
+                editablePolarity = editablePolarity,
+                onDraftChange = onDraftChange
+            )
+            WasChip(editing)
+        }
+        return
+    }
     var expanded by rememberSaveable(setting.id) { mutableStateOf(false) }
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpRow(verticalAlignment = Alignment.Top) {
@@ -141,6 +161,7 @@ private fun WasChip(editing: EditingSetting) {
     )
 }
 
+@Suppress("CyclomaticComplexMethod") // плоский выбор редактора по типу настройки
 @Composable
 private fun EditorBody(editing: EditingSetting, onDraftChange: (SettingValue) -> Unit) {
     val setting = editing.setting
@@ -161,6 +182,16 @@ private fun EditorBody(editing: EditingSetting, onDraftChange: (SettingValue) ->
 
             setting is TimeSetting && draft is SettingValue.Time ->
                 TimeEditor(draft.value) { onDraftChange(SettingValue.Time(it)) }
+
+            setting is InputSetting && draft is SettingValue.Input ->
+                ChannelFunctionsEditor(setting.availableLogics, draft.value.logicsState) { state ->
+                    onDraftChange(SettingValue.Input(draft.value.copy(logicsState = state)))
+                }
+
+            setting is OutputSetting && draft is SettingValue.Output ->
+                ChannelFunctionsEditor(setting.availableLogics, draft.value.logicsState) { state ->
+                    onDraftChange(SettingValue.Output(draft.value.copy(logicsState = state)))
+                }
 
             else -> Unit
         }

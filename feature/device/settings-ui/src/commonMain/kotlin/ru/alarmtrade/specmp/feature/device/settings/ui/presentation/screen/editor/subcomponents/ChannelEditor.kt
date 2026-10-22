@@ -1,0 +1,265 @@
+package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
+import ru.alarmtrade.specmp.core.ui.view.input.CmpSegmentedButton
+import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.ChannelLogic
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
+import specmp.feature.device.settings_ui.generated.resources.Res
+import specmp.feature.device.settings_ui.generated.resources.settings_io_label_only_selected
+import specmp.feature.device.settings_ui.generated.resources.settings_io_label_selected
+import specmp.feature.device.settings_ui.generated.resources.settings_io_msg_nothing_found
+import specmp.feature.device.settings_ui.generated.resources.settings_io_placeholder_search
+import specmp.feature.device.settings_ui.generated.resources.settings_search_a11y_clear
+import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_nc
+import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_no
+import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_minus_sign
+import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_plus_sign
+
+private val SegmentsWidth = 132.dp
+private val FunctionsMaxHeight = 360.dp
+private const val SELECTED_TINT_ALPHA = 0.45f
+
+/**
+ * Шапка окна канала: имя канала, справа — тип контакта (NO/NC) у входа или полярность (+/−) у выхода, если её можно
+ * менять; ниже — провода канала.
+ */
+@Composable
+internal fun ChannelEditorHeader(
+    number: String,
+    title: String,
+    channel: Channel,
+    draft: SettingValue,
+    editablePolarity: Boolean,
+    onDraftChange: (SettingValue) -> Unit
+) {
+    val colors = cmpThemeColors()
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CmpColumn(modifier = Modifier.weight(1f)) {
+                if (number.isNotEmpty()) {
+                    CmpText(text = number, style = CmpTextStyle.Caption, color = colors.onSurfaceVariant)
+                }
+                CmpText(text = title, style = CmpTextStyle.Title, color = colors.onSurface)
+            }
+            ChannelModeSegments(draft, editablePolarity, onDraftChange)
+        }
+        if (channel.wires.isNotEmpty()) {
+            CmpFlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                channel.wires.forEach { wire -> WireTag(wire) }
+            }
+        }
+    }
+}
+
+/** Тип контакта входа (NO/NC) или полярность выхода (+/−), если её можно менять. */
+@Composable
+private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, onDraftChange: (SettingValue) -> Unit) {
+    when (draft) {
+        is SettingValue.Input -> CmpSegmentedButton(
+            options = listOf(
+                stringResource(Res.string.settings_value_contact_no),
+                stringResource(Res.string.settings_value_contact_nc)
+            ),
+            selectedIndex = when (draft.value.type) {
+                InputContactType.NORMALLY_OPEN -> 0
+                InputContactType.NORMALLY_CLOSED -> 1
+                InputContactType.UNDEFINED -> -1
+            },
+            onSelect = { index ->
+                val type = if (index == 0) InputContactType.NORMALLY_OPEN else InputContactType.NORMALLY_CLOSED
+                onDraftChange(SettingValue.Input(draft.value.copy(type = type)))
+            },
+            modifier = Modifier.width(SegmentsWidth),
+            minHeight = 44.dp
+        )
+
+        is SettingValue.Output -> if (editablePolarity) {
+            CmpSegmentedButton(
+                options = listOf(
+                    stringResource(Res.string.settings_value_polarity_plus_sign),
+                    stringResource(Res.string.settings_value_polarity_minus_sign)
+                ),
+                selectedIndex = when (draft.value.polarity) {
+                    Polarity.PLUS -> 0
+                    Polarity.MINUS -> 1
+                    Polarity.UNDEFINED -> -1
+                },
+                onSelect = { index ->
+                    val polarity = if (index == 0) Polarity.PLUS else Polarity.MINUS
+                    onDraftChange(SettingValue.Output(draft.value.copy(polarity = polarity)))
+                },
+                modifier = Modifier.width(SegmentsWidth),
+                minHeight = 44.dp
+            )
+        }
+
+        else -> Unit
+    }
+}
+
+/** Канал и «полярность можно менять» для окна канала (вход / выход), иначе null. */
+internal fun channelHeaderOf(setting: Setting): Pair<Channel, Boolean>? = when (setting) {
+    is InputSetting -> setting.channel to false
+    is OutputSetting -> setting.channel to setting.canEditPolarity
+    else -> null
+}
+
+/**
+ * Функции канала: «Выбрано N из M», «Только выбранные», поиск и список с галочками (описание — под названием).
+ * Состояние — [state] по [ChannelLogic.id].
+ */
+@Composable
+internal fun ChannelFunctionsEditor(
+    logics: List<ChannelLogic>,
+    state: List<Boolean>,
+    onChange: (List<Boolean>) -> Unit
+) {
+    val colors = cmpThemeColors()
+    var query by rememberSaveable { mutableStateOf("") }
+    var onlySelected by rememberSaveable { mutableStateOf(false) }
+    val isOn = { logic: ChannelLogic -> state.getOrElse(logic.id) { false } }
+    val selected = logics.count(isOn)
+    val visible = logics.filter { logic ->
+        (!onlySelected || isOn(logic)) && (query.isBlank() || logic.name.contains(query.trim(), ignoreCase = true))
+    }
+
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CmpRow(verticalAlignment = Alignment.CenterVertically) {
+            CmpText(
+                text = stringResource(Res.string.settings_io_label_selected, selected, logics.size),
+                style = CmpTextStyle.Body,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            CmpRow(
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .clickable(role = Role.Checkbox) { onlySelected = !onlySelected }
+                    .padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CmpCheckbox(checked = onlySelected, onCheckedChange = null)
+                CmpText(text = stringResource(Res.string.settings_io_label_only_selected), style = CmpTextStyle.Body)
+            }
+        }
+        CmpTextField(
+            value = query,
+            onValueChange = { query = it },
+            placeholder = stringResource(Res.string.settings_io_placeholder_search),
+            singleLine = true,
+            leadingIcon = { CmpIcon(icon = CmpIcons.Search, contentDescription = null) },
+            trailingIcon = if (query.isNotEmpty()) {
+                {
+                    CmpIconButton(
+                        onClick = { query = "" },
+                        icon = CmpIcons.Close,
+                        contentDescription = stringResource(Res.string.settings_search_a11y_clear)
+                    )
+                }
+            } else {
+                null
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+        if (visible.isEmpty()) {
+            CmpText(
+                text = stringResource(Res.string.settings_io_msg_nothing_found),
+                style = CmpTextStyle.Body,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+            )
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = FunctionsMaxHeight)) {
+                items(visible, key = { it.id }) { logic ->
+                    val on = isOn(logic)
+                    CmpRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 52.dp)
+                            .background(
+                                if (on) {
+                                    colors.secondaryContainer.copy(
+                                        alpha = SELECTED_TINT_ALPHA
+                                    )
+                                } else {
+                                    Color.Transparent
+                                },
+                                RoundedCornerShape(12.dp)
+                            )
+                            .clickable(role = Role.Checkbox) { onChange(state.withLogic(logic.id, !on)) }
+                            .padding(horizontal = 4.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CmpCheckbox(checked = on, onCheckedChange = null)
+                        CmpColumn(modifier = Modifier.weight(1f)) {
+                            CmpText(
+                                text = logic.name,
+                                style = CmpTextStyle.Body,
+                                fontWeight = if (on) FontWeight.SemiBold else null,
+                                color = colors.onSurface
+                            )
+                            logic.description?.let { description ->
+                                CmpText(
+                                    text = description,
+                                    style = CmpTextStyle.Caption,
+                                    color = colors.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Состояние функций с [enabled] для функции [logicId]; список дополняется до нужной длины. */
+private fun List<Boolean>.withLogic(logicId: Int, enabled: Boolean): List<Boolean> {
+    val result = toMutableList()
+    while (result.size <= logicId) result += false
+    result[logicId] = enabled
+    return result
+}

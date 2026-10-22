@@ -74,4 +74,8 @@
     <string name="settings_io_a11y_toggle_contact">Сменить тип контакта</string>
     <string name="settings_io_a11y_toggle_polarity">Сменить полярность</string>
     <string name="settings_io_a11y_locked">Нельзя изменить</string>
+    <string name="settings_io_label_selected">Выбрано %1$d из %2$d</string>
+    <string name="settings_io_label_only_selected">Только выбранные</string>
+    <string name="settings_io_placeholder_search">Найти функцию</string>
+    <string name="settings_io_msg_nothing_found">Ничего не найдено</string>
 </resources>

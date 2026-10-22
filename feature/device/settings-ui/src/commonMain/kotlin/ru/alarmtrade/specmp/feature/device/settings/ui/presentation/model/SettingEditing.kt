@@ -1,8 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model
 
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.IntegerSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OptionSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
@@ -19,7 +21,7 @@ internal val OptionSetting.isSegmented: Boolean
 internal val Setting.opensEditor: Boolean
     get() = when (this) {
         is OptionSetting -> !isSegmented
-        is IntegerSetting, is DecimalSetting, is TextSetting, is TimeSetting -> true
+        is IntegerSetting, is DecimalSetting, is TextSetting, is TimeSetting, is InputSetting, is OutputSetting -> true
         else -> false
     }
 
