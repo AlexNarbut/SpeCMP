@@ -40,6 +40,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModul
 import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
 import ru.alarmtrade.specmp.feature.device.selection.ui.di.deviceSelectionUiModule
+import ru.alarmtrade.specmp.feature.device.settings.di.deviceSettingsModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
 import ru.alarmtrade.specmp.feature.supportchat.di.supportChatModule
@@ -93,6 +94,7 @@ fun App(
                 add(deviceInteractionModule)
                 add(deviceFirmwareModule)
                 add(deviceFirmwareUiModule)
+                add(deviceSettingsModule)
                 add(deviceSelectionUiModule)
                 add(deviceInteractionUiModule)
                 add(advancedMountModule)

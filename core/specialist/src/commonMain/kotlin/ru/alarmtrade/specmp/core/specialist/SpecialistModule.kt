@@ -65,6 +65,8 @@ val specialistModule = module {
     // Прошивка блока (feature/device/firmware): модули блока и версии прошивок с сервера.
     single { get<SpecialistApp>().deviceInformationInteractor }
     single { get<SpecialistApp>().firmwareFilesInteractor }
+    // Расширенные настройки блока (feature/device/settings): сессии настроек по SettingsPath.
+    single { get<SpecialistApp>().alarmDeviceSettingsInteractor }
     singleOf(::SpecialistAccountRepository) bind AccountRepository::class
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
     single<SpecialistDeviceInformationProvider> {
