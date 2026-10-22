@@ -97,11 +97,11 @@ internal fun ChannelRow(
                 itemVerticalAlignment = Alignment.CenterVertically
             ) {
                 if (setting.number.isNotEmpty()) {
-                    CmpText(text = setting.number, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+                    CmpText(text = setting.number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
                 }
                 CmpText(
                     text = titleOf(setting.name, channel),
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.BodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.onSurface
                 )
@@ -112,14 +112,14 @@ internal fun ChannelRow(
             functionsOf(setting)?.let { functions ->
                 CmpText(
                     text = functions.ifEmpty { stringResource(Res.string.settings_value_not_assigned) },
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.BodyLarge,
                     color = if (functions.isEmpty()) colors.onSurfaceVariant else colors.primary,
                     maxLines = FUNCTIONS_MAX_LINES,
                     overflow = TextOverflow.Ellipsis
                 )
             }
             if (path != null) {
-                CmpText(text = path, style = CmpTextStyle.Caption, color = colors.onSurfaceVariant, maxLines = 1)
+                CmpText(text = path, style = CmpTextStyle.Body, color = colors.onSurfaceVariant, maxLines = 1)
             }
         }
         Trailing(setting, actions)

@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.TextUnit
  */
 enum class CmpTextStyle {
     Title,
+
+    /** Крупный основной текст (bodyLarge, 16 sp): строки списков настроек, пункты выбора. */
+    BodyLarge,
     Body,
     Caption
 }
@@ -40,6 +43,7 @@ fun CmpText(
     if (style != null) {
         val textStyle: TextStyle = when (style) {
             CmpTextStyle.Title -> MaterialTheme.typography.titleLarge
+            CmpTextStyle.BodyLarge -> MaterialTheme.typography.bodyLarge
             CmpTextStyle.Body -> MaterialTheme.typography.bodyMedium
             CmpTextStyle.Caption -> MaterialTheme.typography.bodySmall
         }

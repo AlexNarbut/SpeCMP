@@ -160,7 +160,7 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
             CmpText(
                 text = row.section.number.takeIf { it.isNotEmpty() }?.let { "$it ${row.section.name}" }
                     ?: row.section.name,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.BodyLarge,
                 fontWeight = if (selected) FontWeight.SemiBold else null,
                 color = content,
                 maxLines = 1,

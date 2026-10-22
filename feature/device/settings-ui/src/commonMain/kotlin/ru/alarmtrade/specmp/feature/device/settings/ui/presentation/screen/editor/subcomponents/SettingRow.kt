@@ -272,7 +272,7 @@ private fun Title(number: String, name: String, changed: Boolean, bold: Boolean,
     CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpText(
             text = if (number.isEmpty()) name else "$number  $name",
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.BodyLarge,
             fontWeight = if (bold) FontWeight.SemiBold else null,
             color = if (dimmed) colors.onSurfaceVariant else colors.onSurface,
             maxLines = 2,
@@ -287,7 +287,7 @@ private fun Title(number: String, name: String, changed: Boolean, bold: Boolean,
 private fun Subtitle(text: String) {
     CmpText(
         text = text,
-        style = CmpTextStyle.Caption,
+        style = CmpTextStyle.Body,
         color = cmpThemeColors().onSurfaceVariant,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
@@ -298,7 +298,7 @@ private fun Subtitle(text: String) {
 private fun ValueLabel(text: String, maxLines: Int, modifier: Modifier = Modifier) {
     CmpText(
         text = text,
-        style = CmpTextStyle.Body,
+        style = CmpTextStyle.BodyLarge,
         fontWeight = FontWeight.SemiBold,
         color = cmpThemeColors().primary,
         maxLines = maxLines,

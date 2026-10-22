@@ -189,7 +189,7 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 ## Типографика
 
-`CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`Body`/`Caption`) с
+`CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`BodyLarge`/`Body`/`Caption` → `titleLarge`/`bodyLarge` 16 sp/`bodyMedium` 14 sp/`bodySmall` 12 sp) с
 маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
 в фичах числами не задаются. Параметр `fontSize` остаётся для исключений.
 

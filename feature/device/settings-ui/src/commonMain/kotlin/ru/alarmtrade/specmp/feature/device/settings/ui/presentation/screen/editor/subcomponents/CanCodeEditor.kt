@@ -137,7 +137,7 @@ private fun CarSearchResult(value: CanCode, carSearch: CarSearch, cars: Map<Int,
                         CmpRadioButton(selected = selected, onClick = null)
                         CmpText(
                             text = carLabel(car),
-                            style = CmpTextStyle.Body,
+                            style = CmpTextStyle.BodyLarge,
                             color = if (selected) colors.onSecondaryContainer else colors.onSurface,
                             modifier = Modifier.weight(1f)
                         )
@@ -162,7 +162,7 @@ private fun CarCard(text: String) {
         CmpIcon(icon = CmpIcons.Check, contentDescription = null, tint = colors.onPrimaryContainer)
         CmpText(
             text = text,
-            style = CmpTextStyle.Body,
+            style = CmpTextStyle.BodyLarge,
             fontWeight = FontWeight.SemiBold,
             color = colors.onPrimaryContainer
         )

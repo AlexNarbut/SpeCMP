@@ -294,7 +294,7 @@ internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int)
                 CmpRadioButton(selected = isSelected, onClick = null)
                 CmpText(
                     text = option,
-                    style = CmpTextStyle.Body,
+                    style = CmpTextStyle.BodyLarge,
                     fontWeight = if (isSelected) FontWeight.SemiBold else null,
                     color = if (isSelected) colors.onSecondaryContainer else colors.onSurface,
                     modifier = Modifier.weight(1f)

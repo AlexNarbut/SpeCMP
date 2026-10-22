@@ -275,13 +275,13 @@ private fun FunctionRow(
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(
                 text = logic.name,
-                style = CmpTextStyle.Body,
+                style = CmpTextStyle.BodyLarge,
                 fontWeight = if (on) FontWeight.SemiBold else null,
                 color = colors.onSurface
             )
             if (descriptionOpen) {
                 logic.description?.let { description ->
-                    CmpText(text = description, style = CmpTextStyle.Caption, color = colors.onSurfaceVariant)
+                    CmpText(text = description, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
                 }
             }
         }
