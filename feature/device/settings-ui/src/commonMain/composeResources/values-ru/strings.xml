@@ -109,4 +109,5 @@
     <string name="settings_can_single_title">CAN-код меняется прошивкой</string>
     <string name="settings_can_single_msg">На этом блоке единая CAN-прошивка (код %1$s): CAN-код меняется прошивкой CAN под автомобиль. Перейдите к обновлению прошивки.</string>
     <string name="settings_can_single_btn_update">Перейти к обновлению</string>
+    <string name="settings_common_a11y_close">Закрыть</string>
 </resources>

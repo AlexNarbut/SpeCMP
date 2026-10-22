@@ -79,8 +79,8 @@ internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, Car>, wide: Boo
         CmpDialog(
             onDismissRequest = actions.onDismiss,
             width = EditorDialogWidth,
-            title = { EditorHeader(editing, actions.onDraftChange) },
-            text = { EditorBody(editing, cars, actions) },
+            title = { EditorHeader(editing, actions.onDraftChange, actions.onDismiss) },
+            text = { EditorBody(editing, cars, wide, actions) },
             confirmButton = { EditorButtons(editing, actions) }
         )
     } else {
@@ -89,8 +89,8 @@ internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, Car>, wide: Boo
                 modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                EditorHeader(editing, actions.onDraftChange)
-                EditorBody(editing, cars, actions)
+                EditorHeader(editing, actions.onDraftChange, actions.onDismiss)
+                EditorBody(editing, cars, wide, actions)
                 EditorButtons(editing, actions)
             }
         }
@@ -98,7 +98,7 @@ internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, Car>, wide: Boo
 }
 
 @Composable
-private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) -> Unit) {
+private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) -> Unit, onClose: () -> Unit) {
     val setting = editing.setting
     val colors = cmpThemeColors()
     channelHeaderOf(setting)?.let { (channel, editablePolarity) ->
@@ -113,7 +113,8 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
                 channel = channel,
                 draft = editing.draft,
                 editablePolarity = editablePolarity,
-                onDraftChange = onDraftChange
+                onDraftChange = onDraftChange,
+                onClose = onClose
             )
             setting.description?.let { ChannelDescription(setting.id, it) }
             WasChip(editing)
@@ -142,6 +143,7 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
                     )
                 )
             }
+            CloseButton(onClose)
         }
         setting.description?.let { description ->
             CmpText(
@@ -189,7 +191,7 @@ private fun WasChip(editing: EditingSetting) {
 
 @Suppress("CyclomaticComplexMethod") // плоский выбор редактора по типу настройки
 @Composable
-private fun EditorBody(editing: EditingSetting, cars: Map<Int, Car>, actions: EditorActions) {
+private fun EditorBody(editing: EditingSetting, cars: Map<Int, Car>, wide: Boolean, actions: EditorActions) {
     val onDraftChange = actions.onDraftChange
     val setting = editing.setting
     val draft = editing.draft
@@ -226,12 +228,12 @@ private fun EditorBody(editing: EditingSetting, cars: Map<Int, Car>, actions: Ed
             )
 
             setting is InputSetting && draft is SettingValue.Input ->
-                ChannelFunctionsEditor(setting.availableLogics, draft.value.logicsState) { state ->
+                ChannelFunctionsEditor(setting.availableLogics, draft.value.logicsState, searchable = wide) { state ->
                     onDraftChange(SettingValue.Input(draft.value.copy(logicsState = state)))
                 }
 
             setting is OutputSetting && draft is SettingValue.Output ->
-                ChannelFunctionsEditor(setting.availableLogics, draft.value.logicsState) { state ->
+                ChannelFunctionsEditor(setting.availableLogics, draft.value.logicsState, searchable = wide) { state ->
                     onDraftChange(SettingValue.Output(draft.value.copy(logicsState = state)))
                 }
 

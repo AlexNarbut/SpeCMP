@@ -47,7 +47,12 @@ import specmp.feature.device.settings_ui.generated.resources.settings_write_titl
 internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = if (node.number.isEmpty()) node.name else "${node.number} ${node.name}") },
+        title = {
+            DialogTitle(
+                text = if (node.number.isEmpty()) node.name else "${node.number} ${node.name}",
+                onClose = onDismiss
+            )
+        },
         text = { CmpText(text = node.description.orEmpty()) },
         confirmButton = { CmpTextButton(text = stringResource(Res.string.settings_common_btn_ok), onClick = onDismiss) }
     )
@@ -58,7 +63,7 @@ internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
 internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = stringResource(Res.string.settings_exit_title, changed)) },
+        title = { DialogTitle(text = stringResource(Res.string.settings_exit_title, changed), onClose = onDismiss) },
         text = { CmpText(text = stringResource(Res.string.settings_exit_msg)) },
         confirmButton = {
             CmpColumn(
@@ -102,7 +107,7 @@ internal fun WriteProgressDialog() {
 internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = stringResource(Res.string.settings_write_title_error)) },
+        title = { DialogTitle(text = stringResource(Res.string.settings_write_title_error), onClose = onDismiss) },
         text = { CmpText(text = stringResource(Res.string.settings_write_msg_error, changed)) },
         confirmButton = { CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = onRetry) },
         dismissButton = {
@@ -116,7 +121,7 @@ internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -
 internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = stringResource(Res.string.settings_reset_title_confirm)) },
+        title = { DialogTitle(text = stringResource(Res.string.settings_reset_title_confirm), onClose = onDismiss) },
         text = {
             CmpText(
                 text = if (changed > 0) {
@@ -159,7 +164,7 @@ internal fun ResetProgressDialog() {
 internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = stringResource(Res.string.settings_reset_title_error)) },
+        title = { DialogTitle(text = stringResource(Res.string.settings_reset_title_error), onClose = onDismiss) },
         text = { CmpText(text = stringResource(Res.string.settings_reset_msg_error)) },
         confirmButton = { CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = onRetry) },
         dismissButton = {
@@ -173,7 +178,7 @@ internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
 internal fun SingleCanFirmwareDialog(canCode: String, onUpdate: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { CmpText(text = stringResource(Res.string.settings_can_single_title)) },
+        title = { DialogTitle(text = stringResource(Res.string.settings_can_single_title), onClose = onDismiss) },
         text = { CmpText(text = stringResource(Res.string.settings_can_single_msg, canCode)) },
         confirmButton = {
             CmpButton(

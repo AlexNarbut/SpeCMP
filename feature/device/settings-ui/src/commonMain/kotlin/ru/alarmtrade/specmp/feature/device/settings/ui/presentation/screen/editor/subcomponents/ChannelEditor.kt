@@ -46,6 +46,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
 import specmp.feature.device.settings_ui.generated.resources.Res
+import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_collapse_description
+import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_expand_description
 import specmp.feature.device.settings_ui.generated.resources.settings_io_label_only_selected
 import specmp.feature.device.settings_ui.generated.resources.settings_io_label_selected
 import specmp.feature.device.settings_ui.generated.resources.settings_io_msg_nothing_found
@@ -71,7 +73,8 @@ internal fun ChannelEditorHeader(
     channel: Channel,
     draft: SettingValue,
     editablePolarity: Boolean,
-    onDraftChange: (SettingValue) -> Unit
+    onDraftChange: (SettingValue) -> Unit,
+    onClose: () -> Unit
 ) {
     val colors = cmpThemeColors()
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -83,6 +86,7 @@ internal fun ChannelEditorHeader(
                 CmpText(text = title, style = CmpTextStyle.Title, color = colors.onSurface)
             }
             ChannelModeSegments(draft, editablePolarity, onDraftChange)
+            CloseButton(onClose)
         }
         if (channel.wires.isNotEmpty()) {
             CmpFlowRow(
@@ -149,22 +153,27 @@ internal fun channelHeaderOf(setting: Setting): Pair<Channel, Boolean>? = when (
 }
 
 /**
- * Функции канала: «Выбрано N из M», «Только выбранные», поиск и список с галочками (описание — под названием).
+ * Функции канала: «Выбрано N из M», «Только выбранные», поиск ([searchable] — на широком окне) и список с галочками;
+ * описание функции раскрывается кнопкой справа.
  * Состояние — [state] по [ChannelLogic.id].
  */
 @Composable
 internal fun ChannelFunctionsEditor(
     logics: List<ChannelLogic>,
     state: List<Boolean>,
+    searchable: Boolean,
     onChange: (List<Boolean>) -> Unit
 ) {
     val colors = cmpThemeColors()
     var query by rememberSaveable { mutableStateOf("") }
     var onlySelected by rememberSaveable { mutableStateOf(false) }
+    // Описания функций свёрнуты; раскрываются кнопкой справа (длинные описания не раздувают список).
+    var expanded by rememberSaveable { mutableStateOf(listOf<Int>()) }
     val isOn = { logic: ChannelLogic -> state.getOrElse(logic.id) { false } }
     val selected = logics.count(isOn)
     val visible = logics.filter { logic ->
-        (!onlySelected || isOn(logic)) && (query.isBlank() || logic.name.contains(query.trim(), ignoreCase = true))
+        (!onlySelected || isOn(logic)) &&
+            (!searchable || query.isBlank() || logic.name.contains(query.trim(), ignoreCase = true))
     }
 
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -186,25 +195,8 @@ internal fun ChannelFunctionsEditor(
                 CmpText(text = stringResource(Res.string.settings_io_label_only_selected), style = CmpTextStyle.Body)
             }
         }
-        CmpTextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = stringResource(Res.string.settings_io_placeholder_search),
-            singleLine = true,
-            leadingIcon = { CmpIcon(icon = CmpIcons.Search, contentDescription = null) },
-            trailingIcon = if (query.isNotEmpty()) {
-                {
-                    CmpIconButton(
-                        onClick = { query = "" },
-                        icon = CmpIcons.Close,
-                        contentDescription = stringResource(Res.string.settings_search_a11y_clear)
-                    )
-                }
-            } else {
-                null
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
+        // На телефоне поиска нет: список функций короткий для прокрутки, а клавиатура закрывает пол-экрана.
+        if (searchable) FunctionSearchField(query) { query = it }
         if (visible.isEmpty()) {
             CmpText(
                 text = stringResource(Res.string.settings_io_msg_nothing_found),
@@ -215,46 +207,95 @@ internal fun ChannelFunctionsEditor(
         } else {
             LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = FunctionsMaxHeight)) {
                 items(visible, key = { it.id }) { logic ->
-                    val on = isOn(logic)
-                    CmpRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 52.dp)
-                            .background(
-                                if (on) {
-                                    colors.secondaryContainer.copy(
-                                        alpha = SELECTED_TINT_ALPHA
-                                    )
-                                } else {
-                                    Color.Transparent
-                                },
-                                RoundedCornerShape(12.dp)
-                            )
-                            .clickable(role = Role.Checkbox) { onChange(state.withLogic(logic.id, !on)) }
-                            .testTag(SettingsTestTags.function(logic.id))
-                            .padding(horizontal = 4.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        CmpCheckbox(checked = on, onCheckedChange = null)
-                        CmpColumn(modifier = Modifier.weight(1f)) {
-                            CmpText(
-                                text = logic.name,
-                                style = CmpTextStyle.Body,
-                                fontWeight = if (on) FontWeight.SemiBold else null,
-                                color = colors.onSurface
-                            )
-                            logic.description?.let { description ->
-                                CmpText(
-                                    text = description,
-                                    style = CmpTextStyle.Caption,
-                                    color = colors.onSurfaceVariant
-                                )
-                            }
+                    FunctionRow(
+                        logic = logic,
+                        on = isOn(logic),
+                        descriptionOpen = logic.id in expanded,
+                        onToggle = { onChange(state.withLogic(logic.id, !isOn(logic))) },
+                        onDescriptionToggle = {
+                            expanded = if (logic.id in expanded) expanded - logic.id else expanded + logic.id
                         }
-                    }
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun FunctionSearchField(query: String, onQueryChange: (String) -> Unit) {
+    CmpTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = stringResource(Res.string.settings_io_placeholder_search),
+        singleLine = true,
+        leadingIcon = { CmpIcon(icon = CmpIcons.Search, contentDescription = null) },
+        trailingIcon = if (query.isNotEmpty()) {
+            {
+                CmpIconButton(
+                    onClick = { onQueryChange("") },
+                    icon = CmpIcons.Close,
+                    contentDescription = stringResource(Res.string.settings_search_a11y_clear)
+                )
+            }
+        } else {
+            null
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+/** Функция канала: галочка (вся строка), название; описание — по кнопке справа. */
+@Composable
+private fun FunctionRow(
+    logic: ChannelLogic,
+    on: Boolean,
+    descriptionOpen: Boolean,
+    onToggle: () -> Unit,
+    onDescriptionToggle: () -> Unit
+) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 52.dp)
+            .background(
+                if (on) colors.secondaryContainer.copy(alpha = SELECTED_TINT_ALPHA) else Color.Transparent,
+                RoundedCornerShape(12.dp)
+            )
+            .clickable(role = Role.Checkbox, onClick = onToggle)
+            .testTag(SettingsTestTags.function(logic.id))
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        CmpCheckbox(checked = on, onCheckedChange = null)
+        CmpColumn(modifier = Modifier.weight(1f)) {
+            CmpText(
+                text = logic.name,
+                style = CmpTextStyle.Body,
+                fontWeight = if (on) FontWeight.SemiBold else null,
+                color = colors.onSurface
+            )
+            if (descriptionOpen) {
+                logic.description?.let { description ->
+                    CmpText(text = description, style = CmpTextStyle.Caption, color = colors.onSurfaceVariant)
+                }
+            }
+        }
+        if (logic.description != null) {
+            CmpIconButton(
+                onClick = onDescriptionToggle,
+                icon = if (descriptionOpen) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
+                contentDescription = stringResource(
+                    if (descriptionOpen) {
+                        Res.string.settings_edit_a11y_collapse_description
+                    } else {
+                        Res.string.settings_edit_a11y_expand_description
+                    }
+                ),
+                tint = colors.onSurfaceVariant
+            )
         }
     }
 }

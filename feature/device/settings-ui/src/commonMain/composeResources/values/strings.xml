@@ -112,4 +112,5 @@
     <string name="settings_can_single_title">CAN code is changed by firmware</string>
     <string name="settings_can_single_msg">This unit has a single CAN firmware (code %1$s): the CAN code is changed by flashing the CAN firmware for the vehicle. Go to the firmware update.</string>
     <string name="settings_can_single_btn_update">Go to update</string>
+    <string name="settings_common_a11y_close">Close</string>
 </resources>
