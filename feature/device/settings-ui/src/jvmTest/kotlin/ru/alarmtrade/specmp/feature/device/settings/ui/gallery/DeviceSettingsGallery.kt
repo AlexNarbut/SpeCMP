@@ -44,6 +44,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsContent
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.ExitTarget
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
@@ -231,7 +232,9 @@ class DeviceSettingsGallery {
     private val noActions = DeviceSettingsActions(
         onBack = {}, onSearch = {}, onNavigateTo = {}, onRetry = {},
         onTreeWidthChange = {}, onWrite = {}, onExitWrite = {}, onExitDiscard = {},
-        onDialogDismiss = {}, onResetRequest = {}, onResetConfirm = {}, editor = EditorActions({}, {}, {}, {}, {}, {})
+        onDialogDismiss = {
+        }, onResetRequest = {
+        }, onResetConfirm = {}, onSingleCanUpdate = {}, editor = EditorActions({}, {}, {}, {}, {}, {})
     )
 
     private fun render(name: String, state: DeviceSettingsState, path: List<Int>, search: Boolean = false) =
@@ -316,6 +319,9 @@ class DeviceSettingsGallery {
     fun resetting() = render("28_resetting", base.copy(isResetting = true), listOf(300, 320))
 
     @Test
+    fun singleCan() = render("29_single_can", base.copy(dialog = SettingsDialog.SingleCanFirmware), listOf(800))
+
+    @Test
     fun emptySection() = render("07_empty", base, listOf(700))
 
     @Test
@@ -344,7 +350,7 @@ class DeviceSettingsGallery {
     fun editTime() = render("14_edit_time", base.copy(editing = editing(106)), listOf(100))
 
     @Test
-    fun exitDialog() = render("15_exit", base.copy(dialog = SettingsDialog.ExitConfirm), emptyList())
+    fun exitDialog() = render("15_exit", base.copy(dialog = SettingsDialog.ExitConfirm(ExitTarget.BACK)), emptyList())
 
     @Test
     fun writing() = render("16_writing", base.copy(isWriting = true), listOf(300, 320))

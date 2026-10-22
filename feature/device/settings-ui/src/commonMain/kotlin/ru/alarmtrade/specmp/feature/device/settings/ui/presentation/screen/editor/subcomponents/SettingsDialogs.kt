@@ -18,6 +18,9 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import specmp.feature.device.settings_ui.generated.resources.Res
+import specmp.feature.device.settings_ui.generated.resources.settings_can_single_btn_update
+import specmp.feature.device.settings_ui.generated.resources.settings_can_single_msg
+import specmp.feature.device.settings_ui.generated.resources.settings_can_single_title
 import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_cancel
 import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_close
 import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_ok
@@ -161,6 +164,26 @@ internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
         confirmButton = { CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = onRetry) },
         dismissButton = {
             CmpTextButton(text = stringResource(Res.string.settings_common_btn_close), onClick = onDismiss)
+        }
+    )
+}
+
+/** Единая CAN-прошивка: CAN-код меняется прошивкой CAN под автомобиль — переход к обновлению прошивки. */
+@Composable
+internal fun SingleCanFirmwareDialog(canCode: String, onUpdate: () -> Unit, onDismiss: () -> Unit) {
+    CmpDialog(
+        onDismissRequest = onDismiss,
+        title = { CmpText(text = stringResource(Res.string.settings_can_single_title)) },
+        text = { CmpText(text = stringResource(Res.string.settings_can_single_msg, canCode)) },
+        confirmButton = {
+            CmpButton(
+                text = stringResource(Res.string.settings_can_single_btn_update),
+                onClick = onUpdate,
+                modifier = Modifier.testTag(SettingsTestTags.CAN_SINGLE_UPDATE)
+            )
+        },
+        dismissButton = {
+            CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
         }
     )
 }

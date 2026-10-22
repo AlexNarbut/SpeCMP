@@ -106,4 +106,7 @@
     <string name="settings_reset_title_error">Не удалось сбросить настройки</string>
     <string name="settings_reset_msg_error">Нет ответа от устройства. Проверьте связь и питание блока.</string>
     <string name="settings_reset_msg_done">Устройство сброшено к заводским настройкам</string>
+    <string name="settings_can_single_title">CAN-код меняется прошивкой</string>
+    <string name="settings_can_single_msg">На этом блоке единая CAN-прошивка (код %1$s): CAN-код меняется прошивкой CAN под автомобиль. Перейдите к обновлению прошивки.</string>
+    <string name="settings_can_single_btn_update">Перейти к обновлению</string>
 </resources>

@@ -66,7 +66,12 @@ internal sealed interface CarSearch {
 
 internal sealed interface SettingsDialog {
     data class Description(val node: SettingNode) : SettingsDialog
-    data object ExitConfirm : SettingsDialog
+
+    /** Выход с незаписанными изменениями — подтверждение; [target] — куда после выхода. */
+    data class ExitConfirm(val target: ExitTarget) : SettingsDialog
+
+    /** CAN-код на блоке с единой CAN-прошивкой меняется прошивкой CAN — предложение перейти к обновлению. */
+    data object SingleCanFirmware : SettingsDialog
     data object WriteError : SettingsDialog
     data object ResetConfirm : SettingsDialog
     data object ResetError : SettingsDialog
@@ -77,5 +82,8 @@ internal sealed interface DeviceSettingsEffect {
     data class Written(val count: Int) : DeviceSettingsEffect
     data object SetValueFailed : DeviceSettingsEffect
     data object ResetDone : DeviceSettingsEffect
-    data object Exit : DeviceSettingsEffect
+    data class Exit(val target: ExitTarget) : DeviceSettingsEffect
 }
+
+/** Куда уходим из настроек: назад (корень монтажа) или в «Проверку прошивок» (единая CAN-прошивка). */
+internal enum class ExitTarget { BACK, FIRMWARE_UPDATE }

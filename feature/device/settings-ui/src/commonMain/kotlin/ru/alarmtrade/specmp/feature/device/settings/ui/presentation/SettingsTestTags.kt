@@ -15,6 +15,7 @@ internal object SettingsTestTags {
     const val MENU = "settings_menu"
     const val MENU_RESET = "settings_menu_reset"
     const val RESET_CONFIRM = "settings_reset_confirm"
+    const val CAN_SINGLE_UPDATE = "settings_can_single_update"
 
     fun row(id: Int) = "settings_row_$id"
     fun section(id: Int) = "settings_section_$id"

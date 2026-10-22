@@ -32,6 +32,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsEffect
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsViewModel
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.ExitTarget
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsMenu
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.firstSectionId
@@ -68,9 +69,10 @@ private val navConfig = SavedStateConfiguration {
  * изменениями — подтверждение).
  *
  * @param onExit выход из настроек.
+ * @param onOpenFirmwareUpdate выход в «Проверку прошивок»: на блоке с единой CAN-прошивкой CAN-код меняется прошивкой.
  */
 @Composable
-fun DeviceSettingsEntry(onExit: () -> Unit) {
+fun DeviceSettingsEntry(onExit: () -> Unit, onOpenFirmwareUpdate: () -> Unit) {
     val viewModel = koinViewModel<DeviceSettingsViewModel>(parameters = { parametersOf(SettingsSource.Device) })
     val state by viewModel.state.collectAsState()
     val backStack = rememberNavBackStack(navConfig, SettingsSectionRoute(null))
@@ -90,11 +92,14 @@ fun DeviceSettingsEntry(onExit: () -> Unit) {
                 getString(Res.string.settings_reset_msg_done)
             )
 
-            DeviceSettingsEffect.Exit -> onExit()
+            is DeviceSettingsEffect.Exit -> when (effect.target) {
+                ExitTarget.BACK -> onExit()
+                ExitTarget.FIRMWARE_UPDATE -> onOpenFirmwareUpdate()
+            }
         }
     }
 
-    val onBack = { if (!backStack.popSafe()) viewModel.onExitRequest() }
+    val onBack = { if (!backStack.popSafe()) viewModel.onExitRequest(ExitTarget.BACK) }
     val navigateTo = { path: List<Int> -> backStack.navigateTo(path) }
     val rowActions = remember(viewModel, backStack) {
         SettingRowActions(
@@ -121,6 +126,7 @@ fun DeviceSettingsEntry(onExit: () -> Unit) {
             onDialogDismiss = viewModel::onDialogDismiss,
             onResetRequest = viewModel::onResetRequest,
             onResetConfirm = viewModel::onResetConfirm,
+            onSingleCanUpdate = viewModel::onSingleCanUpdate,
             editor = EditorActions(
                 onDraftChange = viewModel::onDraftChange,
                 onReset = viewModel::onEditReset,

@@ -125,7 +125,9 @@ private fun AuthedNavGraph() {
                         onExit = onExit,
                         onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
                         firmwareCheck = { onBack -> FirmwareCheckScreen(onBack = onBack) },
-                        settingsEditor = { onBack -> DeviceSettingsEntry(onExit = onBack) }
+                        settingsEditor = { onBack, onOpenFirmwareUpdate ->
+                            DeviceSettingsEntry(onExit = onBack, onOpenFirmwareUpdate = onOpenFirmwareUpdate)
+                        }
                     )
                 }
             }

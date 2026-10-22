@@ -69,6 +69,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetProgressDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionTree
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SingleCanFirmwareDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteProgressDialog
 import specmp.feature.device.settings_ui.generated.resources.Res
@@ -108,6 +109,7 @@ internal class DeviceSettingsActions(
     val onDialogDismiss: () -> Unit,
     val onResetRequest: () -> Unit,
     val onResetConfirm: () -> Unit,
+    val onSingleCanUpdate: () -> Unit,
     val editor: EditorActions
 )
 
@@ -372,7 +374,13 @@ private fun Dialogs(state: DeviceSettingsState, actions: DeviceSettingsActions) 
     when (val dialog = state.dialog) {
         is SettingsDialog.Description -> DescriptionDialog(node = dialog.node, onDismiss = actions.onDialogDismiss)
 
-        SettingsDialog.ExitConfirm -> ExitDialog(
+        SettingsDialog.SingleCanFirmware -> SingleCanFirmwareDialog(
+            canCode = state.header?.singleCanCode.orEmpty(),
+            onUpdate = actions.onSingleCanUpdate,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        is SettingsDialog.ExitConfirm -> ExitDialog(
             changed = state.changedCount,
             onWrite = actions.onExitWrite,
             onDiscard = actions.onExitDiscard,

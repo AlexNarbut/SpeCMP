@@ -15,6 +15,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.AdvancedMountRootScreen
@@ -55,14 +56,15 @@ private val navConfig = SavedStateConfiguration {
  * @param firmwareCheck экран раздела «Проверка прошивок» (фича `device/firmware-ui`, подключается в `composeApp`);
  *   получает выход на корень монтажа.
  * @param settingsEditor раздел «Настройки» (фича `device/settings-ui`, подключается в `composeApp`); получает выход на
- *   корень монтажа.
+ *   корень монтажа и переход в «Проверку прошивок» (заменяет раздел настроек: CAN-код блока с единой CAN-прошивкой
+ *   меняется прошивкой).
  */
 @Composable
 fun AdvancedMountNavGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
-    settingsEditor: @Composable (onBack: () -> Unit) -> Unit
+    settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
 
@@ -91,7 +93,14 @@ fun AdvancedMountNavGraph(
                 when (key.section) {
                     MountSection.FIRMWARE_UPDATE -> firmwareCheck { backStack.popSafe() }
 
-                    MountSection.SETTINGS -> settingsEditor { backStack.popSafe() }
+                    MountSection.SETTINGS -> settingsEditor(
+                        { backStack.popSafe() },
+                        {
+                            backStack.replaceCurrent(
+                                AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
+                            )
+                        }
+                    )
 
                     else -> SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = {
                         backStack.popSafe()

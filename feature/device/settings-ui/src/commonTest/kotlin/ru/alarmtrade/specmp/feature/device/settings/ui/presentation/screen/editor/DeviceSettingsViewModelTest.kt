@@ -74,7 +74,7 @@ class DeviceSettingsViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = emptySet(),
-        can = CanInfo(firmwareVersion = "1.0", code = "2154", isFactory = false)
+        can = null
     )
 
     private val shock = SwitchSetting(11, "3.2.1", "Датчик удара", null, SettingValue.Switch(false), null, null)
@@ -111,6 +111,7 @@ class DeviceSettingsViewModelTest {
     private val repository = FakeSettingsRepository(tree)
     private val sessionRepository = FakeSessionRepository(device)
     private val preferences = FakePreferences()
+    private val singleCanDevice = device.copy(can = CanInfo(firmwareVersion = "1.0", code = "2154", isFactory = false))
     private val cars = FakeCars()
 
     @BeforeTest
@@ -163,6 +164,7 @@ class DeviceSettingsViewModelTest {
 
     @Test
     fun `menu is read from the device with reload and the header shows the unit`() = test {
+        sessionRepository.device = singleCanDevice
         val vm = viewModel()
 
         assertEquals(tree, vm.root())
@@ -285,17 +287,17 @@ class DeviceSettingsViewModelTest {
 
         vm.onExitRequest()
         runCurrent()
-        assertEquals(listOf<DeviceSettingsEffect>(DeviceSettingsEffect.Exit), effects)
+        assertEquals(listOf<DeviceSettingsEffect>(DeviceSettingsEffect.Exit(ExitTarget.BACK)), effects)
 
         vm.onValueChange(11, SettingValue.Switch(true))
         settle()
         vm.onExitRequest()
-        assertEquals(SettingsDialog.ExitConfirm, vm.state.value.dialog)
+        assertEquals(SettingsDialog.ExitConfirm(ExitTarget.BACK), vm.state.value.dialog)
 
         vm.onExitWrite()
         settle()
         assertEquals(1, repository.saveCalls)
-        assertEquals(DeviceSettingsEffect.Exit, effects.last())
+        assertEquals(DeviceSettingsEffect.Exit(ExitTarget.BACK), effects.last())
     }
 
     @Test
@@ -433,6 +435,40 @@ class DeviceSettingsViewModelTest {
         assertEquals(SettingsDialog.ResetError, vm.state.value.dialog)
         assertEquals(false, vm.state.value.isResetting)
         assertEquals(tree, vm.root())
+    }
+
+    @Test
+    fun `can code on a single can firmware unit leads to the firmware update instead of the editor`() = test {
+        sessionRepository.device = singleCanDevice
+        val vm = viewModel()
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+
+        vm.onSettingClick(61)
+        assertNull(vm.state.value.editing)
+        assertEquals(SettingsDialog.SingleCanFirmware, vm.state.value.dialog)
+
+        vm.onSingleCanUpdate()
+        runCurrent()
+        assertEquals(listOf<DeviceSettingsEffect>(DeviceSettingsEffect.Exit(ExitTarget.FIRMWARE_UPDATE)), effects)
+    }
+
+    @Test
+    fun `going to the firmware update with unsaved changes asks first and keeps the target`() = test {
+        sessionRepository.device = singleCanDevice
+        val vm = viewModel()
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        vm.onValueChange(11, SettingValue.Switch(true))
+        settle()
+
+        vm.onSettingClick(61)
+        vm.onSingleCanUpdate()
+        assertEquals(SettingsDialog.ExitConfirm(ExitTarget.FIRMWARE_UPDATE), vm.state.value.dialog)
+
+        vm.onExitDiscard()
+        runCurrent()
+        assertEquals(DeviceSettingsEffect.Exit(ExitTarget.FIRMWARE_UPDATE), effects.last())
     }
 
     @Test

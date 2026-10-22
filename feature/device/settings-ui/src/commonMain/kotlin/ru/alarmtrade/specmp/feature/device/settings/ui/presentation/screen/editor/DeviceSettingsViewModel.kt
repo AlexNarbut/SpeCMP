@@ -166,6 +166,10 @@ internal class DeviceSettingsViewModel(
     fun onSettingClick(settingId: Int) {
         val setting = currentRoot()?.findNode(settingId) as? Setting ?: return
         if (!setting.opensEditor) return
+        if (setting is CanCodeSetting && _state.value.header?.singleCanCode != null) {
+            _state.update { it.copy(dialog = SettingsDialog.SingleCanFirmware) }
+            return
+        }
         val original = baseline.value[settingId] ?: setting.value
         _state.update { it.copy(editing = EditingSetting(setting, original = original, draft = setting.value)) }
     }
@@ -255,32 +259,41 @@ internal class DeviceSettingsViewModel(
         _state.update { it.copy(searchQuery = query) }
     }
 
-    /** «Назад» с корня меню: с незаписанными изменениями — подтверждение, иначе выход. */
-    fun onExitRequest() {
+    /** Выход ([target] — «назад» с корня или к обновлению CAN): с незаписанными изменениями — подтверждение. */
+    fun onExitRequest(target: ExitTarget = ExitTarget.BACK) {
         if (_state.value.changedCount > 0) {
-            _state.update { it.copy(dialog = SettingsDialog.ExitConfirm) }
+            _state.update { it.copy(dialog = SettingsDialog.ExitConfirm(target)) }
         } else {
-            _effect.tryEmit(DeviceSettingsEffect.Exit)
+            _state.update { it.copy(dialog = null) }
+            _effect.tryEmit(DeviceSettingsEffect.Exit(target))
         }
     }
 
+    /** «Перейти к обновлению» в диалоге единой CAN-прошивки. */
+    fun onSingleCanUpdate() = onExitRequest(ExitTarget.FIRMWARE_UPDATE)
+
     fun onExitDiscard() {
+        val target = exitTarget()
         _state.update { it.copy(dialog = null) }
-        _effect.tryEmit(DeviceSettingsEffect.Exit)
+        _effect.tryEmit(DeviceSettingsEffect.Exit(target))
     }
 
+    private fun exitTarget(): ExitTarget =
+        (_state.value.dialog as? SettingsDialog.ExitConfirm)?.target ?: ExitTarget.BACK
+
     fun onWrite() {
-        work { write(thenExit = false) }
+        work { write(exitTo = null) }
     }
 
     fun onExitWrite() {
-        work { write(thenExit = true) }
+        val target = exitTarget()
+        work { write(exitTo = target) }
     }
 
     // Следом за правками в очереди (не пропуск): запись не должна теряться, пока применяется значение.
-    private suspend fun write(thenExit: Boolean) = executeWithProceedLock(needSkipAnother = false) {
+    private suspend fun write(exitTo: ExitTarget?) = executeWithProceedLock(needSkipAnother = false) {
         val count = _state.value.changedCount
-        if (count == 0 && !thenExit) return@executeWithProceedLock
+        if (count == 0 && exitTo == null) return@executeWithProceedLock
         _state.update { it.copy(isWriting = true, dialog = null) }
         val response = try {
             withContext(dispatchers.io) { repository.save(source) }
@@ -294,7 +307,7 @@ internal class DeviceSettingsViewModel(
                 currentRoot()?.let { root -> baseline.update { root.valuesById() } }
                 refreshChanged()
                 _effect.tryEmit(DeviceSettingsEffect.Written(count))
-                if (thenExit) _effect.tryEmit(DeviceSettingsEffect.Exit)
+                exitTo?.let { _effect.tryEmit(DeviceSettingsEffect.Exit(it)) }
             }
         }
     }
