@@ -68,6 +68,7 @@ import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
@@ -124,7 +125,7 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     // Actions
     CmpIcons.Add -> Icons.Filled.Add
 
-    CmpIcons.Remove -> Icons.Filled.Clear
+    CmpIcons.Remove -> Icons.Filled.Remove
 
     CmpIcons.Edit -> Icons.Filled.Edit
 
