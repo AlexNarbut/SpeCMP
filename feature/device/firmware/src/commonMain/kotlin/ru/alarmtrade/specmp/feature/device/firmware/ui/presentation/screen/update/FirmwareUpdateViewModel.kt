@@ -35,7 +35,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUp
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
@@ -347,7 +347,7 @@ class FirmwareUpdateViewModel(
         if (current.stage != UpdatePhase.Source || profile == null || moduleId == null) return
         _effect.tryEmit(
             FirmwareUpdateEffect.OpenArchive(
-                FirmwareArchiveArgs(
+                FirmwareArchiveRequest(
                     moduleId = moduleId,
                     channel = current.channel,
                     installedVersion = profile.currentVersion,

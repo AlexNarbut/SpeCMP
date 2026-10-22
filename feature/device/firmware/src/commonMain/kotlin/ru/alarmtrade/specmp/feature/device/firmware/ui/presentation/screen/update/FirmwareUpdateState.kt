@@ -2,7 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.upda
 
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 
 /** Фазы экрана «Обновление прошивки» (блок в загрузчике). Часть выводится из связи, а не из действий пользователя. */
 sealed interface UpdatePhase {
@@ -144,7 +144,7 @@ sealed interface FirmwareUpdateEffect {
     data object OpenSupportChat : FirmwareUpdateEffect
 
     /** Открыть архив прошивок выбранного модуля и канала. */
-    data class OpenArchive(val args: FirmwareArchiveArgs) : FirmwareUpdateEffect
+    data class OpenArchive(val args: FirmwareArchiveRequest) : FirmwareUpdateEffect
 
     /** Выйти из режима обновления (закрыть сессию и flow). */
     data object Exit : FirmwareUpdateEffect

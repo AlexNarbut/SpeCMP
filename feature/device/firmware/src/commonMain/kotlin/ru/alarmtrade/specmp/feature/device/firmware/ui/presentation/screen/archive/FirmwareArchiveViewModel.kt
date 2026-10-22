@@ -20,11 +20,10 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 
 /**
  * «Архив прошивок»: версии модуля в выбранном канале, страницами по [PAGE_SIZE]; выбранная версия уходит экрану
- * обновления через [FirmwareArchivePicker].
+ * обновления через эффект [FirmwareArchiveEffect.Picked].
  *
  * Страница 1 грузится при создании; следующая — когда список докручен до конца. Версии уникальны по номеру и
  * держатся от новой к старой (числами: `3.10` новее `3.9`). Источник не отдаёт признак «страниц больше нет», поэтому
@@ -33,9 +32,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchi
  * Версия старее установленной выбирается через подтверждение, равная установленной и новее — сразу.
  */
 class FirmwareArchiveViewModel(
-    private val args: FirmwareArchiveArgs,
+    private val args: FirmwareArchiveRequest,
     private val repository: FirmwareRepository,
-    private val picker: FirmwareArchivePicker,
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
@@ -194,8 +192,7 @@ class FirmwareArchiveViewModel(
     }
 
     private fun pick(version: FirmwareVersion) {
-        picker.pick(version)
-        _effect.tryEmit(FirmwareArchiveEffect.Close)
+        _effect.tryEmit(FirmwareArchiveEffect.Picked(version))
     }
 
     /** Атомарный переход: [change] применяется, только если [from] истинно для текущего состояния. */

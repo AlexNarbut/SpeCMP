@@ -47,7 +47,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.d
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ConfirmBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.DataErrorBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.DownloadBody
@@ -82,7 +82,7 @@ internal const val EXIT_DIALOG_CONFIRM_TAG = "firmware_exit_dialog_confirm"
 fun FirmwareUpdateScreen(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
-    onOpenArchive: (FirmwareArchiveArgs) -> Unit,
+    onOpenArchive: (FirmwareArchiveRequest) -> Unit,
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker
 ) {
     val viewModel = koinViewModel<FirmwareUpdateViewModel>()

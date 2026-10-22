@@ -36,7 +36,7 @@ Nav3 back stack используется **внутри каждой зоны**:
 | `LoginRoute` / `RegistrationRoute` / `ForgotPasswordRoute` | `LoginNavGraph` (`feature/login`) | Login / Registration / ForgotPassword |
 | `MainRoute` | `MainNavGraph` (`feature/main`) | `HomeRoute` → `MainScreen` |
 | `SupportChatRoute` | `SupportChatEntry` (`feature/support-chat`, без собственного графа — экран один) | `SupportChatScreen` |
-| `DeviceSelectionRoute` | `DeviceSelectionNavGraph` (`feature/device/selection-ui`) | `ScanDeviceRoute` → экран поиска |
+| `DeviceSelectionRoute` | `DeviceSelectionNavGraph` (`feature/device/selection`) | `ScanDeviceRoute` → экран поиска |
 
 Каждый граф фичи — свой `NavDisplay` со своим back stack и `entryDecorators`
 (`rememberSaveableStateHolderNavEntryDecorator()` + `rememberViewModelStoreNavEntryDecorator()`),

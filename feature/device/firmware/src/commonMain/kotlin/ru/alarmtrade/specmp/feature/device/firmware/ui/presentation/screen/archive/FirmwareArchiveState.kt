@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.arch
 import androidx.compose.runtime.Immutable
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 
 /** Отношение версии в архиве к установленной на блоке: по нему метка и предупреждения. */
@@ -61,6 +62,6 @@ class FirmwareArchiveActions(
 )
 
 sealed interface FirmwareArchiveEffect {
-    /** Версия выбрана (результат передан экрану обновления) — закрыть архив. */
-    data object Close : FirmwareArchiveEffect
+    /** Выбрана версия для установки — результат архива. */
+    data class Picked(val version: FirmwareVersion) : FirmwareArchiveEffect
 }

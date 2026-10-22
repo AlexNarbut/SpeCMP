@@ -39,7 +39,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -475,7 +475,7 @@ class FirmwareUpdateViewModelTest {
         assertEquals(
             listOf(
                 FirmwareUpdateEffect.OpenArchive(
-                    FirmwareArchiveArgs(1, FirmwareChannel.RELEASE, "3.57", "DX4G  77", UpdateProfile.Main)
+                    FirmwareArchiveRequest(1, FirmwareChannel.RELEASE, "3.57", "DX4G  77", UpdateProfile.Main)
                 ),
                 FirmwareUpdateEffect.OpenSupportChat
             ),

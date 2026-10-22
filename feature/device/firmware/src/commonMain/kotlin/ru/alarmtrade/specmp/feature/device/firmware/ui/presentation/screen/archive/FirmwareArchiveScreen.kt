@@ -36,6 +36,7 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLayout
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.deviceSubtitle
@@ -62,23 +63,25 @@ private val DetailMaxWidth = 1180.dp
 private const val END_THRESHOLD = 3
 
 /**
- * «Архив прошивок»: версии модуля выбранного канала; выбор уходит экрану обновления, архив закрывается ([onClose]).
+ * Точка входа «Архив прошивок»: версии модуля выбранного канала из [request]. Выбранная для установки версия
+ * возвращается в [onPick] (закрыть архив — дело вызывающего), «назад» — [onBack]. Используется графом загрузчика;
+ * другие места подключают её через слот навигации в `composeApp`.
  */
 @Composable
-fun FirmwareArchiveScreen(args: FirmwareArchiveArgs, onClose: () -> Unit) {
-    val viewModel = koinViewModel<FirmwareArchiveViewModel>(parameters = { parametersOf(args) })
+fun FirmwareArchiveEntry(request: FirmwareArchiveRequest, onPick: (FirmwareVersion) -> Unit, onBack: () -> Unit) {
+    val viewModel = koinViewModel<FirmwareArchiveViewModel>(parameters = { parametersOf(request) })
     val state by viewModel.state.collectAsState()
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
-            FirmwareArchiveEffect.Close -> onClose()
+            is FirmwareArchiveEffect.Picked -> onPick(effect.version)
         }
     }
 
     FirmwareArchiveContent(
         state = state,
         actions = FirmwareArchiveActions(
-            onBack = onClose,
+            onBack = onBack,
             onRefresh = viewModel::onRefresh,
             onEndReached = viewModel::onEndReached,
             onRetryMore = viewModel::onRetryMore,

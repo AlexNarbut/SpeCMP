@@ -15,19 +15,21 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveArgs
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveScreen
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateScreen
 
 @Serializable
 internal data object FirmwareUpdateRoute : NavKey
 
 @Serializable
-internal data class FirmwareArchiveRoute(val args: FirmwareArchiveArgs) : NavKey
+internal data class FirmwareArchiveRoute(val request: FirmwareArchiveRequest) : NavKey
 
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
@@ -54,6 +56,7 @@ fun FirmwareBootGraph(
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker
 ) {
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
+    val archivePicker = koinInject<FirmwareArchivePicker>()
 
     NavDisplay(
         backStack = backStack,
@@ -69,11 +72,19 @@ fun FirmwareBootGraph(
                     onExit = onExit,
                     onOpenSupportChat = onOpenSupportChat,
                     filePicker = filePicker,
-                    onOpenArchive = { args -> backStack.navigateSafe(FirmwareArchiveRoute(args)) }
+                    onOpenArchive = { request -> backStack.navigateSafe(FirmwareArchiveRoute(request)) }
                 )
             }
             entry<FirmwareArchiveRoute> { key ->
-                FirmwareArchiveScreen(args = key.args, onClose = { backStack.popSafe() })
+                FirmwareArchiveEntry(
+                    request = key.request,
+                    onPick = { version ->
+                        // Экран обновления ниже в стеке не отрисован — выбор доходит до его ViewModel через picker.
+                        archivePicker.pick(version)
+                        backStack.popSafe()
+                    },
+                    onBack = { backStack.popSafe() }
+                )
             }
         }
     )

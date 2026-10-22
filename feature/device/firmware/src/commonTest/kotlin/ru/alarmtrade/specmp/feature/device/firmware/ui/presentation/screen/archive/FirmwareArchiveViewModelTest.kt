@@ -24,7 +24,6 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 
@@ -32,7 +31,6 @@ class FirmwareArchiveViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val repository = FakeFirmwareRepository()
-    private val picker = FirmwareArchivePicker()
     private val viewModels = mutableListOf<FirmwareArchiveViewModel>()
 
     private fun version(value: String, description: String = "") =
@@ -57,29 +55,29 @@ class FirmwareArchiveViewModelTest {
 
     private fun TestScope.viewModel(
         installed: String? = "3.57"
-    ): Triple<FirmwareArchiveViewModel, MutableList<FirmwareArchiveEffect>, MutableList<FirmwareVersion>> {
-        val args = FirmwareArchiveArgs(1, FirmwareChannel.RELEASE, installed, "DX4G  77", UpdateProfile.Main)
+    ): Pair<FirmwareArchiveViewModel, MutableList<FirmwareArchiveEffect>> {
+        val request = FirmwareArchiveRequest(1, FirmwareChannel.RELEASE, installed, "DX4G  77", UpdateProfile.Main)
         val vm = FirmwareArchiveViewModel(
-            args,
+            request,
             repository,
-            picker,
             AppDispatchers(dispatcher, dispatcher, dispatcher)
         ).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<FirmwareArchiveEffect>()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
-        val picks = mutableListOf<FirmwareVersion>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { picker.picks.collect { picks += it } }
         runCurrent()
-        return Triple(vm, effects, picks)
+        return vm to effects
     }
+
+    private fun List<FirmwareArchiveEffect>.picked(): List<String> =
+        filterIsInstance<FirmwareArchiveEffect.Picked>().map { it.version.version }
 
     private fun FirmwareArchiveViewModel.rows(): List<ArchiveRowUi> = (state.value.content as ArchiveContent.Ready).rows
 
     @Test
     fun `first page is shown newest first with marks relative to the installed version`() = test {
         repository.archivePages[1] = page(1, "3.55", "3.61", "3.57")
-        val (vm, _, _) = viewModel()
+        val (vm, _) = viewModel()
 
         val rows = vm.rows()
         assertEquals(listOf("3.61", "3.57", "3.55"), rows.map { it.version })
@@ -95,7 +93,7 @@ class FirmwareArchiveViewModelTest {
     @Test
     fun `versions are ordered by number not by text`() = test {
         repository.archivePages[1] = page(1, "3.9", "3.10", "3.2")
-        val (vm, _, _) = viewModel(installed = null)
+        val (vm, _) = viewModel(installed = null)
 
         assertEquals(listOf("3.10", "3.9", "3.2"), vm.rows().map { it.version })
         // Установленная версия неизвестна — все версии «новые» и выбираются сразу.
@@ -107,7 +105,7 @@ class FirmwareArchiveViewModelTest {
         repository.archivePages[1] = page(1, "3.61", "3.60")
         repository.archivePages[2] = page(2, "3.60", "3.58")
         repository.archivePages[3] = page(3, "3.58", "3.60")
-        val (vm, _, _) = viewModel()
+        val (vm, _) = viewModel()
 
         vm.onEndReached()
         runCurrent()
@@ -126,7 +124,7 @@ class FirmwareArchiveViewModelTest {
     @Test
     fun `loading more is not repeated while it runs and not after an error`() = test {
         repository.archivePages[1] = page(1, "3.61")
-        val (vm, _, _) = viewModel()
+        val (vm, _) = viewModel()
 
         vm.onEndReached()
         vm.onEndReached()
@@ -151,7 +149,7 @@ class FirmwareArchiveViewModelTest {
 
     @Test
     fun `first page failure is a full screen error and refresh loads again`() = test {
-        val (vm, _, _) = viewModel()
+        val (vm, _) = viewModel()
         assertEquals(ArchiveContent.Error, vm.state.value.content)
 
         repository.archivePages[1] = page(1, "3.61")
@@ -164,7 +162,7 @@ class FirmwareArchiveViewModelTest {
     @Test
     fun `empty answer is the empty state`() = test {
         repository.archivePages[1] = page(1)
-        val (vm, _, _) = viewModel()
+        val (vm, _) = viewModel()
 
         assertEquals(ArchiveContent.Empty, vm.state.value.content)
     }
@@ -172,54 +170,50 @@ class FirmwareArchiveViewModelTest {
     @Test
     fun `newer and installed versions are picked at once and close the archive`() = test {
         repository.archivePages[1] = page(1, "3.61", "3.57", "3.55")
-        val (vm, effects, picks) = viewModel()
+        val (vm, effects) = viewModel()
 
         vm.onPick("3.61")
         runCurrent()
-        assertEquals(listOf("3.61"), picks.map { it.version })
-        assertEquals(listOf<FirmwareArchiveEffect>(FirmwareArchiveEffect.Close), effects)
+        assertEquals(listOf("3.61"), effects.picked())
 
         // Переустановка текущей версии — без предупреждения.
         vm.onPick("3.57")
         runCurrent()
-        assertEquals(listOf("3.61", "3.57"), picks.map { it.version })
+        assertEquals(listOf("3.61", "3.57"), effects.picked())
         assertNull(vm.state.value.rollback)
     }
 
     @Test
     fun `older version asks for confirmation before it is picked`() = test {
         repository.archivePages[1] = page(1, "3.61", "3.57", "3.55")
-        val (vm, effects, picks) = viewModel()
+        val (vm, effects) = viewModel()
 
         vm.onPick("3.55")
         runCurrent()
         assertEquals(RollbackUi("3.55", "3.57"), vm.state.value.rollback)
-        assertEquals(emptyList(), picks)
+        assertEquals(emptyList(), effects)
 
         vm.onRollbackDismiss()
         runCurrent()
         assertNull(vm.state.value.rollback)
-        assertEquals(emptyList(), picks)
         assertEquals(emptyList(), effects)
 
         vm.onPick("3.55")
         vm.onRollbackConfirm()
         runCurrent()
-        assertEquals(listOf("3.55"), picks.map { it.version })
-        assertEquals(listOf<FirmwareArchiveEffect>(FirmwareArchiveEffect.Close), effects)
+        assertEquals(listOf("3.55"), effects.picked())
         assertNull(vm.state.value.rollback)
     }
 
     @Test
     fun `selecting a row only highlights it`() = test {
         repository.archivePages[1] = page(1, "3.61", "3.57")
-        val (vm, effects, picks) = viewModel()
+        val (vm, effects) = viewModel()
 
         vm.onSelectRow("3.57")
         runCurrent()
 
         assertEquals("3.57", vm.state.value.selected)
-        assertEquals(emptyList(), picks)
         assertEquals(emptyList(), effects)
     }
 }
