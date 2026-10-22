@@ -30,9 +30,11 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_empty_section
@@ -212,7 +214,8 @@ private fun NodeRow(
         sectionChanges = state.sectionChanges[node.id] ?: 0,
         wide = wide,
         actions = actions,
-        path = path?.takeIf { it.isNotEmpty() }
+        path = path?.takeIf { it.isNotEmpty() },
+        note = (node as? CanCodeSetting)?.value?.value?.carId?.let(state.cars::get)?.let { carLabel(it) }
     )
     if (!last) CmpDivider(color = cmpThemeColors().outlineVariant)
 }

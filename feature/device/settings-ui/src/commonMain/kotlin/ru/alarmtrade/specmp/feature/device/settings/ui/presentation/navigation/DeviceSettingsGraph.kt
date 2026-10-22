@@ -118,7 +118,9 @@ fun DeviceSettingsEntry(onExit: () -> Unit) {
                 onDraftChange = viewModel::onDraftChange,
                 onReset = viewModel::onEditReset,
                 onApply = viewModel::onEditApply,
-                onDismiss = viewModel::onEditDismiss
+                onDismiss = viewModel::onEditDismiss,
+                onCarSearch = viewModel::onCarSearch,
+                onCarPick = viewModel::onCarPick
             )
         )
     }

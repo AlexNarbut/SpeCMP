@@ -127,7 +127,9 @@ internal fun DeviceSettingsContent(
                 }
             }
         }
-        state.editing?.let { EditorPanel(editing = it, wide = layout.isWide, actions = actions.editor) }
+        state.editing?.let {
+            EditorPanel(editing = it, cars = state.cars, wide = layout.isWide, actions = actions.editor)
+        }
         Dialogs(state, actions)
     }
 }

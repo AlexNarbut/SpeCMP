@@ -82,4 +82,17 @@
     <string name="settings_io_placeholder_search">Find function</string>
     <string name="settings_io_msg_nothing_found">Nothing found</string>
     <string name="settings_value_changed">Changed</string>
+    <string name="settings_schedule_label_morning">Morning start</string>
+    <string name="settings_schedule_label_evening">Evening start</string>
+    <string name="settings_siren_label_tone">Tone</string>
+    <string name="settings_siren_label_melody">Melody</string>
+    <string name="settings_siren_label_number">Number</string>
+    <string name="settings_can_label_code">CAN code (4 digits)</string>
+    <string name="settings_can_hint_digits">Enter 4 digits</string>
+    <string name="settings_can_btn_find">Find vehicle</string>
+    <string name="settings_can_loading">Looking for the vehicle…</string>
+    <string name="settings_can_msg_many">Several vehicles match the code</string>
+    <string name="settings_can_msg_none">No vehicle found for code %1$s. The code can still be applied.</string>
+    <string name="settings_can_msg_error">Couldn\'t reach the server to find the vehicle. The code can be applied without it.</string>
+    <string name="settings_can_car">%1$s, %2$d–%3$d</string>
 </resources>

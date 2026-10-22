@@ -78,7 +78,9 @@ internal fun SettingNodeRow(
     wide: Boolean,
     actions: SettingRowActions,
     modifier: Modifier = Modifier,
-    path: String? = null
+    path: String? = null,
+    /** Подпись к значению (автомобиль у CAN-кода). */
+    note: String? = null
 ) {
     when (node) {
         is SettingsSection -> SectionRow(node, sectionChanges, path, actions, modifier)
@@ -95,7 +97,7 @@ internal fun SettingNodeRow(
                 modifier = modifier
             )
         } else {
-            LeafRow(node, changed, wide, path, actions, modifier)
+            LeafRow(node, changed, wide, path, note, actions, modifier)
         }
     }
 }
@@ -146,6 +148,7 @@ private fun LeafRow(
     changed: Boolean,
     wide: Boolean,
     path: String?,
+    note: String?,
     actions: SettingRowActions,
     modifier: Modifier
 ) {
@@ -182,6 +185,8 @@ private fun LeafRow(
             Title(number = setting.number, name = setting.name, changed = changed, bold = false)
             when {
                 path != null -> Subtitle(path)
+
+                note != null -> Subtitle(note)
 
                 setting is SwitchSetting && (setting.onTitle != null || setting.offTitle != null) ->
                     Subtitle(valueText(setting))

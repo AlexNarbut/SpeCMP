@@ -73,15 +73,34 @@ private val OptionsMaxHeight = 360.dp
 
 @Composable
 internal fun IntegerEditor(setting: IntegerSetting, value: Int, onChange: (Int) -> Unit) {
-    val range = setting.range
+    IntRangeEditor(
+        value = value,
+        range = setting.range,
+        units = setting.units,
+        minValueText = setting.minValueText,
+        maxValueText = setting.maxValueText,
+        onChange = onChange
+    )
+}
+
+/** Целое число в диапазоне: −/+ с автоповтором, ввод с клавиатуры, ползунок, подписи краёв. */
+@Composable
+internal fun IntRangeEditor(
+    value: Int,
+    range: IntRange,
+    units: String?,
+    onChange: (Int) -> Unit,
+    minValueText: String? = null,
+    maxValueText: String? = null
+) {
     val edgeLabel = when (value) {
-        range.first -> setting.minValueText
-        range.last -> setting.maxValueText
+        range.first -> minValueText
+        range.last -> maxValueText
         else -> null
     }
     NumberEditor(
         bigText = edgeLabel ?: value.toString(),
-        units = setting.units.takeIf { edgeLabel == null },
+        units = units.takeIf { edgeLabel == null },
         typedInitial = value.toString(),
         parse = { text -> text.trim().toIntOrNull()?.takeIf { it in range } },
         onType = onChange,
@@ -93,8 +112,8 @@ internal fun IntegerEditor(setting: IntegerSetting, value: Int, onChange: (Int) 
             steps = (range.last - range.first - 1).takeIf { it in 0..MAX_SLIDER_STEPS } ?: 0,
             onChange = { onChange(it.roundToInt().coerceIn(range)) }
         ),
-        minLabel = setting.minValueText ?: unitsOf(range.first.toString(), setting.units),
-        maxLabel = setting.maxValueText ?: unitsOf(range.last.toString(), setting.units)
+        minLabel = minValueText ?: unitsOf(range.first.toString(), units),
+        maxLabel = maxValueText ?: unitsOf(range.last.toString(), units)
     )
 }
 

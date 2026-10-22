@@ -79,4 +79,17 @@
     <string name="settings_io_placeholder_search">Найти функцию</string>
     <string name="settings_io_msg_nothing_found">Ничего не найдено</string>
     <string name="settings_value_changed">Изменено</string>
+    <string name="settings_schedule_label_morning">Утренний запуск</string>
+    <string name="settings_schedule_label_evening">Вечерний запуск</string>
+    <string name="settings_siren_label_tone">Тон</string>
+    <string name="settings_siren_label_melody">Мелодия</string>
+    <string name="settings_siren_label_number">Номер</string>
+    <string name="settings_can_label_code">CAN-код (4 цифры)</string>
+    <string name="settings_can_hint_digits">Введите 4 цифры</string>
+    <string name="settings_can_btn_find">Найти автомобиль</string>
+    <string name="settings_can_loading">Ищем автомобиль…</string>
+    <string name="settings_can_msg_many">Подходит несколько автомобилей</string>
+    <string name="settings_can_msg_none">Для кода %1$s автомобиль не найден. Код всё равно можно применить.</string>
+    <string name="settings_can_msg_error">Не удалось связаться с сервером для поиска автомобиля. Код можно применить без него.</string>
+    <string name="settings_can_car">%1$s, %2$d–%3$d</string>
 </resources>

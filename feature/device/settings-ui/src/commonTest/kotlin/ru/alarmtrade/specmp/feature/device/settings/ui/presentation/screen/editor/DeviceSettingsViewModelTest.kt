@@ -6,6 +6,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
@@ -38,6 +39,9 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.ChannelLogic
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
@@ -55,6 +59,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
+import ru.alarmtrade.specmp.feature.device.settings.domain.repository.CarsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
@@ -99,12 +104,14 @@ class DeviceSettingsViewModelTest {
         "",
         "",
         null,
-        listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors)), door, timerChannels)
+        listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors)), door, timerChannels, can)
     )
+    private val can get() = CanCodeSetting(61, "6.1", "CAN-код", null, SettingValue.Can(CanCode("2154", 17)))
 
     private val repository = FakeSettingsRepository(tree)
     private val sessionRepository = FakeSessionRepository(device)
     private val preferences = FakePreferences()
+    private val cars = FakeCars()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -130,6 +137,7 @@ class DeviceSettingsViewModelTest {
             SettingsSource.Device,
             repository,
             preferences,
+            cars,
             session,
             backgroundScope,
             dispatchers
@@ -353,6 +361,45 @@ class DeviceSettingsViewModelTest {
     }
 
     @Test
+    fun `car of the stored can code is loaded for the row caption`() = test {
+        val vm = viewModel()
+        assertEquals("Polo", vm.state.value.cars[17]?.model)
+    }
+
+    @Test
+    fun `single car found by code is attached to the code`() = test {
+        val vm = viewModel()
+        vm.onSettingClick(61)
+        vm.onDraftChange(SettingValue.Can(CanCode("7001", null)))
+
+        vm.onCarSearch()
+        settle()
+
+        val editing = assertNotNull(vm.state.value.editing)
+        assertEquals(SettingValue.Can(CanCode("7001", 21)), editing.draft)
+        assertEquals(CarSearch.Found(listOf(cars.rio)), editing.carSearch)
+    }
+
+    @Test
+    fun `several cars are offered to pick, none or no server keeps the code without a car`() = test {
+        val vm = viewModel()
+        vm.onSettingClick(61)
+        vm.onDraftChange(SettingValue.Can(CanCode("7002", null)))
+        vm.onCarSearch()
+        settle()
+        assertEquals(SettingValue.Can(CanCode("7002", null)), vm.state.value.editing?.draft)
+        vm.onCarPick(22)
+        assertEquals(SettingValue.Can(CanCode("7002", 22)), vm.state.value.editing?.draft)
+
+        vm.onDraftChange(SettingValue.Can(CanCode("9999", null)))
+        assertEquals(CarSearch.Idle, vm.state.value.editing?.carSearch)
+        cars.fail = true
+        vm.onCarSearch()
+        settle()
+        assertEquals(CarSearch.Failed, vm.state.value.editing?.carSearch)
+    }
+
+    @Test
     fun `search finds settings by number`() = test {
         val vm = viewModel()
         vm.onSearchQueryChange("3.2.4")
@@ -446,6 +493,24 @@ private class FakePreferences : DeviceSettingsPreferences {
     override fun setTreeWidthDp(width: Int) {
         this.width = width
     }
+}
+
+private class FakeCars : CarsRepository {
+    val polo = Car(17, "Volkswagen", "Polo", "V", 2015..2020)
+    val rio = Car(21, "Kia", "Rio", "IV", 2017..2020)
+    val solaris = Car(22, "Hyundai", "Solaris", "II", 2017..2020)
+    var fail = false
+
+    override suspend fun findByCanCode(canCode: String): Response<List<Car>> = when {
+        fail -> Response.Error(IllegalStateException("no server"))
+        canCode == "7001" -> Response.Success(listOf(rio))
+        canCode == "7002" -> Response.Success(listOf(rio, solaris))
+        else -> Response.Success(emptyList())
+    }
+
+    override suspend fun car(id: Int): Response<Car> =
+        listOf(polo, rio, solaris).firstOrNull { it.id == id }?.let { Response.Success(it) }
+            ?: Response.Error(IllegalStateException("no car"))
 }
 
 private class FakeConnectionRepository : DeviceConnectionRepository {

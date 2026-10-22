@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -23,7 +24,9 @@ internal data class DeviceSettingsState(
     /** Идёт запись в устройство — блокирующий прогресс. */
     val isWriting: Boolean = false,
     /** Ширина колонки дерева, заданная пользователем (dp); `null` — по умолчанию раскладки. */
-    val treeWidthDp: Int? = null
+    val treeWidthDp: Int? = null,
+    /** Автомобили по id (подпись к CAN-коду в строке и в окне). */
+    val cars: Map<Int, Car> = emptyMap()
 ) {
     val changedCount: Int get() = changedIds.size
 }
@@ -38,7 +41,24 @@ internal sealed interface SettingsMenu {
 }
 
 /** Открытое окно редактирования: [original] — значение «как было» (до правок), [draft] — набираемое. */
-internal data class EditingSetting(val setting: Setting, val original: SettingValue, val draft: SettingValue)
+internal data class EditingSetting(
+    val setting: Setting,
+    val original: SettingValue,
+    val draft: SettingValue,
+    /** Поиск автомобиля по CAN-коду в окне CAN-кода. */
+    val carSearch: CarSearch = CarSearch.Idle
+)
+
+internal sealed interface CarSearch {
+    data object Idle : CarSearch
+    data object Loading : CarSearch
+
+    /** Найдено (пусто — для кода автомобиля нет, код всё равно можно применить). */
+    data class Found(val cars: List<Car>) : CarSearch
+
+    /** Нет связи с сервером — код можно применить без автомобиля. */
+    data object Failed : CarSearch
+}
 
 internal sealed interface SettingsDialog {
     data class Description(val node: SettingNode) : SettingsDialog

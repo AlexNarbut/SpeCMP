@@ -32,12 +32,17 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.sheet.CmpBottomSheet
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartScheduleSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.IntegerSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OptionSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
@@ -59,7 +64,9 @@ internal class EditorActions(
     val onDraftChange: (SettingValue) -> Unit,
     val onReset: () -> Unit,
     val onApply: () -> Unit,
-    val onDismiss: () -> Unit
+    val onDismiss: () -> Unit,
+    val onCarSearch: () -> Unit,
+    val onCarPick: (carId: Int) -> Unit
 )
 
 /**
@@ -67,13 +74,13 @@ internal class EditorActions(
  * описание, «Было: …»), содержимое по типу, «Сбросить» / «Готово». Значение уходит в сессию только по «Готово».
  */
 @Composable
-internal fun EditorPanel(editing: EditingSetting, wide: Boolean, actions: EditorActions) {
+internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, Car>, wide: Boolean, actions: EditorActions) {
     if (wide) {
         CmpDialog(
             onDismissRequest = actions.onDismiss,
             width = EditorDialogWidth,
             title = { EditorHeader(editing, actions.onDraftChange) },
-            text = { EditorBody(editing, actions.onDraftChange) },
+            text = { EditorBody(editing, cars, actions) },
             confirmButton = { EditorButtons(editing, actions) }
         )
     } else {
@@ -83,7 +90,7 @@ internal fun EditorPanel(editing: EditingSetting, wide: Boolean, actions: Editor
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 EditorHeader(editing, actions.onDraftChange)
-                EditorBody(editing, actions.onDraftChange)
+                EditorBody(editing, cars, actions)
                 EditorButtons(editing, actions)
             }
         }
@@ -182,7 +189,8 @@ private fun WasChip(editing: EditingSetting) {
 
 @Suppress("CyclomaticComplexMethod") // плоский выбор редактора по типу настройки
 @Composable
-private fun EditorBody(editing: EditingSetting, onDraftChange: (SettingValue) -> Unit) {
+private fun EditorBody(editing: EditingSetting, cars: Map<Int, Car>, actions: EditorActions) {
+    val onDraftChange = actions.onDraftChange
     val setting = editing.setting
     val draft = editing.draft
     CmpColumn(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
@@ -201,6 +209,21 @@ private fun EditorBody(editing: EditingSetting, onDraftChange: (SettingValue) ->
 
             setting is TimeSetting && draft is SettingValue.Time ->
                 TimeEditor(draft.value) { onDraftChange(SettingValue.Time(it)) }
+
+            setting is AutoStartScheduleSetting && draft is SettingValue.AutoStart ->
+                ScheduleEditor(draft.value) { onDraftChange(SettingValue.AutoStart(it)) }
+
+            setting is SirenSetting && draft is SettingValue.Siren ->
+                SirenEditor(setting, draft.value) { onDraftChange(SettingValue.Siren(it)) }
+
+            setting is CanCodeSetting && draft is SettingValue.Can -> CanCodeEditor(
+                value = draft.value,
+                carSearch = editing.carSearch,
+                cars = cars,
+                onCodeChange = { code -> onDraftChange(SettingValue.Can(CanCode(code, carId = null))) },
+                onSearch = actions.onCarSearch,
+                onPick = actions.onCarPick
+            )
 
             setting is InputSetting && draft is SettingValue.Input ->
                 ChannelFunctionsEditor(setting.availableLogics, draft.value.logicsState) { state ->

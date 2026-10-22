@@ -28,6 +28,8 @@ import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -37,6 +39,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
+import ru.alarmtrade.specmp.feature.device.settings.domain.repository.CarsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
@@ -60,6 +63,7 @@ internal class DeviceSettingsViewModel(
     private val source: SettingsSource,
     private val repository: DeviceSettingsRepository,
     private val preferences: DeviceSettingsPreferences,
+    private val carsRepository: CarsRepository,
     deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
     private val dispatchers: AppDispatchers
@@ -119,6 +123,7 @@ internal class DeviceSettingsViewModel(
                 baseline.update { root.valuesById() }
                 _state.update { it.copy(menu = SettingsMenu.Ready(root)) }
                 refreshChanged()
+                loadCarNames(root)
             }
         }
     }
@@ -147,6 +152,7 @@ internal class DeviceSettingsViewModel(
                     state.copy(menu = SettingsMenu.Ready(reread ?: menu.root.replace(response.value)))
                 }
                 refreshChanged()
+                currentRoot()?.let(::loadCarNames)
             }
         }
     }
@@ -159,7 +165,54 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onDraftChange(draft: SettingValue) {
-        _state.update { state -> state.copy(editing = state.editing?.copy(draft = draft)) }
+        _state.update { state ->
+            val editing = state.editing ?: return@update state
+            // Другой CAN-код — найденные автомобили к нему не относятся.
+            val codeChanged =
+                (draft as? SettingValue.Can)?.value?.code != (editing.draft as? SettingValue.Can)?.value?.code
+            state.copy(
+                editing = editing.copy(
+                    draft = draft,
+                    carSearch = if (codeChanged) CarSearch.Idle else editing.carSearch
+                )
+            )
+        }
+    }
+
+    /** Найти автомобиль по набранному CAN-коду; один найденный — сразу привязывается к коду. */
+    fun onCarSearch() {
+        val editing = _state.value.editing ?: return
+        val code = (editing.draft as? SettingValue.Can)?.value?.code ?: return
+        if (!editing.setting.accepts(editing.draft)) return
+        _state.update { it.copy(editing = it.editing?.copy(carSearch = CarSearch.Loading)) }
+        safeLaunch {
+            val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code) }
+            _state.update { state ->
+                val current = state.editing ?: return@update state
+                if ((current.draft as? SettingValue.Can)?.value?.code != code) return@update state
+                when (response) {
+                    is Response.Error -> state.copy(editing = current.copy(carSearch = CarSearch.Failed))
+
+                    is Response.Success -> {
+                        val cars = response.value
+                        val draft = cars.singleOrNull()?.let { SettingValue.Can(CanCode(code, it.id)) } ?: current.draft
+                        state.copy(
+                            editing = current.copy(draft = draft, carSearch = CarSearch.Found(cars)),
+                            cars = state.cars + cars.associateBy { it.id }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /** Выбран автомобиль из нескольких подходящих к коду. */
+    fun onCarPick(carId: Int) {
+        _state.update { state ->
+            val editing = state.editing ?: return@update state
+            val draft = editing.draft as? SettingValue.Can ?: return@update state
+            state.copy(editing = editing.copy(draft = SettingValue.Can(draft.value.copy(carId = carId))))
+        }
     }
 
     fun onEditReset() {
@@ -251,6 +304,22 @@ internal class DeviceSettingsViewModel(
             changed to root.sectionChanges(changed)
         }
         _state.update { it.copy(changedIds = changes.first, sectionChanges = changes.second) }
+    }
+
+    /** Подписи автомобилей к CAN-кодам меню (с сервера, без связи — без подписи). */
+    private fun loadCarNames(root: SettingsSection) {
+        val known = _state.value.cars.keys
+        root.settings().filterIsInstance<CanCodeSetting>()
+            .mapNotNull { it.value.value.carId }
+            .filter { it !in known }
+            .distinct()
+            .forEach { carId ->
+                safeLaunch {
+                    withContext(dispatchers.io) { carsRepository.car(carId) }.getValueIfSuccess()?.let { car ->
+                        _state.update { it.copy(cars = it.cars + (car.id to car)) }
+                    }
+                }
+            }
     }
 
     private fun currentRoot(): SettingsSection? = (_state.value.menu as? SettingsMenu.Ready)?.root

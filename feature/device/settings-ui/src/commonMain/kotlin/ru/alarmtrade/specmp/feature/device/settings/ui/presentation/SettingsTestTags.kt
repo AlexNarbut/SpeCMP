@@ -10,6 +10,8 @@ internal object SettingsTestTags {
     const val EXIT_WRITE = "settings_exit_write"
     const val EXIT_DISCARD = "settings_exit_discard"
     const val TREE_RESIZE = "settings_tree_resize"
+    const val CAN_CODE = "settings_can_code"
+    const val CAN_FIND = "settings_can_find"
 
     fun row(id: Int) = "settings_row_$id"
     fun section(id: Int) = "settings_section_$id"

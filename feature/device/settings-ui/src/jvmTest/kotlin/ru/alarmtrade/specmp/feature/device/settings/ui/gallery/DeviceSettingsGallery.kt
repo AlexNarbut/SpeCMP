@@ -4,6 +4,11 @@ import androidx.compose.runtime.remember
 import java.io.File
 import kotlin.test.Test
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartSchedule
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartScheduleSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.ChannelLogic
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
@@ -19,16 +24,22 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenEvent
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenTone
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenToneType
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextInputType
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Weekday
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Wire
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.SectionEntry
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.CarSearch
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsContent
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
@@ -172,6 +183,32 @@ class DeviceSettingsGallery {
         osw(503, "5.5", "SIREN", Wire("", emptyList(), 6), listOf(logic(4, "Подогрев сидений")), on = true)
     )
 
+    private val extras = section(
+        800,
+        "8",
+        "Прочее",
+        AutoStartScheduleSetting(
+            801,
+            "8.1",
+            "Понедельник",
+            null,
+            SettingValue.AutoStart(AutoStartSchedule(true, TimeOfDay(7, 30), false, TimeOfDay(18, 0))),
+            Weekday.MONDAY
+        ),
+        SirenSetting(
+            802,
+            "8.2",
+            "Сирена · тревога",
+            null,
+            SettingValue.Siren(SirenTone(SirenToneType.MELODY, 3)),
+            1..12,
+            null,
+            SirenEvent.ALARM
+        ),
+        CanCodeSetting(803, "8.3", "CAN-код автомобиля", null, SettingValue.Can(CanCode("7002", null)))
+    )
+    private val cars = listOf(Car(21, "Kia", "Rio", "IV", 2017..2020), Car(22, "Hyundai", "Solaris", "II", 2017..2020))
+
     private val root = section(
         0, "", "", general,
         section(
@@ -180,7 +217,7 @@ class DeviceSettingsGallery {
             "Охрана",
             sensors
         ),
-        inputs, channelChoice, outputs, section(700, "7", "Резерв")
+        inputs, channelChoice, outputs, extras, section(700, "7", "Резерв")
     )
 
     private val base = DeviceSettingsState(
@@ -194,7 +231,7 @@ class DeviceSettingsGallery {
     private val noActions = DeviceSettingsActions(
         onBack = {}, onSearch = {}, onNavigateTo = {}, onRetry = {},
         onTreeWidthChange = {}, onWrite = {}, onExitWrite = {}, onExitDiscard = {},
-        onDialogDismiss = {}, editor = EditorActions({}, {}, {}, {})
+        onDialogDismiss = {}, editor = EditorActions({}, {}, {}, {}, {}, {})
     )
 
     private fun render(name: String, state: DeviceSettingsState, path: List<Int>, search: Boolean = false) =
@@ -251,6 +288,26 @@ class DeviceSettingsGallery {
 
     @Test
     fun editInput() = render("22_edit_input", base.copy(editing = editing(401)), listOf(400))
+
+    @Test
+    fun editSchedule() = render("23_edit_schedule", base.copy(editing = editing(801)), listOf(800))
+
+    @Test
+    fun editSiren() = render("24_edit_siren", base.copy(editing = editing(802)), listOf(800))
+
+    @Test
+    fun editCanMany() = render(
+        "25_edit_can_many",
+        base.copy(editing = editing(803).copy(carSearch = CarSearch.Found(cars))),
+        listOf(800)
+    )
+
+    @Test
+    fun editCanNone() = render(
+        "26_edit_can_none",
+        base.copy(editing = editing(803).copy(carSearch = CarSearch.Found(emptyList()))),
+        listOf(800)
+    )
 
     @Test
     fun emptySection() = render("07_empty", base, listOf(700))
