@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -15,6 +16,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_cancel
 import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_close
@@ -56,12 +58,12 @@ internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit
                 CmpButton(
                     text = stringResource(Res.string.settings_exit_btn_write),
                     onClick = onWrite,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_WRITE)
                 )
                 CmpOutlinedButton(
                     text = stringResource(Res.string.settings_exit_btn_discard),
                     onClick = onDiscard,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD)
                 )
                 CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
             }

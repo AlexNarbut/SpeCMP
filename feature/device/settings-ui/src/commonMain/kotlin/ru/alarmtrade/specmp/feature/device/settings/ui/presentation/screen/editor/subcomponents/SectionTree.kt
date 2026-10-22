@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,6 +35,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 
 private val LevelIndent = 14.dp
 private val RowHeight = 40.dp
@@ -128,6 +130,7 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
             .padding(horizontal = 4.dp)
             .heightIn(min = RowHeight)
             // Наведение и нажатие — на всю «таблетку» строки, как у выбранного раздела.
+            .testTag(SettingsTestTags.tree(row.section.id))
             .clip(CircleShape)
             .background(if (selected) colors.secondaryContainer else colors.surfaceContainerLow)
             .then(if (row.enterable) Modifier.clickable(role = Role.Button, onClick = onSelect) else Modifier)

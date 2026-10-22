@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,6 +39,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.isEnabled
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ContactBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.PolarityBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
@@ -79,6 +81,7 @@ internal fun ChannelRow(
     }
     CmpRow(
         modifier = modifier
+            .testTag(SettingsTestTags.row(setting.id))
             .fillMaxWidth()
             .background(if (changed) colors.tertiaryContainer.copy(alpha = CHANGED_TINT_ALPHA) else colors.surface)
             .heightIn(min = 56.dp)
@@ -127,9 +130,15 @@ internal fun ChannelRow(
 @Composable
 private fun ChannelBadge(setting: Setting) {
     when (setting) {
-        is InputSetting -> ContactBadge(setting.value.value.type)
-        is OutputSetting -> PolarityBadge(setting.value.value.polarity)
+        is InputSetting -> {
+            PolarityBadge(setting.defaultPolarity)
+            ContactBadge(setting.value.value.type)
+        }
+
+        is OutputSetting -> PolarityBadge(setting.shownPolarity)
+
         is SwitchOutputSetting -> PolarityBadge(setting.polarity)
+
         else -> Unit
     }
 }
@@ -150,7 +159,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             icon = CmpIcons.SwapHoriz,
             contentDescription = stringResource(Res.string.settings_io_a11y_toggle_contact),
             tint = colors.primary,
-            modifier = Modifier.size(48.dp)
+            modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
         )
 
         is OutputSetting -> if (setting.canEditPolarity) {
@@ -159,7 +168,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                 icon = CmpIcons.SwapHoriz,
                 contentDescription = stringResource(Res.string.settings_io_a11y_toggle_polarity),
                 tint = colors.primary,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
             )
         } else {
             CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -175,6 +184,17 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
         else -> Unit
     }
 }
+
+/**
+ * Полярность выхода для показа (как в старом приложении): неизменяемая — по умолчанию из устройства; изменяемая —
+ * текущая, а если не задана — по умолчанию.
+ */
+internal val OutputSetting.shownPolarity: Polarity
+    get() = when {
+        !canEditPolarity -> defaultPolarity
+        value.value.polarity == Polarity.UNDEFINED -> defaultPolarity
+        else -> value.value.polarity
+    }
 
 private fun channelOf(setting: Setting): Channel? = when (setting) {
     is InputSetting -> setting.channel

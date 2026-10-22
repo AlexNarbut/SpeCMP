@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +40,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.isSegmented
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
@@ -110,6 +112,7 @@ private fun SectionRow(
     val enterable = section.children.isNotEmpty()
     CmpRow(
         modifier = modifier
+            .testTag(SettingsTestTags.section(section.id))
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .then(
@@ -163,6 +166,7 @@ private fun LeafRow(
 
     CmpRow(
         modifier = modifier
+            .testTag(SettingsTestTags.row(setting.id))
             .fillMaxWidth()
             .background(if (changed) colors.tertiaryContainer.copy(alpha = CHANGED_TINT_ALPHA) else colors.surface)
             .heightIn(min = 56.dp)

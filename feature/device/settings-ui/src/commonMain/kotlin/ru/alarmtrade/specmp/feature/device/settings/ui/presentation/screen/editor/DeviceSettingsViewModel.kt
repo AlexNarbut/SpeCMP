@@ -49,7 +49,8 @@ private const val SEARCH_DEBOUNCE_MILLIS = 150L
  *
  * - Меню читается при открытии; для блока — на каждое (пере)подключение, с `reload`: незаписанные правки при обрыве
  *   связи теряются, после переподключения настройки перечитываются из блока.
- * - Правка ([onValueChange]) меняет значение в сессии SDK; изменённые — пересечение `unsavedIds` SDK с настройками,
+ * - Правка ([onValueChange]) меняет значение в сессии SDK, после неё меню перечитывается из кэша сессии (правка может
+ *   поменять соседние настройки); изменённые — пересечение `unsavedIds` SDK с настройками,
  *   чьё значение отличается от снимка «как было» ([baseline]): возврат исходного значения снимает подсветку.
  * - Запись ([onWrite]) — `save`; после успеха снимок «как было» = текущее меню.
  * - Сессия SDK закрывается в [onCleared] (в app-скоупе: `viewModelScope` к этому моменту отменён).
@@ -138,9 +139,12 @@ internal class DeviceSettingsViewModel(
             is Response.Error -> _effect.tryEmit(DeviceSettingsEffect.SetValueFailed)
 
             is Response.Success -> {
+                // Правка может поменять соседние настройки (например, выбор одного таймерного канала снимает другие):
+                // перечитываем меню из кэша сессии SDK (без опроса блока); не вышло — заменяем только эту настройку.
+                val reread = withContext(dispatchers.io) { repository.open(source, reload = false) }.getValueIfSuccess()
                 _state.update { state ->
                     val menu = state.menu as? SettingsMenu.Ready ?: return@update state
-                    state.copy(menu = SettingsMenu.Ready(menu.root.replace(response.value)))
+                    state.copy(menu = SettingsMenu.Ready(reread ?: menu.root.replace(response.value)))
                 }
                 refreshChanged()
             }

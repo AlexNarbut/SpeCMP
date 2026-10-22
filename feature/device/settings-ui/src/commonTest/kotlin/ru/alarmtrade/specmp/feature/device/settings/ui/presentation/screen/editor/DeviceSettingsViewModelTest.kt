@@ -38,15 +38,23 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.ChannelLogic
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.IntegerSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
@@ -67,8 +75,32 @@ class DeviceSettingsViewModelTest {
     private val shock = SwitchSetting(11, "3.2.1", "Датчик удара", null, SettingValue.Switch(false), null, null)
     private val delay = IntegerSetting(12, "3.2.4", "Задержка", null, SettingValue.Integer(30), 0..120, "с", null, null)
     private val sensors = SettingsSection(10, "3.2", "Датчики", null, listOf(shock, delay))
-    private val tree =
-        SettingsSection(0, "", "", null, listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors))))
+    private val door = InputSetting(
+        41, "4.1", "Концевик", null,
+        SettingValue.Input(InputValue(listOf(true, false), InputContactType.NORMALLY_OPEN)),
+        Channel(1, "IN1", emptyList()), Polarity.MINUS,
+        availableLogics = listOf(ChannelLogic(0, "Двери", null), ChannelLogic(1, "Багажник", null)),
+        enabledLogics = emptyList()
+    )
+    private fun channel(id: Int, on: Boolean) = SwitchOutputSetting(
+        id,
+        "",
+        "CH$id",
+        null,
+        SettingValue.SwitchOutput(on),
+        Channel(id, "CH$id", emptyList()),
+        Polarity.MINUS,
+        emptyList()
+    )
+    private val timerChannels =
+        SettingsSection(50, "4.1.1", "Выбор канала", null, listOf(channel(51, true), channel(52, false)))
+    private val tree = SettingsSection(
+        0,
+        "",
+        "",
+        null,
+        listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors)), door, timerChannels)
+    )
 
     private val repository = FakeSettingsRepository(tree)
     private val sessionRepository = FakeSessionRepository(device)
@@ -270,7 +302,8 @@ class DeviceSettingsViewModelTest {
         sessionRepository.link.value = DeviceLinkState.READY
         settle()
 
-        assertEquals(listOf(true, true), repository.openReloads)
+        // Чтения из блока (reload) — при входе и после переподключения; без reload — перечитывание после правки.
+        assertEquals(listOf(true, true), repository.openReloads.filter { it })
         assertEquals(tree, vm.root())
         assertTrue(vm.state.value.changedIds.isEmpty())
     }
@@ -285,6 +318,38 @@ class DeviceSettingsViewModelTest {
 
         assertEquals(360, vm.state.value.treeWidthDp)
         assertEquals(360, preferences.width)
+    }
+
+    @Test
+    fun `input functions are edited in the window and applied on done`() = test {
+        val vm = viewModel()
+
+        vm.onSettingClick(41)
+        assertEquals(
+            SettingValue.Input(InputValue(listOf(true, false), InputContactType.NORMALLY_OPEN)),
+            vm.state.value.editing?.original
+        )
+        val draft = SettingValue.Input(InputValue(listOf(true, true), InputContactType.NORMALLY_CLOSED))
+        vm.onDraftChange(draft)
+        vm.onEditApply()
+        settle()
+
+        assertEquals(listOf<Pair<Int, SettingValue>>(41 to draft), repository.setCalls)
+        assertEquals(draft, (vm.root().findNode(41) as Setting).value)
+        assertEquals(setOf(41), vm.state.value.changedIds)
+    }
+
+    @Test
+    fun `settings changed by the sdk as a side effect are shown after a change`() = test {
+        val vm = viewModel()
+
+        vm.onValueChange(52, SettingValue.SwitchOutput(true))
+        settle()
+
+        assertEquals(SettingValue.SwitchOutput(false), (vm.root().findNode(51) as Setting).value)
+        assertEquals(SettingValue.SwitchOutput(true), (vm.root().findNode(52) as Setting).value)
+        // SDK считает несохранённой только явно изменённую настройку (как в фейке): подсвечивается она.
+        assertEquals(setOf(52), vm.state.value.changedIds)
     }
 
     @Test
@@ -324,7 +389,21 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
         setCalls += settingId to value
         val updated = when (val node: SettingNode? = current.findNode(settingId)) {
             is SwitchSetting -> node.copy(value = value as SettingValue.Switch)
+
             is IntegerSetting -> node.copy(value = value as SettingValue.Integer)
+
+            is InputSetting -> node.copy(value = value as SettingValue.Input)
+
+            is SwitchOutputSetting -> {
+                // Как выбор таймерного канала: включение одного выключает остальные каналы раздела.
+                if ((value as SettingValue.SwitchOutput).enabled) {
+                    current.settings().filterIsInstance<SwitchOutputSetting>().filter { it.id != settingId }.forEach {
+                        current = current.replace(it.copy(value = SettingValue.SwitchOutput(false)))
+                    }
+                }
+                node.copy(value = value)
+            }
+
             else -> return Response.Error(IllegalStateException("unsupported"))
         }
         current = current.replace(updated)

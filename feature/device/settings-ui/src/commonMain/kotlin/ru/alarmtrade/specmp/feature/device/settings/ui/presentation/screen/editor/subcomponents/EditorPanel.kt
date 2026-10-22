@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -14,6 +15,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -37,6 +40,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
@@ -104,6 +108,7 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
                 editablePolarity = editablePolarity,
                 onDraftChange = onDraftChange
             )
+            setting.description?.let { ChannelDescription(setting.id, it) }
             WasChip(editing)
         }
         return
@@ -142,6 +147,20 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
         }
         WasChip(editing)
     }
+}
+
+/** Описание канала: две строки, по нажатию — целиком. */
+@Composable
+private fun ChannelDescription(settingId: Int, text: String) {
+    var expanded by rememberSaveable(settingId) { mutableStateOf(false) }
+    CmpText(
+        text = text,
+        style = CmpTextStyle.Body,
+        color = cmpThemeColors().onSurfaceVariant,
+        maxLines = if (expanded) Int.MAX_VALUE else 2,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.clickable(role = Role.Button) { expanded = !expanded }
+    )
 }
 
 /** «Было: …» — место занято всегда, чтобы содержимое не прыгало; выделяется, когда значение отличается. */
@@ -205,13 +224,13 @@ private fun EditorButtons(editing: EditingSetting, actions: EditorActions) {
             text = stringResource(Res.string.settings_edit_btn_reset),
             onClick = actions.onReset,
             enabled = editing.draft != editing.original,
-            modifier = Modifier.weight(1f).heightIn(min = 52.dp)
+            modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_RESET)
         )
         CmpButton(
             text = stringResource(Res.string.settings_edit_btn_done),
             onClick = actions.onApply,
             enabled = editing.setting.accepts(editing.draft),
-            modifier = Modifier.weight(1f).heightIn(min = 52.dp)
+            modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_DONE)
         )
     }
 }

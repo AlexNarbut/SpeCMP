@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -52,6 +53,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.SettingsLayout
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.settingsLayoutOf
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DescriptionDialog
@@ -175,6 +177,7 @@ private fun TreeResizeHandle(onDrag: (Dp) -> Unit, onDragStop: () -> Unit) {
         modifier = Modifier
             .width(ResizeHandleWidth)
             .fillMaxHeight()
+            .testTag(SettingsTestTags.TREE_RESIZE)
             .background(colors.surfaceContainerLow)
             .pointerHoverIcon(PointerIcon.Hand)
             .draggable(
@@ -227,6 +230,7 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
             if (!location.isSearch && state.menu is SettingsMenu.Ready) {
                 CmpIconButton(
                     onClick = actions.onSearch,
+                    modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
                     icon = CmpIcons.Search,
                     contentDescription = stringResource(Res.string.settings_common_a11y_search)
                 )
@@ -294,7 +298,7 @@ private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions)
             CmpButton(
                 text = stringResource(Res.string.settings_editor_btn_write),
                 onClick = actions.onWrite,
-                modifier = Modifier.widthIn(min = 160.dp).heightIn(min = 52.dp)
+                modifier = Modifier.widthIn(min = 160.dp).heightIn(min = 52.dp).testTag(SettingsTestTags.WRITE)
             )
         }
     }
