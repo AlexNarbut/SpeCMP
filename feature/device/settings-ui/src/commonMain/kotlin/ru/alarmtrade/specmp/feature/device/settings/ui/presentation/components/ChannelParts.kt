@@ -17,12 +17,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
@@ -123,27 +125,36 @@ internal fun PolarityBadge(polarity: Polarity) {
     if (polarity == Polarity.UNDEFINED) return
     val colors = cmpThemeColors()
     val plus = polarity == Polarity.PLUS
-    CmpBox(
+    val sign = if (plus) colors.onPrimary else colors.onSurface
+    val label = stringResource(
+        if (plus) Res.string.settings_value_polarity_plus_sign else Res.string.settings_value_polarity_minus_sign
+    )
+    // Знак рисуется линиями, а не глифом шрифта: текст в маленьком круге смещается из-за отступов шрифта.
+    Canvas(
         modifier = Modifier
             .size(24.dp)
             .background(if (plus) colors.primary else Color.Transparent, CircleShape)
-            .border(2.dp, if (plus) colors.primary else colors.onSurface, CircleShape),
-        contentAlignment = Alignment.Center
+            .border(2.dp, if (plus) colors.primary else colors.onSurface, CircleShape)
+            .semantics { contentDescription = label }
     ) {
-        CmpText(
-            text = stringResource(
-                if (plus) {
-                    Res.string.settings_value_polarity_plus_sign
-                } else {
-                    Res.string.settings_value_polarity_minus_sign
-                }
-            ),
-            style = CmpTextStyle.Body,
-            fontWeight = FontWeight.Bold,
-            color = if (plus) colors.onPrimary else colors.onSurface
-        )
+        val half = size.minDimension * SIGN_HALF_LENGTH
+        val stroke = SIGN_STROKE.dp.toPx()
+        drawLine(sign, Offset(center.x - half, center.y), Offset(center.x + half, center.y), stroke, StrokeCap.Round)
+        if (plus) {
+            drawLine(
+                sign,
+                Offset(center.x, center.y - half),
+                Offset(center.x, center.y + half),
+                stroke,
+                StrokeCap.Round
+            )
+        }
     }
 }
+
+/** Половина длины линии знака относительно размера круга и толщина линии (dp). */
+private const val SIGN_HALF_LENGTH = 0.25f
+private const val SIGN_STROKE = 2f
 
 /** Метка «Изменено» в заголовке канала (по макету): точка + слово на фоне цвета несохранённых правок. */
 @Composable
