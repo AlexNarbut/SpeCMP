@@ -103,23 +103,25 @@ internal fun ChannelEditorHeader(
 @Composable
 private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, onDraftChange: (SettingValue) -> Unit) {
     when (draft) {
-        is SettingValue.Input -> CmpSegmentedButton(
-            options = listOf(
-                stringResource(Res.string.settings_value_contact_no),
-                stringResource(Res.string.settings_value_contact_nc)
-            ),
-            selectedIndex = when (draft.value.type) {
-                InputContactType.NORMALLY_OPEN -> 0
-                InputContactType.NORMALLY_CLOSED -> 1
-                InputContactType.UNDEFINED -> -1
-            },
-            onSelect = { index ->
-                val type = if (index == 0) InputContactType.NORMALLY_OPEN else InputContactType.NORMALLY_CLOSED
-                onDraftChange(SettingValue.Input(draft.value.copy(type = type)))
-            },
-            modifier = Modifier.width(SegmentsWidth),
-            minHeight = 44.dp
-        )
+        is SettingValue.Input -> if (draft.value.type != InputContactType.UNDEFINED) {
+            CmpSegmentedButton(
+                options = listOf(
+                    stringResource(Res.string.settings_value_contact_no),
+                    stringResource(Res.string.settings_value_contact_nc)
+                ),
+                selectedIndex = when (draft.value.type) {
+                    InputContactType.NORMALLY_OPEN -> 0
+                    InputContactType.NORMALLY_CLOSED -> 1
+                    InputContactType.UNDEFINED -> -1
+                },
+                onSelect = { index ->
+                    val type = if (index == 0) InputContactType.NORMALLY_OPEN else InputContactType.NORMALLY_CLOSED
+                    onDraftChange(SettingValue.Input(draft.value.copy(type = type)))
+                },
+                modifier = Modifier.width(SegmentsWidth),
+                minHeight = 44.dp
+            )
+        }
 
         is SettingValue.Output -> if (editablePolarity) {
             CmpSegmentedButton(

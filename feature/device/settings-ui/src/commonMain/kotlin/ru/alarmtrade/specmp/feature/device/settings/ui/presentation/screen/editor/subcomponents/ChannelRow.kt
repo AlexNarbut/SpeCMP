@@ -154,13 +154,15 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             CmpSwitch(checked = setting.value.enabled, onCheckedChange = null)
         }
 
-        is InputSetting -> CmpIconButton(
-            onClick = { actions.onValueChange(setting.id, SettingValue.Input(setting.value.value.toggled())) },
-            icon = CmpIcons.SwapHoriz,
-            contentDescription = stringResource(Res.string.settings_io_a11y_toggle_contact),
-            tint = colors.primary,
-            modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
-        )
+        is InputSetting -> if (setting.canEditContactType) {
+            CmpIconButton(
+                onClick = { actions.onValueChange(setting.id, SettingValue.Input(setting.value.value.toggled())) },
+                icon = CmpIcons.SwapHoriz,
+                contentDescription = stringResource(Res.string.settings_io_a11y_toggle_contact),
+                tint = colors.primary,
+                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
+            )
+        }
 
         is OutputSetting -> if (setting.canEditPolarity) {
             CmpIconButton(
@@ -221,7 +223,14 @@ private fun functionsOf(setting: Setting): String? = when (setting) {
     else -> null
 }
 
-/** НО ↔ НЗ; не заданный тип становится «НО». */
+/**
+ * Тип контакта входа можно менять, только если блок его сообщает: не заданный тип (`UNDEFINED`) — у входа нет
+ * NO/NC (флага в SDK нет — признак по значению).
+ */
+internal val InputSetting.canEditContactType: Boolean
+    get() = value.value.type != InputContactType.UNDEFINED
+
+/** NO ↔ NC. */
 private fun InputValue.toggled() = copy(
     type = when (type) {
         InputContactType.NORMALLY_OPEN -> InputContactType.NORMALLY_CLOSED
