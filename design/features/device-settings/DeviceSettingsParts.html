@@ -1,0 +1,96 @@
+
+<!-- @dsCard group="Настройки устройства" viewport="1000x1000" name="Настройки устройства — строки и компоненты" subtitle="13 типов строк × состояния (обычное, изменено, недоступно, длинное название, фокус); новые компоненты кита; light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Настройки: строки и компоненты</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; padding: 24px; box-sizing: border-box; }
+  .seg { display: inline-flex; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 7px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  h2 { font: 600 15px var(--font-sans); margin: 28px 0 10px; color: #222; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(412px, 1fr)); gap: 16px; align-items: start; }
+  .cap { font: 500 12px var(--font-sans); color: #555; margin: 0 0 4px 4px; }
+  .card { border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,.12); background: var(--surface); color: var(--on-surface); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./DeviceSettings.jsx"></script>
+<script type="text/babel">
+  const D = window.DSET, I = D.IDX;
+  const noop = () => {};
+  function R({ id, wide, changed, val, it, focus }) {
+    const item = it || I[id].n;
+    return <SettingRowState item={item} wide={wide} changed={changed} val={val} focus={focus} />;
+  }
+  function SettingRowState({ item, wide, changed, val, focus }) {
+    const [v, setV] = React.useState(val !== undefined ? val : item.v);
+    return <D.SettingRow it={item} val={v} changed={changed} wide={wide} focus={focus} count={item.type === "sec" ? 2 : 0} last onOpen={noop} onInfo={noop} onChangeVal={setV} />;
+  }
+  const Cell = ({ cap, children }) => <div><div className="cap">{cap}</div><div className="card">{children}</div></div>;
+  const stack = (rows) => rows.map((r, i) => <div key={i} style={{ borderBottom: i < rows.length - 1 ? "1px solid var(--outline-variant)" : "none" }}>{r}</div>);
+  const dis = (id) => ({ ...I[id].n, disabled: true });
+  const long = { ...I["3.2.4"].n, id: "3.2.4", t: "Задержка постановки в охрану после закрытия последней двери при включённом режиме «Комфорт»" };
+
+  function App() {
+    const [dark, setDark] = React.useState(false);
+    const [wide, setWide] = React.useState(false);
+    return (
+      <div data-theme={dark ? "dark" : undefined} style={{ background: "transparent" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div className="seg">{[["l","Светлая"],["d","Тёмная"]].map(([k,l]) => <button key={k} className={(dark ? "d" : "l") === k ? "on" : ""} onClick={() => setDark(k === "d")}>{l}</button>)}</div>
+          <div className="seg">{[["c","Строка: compact"],["w","Строка: wide"]].map(([k,l]) => <button key={k} className={(wide ? "w" : "c") === k ? "on" : ""} onClick={() => setWide(k === "w")}>{l}</button>)}</div>
+        </div>
+        <h2>1 · Раздел · 2 · Переключатель · 3 · Выбор варианта</h2>
+        <div className="grid">
+          <Cell cap="Раздел: обычный · с изменениями (●2)">{stack([<R id="3.1" wide={wide} />, <R id="3.2" wide={wide} />])}</Cell>
+          <Cell cap="Переключатель: обычный · изменён · с подписью · недоступен">{stack([<R id="3.2.1" wide={wide} />, <R id="3.2.1" wide={wide} changed val={false} />, <R id="1.4" wide={wide} />, <R it={dis("1.6")} wide={wide} />])}</Cell>
+          <Cell cap="Выбор: сегменты в строке (≤3 × ≤6) · изменён · недоступен">{stack([<R id="3.2.3" wide={wide} />, <R id="2.1" wide={wide} changed val={2} />, <R it={{ ...I["3.2.3"].n, disabled: true }} wide={wide} />])}</Cell>
+          <Cell cap="Выбор: значение справа + › (список в шторке)">{stack([<R id="1.2" wide={wide} />, <R id="1.3" wide={wide} changed val={16} />, <R id="3.2.6" wide={wide} />])}</Cell>
+        </div>
+        <h2>4–5 · Целое и дробное число · 6 · Текст · 7 · Время</h2>
+        <div className="grid">
+          <Cell cap="Число: обычное (с ⓘ) · изменено · мин. = «Выкл» · недоступно">{stack([<R id="3.2.2" wide={wide} />, <R id="3.2.4" wide={wide} changed val={45} />, <R id="3.2.4" wide={wide} val={0} />, <R it={dis("2.2")} wide={wide} />])}</Cell>
+          <Cell cap="Дробное · длинное название (2 строки, обрезка)">{stack([<R id="2.3" wide={wide} />, <R it={long} wide={wide} changed val={45} />])}</Cell>
+          <Cell cap="Текст: обычный · изменён · длинное значение (обрезка)">{stack([<R id="1.1" wide={wide} />, <R id="1.1" wide={wide} changed val="Лада Веста" />, <R id="1.7" wide={wide} />])}</Cell>
+          <Cell cap="Время · изменено · фокус (desktop)">{stack([<R id="2.5" wide={wide} />, <R id="2.5" wide={wide} changed val="06:45" />, <R id="2.5" wide={wide} focus />])}</Cell>
+        </div>
+        <h2>8 · Расписание · 9 · Сирена · 10 · CAN-код</h2>
+        <div className="grid">
+          <Cell cap="Расписание автозапуска: Пн · Вт · изменено">{stack([<R id="2.4.1" wide={wide} />, <R id="2.4.2" wide={wide} />, <R id="2.4.3" wide={wide} changed val={{ am: true, amT: "08:00", pm: true, pmT: "19:30" }} />])}</Cell>
+          <Cell cap="Сирена: тон · мелодия · изменено">{stack([<R id="3.3.1" wide={wide} />, <R id="3.3.3" wide={wide} />, <R id="3.3.4" wide={wide} changed val={{ type: "Мелодия", num: 7 }} />])}</Cell>
+          <Cell cap="CAN-код: с автомобилем · без автомобиля · изменён">{stack([<R id="6.1" wide={wide} />, <R id="6.1" wide={wide} val="0000" />, <R id="6.1" wide={wide} changed val="7001" />])}</Cell>
+        </div>
+        <h2>11–13 · Вход · Выход · Переключаемый выход</h2>
+        <div className="grid">
+          <Cell cap="Вход: двухцветный провод · два провода, один без цвета · длинное имя">{stack([<R id="4.1" wide={wide} />, <R id="4.2" wide={wide} changed val={{ type: 1, logics: I["4.2"].n.v.logics }} />, <R id="4.3" wide={wide} />])}</Cell>
+          <Cell cap="Выход: полярность меняется (−) · изменён (+) · нередактируемая">{stack([<R id="5.1" wide={wide} />, <R id="5.1" wide={wide} changed val={{ ...I["5.1"].n.v, pol: 0 }} />, <R id="5.2" wide={wide} />])}</Cell>
+          <Cell cap="Переключаемый выход: вкл · изменён (выкл) · недоступен">{stack([<R id="5.3" wide={wide} />, <R id="5.3" wide={wide} changed val={{ ...I["5.3"].n.v, on: false }} />, <R it={dis("5.3")} wide={wide} />])}</Cell>
+        </div>
+        <h2>Новые компоненты кита</h2>
+        <div className="grid">
+          <Cell cap="Сегментированные кнопки (48 dp)"><div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}><D.Segmented opts={["Имп", "Пост", "Выкл"]} value={1} onChange={noop} /><D.Segmented opts={["НО", "НЗ"]} value={0} onChange={noop} /><D.Segmented opts={["+", "−"]} value={1} onChange={noop} /><D.Segmented opts={["Тон", "Мелодия"]} value={0} onChange={noop} disabled /></div></Cell>
+          <Cell cap="Метка провода · полярность · счётчик изменений"><div style={{ padding: 16, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}><D.WireTag c={["#E0B400", "#1B1B1B"]} pin={5} /><D.WireTag c={["#D32F2F"]} pin={12} /><D.WireTag c={[]} pin={13} /><D.Pol p="+" /><D.Pol p="−" /><D.CountPill n={3} /><D.Dot /></div></Cell>
+          <Cell cap="Хлебные крошки (длинный путь сворачивается)"><div><D.Breadcrumbs cur="3.2" edits={{ "3.2.2": 7 }} onGo={noop} /><D.Breadcrumbs cur="3.2.5" edits={{ "3.2.5.1": true }} onGo={noop} /></div></Cell>
+          <Cell cap="Дерево разделов (280 dp): выбран 3.2, изменения ●"><div style={{ display: "flex", height: 360 }}><TreeDemo /></div></Cell>
+        </div>
+      </div>
+    );
+  }
+  function TreeDemo() {
+    const [sel, setSel] = React.useState("3.2"); const [exp, setExp] = React.useState(["3", "3.2"]);
+    return <D.Tree sel={sel} exp={exp} toggle={(id) => setExp((e) => e.includes(id) ? e.filter((x) => x !== id) : [...e, id])} select={setSel} edits={{ "3.2.2": 7, "3.2.5.1": true, "3.2.5.2": 6 }} width={280} />;
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

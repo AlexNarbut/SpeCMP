@@ -385,13 +385,13 @@ function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, n
   else if (phase === "confirm") content = <React.Fragment>
     <CmpText variant="headlineSmall" style={{ textAlign: "center" }}>{L("Подтвердите версию")}</CmpText>
     {verBlock(P.ver, nextVer || P.next)}
-    <div style={{ padding: 14, borderRadius: 14, background: "var(--surface-container-high)", textAlign: "left" }}>
+    <div style={{ padding: 14, borderRadius: 14, background: "var(--surface-container-high)", textAlign: "left", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("Что нового")}</CmpText>
-      <div style={{ whiteSpace: "pre-line", marginTop: 4 }}><CmpText variant="bodyMedium">{L(FW_NOTES)}</CmpText></div>
+      <div style={{ whiteSpace: "pre-line", marginTop: 4, maxHeight: "min(220px, 30vh)", overflowY: "auto" }} tabIndex={0}><CmpText variant="bodyMedium">{L(FW_NOTES)}</CmpText></div>
     </div>
     {downgrade && <Banner icon="warning">{L("Выбрана версия старее установленной")}</Banner>}
     {warnVer}
-    <div style={{ display: "flex", gap: 12, width: "100%" }}>
+    <div style={{ display: "flex", gap: 12, width: "100%", position: "sticky", bottom: 0, padding: "12px 0 4px", background: "var(--background)", zIndex: 2 }}>
       <CmpButton text={L("Обновить")} style={{ height: 52, flex: 1 }} onClick={() => { setLive(true); setPct(0); setPhase("prepare"); }} />
       <CmpOutlinedButton text={L("Отмена")} style={{ height: 52, flex: 1 }} onClick={() => setPhase("source")} />
     </div></React.Fragment>;
@@ -478,7 +478,7 @@ function VerBadge({ kind }) {
 function VerRow({ it, kind, wide, sel, onSelect, onPick, i }) {
   const [open, setOpen] = React.useState(false);
   const has = !!it.desc;
-  const clamp = open ? {} : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" };
+  const clamp = open ? { maxHeight: 200, overflowY: "auto" } : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" };
   return (
     <div className="fw-anim" onClick={wide ? onSelect : undefined} role={wide ? "button" : undefined} tabIndex={wide ? 0 : undefined}
       style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 40}ms`, boxSizing: "border-box", borderRadius: 18, padding: 16, cursor: wide ? "pointer" : "default", display: "flex", flexDirection: "column", gap: 10, minWidth: 0,
@@ -532,7 +532,7 @@ function FwArchive({ layout, scenario, channel, dialog0, onBack, onPick }) {
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, color: "var(--on-surface-variant)" }}>{sel.d}</span>
             </div>
             <div><CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("Полное описание")}</CmpText>
-              <div style={{ whiteSpace: "pre-line", marginTop: 6 }}><CmpText variant="bodyLarge">{sel.desc ? L(sel.desc) : L("Описание отсутствует")}</CmpText></div></div>
+              <div style={{ whiteSpace: "pre-line", marginTop: 6, maxHeight: 300, overflowY: "auto" }} tabIndex={0}><CmpText variant="bodyLarge">{sel.desc ? L(sel.desc) : L("Описание отсутствует")}</CmpText></div></div>
             {kindOf(selI) === "older" && <Banner icon="warning">{L("Выбранная версия старее установленной")} <Ver v={FW_INSTALLED} color="currentColor" size={14} /></Banner>}
             {kindOf(selI) === "installed" && <Banner icon="info" tone="ok">{L("Эта версия уже установлена. Можно переустановить")}</Banner>}
             <CmpButton text={kindOf(selI) === "installed" ? L("Переустановить") : L("Установить")} icon="system_update" style={{ height: 52, alignSelf: "flex-start", minWidth: 240 }} onClick={() => pick(sel, selI)} />
