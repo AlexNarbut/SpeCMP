@@ -79,6 +79,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.ThumbUp
@@ -210,6 +211,8 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.AlertCircle -> Icons.Filled.Error
 
     CmpIcons.Lock -> Icons.Filled.Lock
+
+    CmpIcons.SwapHoriz -> Icons.Filled.SwapHoriz
 
     CmpIcons.Visibility -> Icons.Filled.Visibility
 

@@ -77,6 +77,7 @@ enum class CmpIcons {
     AlertTriangle,
     AlertCircle,
     Lock,
+    SwapHoriz,
     Visibility,
     VisibilityOff,
     WifiOff,

@@ -1,0 +1,286 @@
+package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
+
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
+import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
+import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
+
+private const val SEARCH_DEBOUNCE_MILLIS = 150L
+
+/**
+ * Сессия редактора настроек для [source] (одна на граф настроек).
+ *
+ * - Меню читается при открытии; для блока — на каждое (пере)подключение, с `reload`: незаписанные правки при обрыве
+ *   связи теряются, после переподключения настройки перечитываются из блока.
+ * - Правка ([onValueChange]) меняет значение в сессии SDK; изменённые — пересечение `unsavedIds` SDK с настройками,
+ *   чьё значение отличается от снимка «как было» ([baseline]): возврат исходного значения снимает подсветку.
+ * - Запись ([onWrite]) — `save`; после успеха снимок «как было» = текущее меню.
+ * - Сессия SDK закрывается в [onCleared] (в app-скоупе: `viewModelScope` к этому моменту отменён).
+ */
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+internal class DeviceSettingsViewModel(
+    private val source: SettingsSource,
+    private val repository: DeviceSettingsRepository,
+    private val preferences: DeviceSettingsPreferences,
+    deviceSession: DeviceSession,
+    private val appScope: CoroutineScope,
+    private val dispatchers: AppDispatchers
+) : BaseViewModel() {
+
+    private val deviceScope = DeviceScope(viewModelScope, deviceSession)
+    private val followsDevice = source.capabilities.followsDeviceConnection
+
+    private val _state = MutableStateFlow(DeviceSettingsState(treeWidthDp = preferences.treeWidthDp()))
+    val state: StateFlow<DeviceSettingsState> = _state.asStateFlow()
+
+    private val _effect = sideEffectFlow<DeviceSettingsEffect>()
+    val effect: SharedFlow<DeviceSettingsEffect> = _effect.asSharedFlow()
+
+    /** Значения «как было» (после чтения или записи) по id настройки. */
+    private val baseline = MutableStateFlow<Map<Int, SettingValue>>(emptyMap())
+
+    init {
+        if (followsDevice) {
+            deviceScope.onReady(::onDeviceReady)
+        } else {
+            safeLaunch { load() }
+        }
+        _state
+            .map { it.searchQuery to (it.menu as? SettingsMenu.Ready)?.root }
+            .distinctUntilChanged()
+            .debounce(SEARCH_DEBOUNCE_MILLIS)
+            .mapLatest { (query, root) -> root?.search(query).orEmpty() }
+            .flowOn(dispatchers.default)
+            .onEach { hits -> _state.update { it.copy(searchHits = hits) } }
+            .launchIn(viewModelScope)
+    }
+
+    private suspend fun onDeviceReady(device: AlarmDevice) {
+        _state.update {
+            it.copy(header = SettingsHeader(device.systemName, device.systemId, device.can?.code))
+        }
+        load()
+    }
+
+    private suspend fun load() = executeWithProceedLock(needSkipAnother = false) {
+        _state.update {
+            it.copy(
+                menu = SettingsMenu.Loading,
+                changedIds = emptySet(),
+                sectionChanges = emptyMap(),
+                editing = null,
+                dialog = null,
+                isWriting = false
+            )
+        }
+        when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
+            is Response.Error -> _state.update { it.copy(menu = SettingsMenu.Error) }
+
+            is Response.Success -> {
+                val root = response.value
+                baseline.update { root.valuesById() }
+                _state.update { it.copy(menu = SettingsMenu.Ready(root)) }
+                refreshChanged()
+            }
+        }
+    }
+
+    fun onRetry() {
+        work { load() }
+    }
+
+    /** Значение изменено прямо в строке (переключатель, сегменты) или применено из окна редактирования. */
+    fun onValueChange(settingId: Int, value: SettingValue) {
+        work { applyValue(settingId, value) }
+    }
+
+    private suspend fun applyValue(settingId: Int, value: SettingValue) = executeWithProceedLock(
+        needSkipAnother = false
+    ) {
+        when (val response = withContext(dispatchers.io) { repository.setValue(source, settingId, value) }) {
+            is Response.Error -> _effect.tryEmit(DeviceSettingsEffect.SetValueFailed)
+
+            is Response.Success -> {
+                _state.update { state ->
+                    val menu = state.menu as? SettingsMenu.Ready ?: return@update state
+                    state.copy(menu = SettingsMenu.Ready(menu.root.replace(response.value)))
+                }
+                refreshChanged()
+            }
+        }
+    }
+
+    fun onSettingClick(settingId: Int) {
+        val setting = currentRoot()?.findNode(settingId) as? Setting ?: return
+        if (!setting.opensEditor) return
+        val original = baseline.value[settingId] ?: setting.value
+        _state.update { it.copy(editing = EditingSetting(setting, original = original, draft = setting.value)) }
+    }
+
+    fun onDraftChange(draft: SettingValue) {
+        _state.update { state -> state.copy(editing = state.editing?.copy(draft = draft)) }
+    }
+
+    fun onEditReset() {
+        _state.update { state -> state.copy(editing = state.editing?.let { it.copy(draft = it.original) }) }
+    }
+
+    fun onEditApply() {
+        val editing = _state.value.editing ?: return
+        if (!editing.setting.accepts(editing.draft)) return
+        _state.update { it.copy(editing = null) }
+        if (editing.draft != editing.setting.value) onValueChange(editing.setting.id, editing.draft)
+    }
+
+    fun onEditDismiss() {
+        _state.update { it.copy(editing = null) }
+    }
+
+    fun onDescriptionClick(nodeId: Int) {
+        val node = currentRoot()?.findNode(nodeId) ?: return
+        _state.update { it.copy(dialog = SettingsDialog.Description(node)) }
+    }
+
+    fun onDialogDismiss() {
+        _state.update { it.copy(dialog = null) }
+    }
+
+    /** Ширина колонки дерева изменена перетаскиванием (по окончании) — запоминается для следующих входов. */
+    fun onTreeWidthChange(widthDp: Int) {
+        _state.update { it.copy(treeWidthDp = widthDp) }
+        preferences.setTreeWidthDp(widthDp)
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _state.update { it.copy(searchQuery = query) }
+    }
+
+    /** «Назад» с корня меню: с незаписанными изменениями — подтверждение, иначе выход. */
+    fun onExitRequest() {
+        if (_state.value.changedCount > 0) {
+            _state.update { it.copy(dialog = SettingsDialog.ExitConfirm) }
+        } else {
+            _effect.tryEmit(DeviceSettingsEffect.Exit)
+        }
+    }
+
+    fun onExitDiscard() {
+        _state.update { it.copy(dialog = null) }
+        _effect.tryEmit(DeviceSettingsEffect.Exit)
+    }
+
+    fun onWrite() {
+        work { write(thenExit = false) }
+    }
+
+    fun onExitWrite() {
+        work { write(thenExit = true) }
+    }
+
+    // Следом за правками в очереди (не пропуск): запись не должна теряться, пока применяется значение.
+    private suspend fun write(thenExit: Boolean) = executeWithProceedLock(needSkipAnother = false) {
+        val count = _state.value.changedCount
+        if (count == 0 && !thenExit) return@executeWithProceedLock
+        _state.update { it.copy(isWriting = true, dialog = null) }
+        val response = try {
+            withContext(dispatchers.io) { repository.save(source) }
+        } finally {
+            _state.update { it.copy(isWriting = false) }
+        }
+        when (response) {
+            is Response.Error -> _state.update { it.copy(dialog = SettingsDialog.WriteError) }
+
+            is Response.Success -> {
+                currentRoot()?.let { root -> baseline.update { root.valuesById() } }
+                refreshChanged()
+                _effect.tryEmit(DeviceSettingsEffect.Written(count))
+                if (thenExit) _effect.tryEmit(DeviceSettingsEffect.Exit)
+            }
+        }
+    }
+
+    /** Пересчитать изменённые настройки и счётчики разделов. */
+    private suspend fun refreshChanged() {
+        val root = currentRoot() ?: return
+        val unsaved = withContext(dispatchers.io) { repository.unsavedIds(source) }.getValueIfSuccess()
+        val changes = withContext(dispatchers.default) {
+            val before = baseline.value
+            val differing = root.settings().filter { it.value != before[it.id] }.mapTo(mutableSetOf()) { it.id }
+            val changed = if (unsaved == null) differing else differing.intersect(unsaved)
+            changed to root.sectionChanges(changed)
+        }
+        _state.update { it.copy(changedIds = changes.first, sectionChanges = changes.second) }
+    }
+
+    private fun currentRoot(): SettingsSection? = (_state.value.menu as? SettingsMenu.Ready)?.root
+
+    /** Работа с источником: для блока — только при связи (отменяется при обрыве), иначе — в скоупе VM. */
+    private fun work(block: suspend CoroutineScope.() -> Unit): Job? =
+        if (followsDevice) deviceScope.launch(block) else safeLaunch(block = block)
+
+    override fun onCleared() {
+        appScope.launch(dispatchers.io) { repository.close(source) }
+        super.onCleared()
+    }
+}
+
+/** Число изменённых настроек в каждом разделе дерева (на любой глубине); разделы без изменений не входят. */
+private fun SettingsSection.sectionChanges(changed: Set<Int>): Map<Int, Int> {
+    val result = mutableMapOf<Int, Int>()
+    fun count(section: SettingsSection): Int {
+        var total = 0
+        section.children.forEach { child ->
+            total += when (child) {
+                is SettingsSection -> count(child)
+                is Setting -> if (child.id in changed) 1 else 0
+            }
+        }
+        if (total > 0) result[section.id] = total
+        return total
+    }
+    count(this)
+    return result
+}
+
+/** Значения всех настроек меню по id — снимок «как было». */
+private fun SettingsSection.valuesById(): Map<Int, SettingValue> = settings().associate { setting ->
+    setting.id to
+        setting.value
+}

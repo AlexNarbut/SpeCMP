@@ -30,6 +30,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
@@ -123,7 +124,8 @@ private fun AuthedNavGraph() {
                     AdvancedMountNavGraph(
                         onExit = onExit,
                         onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
-                        firmwareCheck = { onBack -> FirmwareCheckScreen(onBack = onBack) }
+                        firmwareCheck = { onBack -> FirmwareCheckScreen(onBack = onBack) },
+                        settingsEditor = { onBack -> DeviceSettingsEntry(onExit = onBack) }
                     )
                 }
             }

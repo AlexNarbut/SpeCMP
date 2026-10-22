@@ -173,6 +173,7 @@ commonMain.dependencies {
 | Box | `layout/CmpBox.kt` |
 | Column | `layout/CmpColumn.kt` |
 | Row | `layout/CmpRow.kt` |
+| Строка с переносом (FlowRow) | `layout/CmpFlowRow.kt` |
 | Spacer | `layout/CmpSpacer.kt` |
 
 Галерея новых компонентов (PNG, светлая/тёмная тема, без окна): `./gradlew :core:ui:jvmTest --tests '*KitGallery*'` →
