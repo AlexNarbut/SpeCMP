@@ -23,6 +23,10 @@ internal data class DeviceSettingsState(
     val dialog: SettingsDialog? = null,
     /** Идёт запись в устройство — блокирующий прогресс. */
     val isWriting: Boolean = false,
+    /** Идёт сброс блока к заводским настройкам — блокирующий прогресс. */
+    val isResetting: Boolean = false,
+    /** Источник поддерживает сброс к заводским (пункт меню «⋯»). */
+    val canResetToFactory: Boolean = false,
     /** Ширина колонки дерева, заданная пользователем (dp); `null` — по умолчанию раскладки. */
     val treeWidthDp: Int? = null,
     /** Автомобили по id (подпись к CAN-коду в строке и в окне). */
@@ -64,11 +68,14 @@ internal sealed interface SettingsDialog {
     data class Description(val node: SettingNode) : SettingsDialog
     data object ExitConfirm : SettingsDialog
     data object WriteError : SettingsDialog
+    data object ResetConfirm : SettingsDialog
+    data object ResetError : SettingsDialog
 }
 
 /** One-shot события экрана. */
 internal sealed interface DeviceSettingsEffect {
     data class Written(val count: Int) : DeviceSettingsEffect
     data object SetValueFailed : DeviceSettingsEffect
+    data object ResetDone : DeviceSettingsEffect
     data object Exit : DeviceSettingsEffect
 }

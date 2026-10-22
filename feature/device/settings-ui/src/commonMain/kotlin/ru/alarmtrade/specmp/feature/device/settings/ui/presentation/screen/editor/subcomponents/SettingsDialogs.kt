@@ -26,6 +26,14 @@ import specmp.feature.device.settings_ui.generated.resources.settings_exit_btn_d
 import specmp.feature.device.settings_ui.generated.resources.settings_exit_btn_write
 import specmp.feature.device.settings_ui.generated.resources.settings_exit_msg
 import specmp.feature.device.settings_ui.generated.resources.settings_exit_title
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_btn_confirm
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_confirm
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_confirm_changes
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_error
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_progress
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_title_confirm
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_title_error
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_title_progress
 import specmp.feature.device.settings_ui.generated.resources.settings_write_msg_error
 import specmp.feature.device.settings_ui.generated.resources.settings_write_msg_progress
 import specmp.feature.device.settings_ui.generated.resources.settings_write_title_error
@@ -93,6 +101,63 @@ internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -
         onDismissRequest = onDismiss,
         title = { CmpText(text = stringResource(Res.string.settings_write_title_error)) },
         text = { CmpText(text = stringResource(Res.string.settings_write_msg_error, changed)) },
+        confirmButton = { CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = onRetry) },
+        dismissButton = {
+            CmpTextButton(text = stringResource(Res.string.settings_common_btn_close), onClick = onDismiss)
+        }
+    )
+}
+
+/** Подтверждение сброса блока к заводским: незаписанные изменения пропадут, отменить нельзя. */
+@Composable
+internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    CmpDialog(
+        onDismissRequest = onDismiss,
+        title = { CmpText(text = stringResource(Res.string.settings_reset_title_confirm)) },
+        text = {
+            CmpText(
+                text = if (changed > 0) {
+                    stringResource(Res.string.settings_reset_msg_confirm_changes, changed)
+                } else {
+                    stringResource(Res.string.settings_reset_msg_confirm)
+                }
+            )
+        },
+        confirmButton = {
+            CmpButton(
+                text = stringResource(Res.string.settings_reset_btn_confirm),
+                onClick = onConfirm,
+                modifier = Modifier.testTag(SettingsTestTags.RESET_CONFIRM)
+            )
+        },
+        dismissButton = {
+            CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+        }
+    )
+}
+
+/** Блокирующий прогресс сброса (SDK не отдаёт процентов). */
+@Composable
+internal fun ResetProgressDialog() {
+    CmpDialog(
+        onDismissRequest = {},
+        title = { CmpText(text = stringResource(Res.string.settings_reset_title_progress)) },
+        text = {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                CmpText(text = stringResource(Res.string.settings_reset_msg_progress))
+            }
+        },
+        confirmButton = {}
+    )
+}
+
+@Composable
+internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
+    CmpDialog(
+        onDismissRequest = onDismiss,
+        title = { CmpText(text = stringResource(Res.string.settings_reset_title_error)) },
+        text = { CmpText(text = stringResource(Res.string.settings_reset_msg_error)) },
         confirmButton = { CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = onRetry) },
         dismissButton = {
             CmpTextButton(text = stringResource(Res.string.settings_common_btn_close), onClick = onDismiss)

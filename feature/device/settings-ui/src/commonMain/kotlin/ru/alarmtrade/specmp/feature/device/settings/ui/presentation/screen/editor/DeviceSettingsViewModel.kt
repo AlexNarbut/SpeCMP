@@ -72,7 +72,12 @@ internal class DeviceSettingsViewModel(
     private val deviceScope = DeviceScope(viewModelScope, deviceSession)
     private val followsDevice = source.capabilities.followsDeviceConnection
 
-    private val _state = MutableStateFlow(DeviceSettingsState(treeWidthDp = preferences.treeWidthDp()))
+    private val _state = MutableStateFlow(
+        DeviceSettingsState(
+            treeWidthDp = preferences.treeWidthDp(),
+            canResetToFactory = source.capabilities.canResetToFactory
+        )
+    )
     val state: StateFlow<DeviceSettingsState> = _state.asStateFlow()
 
     private val _effect = sideEffectFlow<DeviceSettingsEffect>()
@@ -112,7 +117,8 @@ internal class DeviceSettingsViewModel(
                 sectionChanges = emptyMap(),
                 editing = null,
                 dialog = null,
-                isWriting = false
+                isWriting = false,
+                isResetting = false
             )
         }
         when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
@@ -290,6 +296,37 @@ internal class DeviceSettingsViewModel(
                 _effect.tryEmit(DeviceSettingsEffect.Written(count))
                 if (thenExit) _effect.tryEmit(DeviceSettingsEffect.Exit)
             }
+        }
+    }
+
+    /** Меню «⋯» → «Сбросить к заводским»: сначала подтверждение. */
+    fun onResetRequest() {
+        if (!_state.value.canResetToFactory) return
+        _state.update { it.copy(dialog = SettingsDialog.ResetConfirm) }
+    }
+
+    /** Подтверждён сброс (или «Повторить» после ошибки): после успеха меню перечитывается из блока. */
+    fun onResetConfirm() {
+        work { reset() }
+    }
+
+    private suspend fun reset() {
+        var done = false
+        executeWithProceedLock(needSkipAnother = false) {
+            _state.update { it.copy(isResetting = true, dialog = null) }
+            val response = try {
+                withContext(dispatchers.io) { repository.resetDeviceToFactory() }
+            } finally {
+                _state.update { it.copy(isResetting = false) }
+            }
+            when (response) {
+                is Response.Error -> _state.update { it.copy(dialog = SettingsDialog.ResetError) }
+                is Response.Success -> done = true
+            }
+        }
+        if (done) {
+            load()
+            _effect.tryEmit(DeviceSettingsEffect.ResetDone)
         }
     }
 

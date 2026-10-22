@@ -95,4 +95,18 @@
     <string name="settings_can_msg_none">No vehicle found for code %1$s. The code can still be applied.</string>
     <string name="settings_can_msg_error">Couldn\'t reach the server to find the vehicle. The code can be applied without it.</string>
     <string name="settings_can_car">%1$s, %2$d–%3$d</string>
+    <string name="settings_common_a11y_more">More</string>
+    <string name="settings_menu_reset">Reset to factory settings</string>
+    <string name="settings_menu_open_from">Open from…</string>
+    <string name="settings_menu_save_to">Save to…</string>
+    <string name="settings_menu_defaults">Factory settings of the model</string>
+    <string name="settings_reset_title_confirm">Reset to factory settings?</string>
+    <string name="settings_reset_msg_confirm">All device settings will be replaced with factory ones. This cannot be undone.</string>
+    <string name="settings_reset_msg_confirm_changes">All device settings will be replaced with factory ones, unsaved changes (%1$d) will be lost. This cannot be undone.</string>
+    <string name="settings_reset_btn_confirm">Reset</string>
+    <string name="settings_reset_title_progress">Resetting settings…</string>
+    <string name="settings_reset_msg_progress">The device is returning to factory settings. Do not turn off the power.</string>
+    <string name="settings_reset_title_error">Failed to reset</string>
+    <string name="settings_reset_msg_error">No response from the device. Check the connection and the unit\'s power.</string>
+    <string name="settings_reset_msg_done">The device has been reset to factory settings</string>
 </resources>

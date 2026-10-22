@@ -92,4 +92,18 @@
     <string name="settings_can_msg_none">Для кода %1$s автомобиль не найден. Код всё равно можно применить.</string>
     <string name="settings_can_msg_error">Не удалось связаться с сервером для поиска автомобиля. Код можно применить без него.</string>
     <string name="settings_can_car">%1$s, %2$d–%3$d</string>
+    <string name="settings_common_a11y_more">Ещё</string>
+    <string name="settings_menu_reset">Сбросить к заводским настройкам</string>
+    <string name="settings_menu_open_from">Открыть из…</string>
+    <string name="settings_menu_save_to">Сохранить в…</string>
+    <string name="settings_menu_defaults">Заводские настройки модели</string>
+    <string name="settings_reset_title_confirm">Сбросить к заводским настройкам?</string>
+    <string name="settings_reset_msg_confirm">Все настройки устройства будут заменены заводскими. Отменить это действие нельзя.</string>
+    <string name="settings_reset_msg_confirm_changes">Все настройки устройства будут заменены заводскими, незаписанные изменения (%1$d) пропадут. Отменить это действие нельзя.</string>
+    <string name="settings_reset_btn_confirm">Сбросить</string>
+    <string name="settings_reset_title_progress">Сбрасываем настройки…</string>
+    <string name="settings_reset_msg_progress">Устройство возвращается к заводским настройкам. Не отключайте питание.</string>
+    <string name="settings_reset_title_error">Не удалось сбросить настройки</string>
+    <string name="settings_reset_msg_error">Нет ответа от устройства. Проверьте связь и питание блока.</string>
+    <string name="settings_reset_msg_done">Устройство сброшено к заводским настройкам</string>
 </resources>

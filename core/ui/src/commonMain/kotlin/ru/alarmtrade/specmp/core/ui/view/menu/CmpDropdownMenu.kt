@@ -49,3 +49,21 @@ fun CmpDropdownMenuItem(text: String, onClick: () -> Unit, selected: Boolean, mo
         }
     )
 }
+
+/** Пункт меню действия ≥ 48 dp: иконка слева (необязательна), неактивный пункт — приглушён и не нажимается. */
+@Composable
+fun CmpDropdownMenuItem(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: CmpIcons? = null,
+    enabled: Boolean = true
+) {
+    DropdownMenuItem(
+        text = { CmpText(text = text) },
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(minHeight = MenuItemMinHeight),
+        enabled = enabled,
+        leadingIcon = icon?.let { { CmpIcon(icon = it, contentDescription = null) } }
+    )
+}

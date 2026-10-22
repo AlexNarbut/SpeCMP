@@ -400,6 +400,42 @@ class DeviceSettingsViewModelTest {
     }
 
     @Test
+    fun `factory reset asks for confirmation, resets the unit and reads the menu again`() = test {
+        val vm = viewModel()
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        vm.onValueChange(11, SettingValue.Switch(true))
+        settle()
+
+        vm.onResetRequest()
+        assertEquals(SettingsDialog.ResetConfirm, vm.state.value.dialog)
+        assertEquals(0, repository.resetCalls)
+
+        vm.onResetConfirm()
+        settle()
+
+        assertEquals(1, repository.resetCalls)
+        assertEquals(false, vm.state.value.isResetting)
+        assertEquals(tree, vm.root())
+        assertTrue(vm.state.value.changedIds.isEmpty())
+        assertTrue(DeviceSettingsEffect.ResetDone in effects)
+    }
+
+    @Test
+    fun `failed factory reset shows the error and keeps the menu`() = test {
+        val vm = viewModel()
+        repository.resetResult = Response.Error(IllegalStateException("timeout"))
+
+        vm.onResetRequest()
+        vm.onResetConfirm()
+        settle()
+
+        assertEquals(SettingsDialog.ResetError, vm.state.value.dialog)
+        assertEquals(false, vm.state.value.isResetting)
+        assertEquals(tree, vm.root())
+    }
+
+    @Test
     fun `search finds settings by number`() = test {
         val vm = viewModel()
         vm.onSearchQueryChange("3.2.4")
@@ -469,7 +505,14 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     override suspend fun copy(from: SettingsSource, to: SettingsSource, saveChanges: Boolean) =
         Response.Error(IllegalStateException("not used"))
 
-    override suspend fun resetDeviceToFactory(): Response<Unit> = Response.Success(Unit)
+    var resetResult: Response<Unit> = Response.Success(Unit)
+    var resetCalls = 0
+
+    override suspend fun resetDeviceToFactory(): Response<Unit> {
+        resetCalls++
+        if (resetResult is Response.Success) reset()
+        return resetResult
+    }
 }
 
 private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {

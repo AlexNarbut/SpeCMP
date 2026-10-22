@@ -43,7 +43,10 @@ import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenu
+import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumb
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumbs
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -62,11 +65,15 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ExitDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.MenuError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.MenuLoading
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetConfirmDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetErrorDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetProgressDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionTree
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteProgressDialog
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_back
+import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_more
 import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_search
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_btn_write
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_crumb_all
@@ -74,6 +81,10 @@ import specmp.feature.device.settings_ui.generated.resources.settings_editor_lab
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_device
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_single_can
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_title_screen
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_defaults
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_open_from
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_reset
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_to
 
 /** Где пользователь в меню: путь разделов от корня (пусто — корень) или поиск. */
 @Immutable
@@ -95,6 +106,8 @@ internal class DeviceSettingsActions(
     val onExitWrite: () -> Unit,
     val onExitDiscard: () -> Unit,
     val onDialogDismiss: () -> Unit,
+    val onResetRequest: () -> Unit,
+    val onResetConfirm: () -> Unit,
     val editor: EditorActions
 )
 
@@ -205,9 +218,11 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
         title = { CmpText(text = stringResource(Res.string.settings_editor_title_screen)) },
         subtitle = header?.let { device ->
             {
-                CmpRow(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // С переносом: на узкой шапке бейдж единой CAN уходит на вторую строку, а не обрезается.
+                CmpFlowRow(
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     CmpText(
                         text = stringResource(
@@ -236,9 +251,55 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
                     icon = CmpIcons.Search,
                     contentDescription = stringResource(Res.string.settings_common_a11y_search)
                 )
+                MoreMenu(state, actions)
             }
         }
     )
+}
+
+/** Меню «⋯»: сброс к заводским (если источник умеет), конфигурации — пока неактивны (второй этап). */
+@Composable
+private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions) {
+    var expanded by remember { mutableStateOf(false) }
+    CmpBox {
+        CmpIconButton(
+            onClick = { expanded = true },
+            icon = CmpIcons.MoreVert,
+            contentDescription = stringResource(Res.string.settings_common_a11y_more),
+            modifier = Modifier.testTag(SettingsTestTags.MENU)
+        )
+        CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            if (state.canResetToFactory) {
+                CmpDropdownMenuItem(
+                    text = stringResource(Res.string.settings_menu_reset),
+                    icon = CmpIcons.Refresh,
+                    onClick = {
+                        expanded = false
+                        actions.onResetRequest()
+                    },
+                    modifier = Modifier.testTag(SettingsTestTags.MENU_RESET)
+                )
+            }
+            CmpDropdownMenuItem(
+                text = stringResource(Res.string.settings_menu_open_from),
+                icon = CmpIcons.FolderOpen,
+                onClick = {},
+                enabled = false
+            )
+            CmpDropdownMenuItem(
+                text = stringResource(Res.string.settings_menu_save_to),
+                icon = CmpIcons.Download,
+                onClick = {},
+                enabled = false
+            )
+            CmpDropdownMenuItem(
+                text = stringResource(Res.string.settings_menu_defaults),
+                icon = CmpIcons.Inventory2,
+                onClick = {},
+                enabled = false
+            )
+        }
+    }
 }
 
 @Composable
@@ -318,6 +379,17 @@ private fun Dialogs(state: DeviceSettingsState, actions: DeviceSettingsActions) 
             onDismiss = actions.onDialogDismiss
         )
 
+        SettingsDialog.ResetConfirm -> ResetConfirmDialog(
+            changed = state.changedCount,
+            onConfirm = actions.onResetConfirm,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        SettingsDialog.ResetError -> ResetErrorDialog(
+            onRetry = actions.onResetConfirm,
+            onDismiss = actions.onDialogDismiss
+        )
+
         SettingsDialog.WriteError -> WriteErrorDialog(
             changed = state.changedCount,
             onRetry = actions.onWrite,
@@ -327,6 +399,7 @@ private fun Dialogs(state: DeviceSettingsState, actions: DeviceSettingsActions) 
         null -> Unit
     }
     if (state.isWriting) WriteProgressDialog()
+    if (state.isResetting) ResetProgressDialog()
 }
 
 /** Ширина дерева: от 180 dp до 480 dp, но не больше половины окна. */

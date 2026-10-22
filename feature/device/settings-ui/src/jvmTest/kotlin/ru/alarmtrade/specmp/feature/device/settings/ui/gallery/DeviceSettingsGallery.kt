@@ -231,7 +231,7 @@ class DeviceSettingsGallery {
     private val noActions = DeviceSettingsActions(
         onBack = {}, onSearch = {}, onNavigateTo = {}, onRetry = {},
         onTreeWidthChange = {}, onWrite = {}, onExitWrite = {}, onExitDiscard = {},
-        onDialogDismiss = {}, editor = EditorActions({}, {}, {}, {}, {}, {})
+        onDialogDismiss = {}, onResetRequest = {}, onResetConfirm = {}, editor = EditorActions({}, {}, {}, {}, {}, {})
     )
 
     private fun render(name: String, state: DeviceSettingsState, path: List<Int>, search: Boolean = false) =
@@ -308,6 +308,12 @@ class DeviceSettingsGallery {
         base.copy(editing = editing(803).copy(carSearch = CarSearch.Found(emptyList()))),
         listOf(800)
     )
+
+    @Test
+    fun resetConfirm() = render("27_reset_confirm", base.copy(dialog = SettingsDialog.ResetConfirm), listOf(300, 320))
+
+    @Test
+    fun resetting() = render("28_resetting", base.copy(isResetting = true), listOf(300, 320))
 
     @Test
     fun emptySection() = render("07_empty", base, listOf(700))

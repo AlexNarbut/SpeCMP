@@ -42,6 +42,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_error_set_value
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_written
+import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_done
 
 /** Раздел меню; `null` — корень. */
 @Serializable
@@ -85,6 +86,10 @@ fun DeviceSettingsEntry(onExit: () -> Unit) {
                 getString(Res.string.settings_editor_error_set_value)
             )
 
+            DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(
+                getString(Res.string.settings_reset_msg_done)
+            )
+
             DeviceSettingsEffect.Exit -> onExit()
         }
     }
@@ -114,6 +119,8 @@ fun DeviceSettingsEntry(onExit: () -> Unit) {
             onExitWrite = viewModel::onExitWrite,
             onExitDiscard = viewModel::onExitDiscard,
             onDialogDismiss = viewModel::onDialogDismiss,
+            onResetRequest = viewModel::onResetRequest,
+            onResetConfirm = viewModel::onResetConfirm,
             editor = EditorActions(
                 onDraftChange = viewModel::onDraftChange,
                 onReset = viewModel::onEditReset,
