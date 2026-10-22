@@ -86,6 +86,11 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
+        // Галерея компонентов кита (PNG без окна) — см. KitGalleryTest
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs)
+        }
     }
 }
 

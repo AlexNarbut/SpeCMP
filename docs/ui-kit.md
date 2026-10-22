@@ -137,6 +137,7 @@ commonMain.dependencies {
 | Кнопка (outlined) | `button/CmpOutlinedButton.kt` |
 | Кнопка (text) | `button/CmpTextButton.kt` |
 | Кнопка с иконкой | `button/CmpIconButton.kt` |
+| Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
 | Текстовое поле | `input/CmpTextField.kt` |
 | Выпадающий список (поле) | `input/CmpDropdown.kt` |
@@ -144,6 +145,7 @@ commonMain.dependencies {
 | Switch | `input/CmpSwitch.kt` |
 | Checkbox | `input/CmpCheckbox.kt` |
 | Radio button | `input/CmpRadioButton.kt` |
+| Сегменты (выбор из 2–3 коротких вариантов) | `input/CmpSegmentedButton.kt` |
 | Slider | `input/CmpSlider.kt` |
 | Круговой прогресс | `progress/CmpCircularProgressIndicator.kt` |
 | Линейный прогресс | `progress/CmpLinearProgressIndicator.kt` |
@@ -154,6 +156,7 @@ commonMain.dependencies {
 | Top bar | `navigation/CmpTopAppBar.kt` |
 | Нижняя навигация | `navigation/CmpNavigationBar.kt` |
 | Вкладки | `navigation/CmpTab.kt` |
+| Хлебные крошки (путь, свёртка начала в «…») | `navigation/CmpBreadcrumbs.kt` |
 | Иконка | `icon/CmpIcon.kt` |
 | Каталог иконок (enum) | `icon/CmpIcons.kt` |
 | Резолвер иконок (@Composable) | `icon/CmpIconsResolver.kt` |
@@ -164,12 +167,17 @@ commonMain.dependencies {
 | Полноэкранный диалог | `dialog/CmpFullScreenDialog.kt` |
 | Snackbar | `dialog/CmpSnackbar.kt` |
 | Badge | `badge/CmpBadge.kt` |
+| Счётчик-«таблетка» и точка-маркер «есть изменения» | `badge/CmpCountPill.kt` (`CmpCountPill`, `CmpDot`) |
 | Разделитель | `divider/CmpDivider.kt` |
 | Текст | `text/CmpText.kt` |
 | Box | `layout/CmpBox.kt` |
 | Column | `layout/CmpColumn.kt` |
 | Row | `layout/CmpRow.kt` |
+| Строка с переносом (FlowRow) | `layout/CmpFlowRow.kt` |
 | Spacer | `layout/CmpSpacer.kt` |
+
+Галерея новых компонентов (PNG, светлая/тёмная тема, без окна): `./gradlew :core:ui:jvmTest --tests '*KitGallery*'` →
+`core/ui/build/kit-gallery/`. Добавляя компонент, дополняй `KitGalleryTest` и смотри результат глазами.
 
 ## Исключения из «только Cmp*»
 
@@ -181,7 +189,7 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 ## Типографика
 
-`CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`Body`/`Caption`) с
+`CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`BodyLarge`/`Body`/`Caption` → `titleLarge`/`bodyLarge` 16 sp/`bodyMedium` 14 sp/`bodySmall` 12 sp) с
 маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
 в фичах числами не задаются. Параметр `fontSize` остаётся для исключений.
 

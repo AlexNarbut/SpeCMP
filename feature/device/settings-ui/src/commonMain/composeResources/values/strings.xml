@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_common_a11y_back">Back</string>
+    <string name="settings_common_a11y_search">Search</string>
+    <string name="settings_common_a11y_description">Description</string>
+    <string name="settings_common_btn_retry">Retry</string>
+    <string name="settings_common_btn_cancel">Cancel</string>
+    <string name="settings_common_btn_close">Close</string>
+    <string name="settings_common_btn_ok">Got it</string>
+    <string name="settings_common_decimal_separator">.</string>
+
+    <string name="settings_editor_title_screen">Settings</string>
+    <string name="settings_editor_label_device">%1$s · %2$s</string>
+    <string name="settings_editor_label_single_can">Single CAN %1$s</string>
+    <string name="settings_editor_crumb_all">All</string>
+    <string name="settings_editor_loading_read">Reading settings from the device…</string>
+    <string name="settings_editor_hint_read">Over Bluetooth this may take up to a minute</string>
+    <string name="settings_editor_error_read_title">Failed to read settings</string>
+    <string name="settings_editor_error_read_text">The device did not respond. Check the connection and the unit\'s power.</string>
+    <string name="settings_editor_msg_empty_section">This section has no settings</string>
+    <string name="settings_editor_msg_empty_section_hint">The device sent no items for this section.</string>
+    <string name="settings_editor_label_changed">Changed: %1$d</string>
+    <string name="settings_editor_btn_write">Write</string>
+    <string name="settings_editor_msg_written">Changes written: %1$d</string>
+    <string name="settings_editor_error_set_value">Couldn\'t change the setting. Try again.</string>
+
+    <string name="settings_edit_label_was">Was: %1$s</string>
+    <string name="settings_edit_btn_reset">Reset</string>
+    <string name="settings_edit_btn_done">Done</string>
+    <string name="settings_edit_a11y_less">Decrease</string>
+    <string name="settings_edit_a11y_more">Increase</string>
+    <string name="settings_edit_a11y_type_value">Enter value</string>
+    <string name="settings_edit_a11y_hours_up">Hours up</string>
+    <string name="settings_edit_a11y_hours_down">Hours down</string>
+    <string name="settings_edit_a11y_minutes_up">Minutes up</string>
+    <string name="settings_edit_a11y_minutes_down">Minutes down</string>
+    <string name="settings_edit_a11y_expand_description">Show description</string>
+    <string name="settings_edit_a11y_collapse_description">Hide description</string>
+    <string name="settings_edit_label_value">Value</string>
+    <string name="settings_edit_error_range">Allowed from %1$s to %2$s</string>
+    <string name="settings_edit_error_invalid">Invalid value</string>
+    <string name="settings_edit_label_counter">%1$d/%2$d</string>
+
+    <string name="settings_write_title_progress">Writing changes…</string>
+    <string name="settings_write_msg_progress">Do not turn off the power or close the app.</string>
+    <string name="settings_write_title_error">Failed to write</string>
+    <string name="settings_write_msg_error">No response from the device. Check the connection and the unit\'s power. Changes (%1$d) are kept, you can write them again.</string>
+
+    <string name="settings_exit_title">Unsaved changes (%1$d)</string>
+    <string name="settings_exit_msg">The changes have not been written to the device yet. If you leave without writing, they will be lost.</string>
+    <string name="settings_exit_btn_write">Write and leave</string>
+    <string name="settings_exit_btn_discard">Leave without writing</string>
+
+    <string name="settings_search_placeholder">Name or number</string>
+    <string name="settings_search_a11y_clear">Clear</string>
+    <string name="settings_search_msg_prompt">Enter a setting name or number</string>
+    <string name="settings_search_msg_empty">Nothing found for “%1$s”</string>
+    <string name="settings_search_msg_empty_hint">Check the spelling or enter a setting number, for example 3.2.4.</string>
+
+    <string name="settings_value_on">On</string>
+    <string name="settings_value_off">Off</string>
+    <string name="settings_value_empty">—</string>
+    <string name="settings_value_schedule">Morning %1$s · Evening %2$s</string>
+    <string name="settings_value_siren_tone">Tone %1$d</string>
+    <string name="settings_value_siren_melody">Melody %1$d</string>
+    <!-- Тип контакта входа: на всех языках латиницей (как на схемах и в инструкциях). -->
+    <string name="settings_value_contact_no" translatable="false">NO</string>
+    <string name="settings_value_contact_nc" translatable="false">NC</string>
+    <string name="settings_value_polarity_plus">PLUS</string>
+    <string name="settings_value_polarity_minus">MINUS</string>
+    <string name="settings_value_functions">functions: %1$d</string>
+    <string name="settings_value_not_assigned">Not assigned</string>
+    <string name="settings_value_wire">%1$s, Pin %2$d</string>
+    <string name="settings_value_wire_pin">Pin %1$d</string>
+    <string name="settings_value_polarity_plus_sign">+</string>
+    <string name="settings_value_polarity_minus_sign">−</string>
+    <string name="settings_io_a11y_toggle_contact">Switch contact type</string>
+    <string name="settings_io_a11y_toggle_polarity">Switch polarity</string>
+    <string name="settings_io_a11y_locked">Can't be changed</string>
+    <string name="settings_io_label_selected">Selected %1$d of %2$d</string>
+    <string name="settings_io_label_only_selected">Selected only</string>
+    <string name="settings_io_placeholder_search">Find function</string>
+    <string name="settings_io_msg_nothing_found">Nothing found</string>
+    <string name="settings_value_changed">Changed</string>
+    <string name="settings_schedule_label_morning">Morning start</string>
+    <string name="settings_schedule_label_evening">Evening start</string>
+    <string name="settings_siren_label_tone">Tone</string>
+    <string name="settings_siren_label_melody">Melody</string>
+    <string name="settings_siren_label_number">Number</string>
+    <string name="settings_can_label_code">CAN code (4 digits)</string>
+    <string name="settings_can_hint_digits">Enter 4 digits</string>
+    <string name="settings_can_btn_find">Find vehicle</string>
+    <string name="settings_can_loading">Looking for the vehicle…</string>
+    <string name="settings_can_msg_many">Several vehicles match the code</string>
+    <string name="settings_can_msg_none">No vehicle found for code %1$s. The code can still be applied.</string>
+    <string name="settings_can_msg_error">Couldn\'t reach the server to find the vehicle. The code can be applied without it.</string>
+    <string name="settings_can_car">%1$s, %2$d–%3$d</string>
+    <string name="settings_common_a11y_more">More</string>
+    <string name="settings_menu_reset">Reset to factory settings</string>
+    <string name="settings_menu_open_from">Open from…</string>
+    <string name="settings_menu_save_to">Save to…</string>
+    <string name="settings_menu_defaults">Factory settings of the model</string>
+    <string name="settings_reset_title_confirm">Reset to factory settings?</string>
+    <string name="settings_reset_msg_confirm">All device settings will be replaced with factory ones. This cannot be undone.</string>
+    <string name="settings_reset_msg_confirm_changes">All device settings will be replaced with factory ones, unsaved changes (%1$d) will be lost. This cannot be undone.</string>
+    <string name="settings_reset_btn_confirm">Reset</string>
+    <string name="settings_reset_title_progress">Resetting settings…</string>
+    <string name="settings_reset_msg_progress">The device is returning to factory settings. Do not turn off the power.</string>
+    <string name="settings_reset_title_error">Failed to reset</string>
+    <string name="settings_reset_msg_error">No response from the device. Check the connection and the unit\'s power.</string>
+    <string name="settings_reset_msg_done">The device has been reset to factory settings</string>
+    <string name="settings_can_single_title">CAN code is changed by firmware</string>
+    <string name="settings_can_single_msg">This unit has a single CAN firmware (code %1$s): the CAN code is changed by flashing the CAN firmware for the vehicle. Go to the firmware update.</string>
+    <string name="settings_can_single_btn_update">Go to update</string>
+    <string name="settings_common_a11y_close">Close</string>
+</resources>
