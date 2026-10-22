@@ -78,4 +78,5 @@
     <string name="settings_io_label_only_selected">Только выбранные</string>
     <string name="settings_io_placeholder_search">Найти функцию</string>
     <string name="settings_io_msg_nothing_found">Ничего не найдено</string>
+    <string name="settings_value_changed">Изменено</string>
 </resources>

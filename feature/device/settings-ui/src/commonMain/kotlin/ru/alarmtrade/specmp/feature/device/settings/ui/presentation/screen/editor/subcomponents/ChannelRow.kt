@@ -17,7 +17,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -40,6 +39,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.isEnabled
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ChangedChip
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ContactBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.PolarityBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
@@ -106,8 +106,8 @@ internal fun ChannelRow(
                     color = colors.onSurface
                 )
                 ChannelBadge(setting)
+                if (changed) ChangedChip()
                 channel.wires.forEach { wire -> WireTag(wire) }
-                if (changed) CmpDot()
             }
             functionsOf(setting)?.let { functions ->
                 CmpText(

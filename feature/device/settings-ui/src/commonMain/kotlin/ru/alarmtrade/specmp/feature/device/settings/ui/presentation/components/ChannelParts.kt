@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
@@ -30,6 +31,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactTyp
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Wire
 import specmp.feature.device.settings_ui.generated.resources.Res
+import specmp.feature.device.settings_ui.generated.resources.settings_value_changed
 import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_nc
 import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_no
 import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_minus_sign
@@ -139,6 +141,28 @@ internal fun PolarityBadge(polarity: Polarity) {
             style = CmpTextStyle.Body,
             fontWeight = FontWeight.Bold,
             color = if (plus) colors.onPrimary else colors.onSurface
+        )
+    }
+}
+
+/** Метка «Изменено» в заголовке канала (по макету): точка + слово на фоне цвета несохранённых правок. */
+@Composable
+internal fun ChangedChip() {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = Modifier
+            .heightIn(min = 26.dp)
+            .background(colors.tertiaryContainer, CircleShape)
+            .padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        CmpDot(size = 8.dp)
+        CmpText(
+            text = stringResource(Res.string.settings_value_changed),
+            style = CmpTextStyle.Caption,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.onTertiaryContainer
         )
     }
 }

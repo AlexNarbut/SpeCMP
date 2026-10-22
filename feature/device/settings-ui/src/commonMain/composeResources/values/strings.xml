@@ -81,4 +81,5 @@
     <string name="settings_io_label_only_selected">Selected only</string>
     <string name="settings_io_placeholder_search">Find function</string>
     <string name="settings_io_msg_nothing_found">Nothing found</string>
+    <string name="settings_value_changed">Changed</string>
 </resources>
