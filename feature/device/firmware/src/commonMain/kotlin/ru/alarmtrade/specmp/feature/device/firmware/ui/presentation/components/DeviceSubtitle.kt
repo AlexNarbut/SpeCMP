@@ -3,8 +3,8 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components
 import androidx.compose.runtime.Composable
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_subtitle_bluetooth
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_update_subtitle_bluetooth
 
 /** Подзаголовок экранов режима загрузчика: «Название  ID» блока или «Bluetooth-модуль · имя» (по [profile]). */
 @Composable

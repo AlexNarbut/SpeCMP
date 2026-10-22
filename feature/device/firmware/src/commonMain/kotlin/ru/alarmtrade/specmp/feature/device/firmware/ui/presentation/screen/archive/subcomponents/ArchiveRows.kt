@@ -39,12 +39,12 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_badge_installed
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_badge_older
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_btn_less
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_btn_more
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_btn_select
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_archive_badge_installed
+import specmp.feature.device.firmware.generated.resources.firmware_archive_badge_older
+import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_less
+import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_more
+import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_select
 
 private val ButtonHeight = 48.dp
 private val ExpandedDescriptionMaxHeight = 200.dp

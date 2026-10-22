@@ -44,24 +44,24 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.V
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.RollbackUi
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_btn_install
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_btn_refresh
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_btn_reinstall
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_empty_title
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_error_more
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_error_msg
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_error_title
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_loading
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_loading_more
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_msg_older
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_msg_same
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_rollback_msg
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_rollback_title
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_label_full_description
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_msg_no_description
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_btn_cancel
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_btn_retry
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_install
+import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_refresh
+import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_reinstall
+import specmp.feature.device.firmware.generated.resources.firmware_archive_empty_title
+import specmp.feature.device.firmware.generated.resources.firmware_archive_error_more
+import specmp.feature.device.firmware.generated.resources.firmware_archive_error_msg
+import specmp.feature.device.firmware.generated.resources.firmware_archive_error_title
+import specmp.feature.device.firmware.generated.resources.firmware_archive_loading
+import specmp.feature.device.firmware.generated.resources.firmware_archive_loading_more
+import specmp.feature.device.firmware.generated.resources.firmware_archive_msg_older
+import specmp.feature.device.firmware.generated.resources.firmware_archive_msg_same
+import specmp.feature.device.firmware.generated.resources.firmware_archive_rollback_msg
+import specmp.feature.device.firmware.generated.resources.firmware_archive_rollback_title
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_label_full_description
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_msg_no_description
+import specmp.feature.device.firmware.generated.resources.firmware_common_btn_cancel
+import specmp.feature.device.firmware.generated.resources.firmware_common_btn_retry
 
 private val CenterMaxWidth = 440.dp
 private val ButtonHeight = 48.dp

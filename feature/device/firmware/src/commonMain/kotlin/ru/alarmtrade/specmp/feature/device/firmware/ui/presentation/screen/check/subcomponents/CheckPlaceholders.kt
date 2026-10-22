@@ -24,11 +24,11 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_error_msg
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_error_title
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_loading_modules
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_btn_retry
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_check_error_msg
+import specmp.feature.device.firmware.generated.resources.firmware_check_error_title
+import specmp.feature.device.firmware.generated.resources.firmware_check_loading_modules
+import specmp.feature.device.firmware.generated.resources.firmware_common_btn_retry
 
 private val CenterMaxWidth = 440.dp
 

@@ -42,13 +42,13 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesLoading
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.PinDialog
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_msg_boot_failed
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_title_modules
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_title_screen
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_label_device_id
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_msg_test_channel
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_check_msg_boot_failed
+import specmp.feature.device.firmware.generated.resources.firmware_check_title_modules
+import specmp.feature.device.firmware.generated.resources.firmware_check_title_screen
+import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
+import specmp.feature.device.firmware.generated.resources.firmware_common_label_device_id
+import specmp.feature.device.firmware.generated.resources.firmware_common_msg_test_channel
 
 private val ContentMaxWidth = 1040.dp
 

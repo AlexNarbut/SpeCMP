@@ -45,7 +45,6 @@ kotlin {
             implementation(project(":feature:device:selection"))
             implementation(project(":feature:device:interaction"))
             implementation(project(":feature:device:firmware"))
-            implementation(project(":feature:device:firmware-ui"))
             implementation(project(":feature:device:settings"))
             implementation(project(":feature:device:settings-ui"))
             implementation(project(":feature:device:interaction-ui"))

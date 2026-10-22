@@ -49,22 +49,22 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_btn_update
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_btn_confirm
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_label_full_description
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_msg_confirm
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_msg_no_description
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_title_confirm
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_dialog_title_description
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_pin_a11y_input
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_pin_btn_submit
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_pin_error_wrong
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_pin_msg
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_pin_msg_locked
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_pin_title
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_btn_cancel
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_label_version
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_check_btn_update
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_btn_confirm
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_label_full_description
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_msg_confirm
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_msg_no_description
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_title_confirm
+import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_title_description
+import specmp.feature.device.firmware.generated.resources.firmware_check_pin_a11y_input
+import specmp.feature.device.firmware.generated.resources.firmware_check_pin_btn_submit
+import specmp.feature.device.firmware.generated.resources.firmware_check_pin_error_wrong
+import specmp.feature.device.firmware.generated.resources.firmware_check_pin_msg
+import specmp.feature.device.firmware.generated.resources.firmware_check_pin_msg_locked
+import specmp.feature.device.firmware.generated.resources.firmware_check_pin_title
+import specmp.feature.device.firmware.generated.resources.firmware_common_btn_cancel
+import specmp.feature.device.firmware.generated.resources.firmware_common_label_version
 
 private val ButtonHeight = 48.dp
 private val DialogMaxWidth = 440.dp

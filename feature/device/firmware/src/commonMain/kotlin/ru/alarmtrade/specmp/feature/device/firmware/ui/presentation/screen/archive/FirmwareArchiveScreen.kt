@@ -48,11 +48,11 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveLoading
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveRow
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.RollbackDialog
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_a11y_refresh
-import specmp.feature.device.firmware_ui.generated.resources.firmware_archive_title_screen
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_msg_test_channel
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_archive_a11y_refresh
+import specmp.feature.device.firmware.generated.resources.firmware_archive_title_screen
+import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
+import specmp.feature.device.firmware.generated.resources.firmware_common_msg_test_channel
 
 private val ListMaxWidth = 760.dp
 private val MasterWidth = 440.dp

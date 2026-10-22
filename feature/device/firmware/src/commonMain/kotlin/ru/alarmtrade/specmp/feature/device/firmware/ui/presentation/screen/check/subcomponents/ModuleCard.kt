@@ -36,20 +36,20 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.titleR
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CardStatusUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CurrentVersionUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.ModuleCardUi
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_a11y_refresh
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_btn_description
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_btn_reinstall
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_btn_update
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_error_server
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_label_actual
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_label_unsupported
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_label_update_available
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_loading_search
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_loading_version
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_msg_unsupported_hint
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_btn_retry
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_label_version
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_check_a11y_refresh
+import specmp.feature.device.firmware.generated.resources.firmware_check_btn_description
+import specmp.feature.device.firmware.generated.resources.firmware_check_btn_reinstall
+import specmp.feature.device.firmware.generated.resources.firmware_check_btn_update
+import specmp.feature.device.firmware.generated.resources.firmware_check_error_server
+import specmp.feature.device.firmware.generated.resources.firmware_check_label_actual
+import specmp.feature.device.firmware.generated.resources.firmware_check_label_unsupported
+import specmp.feature.device.firmware.generated.resources.firmware_check_label_update_available
+import specmp.feature.device.firmware.generated.resources.firmware_check_loading_search
+import specmp.feature.device.firmware.generated.resources.firmware_check_loading_version
+import specmp.feature.device.firmware.generated.resources.firmware_check_msg_unsupported_hint
+import specmp.feature.device.firmware.generated.resources.firmware_common_btn_retry
+import specmp.feature.device.firmware.generated.resources.firmware_common_label_version
 
 private val ButtonHeight = 48.dp
 

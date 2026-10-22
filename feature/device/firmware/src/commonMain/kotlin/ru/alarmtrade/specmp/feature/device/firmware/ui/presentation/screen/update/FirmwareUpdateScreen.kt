@@ -59,14 +59,14 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ProgressBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SourceBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SuccessBody
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_a11y_locked
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exit_btn_exit
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exit_btn_stay
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exit_msg
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_exit_title
-import specmp.feature.device.firmware_ui.generated.resources.firmware_update_title_screen
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
+import specmp.feature.device.firmware.generated.resources.firmware_update_a11y_locked
+import specmp.feature.device.firmware.generated.resources.firmware_update_exit_btn_exit
+import specmp.feature.device.firmware.generated.resources.firmware_update_exit_btn_stay
+import specmp.feature.device.firmware.generated.resources.firmware_update_exit_msg
+import specmp.feature.device.firmware.generated.resources.firmware_update_exit_title
+import specmp.feature.device.firmware.generated.resources.firmware_update_title_screen
 
 private val BodyMaxWidth = 480.dp
 private val CompactHero = 128.dp

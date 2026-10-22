@@ -34,15 +34,15 @@ import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import specmp.feature.device.firmware_ui.generated.resources.Res
-import specmp.feature.device.firmware_ui.generated.resources.firmware_check_chip_channel
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_channel_alpha
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_channel_alpha_short
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_channel_beta
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_channel_beta_short
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_channel_release
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_channel_release_short
-import specmp.feature.device.firmware_ui.generated.resources.firmware_common_label_channel
+import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_check_chip_channel
+import specmp.feature.device.firmware.generated.resources.firmware_common_channel_alpha
+import specmp.feature.device.firmware.generated.resources.firmware_common_channel_alpha_short
+import specmp.feature.device.firmware.generated.resources.firmware_common_channel_beta
+import specmp.feature.device.firmware.generated.resources.firmware_common_channel_beta_short
+import specmp.feature.device.firmware.generated.resources.firmware_common_channel_release
+import specmp.feature.device.firmware.generated.resources.firmware_common_channel_release_short
+import specmp.feature.device.firmware.generated.resources.firmware_common_label_channel
 
 internal const val CHANNEL_CHIP_TAG = "firmware_channel_chip"
 
