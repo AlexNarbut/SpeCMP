@@ -23,6 +23,7 @@ import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSegmentedButton
@@ -110,6 +111,11 @@ private fun SectionRow(
     actions: SettingRowActions,
     modifier: Modifier
 ) {
+    // Пустой раздел без номера — связка между условиями («И», «ИЛИ»): разделитель с подписью.
+    if (section.children.isEmpty() && section.number.isEmpty()) {
+        LinkSeparator(section.name, modifier)
+        return
+    }
     // В пустой раздел не заходим: без нажатия, наведения и стрелки, текст приглушён.
     val enterable = section.children.isNotEmpty()
     CmpRow(
@@ -299,4 +305,24 @@ private fun ValueLabel(text: String, maxLines: Int, modifier: Modifier = Modifie
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
     )
+}
+
+/** Связка между условиями («И», «ИЛИ»): подпись по центру между линиями, не нажимается. */
+@Composable
+private fun LinkSeparator(text: String, modifier: Modifier) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = modifier.fillMaxWidth().heightIn(min = 36.dp).padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)
+        CmpText(
+            text = text,
+            style = CmpTextStyle.Caption,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.onSurfaceVariant
+        )
+        CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)
+    }
 }

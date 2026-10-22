@@ -206,7 +206,17 @@ class DeviceSettingsGallery {
             null,
             SirenEvent.ALARM
         ),
-        CanCodeSetting(803, "8.3", "CAN-код автомобиля", null, SettingValue.Can(CanCode("7002", null)))
+        CanCodeSetting(803, "8.3", "CAN-код автомобиля", null, SettingValue.Can(CanCode("7002", null))),
+        section(
+            810,
+            "8.4",
+            "Условия срабатывания",
+            sw(811, "8.4.1", "Зажигание включено", on = true),
+            section(812, "", "ИЛИ"),
+            sw(813, "8.4.2", "Двигатель запущен", on = false),
+            section(814, "", "И"),
+            sw(815, "8.4.3", "Охрана выключена", on = true)
+        )
     )
     private val cars = listOf(Car(21, "Kia", "Rio", "IV", 2017..2020), Car(22, "Hyundai", "Solaris", "II", 2017..2020))
 
@@ -320,6 +330,9 @@ class DeviceSettingsGallery {
 
     @Test
     fun singleCan() = render("29_single_can", base.copy(dialog = SettingsDialog.SingleCanFirmware), listOf(800))
+
+    @Test
+    fun linkSeparators() = render("30_link_separators", base, listOf(800, 810))
 
     @Test
     fun emptySection() = render("07_empty", base, listOf(700))

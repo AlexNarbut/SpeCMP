@@ -81,8 +81,9 @@ internal fun SectionTree(
     }
     val rows = buildList {
         fun walk(section: SettingsSection, depth: Int) {
-            section.children.filterIsInstance<SettingsSection>().forEach { child ->
-                val hasSubsections = child.children.any { it is SettingsSection }
+            // Пустые разделы (связки «И» / «ИЛИ» между условиями, резерв) в дереве не показываются.
+            section.children.filterIsInstance<SettingsSection>().filter { it.children.isNotEmpty() }.forEach { child ->
+                val hasSubsections = child.children.any { it is SettingsSection && it.children.isNotEmpty() }
                 val isOpen = hasSubsections && child.id in open
                 add(TreeRow(child, depth, hasSubsections, isOpen))
                 if (isOpen) walk(child, depth + 1)
