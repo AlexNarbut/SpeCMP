@@ -86,6 +86,16 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
         }
 
+        iosMain.dependencies {
+            // Дублирование логов в stdout в отладочной сборке (MainViewController)
+            implementation(libs.kermit)
+        }
+
+        iosMain.dependencies {
+            // Дублирование логов в stdout в отладочной сборке (MainViewController)
+            implementation(libs.kermit)
+        }
+
         androidMain.dependencies {
             implementation(libs.compose.ui.tooling)
             implementation(libs.androidx.activityCompose)
@@ -107,4 +117,24 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.ui.tooling)
+}
+
+// Ресурсы SDK на moko-resources (встроенная база настроек и моделей блоков `settings.json` и др.) лежат в
+// iOS-klib как `default/resources/<id>.bundle`. Плагин moko-resources в проекте не подключён (у SDK свой форк),
+// поэтому bundle копируются в приложение этой задачей — Xcode вызывает её вместе с
+// embedAndSignAppleFrameworkForXcode. moko находит bundle по идентификатору, перебирая содержимое приложения.
+// Без неё на iOS синхронизация базы падает: модели нет — блок «не поддерживается».
+val copyMokoBundlesToXcode by tasks.registering(Copy::class) {
+    description = "Copies moko-resources bundles from iOS klib dependencies into the Xcode app bundle"
+    val klibs = configurations.named("iosArm64CompileKlibraries")
+    from(klibs.map { config -> config.filter { it.extension == "klib" }.map { zipTree(it) } }) {
+        include("default/resources/*.bundle/**")
+        eachFile { path = path.removePrefix("default/resources/") }
+    }
+    includeEmptyDirs = false
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    into(
+        providers.environmentVariable("TARGET_BUILD_DIR")
+            .zip(providers.environmentVariable("UNLOCALIZED_RESOURCES_FOLDER_PATH")) { dir, path -> "$dir/$path" }
+    )
 }
