@@ -124,7 +124,10 @@ internal class DeviceSettingsViewModel(
             )
         }
         when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
-            is Response.Error -> _state.update { it.copy(menu = SettingsMenu.Error) }
+            is Response.Error -> {
+                logger.w(response.exception) { "Settings menu read failed: ${response.message}" }
+                _state.update { it.copy(menu = SettingsMenu.Error) }
+            }
 
             is Response.Success -> {
                 val root = response.value
@@ -149,7 +152,10 @@ internal class DeviceSettingsViewModel(
         needSkipAnother = false
     ) {
         when (val response = withContext(dispatchers.io) { repository.setValue(source, settingId, value) }) {
-            is Response.Error -> _effect.tryEmit(DeviceSettingsEffect.SetValueFailed)
+            is Response.Error -> {
+                logger.w(response.exception) { "Setting $settingId change failed: ${response.message}" }
+                _effect.tryEmit(DeviceSettingsEffect.SetValueFailed)
+            }
 
             is Response.Success -> {
                 // Правка может поменять соседние настройки (например, выбор одного таймерного канала снимает другие):
@@ -326,7 +332,10 @@ internal class DeviceSettingsViewModel(
             _state.update { it.copy(isWriting = false) }
         }
         when (response) {
-            is Response.Error -> _state.update { it.copy(dialog = SettingsDialog.WriteError) }
+            is Response.Error -> {
+                logger.w(response.exception) { "Settings write failed: ${response.message}" }
+                _state.update { it.copy(dialog = SettingsDialog.WriteError) }
+            }
 
             is Response.Success -> {
                 currentRoot()?.let { root -> baseline.update { root.valuesById() } }
@@ -358,7 +367,11 @@ internal class DeviceSettingsViewModel(
                 _state.update { it.copy(isResetting = false) }
             }
             when (response) {
-                is Response.Error -> _state.update { it.copy(dialog = SettingsDialog.ResetError) }
+                is Response.Error -> {
+                    logger.w(response.exception) { "Factory reset failed: ${response.message}" }
+                    _state.update { it.copy(dialog = SettingsDialog.ResetError) }
+                }
+
                 is Response.Success -> done = true
             }
         }
