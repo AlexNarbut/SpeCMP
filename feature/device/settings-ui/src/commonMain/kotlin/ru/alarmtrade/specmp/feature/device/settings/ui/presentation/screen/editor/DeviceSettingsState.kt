@@ -1,12 +1,12 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchHit
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
 /** Состояние редактора настроек: меню, изменения, окно редактирования, диалоги, запись. */
 @Immutable
@@ -30,7 +30,7 @@ internal data class DeviceSettingsState(
     /** Ширина колонки дерева, заданная пользователем (dp); `null` — по умолчанию раскладки. */
     val treeWidthDp: Int? = null,
     /** Автомобили по id (подпись к CAN-коду в строке и в окне). */
-    val cars: Map<Int, Car> = emptyMap()
+    val cars: Map<Int, CarSummary> = emptyMap()
 ) {
     val changedCount: Int get() = changedIds.size
 }
@@ -58,7 +58,7 @@ internal sealed interface CarSearch {
     data object Loading : CarSearch
 
     /** Найдено (пусто — для кода автомобиля нет, код всё равно можно применить). */
-    data class Found(val cars: List<Car>) : CarSearch
+    data class Found(val cars: List<CarSummary>) : CarSearch
 
     /** Нет связи с сервером — код можно применить без автомобиля. */
     data object Failed : CarSearch

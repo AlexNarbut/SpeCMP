@@ -35,7 +35,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartScheduleSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.IntegerSetting
@@ -49,6 +48,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTest
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_collapse_description
 import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_expand_description
@@ -74,7 +74,7 @@ internal class EditorActions(
  * описание, «Было: …»), содержимое по типу, «Сбросить» / «Готово». Значение уходит в сессию только по «Готово».
  */
 @Composable
-internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, Car>, wide: Boolean, actions: EditorActions) {
+internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, CarSummary>, wide: Boolean, actions: EditorActions) {
     if (wide) {
         CmpDialog(
             onDismissRequest = actions.onDismiss,
@@ -191,7 +191,7 @@ private fun WasChip(editing: EditingSetting) {
 
 @Suppress("CyclomaticComplexMethod") // плоский выбор редактора по типу настройки
 @Composable
-private fun EditorBody(editing: EditingSetting, cars: Map<Int, Car>, wide: Boolean, actions: EditorActions) {
+private fun EditorBody(editing: EditingSetting, cars: Map<Int, CarSummary>, wide: Boolean, actions: EditorActions) {
     val onDraftChange = actions.onDraftChange
     val setting = editing.setting
     val draft = editing.draft

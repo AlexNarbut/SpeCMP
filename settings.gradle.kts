@@ -48,6 +48,7 @@ include(":feature:login")
 include(":feature:main")
 include(":feature:support-chat")
 include(":feature:advanced-mount")
+include(":feature:vehicle")
 
 include(":feature:device")
 include(":feature:device:selection")

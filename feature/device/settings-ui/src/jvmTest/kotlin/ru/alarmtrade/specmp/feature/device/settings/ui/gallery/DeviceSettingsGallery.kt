@@ -8,7 +8,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartSchedu
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartScheduleSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.ChannelLogic
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
@@ -52,6 +51,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
 /** Состояния редактора настроек; PNG — в `build/state-gallery/device-settings`. */
 class DeviceSettingsGallery {
@@ -218,7 +218,19 @@ class DeviceSettingsGallery {
             sw(815, "8.4.3", "Охрана выключена", on = true)
         )
     )
-    private val cars = listOf(Car(21, "Kia", "Rio", "IV", 2017..2020), Car(22, "Hyundai", "Solaris", "II", 2017..2020))
+    private val cars =
+        listOf(
+            CarSummary(21, "Kia", "Rio", "IV", 2017..2020, "7002", null),
+            CarSummary(
+                22,
+                "Hyundai",
+                "Solaris",
+                "II",
+                2017..2020,
+                "7002",
+                null
+            )
+        )
 
     private val root = section(
         0, "", "", general,

@@ -39,11 +39,12 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
-import ru.alarmtrade.specmp.feature.device.settings.domain.repository.CarsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
+import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 
 private const val SEARCH_DEBOUNCE_MILLIS = 150L
 
@@ -63,7 +64,7 @@ internal class DeviceSettingsViewModel(
     private val source: SettingsSource,
     private val repository: DeviceSettingsRepository,
     private val preferences: DeviceSettingsPreferences,
-    private val carsRepository: CarsRepository,
+    private val carsRepository: VehicleCatalogRepository,
     deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
     private val dispatchers: AppDispatchers
@@ -196,7 +197,7 @@ internal class DeviceSettingsViewModel(
         if (!editing.setting.accepts(editing.draft)) return
         _state.update { it.copy(editing = it.editing?.copy(carSearch = CarSearch.Loading)) }
         safeLaunch {
-            val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code) }
+            val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code, vehicleDevice()) }
             _state.update { state ->
                 val current = state.editing ?: return@update state
                 if ((current.draft as? SettingValue.Can)?.value?.code != code) return@update state
@@ -365,12 +366,16 @@ internal class DeviceSettingsViewModel(
             .distinct()
             .forEach { carId ->
                 safeLaunch {
-                    withContext(dispatchers.io) { carsRepository.car(carId) }.getValueIfSuccess()?.let { car ->
+                    withContext(dispatchers.io) { carsRepository.summary(carId) }.getValueIfSuccess()?.let { car ->
                         _state.update { it.copy(cars = it.cars + (car.id to car)) }
                     }
                 }
             }
     }
+
+    /** Каталог автомобилей — под модель подключённого блока (его подсистемы); блок неизвестен — без фильтра. */
+    private fun vehicleDevice(): VehicleDeviceFilter? =
+        _state.value.header?.let { VehicleDeviceFilter.Device(it.deviceName) }
 
     private fun currentRoot(): SettingsSection? = (_state.value.menu as? SettingsMenu.Ready)?.root
 

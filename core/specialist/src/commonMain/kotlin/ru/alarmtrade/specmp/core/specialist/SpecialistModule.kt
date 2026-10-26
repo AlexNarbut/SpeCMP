@@ -67,8 +67,10 @@ val specialistModule = module {
     single { get<SpecialistApp>().firmwareFilesInteractor }
     // Расширенные настройки блока (feature/device/settings): сессии настроек по SettingsPath.
     single { get<SpecialistApp>().alarmDeviceSettingsInteractor }
-    // Автомобили по CAN-коду (feature/device/settings: CAN-код в настройках).
+    // Каталог автомобилей (feature/vehicle): марки, модели, карточки, поиск по CAN-коду.
     single { get<SpecialistApp>().carsInteractor }
+    // Каталог автомобилей с готовыми конфигурациями (feature/vehicle) и сами конфигурации.
+    single { get<SpecialistApp>().configurationInteractor }
     singleOf(::SpecialistAccountRepository) bind AccountRepository::class
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
     single<SpecialistDeviceInformationProvider> {

@@ -41,7 +41,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceS
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.ChannelLogic
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
@@ -59,9 +58,17 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
-import ru.alarmtrade.specmp.feature.device.settings.domain.repository.CarsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarTrim
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CatalogQuery
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
+import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 
 class DeviceSettingsViewModelTest {
 
@@ -574,22 +581,33 @@ private class FakePreferences : DeviceSettingsPreferences {
     }
 }
 
-private class FakeCars : CarsRepository {
-    val polo = Car(17, "Volkswagen", "Polo", "V", 2015..2020)
-    val rio = Car(21, "Kia", "Rio", "IV", 2017..2020)
-    val solaris = Car(22, "Hyundai", "Solaris", "II", 2017..2020)
+private class FakeCars : VehicleCatalogRepository {
+    val polo = CarSummary(17, "Volkswagen", "Polo", "V", 2015..2020, "7000", null)
+    val rio = CarSummary(21, "Kia", "Rio", "IV", 2017..2020, "7001", null)
+    val solaris = CarSummary(22, "Hyundai", "Solaris", "II", 2017..2020, "7002", null)
     var fail = false
 
-    override suspend fun findByCanCode(canCode: String): Response<List<Car>> = when {
+    override suspend fun findByCanCode(
+        canCode: String,
+        device: VehicleDeviceFilter?,
+        groups: Set<CarFeatureGroup>
+    ): Response<List<CarSummary>> = when {
         fail -> Response.Error(IllegalStateException("no server"))
         canCode == "7001" -> Response.Success(listOf(rio))
         canCode == "7002" -> Response.Success(listOf(rio, solaris))
         else -> Response.Success(emptyList())
     }
 
-    override suspend fun car(id: Int): Response<Car> =
-        listOf(polo, rio, solaris).firstOrNull { it.id == id }?.let { Response.Success(it) }
+    override suspend fun summary(carId: Int): Response<CarSummary> =
+        listOf(polo, rio, solaris).firstOrNull { it.id == carId }?.let { Response.Success(it) }
             ?: Response.Error(IllegalStateException("no car"))
+
+    override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> = unused()
+    override suspend fun models(query: CatalogQuery, brandId: Int): Response<List<CarModel>> = unused()
+    override suspend fun trims(query: CatalogQuery, modelId: Int): Response<List<CarTrim>> = unused()
+    override suspend fun card(carId: Int, groups: Set<CarFeatureGroup>): Response<CarCard> = unused()
+
+    private fun unused(): Response.Error = Response.Error(UnsupportedOperationException("not used by settings"))
 }
 
 private class FakeConnectionRepository : DeviceConnectionRepository {

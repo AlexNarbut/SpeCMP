@@ -30,11 +30,11 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.CAN_CODE_LENGTH
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.CarSearch
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_find
 import specmp.feature.device.settings_ui.generated.resources.settings_can_hint_digits
@@ -53,7 +53,7 @@ import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_no
 internal fun CanCodeEditor(
     value: CanCode,
     carSearch: CarSearch,
-    cars: Map<Int, Car>,
+    cars: Map<Int, CarSummary>,
     onCodeChange: (String) -> Unit,
     onSearch: () -> Unit,
     onPick: (carId: Int) -> Unit
@@ -92,7 +92,12 @@ internal fun CanCodeEditor(
 
 /** Результат поиска автомобиля по коду: привязанный автомобиль, загрузка, выбор из нескольких или предупреждение. */
 @Composable
-private fun CarSearchResult(value: CanCode, carSearch: CarSearch, cars: Map<Int, Car>, onPick: (carId: Int) -> Unit) {
+private fun CarSearchResult(
+    value: CanCode,
+    carSearch: CarSearch,
+    cars: Map<Int, CarSummary>,
+    onPick: (carId: Int) -> Unit
+) {
     val colors = cmpThemeColors()
     when (carSearch) {
         CarSearch.Idle -> value.carId?.let(cars::get)?.let { car -> CarCard(carLabel(car)) }
