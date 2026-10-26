@@ -475,7 +475,14 @@ class FirmwareUpdateViewModelTest {
         assertEquals(
             listOf(
                 FirmwareUpdateEffect.OpenArchive(
-                    FirmwareArchiveRequest(1, FirmwareChannel.RELEASE, "3.57", "DX4G  77", UpdateProfile.Main)
+                    FirmwareArchiveRequest(
+                        1,
+                        FirmwareChannel.RELEASE,
+                        "3.57",
+                        "DX4G  77",
+                        UpdateProfile.Main,
+                        deviceName = "DX4G"
+                    )
                 ),
                 FirmwareUpdateEffect.OpenSupportChat
             ),

@@ -2,6 +2,10 @@ package ru.alarmtrade.specmp.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -11,6 +15,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -25,8 +32,14 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.Advanc
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
@@ -131,7 +144,10 @@ private fun AuthedNavGraph() {
                         FirmwareBootGraph(
                             onExit = onExit,
                             onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
-                            filePicker = rememberFirmwareFilePicker()
+                            filePicker = rememberFirmwareFilePicker(),
+                            vehiclePicker = { deviceName, onPick, onPickerBack ->
+                                ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
+                            }
                         )
                     }
                 ) { device, onExit ->
@@ -157,23 +173,77 @@ private fun AuthedNavGraph() {
                                 }
                             )
                         },
-                        // Справочник под подключённый блок: подсистемы модели, CAN-код прошивки — в поиске по CAN.
-                        vehicles = { onBack ->
-                            VehicleSelectEntry(
-                                request = VehicleSelectRequest(
-                                    mode = VehicleSelectMode.VIEW,
-                                    catalog = VehicleCatalog.ALL,
-                                    device = VehicleDeviceFilter.Device(device.systemName),
-                                    firmwareCanCode = device.can?.code
-                                ),
-                                onPick = {},
-                                onBack = onBack
-                            )
-                        }
+                        vehicles = { onBack -> DeviceVehicles(device, onBack) }
                     )
                 }
             }
         }
+    )
+}
+
+/**
+ * Справочник автомобилей под подключённый блок (подсистемы модели, CAN-код прошивки — в поиске по CAN). «Прошивки
+ * для CAN» в карточке — архив основной программы блока с этим CAN-фильтром, только просмотр.
+ */
+@Composable
+private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
+    var archiveCanCode by rememberSaveable { mutableStateOf<String?>(null) }
+    val canCode = archiveCanCode
+    if (canCode == null) {
+        VehicleSelectEntry(
+            request = VehicleSelectRequest(
+                mode = VehicleSelectMode.VIEW,
+                catalog = VehicleCatalog.ALL,
+                device = VehicleDeviceFilter.Device(device.systemName),
+                firmwareCanCode = device.can?.code
+            ),
+            onPick = {},
+            onBack = onBack,
+            onOpenFirmwareArchive = { archiveCanCode = it }
+        )
+    } else {
+        // Архив поверх справочника: «назад» возвращает к карточке автомобиля, а не закрывает раздел.
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            onBackCompleted = { archiveCanCode = null }
+        )
+        FirmwareArchiveEntry(
+            request = FirmwareArchiveRequest(
+                moduleId = null,
+                channel = FirmwareChannel.RELEASE,
+                installedVersion = device.displayFirmwareVersion,
+                deviceTitle = "${device.systemName}  ${device.systemId}",
+                profile = UpdateProfile.Main,
+                deviceName = device.systemName,
+                canCode = canCode,
+                viewOnly = true
+            ),
+            onPick = {},
+            onBack = { archiveCanCode = null },
+            vehiclePicker = { deviceName, onPick, onPickerBack ->
+                ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
+            }
+        )
+    }
+}
+
+/** Выбор автомобиля для CAN-фильтра архива прошивок: каталог под модель блока, результат — CAN-код и название. */
+@Composable
+private fun ArchiveVehiclePicker(
+    deviceName: String?,
+    onPick: (canCode: String, carTitle: String) -> Unit,
+    onBack: () -> Unit
+) {
+    VehicleSelectEntry(
+        request = VehicleSelectRequest(
+            mode = VehicleSelectMode.PICK,
+            catalog = VehicleCatalog.ALL,
+            device = deviceName?.let { VehicleDeviceFilter.Device(it) }
+        ),
+        onPick = { car ->
+            onPick(car.canCode, listOf(car.brand, car.model, car.name).filter { it.isNotBlank() }.joinToString(" "))
+        },
+        onBack = onBack
     )
 }
 

@@ -67,6 +67,8 @@ class FirmwareUpdateViewModel(
 
     private class Profile(
         val kind: UpdateProfile,
+        /** Модель блока (основная программа) или прошивка Bluetooth-модуля — для базы устройств. */
+        val deviceName: String,
         val deviceTitle: String,
         val currentVersion: String,
         val modules: List<FirmwareModule>,
@@ -275,6 +277,7 @@ class FirmwareUpdateViewModel(
             state.copy(
                 profile = Profile(
                     source.kind,
+                    source.deviceName,
                     source.title,
                     source.current,
                     modules,
@@ -352,7 +355,9 @@ class FirmwareUpdateViewModel(
                     channel = current.channel,
                     installedVersion = profile.currentVersion,
                     deviceTitle = state.value.deviceTitle,
-                    profile = profile.kind
+                    profile = profile.kind,
+                    // Каталог автомобилей CAN-фильтра — под модель блока (у Bluetooth-модуля фильтра нет).
+                    deviceName = profile.deviceName.takeIf { profile.kind == UpdateProfile.Main }
                 )
             )
         )

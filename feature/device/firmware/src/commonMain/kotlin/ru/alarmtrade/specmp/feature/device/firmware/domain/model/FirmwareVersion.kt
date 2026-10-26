@@ -9,13 +9,17 @@ import kotlinx.datetime.LocalDate
  *   поэтому в дату оно берётся без пересчёта — на другом поясе дата не «уедет».
  * @property description описание версии как есть (может быть пустым); форматирование — в UI.
  * @property url ссылка на файл прошивки: SDK скачивает файл сам при обновлении.
+ * @property canCode CAN-код, под который собрана версия (единая CAN-прошивка); `null` — без привязки к CAN.
+ * @property canVersion версия CAN-профиля в виде сервера; `null`, если сервер её не отдал.
  */
 data class FirmwareVersion(
     val id: Long,
     val version: String,
     val createdOn: LocalDate,
     val description: String,
-    val url: String
+    val url: String,
+    val canCode: String? = null,
+    val canVersion: String? = null
 )
 
 /**

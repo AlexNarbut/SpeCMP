@@ -15,7 +15,10 @@ data class ArchiveRowUi(
     val version: String,
     val createdOn: LocalDate,
     val description: String,
-    val kind: ArchiveRowKind
+    val kind: ArchiveRowKind,
+    /** CAN-код версии (единая CAN-прошивка); `null` — версия без привязки к CAN. */
+    val canCode: String? = null,
+    val canVersion: String? = null
 )
 
 sealed interface ArchiveContent {
@@ -33,6 +36,18 @@ sealed interface ArchiveContent {
         ArchiveContent
 }
 
+/**
+ * CAN-фильтр над списком: [input] — текст поля, [applied] — код, по которому загружен список (`null` — все версии),
+ * [carTitle] — автомобиль, из которого взят код (выбор из каталога); [canPickVehicle] — каталог подключён.
+ */
+@Immutable
+data class CanFilterUi(
+    val input: String = "",
+    val applied: String? = null,
+    val carTitle: String? = null,
+    val canPickVehicle: Boolean = false
+)
+
 /** Диалог «Установить более старую версию?». */
 @Immutable
 data class RollbackUi(val version: String, val installedVersion: String)
@@ -46,7 +61,15 @@ data class FirmwareArchiveState(
     val channel: FirmwareChannel = FirmwareChannel.RELEASE,
     val installedVersion: String? = null,
     val deviceTitle: String = "",
-    val profile: UpdateProfile = UpdateProfile.Main
+    val profile: UpdateProfile = UpdateProfile.Main,
+    /** `null` — фильтра нет (Bluetooth-модуль). */
+    val canFilter: CanFilterUi? = null,
+    /** Просмотр без выбора версии для установки. */
+    val viewOnly: Boolean = false,
+    /** Открыт каталог автомобилей для CAN-фильтра. */
+    val vehiclePicker: Boolean = false,
+    /** Модель блока для каталога автомобилей (`null` — каталог с выбором типа устройства). */
+    val deviceName: String? = null
 )
 
 /** Действия экрана архива (stateless-контент получает их от VM или заглушки в галерее состояний). */
@@ -58,7 +81,9 @@ class FirmwareArchiveActions(
     val onSelectRow: (String) -> Unit = {},
     val onPick: (String) -> Unit = {},
     val onRollbackConfirm: () -> Unit = {},
-    val onRollbackDismiss: () -> Unit = {}
+    val onRollbackDismiss: () -> Unit = {},
+    val onCanInput: (String) -> Unit = {},
+    val onVehiclePickerOpen: () -> Unit = {}
 )
 
 sealed interface FirmwareArchiveEffect {

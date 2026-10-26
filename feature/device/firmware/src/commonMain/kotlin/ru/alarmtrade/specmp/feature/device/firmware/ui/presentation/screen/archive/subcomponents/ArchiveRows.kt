@@ -99,8 +99,9 @@ internal fun VersionBadge(kind: ArchiveRowKind, modifier: Modifier = Modifier) {
 }
 
 /**
- * Строка версии: номер, метка, дата и описание (раскрывается отдельной кнопкой — нажатие по ней версию не выбирает).
- * На широком окне ([master]) вся строка выбирает версию для панели справа; на узком — кнопка «Выбрать».
+ * Строка версии: номер, метка, дата, CAN и описание (раскрывается отдельной кнопкой — нажатие по ней версию не
+ * выбирает). На широком окне ([master]) вся строка выбирает версию для панели справа; на узком — кнопка «Выбрать»
+ * ([onPick] = `null` — просмотр без выбора, кнопки нет).
  */
 @Composable
 internal fun ArchiveRow(
@@ -108,7 +109,7 @@ internal fun ArchiveRow(
     master: Boolean,
     selected: Boolean,
     onSelect: () -> Unit,
-    onPick: () -> Unit,
+    onPick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     val colors = cmpThemeColors()
@@ -147,6 +148,7 @@ internal fun ArchiveRow(
                     color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
                 )
             }
+            ArchiveRowCan(row)
             if (row.description.isNotBlank()) {
                 CmpText(
                     text = row.description,
@@ -173,10 +175,11 @@ private fun RowActions(
     master: Boolean,
     expanded: Boolean,
     onToggle: () -> Unit,
-    onPick: () -> Unit
+    onPick: (() -> Unit)?
 ) {
     val hasDescription = row.description.isNotBlank()
-    if (!hasDescription && master) return
+    val showPick = !master && onPick != null
+    if (!hasDescription && !showPick) return
     CmpRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -193,7 +196,7 @@ private fun RowActions(
         } else {
             CmpColumn {}
         }
-        if (!master) {
+        if (showPick && onPick != null) {
             CmpOutlinedButton(
                 text = stringResource(Res.string.firmware_archive_btn_select),
                 onClick = onPick,

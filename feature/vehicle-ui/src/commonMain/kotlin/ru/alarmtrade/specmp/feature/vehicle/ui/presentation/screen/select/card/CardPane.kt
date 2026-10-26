@@ -142,11 +142,14 @@ private fun CardContent(
             return@LazyColumn
         }
         stickyHeader(key = "tabs") {
-            CmpSurface(color = colors.background, modifier = Modifier.padding(top = 12.dp)) {
+            // Непрозрачная шапка на всю ширину, отступ сверху — внутри фона: прокручиваемое содержимое вкладки
+            // уходит под вкладки и не просвечивает ни над ними, ни справа от них.
+            CmpSurface(color = colors.background, modifier = Modifier.fillMaxWidth()) {
                 CmpTabRow(
                     selectedTabIndex = tabs.indexOf(tab),
                     tabs = tabs.map { CmpTabItem(tabTitle(it)) },
                     onTabSelect = { actions.onTabSelect(tabs[it]) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     scrollable = true
                 )
             }

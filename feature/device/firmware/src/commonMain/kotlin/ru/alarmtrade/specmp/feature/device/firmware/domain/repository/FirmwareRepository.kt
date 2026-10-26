@@ -18,11 +18,15 @@ interface FirmwareRepository {
     /** Последняя версия модуля в канале. */
     suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion>
 
-    /** Страница архива версий (страницы с 1). */
+    /** Основной модуль (основная программа) блока с именем [deviceName]; `null` — у модели его нет. */
+    suspend fun mainModuleId(deviceName: String): Response<Long?>
+
+    /** Страница архива версий (страницы с 1); [canCode] — только версии под этот CAN-код. */
     suspend fun archivePage(
         moduleId: Long,
         channel: FirmwareChannel,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        canCode: String? = null
     ): Response<FirmwareVersionPage>
 }

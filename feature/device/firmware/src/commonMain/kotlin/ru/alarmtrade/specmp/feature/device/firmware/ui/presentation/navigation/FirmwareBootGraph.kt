@@ -21,6 +21,7 @@ import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveVehiclePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateScreen
@@ -48,12 +49,15 @@ private val navConfig = SavedStateConfiguration {
  * @param onExit выход из всего flow (закрывает сессию); на экране обновления вызывается после подтверждения.
  * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
  * @param filePicker выбор файла прошивки в файловом менеджере (платформа, `composeApp`).
+ * @param vehiclePicker выбор автомобиля для CAN-фильтра архива (фича `vehicle-ui`, `composeApp`);
+ *   `null` — без каталога.
  */
 @Composable
 fun FirmwareBootGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
-    filePicker: FirmwareFilePicker = NoFirmwareFilePicker
+    filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
+    vehiclePicker: ArchiveVehiclePicker? = null
 ) {
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
     val archivePicker = koinInject<FirmwareArchivePicker>()
@@ -83,7 +87,8 @@ fun FirmwareBootGraph(
                         archivePicker.pick(version)
                         backStack.popSafe()
                     },
-                    onBack = { backStack.popSafe() }
+                    onBack = { backStack.popSafe() },
+                    vehiclePicker = vehiclePicker
                 )
             }
         }

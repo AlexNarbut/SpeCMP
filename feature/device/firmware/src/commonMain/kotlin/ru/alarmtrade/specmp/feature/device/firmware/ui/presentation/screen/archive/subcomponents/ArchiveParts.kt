@@ -45,9 +45,11 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.RollbackUi
 import specmp.feature.device.firmware.generated.resources.Res
+import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_all_versions
 import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_install
 import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_refresh
 import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_reinstall
+import specmp.feature.device.firmware.generated.resources.firmware_archive_empty_can_title
 import specmp.feature.device.firmware.generated.resources.firmware_archive_empty_title
 import specmp.feature.device.firmware.generated.resources.firmware_archive_error_more
 import specmp.feature.device.firmware.generated.resources.firmware_archive_error_msg
@@ -84,17 +86,27 @@ internal fun ArchiveLoading() {
 }
 
 @Composable
-internal fun ArchiveEmpty(onRefresh: () -> Unit) {
+internal fun ArchiveEmpty(onRefresh: () -> Unit, canCode: String? = null, onShowAll: () -> Unit = {}) {
     CenteredBody {
         FirmwareHero(icon = CmpIcons.Inventory2, tone = HeroTone.Neutral, size = 88.dp)
         CmpText(
-            text = stringResource(Res.string.firmware_archive_empty_title),
+            text = canCode?.let { stringResource(Res.string.firmware_archive_empty_can_title, it) }
+                ?: stringResource(Res.string.firmware_archive_empty_title),
             style = CmpTextStyle.Title,
             textAlign = TextAlign.Center
         )
+        // С CAN-фильтром пусто — предлагаем все версии, без фильтра — повторить запрос.
         CmpOutlinedButton(
-            text = stringResource(Res.string.firmware_archive_btn_refresh),
-            onClick = onRefresh,
+            text = stringResource(
+                if (canCode !=
+                    null
+                ) {
+                    Res.string.firmware_archive_btn_all_versions
+                } else {
+                    Res.string.firmware_archive_btn_refresh
+                }
+            ),
+            onClick = if (canCode != null) onShowAll else onRefresh,
             modifier = Modifier.fillMaxWidth().height(52.dp)
         )
     }
@@ -177,7 +189,7 @@ internal fun ArchiveFooter(loadingMore: Boolean, moreError: Boolean, onRetryMore
 internal fun ArchiveDetail(
     row: ArchiveRowUi,
     installedVersion: String?,
-    onInstall: () -> Unit,
+    onInstall: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     val colors = cmpThemeColors()
@@ -202,6 +214,7 @@ internal fun ArchiveDetail(
                 }
                 CmpText(text = formatArchiveDate(row.createdOn), color = colors.onSurfaceVariant)
             }
+            ArchiveRowCan(row)
             CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CmpText(
                     text = stringResource(Res.string.firmware_check_dialog_label_full_description),
@@ -215,6 +228,8 @@ internal fun ArchiveDetail(
                     modifier = Modifier.heightIn(max = DetailDescriptionMaxHeight).verticalScroll(rememberScrollState())
                 )
             }
+            // Просмотр без установки: нет ни кнопки, ни предупреждений о выбранной версии.
+            if (onInstall == null) return@CmpColumn
             when (row.kind) {
                 ArchiveRowKind.Older -> installedVersion?.let {
                     InfoBanner(text = stringResource(Res.string.firmware_archive_msg_older, it))

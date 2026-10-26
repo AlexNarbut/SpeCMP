@@ -142,4 +142,12 @@
     <string name="firmware_update_success_msg_boot_ble">The unit stays in update mode. Press “Exit update” to restart it into work mode, or choose another firmware.</string>
     <string name="firmware_update_success_msg_boot_usb">The unit stays in update mode. Power-cycle it to return to work mode, or choose another firmware.</string>
     <string name="firmware_check_chip_channel">Channel: %1$s</string>
+    <string name="firmware_archive_can_hint">CAN code</string>
+    <string name="firmware_archive_can_a11y_clear">Clear the CAN code</string>
+    <string name="firmware_archive_can_a11y_vehicle">Choose a vehicle</string>
+    <string name="firmware_archive_can_msg_partial">Enter 4 digits of the CAN code</string>
+    <string name="firmware_archive_row_can">CAN %1$s</string>
+    <string name="firmware_archive_row_can_version">CAN %1$s · %2$s</string>
+    <string name="firmware_archive_empty_can_title">No firmware for CAN %1$s</string>
+    <string name="firmware_archive_btn_all_versions">Show all versions</string>
 </resources>

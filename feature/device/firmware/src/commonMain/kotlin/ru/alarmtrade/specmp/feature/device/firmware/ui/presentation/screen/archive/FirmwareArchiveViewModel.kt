@@ -30,6 +30,10 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
  * конец списка — страница без новых версий (эвристика). Ошибка первой страницы — полноэкранная, ошибка догрузки
  * оставляет список.
  * Версия старее установленной выбирается через подтверждение, равная установленной и новее — сразу.
+ *
+ * CAN-фильтр (только основная программа): список грузится заново, когда в поле набран полный CAN-код или поле
+ * очищено; код из каталога автомобилей применяется сразу. Модуль без [FirmwareArchiveRequest.moduleId] — основной
+ * модуль модели блока, определяется перед первой страницей. В режиме просмотра версия не выбирается.
  */
 class FirmwareArchiveViewModel(
     private val args: FirmwareArchiveRequest,
@@ -47,12 +51,19 @@ class FirmwareArchiveViewModel(
         val loadingMore: Boolean = false,
         val moreError: Boolean = false,
         val selected: String? = null,
-        val rollback: String? = null
+        val rollback: String? = null,
+        val moduleId: Long? = null,
+        val canInput: String = "",
+        val canApplied: String? = null,
+        val carTitle: String? = null,
+        val vehiclePicker: Boolean = false
     ) {
         val canLoadMore: Boolean get() = load == Load.Ready && hasMore && !loadingMore && !moreError
     }
 
-    private val core = MutableStateFlow(Core())
+    private val core = MutableStateFlow(
+        Core(moduleId = args.moduleId, canInput = args.canCode.orEmpty(), canApplied = args.canCode)
+    )
 
     val state: StateFlow<FirmwareArchiveState> = core
         .map(::toState)
@@ -74,7 +85,9 @@ class FirmwareArchiveViewModel(
                     version = version.version,
                     createdOn = version.createdOn,
                     description = version.description,
-                    kind = kindOf(version.version)
+                    kind = kindOf(version.version),
+                    canCode = version.canCode,
+                    canVersion = version.canVersion
                 )
             }
         val content = when (core.load) {
@@ -96,7 +109,15 @@ class FirmwareArchiveViewModel(
             channel = args.channel,
             installedVersion = installed,
             deviceTitle = args.deviceTitle,
-            profile = args.profile
+            profile = args.profile,
+            canFilter = if (args.canFilterEnabled) {
+                CanFilterUi(core.canInput, core.canApplied, core.carTitle)
+            } else {
+                null
+            },
+            viewOnly = args.viewOnly,
+            vehiclePicker = core.vehiclePicker,
+            deviceName = args.deviceName
         )
     }
 
@@ -115,7 +136,17 @@ class FirmwareArchiveViewModel(
     fun onRefresh() = loadFirstPage()
 
     private fun loadFirstPage() {
-        core.update { Core(selected = it.selected) }
+        core.update {
+            it.copy(
+                load = Load.Loading,
+                items = emptyList(),
+                page = 0,
+                hasMore = false,
+                loadingMore = false,
+                moreError = false,
+                rollback = null
+            )
+        }
         // Серийно: обновление не теряется, если подгрузка ещё идёт; её результат придёт до сброса и будет перезаписан.
         safeLaunch { executeWithProceedLock(needSkipAnother = false) { loadPage(FIRST_PAGE) } }
     }
@@ -137,9 +168,24 @@ class FirmwareArchiveViewModel(
     }
 
     private suspend fun loadPage(page: Int) {
-        val response = withContext(dispatchers.io) {
-            repository.archivePage(args.moduleId, args.channel, page, PAGE_SIZE)
+        val filter = core.value.canApplied
+        val moduleId = when (val module = moduleId()) {
+            is Response.Error -> {
+                core.update { it.copy(load = Load.Error, loadingMore = false) }
+                return
+            }
+
+            // У модели нет основного модуля — версий нет.
+            is Response.Success -> module.value ?: run {
+                core.update { it.copy(load = Load.Ready, hasMore = false, loadingMore = false) }
+                return
+            }
         }
+        val response = withContext(dispatchers.io) {
+            repository.archivePage(moduleId, args.channel, page, PAGE_SIZE, canCode = filter)
+        }
+        // Пока страница грузилась, фильтр сменили: список уже перезапрошен, этот ответ не нужен.
+        if (core.value.canApplied != filter) return
         when (response) {
             is Response.Success -> core.update { state ->
                 val known = state.items.mapTo(mutableSetOf()) { it.version }
@@ -165,6 +211,50 @@ class FirmwareArchiveViewModel(
         }
     }
 
+    /** Модуль архива: из запроса или основной модуль модели блока (один раз за экран). */
+    private suspend fun moduleId(): Response<Long?> {
+        core.value.moduleId?.let { return Response.Success(it) }
+        val deviceName = args.deviceName ?: return Response.Success(null)
+        val response = withContext(dispatchers.io) { repository.mainModuleId(deviceName) }
+        if (response is Response.Success) response.value?.let { id -> core.update { it.copy(moduleId = id) } }
+        return response
+    }
+
+    // ───── CAN-фильтр ─────
+
+    /** Ввод в поле CAN-кода: список перезапрашивается на полном коде и при очистке поля. */
+    fun onCanInput(text: String) {
+        val code = text.filter(Char::isDigit).take(CAN_CODE_LENGTH)
+        core.update { it.copy(canInput = code, carTitle = null) }
+        when (code.length) {
+            0 -> applyCanFilter(null)
+            CAN_CODE_LENGTH -> applyCanFilter(code)
+            else -> Unit
+        }
+    }
+
+    /** Кнопка каталога есть, только когда каталог подключён (слот точки входа). */
+    fun onVehiclePickerOpen() {
+        core.update { it.copy(vehiclePicker = true) }
+    }
+
+    fun onVehiclePickerClose() {
+        core.update { it.copy(vehiclePicker = false) }
+    }
+
+    /** Автомобиль из каталога: его CAN-код — фильтр списка. */
+    fun onVehiclePicked(canCode: String, carTitle: String) {
+        val code = canCode.filter(Char::isDigit).take(CAN_CODE_LENGTH)
+        core.update { it.copy(canInput = code, carTitle = carTitle, vehiclePicker = false) }
+        applyCanFilter(code.ifEmpty { null })
+    }
+
+    private fun applyCanFilter(code: String?) {
+        if (core.value.canApplied == code) return
+        core.update { it.copy(canApplied = code) }
+        loadFirstPage()
+    }
+
     // ───── выбор ─────
 
     fun onSelectRow(version: String) {
@@ -173,6 +263,7 @@ class FirmwareArchiveViewModel(
 
     /** «Выбрать» / «Установить»: старее установленной — через подтверждение, иначе сразу. */
     fun onPick(version: String) {
+        if (args.viewOnly) return
         val item = core.value.items.firstOrNull { it.version == version } ?: return
         if (kindOf(version) == ArchiveRowKind.Older && args.installedVersion != null) {
             core.update { it.copy(rollback = version) }
@@ -205,6 +296,7 @@ class FirmwareArchiveViewModel(
     }
 
     private companion object {
+        const val CAN_CODE_LENGTH = 4
         const val FIRST_PAGE = 1
         const val PAGE_SIZE = 10
         const val STOP_TIMEOUT_MILLIS = 5_000L

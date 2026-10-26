@@ -7,6 +7,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveContent
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.CanFilterUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveActions
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveContent
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveState
@@ -75,4 +76,39 @@ class FirmwareArchiveGallery {
 
     @Test
     fun rollbackDialog() = render("10_rollback_dialog", base.copy(rollback = RollbackUi("3.55", "3.57")))
+
+    private val canRows = rows.take(3).map { it.copy(canCode = "0213", canVersion = "CAN 2.0 · ред. 4") }
+    private val withFilter = base.copy(canFilter = CanFilterUi(canPickVehicle = true))
+
+    @Test
+    fun canFilterEmptyField() = render("11_can_filter", withFilter)
+
+    @Test
+    fun canFilterPartial() =
+        render("12_can_partial", withFilter.copy(canFilter = CanFilterUi("02", canPickVehicle = true)))
+
+    @Test
+    fun canFilterFromVehicle() = render(
+        "13_can_vehicle",
+        withFilter.copy(
+            content = ArchiveContent.Ready(canRows),
+            canFilter = CanFilterUi("0213", "0213", "Toyota Camry XV70 2018–2024", canPickVehicle = true)
+        )
+    )
+
+    @Test
+    fun canFilterEmpty() = render(
+        "14_can_empty",
+        withFilter.copy(content = ArchiveContent.Empty, canFilter = CanFilterUi("9999", "9999", canPickVehicle = true))
+    )
+
+    @Test
+    fun viewOnly() = render(
+        "15_view_only",
+        withFilter.copy(
+            content = ArchiveContent.Ready(canRows),
+            canFilter = CanFilterUi("0213", "0213", canPickVehicle = true),
+            viewOnly = true
+        )
+    )
 }

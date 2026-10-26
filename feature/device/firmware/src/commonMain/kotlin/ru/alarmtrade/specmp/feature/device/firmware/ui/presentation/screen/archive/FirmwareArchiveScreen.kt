@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,9 +32,11 @@ import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
@@ -42,6 +45,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.I
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.deviceSubtitle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ARCHIVE_REFRESH_TAG
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveCanFilter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveDetail
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveEmpty
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveError
@@ -63,14 +67,35 @@ private val DetailMaxWidth = 1180.dp
 private const val END_THRESHOLD = 3
 
 /**
+ * Каталог автомобилей для CAN-фильтра архива (фича `vehicle-ui`, подключается в `composeApp`): [deviceName] — модель
+ * блока (`null` — каталог с выбором типа), `onPick` — CAN-код и название выбранного автомобиля.
+ */
+typealias ArchiveVehiclePicker =
+    @Composable (deviceName: String?, onPick: (canCode: String, carTitle: String) -> Unit, onBack: () -> Unit) -> Unit
+
+/**
  * Точка входа «Архив прошивок»: версии модуля выбранного канала из [request]. Выбранная для установки версия
- * возвращается в [onPick] (закрыть архив — дело вызывающего), «назад» — [onBack]. Используется графом загрузчика;
- * другие места подключают её через слот навигации в `composeApp`.
+ * возвращается в [onPick] (закрыть архив — дело вызывающего; в режиме просмотра выбора нет), «назад» — [onBack].
+ * Используется графом загрузчика; другие места подключают её через слот навигации в `composeApp`.
+ * [vehiclePicker] — выбор автомобиля для CAN-фильтра; `null` — кнопки каталога нет, код вводится вручную.
  */
 @Composable
-fun FirmwareArchiveEntry(request: FirmwareArchiveRequest, onPick: (FirmwareVersion) -> Unit, onBack: () -> Unit) {
-    val viewModel = koinViewModel<FirmwareArchiveViewModel>(parameters = { parametersOf(request) })
-    val state by viewModel.state.collectAsState()
+fun FirmwareArchiveEntry(
+    request: FirmwareArchiveRequest,
+    onPick: (FirmwareVersion) -> Unit,
+    onBack: () -> Unit,
+    vehiclePicker: ArchiveVehiclePicker? = null
+) {
+    // Ключ — запрос: архив с другим модулем или CAN-фильтром в том же владельце — отдельная ViewModel.
+    val viewModel = koinViewModel<FirmwareArchiveViewModel>(
+        key = "FirmwareArchive:$request",
+        parameters = { parametersOf(request) }
+    )
+    val vmState by viewModel.state.collectAsState()
+    val hasPicker = vehiclePicker != null
+    val state = remember(vmState, hasPicker) {
+        vmState.copy(canFilter = vmState.canFilter?.copy(canPickVehicle = hasPicker))
+    }
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
@@ -78,19 +103,28 @@ fun FirmwareArchiveEntry(request: FirmwareArchiveRequest, onPick: (FirmwareVersi
         }
     }
 
-    FirmwareArchiveContent(
-        state = state,
-        actions = FirmwareArchiveActions(
-            onBack = onBack,
-            onRefresh = viewModel::onRefresh,
-            onEndReached = viewModel::onEndReached,
-            onRetryMore = viewModel::onRetryMore,
-            onSelectRow = viewModel::onSelectRow,
-            onPick = viewModel::onPick,
-            onRollbackConfirm = viewModel::onRollbackConfirm,
-            onRollbackDismiss = viewModel::onRollbackDismiss
+    CmpBox(modifier = Modifier.fillMaxSize()) {
+        FirmwareArchiveContent(
+            state = state,
+            actions = FirmwareArchiveActions(
+                onBack = onBack,
+                onRefresh = viewModel::onRefresh,
+                onEndReached = viewModel::onEndReached,
+                onRetryMore = viewModel::onRetryMore,
+                onSelectRow = viewModel::onSelectRow,
+                onPick = viewModel::onPick,
+                onRollbackConfirm = viewModel::onRollbackConfirm,
+                onRollbackDismiss = viewModel::onRollbackDismiss,
+                onCanInput = viewModel::onCanInput,
+                onVehiclePickerOpen = viewModel::onVehiclePickerOpen
+            )
         )
-    )
+        if (state.vehiclePicker && vehiclePicker != null) {
+            CmpSurface(modifier = Modifier.fillMaxSize()) {
+                vehiclePicker(state.deviceName, viewModel::onVehiclePicked, viewModel::onVehiclePickerClose)
+            }
+        }
+    }
 }
 
 /** Stateless-контент архива: раскладка по ширине (на широком окне — список и панель версии) и диалог отката. */
@@ -124,16 +158,48 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = firmwareLayoutOf(maxWidth)
-            when (val content = state.content) {
-                ArchiveContent.Loading -> ArchiveLoading()
-                ArchiveContent.Error -> ArchiveError(onRetry = actions.onRefresh)
-                ArchiveContent.Empty -> ArchiveEmpty(onRefresh = actions.onRefresh)
-                is ArchiveContent.Ready -> ReadyBody(state, content, layout, actions)
+            CmpColumn(modifier = Modifier.fillMaxSize()) {
+                state.canFilter?.let { filter -> CanFilterBar(filter, layout, actions) }
+                CmpBox(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                    when (val content = state.content) {
+                        ArchiveContent.Loading -> ArchiveLoading()
+
+                        ArchiveContent.Error -> ArchiveError(onRetry = actions.onRefresh)
+
+                        ArchiveContent.Empty -> ArchiveEmpty(
+                            onRefresh = actions.onRefresh,
+                            canCode = state.canFilter?.applied,
+                            onShowAll = { actions.onCanInput("") }
+                        )
+
+                        is ArchiveContent.Ready -> ReadyBody(state, content, layout, actions)
+                    }
+                }
             }
         }
     }
     state.rollback?.let {
         RollbackDialog(it, onConfirm = actions.onRollbackConfirm, onDismiss = actions.onRollbackDismiss)
+    }
+}
+
+/** Поле CAN-фильтра: над списком той же ширины (на широком окне — над колонкой списка). */
+@Composable
+private fun CanFilterBar(filter: CanFilterUi, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
+    val expanded = layout == FirmwareLayout.Expanded
+    val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
+    CmpBox(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = if (expanded) Alignment.TopStart else Alignment.TopCenter
+    ) {
+        ArchiveCanFilter(
+            filter = filter,
+            onInput = actions.onCanInput,
+            onPickVehicle = actions.onVehiclePickerOpen,
+            modifier = Modifier
+                .widthIn(max = if (expanded) MasterWidth + padding * 2 else ListMaxWidth)
+                .padding(start = padding, top = padding, end = padding)
+        )
     }
 }
 
@@ -161,7 +227,7 @@ private fun ReadyBody(
                 ArchiveDetail(
                     row = selected,
                     installedVersion = state.installedVersion,
-                    onInstall = { actions.onPick(selected.version) }
+                    onInstall = if (state.viewOnly) null else ({ actions.onPick(selected.version) })
                 )
             }
         }
@@ -216,7 +282,7 @@ private fun VersionList(
                 master = master,
                 selected = master && state.selected == row.version,
                 onSelect = { actions.onSelectRow(row.version) },
-                onPick = { actions.onPick(row.version) }
+                onPick = if (state.viewOnly) null else ({ actions.onPick(row.version) })
             )
         }
         item(key = "footer") {

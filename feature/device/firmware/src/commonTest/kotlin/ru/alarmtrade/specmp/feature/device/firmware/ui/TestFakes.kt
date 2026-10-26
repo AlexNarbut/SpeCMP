@@ -41,17 +41,31 @@ internal class FakeFirmwareRepository : FirmwareRepository {
         return latest[moduleId to channel] ?: Response.Error(IllegalStateException("no version"))
     }
 
+    /** Основной модуль модели блока (архив без moduleId). */
+    var mainModule: Response<Long?> = Response.Success(null)
+    val mainModuleCalls = mutableListOf<String>()
+
+    override suspend fun mainModuleId(deviceName: String): Response<Long?> {
+        mainModuleCalls += deviceName
+        return mainModule
+    }
+
     /** Страницы архива по номеру; нет страницы — ошибка сервера. */
     val archivePages = mutableMapOf<Int, Response<FirmwareVersionPage>>()
     val archiveCalls = mutableListOf<Int>()
+
+    /** Запросы архива целиком: модуль, страница и CAN-фильтр. */
+    val archiveRequests = mutableListOf<Triple<Long, Int, String?>>()
 
     override suspend fun archivePage(
         moduleId: Long,
         channel: FirmwareChannel,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        canCode: String?
     ): Response<FirmwareVersionPage> {
         archiveCalls += page
+        archiveRequests += Triple(moduleId, page, canCode)
         return archivePages[page] ?: Response.Error(IllegalStateException("no page"))
     }
 }

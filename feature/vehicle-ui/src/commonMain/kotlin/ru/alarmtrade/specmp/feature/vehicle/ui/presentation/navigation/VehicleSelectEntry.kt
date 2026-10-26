@@ -46,7 +46,11 @@ fun VehicleSelectEntry(
     onOpenFirmwareArchive: ((canCode: String) -> Unit)? = null,
     onOpenUserManual: ((manualId: Int) -> Unit)? = null
 ) {
-    val viewModel = koinViewModel<VehicleSelectViewModel>(parameters = { parametersOf(request) })
+    // Ключ — запрос: каталог для другого режима в том же владельце (справочник и выбор для архива) — своя ViewModel.
+    val viewModel = koinViewModel<VehicleSelectViewModel>(
+        key = "VehicleSelect:$request",
+        parameters = { parametersOf(request) }
+    )
     val state by viewModel.state.collectAsState()
     val snackbarHostState = rememberCmpSnackbarHostState()
     val uriHandler = LocalUriHandler.current
