@@ -20,6 +20,15 @@ import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImageWithPlaceholder
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
+/** Квадратная миниатюра строки каталога: логотип марки, фото модели и комплектации, результат CAN-поиска. */
+internal val ThumbSize = 48.dp
+
+/** Миниатюра фото автомобиля в строке (модель, комплектация, результат CAN-поиска) — крупнее логотипа. */
+internal val PhotoThumbSize = 72.dp
+
+/** Скругление миниатюры строки. */
+internal val ThumbRadius = 12.dp
+
 /** Пропорции фото автомобиля и точек подключения. */
 internal const val PHOTO_RATIO = 4f / 3f
 
@@ -54,7 +63,8 @@ internal fun CarPhoto(
                 model = url,
                 contentDescription = contentDescription,
                 placeholder = placeholder,
-                contentScale = ContentScale.Crop,
+                // Вписываем по большей стороне: фото видно целиком, ничего не обрезается.
+                contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -63,7 +73,7 @@ internal fun CarPhoto(
 
 /** Логотип марки; нет логотипа — первая буква марки в круге. */
 @Composable
-internal fun BrandLogo(name: String, url: String?, modifier: Modifier = Modifier, size: Dp = 40.dp) {
+internal fun BrandLogo(name: String, url: String?, modifier: Modifier = Modifier, size: Dp = ThumbSize) {
     val colors = cmpThemeColors()
     val letter: @Composable () -> Unit = {
         CmpText(
@@ -74,7 +84,7 @@ internal fun BrandLogo(name: String, url: String?, modifier: Modifier = Modifier
         )
     }
     Box(
-        modifier = modifier.size(size).clip(RoundedCornerShape(12.dp)).background(colors.secondaryContainer),
+        modifier = modifier.size(size).clip(RoundedCornerShape(ThumbRadius)).background(colors.secondaryContainer),
         contentAlignment = Alignment.Center
     ) {
         if (url == null) {

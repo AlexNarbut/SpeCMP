@@ -69,7 +69,7 @@ fun CmpCodeField(
                         }
                         Box(
                             modifier = Modifier
-                                .size(width = 58.dp, height = 60.dp)
+                                .size(width = 58.dp, height = 56.dp)
                                 .border(
                                     width = if (isError || active) 2.dp else 1.dp,
                                     color = borderColor,

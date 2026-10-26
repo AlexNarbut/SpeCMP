@@ -11,7 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,9 +40,14 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.BrandLogo
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.CarPhoto
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FilteredOut
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.LoadFailed
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PhotoThumbSize
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.SkeletonRows
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.StateAction
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.ThumbRadius
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.ThumbSize
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.VehicleRow
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.fadeItem
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.fadeItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.highlighted
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.looksLikeCanCode
@@ -81,9 +87,14 @@ import specmp.feature.vehicle_ui.generated.resources.vehicle_search_btn_by_name
 
 /** Список уровня каталога: прокрутка, отступы. */
 @Composable
-internal fun CatalogList(modifier: Modifier = Modifier, content: LazyListScope.() -> Unit) {
+internal fun CatalogList(
+    modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
+    content: LazyListScope.() -> Unit
+) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
+        state = listState,
         contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
         content = content
@@ -102,12 +113,14 @@ internal fun <T> LazyListScope.levelState(
     is Load.Ready -> load.value
 
     is Load.Failed -> {
-        item { LoadFailed(offline = load.offline, onRetry = { actions.onRetry(level) }, compact = compact) }
+        fadeItem("failed-$level") {
+            LoadFailed(offline = load.offline, onRetry = { actions.onRetry(level) }, compact = compact)
+        }
         null
     }
 
     Load.Idle, Load.Loading -> {
-        item { SkeletonRows(count = skeleton, thumb = thumb) }
+        fadeItem("skeleton-$level") { SkeletonRows(count = skeleton, thumb = thumb) }
         null
     }
 }
@@ -130,7 +143,7 @@ internal fun LazyListScope.brandItems(
     if (showRecent && state.query.isBlank() && state.recent.isNotEmpty()) recentItems(state.recent, actions)
     val list = brands.filter { matchesQuery(it.name, state.query) }
     if (list.isEmpty()) {
-        item { EmptyBrands(state, actions, compact) }
+        fadeItem("brands-empty") { EmptyBrands(state, actions, compact) }
         return
     }
     var letter: Char? = null
@@ -138,9 +151,9 @@ internal fun LazyListScope.brandItems(
         val first = brand.name.firstOrNull()?.uppercaseChar()
         if (state.query.isBlank() && first != letter) {
             letter = first
-            item(key = "letter-$first") { LetterHeader(first?.toString().orEmpty()) }
+            fadeItem("letter-$first") { LetterHeader(first?.toString().orEmpty()) }
         }
-        item(key = "brand-${brand.id}") {
+        fadeItem("brand-${brand.id}") {
             BrandRow(
                 brand = brand,
                 query = state.query,
@@ -198,7 +211,7 @@ private fun EmptyBrands(state: VehicleSelectState, actions: VehicleSelectActions
 
 private fun LazyListScope.comboItems(state: VehicleSelectState, actions: VehicleSelectActions) {
     val combo = state.combo ?: return
-    item(key = "combo-brand") {
+    fadeItem("combo-brand") {
         VehicleRow(
             title = highlighted(combo.brand.name, state.query),
             subtitle = stringResource(Res.string.vehicle_catalog_label_all_models),
@@ -207,7 +220,7 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
             modifier = Modifier.testTag(VehicleTestTags.brand(combo.brand.id))
         )
     }
-    item(key = "combo-title") {
+    fadeItem("combo-title") {
         SectionTitle(
             if (combo.rest.isEmpty()) {
                 stringResource(Res.string.vehicle_catalog_title_combo, combo.brand.name)
@@ -220,7 +233,7 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
         ?: return
     val matched = models.filter { matchesQuery(it.name, combo.rest) }
     if (matched.isEmpty()) {
-        item {
+        fadeItem("combo-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
                 title = stringResource(Res.string.vehicle_catalog_title_nothing),
@@ -230,14 +243,14 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
         }
         return
     }
-    items(matched, key = { "combo-model-${it.id}" }) { model ->
+    fadeItems(matched, key = { "combo-model-${it.id}" }) { model ->
         ModelRow(model = model, query = combo.rest, selected = false, onClick = { actions.onModelPick(model) })
     }
 }
 
 internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: VehicleSelectActions) {
-    item(key = "recent-title") { SectionTitle(stringResource(Res.string.vehicle_catalog_title_recent)) }
-    items(recent, key = { "recent-${it.id}" }) { car ->
+    fadeItem("recent-title") { SectionTitle(stringResource(Res.string.vehicle_catalog_title_recent)) }
+    fadeItems(recent, key = { "recent-${it.id}" }) { car ->
         val colors = cmpThemeColors()
         VehicleRow(
             title = AnnotatedString(car.fullName()),
@@ -247,8 +260,8 @@ internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: Vehicl
             lead = {
                 CmpBox(
                     modifier = Modifier
-                        .size(40.dp)
-                        .background(colors.secondaryContainer, RoundedCornerShape(12.dp)),
+                        .size(ThumbSize)
+                        .background(colors.secondaryContainer, RoundedCornerShape(ThumbRadius)),
                     contentAlignment = Alignment.Center
                 ) {
                     CmpIcon(icon = CmpIcons.History, contentDescription = null, tint = colors.onSecondaryContainer)
@@ -257,7 +270,7 @@ internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: Vehicl
             modifier = Modifier.testTag(VehicleTestTags.recent(car.id))
         )
     }
-    item(key = "recent-divider") { CmpDivider(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) }
+    fadeItem("recent-divider") { CmpDivider(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) }
 }
 
 @Composable
@@ -285,7 +298,7 @@ internal fun LazyListScope.modelItems(
     val models = levelState(state.models, CatalogLevel.MODELS, actions, skeleton = 5, thumb = true, compact = compact)
         ?: return
     if (models.isEmpty()) {
-        item {
+        fadeItem("models-empty") {
             if (state.groups.isNotEmpty()) {
                 FilteredOut(onReset = actions.onFilterClear, compact = compact)
             } else {
@@ -301,7 +314,7 @@ internal fun LazyListScope.modelItems(
     val query = if (accordion || state.selection.model == null) state.query else ""
     val list = models.filter { matchesQuery(it.name, query) }
     if (list.isEmpty()) {
-        item {
+        fadeItem("models-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
                 title = stringResource(Res.string.vehicle_catalog_title_nothing),
@@ -313,7 +326,7 @@ internal fun LazyListScope.modelItems(
     }
     list.forEach { model ->
         val open = accordion && state.selection.model?.id == model.id && state.selection.carId == null
-        item(key = "model-${model.id}") {
+        fadeItem("model-${model.id}") {
             ModelRow(
                 model = model,
                 query = query,
@@ -342,7 +355,7 @@ internal fun ModelRow(
         onClick = onClick,
         selected = selected,
         chevron = !expandable,
-        lead = { CarPhoto(url = model.imageUrl, modifier = Modifier.size(width = 84.dp, height = 56.dp)) },
+        lead = { CarPhoto(url = model.imageUrl, radius = ThumbRadius, modifier = Modifier.size(PhotoThumbSize)) },
         trailing = if (expandable) {
             {
                 CmpIcon(
@@ -363,9 +376,10 @@ internal fun ModelRow(
 /** Комплектации выбранной модели; [inline] — под моделью в аккордеоне (без фильтра поиском). */
 internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: VehicleSelectActions, inline: Boolean) {
     val model = state.selection.model ?: return
-    val trims = levelState(state.trims, CatalogLevel.TRIMS, actions, skeleton = 2, compact = true) ?: return
+    val trims =
+        levelState(state.trims, CatalogLevel.TRIMS, actions, skeleton = 2, thumb = true, compact = true) ?: return
     if (trims.isEmpty()) {
-        item {
+        fadeItem("trims-empty") {
             CmpStateBox(
                 icon = CmpIcons.Inventory2,
                 title = stringResource(Res.string.vehicle_catalog_title_trims_empty),
@@ -378,7 +392,7 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
     val query = if (inline) "" else state.query
     val list = trims.filter { matchesQuery(it.name, query) }
     if (list.isEmpty()) {
-        item {
+        fadeItem("trims-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
                 title = stringResource(Res.string.vehicle_catalog_title_nothing),
@@ -388,9 +402,10 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
         }
         return
     }
-    items(list, key = { "trim-${it.id}" }) { trim ->
+    fadeItems(list, key = { "trim-${it.id}" }) { trim ->
         TrimRow(
             trim = trim,
+            imageUrl = model.imageUrl,
             query = query,
             selected = state.selection.carId == trim.id,
             pick = state.mode.pick,
@@ -403,6 +418,7 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
 @Composable
 private fun TrimRow(
     trim: CarTrim,
+    imageUrl: String?,
     query: String,
     selected: Boolean,
     pick: Boolean,
@@ -414,6 +430,8 @@ private fun TrimRow(
         onClick = { actions.onTrimOpen(trim.id) },
         selected = selected,
         dense = true,
+        // Своего фото у комплектации нет — фото модели.
+        lead = { CarPhoto(url = imageUrl, radius = ThumbRadius, modifier = Modifier.size(PhotoThumbSize)) },
         modifier = Modifier
             .padding(start = if (inline) 24.dp else 0.dp)
             .testTag(VehicleTestTags.trim(trim.id)),
@@ -443,7 +461,7 @@ internal fun PickButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleSelectActions, compact: Boolean) {
     if (state.canCode.length < CAN_LENGTH) {
-        item {
+        fadeItem("can-enter") {
             CmpText(
                 text = stringResource(Res.string.vehicle_can_msg_enter),
                 style = CmpTextStyle.BodyLarge,
@@ -456,7 +474,7 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
     val cars = levelState(state.canResults, CatalogLevel.CAN, actions, skeleton = 3, thumb = true, compact = compact)
         ?: return
     if (cars.isEmpty()) {
-        item {
+        fadeItem("can-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
                 title = stringResource(Res.string.vehicle_can_title_none, state.canCode),
@@ -471,14 +489,14 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
         }
         return
     }
-    item(key = "can-found") { SectionTitle(stringResource(Res.string.vehicle_can_msg_found, cars.size)) }
-    items(cars, key = { "can-${it.id}" }) { car ->
+    fadeItem("can-found") { SectionTitle(stringResource(Res.string.vehicle_can_msg_found, cars.size)) }
+    fadeItems(cars, key = { "can-${it.id}" }) { car ->
         VehicleRow(
             title = AnnotatedString("${car.brand} ${car.model}"),
             subtitle = stringResource(Res.string.vehicle_can_label_result, yearsText(car.years), car.name),
             onClick = { actions.onCanResultOpen(car) },
             selected = state.selection.carId == car.id,
-            lead = { CarPhoto(url = car.imageUrl, modifier = Modifier.size(width = 64.dp, height = 48.dp)) },
+            lead = { CarPhoto(url = car.imageUrl, radius = ThumbRadius, modifier = Modifier.size(PhotoThumbSize)) },
             action = if (state.mode.pick) {
                 { PickButton(onClick = { actions.onPick(car.id) }) }
             } else {

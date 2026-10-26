@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +17,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.CardPane
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.PhotoViewer
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.VehicleDialogs
@@ -78,10 +80,21 @@ internal fun VehicleSelectContent(
     }
 }
 
+/** Ключ шага узкой раскладки: смена ключа — плавный переход, у каждого шага своя прокрутка. */
+private fun VehicleSelectState.compactKey(): Any = when (compactStep()) {
+    CompactStep.BRANDS -> "brands"
+    CompactStep.MODELS -> "models-${selection.brand?.id}"
+    CompactStep.TRIMS -> "trims-${selection.model?.id}"
+    CompactStep.CAN -> "can"
+    CompactStep.CARD -> "card-${selection.carId}"
+}
+
 /** Узкое окно: шаги «марки → модели → комплектации → карточка» (или поиск по CAN → карточка). */
 @Composable
 private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions) {
     val step = state.compactStep()
+    // Прокрутка марок переживает уход на модели и возврат.
+    val brandsList = rememberLazyListState()
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         if (step != CompactStep.CARD) {
             SearchArea(
@@ -92,26 +105,35 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
             )
         }
         CrumbsBar(state = state, actions = actions, typeChip = step != CompactStep.CARD)
-        if (step == CompactStep.CARD) {
-            CardPane(
-                card = state.card,
-                ui = state.cardUi,
-                groups = state.groups,
-                wide = false,
-                pick = state.mode.pick,
-                actions = actions.card,
-                onRetry = actions.onRetry,
-                onPick = actions.onPick,
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            CatalogList(modifier = Modifier.weight(1f)) {
-                when (step) {
-                    CompactStep.BRANDS -> brandItems(state, actions, showRecent = true, compact = false)
-                    CompactStep.MODELS -> modelItems(state, actions, accordion = false, compact = false)
-                    CompactStep.TRIMS -> trimItems(state, actions, inline = false)
-                    CompactStep.CAN -> canItems(state, actions, compact = false)
-                    CompactStep.CARD -> Unit
+        FadeContent(targetState = state, contentKey = { it.compactKey() }, modifier = Modifier.weight(1f)) { shown ->
+            when (val shownStep = shown.compactStep()) {
+                CompactStep.CARD -> CardPane(
+                    card = shown.card,
+                    ui = shown.cardUi,
+                    groups = shown.groups,
+                    wide = false,
+                    pick = shown.mode.pick,
+                    actions = actions.card,
+                    onRetry = actions.onRetry,
+                    onPick = actions.onPick
+                )
+
+                else -> CatalogList(
+                    listState = if (shownStep ==
+                        CompactStep.BRANDS
+                    ) {
+                        brandsList
+                    } else {
+                        rememberLazyListState()
+                    }
+                ) {
+                    when (shownStep) {
+                        CompactStep.BRANDS -> brandItems(shown, actions, showRecent = true, compact = false)
+                        CompactStep.MODELS -> modelItems(shown, actions, accordion = false, compact = false)
+                        CompactStep.TRIMS -> trimItems(shown, actions, inline = false)
+                        CompactStep.CAN -> canItems(shown, actions, compact = false)
+                        CompactStep.CARD -> Unit
+                    }
                 }
             }
         }

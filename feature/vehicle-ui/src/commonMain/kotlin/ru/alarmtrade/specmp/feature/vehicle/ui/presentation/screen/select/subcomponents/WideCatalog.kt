@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.ThirdColumnMinWidth
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CenteredCard
@@ -169,10 +170,12 @@ private fun RowScope.NameColumns(
         title = brand?.name ?: stringResource(Res.string.vehicle_catalog_title_models),
         modifier = if (expanded) Modifier.width(if (third) 300.dp else 340.dp) else Modifier.weight(1f)
     ) {
-        if (brand == null) {
-            Prompt(stringResource(Res.string.vehicle_catalog_msg_pick_brand))
-        } else {
-            CatalogList { modelItems(state, actions, accordion = !third, compact = true) }
+        FadeContent(targetState = state, contentKey = { it.selection.brand?.id }) { shown ->
+            if (shown.selection.brand == null) {
+                Prompt(stringResource(Res.string.vehicle_catalog_msg_pick_brand))
+            } else {
+                CatalogList { modelItems(shown, actions, accordion = !third, compact = true) }
+            }
         }
     }
     if (third) {
@@ -186,11 +189,13 @@ private fun RowScope.NameColumns(
 @Composable
 private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
     Column(title = stringResource(Res.string.vehicle_catalog_title_trims), modifier = Modifier.width(260.dp)) {
-        val single = state.trims.valueOrNull()?.size == 1
-        when {
-            state.selection.model == null -> Prompt(stringResource(Res.string.vehicle_catalog_msg_pick_model))
-            single -> Prompt(stringResource(Res.string.vehicle_catalog_msg_single_trim))
-            else -> CatalogList { trimItems(state, actions, inline = false) }
+        FadeContent(targetState = state, contentKey = { it.selection.model?.id }) { shown ->
+            val single = shown.trims.valueOrNull()?.size == 1
+            when {
+                shown.selection.model == null -> Prompt(stringResource(Res.string.vehicle_catalog_msg_pick_model))
+                single -> Prompt(stringResource(Res.string.vehicle_catalog_msg_single_trim))
+                else -> CatalogList { trimItems(shown, actions, inline = false) }
+            }
         }
     }
 }
@@ -213,7 +218,17 @@ private fun CanColumn(state: VehicleSelectState, actions: VehicleSelectActions, 
 @Composable
 private fun RowScope.CardColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
     val colors = cmpThemeColors()
-    CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight().background(colors.surfaceContainerLowest)) {
+    FadeContent(
+        targetState = state,
+        contentKey = { it.selection.carId },
+        modifier = Modifier.weight(1f).fillMaxHeight().background(colors.surfaceContainerLowest)
+    ) { shown -> CardColumnContent(shown, actions) }
+}
+
+@Composable
+private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectActions) {
+    val colors = cmpThemeColors()
+    CmpColumn(modifier = Modifier.fillMaxSize()) {
         if (state.selection.carId == null) {
             CmpBox(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 CmpColumn(

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subco
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -18,6 +19,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpCodeField
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSegmentedButton
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -52,6 +54,8 @@ import specmp.feature.vehicle_ui.generated.resources.vehicle_search_placeholder_
 import specmp.feature.vehicle_ui.generated.resources.vehicle_search_placeholder_trim
 
 private const val CAN_CODE_LENGTH = 4
+private val FIELD_HEIGHT = 56.dp
+private val HINT_HEIGHT = 24.dp
 
 /**
  * Зона поиска: сегменты «По названию | По CAN-коду» (кроме каталога конфигураций) и поле запроса либо
@@ -112,20 +116,37 @@ private fun NameField(state: VehicleSelectState, actions: VehicleSelectActions, 
 
         else -> stringResource(Res.string.vehicle_search_placeholder_brand)
     }
-    CmpSearchField(
-        value = state.query,
-        onValueChange = actions.onQueryChange,
-        placeholder = placeholder,
-        clearContentDescription = stringResource(Res.string.vehicle_common_a11y_clear),
-        modifier = modifier.testTag(VehicleTestTags.SEARCH)
-    )
+    InputSlot(modifier = modifier, hint = {}) {
+        CmpSearchField(
+            value = state.query,
+            onValueChange = actions.onQueryChange,
+            placeholder = placeholder,
+            clearContentDescription = stringResource(Res.string.vehicle_common_a11y_clear),
+            modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.SEARCH)
+        )
+    }
+}
+
+/**
+ * Поле поиска и строка подсказки под ним фиксированной высоты в обоих режимах — переключение «По названию /
+ * По CAN-коду» не сдвигает список под зоной поиска.
+ */
+@Composable
+private fun InputSlot(modifier: Modifier, hint: @Composable () -> Unit, field: @Composable () -> Unit) {
+    CmpColumn(modifier = modifier) {
+        CmpBox(modifier = Modifier.fillMaxWidth().height(FIELD_HEIGHT), contentAlignment = Alignment.CenterStart) {
+            field()
+        }
+        CmpBox(modifier = Modifier.fillMaxWidth().height(HINT_HEIGHT), contentAlignment = Alignment.CenterStart) {
+            hint()
+        }
+    }
 }
 
 @Composable
 private fun CanField(state: VehicleSelectState, actions: VehicleSelectActions, modifier: Modifier) {
-    val colors = cmpThemeColors()
     val fromFirmware = state.mode.firmwareCanCode != null && state.canCode == state.mode.firmwareCanCode
-    CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    InputSlot(modifier = modifier, hint = { CanHint(state, fromFirmware) }) {
         CmpCodeField(
             value = state.canCode,
             onValueChange = actions.onCanCodeChange,
@@ -134,30 +155,35 @@ private fun CanField(state: VehicleSelectState, actions: VehicleSelectActions, m
             length = CAN_CODE_LENGTH,
             modifier = Modifier.testTag(VehicleTestTags.CAN_INPUT)
         )
-        when {
-            fromFirmware -> CmpRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                CmpIcon(
-                    icon = CmpIcons.Memory,
-                    contentDescription = null,
-                    tint = colors.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                CmpText(
-                    text = stringResource(Res.string.vehicle_can_hint_firmware),
-                    style = CmpTextStyle.Body,
-                    color = colors.primary
-                )
-            }
+    }
+}
 
-            state.canCode.length < CAN_CODE_LENGTH -> CmpText(
-                text = stringResource(Res.string.vehicle_can_hint_prompt),
+@Composable
+private fun CanHint(state: VehicleSelectState, fromFirmware: Boolean) {
+    val colors = cmpThemeColors()
+    when {
+        fromFirmware -> CmpRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CmpIcon(
+                icon = CmpIcons.Memory,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            CmpText(
+                text = stringResource(Res.string.vehicle_can_hint_firmware),
                 style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant
+                color = colors.primary
             )
         }
+
+        state.canCode.length < CAN_CODE_LENGTH -> CmpText(
+            text = stringResource(Res.string.vehicle_can_hint_prompt),
+            style = CmpTextStyle.Body,
+            color = colors.onSurfaceVariant
+        )
     }
 }
 

@@ -35,6 +35,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.LoadFailed
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PHOTO_RATIO
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
@@ -69,6 +70,26 @@ internal fun CardPane(
     onPick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     padding: Dp = 16.dp
+) {
+    // Скелетон → карточка / ошибка — затуханием, а не резкой подменой.
+    FadeContent(targetState = card, contentKey = { it::class }, modifier = modifier) { shown ->
+        CardPaneState(shown, ui, groups, wide, pick, actions, onRetry, onPick, padding)
+    }
+}
+
+@Suppress("LongParameterList") // проброс параметров CardPane в одну фазу загрузки
+@Composable
+private fun CardPaneState(
+    card: Load<CarCard>,
+    ui: CardUi,
+    groups: Set<CarFeatureGroup>,
+    wide: Boolean,
+    pick: Boolean,
+    actions: CardActions,
+    onRetry: (CatalogLevel) -> Unit,
+    onPick: (Int) -> Unit,
+    padding: Dp,
+    modifier: Modifier = Modifier
 ) {
     when (card) {
         Load.Idle, Load.Loading -> CardSkeleton(wide = wide, modifier = modifier.padding(padding))

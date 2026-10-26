@@ -1,15 +1,22 @@
 package ru.alarmtrade.specmp.core.ui.view.image
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import coil3.ImageLoader
@@ -17,6 +24,7 @@ import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageContent
 
 /**
  * Единый `ImageLoader` приложения (U-1): memory/disk-кэш и сетевой стек
@@ -98,6 +106,8 @@ fun CmpSubcomposeAsyncImage(
     }
 }
 
+private const val IMAGE_FADE_MS = 220
+
 /**
  * Картинка по url с заглушкой: [placeholder] показывается, пока картинка грузится, и вместо неё, если загрузка
  * не удалась. Размер задаёт [modifier] — раскладка не прыгает.
@@ -121,6 +131,13 @@ fun CmpAsyncImageWithPlaceholder(
         contentScale = contentScale,
         // Слот получает жёсткие ограничения картинки — заглушку центрируем, иначе она растянется.
         loading = { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { placeholder() } },
-        error = { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { placeholder() } }
+        error = { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { placeholder() } },
+        success = {
+            // Загруженная картинка проявляется, а не подменяет заглушку резко.
+            var shown by remember { mutableStateOf(false) }
+            val alpha by animateFloatAsState(if (shown) 1f else 0f, tween(IMAGE_FADE_MS), label = "imageFade")
+            LaunchedEffect(Unit) { shown = true }
+            SubcomposeAsyncImageContent(modifier = Modifier.graphicsLayer { this.alpha = alpha })
+        }
     )
 }

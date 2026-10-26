@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -90,9 +89,9 @@ internal fun StateAction(text: String, onClick: () -> Unit, primary: Boolean = f
     }
 }
 
-/** Скелетон списка: [count] строк, слева квадрат [lead] или миниатюра фото ([thumb]). */
+/** Скелетон списка: [count] строк с квадратной миниатюрой; [thumb] — строка с подписью (модели, результаты). */
 @Composable
-internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Boolean = false, lead: Dp = 40.dp) {
+internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Boolean = false) {
     CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         repeat(count) {
             CmpRow(
@@ -100,11 +99,10 @@ internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Bool
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (thumb) {
-                    CmpSkeleton(Modifier.size(width = 84.dp, height = 56.dp), shape = RoundedCornerShape(10.dp))
-                } else {
-                    CmpSkeleton(Modifier.size(lead), shape = RoundedCornerShape(12.dp))
-                }
+                CmpSkeleton(
+                    Modifier.size(if (thumb) PhotoThumbSize else ThumbSize),
+                    shape = RoundedCornerShape(ThumbRadius)
+                )
                 CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     CmpSkeleton(Modifier.width(180.dp).height(18.dp))
                     if (thumb) CmpSkeleton(Modifier.width(110.dp).height(14.dp))
