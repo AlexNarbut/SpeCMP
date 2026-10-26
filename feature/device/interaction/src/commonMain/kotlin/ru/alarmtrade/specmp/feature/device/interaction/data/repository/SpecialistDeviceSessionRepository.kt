@@ -51,8 +51,10 @@ class SpecialistDeviceSessionRepository(
             emit(DeviceLinkState.DISCONNECTED)
             return@flow
         }
+        // Поток текущей сессии SDK: сам переключается на новую сессию после закрытия прежней (поток конкретной
+        // сессии после её закрытия молчит, и долгоживущий подписчик не увидел бы новое подключение).
         emitAll(
-            interactor.getDeviceConnectionStateFlowUseCase.execute().map { response ->
+            interactor.observeCurrentSessionConnectionStateUseCase.execute().map { response ->
                 when (response) {
                     is SpecialistResponse.Success -> response.value.toDomain()
                     is SpecialistResponse.Error -> DeviceLinkState.DISCONNECTED
