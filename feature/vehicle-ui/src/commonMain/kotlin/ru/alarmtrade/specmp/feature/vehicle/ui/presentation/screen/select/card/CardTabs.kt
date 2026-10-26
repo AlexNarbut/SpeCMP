@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -54,19 +56,59 @@ import specmp.feature.vehicle_ui.generated.resources.vehicle_points_label_photos
 /** Доля столбца названия функции на широком окне (столбцы шин — по 1). */
 private const val FEATURE_NAME_WEIGHT = 1.2f
 
+/** Функции по группам в порядке [CarFeatureGroup.entries]; пустые группы не входят. */
+internal fun featuresByGroup(features: List<CarFeature>): List<Pair<CarFeatureGroup, List<CarFeature>>> {
+    val byGroup = features.groupBy { it.group }
+    return CarFeatureGroup.entries.mapNotNull { group -> byGroup[group]?.let { group to it } }
+}
+
 /**
- * Вкладка «Функции» (матрица B): группы со счётчиком и сворачиванием; у функции — «Чтение» и «Управление»
- * с чипами шин (узкое окно — строками под названием, широкое — два столбца); внизу — предупреждение.
+ * Вкладка «Функции» (матрица B) элементами списка карточки: группы со счётчиком и сворачиванием; у функции —
+ * «Чтение» и «Управление» с чипами шин (узкое окно — строками под названием, широкое — два столбца); внизу —
+ * предупреждение. Каждая функция — отдельный элемент: при открытии карточки композируются только видимые.
  */
-@Composable
-internal fun FeaturesTab(
-    features: List<CarFeature>,
+@Suppress("LongParameterList") // разметка вкладки: всё приходит из CardContent
+internal fun LazyListScope.featureItems(
+    groups: List<Pair<CarFeatureGroup, List<CarFeature>>>,
+    shown: Int,
     total: Int,
     filtered: Boolean,
     collapsed: Set<CarFeatureGroup>,
     wide: Boolean,
+    padding: Dp,
     onGroupToggle: (CarFeatureGroup) -> Unit
 ) {
+    // Отступ между элементами вкладки — как у прежней колонки (spacedBy 10).
+    val itemPadding = Modifier.padding(start = padding, end = padding, top = 10.dp)
+    item(key = "features-intro") {
+        CmpColumn(modifier = Modifier.padding(start = padding, end = padding, top = 14.dp)) {
+            if (wide) FeaturesColumnsHeader()
+            FeaturesIntro(shown = shown, total = total, filtered = filtered)
+        }
+    }
+    groups.forEach { (group, inGroup) ->
+        val open = group !in collapsed
+        item(key = "features-group-${group.name}") {
+            GroupHeader(
+                group = group,
+                count = inGroup.size,
+                open = open,
+                onToggle = { onGroupToggle(group) },
+                modifier = itemPadding
+            )
+        }
+        if (open) {
+            items(count = inGroup.size, key = { index -> "feature-${group.name}-$index" }) { index ->
+                FeatureRow(inGroup[index], wide, modifier = itemPadding)
+            }
+        }
+    }
+    item(key = "features-warning") { FeaturesWarning(modifier = itemPadding) }
+}
+
+/** Легенда вкладки, признак фильтра по группам и пустой результат фильтра. */
+@Composable
+private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
     val colors = cmpThemeColors()
     CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         CmpText(
@@ -83,46 +125,49 @@ internal fun FeaturesTab(
                     modifier = Modifier.size(18.dp)
                 )
                 CmpText(
-                    text = stringResource(Res.string.vehicle_features_msg_filtered, features.size, total),
+                    text = stringResource(Res.string.vehicle_features_msg_filtered, shown, total),
                     style = CmpTextStyle.Body,
                     color = colors.primary
                 )
             }
         }
-        if (features.isEmpty()) {
+        if (shown == 0) {
             CmpStateBox(
                 icon = CmpIcons.FilterAltOff,
                 title = stringResource(Res.string.vehicle_features_msg_filtered_none),
                 compact = true
             )
         }
-        CarFeatureGroup.entries.forEach { group ->
-            val inGroup = features.filter { it.group == group }
-            if (inGroup.isNotEmpty()) {
-                val open = group !in collapsed
-                GroupHeader(group = group, count = inGroup.size, open = open, onToggle = { onGroupToggle(group) })
-                if (open) inGroup.forEach { FeatureRow(it, wide) }
-            }
-        }
-        CmpRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-                .background(colors.surfaceContainerHigh, RoundedCornerShape(14.dp))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onSurfaceVariant)
-            CmpText(text = stringResource(Res.string.vehicle_features_msg_warning), style = CmpTextStyle.Body)
-        }
     }
 }
 
 @Composable
-private fun GroupHeader(group: CarFeatureGroup, count: Int, open: Boolean, onToggle: () -> Unit) {
+private fun FeaturesWarning(modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
     CmpRow(
-        modifier = Modifier
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .background(colors.surfaceContainerHigh, RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onSurfaceVariant)
+        CmpText(text = stringResource(Res.string.vehicle_features_msg_warning), style = CmpTextStyle.Body)
+    }
+}
+
+@Composable
+private fun GroupHeader(
+    group: CarFeatureGroup,
+    count: Int,
+    open: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 10.dp)
             .clip(RoundedCornerShape(12.dp))
@@ -149,7 +194,7 @@ private fun GroupHeader(group: CarFeatureGroup, count: Int, open: Boolean, onTog
 }
 
 @Composable
-private fun FeatureRow(feature: CarFeature, wide: Boolean) {
+private fun FeatureRow(feature: CarFeature, wide: Boolean, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
     val name: @Composable () -> Unit = {
         CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -157,11 +202,9 @@ private fun FeatureRow(feature: CarFeature, wide: Boolean) {
             feature.description?.let { CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant) }
         }
     }
-    val read = stringResource(Res.string.vehicle_features_label_read)
-    val control = stringResource(Res.string.vehicle_features_label_control)
     if (wide) {
         CmpRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             CmpBox(modifier = Modifier.weight(FEATURE_NAME_WEIGHT)) { name() }
@@ -170,12 +213,13 @@ private fun FeatureRow(feature: CarFeature, wide: Boolean) {
         }
     } else {
         CmpColumn(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             name()
-            BusList(label = read, buses = feature.reads)
-            BusList(label = control, buses = feature.controls)
+            // Подписи — только на узком окне: на широком они в заголовке столбцов.
+            BusList(label = stringResource(Res.string.vehicle_features_label_read), buses = feature.reads)
+            BusList(label = stringResource(Res.string.vehicle_features_label_control), buses = feature.controls)
         }
     }
 }

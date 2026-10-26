@@ -104,9 +104,9 @@ fun FirmwareArchiveEntry(
     }
 
     CmpBox(modifier = Modifier.fillMaxSize()) {
-        FirmwareArchiveContent(
-            state = state,
-            actions = FirmwareArchiveActions(
+        // Один экземпляр на экран: дочерние composable пропускают рекомпозицию по равенству действий.
+        val actions = remember(viewModel, onBack) {
+            FirmwareArchiveActions(
                 onBack = onBack,
                 onRefresh = viewModel::onRefresh,
                 onEndReached = viewModel::onEndReached,
@@ -118,6 +118,10 @@ fun FirmwareArchiveEntry(
                 onCanInput = viewModel::onCanInput,
                 onVehiclePickerOpen = viewModel::onVehiclePickerOpen
             )
+        }
+        FirmwareArchiveContent(
+            state = state,
+            actions = actions
         )
         if (state.vehiclePicker && vehiclePicker != null) {
             CmpSurface(modifier = Modifier.fillMaxSize()) {

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.chec
 
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +77,11 @@ class FirmwareCheckViewModel(
             if (systemId == null) {
                 flowOf(null)
             } else {
-                pinCooldown.remaining(systemId).map { left -> left.takeIf { it > Duration.ZERO } }
+                // Тик кулдауна — 250 мс, а диалог показывает целые секунды: округляем вверх и отсекаем повторы,
+                // чтобы state экрана менялся раз в секунду, а не 4 раза.
+                pinCooldown.remaining(systemId)
+                    .map { left -> left.takeIf { it > Duration.ZERO }?.ceilToSeconds() }
+                    .distinctUntilChanged()
             }
         }
 
@@ -326,3 +331,8 @@ class FirmwareCheckViewModel(
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
+
+private fun Duration.ceilToSeconds(): Duration =
+    ((inWholeMilliseconds + MILLIS_IN_SECOND - 1) / MILLIS_IN_SECOND).seconds
+
+private const val MILLIS_IN_SECOND = 1_000L

@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -60,9 +61,9 @@ private val ContentMaxWidth = 1040.dp
 fun FirmwareCheckScreen(onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareCheckViewModel>()
     val state by viewModel.state.collectAsState()
-    FirmwareCheckContent(
-        state = state,
-        actions = FirmwareCheckActions(
+    // Один экземпляр на экран: дочерние composable пропускают рекомпозицию по равенству действий.
+    val actions = remember(viewModel, onBack) {
+        FirmwareCheckActions(
             onBack = onBack,
             onRetry = viewModel::onRetry,
             onChannelSelected = viewModel::onChannelSelected,
@@ -73,6 +74,10 @@ fun FirmwareCheckScreen(onBack: () -> Unit) {
             onConfirmBoot = viewModel::onConfirmBoot,
             onPinSubmit = viewModel::onPinSubmit
         )
+    }
+    FirmwareCheckContent(
+        state = state,
+        actions = actions
     )
 }
 

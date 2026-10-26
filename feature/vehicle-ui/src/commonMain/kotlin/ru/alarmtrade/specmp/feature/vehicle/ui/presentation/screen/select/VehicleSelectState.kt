@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
+import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -74,6 +75,7 @@ internal sealed interface VehicleDialog {
 
 internal enum class CapabilityKind { ENGINE_BLOCK, KEYLESS_BYPASS }
 
+@Immutable
 internal data class VehicleSelectState(
     val mode: VehicleSelectModeUi,
     /** Тип устройства не задан запросом и ещё не выбран — экран выбора типа. */

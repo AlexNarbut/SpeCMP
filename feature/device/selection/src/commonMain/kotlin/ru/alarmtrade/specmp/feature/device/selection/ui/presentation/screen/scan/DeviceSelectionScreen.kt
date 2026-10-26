@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -455,8 +456,9 @@ private fun DeviceList(
                     modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    // Порядок приходит из скана и меняется между эмитами — строка привязана к устройству, не к позиции.
                     devices.forEach { d ->
-                        DeviceRow(d, d.id == selectedId, { onSelect(d) }, tileSize, showMode = true)
+                        key(d.id) { DeviceRow(d, d.id == selectedId, { onSelect(d) }, tileSize, showMode = true) }
                     }
                 }
             }
@@ -495,10 +497,11 @@ private fun DeviceList(
             ListHeader(devices.size)
             CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 devices.forEach { d ->
-                    DeviceRow(d, selected = false, onClick = { onSelect(d) }, tileSize = tileSize, onInfo = {
-                        infoId =
-                            d.id
-                    })
+                    key(d.id) {
+                        DeviceRow(d, selected = false, onClick = { onSelect(d) }, tileSize = tileSize, onInfo = {
+                            infoId = d.id
+                        })
+                    }
                 }
             }
         }

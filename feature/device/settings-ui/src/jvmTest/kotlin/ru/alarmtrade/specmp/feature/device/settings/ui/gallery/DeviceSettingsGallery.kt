@@ -49,6 +49,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsMenu
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -270,10 +271,17 @@ class DeviceSettingsGallery {
                 actions = noActions,
                 snackbarHostState = remember { CmpSnackbarHostState() }
             ) { layout ->
+                val marks = RowMarks(state.changedIds, state.sectionChanges, state.cars)
                 if (search) {
-                    SearchPane(state, layout.isWide, {}, noRowActions)
+                    SearchPane(state.searchQuery, state.searchHits, marks, layout.isWide, {}, noRowActions)
                 } else {
-                    SectionEntry(state, path.lastOrNull(), layout, noRowActions)
+                    SectionEntry(
+                        (state.menu as? SettingsMenu.Ready)?.root,
+                        marks,
+                        path.lastOrNull(),
+                        layout,
+                        noRowActions
+                    )
                 }
             }
         }

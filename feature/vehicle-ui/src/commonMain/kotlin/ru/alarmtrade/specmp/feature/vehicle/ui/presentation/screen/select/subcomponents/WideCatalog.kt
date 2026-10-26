@@ -37,7 +37,9 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.ThirdColumnMinWidth
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardUi
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CenteredCard
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Load
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleLayout
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
@@ -80,19 +82,45 @@ internal fun WideCatalog(
         }
         return
     }
+    // Колонкам и карточке — каждой свой срез state: свайп фото, вкладки и группы карточки не перерисовывают
+    // колонки каталога, а ввод в поиске — карточку (state @Immutable: равный срез — пропуск рекомпозиции).
+    val catalog = state.forCatalog()
     CmpColumn(modifier = Modifier.fillMaxSize()) {
-        TopSearch(state, actions)
+        TopSearch(catalog, actions)
         CmpRow(modifier = Modifier.fillMaxSize()) {
             val expanded = layout == VehicleLayout.EXPANDED
-            if (state.searchMode == SearchMode.CAN) {
-                CanColumn(state, actions, if (expanded) Modifier.width(460.dp) else Modifier.weight(1f))
+            if (catalog.searchMode == SearchMode.CAN) {
+                CanColumn(catalog, actions, if (expanded) Modifier.width(460.dp) else Modifier.weight(1f))
             } else {
-                NameColumns(state, actions, third = expanded && windowWidth >= ThirdColumnMinWidth, expanded = expanded)
+                NameColumns(
+                    catalog,
+                    actions,
+                    third = expanded && windowWidth >= ThirdColumnMinWidth,
+                    expanded = expanded
+                )
             }
-            if (expanded) CardColumn(state, actions)
+            if (expanded) CardColumn(state.forCard(), actions)
         }
     }
 }
+
+/** Срез для колонок каталога и поиска: без карточки, диалогов и фильтра. */
+private fun VehicleSelectState.forCatalog(): VehicleSelectState =
+    copy(card = Load.Idle, cardUi = CardUi(), dialog = null, filterDraft = null, picking = false)
+
+/** Срез для колонки карточки (с крошками): без списков каталога и ввода поиска по названию. */
+private fun VehicleSelectState.forCard(): VehicleSelectState = copy(
+    query = "",
+    brands = Load.Idle,
+    models = Load.Idle,
+    combo = null,
+    comboModels = Load.Idle,
+    canResults = Load.Idle,
+    recent = emptyList(),
+    dialog = null,
+    filterDraft = null,
+    picking = false
+)
 
 @Composable
 private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) {

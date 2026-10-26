@@ -8,23 +8,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
@@ -45,7 +48,8 @@ private val LevelIndent = 14.dp
 private val RowHeight = 40.dp
 private val ToggleSize = 32.dp
 
-private class TreeRow(
+@Immutable
+private data class TreeRow(
     val section: SettingsSection,
     val depth: Int,
     val hasSubsections: Boolean,
@@ -68,7 +72,8 @@ internal fun SectionTree(
     selectedPath: List<Int>,
     sectionChanges: Map<Int, Int>,
     changedIds: Set<Int>,
-    width: Dp,
+    /** Ширина колонки; лямбда — читается только при измерении, перетаскивание не рекомпозирует дерево. */
+    width: () -> Dp,
     onEditSetting: (settingId: Int) -> Unit,
     onSelect: (sectionId: Int) -> Unit,
     modifier: Modifier = Modifier
@@ -76,7 +81,7 @@ internal fun SectionTree(
     val colors = cmpThemeColors()
     var expanded by rememberSaveable { mutableStateOf(listOf<Int>()) }
     var collapsed by rememberSaveable(selectedId) { mutableStateOf(listOf<Int>()) }
-    val open = expanded.toSet() + selectedPath - collapsed.toSet()
+
     val toggle = { id: Int, isOpen: Boolean ->
         if (isOpen) {
             expanded = expanded - id
@@ -86,24 +91,33 @@ internal fun SectionTree(
             collapsed = collapsed - id
         }
     }
-    val rows = buildList {
-        fun walk(section: SettingsSection, depth: Int) {
-            // Пустые разделы (связки «И» / «ИЛИ» между условиями, резерв) в дереве не показываются.
-            section.children.filterIsInstance<SettingsSection>().filter { it.children.isNotEmpty() }.forEach { child ->
-                val hasSubsections = child.children.any { it is SettingsSection && it.children.isNotEmpty() }
-                val isOpen = hasSubsections && child.id in open
-                add(TreeRow(child, depth, hasSubsections, isOpen))
-                if (isOpen) walk(child, depth + 1)
+    // Строки пересобираются только при смене меню или раскрытия: равные строки дерева не перерисовываются.
+    val rows = remember(root, expanded, collapsed, selectedPath) {
+        val open = expanded.toSet() + selectedPath - collapsed.toSet()
+        buildList {
+            fun walk(section: SettingsSection, depth: Int) {
+                // Пустые разделы (связки «И» / «ИЛИ» между условиями, резерв) в дереве не показываются.
+                val visible = section.children.filterIsInstance<SettingsSection>().filter { it.children.isNotEmpty() }
+                visible.forEach { child ->
+                    val hasSubsections = child.children.any { it is SettingsSection && it.children.isNotEmpty() }
+                    val isOpen = hasSubsections && child.id in open
+                    add(TreeRow(child, depth, hasSubsections, isOpen))
+                    if (isOpen) walk(child, depth + 1)
+                }
             }
+            walk(root, 0)
         }
-        walk(root, 0)
     }
 
-    val rootSettings = root.children.filterIsInstance<Setting>()
+    val rootSettings = remember(root) { root.children.filterIsInstance<Setting>() }
 
     LazyColumn(
         modifier = modifier
-            .width(width)
+            .layout { measurable, constraints ->
+                val px = constraints.constrainWidth(width().roundToPx())
+                val placeable = measurable.measure(constraints.copy(minWidth = px, maxWidth = px))
+                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+            }
             .fillMaxHeight()
             .background(colors.surfaceContainerLow)
             .padding(vertical = 4.dp)

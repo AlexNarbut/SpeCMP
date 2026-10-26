@@ -301,7 +301,8 @@ class DeviceSession(
             // синхронизируем базу и перечитываем блок — иначе он показался бы «не поддерживается».
             databaseSynced.update { true }
             logStage { "device database sync: model ${device.systemName.trim()} not found" }
-            val synced = sessionRepository.syncDeviceDatabase()
+            // Сеть может зависнуть: без предела экран остался бы в «Подключение…». Таймаут — неуспех синхронизации.
+            val synced = withTimeoutOrNull(SYNC_TIMEOUT_MILLIS) { sessionRepository.syncDeviceDatabase() }
             logStage { "device database sync ${if (synced is Response.Success) "ok" else "failed"}" }
             if (synced is Response.Success) device = readWithRetry { sessionRepository.readDevice() } ?: device
         }
@@ -346,6 +347,7 @@ class DeviceSession(
         const val READ_ATTEMPTS = 3
         const val READ_RETRY_DELAY_MILLIS = 500L
         const val READ_TIMEOUT_MILLIS = 10_000L
+        const val SYNC_TIMEOUT_MILLIS = 30_000L
         const val BOOT_MODE_RETRY_DELAY_MILLIS = 3_000L
         const val REBOOT_TIMEOUT_MILLIS = 60_000L
         const val RECONNECT_INTERVAL_MILLIS = 1_000L

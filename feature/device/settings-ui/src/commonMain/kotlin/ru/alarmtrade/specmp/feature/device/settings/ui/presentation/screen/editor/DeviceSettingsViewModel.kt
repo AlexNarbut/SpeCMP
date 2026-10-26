@@ -10,9 +10,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -37,6 +39,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.reusing
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
@@ -88,19 +91,28 @@ internal class DeviceSettingsViewModel(
     /** Значения «как было» (после чтения или записи) по id настройки. */
     private val baseline = MutableStateFlow<Map<Int, SettingValue>>(emptyMap())
 
+    /**
+     * `carId`, подпись к которым уже запрашивалась в этом чтении меню (в том числе неудачно — без сети запрос не
+     * повторяется на каждую правку). Проверка и запись — одним атомарным `getAndUpdate`: параллельные правки не
+     * запросят один `carId` дважды.
+     */
+    private val requestedCarIds = MutableStateFlow<Set<Int>>(emptySet())
+
+    /** Набираемый запрос: в state попадает вместе с результатом (после debounce), а не на каждый символ. */
+    private val searchQuery = MutableStateFlow("")
+
     init {
         if (followsDevice) {
             deviceScope.onReady(::onDeviceReady)
         } else {
             safeLaunch { load() }
         }
-        _state
-            .map { it.searchQuery to (it.menu as? SettingsMenu.Ready)?.root }
-            .distinctUntilChanged()
+        val menuRoot = _state.map { (it.menu as? SettingsMenu.Ready)?.root }.distinctUntilChanged { a, b -> a === b }
+        combine(searchQuery, menuRoot) { query, root -> query to root }
             .debounce(SEARCH_DEBOUNCE_MILLIS)
-            .mapLatest { (query, root) -> root?.search(query).orEmpty() }
+            .mapLatest { (query, root) -> query to root?.search(query).orEmpty() }
             .flowOn(dispatchers.default)
-            .onEach { hits -> _state.update { it.copy(searchHits = hits) } }
+            .onEach { (query, hits) -> _state.update { it.copy(searchQuery = query, searchHits = hits) } }
             .launchIn(viewModelScope)
     }
 
@@ -112,6 +124,7 @@ internal class DeviceSettingsViewModel(
     }
 
     private suspend fun load() = executeWithProceedLock(needSkipAnother = false) {
+        requestedCarIds.update { emptySet() }
         _state.update {
             it.copy(
                 menu = SettingsMenu.Loading,
@@ -132,9 +145,7 @@ internal class DeviceSettingsViewModel(
             is Response.Success -> {
                 val root = response.value
                 baseline.update { root.valuesById() }
-                _state.update { it.copy(menu = SettingsMenu.Ready(root)) }
-                refreshChanged()
-                loadCarNames(root)
+                showMenu(root)
             }
         }
     }
@@ -160,13 +171,13 @@ internal class DeviceSettingsViewModel(
             is Response.Success -> {
                 // Правка может поменять соседние настройки (например, выбор одного таймерного канала снимает другие):
                 // перечитываем меню из кэша сессии SDK (без опроса блока); не вышло — заменяем только эту настройку.
+                // Неизменённые узлы берутся из текущего меню — их строки не перерисовываются.
+                val current = currentRoot() ?: return@executeWithProceedLock
                 val reread = withContext(dispatchers.io) { repository.open(source, reload = false) }.getValueIfSuccess()
-                _state.update { state ->
-                    val menu = state.menu as? SettingsMenu.Ready ?: return@update state
-                    state.copy(menu = SettingsMenu.Ready(reread ?: menu.root.replace(response.value)))
+                val root = withContext(dispatchers.default) {
+                    reread?.reusing(current) ?: current.replace(response.value)
                 }
-                refreshChanged()
-                currentRoot()?.let(::loadCarNames)
+                showMenu(root)
             }
         }
     }
@@ -287,7 +298,7 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onSearchQueryChange(query: String) {
-        _state.update { it.copy(searchQuery = query) }
+        searchQuery.update { query }
     }
 
     /** Выход ([target] — «назад» с корня или к обновлению CAN): с незаписанными изменениями — подтверждение. */
@@ -381,26 +392,42 @@ internal class DeviceSettingsViewModel(
         }
     }
 
+    /** Новое меню вместе с изменёнными настройками — одним обновлением state (без кадра со старой подсветкой). */
+    private suspend fun showMenu(root: SettingsSection) {
+        val settings = withContext(dispatchers.default) { root.settings() }
+        val (changedIds, sectionChanges) = changesOf(root, settings)
+        _state.update {
+            it.copy(menu = SettingsMenu.Ready(root), changedIds = changedIds, sectionChanges = sectionChanges)
+        }
+        loadCarNames(settings)
+    }
+
     /** Пересчитать изменённые настройки и счётчики разделов. */
     private suspend fun refreshChanged() {
         val root = currentRoot() ?: return
+        val (changedIds, sectionChanges) = changesOf(root, withContext(dispatchers.default) { root.settings() })
+        _state.update { it.copy(changedIds = changedIds, sectionChanges = sectionChanges) }
+    }
+
+    /** Изменённые настройки [root] (id) и их число по разделам. */
+    private suspend fun changesOf(root: SettingsSection, settings: List<Setting>): Pair<Set<Int>, Map<Int, Int>> {
         val unsaved = withContext(dispatchers.io) { repository.unsavedIds(source) }.getValueIfSuccess()
-        val changes = withContext(dispatchers.default) {
+        return withContext(dispatchers.default) {
             val before = baseline.value
-            val differing = root.settings().filter { it.value != before[it.id] }.mapTo(mutableSetOf()) { it.id }
+            val differing = settings.filter { it.value != before[it.id] }.mapTo(mutableSetOf()) { it.id }
             val changed = if (unsaved == null) differing else differing.intersect(unsaved)
             changed to root.sectionChanges(changed)
         }
-        _state.update { it.copy(changedIds = changes.first, sectionChanges = changes.second) }
     }
 
     /** Подписи автомобилей к CAN-кодам меню (с сервера, без связи — без подписи). */
-    private fun loadCarNames(root: SettingsSection) {
+    private fun loadCarNames(settings: List<Setting>) {
         val known = _state.value.cars.keys
-        root.settings().filterIsInstance<CanCodeSetting>()
-            .mapNotNull { it.value.value.carId }
-            .filter { it !in known }
-            .distinct()
+        val wanted = settings.filterIsInstance<CanCodeSetting>()
+            .mapNotNullTo(mutableSetOf()) { it.value.value.carId } - known
+        if (wanted.isEmpty()) return
+        val alreadyRequested = requestedCarIds.getAndUpdate { it + wanted }
+        (wanted - alreadyRequested)
             .forEach { carId ->
                 safeLaunch {
                     withContext(dispatchers.io) { carsRepository.summary(carId) }.getValueIfSuccess()?.let { car ->

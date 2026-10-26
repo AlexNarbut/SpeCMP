@@ -112,6 +112,14 @@ import specmp.feature.device.firmware.generated.resources.firmware_update_succes
 import specmp.feature.device.firmware.generated.resources.firmware_update_success_msg_boot_usb
 import specmp.feature.device.firmware.generated.resources.firmware_update_success_title
 
+/** Шаги обновления на экране прогресса (подготовка → передача → проверка → применение). */
+private val ProgressSteps = listOf(
+    Res.string.firmware_update_step_prepare,
+    Res.string.firmware_update_step_transfer,
+    Res.string.firmware_update_step_verify,
+    Res.string.firmware_update_step_apply
+)
+
 private val BigButtonHeight = 52.dp
 
 /** Предел высоты блока «Что нового»: длинный текст прокручивается внутри, кнопки остаются на экране. */
@@ -358,19 +366,13 @@ internal fun ProgressBody(phase: UpdatePhase) {
         UpdatePhase.Verify -> 2
         else -> 3
     }
-    val steps = listOf(
-        Res.string.firmware_update_step_prepare,
-        Res.string.firmware_update_step_transfer,
-        Res.string.firmware_update_step_verify,
-        Res.string.firmware_update_step_apply
-    )
     val percent = (phase as? UpdatePhase.Transfer)?.percent
     CmpColumn(
         modifier = Modifier.fillMaxWidth().testTag(UPDATE_PROGRESS_TAG),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            steps.forEachIndexed { index, label ->
+            ProgressSteps.forEachIndexed { index, label ->
                 CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     CmpSurface(
                         modifier = Modifier.fillMaxWidth().height(6.dp),

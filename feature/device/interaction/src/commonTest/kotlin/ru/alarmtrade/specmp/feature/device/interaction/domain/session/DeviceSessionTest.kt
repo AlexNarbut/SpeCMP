@@ -67,6 +67,25 @@ class DeviceSessionTest {
         }
 
     @Test
+    fun `hanging database sync times out and keeps the device without features`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val unknown = testDevice.copy(features = null, modelInDatabase = false)
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                readResults = listOf(Response.Success(unknown))
+                syncHangs = true
+            }
+            val session = testSession(repository, FakeDeviceConnectionRepository())
+            backgroundScope.launch { session.state.collect {} }
+            advanceUntilIdle()
+            assertEquals(DeviceSessionState.Connecting, session.state.value)
+
+            advanceTimeBy(30_001)
+
+            assertEquals(DeviceSessionState.Ready(unknown), session.state.value)
+            assertEquals(1, repository.syncCount)
+        }
+
+    @Test
     fun `read failures are retried then disconnected`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             readResults = listOf(Response.Error(IllegalStateException("no answer")))

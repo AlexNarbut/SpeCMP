@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -46,6 +48,8 @@ internal class VehicleSelectViewModel(
     private val networkMonitor: NetworkMonitor?,
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
+
+    private val recentLock = Mutex()
 
     private val configurationsOnly = request.catalog == VehicleCatalog.WITH_CONFIGURATIONS
 
@@ -386,9 +390,20 @@ internal class VehicleSelectViewModel(
         _effect.tryEmit(VehicleSelectEffect.Picked(car))
     }
 
+    /**
+     * Запомнить автомобиль в «недавних»: чтение-изменение-запись `Settings` — в фоне (io) и под [recentLock]
+     * (хранилище не атомарно: два быстрых открытия карточек иначе потеряют одну запись); в state — готовый список.
+     */
     private fun rememberRecent(car: CarSummary) {
-        recentStore.push(request.catalog, car)
-        _state.update { it.copy(recent = recentStore.recent(request.catalog)) }
+        safeLaunch {
+            val recent = recentLock.withLock {
+                withContext(dispatchers.io) {
+                    recentStore.push(request.catalog, car)
+                    recentStore.recent(request.catalog)
+                }
+            }
+            _state.update { it.copy(recent = recent) }
+        }
     }
 
     private fun openCard(carId: Int, source: CardSource) {

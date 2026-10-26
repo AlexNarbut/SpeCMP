@@ -172,7 +172,7 @@ private fun ReadyBody(
                 selectedPath = location.sectionPath,
                 sectionChanges = state.sectionChanges,
                 changedIds = state.changedIds,
-                width = treeWidth,
+                width = { treeWidth },
                 onEditSetting = actions.onEditSetting,
                 onSelect = { id -> actions.onNavigateTo(root.pathTo(id).orEmpty().map { it.id } + id) }
             )

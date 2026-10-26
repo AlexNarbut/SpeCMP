@@ -93,8 +93,12 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
     var syncCount = 0
         private set
 
+    /** Синхронизация не отвечает (зависшая сеть). */
+    var syncHangs = false
+
     override suspend fun syncDeviceDatabase(): Response<Unit> {
         syncCount++
+        if (syncHangs) awaitCancellation()
         return syncResult
     }
 

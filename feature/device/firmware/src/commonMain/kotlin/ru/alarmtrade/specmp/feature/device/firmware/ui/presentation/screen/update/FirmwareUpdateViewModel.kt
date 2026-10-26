@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
@@ -527,7 +528,12 @@ class FirmwareUpdateViewModel(
             is UpdateSource.Server -> updateRepository.update(target, source.version)
             is UpdateSource.File -> updateRepository.updateFromFile(target, source.path)
         }
-        progress.collect { onProgress(it) }
+        // SDK шлёт событие на каждый пакет передачи: маппинг и отсев повторов — в фоне (io), на Main приходит
+        // только смена стадии или процента; переходы состояния (onProgress) — в коллекторе, на Main.
+        progress
+            .distinctUntilChanged()
+            .flowOn(dispatchers.io)
+            .collect { onProgress(it) }
     }
 
     private suspend fun onProgress(progress: FirmwareUpdateProgress) {

@@ -11,10 +11,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 
 private const val SKELETON_PERIOD_MS = 700
@@ -27,11 +26,16 @@ private const val SKELETON_MIN_ALPHA = 0.45f
 @Composable
 fun CmpSkeleton(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(8.dp)) {
     val transition = rememberInfiniteTransition(label = "skeleton")
-    val alpha by transition.animateFloat(
+    val alpha = transition.animateFloat(
         initialValue = 1f,
         targetValue = SKELETON_MIN_ALPHA,
         animationSpec = infiniteRepeatable(tween(SKELETON_PERIOD_MS, easing = LinearEasing), RepeatMode.Reverse),
         label = "skeletonAlpha"
     )
-    Box(modifier.alpha(alpha).background(MaterialTheme.colorScheme.surfaceContainerHighest, shape))
+    // Альфа читается в фазе draw: пульс не рекомпозирует скелетон каждый кадр.
+    Box(
+        modifier
+            .graphicsLayer { this.alpha = alpha.value }
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape)
+    )
 }

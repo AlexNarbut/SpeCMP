@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -127,6 +128,11 @@ private fun CardContent(
     val tabs = card.tabs()
     val tab = ui.tab?.takeIf { it in tabs } ?: tabs.firstOrNull()
     val colors = cmpThemeColors()
+    // Фильтр и раскладка функций по группам — один раз на карточку и фильтр, не на каждую рекомпозицию.
+    val shownFeatures = remember(card.features, groups) {
+        if (groups.isEmpty()) card.features else card.features.filter { it.group in groups }
+    }
+    val featureGroups = remember(shownFeatures) { featuresByGroup(shownFeatures) }
     LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = padding + 8.dp)) {
         item(key = "header") {
             CardHeader(
@@ -154,36 +160,32 @@ private fun CardContent(
                 )
             }
         }
-        item(key = "tab-${tab.name}") {
-            CmpColumn(modifier = Modifier.padding(start = padding, end = padding, top = 14.dp)) {
-                TabBody(card = card, tab = tab, ui = ui, groups = groups, wide = wide, actions = actions)
+        if (tab == CardTab.FEATURES) {
+            featureItems(
+                groups = featureGroups,
+                shown = shownFeatures.size,
+                total = card.features.size,
+                filtered = groups.isNotEmpty(),
+                collapsed = ui.collapsedGroups,
+                wide = wide,
+                padding = padding,
+                onGroupToggle = actions.onGroupToggle
+            )
+        } else {
+            item(key = "tab-${tab.name}") {
+                CmpColumn(modifier = Modifier.padding(start = padding, end = padding, top = 14.dp)) {
+                    TabBody(card = card, tab = tab, ui = ui, actions = actions)
+                }
             }
         }
     }
 }
 
+/** Вкладки, кроме «Функций» (те — элементами списка карточки, см. [featureItems]). */
 @Composable
-private fun TabBody(
-    card: CarCard,
-    tab: CardTab,
-    ui: CardUi,
-    groups: Set<CarFeatureGroup>,
-    wide: Boolean,
-    actions: CardActions
-) {
+private fun TabBody(card: CarCard, tab: CardTab, ui: CardUi, actions: CardActions) {
     when (tab) {
-        CardTab.FEATURES -> {
-            val shown = if (groups.isEmpty()) card.features else card.features.filter { it.group in groups }
-            if (wide) FeaturesColumnsHeader()
-            FeaturesTab(
-                features = shown,
-                total = card.features.size,
-                filtered = groups.isNotEmpty(),
-                collapsed = ui.collapsedGroups,
-                wide = wide,
-                onGroupToggle = actions.onGroupToggle
-            )
-        }
+        CardTab.FEATURES -> Unit
 
         CardTab.MOUNT_POINTS -> {
             val point = ui.point?.let { card.mountPoints.getOrNull(it) }

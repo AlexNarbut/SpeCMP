@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model
 
 import androidx.compose.runtime.Immutable
+import kotlin.math.roundToInt
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
@@ -58,6 +59,14 @@ sealed interface DeviceUiItem {
     }
 }
 
+/**
+ * Шаг уровня сигнала в списке. SDK отдаёт RSSI почти на каждый рекламный пакет, и он дрожит на 1–2 dBm: без
+ * округления каждый эмит скана — новый state и перерисовка списка. 5 dBm достаточно, чтобы найти ближайший блок.
+ */
+private const val RSSI_STEP_DBM = 5
+
+private fun Int.roundToStep(step: Int): Int = (toDouble() / step).roundToInt() * step
+
 internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
     is ScannedDevice.Ble -> DeviceUiItem.Ble(
         id = id,
@@ -65,7 +74,7 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
         address = id,
         kind = kind,
         mode = mode,
-        rssi = rssi,
+        rssi = rssi.roundToStep(RSSI_STEP_DBM),
         hasDeviceBond = hasDeviceBond,
         hasPhoneBond = hasPhoneBond
     )

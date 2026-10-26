@@ -41,6 +41,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsMenu
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.firstSectionId
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
@@ -180,6 +181,11 @@ private fun SettingsWithNav(
     rowActions: SettingRowActions,
     onSearchQueryChange: (String) -> Unit
 ) {
+    // Строкам — только их пометки: ввод, диалоги и прочие поля state строки не перерисовывают.
+    val marks = remember(state.changedIds, state.sectionChanges, state.cars) {
+        RowMarks(state.changedIds, state.sectionChanges, state.cars)
+    }
+    val root = (state.menu as? SettingsMenu.Ready)?.root
     DeviceSettingsContent(
         state = state,
         location = backStack.location(),
@@ -195,11 +201,13 @@ private fun SettingsWithNav(
             ),
             entryProvider = entryProvider<NavKey> {
                 entry<SettingsSectionRoute> { key ->
-                    SectionEntry(state, key.sectionId, layout, rowActions)
+                    SectionEntry(root, marks, key.sectionId, layout, rowActions)
                 }
                 entry<SettingsSearchRoute> { _ ->
                     SearchPane(
-                        state = state,
+                        query = state.searchQuery,
+                        hits = state.searchHits,
+                        marks = marks,
                         wide = layout.isWide,
                         onQueryChange = onSearchQueryChange,
                         actions = rowActions
@@ -212,16 +220,17 @@ private fun SettingsWithNav(
 
 @Composable
 internal fun SectionEntry(
-    state: DeviceSettingsState,
+    root: SettingsSection?,
+    marks: RowMarks,
     sectionId: Int?,
     layout: SettingsLayout,
     actions: SettingRowActions
 ) {
-    val root = (state.menu as? SettingsMenu.Ready)?.root ?: return
+    root ?: return
     // На широкой раскладке корень не показывается — открыт первый раздел (он же выделен в дереве).
     val id = sectionId ?: firstSectionId(root).takeIf { layout.isWide }
     val section = id?.let { root.findNode(it) as? SettingsSection } ?: root
-    SectionPane(section = section, state = state, wide = layout.isWide, actions = actions)
+    SectionPane(section = section, marks = marks, wide = layout.isWide, actions = actions)
 }
 
 private fun NavBackStack<NavKey>.location(): SettingsLocation = SettingsLocation(

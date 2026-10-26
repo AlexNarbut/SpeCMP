@@ -4,7 +4,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 
 class DeviceUiItemTest {
 
@@ -41,4 +43,21 @@ class DeviceUiItemTest {
         assertEquals("3.57", "3.57".toDisplayFirmware())
         assertEquals("3.57", "VER 3.57".toDisplayFirmware())
     }
+
+    @Test
+    fun `rssi is rounded to the list step so jitter gives an equal item`() {
+        assertEquals(-50, assertIs<DeviceUiItem.Ble>(ble(rssi = -52).toUiItem()).rssi)
+        assertEquals(-55, assertIs<DeviceUiItem.Ble>(ble(rssi = -53).toUiItem()).rssi)
+        assertEquals(ble(rssi = -49).toUiItem(), ble(rssi = -51).toUiItem())
+    }
+
+    private fun ble(rssi: Int) = ScannedDevice.Ble(
+        id = "AA:BB",
+        name = "Pandora",
+        kind = DeviceKind.ALARM,
+        mode = ScannedDeviceMode.BASE,
+        rssi = rssi,
+        hasDeviceBond = false,
+        hasPhoneBond = false
+    )
 }

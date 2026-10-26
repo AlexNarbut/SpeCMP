@@ -48,14 +48,24 @@ internal fun <S> FadeContent(
     ) { state -> content(state) }
 }
 
-/** Элемент ленивого списка с плавным появлением, исчезновением и сдвигом. Ключ обязателен — по нему анимация. */
+/**
+ * Элемент ленивого списка с плавным появлением, исчезновением и сдвигом. Ключ обязателен — по нему анимация.
+ * Тип элемента для переиспользования слотов — префикс ключа до «-» (`brand-12` → `brand`, `letter-A` → `letter`):
+ * при прокрутке строка марки переиспользует слот строки марки, а не заголовка буквы.
+ */
 internal fun LazyListScope.fadeItem(key: Any, content: @Composable () -> Unit) {
-    item(key = key) { Animated { content() } }
+    item(key = key, contentType = contentTypeOf(key)) { Animated { content() } }
 }
 
 internal fun <T> LazyListScope.fadeItems(list: List<T>, key: (T) -> Any, content: @Composable (T) -> Unit) {
-    items(count = list.size, key = { key(list[it]) }) { index -> Animated { content(list[index]) } }
+    items(
+        count = list.size,
+        key = { key(list[it]) },
+        contentType = { contentTypeOf(key(list[it])) }
+    ) { index -> Animated { content(list[index]) } }
 }
+
+private fun contentTypeOf(key: Any): Any? = (key as? String)?.substringBefore('-')
 
 @Composable
 private fun LazyItemScope.Animated(content: @Composable () -> Unit) {

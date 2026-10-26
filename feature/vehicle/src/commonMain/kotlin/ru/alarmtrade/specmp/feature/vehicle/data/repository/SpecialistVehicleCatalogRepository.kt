@@ -53,7 +53,10 @@ class SpecialistVehicleCatalogRepository(
                 .execute(ConfigurationBrandsRequest(alarmDeviceName = query.device.deviceName()))
                 .toResponse()
         }
-    }.map { brands -> brands.map { it.toDomain() }.sortedBy { it.name.lowercase() } }
+    }.map { brands ->
+        // Ключ сортировки — один раз на марку, а не на каждое сравнение (сотни марок).
+        brands.map { it.toDomain() }.map { it.name.lowercase() to it }.sortedBy { it.first }.map { it.second }
+    }
 
     override suspend fun models(query: CatalogQuery, brandId: Int): Response<List<CarModel>> = when (query.catalog) {
         VehicleCatalog.ALL -> withCars { interactor ->

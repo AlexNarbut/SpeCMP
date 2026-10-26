@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,8 +12,20 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -25,15 +37,15 @@ import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchHit
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_empty_section
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_empty_section_hint
@@ -44,17 +56,25 @@ import specmp.feature.device.settings_ui.generated.resources.settings_search_msg
 import specmp.feature.device.settings_ui.generated.resources.settings_search_placeholder
 
 private val ContentMaxWidth = 720.dp
+private val CardRadius = 16.dp
+private val CardBorder = 1.dp
+
+/**
+ * Пометки строк: изменённые настройки, счётчики разделов, автомобили CAN-кодов. Отдельно от state экрана — строки
+ * не перерисовываются от ввода, диалогов и прочих полей, которые их не касаются.
+ */
+@Immutable
+internal data class RowMarks(
+    val changedIds: Set<Int>,
+    val sectionChanges: Map<Int, Int>,
+    val cars: Map<Int, CarSummary>
+)
 
 /**
  * Содержимое раздела: строки его пунктов. На широкой раскладке — заголовок раздела со счётчиком и строки в карточке.
  */
 @Composable
-internal fun SectionPane(
-    section: SettingsSection,
-    state: DeviceSettingsState,
-    wide: Boolean,
-    actions: SettingRowActions
-) {
+internal fun SectionPane(section: SettingsSection, marks: RowMarks, wide: Boolean, actions: SettingRowActions) {
     if (section.children.isEmpty()) {
         EmptyMessage(
             icon = CmpIcons.List,
@@ -69,10 +89,10 @@ internal fun SectionPane(
     ) {
         if (wide) {
             item(key = "header") {
-                SectionHeader(section, state.sectionChanges[section.id] ?: 0)
+                SectionHeader(section, marks.sectionChanges[section.id] ?: 0)
             }
         }
-        rows(section.children, state, wide, actions, paths = null)
+        rows(section.children, marks, wide, actions, paths = null)
     }
 }
 
@@ -93,19 +113,27 @@ private fun SectionHeader(section: SettingsSection, changes: Int) {
     }
 }
 
-/** Поиск по названию, номеру и каналу: поле и результаты с путём раздела. */
+/**
+ * Поиск по названию, номеру и каналу: поле и результаты с путём раздела. Текст поля — локальный (набор не
+ * перерисовывает экран); [query] и [hits] приходят из state вместе, после debounce.
+ */
 @Composable
 internal fun SearchPane(
-    state: DeviceSettingsState,
+    query: String,
+    hits: List<SettingsSearchHit>,
+    marks: RowMarks,
     wide: Boolean,
     onQueryChange: (String) -> Unit,
     actions: SettingRowActions
 ) {
-    val query = state.searchQuery
+    var text by rememberSaveable { mutableStateOf(query) }
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         CmpSearchField(
-            value = query,
-            onValueChange = onQueryChange,
+            value = text,
+            onValueChange = {
+                text = it
+                onQueryChange(it)
+            },
             placeholder = stringResource(Res.string.settings_search_placeholder),
             clearContentDescription = stringResource(Res.string.settings_search_a11y_clear),
             modifier = Modifier
@@ -115,13 +143,16 @@ internal fun SearchPane(
                 .testTag(SettingsTestTags.SEARCH_FIELD)
         )
         when {
-            query.isBlank() -> EmptyMessage(
+            text.isBlank() -> EmptyMessage(
                 icon = CmpIcons.Search,
                 title = stringResource(Res.string.settings_search_msg_prompt),
                 hint = null
             )
 
-            state.searchHits.isEmpty() -> EmptyMessage(
+            // Текст набран, результат ещё считается (debounce).
+            query.isBlank() -> Unit
+
+            hits.isEmpty() -> EmptyMessage(
                 icon = CmpIcons.Search,
                 title = stringResource(Res.string.settings_search_msg_empty, query.trim()),
                 hint = stringResource(Res.string.settings_search_msg_empty_hint)
@@ -132,11 +163,11 @@ internal fun SearchPane(
                 contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 8.dp) else PaddingValues(0.dp)
             ) {
                 rows(
-                    nodes = state.searchHits.map { it.node },
-                    state = state,
+                    nodes = hits.map { it.node },
+                    marks = marks,
                     wide = wide,
                     actions = actions,
-                    paths = state.searchHits.map { hit ->
+                    paths = hits.map { hit ->
                         hit.path.joinToString(" › ") { section ->
                             if (section.number.isEmpty()) section.name else "${section.number} ${section.name}"
                         }
@@ -147,61 +178,82 @@ internal fun SearchPane(
     }
 }
 
-/** Строки пунктов: на компактной раскладке — лениво по строке, на широкой — одной карточкой с рамкой. */
+/**
+ * Строки пунктов, лениво по строке. На широкой раскладке строки складываются в карточку с рамкой: каждая рисует
+ * свой отрезок карточки ([cardSegment]) — раздел из десятков строк и длинный результат поиска не композируются разом.
+ */
 private fun LazyListScope.rows(
     nodes: List<SettingNode>,
-    state: DeviceSettingsState,
+    marks: RowMarks,
     wide: Boolean,
     actions: SettingRowActions,
     paths: List<String>?
 ) {
-    if (wide) {
-        item(key = "card") {
-            CmpBox(modifier = Modifier.widthIn(max = ContentMaxWidth).fillMaxWidth()) {
-                CmpSurface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = cmpThemeColors().surface,
-                    border = BorderStroke(1.dp, cmpThemeColors().outlineVariant)
-                ) {
-                    CmpColumn {
-                        nodes.forEachIndexed { index, node ->
-                            NodeRow(
-                                node,
-                                index == nodes.lastIndex,
-                                state,
-                                wide = true,
-                                actions,
-                                paths?.getOrNull(index)
-                            )
-                        }
-                    }
-                }
+    itemsIndexed(nodes, key = { _, node -> node.id }) { index, node ->
+        val last = index == nodes.lastIndex
+        if (wide) {
+            CmpBox(
+                modifier = Modifier
+                    .widthIn(max = ContentMaxWidth)
+                    .fillMaxWidth()
+                    .cardSegment(
+                        first = index == 0,
+                        last = last,
+                        color = cmpThemeColors().surface,
+                        borderColor = cmpThemeColors().outlineVariant
+                    )
+            ) {
+                CmpColumn { NodeRow(node, last, marks, wide = true, actions, paths?.getOrNull(index)) }
             }
-        }
-    } else {
-        itemsIndexed(nodes, key = { _, node -> node.id }) { index, node ->
-            NodeRow(node, index == nodes.lastIndex, state, wide = false, actions, paths?.getOrNull(index))
+        } else {
+            NodeRow(node, last, marks, wide = false, actions, paths?.getOrNull(index))
         }
     }
+}
+
+/**
+ * Отрезок карточки со скруглёнными углами и рамкой: у первой строки — верх, у последней — низ, у средних — только
+ * боковые стороны (разделители между строками рисует сама строка).
+ */
+private fun Modifier.cardSegment(first: Boolean, last: Boolean, color: Color, borderColor: Color): Modifier {
+    val top = if (first) CardRadius else 0.dp
+    val bottom = if (last) CardRadius else 0.dp
+    return clip(RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom))
+        .background(color)
+        .drawBehind {
+            val stroke = CardBorder.toPx()
+            val radius = CardRadius.toPx()
+            // Скруглённая рамка, продолженная за край отрезка там, где карточка продолжается: обрезка оставляет
+            // от неё только нужные стороны.
+            val y0 = if (first) stroke / 2 else -radius - stroke
+            val y1 = if (last) size.height - stroke / 2 else size.height + radius + stroke
+            drawRoundRect(
+                color = borderColor,
+                topLeft = Offset(stroke / 2, y0),
+                size = Size(size.width - stroke, y1 - y0),
+                cornerRadius = CornerRadius(radius - stroke / 2),
+                style = Stroke(stroke)
+            )
+        }
 }
 
 @Composable
 private fun NodeRow(
     node: SettingNode,
     last: Boolean,
-    state: DeviceSettingsState,
+    marks: RowMarks,
     wide: Boolean,
     actions: SettingRowActions,
     path: String?
 ) {
     SettingNodeRow(
         node = node,
-        changed = node.id in state.changedIds,
-        sectionChanges = state.sectionChanges[node.id] ?: 0,
+        changed = node.id in marks.changedIds,
+        sectionChanges = marks.sectionChanges[node.id] ?: 0,
         wide = wide,
         actions = actions,
         path = path?.takeIf { it.isNotEmpty() },
-        note = (node as? CanCodeSetting)?.value?.value?.carId?.let(state.cars::get)?.let { carLabel(it) }
+        note = (node as? CanCodeSetting)?.value?.value?.carId?.let(marks.cars::get)?.let { carLabel(it) }
     )
     if (!last) CmpDivider(color = cmpThemeColors().outlineVariant)
 }

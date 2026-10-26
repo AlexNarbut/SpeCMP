@@ -12,12 +12,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -72,7 +70,7 @@ internal fun FirmwareHero(
 @Composable
 private fun PulseRing(size: Dp) {
     val transition = rememberInfiniteTransition(label = "firmwareHeroPulse")
-    val progress by transition.animateFloat(
+    val progress = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(PULSE_MILLIS, easing = LinearEasing), RepeatMode.Restart),
@@ -81,8 +79,14 @@ private fun PulseRing(size: Dp) {
     CmpSurface(
         modifier = Modifier
             .size(size)
-            .scale(PULSE_FROM + (PULSE_TO - PULSE_FROM) * progress)
-            .alpha(PULSE_ALPHA * (1f - progress)),
+            // Масштаб и альфа читаются в фазе draw: пульс не рекомпозирует кольцо каждый кадр.
+            .graphicsLayer {
+                val p = progress.value
+                val scale = PULSE_FROM + (PULSE_TO - PULSE_FROM) * p
+                scaleX = scale
+                scaleY = scale
+                alpha = PULSE_ALPHA * (1f - p)
+            },
         shape = CircleShape,
         color = Color.Transparent,
         border = BorderStroke(3.dp, cmpThemeColors().primary)

@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -130,11 +130,12 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                     contentDescription = stringResource(Res.string.vehicle_photo_a11y_prev),
                     enabled = pager.currentPage > 0
                 )
-                CmpRow(
-                    modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                // Лениво: у точки бывают десятки фото — миниатюры за краем не композируются и не грузятся.
+                LazyRow(
+                    modifier = Modifier.weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    point.photos.forEachIndexed { index, item ->
+                    itemsIndexed(point.photos) { index, item ->
                         val selected = index == pager.currentPage
                         CarPhoto(
                             url = item.url,

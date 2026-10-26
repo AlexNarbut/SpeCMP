@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -102,9 +103,9 @@ fun FirmwareUpdateScreen(
         onBackCompleted = viewModel::onBackClick
     )
 
-    FirmwareUpdateContent(
-        state = state,
-        actions = FirmwareUpdateActions(
+    // Один экземпляр на экран: дочерние composable пропускают рекомпозицию по равенству действий.
+    val actions = remember(viewModel, filePicker) {
+        FirmwareUpdateActions(
             onBack = viewModel::onBackClick,
             onModuleSelected = viewModel::onModuleSelected,
             onChannelSelected = viewModel::onChannelSelected,
@@ -122,6 +123,10 @@ fun FirmwareUpdateScreen(
             onExitDialogDismiss = viewModel::onExitDialogDismiss,
             onExitConfirm = viewModel::onExitConfirm
         )
+    }
+    FirmwareUpdateContent(
+        state = state,
+        actions = actions
     )
 }
 
