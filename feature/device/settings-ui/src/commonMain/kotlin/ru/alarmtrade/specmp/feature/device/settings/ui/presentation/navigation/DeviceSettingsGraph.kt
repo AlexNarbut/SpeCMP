@@ -146,7 +146,8 @@ fun DeviceSettingsEntry(
                 onCarSearch = viewModel::onCarSearch,
                 onCarPick = viewModel::onCarPick,
                 onPickFromCatalog = viewModel::onVehiclePickerOpen
-            )
+            ),
+            onEditSetting = viewModel::onSettingClick
         )
     }
 

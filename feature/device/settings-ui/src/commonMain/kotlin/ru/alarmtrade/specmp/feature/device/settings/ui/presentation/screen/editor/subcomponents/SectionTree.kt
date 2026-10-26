@@ -28,14 +28,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
+import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 
 private val LevelIndent = 14.dp
 private val RowHeight = 40.dp
@@ -52,7 +56,8 @@ private class TreeRow(
 }
 
 /**
- * Дерево разделов (только разделы, без настроек) для широкой раскладки. Выбранный раздел выделен, путь к нему
+ * Дерево разделов для широкой раскладки. Настройки корневого уровня меню (как «Код модели» в старом приложении) —
+ * строками над разделами: значение справа, нажатие открывает окно настройки. Выбранный раздел выделен, путь к нему
  * раскрывается при переходе; у разделов с изменениями — счётчик. Раскрытие переключается стрелкой или повторным
  * нажатием на выбранный раздел — в том числе на пути к выбранному (свёрнутое на пути сбрасывается при смене выбора).
  */
@@ -62,7 +67,9 @@ internal fun SectionTree(
     selectedId: Int?,
     selectedPath: List<Int>,
     sectionChanges: Map<Int, Int>,
+    changedIds: Set<Int>,
     width: Dp,
+    onEditSetting: (settingId: Int) -> Unit,
     onSelect: (sectionId: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -92,6 +99,8 @@ internal fun SectionTree(
         walk(root, 0)
     }
 
+    val rootSettings = root.children.filterIsInstance<Setting>()
+
     LazyColumn(
         modifier = modifier
             .width(width)
@@ -99,6 +108,11 @@ internal fun SectionTree(
             .background(colors.surfaceContainerLow)
             .padding(vertical = 4.dp)
     ) {
+        items(rootSettings, key = { "setting-${it.id}" }) { setting ->
+            TreeSettingRow(setting = setting, changed = setting.id in changedIds, onClick = {
+                onEditSetting(setting.id)
+            })
+        }
         items(rows, key = { it.section.id }) { row ->
             TreeRowView(
                 row = row,
@@ -114,6 +128,49 @@ internal fun SectionTree(
                 }
             )
         }
+    }
+}
+
+/** Настройка корневого уровня: шестерёнка, номер и название, значение; нажатие — окно настройки. */
+@Composable
+private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Unit) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp)
+            .heightIn(min = RowHeight)
+            .testTag(SettingsTestTags.row(setting.id))
+            .clip(CircleShape)
+            .clickable(role = Role.Button, onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        CmpBox(modifier = Modifier.size(width = ToggleSize, height = RowHeight), contentAlignment = Alignment.Center) {
+            CmpIcon(
+                icon = CmpIcons.Settings,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        CmpText(
+            text = setting.number.takeIf { it.isNotEmpty() }?.let { "$it ${setting.name}" } ?: setting.name,
+            style = CmpTextStyle.BodyLarge,
+            color = colors.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        if (changed) CmpDot()
+        CmpText(
+            text = valueText(setting),
+            style = CmpTextStyle.BodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.primary,
+            maxLines = 1,
+            modifier = Modifier.padding(end = 12.dp)
+        )
     }
 }
 

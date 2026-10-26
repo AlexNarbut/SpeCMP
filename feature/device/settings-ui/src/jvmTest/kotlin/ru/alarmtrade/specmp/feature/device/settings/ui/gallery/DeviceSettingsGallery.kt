@@ -233,7 +233,10 @@ class DeviceSettingsGallery {
         )
 
     private val root = section(
-        0, "", "", general,
+        0, "", "",
+        // Настройка корневого уровня — в дереве над разделами (как «Код модели» в старом приложении).
+        CanCodeSetting(1, "", "Код модели", null, SettingValue.Can(CanCode("1111", null))),
+        general,
         section(
             300,
             "3",

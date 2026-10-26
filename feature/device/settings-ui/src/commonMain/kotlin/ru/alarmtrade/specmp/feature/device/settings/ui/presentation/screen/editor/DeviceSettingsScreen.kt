@@ -110,7 +110,9 @@ internal class DeviceSettingsActions(
     val onResetRequest: () -> Unit,
     val onResetConfirm: () -> Unit,
     val onSingleCanUpdate: () -> Unit,
-    val editor: EditorActions
+    val editor: EditorActions,
+    /** Открыть окно настройки корневого уровня из дерева (например «Код модели»). */
+    val onEditSetting: (settingId: Int) -> Unit = {}
 )
 
 /**
@@ -169,7 +171,9 @@ private fun ReadyBody(
                 selectedId = (location.sectionId ?: firstSectionId(root)).takeUnless { location.isSearch },
                 selectedPath = location.sectionPath,
                 sectionChanges = state.sectionChanges,
+                changedIds = state.changedIds,
                 width = treeWidth,
+                onEditSetting = actions.onEditSetting,
                 onSelect = { id -> actions.onNavigateTo(root.pathTo(id).orEmpty().map { it.id } + id) }
             )
             TreeResizeHandle(
