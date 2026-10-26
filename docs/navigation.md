@@ -37,6 +37,7 @@ Nav3 back stack используется **внутри каждой зоны**:
 | `MainRoute` | `MainNavGraph` (`feature/main`) | `HomeRoute` → `MainScreen` |
 | `SupportChatRoute` | `SupportChatEntry` (`feature/support-chat`, без собственного графа — экран один) | `SupportChatScreen` |
 | `DeviceSelectionRoute` | `DeviceSelectionNavGraph` (`feature/device/selection`) | `ScanDeviceRoute` → экран поиска |
+| `VehicleSelectRoute(request)` | `VehicleSelectEntry` (`feature/vehicle-ui`, без nav3-графа: шаги каталога — в state VM, «назад» — `NavigationBackHandler`) | каталог автомобилей и карточка |
 
 Каждый граф фичи — свой `NavDisplay` со своим back stack и `entryDecorators`
 (`rememberSaveableStateHolderNavEntryDecorator()` + `rememberViewModelStoreNavEntryDecorator()`),

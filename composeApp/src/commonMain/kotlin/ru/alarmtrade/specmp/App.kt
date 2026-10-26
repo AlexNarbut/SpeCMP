@@ -46,6 +46,7 @@ import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
 import ru.alarmtrade.specmp.feature.supportchat.di.supportChatModule
 import ru.alarmtrade.specmp.feature.vehicle.di.vehicleModule
+import ru.alarmtrade.specmp.feature.vehicle.ui.di.vehicleUiModule
 import ru.alarmtrade.specmp.navigation.AppNavigation
 
 // App — публичная точка входа платформенных обёрток и одновременно превью
@@ -98,6 +99,7 @@ fun App(
                 add(deviceFirmwareUiModule)
                 add(deviceSettingsModule)
                 add(vehicleModule)
+                add(vehicleUiModule)
                 add(deviceSettingsUiModule)
                 add(deviceSelectionUiModule)
                 add(deviceInteractionUiModule)

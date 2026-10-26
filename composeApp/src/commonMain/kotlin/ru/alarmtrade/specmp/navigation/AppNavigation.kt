@@ -37,6 +37,11 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRoute
 import ru.alarmtrade.specmp.filepicker.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
@@ -50,6 +55,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(SupportChatRoute::class, SupportChatRoute.serializer())
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
+            subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
         }
     }
 }
@@ -109,6 +115,13 @@ private fun AuthedNavGraph() {
                     onClose = { backStack.popSafe() }
                 )
             }
+            entry<VehicleSelectRoute> { key ->
+                VehicleSelectEntry(
+                    request = key.request,
+                    onPick = { backStack.popSafe() },
+                    onBack = { backStack.popSafe() }
+                )
+            }
             entry<AdvancedMountRoute> { _ ->
                 // Обёртка interaction: дисконнект — экран поверх графа, выход — закрытие сессии.
                 DeviceInteractionHost(
@@ -138,17 +151,32 @@ private fun AuthedNavGraph() {
 private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackStack<NavKey>) {
     when (target) {
         MainNavigationTarget.QuickMount -> Unit
+
         MainNavigationTarget.AdvancedMount -> backStack.navigateSafe(DeviceSelectionRoute)
+
         MainNavigationTarget.Configurator -> Unit
+
         MainNavigationTarget.FirmwareArchive -> Unit
-        MainNavigationTarget.Cars -> Unit
+
+        // Справочник автомобилей: блок не подключён — сначала выбор типа устройства.
+        MainNavigationTarget.Cars -> backStack.navigateSafe(
+            VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null))
+        )
+
         MainNavigationTarget.CanScanner -> Unit
+
         MainNavigationTarget.Requests -> backStack.navigateSafe(SupportChatRoute)
+
         MainNavigationTarget.Feedback -> Unit
+
         MainNavigationTarget.ProductInfo -> Unit
+
         MainNavigationTarget.TechSupportChat -> backStack.navigateSafe(SupportChatRoute)
+
         MainNavigationTarget.Warehouse1C -> Unit
+
         MainNavigationTarget.Settings -> Unit
+
         MainNavigationTarget.AppUpdate -> Unit
     }
 }

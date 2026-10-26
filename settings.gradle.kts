@@ -49,6 +49,7 @@ include(":feature:main")
 include(":feature:support-chat")
 include(":feature:advanced-mount")
 include(":feature:vehicle")
+include(":feature:vehicle-ui")
 
 include(":feature:device")
 include(":feature:device:selection")

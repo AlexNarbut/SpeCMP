@@ -168,6 +168,7 @@ commonMain.dependencies {
 | Изображение (painter) | `image/CmpImage.kt` |
 | Загрузка изображения по url (Coil) | `image/CmpAsyncImage.kt` |
 | Загрузка с кастомным placeholder'ом (Coil) | `image/CmpAsyncImage.kt` |
+| Картинка по url с заглушкой на время загрузки и при ошибке | `image/CmpAsyncImage.kt` (`CmpAsyncImageWithPlaceholder`) |
 | Картинка по url с зумом (щипок, двойной тап) | `image/CmpZoomableImage.kt` |
 | Диалог | `dialog/CmpDialog.kt` |
 | Полноэкранный диалог | `dialog/CmpFullScreenDialog.kt` |
@@ -177,6 +178,7 @@ commonMain.dependencies {
 | Разделитель | `divider/CmpDivider.kt` |
 | Текст | `text/CmpText.kt` |
 | Текст из простого HTML (абзацы, жирный, курсив, списки, ссылки) | `text/CmpHtmlText.kt` |
+| Текст со стилями внутри строки (`AnnotatedString`: подсветка поиска, моноширинный код) | `text/CmpText.kt` (перегрузка) |
 | Box | `layout/CmpBox.kt` |
 | Column | `layout/CmpColumn.kt` |
 | Row | `layout/CmpRow.kt` |

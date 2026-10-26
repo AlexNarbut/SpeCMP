@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,4 +70,39 @@ fun CmpText(
             maxLines = maxLines
         )
     }
+}
+
+/**
+ * Текст со стилями внутри строки ([AnnotatedString]: подсветка совпадения поиска, моноширинный код).
+ * Роль [style] — как у строкового [CmpText].
+ */
+@Composable
+fun CmpText(
+    text: AnnotatedString,
+    modifier: Modifier = Modifier,
+    fontWeight: FontWeight? = null,
+    color: Color = LocalContentColor.current,
+    textAlign: TextAlign? = null,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
+    style: CmpTextStyle = CmpTextStyle.Body
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = color,
+        textAlign = textAlign,
+        overflow = overflow,
+        maxLines = maxLines,
+        style = style.toTextStyle(),
+        fontWeight = fontWeight
+    )
+}
+
+@Composable
+private fun CmpTextStyle.toTextStyle(): TextStyle = when (this) {
+    CmpTextStyle.Title -> MaterialTheme.typography.titleLarge
+    CmpTextStyle.BodyLarge -> MaterialTheme.typography.bodyLarge
+    CmpTextStyle.Body -> MaterialTheme.typography.bodyMedium
+    CmpTextStyle.Caption -> MaterialTheme.typography.bodySmall
 }

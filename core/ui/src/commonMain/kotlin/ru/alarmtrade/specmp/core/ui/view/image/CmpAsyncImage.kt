@@ -1,5 +1,7 @@
 package ru.alarmtrade.specmp.core.ui.view.image
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -94,4 +96,31 @@ fun CmpSubcomposeAsyncImage(
     ) {
         content(CmpSubcomposeAsyncImageScope(painter))
     }
+}
+
+/**
+ * Картинка по url с заглушкой: [placeholder] показывается, пока картинка грузится, и вместо неё, если загрузка
+ * не удалась. Размер задаёт [modifier] — раскладка не прыгает.
+ */
+// Слот рисуется в одной из двух взаимоисключающих фаз (загрузка / ошибка) — своего состояния у заглушки нет.
+@Suppress("ktlint:compose:content-slot-reused")
+@Composable
+fun CmpAsyncImageWithPlaceholder(
+    model: Any?,
+    contentDescription: String?,
+    placeholder: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
+    imageLoader: ImageLoader = cmpImageLoader()
+) {
+    SubcomposeAsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        imageLoader = imageLoader,
+        modifier = modifier,
+        contentScale = contentScale,
+        // Слот получает жёсткие ограничения картинки — заглушку центрируем, иначе она растянется.
+        loading = { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { placeholder() } },
+        error = { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { placeholder() } }
+    )
 }
