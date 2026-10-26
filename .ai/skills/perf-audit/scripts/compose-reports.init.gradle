@@ -1,0 +1,10 @@
+// Init-скрипт аудита производительности: включает отчёты Compose-компилятора
+// (стабильность классов, skippable/restartable composable) без правки build-файлов.
+// Подключается скриптом compose-reports.sh: ./gradlew <task> --init-script <этот файл>
+allprojects {
+    pluginManager.withPlugin("org.jetbrains.kotlin.plugin.compose") {
+        def ext = extensions.getByName("composeCompiler")
+        ext.reportsDestination.set(layout.buildDirectory.dir("compose-audit"))
+        ext.metricsDestination.set(layout.buildDirectory.dir("compose-audit"))
+    }
+}

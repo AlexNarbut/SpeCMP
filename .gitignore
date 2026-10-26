@@ -111,3 +111,4 @@ replay_pid*
 # UI-тесты: локальные креды скилла ui-test (шаблон — credentials.properties.example) и результаты прогонов
 /.agents/skills/ui-test/*.properties
 /.ai-qa/
+/.ai-perf/
