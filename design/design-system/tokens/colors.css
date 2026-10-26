@@ -73,11 +73,14 @@
 
   /* ── Domain tokens (Pandora Spec) ── */
   --success: #79BD5B;          /* @kind color */
-  --bus-can1: #183C7A;         /* @kind color */
-  --bus-can2: #183C7A;         /* @kind color */
-  --bus-can3: #183C7A;         /* @kind color */
-  --bus-lin: #183C7A;          /* @kind color */
-  --bus-unknown: #183C7A;      /* @kind color */
+  /* Bus families (CarBusGroup): colour = family, number = label text.
+     Chip = 14% tint + 2px family border + on-surface text; unknown = dashed outline, no tint. */
+  --bus-can: #1F5FBF;          /* @kind color */
+  --bus-canfd: #00838F;        /* @kind color */
+  --bus-lin: #7B3FA6;          /* @kind color */
+  --bus-bean: #B85C00;         /* @kind color */
+  --bus-imo: #2E7D32;          /* @kind color */
+  --bus-unknown: #6B6B6B;      /* @kind color */
 }
 
 [data-theme="dark"] {
@@ -139,9 +142,10 @@
 
   /* Domain tokens keep their hue across themes */
   --success: #79BD5B;          /* @kind color */
-  --bus-can1: #4C7AD0;         /* @kind color */
-  --bus-can2: #4C7AD0;         /* @kind color */
-  --bus-can3: #4C7AD0;         /* @kind color */
-  --bus-lin: #4C7AD0;          /* @kind color */
-  --bus-unknown: #4C7AD0;      /* @kind color */
+  --bus-can: #6FA8F5;          /* @kind color */
+  --bus-canfd: #4DD0E1;        /* @kind color */
+  --bus-lin: #C79AEB;          /* @kind color */
+  --bus-bean: #F2A55A;         /* @kind color */
+  --bus-imo: #72C476;          /* @kind color */
+  --bus-unknown: #9AA4B8;      /* @kind color */
 }

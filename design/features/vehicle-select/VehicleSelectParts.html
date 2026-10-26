@@ -1,0 +1,117 @@
+<!-- @dsCard group="Выбор автомобиля" viewport="1200x900" name="Выбор автомобиля — компоненты кита" subtitle="Чип шины (палитра), бейдж возможности, строки, CAN-поле, галерея, состояния, матрица A/B; light и dark рядом" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Выбор автомобиля — компоненты</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 1180px; padding: 0 12px; }
+  .seg { flex: 0 1 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: nowrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.wrap { flex-wrap: wrap; justify-content: center; }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 7px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  #root { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .scaler { transform-origin: top left; }
+  .theme-fab { position: fixed; top: 14px; right: 14px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; line-height: 1; background: #fff; color: #1A3E7A; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  body.page-dark { background: #101314; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .theme-fab { background: #272b2d; color: #ffd966; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 20px; width: 100%; max-width: 1180px; padding: 0 16px; box-sizing: border-box; }
+  .panel { background: var(--background); color: var(--on-background); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 22px; box-shadow: 0 8px 30px rgba(0,0,0,.18); min-width: 0; }
+  .h { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--on-surface-variant); margin-bottom: 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script src="./vs-data.js"></script>
+<script type="text/babel" src="./VsKit.jsx"></script>
+<script type="text/babel" src="./VehicleCard.jsx"></script>
+<script type="text/babel" src="./VehicleSelect.jsx"></script>
+<script type="text/babel">
+  const K = window.VsKit, D = window.VS_DATA;
+  function Sec({ t, children }) { return <section><div className="h">{t}</div>{children}</section>; }
+  function Panel({ dark }) {
+    const [idx, setIdx] = React.useState(2);
+    const [can, setCan] = React.useState("");
+    const [seg, setSeg] = React.useState("name");
+    const camry = D.card(D.CAMRY_TRIM);
+    const sample = { ...camry, funcs: camry.funcs.filter((f) => ["Зажигание", "Багажник", "Центральный замок", "Складывание зеркал", "Штатный дистанционный запуск", "Датчик дождя", "Обход штатного иммобилайзера", "Режим EV", "Запас хода"].includes(f.n)) };
+    const [ui, setUiRaw] = React.useState({ tab: "funcs", closed: {} });
+    const setUi = (p) => setUiRaw((u) => ({ ...u, ...p }));
+    return (
+      <div className="panel" data-theme={dark ? "dark" : undefined}>
+        <div style={{ font: "600 20px var(--font-sans)" }}>{dark ? "Тёмная тема" : "Светлая тема"}</div>
+        <Sec t="Чип шины · BusChip (m / s)">
+          <div className="row">{D.BUS_ORDER.map((b) => <K.BusChip key={b} bus={b} />)}</div>
+          <div className="row" style={{ marginTop: 8 }}>{D.BUS_ORDER.map((b) => <K.BusChip key={b} bus={b} size="s" />)}</div>
+          <div style={{ marginTop: 10, font: "500 14px var(--font-sans)", color: "var(--on-surface-variant)" }}>Новый код сервера (57) → {D.busOf(57)}. 5 шин в узком месте (240 px) — перенос строк, без прокрутки:</div>
+          <div className="row" style={{ marginTop: 6, width: 240, padding: 8, border: "1px dashed var(--outline)", borderRadius: 8 }}>{["IMO-KEY1 + IMO-KEY2", "CAN-FD1 (CAN-FD3)", "LIN (IN-OUT)", "BEAN", D.busOf(57)].map((b) => <K.BusChip key={b} bus={b} size="s" />)}</div>
+        </Sec>
+        <Sec t="Бейдж возможности · CapBadge (строка / плитка, с примечанием и без)">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <K.CapBadge label="Блокировка по CAN" v="yes" note="x" onClick={() => {}} />
+            <K.CapBadge label="Бесключевой обход" v="no" note="x" onClick={() => {}} />
+            <K.CapBadge label="Бесключевой обход" v="nodata" />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8, marginTop: 8 }}>
+            <K.CapBadge tile label="Блокировка по CAN" v="yes" note="x" onClick={() => {}} />
+            <K.CapBadge tile label="Бесключевой обход" v="no" />
+            <K.CapBadge tile label="Бесключевой обход" v="nodata" />
+          </div>
+        </Sec>
+        <Sec t="Строка списка · VsRow (обычная / выбрана / длинное название / с «Выбрать»)">
+          <K.VsRow dense lead={<K.Logo name="Toyota" size={40} />} title="Toyota" onClick={() => {}} />
+          <K.VsRow dense lead={<K.Logo name="Kia" size={40} />} title="Kia" selected onClick={() => {}} />
+          <K.VsRow dense lead={<K.Logo name="Mercedes-Benz Commercial Vehicles" size={40} />} title={<K.Hl text="Mercedes-Benz Commercial Vehicles" q="merc" />} onClick={() => {}} />
+          <K.VsRow lead={<K.Ph label="" small h={56} w={84} radius={10} />} title="RAV4" sub="2019– · 3 комплектации" onClick={() => {}} />
+          <K.VsRow dense title="2.5 Hybrid AWD-i с электромеханическим приводом задней оси" onClick={() => {}} trail={<window.PandoraSpecDesignSystem_b8d6e1.CmpOutlinedButton text="Выбрать" style={{ height: 48 }} />} />
+        </Sec>
+        <Sec t="Переключатель режима поиска · Seg, поле поиска, крошки">
+          <K.Seg opts={[["name","По названию"],["can","По CAN-коду"]]} value={seg} onChange={setSeg} />
+          <div style={{ height: 10 }} />
+          <K.SearchBar value="toyota cam" onChange={() => {}} placeholder="Марка, модель или CAN-код" />
+          <K.Crumbs items={[{ t: "Марки", on: () => {} }, { t: "Toyota", on: () => {} }, { t: "Camry (2017–2023)", on: () => {} }, { t: "2.5 AT" }]} />
+        </Sec>
+        <Sec t="Поле CAN-кода · пустое / код прошивки блока / не найден">
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <K.CanInput value={can} onChange={setCan} />
+            <K.CanInput value="2154" onChange={() => {}} hint="код прошивки блока" />
+            <K.CanInput value="0000" onChange={() => {}} state="none" />
+          </div>
+        </Sec>
+        <Sec t="Заглушка фото · загрузка (фикс. пропорции) / не загрузилось">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><K.Ph label="фото модели 16:9" /><K.Ph label="" fail /></div>
+        </Sec>
+        <Sec t="Галерея точки подключения">
+          <K.Gallery count={7} idx={idx} onIdx={setIdx} onFull={() => {}} label="Зажигание" />
+        </Sec>
+        <Sec t="Состояния уровня · StateBox">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <K.StateBox kind="error" compact onRetry={() => {}} />
+            <K.StateBox kind="offline" compact onRetry={() => {}} />
+            <K.StateBox kind="filter" compact onReset={() => {}} />
+            <K.StateBox kind="nothing" compact />
+          </div>
+          <K.SkelList n={3} thumb />
+        </Sec>
+        <Sec t="Матрица функций (чтение · управление), телефон">
+          <window.VsCard c={{ ...sample, notes: [], points: [], schemes: [], maps: [], folk: [] }} layout="compact" ui={ui} setUi={setUi} mtxVar="B" headVar="B" pad={0} onNote={() => {}} onCopy={() => {}} />
+        </Sec>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<div className="cols"><Panel /><Panel dark /></div>);
+</script>
+</body>
+</html>

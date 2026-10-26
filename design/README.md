@@ -64,8 +64,8 @@ a light and a dark value so contrast is correct automatically.
 - Accents: secondary a steel blue (`#3F5A82` / container `#DAE3F3`), tertiary a teal
   (`#2C6A6E` / container `#C9EAEC`), error red (`#C62828`). Used sparingly — secondaryContainer
   tints operator keys, primaryContainer the promoted action.
-- Domain tokens: `--success` (`#79BD5B`) and the wiring-bus colors `--bus-can1…--bus-unknown`
-  (`#183C7A` light / `#4C7AD0` dark) for CAN/LIN harness diagrams.
+- Domain tokens: `--success` (`#79BD5B`) and the wiring-bus family colors `--bus-can`, `--bus-canfd`, `--bus-lin`, `--bus-bean`, `--bus-imo`, `--bus-unknown`
+  — one hue per bus family (CAN blue, CAN FD teal, LIN purple, BEAN orange, IMO-KEY green, unknown = neutral dashed outline); the bus number is always in the chip label.
 
 **Surfaces & depth.** A 5-step *surface container* ladder (Lowest → Highest) expresses
 elevation **by tone** — here **derived** from `surface`→`onSurface` via `color-mix`, since
