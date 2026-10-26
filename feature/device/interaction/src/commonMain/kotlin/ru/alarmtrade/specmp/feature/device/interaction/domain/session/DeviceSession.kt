@@ -78,6 +78,10 @@ class DeviceSession(
     // (попытки SDK и чтение режима не подменяют её на «Connecting»). Новая сессия (attach) сбрасывает.
     private val wasReady = MutableStateFlow(false)
 
+    // Базу устройств в этой сессии уже синхронизировали из-за неизвестной модели — второй раз не пытаемся
+    // (без сети синхронизация не поможет, а переподключения не должны каждый раз её запускать). attach сбрасывает.
+    private val databaseSynced = MutableStateFlow(false)
+
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
 
     private val expectation = MutableStateFlow<RebootExpectation?>(null)
@@ -132,6 +136,7 @@ class DeviceSession(
     fun attach(transport: ConnectionTransport) {
         stageClock.update { TimeSource.Monotonic.markNow() }
         wasReady.update { false }
+        databaseSynced.update { false }
         expectation.update { null }
         logStage { "attach transport=$transport" }
         _transport.update { transport }
@@ -290,7 +295,16 @@ class DeviceSession(
             val module = readWithRetry { sessionRepository.readBluetoothModule() } ?: return null
             if (module.mode == BluetoothModuleMode.BOOT) return DeviceSessionState.BluetoothBoot(module.manufacturer)
         }
-        val device = readWithRetry { sessionRepository.readDevice() } ?: return null
+        var device = readWithRetry { sessionRepository.readDevice() } ?: return null
+        if (!device.modelInDatabase && !databaseSynced.value) {
+            // Модели нет в базе устройств телефона (свежая установка, база не скачана или устарела): один раз
+            // синхронизируем базу и перечитываем блок — иначе он показался бы «не поддерживается».
+            databaseSynced.update { true }
+            logStage { "device database sync: model ${device.systemName.trim()} not found" }
+            val synced = sessionRepository.syncDeviceDatabase()
+            logStage { "device database sync ${if (synced is Response.Success) "ok" else "failed"}" }
+            if (synced is Response.Success) device = readWithRetry { sessionRepository.readDevice() } ?: device
+        }
         return when (device.mode) {
             DeviceOperationMode.MAIN -> DeviceSessionState.Ready(device)
             DeviceOperationMode.BOOT -> DeviceSessionState.FirmwareBoot(device)

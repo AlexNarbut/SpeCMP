@@ -89,6 +89,15 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
 
     override suspend fun readImei(): Response<String> = imei
 
+    var syncResult: Response<Unit> = Response.Success(Unit)
+    var syncCount = 0
+        private set
+
+    override suspend fun syncDeviceDatabase(): Response<Unit> {
+        syncCount++
+        return syncResult
+    }
+
     var reconnectCount = 0
         private set
 

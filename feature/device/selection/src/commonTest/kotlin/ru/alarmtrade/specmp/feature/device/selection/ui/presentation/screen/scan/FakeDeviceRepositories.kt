@@ -108,6 +108,7 @@ class FakeDeviceSessionRepository : DeviceSessionRepository {
         Response.Error(IllegalStateException("not used"))
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Error(IllegalStateException("not used"))
     override suspend fun readImei(): Response<String> = Response.Error(IllegalStateException("not used"))
+    override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
     override suspend fun reconnect(): Response<Unit> = Response.Error(IllegalStateException("not used"))
     override suspend fun disconnect(): Response<Unit> = Response.Error(IllegalStateException("not used"))
     override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =

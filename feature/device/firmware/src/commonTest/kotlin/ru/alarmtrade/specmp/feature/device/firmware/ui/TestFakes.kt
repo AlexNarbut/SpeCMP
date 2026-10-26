@@ -80,6 +80,7 @@ internal class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRep
     override suspend fun readBluetoothModule() = bluetoothVersions[minOf(bluetoothReads++, bluetoothVersions.lastIndex)]
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
     override suspend fun readImei(): Response<String> = Response.Success("")
+    override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
     var reconnectCount = 0
     override suspend fun reconnect(): Response<Unit> {
         reconnectCount++

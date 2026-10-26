@@ -46,6 +46,8 @@
     <string name="advanced_mount_btn_retry">Повторить</string>
     <string name="advanced_mount_unsupported_title">Устройство не поддерживается</string>
     <string name="advanced_mount_unsupported_subtitle">Доступны только базовые разделы.</string>
+    <string name="advanced_mount_no_model_title">Модели блока нет в базе устройств</string>
+    <string name="advanced_mount_no_model_subtitle">Обновите базу устройств на главном экране (нужен интернет) и переподключитесь к блоку. Пока доступны только базовые разделы.</string>
     <string name="advanced_mount_dialog_attention">Внимание</string>
     <string name="advanced_mount_dialog_can_update">Устройство с заводскими CAN настройками. Нужно обновить прошивку под необходимый CAN код автомобиля</string>
     <string name="advanced_mount_btn_cancel">Отмена</string>

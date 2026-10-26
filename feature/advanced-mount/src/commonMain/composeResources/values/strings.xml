@@ -46,6 +46,8 @@
     <string name="advanced_mount_btn_retry">Retry</string>
     <string name="advanced_mount_unsupported_title">Device is not supported</string>
     <string name="advanced_mount_unsupported_subtitle">Only basic sections are available.</string>
+    <string name="advanced_mount_no_model_title">The unit model is missing from the device database</string>
+    <string name="advanced_mount_no_model_subtitle">Update the device database on the main screen (internet required) and reconnect to the unit. Only basic sections are available for now.</string>
     <string name="advanced_mount_dialog_attention">Attention</string>
     <string name="advanced_mount_dialog_can_update">The unit has factory CAN settings. Update the firmware for the vehicle CAN code</string>
     <string name="advanced_mount_btn_cancel">Cancel</string>

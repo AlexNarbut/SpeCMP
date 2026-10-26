@@ -114,7 +114,11 @@ class AdvancedMountRootViewModel(
                 is Response.Error -> MountContent.VerifyError
 
                 is Response.Success -> if (access.value.hasAccess) {
-                    MountContent.Ready(sections = device.features.toSections(), unsupported = device.features == null)
+                    MountContent.Ready(
+                        sections = device.features.toSections(),
+                        unsupported = device.features == null,
+                        modelNotInDatabase = device.features == null && !device.modelInDatabase
+                    )
                 } else {
                     MountContent.Denied(access.value.message)
                 }

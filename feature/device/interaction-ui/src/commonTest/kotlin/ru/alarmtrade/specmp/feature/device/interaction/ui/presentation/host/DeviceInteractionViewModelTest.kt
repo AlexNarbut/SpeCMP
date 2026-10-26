@@ -48,6 +48,7 @@ class DeviceInteractionViewModelTest {
             Response.Error(IllegalStateException("usb only"))
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(readDevice)
         override suspend fun readImei(): Response<String> = Response.Success("")
+        override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
         override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
         override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
