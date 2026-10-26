@@ -12,6 +12,7 @@ internal object SettingsTestTags {
     const val TREE_RESIZE = "settings_tree_resize"
     const val CAN_CODE = "settings_can_code"
     const val CAN_FIND = "settings_can_find"
+    const val CAN_PICK_VEHICLE = "settings_can_pick_vehicle"
     const val MENU = "settings_menu"
     const val MENU_RESET = "settings_menu_reset"
     const val RESET_CONFIRM = "settings_reset_confirm"

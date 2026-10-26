@@ -36,6 +36,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLab
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.CarSearch
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import specmp.feature.device.settings_ui.generated.resources.Res
+import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_catalog
 import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_find
 import specmp.feature.device.settings_ui.generated.resources.settings_can_hint_digits
 import specmp.feature.device.settings_ui.generated.resources.settings_can_label_code
@@ -45,8 +46,9 @@ import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_ma
 import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_none
 
 /**
- * CAN-код: поле на 4 цифры (цифровая клавиатура) и «Найти автомобиль». Один найденный автомобиль привязывается
- * к коду сразу, несколько — выбор, ни одного или нет связи — предупреждение (код всё равно можно применить).
+ * CAN-код: поле на 4 цифры (цифровая клавиатура), «Найти автомобиль» по коду и «Выбрать из каталога». Один
+ * найденный по коду автомобиль привязывается сразу, несколько — выбор, ни одного или нет связи — предупреждение (код
+ * всё равно можно применить). Выбор из каталога подставляет и код, и автомобиль.
  */
 @Suppress("LongMethod")
 @Composable
@@ -56,7 +58,8 @@ internal fun CanCodeEditor(
     cars: Map<Int, CarSummary>,
     onCodeChange: (String) -> Unit,
     onSearch: () -> Unit,
-    onPick: (carId: Int) -> Unit
+    onPick: (carId: Int) -> Unit,
+    onPickFromCatalog: () -> Unit
 ) {
     val complete = value.code.length == CAN_CODE_LENGTH
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -85,6 +88,16 @@ internal fun CanCodeEditor(
         ) {
             CmpIcon(icon = CmpIcons.Search, contentDescription = null)
             CmpText(text = stringResource(Res.string.settings_can_btn_find), modifier = Modifier.padding(start = 8.dp))
+        }
+        CmpOutlinedButton(
+            onClick = onPickFromCatalog,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_PICK_VEHICLE)
+        ) {
+            CmpIcon(icon = CmpIcons.DirectionsCar, contentDescription = null)
+            CmpText(
+                text = stringResource(Res.string.settings_can_btn_catalog),
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
         CarSearchResult(value, carSearch, cars, onPick)
     }

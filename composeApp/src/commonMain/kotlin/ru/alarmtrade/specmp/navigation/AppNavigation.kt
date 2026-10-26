@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
@@ -133,13 +134,41 @@ private fun AuthedNavGraph() {
                             filePicker = rememberFirmwareFilePicker()
                         )
                     }
-                ) { _, onExit ->
+                ) { device, onExit ->
                     AdvancedMountNavGraph(
                         onExit = onExit,
                         onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
                         firmwareCheck = { onBack -> FirmwareCheckScreen(onBack = onBack) },
                         settingsEditor = { onBack, onOpenFirmwareUpdate ->
-                            DeviceSettingsEntry(onExit = onBack, onOpenFirmwareUpdate = onOpenFirmwareUpdate)
+                            DeviceSettingsEntry(
+                                onExit = onBack,
+                                onOpenFirmwareUpdate = onOpenFirmwareUpdate,
+                                // CAN-код из каталога: автомобили под модель блока, выбор подставляет код и carId.
+                                vehiclePicker = { deviceName, onPick, onPickerBack ->
+                                    VehicleSelectEntry(
+                                        request = VehicleSelectRequest(
+                                            mode = VehicleSelectMode.PICK,
+                                            catalog = VehicleCatalog.ALL,
+                                            device = deviceName?.let { VehicleDeviceFilter.Device(it) }
+                                        ),
+                                        onPick = onPick,
+                                        onBack = onPickerBack
+                                    )
+                                }
+                            )
+                        },
+                        // Справочник под подключённый блок: подсистемы модели, CAN-код прошивки — в поиске по CAN.
+                        vehicles = { onBack ->
+                            VehicleSelectEntry(
+                                request = VehicleSelectRequest(
+                                    mode = VehicleSelectMode.VIEW,
+                                    catalog = VehicleCatalog.ALL,
+                                    device = VehicleDeviceFilter.Device(device.systemName),
+                                    firmwareCanCode = device.can?.code
+                                ),
+                                onPick = {},
+                                onBack = onBack
+                            )
                         }
                     )
                 }

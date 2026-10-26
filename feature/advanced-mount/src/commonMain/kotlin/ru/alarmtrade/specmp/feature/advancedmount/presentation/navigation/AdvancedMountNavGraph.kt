@@ -58,13 +58,16 @@ private val navConfig = SavedStateConfiguration {
  * @param settingsEditor раздел «Настройки» (фича `device/settings-ui`, подключается в `composeApp`); получает выход на
  *   корень монтажа и переход в «Проверку прошивок» (заменяет раздел настроек: CAN-код блока с единой CAN-прошивкой
  *   меняется прошивкой).
+ * @param vehicles раздел «Автомобили» (фича `vehicle-ui`, подключается в `composeApp` с моделью и CAN-кодом блока);
+ *   получает выход на корень монтажа.
  */
 @Composable
 fun AdvancedMountNavGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
-    settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit
+    settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
+    vehicles: @Composable (onBack: () -> Unit) -> Unit
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
 
@@ -101,6 +104,8 @@ fun AdvancedMountNavGraph(
                             )
                         }
                     )
+
+                    MountSection.VEHICLES -> vehicles { backStack.popSafe() }
 
                     else -> SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = {
                         backStack.popSafe()

@@ -87,6 +87,7 @@
     <string name="settings_can_label_code">CAN-код (4 цифры)</string>
     <string name="settings_can_hint_digits">Введите 4 цифры</string>
     <string name="settings_can_btn_find">Найти автомобиль</string>
+    <string name="settings_can_btn_catalog">Выбрать из каталога</string>
     <string name="settings_can_loading">Ищем автомобиль…</string>
     <string name="settings_can_msg_many">Подходит несколько автомобилей</string>
     <string name="settings_can_msg_none">Для кода %1$s автомобиль не найден. Код всё равно можно применить.</string>

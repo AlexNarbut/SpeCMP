@@ -43,6 +43,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 
@@ -223,6 +224,29 @@ internal class DeviceSettingsViewModel(
             val editing = state.editing ?: return@update state
             val draft = editing.draft as? SettingValue.Can ?: return@update state
             state.copy(editing = editing.copy(draft = SettingValue.Can(draft.value.copy(carId = carId))))
+        }
+    }
+
+    /** «Выбрать из каталога» в окне CAN-кода. */
+    fun onVehiclePickerOpen() {
+        if (_state.value.editing?.draft is SettingValue.Can) _state.update { it.copy(vehiclePicker = true) }
+    }
+
+    fun onVehiclePickerClose() = _state.update { it.copy(vehiclePicker = false) }
+
+    /** Автомобиль выбран в каталоге: его CAN-код и `carId` — в черновик окна CAN-кода (применяется по «Готово»). */
+    fun onCarPicked(car: CarSummary) {
+        _state.update { state ->
+            val editing = state.editing
+            if (editing == null || editing.draft !is SettingValue.Can) return@update state.copy(vehiclePicker = false)
+            state.copy(
+                vehiclePicker = false,
+                editing = editing.copy(
+                    draft = SettingValue.Can(CanCode(car.canCode, car.id)),
+                    carSearch = CarSearch.Idle
+                ),
+                cars = state.cars + (car.id to car)
+            )
         }
     }
 

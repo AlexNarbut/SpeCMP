@@ -1,9 +1,11 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -22,6 +24,8 @@ import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
@@ -40,6 +44,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_error_set_value
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_written
@@ -70,9 +75,15 @@ private val navConfig = SavedStateConfiguration {
  *
  * @param onExit выход из настроек.
  * @param onOpenFirmwareUpdate выход в «Проверку прошивок»: на блоке с единой CAN-прошивкой CAN-код меняется прошивкой.
+ * @param vehiclePicker выбор автомобиля из каталога для CAN-кода (фича `vehicle-ui`, подключается в `composeApp`):
+ *   получает модель блока (`null` — ещё не прочитана), выбранный автомобиль и отмену. Рисуется поверх настроек.
  */
 @Composable
-fun DeviceSettingsEntry(onExit: () -> Unit, onOpenFirmwareUpdate: () -> Unit) {
+fun DeviceSettingsEntry(
+    onExit: () -> Unit,
+    onOpenFirmwareUpdate: () -> Unit,
+    vehiclePicker: @Composable (deviceName: String?, onPick: (CarSummary) -> Unit, onBack: () -> Unit) -> Unit
+) {
     val viewModel = koinViewModel<DeviceSettingsViewModel>(parameters = { parametersOf(SettingsSource.Device) })
     val state by viewModel.state.collectAsState()
     val backStack = rememberNavBackStack(navConfig, SettingsSectionRoute(null))
@@ -133,11 +144,41 @@ fun DeviceSettingsEntry(onExit: () -> Unit, onOpenFirmwareUpdate: () -> Unit) {
                 onApply = viewModel::onEditApply,
                 onDismiss = viewModel::onEditDismiss,
                 onCarSearch = viewModel::onCarSearch,
-                onCarPick = viewModel::onCarPick
+                onCarPick = viewModel::onCarPick,
+                onPickFromCatalog = viewModel::onVehiclePickerOpen
             )
         )
     }
 
+    CmpBox(modifier = Modifier.fillMaxSize()) {
+        SettingsWithNav(
+            state,
+            backStack,
+            actions,
+            snackbarHostState,
+            onBack,
+            rowActions,
+            viewModel::onSearchQueryChange
+        )
+        if (state.vehiclePicker) {
+            CmpSurface(modifier = Modifier.fillMaxSize()) {
+                vehiclePicker(state.header?.deviceName, viewModel::onCarPicked, viewModel::onVehiclePickerClose)
+            }
+        }
+    }
+}
+
+@Suppress("LongParameterList") // разметка записи графа: всё приходит из DeviceSettingsEntry
+@Composable
+private fun SettingsWithNav(
+    state: DeviceSettingsState,
+    backStack: NavBackStack<NavKey>,
+    actions: DeviceSettingsActions,
+    snackbarHostState: CmpSnackbarHostState,
+    onBack: () -> Unit,
+    rowActions: SettingRowActions,
+    onSearchQueryChange: (String) -> Unit
+) {
     DeviceSettingsContent(
         state = state,
         location = backStack.location(),
@@ -159,7 +200,7 @@ fun DeviceSettingsEntry(onExit: () -> Unit, onOpenFirmwareUpdate: () -> Unit) {
                     SearchPane(
                         state = state,
                         wide = layout.isWide,
-                        onQueryChange = viewModel::onSearchQueryChange,
+                        onQueryChange = onSearchQueryChange,
                         actions = rowActions
                     )
                 }

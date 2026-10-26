@@ -5,6 +5,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -406,6 +407,27 @@ class DeviceSettingsViewModelTest {
         vm.onCarSearch()
         settle()
         assertEquals(CarSearch.Failed, vm.state.value.editing?.carSearch)
+    }
+
+    @Test
+    fun `car picked from the catalog sets code and car in the draft, cancel keeps the draft`() = test {
+        val vm = viewModel()
+        vm.onSettingClick(61)
+        val before = vm.state.value.editing?.draft
+
+        vm.onVehiclePickerOpen()
+        assertTrue(vm.state.value.vehiclePicker)
+        vm.onVehiclePickerClose()
+        assertFalse(vm.state.value.vehiclePicker)
+        assertEquals(before, vm.state.value.editing?.draft)
+
+        vm.onVehiclePickerOpen()
+        vm.onCarPicked(cars.solaris)
+
+        val state = vm.state.value
+        assertFalse(state.vehiclePicker)
+        assertEquals(SettingValue.Can(CanCode("7002", 22)), state.editing?.draft)
+        assertEquals(cars.solaris, state.cars[22])
     }
 
     @Test

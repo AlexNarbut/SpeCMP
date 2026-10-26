@@ -30,7 +30,9 @@ internal data class DeviceSettingsState(
     /** Ширина колонки дерева, заданная пользователем (dp); `null` — по умолчанию раскладки. */
     val treeWidthDp: Int? = null,
     /** Автомобили по id (подпись к CAN-коду в строке и в окне). */
-    val cars: Map<Int, CarSummary> = emptyMap()
+    val cars: Map<Int, CarSummary> = emptyMap(),
+    /** Открыт выбор автомобиля из каталога для CAN-кода (поверх настроек; окно редактирования скрыто). */
+    val vehiclePicker: Boolean = false
 ) {
     val changedCount: Int get() = changedIds.size
 }

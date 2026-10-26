@@ -142,7 +142,7 @@ internal fun DeviceSettingsContent(
                 }
             }
         }
-        state.editing?.let {
+        state.editing?.takeUnless { state.vehiclePicker }?.let {
             EditorPanel(editing = it, cars = state.cars, wide = layout.isWide, actions = actions.editor)
         }
         Dialogs(state, actions)

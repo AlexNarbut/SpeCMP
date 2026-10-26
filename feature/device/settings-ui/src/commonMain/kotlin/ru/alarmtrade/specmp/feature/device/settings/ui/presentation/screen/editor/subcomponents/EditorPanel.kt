@@ -66,7 +66,8 @@ internal class EditorActions(
     val onApply: () -> Unit,
     val onDismiss: () -> Unit,
     val onCarSearch: () -> Unit,
-    val onCarPick: (carId: Int) -> Unit
+    val onCarPick: (carId: Int) -> Unit,
+    val onPickFromCatalog: () -> Unit
 )
 
 /**
@@ -224,7 +225,8 @@ private fun EditorBody(editing: EditingSetting, cars: Map<Int, CarSummary>, wide
                 cars = cars,
                 onCodeChange = { code -> onDraftChange(SettingValue.Can(CanCode(code, carId = null))) },
                 onSearch = actions.onCarSearch,
-                onPick = actions.onCarPick
+                onPick = actions.onCarPick,
+                onPickFromCatalog = actions.onPickFromCatalog
             )
 
             setting is InputSetting && draft is SettingValue.Input ->

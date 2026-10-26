@@ -90,6 +90,7 @@
     <string name="settings_can_label_code">CAN code (4 digits)</string>
     <string name="settings_can_hint_digits">Enter 4 digits</string>
     <string name="settings_can_btn_find">Find vehicle</string>
+    <string name="settings_can_btn_catalog">Choose from catalog</string>
     <string name="settings_can_loading">Looking for the vehicle…</string>
     <string name="settings_can_msg_many">Several vehicles match the code</string>
     <string name="settings_can_msg_none">No vehicle found for code %1$s. The code can still be applied.</string>

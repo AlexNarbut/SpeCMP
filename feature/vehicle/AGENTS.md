@@ -21,6 +21,10 @@
 - Модель с одной комплектацией сразу открывает карточку. Недавние пишутся при открытии карточки и при выборе.
 - Раскладка (`vehicleLayoutOf`): Compact — шаги, чип типа устройства под поиском; Medium — колонки «Марки · Модели» (аккордеон комплектаций), карточка — на всё окно (max 840 dp); Expanded — колонки + карточка справа, третья колонка «Комплектации» от 1400 dp. Карточка внутри панели выбирает широкую шапку/матрицу от 640 dp.
 - Карточка: шапка B (фото 4:3, CAN-код с копированием, бейджи возможностей с примечанием по тапу), «Важно», вкладки только непустые (функции — матрица B с чипами шин по семействам, точки подключения с галереей и полноэкранным зумом, PDF через `LocalUriHandler`, народные карты), «Выбрать» закреплена внизу. Цвета шин — `cmpDomainColors()` (core/ui), подписи шин не переводятся.
-- Подключено: главная → «Автомобили» (`VehicleSelectRoute`, VIEW, тип выбирается). Расширенный монтаж и окно CAN-кода в настройках — следующий этап; архив прошивок (CAN-фильтр) и конфигуратор (`WITH_CONFIGURATIONS`) — отдельные задачи.
+- Подключено (`composeApp`):
+  - главная → «Автомобили»: `VehicleSelectRoute`, VIEW, тип устройства выбирается;
+  - расширенный монтаж → раздел «Автомобили» (`MountSection.VEHICLES`, слот `vehicles` в `AdvancedMountNavGraph`): VIEW под подключённый блок — `Device(systemName)`, CAN-код прошивки (`device.can?.code`) предзаполнен в поиске по CAN;
+  - настройки → окно CAN-кода → «Выбрать из каталога» (слот `vehiclePicker` в `DeviceSettingsEntry`): PICK под модель блока, рисуется поверх настроек; выбор подставляет CAN-код и `carId` в черновик окна (применяется по «Готово»).
+- Не подключено: архив прошивок (нет CAN-фильтра), конфигуратор (`WITH_CONFIGURATIONS`) — отдельные задачи.
 - Галерея состояний: `./gradlew :feature:vehicle-ui:jvmTest --tests '*Gallery*'` → `build/state-gallery/vehicle-select` (Compact / Medium / Expanded / 1600, светлая и тёмная).
 - `testTag` — `VehicleTestTags` (`vehicle_brand_<id>`, `vehicle_model_<id>`, `vehicle_trim_<id>`, `vehicle_trim_pick_<id>`, `vehicle_can_result_<id>`, `vehicle_recent_<id>`, `vehicle_card`, `vehicle_card_pick`, `vehicle_search`, `vehicle_can_input`, `vehicle_filter*`, `vehicle_type_*`, `vehicle_tab_*`, `vehicle_point_<i>`, `vehicle_retry` …).

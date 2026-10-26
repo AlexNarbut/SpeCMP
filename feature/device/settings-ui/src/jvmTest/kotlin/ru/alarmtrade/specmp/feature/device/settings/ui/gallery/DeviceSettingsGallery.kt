@@ -256,7 +256,7 @@ class DeviceSettingsGallery {
         onTreeWidthChange = {}, onWrite = {}, onExitWrite = {}, onExitDiscard = {},
         onDialogDismiss = {
         }, onResetRequest = {
-        }, onResetConfirm = {}, onSingleCanUpdate = {}, editor = EditorActions({}, {}, {}, {}, {}, {})
+        }, onResetConfirm = {}, onSingleCanUpdate = {}, editor = EditorActions({}, {}, {}, {}, {}, {}, {})
     )
 
     private fun render(name: String, state: DeviceSettingsState, path: List<Int>, search: Boolean = false) =
