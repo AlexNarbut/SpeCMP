@@ -140,6 +140,8 @@ commonMain.dependencies {
 | Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
 | Текстовое поле | `input/CmpTextField.kt` |
+| Поле поиска (лупа, «очистить») | `input/CmpSearchField.kt` |
+| Поле цифрового кода по ячейкам (CAN-код) | `input/CmpCodeField.kt` |
 | Выпадающий список (поле) | `input/CmpDropdown.kt` |
 | Выпадающее меню у кнопки/чипа | `menu/CmpDropdownMenu.kt` |
 | Switch | `input/CmpSwitch.kt` |
@@ -149,6 +151,9 @@ commonMain.dependencies {
 | Slider | `input/CmpSlider.kt` |
 | Круговой прогресс | `progress/CmpCircularProgressIndicator.kt` |
 | Линейный прогресс | `progress/CmpLinearProgressIndicator.kt` |
+| Скелетон загрузки (пульсирующий блок) | `progress/CmpSkeleton.kt` |
+| Блок состояния вместо содержимого (ошибка, пусто, ничего не найдено + действия) | `state/CmpStateBox.kt` |
+| Чип (фильтр, недавнее, тип; выбранный, с «✕») | `chip/CmpChip.kt` |
 | Card | `surface/CmpCard.kt` |
 | Выбираемая карточка | `surface/CmpSelectableCard.kt` |
 | Surface | `surface/CmpSurface.kt` |
@@ -163,6 +168,7 @@ commonMain.dependencies {
 | Изображение (painter) | `image/CmpImage.kt` |
 | Загрузка изображения по url (Coil) | `image/CmpAsyncImage.kt` |
 | Загрузка с кастомным placeholder'ом (Coil) | `image/CmpAsyncImage.kt` |
+| Картинка по url с зумом (щипок, двойной тап) | `image/CmpZoomableImage.kt` |
 | Диалог | `dialog/CmpDialog.kt` |
 | Полноэкранный диалог | `dialog/CmpFullScreenDialog.kt` |
 | Snackbar | `dialog/CmpSnackbar.kt` |
@@ -170,6 +176,7 @@ commonMain.dependencies {
 | Счётчик-«таблетка» и точка-маркер «есть изменения» | `badge/CmpCountPill.kt` (`CmpCountPill`, `CmpDot`) |
 | Разделитель | `divider/CmpDivider.kt` |
 | Текст | `text/CmpText.kt` |
+| Текст из простого HTML (абзацы, жирный, курсив, списки, ссылки) | `text/CmpHtmlText.kt` |
 | Box | `layout/CmpBox.kt` |
 | Column | `layout/CmpColumn.kt` |
 | Row | `layout/CmpRow.kt` |
@@ -242,6 +249,11 @@ Feature-модули читают цвета через `cmpThemeColors()`, не
 `background` / `surface` / `primary` / `secondary` / `tertiary` / `error`,
 container-роли (`primaryContainer`, `secondaryContainer`, `tertiaryContainer`,
 `errorContainer`, `surfaceContainer*`), outline-роли и `scrim`.
+
+Доменные цвета, которых нет в Material-схеме, — `cmpDomainColors()` (`theme/CmpDomainColors.kt`, токены
+`--success` и `--bus-*` из `design/design-system/tokens/colors.css`, своя пара значений на светлую и тёмную тему):
+`success` («поддерживается») и цвета семейств шин автомобиля (`busCan`, `busCanFd`, `busLin`, `busBean`,
+`busImmobilizer`, `busUnknown`) — цвет = семейство, номер шины пишется текстом.
 
 ```kotlin
 // Прочитать текущую тему

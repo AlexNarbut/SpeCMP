@@ -119,6 +119,23 @@ enum class CmpIcons {
     ErrorOutline,
     PriorityHigh,
 
+    // ── Vehicles ────────────────────────────────────────────
+    DirectionsCar,
+    FilterList,
+    FilterAlt,
+    FilterAltOff,
+    Pin,
+    ContentCopy,
+    Security,
+    SettingsRemote,
+    PictureAsPdf,
+    Groups,
+    OpenInNew,
+    Cancel,
+    HelpOutline,
+    Cable,
+    PhotoLibrary,
+
     // ── Other ───────────────────────────────────────────────
     Settings,
     DateRange,

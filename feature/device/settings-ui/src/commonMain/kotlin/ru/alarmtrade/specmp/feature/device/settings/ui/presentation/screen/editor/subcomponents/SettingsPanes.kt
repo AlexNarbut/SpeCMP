@@ -19,11 +19,9 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
-import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
-import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
-import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
+import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -105,23 +103,11 @@ internal fun SearchPane(
 ) {
     val query = state.searchQuery
     CmpColumn(modifier = Modifier.fillMaxSize()) {
-        CmpTextField(
+        CmpSearchField(
             value = query,
             onValueChange = onQueryChange,
             placeholder = stringResource(Res.string.settings_search_placeholder),
-            singleLine = true,
-            leadingIcon = { CmpIcon(icon = CmpIcons.Search, contentDescription = null) },
-            trailingIcon = if (query.isNotEmpty()) {
-                {
-                    CmpIconButton(
-                        onClick = { onQueryChange("") },
-                        icon = CmpIcons.Close,
-                        contentDescription = stringResource(Res.string.settings_search_a11y_clear)
-                    )
-                }
-            } else {
-                null
-            },
+            clearContentDescription = stringResource(Res.string.settings_search_a11y_clear),
             modifier = Modifier
                 .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
