@@ -27,6 +27,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
+import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -52,6 +54,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
@@ -61,6 +64,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
@@ -121,6 +125,7 @@ class DeviceSettingsViewModelTest {
     private val preferences = FakePreferences()
     private val singleCanDevice = device.copy(can = CanInfo(firmwareVersion = "1.0", code = "2154", isFactory = false))
     private val cars = FakeCars()
+    private val local = FakeLocalConfigurations()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -136,15 +141,20 @@ class DeviceSettingsViewModelTest {
         }
     }
 
-    private fun TestScope.viewModel(): DeviceSettingsViewModel {
+    private fun TestScope.viewModel(
+        source: SettingsSource = SettingsSource.Device,
+        options: SettingsEditorOptions = SettingsEditorOptions()
+    ): DeviceSettingsViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         val session =
             DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
         // USB: без чтения Bluetooth-модуля при подключении.
         session.attach(ConnectionTransport.USB)
         val vm = DeviceSettingsViewModel(
-            SettingsSource.Device,
+            source,
+            options,
             repository,
+            local,
             preferences,
             cars,
             session,
@@ -179,6 +189,106 @@ class DeviceSettingsViewModelTest {
         assertEquals(listOf(true), repository.openReloads)
         assertEquals(SettingsHeader("DX-9X", 1234567, "2154"), vm.state.value.header)
         assertTrue(vm.state.value.changedIds.isEmpty())
+    }
+
+    @Test
+    fun `load from defaults compares, then puts values into the session and highlights them`() = test {
+        repository.snapshotTree = tree.replace(shock.copy(value = SettingValue.Switch(true)))
+        val vm = viewModel()
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+
+        vm.onLoadRequest()
+        assertEquals(SettingsDialog.LoadSources, vm.state.value.dialog)
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+
+        val diff = assertIs<DiffState.Ready>(vm.state.value.diff)
+        assertEquals(1, diff.diff.total)
+        assertEquals(SettingsSource.Defaults("DX-9X"), repository.snapshotSources.single())
+        assertTrue(vm.state.value.changedIds.isEmpty())
+
+        vm.onDiffConfirm()
+        settle()
+
+        assertNull(vm.state.value.diff)
+        assertEquals(setOf(11), vm.state.value.changedIds)
+        assertEquals(listOf<DeviceSettingsEffect>(DeviceSettingsEffect.Loaded(1)), effects)
+        assertEquals(1, repository.discarded.size)
+    }
+
+    @Test
+    fun `configuration of another model asks before comparing`() = test {
+        val vm = viewModel()
+        val other = SettingsSource.LocalConfiguration(5, "DX-4GS", "Нива")
+
+        vm.onLoadSourcePick(LoadSourceKind.MINE)
+        assertEquals(ConfigurationPickKind.MINE, vm.state.value.configurationPicker?.kind)
+        vm.onConfigurationPicked(other)
+        settle()
+
+        val dialog = assertIs<SettingsDialog.ModelMismatch>(vm.state.value.dialog)
+        assertEquals("DX-4GS", dialog.sourceDeviceName)
+        assertNull(vm.state.value.diff)
+
+        vm.onMismatchContinue()
+        settle()
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+    }
+
+    @Test
+    fun `load that does not fit the unit shows mismatch error`() = test {
+        repository.snapshotTree = tree.replace(shock.copy(value = SettingValue.Switch(true)))
+        repository.copyResult = Response.Error(SettingsMismatchException(IllegalStateException("size")))
+        val vm = viewModel()
+
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+        vm.onDiffConfirm()
+        settle()
+
+        assertEquals(SettingsDialog.LoadError(LoadErrorKind.MISMATCH), vm.state.value.dialog)
+        assertTrue(vm.state.value.changedIds.isEmpty())
+    }
+
+    @Test
+    fun `save to my configurations copies the current session`() = test {
+        val vm = viewModel()
+
+        vm.onSaveToRequest()
+        vm.onSaveTargetPick(SaveTarget.MINE)
+        assertNotNull(vm.state.value.saveForm)
+        vm.onSaveFormChange("Нива без автозапуска", "")
+        vm.onSaveFormSubmit()
+        settle()
+
+        assertEquals(
+            listOf<Pair<String, SettingsSource>>("Нива без автозапуска" to SettingsSource.Device),
+            local.created
+        )
+        assertNull(vm.state.value.saveForm)
+    }
+
+    @Test
+    fun `my configuration saves itself, read-only source saves as new`() = test {
+        val mine = viewModel(SettingsSource.LocalConfiguration(3, "DX-9X", "Моя"))
+        assertEquals(BarAction.SAVE, mine.state.value.barAction)
+        mine.onValueChange(11, SettingValue.Switch(true))
+        settle()
+        mine.onBarAction()
+        settle()
+        assertEquals(1, repository.saveCalls)
+        assertTrue(mine.state.value.changedIds.isEmpty())
+
+        val cloud = viewModel(SettingsSource.RemoteConfiguration(7, "DX-9X", "Облачная"))
+        assertEquals(BarAction.SAVE_AS, cloud.state.value.barAction)
+        assertTrue(cloud.state.value.source.isReadOnly)
+        cloud.onValueChange(12, SettingValue.Integer(60))
+        settle()
+        cloud.onExitRequest()
+        assertEquals(SettingsDialog.ExitSave, cloud.state.value.dialog)
+        cloud.onExitSave()
+        assertEquals(SettingsDialog.SaveTargets(exitAfter = true), cloud.state.value.dialog)
     }
 
     @Test
@@ -527,9 +637,16 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     }
 
     override suspend fun open(source: SettingsSource, reload: Boolean): Response<SettingsSection> {
+        if (source is SettingsSource.File) return Response.Success(snapshotTree)
         openReloads += reload
         return openResult ?: Response.Success(current)
     }
+
+    /** Меню снимка конфигурации (что загрузится). */
+    var snapshotTree: SettingsSection = initial
+    var copyResult: Response<SettingsSection>? = null
+    val snapshotSources = mutableListOf<SettingsSource>()
+    val discarded = mutableListOf<SettingsSource.File>()
 
     override suspend fun close(source: SettingsSource): Response<Unit> = Response.Success(Unit)
 
@@ -567,8 +684,25 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
         return saveResult
     }
 
-    override suspend fun copy(from: SettingsSource, to: SettingsSource, saveChanges: Boolean) =
-        Response.Error(IllegalStateException("not used"))
+    // Копирование снимка в сессию блока: значения конфигурации, unsaved SDK не меняется.
+    override suspend fun copy(
+        from: SettingsSource,
+        to: SettingsSource,
+        saveChanges: Boolean
+    ): Response<SettingsSection> {
+        copyResult?.let { return it }
+        if (from is SettingsSource.File) current = snapshotTree
+        return Response.Success(current)
+    }
+
+    override suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File> {
+        snapshotSources += from
+        return Response.Success(SettingsSource.File("snapshot.dxs", deviceName))
+    }
+
+    override suspend fun discardSnapshot(snapshot: SettingsSource.File) {
+        discarded += snapshot
+    }
 
     var resetResult: Response<Unit> = Response.Success(Unit)
     var resetCalls = 0
@@ -578,6 +712,29 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
         if (resetResult is Response.Success) reset()
         return resetResult
     }
+}
+
+private class FakeLocalConfigurations : LocalConfigurationsRepository {
+    val created = mutableListOf<Pair<String, SettingsSource>>()
+
+    override val changes: Flow<Unit> = emptyFlow()
+
+    override suspend fun all(): Response<List<LocalConfiguration>> = Response.Success(emptyList())
+
+    override suspend fun create(
+        name: String,
+        description: String,
+        deviceName: String,
+        from: SettingsSource
+    ): Response<SettingsSource.LocalConfiguration> {
+        created += name to from
+        return Response.Success(SettingsSource.LocalConfiguration(created.size.toLong(), deviceName, name))
+    }
+
+    override suspend fun updateInfo(configuration: LocalConfiguration, name: String, description: String) =
+        Response.Error(IllegalStateException("not used"))
+
+    override suspend fun delete(id: Long): Response<Unit> = Response.Success(Unit)
 }
 
 private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {

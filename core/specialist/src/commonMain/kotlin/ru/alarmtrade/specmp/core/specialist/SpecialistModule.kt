@@ -71,6 +71,8 @@ val specialistModule = module {
     single { get<SpecialistApp>().carsInteractor }
     // Каталог автомобилей с готовыми конфигурациями (feature/vehicle) и сами конфигурации.
     single { get<SpecialistApp>().configurationInteractor }
+    // «Мои конфигурации» настроек в хранилище приложения (feature/configurator).
+    single { get<SpecialistApp>().localConfigurationInteractor }
     singleOf(::SpecialistAccountRepository) bind AccountRepository::class
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
     single<SpecialistDeviceInformationProvider> {

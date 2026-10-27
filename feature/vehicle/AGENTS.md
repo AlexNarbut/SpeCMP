@@ -27,6 +27,6 @@
   - настройки → окно CAN-кода → «Выбрать из каталога» (слот `vehiclePicker` в `DeviceSettingsEntry`): PICK под модель блока, рисуется поверх настроек; выбор подставляет CAN-код и `carId` в черновик окна (применяется по «Готово»).
   - архив прошивок → кнопка 🚗 в поле CAN-фильтра (слот `vehiclePicker` в `FirmwareArchiveEntry` / `FirmwareBootGraph`): PICK под модель блока, результат — CAN-код и название автомобиля в фильтр архива.
 - `VehicleSelectViewModel` создаётся с ключом по запросу: справочник и выбор для архива в одном владельце ViewModel не делят её.
-- Не подключено: конфигуратор (`WITH_CONFIGURATIONS`) — отдельная задача.
+  - конфигуратор → облачные конфигурации (слот `ConfiguratorVehiclePicker`): PICK по каталогу `WITH_CONFIGURATIONS` под модель блока (без модели — `Type(ALARM)`, все модели).
 - Галерея состояний: `./gradlew :feature:vehicle-ui:jvmTest --tests '*Gallery*'` → `build/state-gallery/vehicle-select` (Compact / Medium / Expanded / 1600, светлая и тёмная).
 - `testTag` — `VehicleTestTags` (`vehicle_brand_<id>`, `vehicle_model_<id>`, `vehicle_trim_<id>`, `vehicle_trim_pick_<id>`, `vehicle_can_result_<id>`, `vehicle_recent_<id>`, `vehicle_card`, `vehicle_card_pick`, `vehicle_search`, `vehicle_can_input`, `vehicle_filter*`, `vehicle_type_*`, `vehicle_tab_*`, `vehicle_point_<i>`, `vehicle_retry` …).

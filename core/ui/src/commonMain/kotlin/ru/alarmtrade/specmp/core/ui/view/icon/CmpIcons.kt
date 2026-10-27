@@ -115,6 +115,13 @@ enum class CmpIcons {
     ArrowCircleUp,
     CloudOff,
     Inventory2,
+
+    // ── Конфигурации ────────────────────────────────────────
+    Cloud,
+    Save,
+    SaveAs,
+    Upload,
+    Factory,
     RecordVoiceOver,
     ErrorOutline,
     PriorityHigh,

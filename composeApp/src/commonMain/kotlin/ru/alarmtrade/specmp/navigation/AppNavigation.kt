@@ -32,6 +32,9 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.Advanc
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfigurationPickerEntry
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfiguratorEntry
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfiguratorRoute
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
@@ -50,13 +53,17 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRoute
 import ru.alarmtrade.specmp.filepicker.rememberFirmwareFilePicker
+import ru.alarmtrade.specmp.filepicker.rememberSettingsFilePicker
+import ru.alarmtrade.specmp.filepicker.rememberSettingsFileSaver
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFilePicker
@@ -70,6 +77,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
             subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
+            subclass(ConfiguratorRoute::class, ConfiguratorRoute.serializer())
         }
     }
 }
@@ -129,6 +137,16 @@ private fun AuthedNavGraph() {
                     onClose = { backStack.popSafe() }
                 )
             }
+            entry<ConfiguratorRoute> { _ ->
+                ConfiguratorEntry(
+                    onExit = { backStack.popSafe() },
+                    vehiclePicker = { catalog, deviceName, onPick, onPickerBack ->
+                        ConfiguratorVehicles(catalog, deviceName, onPick, onPickerBack)
+                    },
+                    filePicker = rememberSettingsFilePicker(),
+                    fileSaver = rememberSettingsFileSaver()
+                )
+            }
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(
                     request = key.request,
@@ -170,7 +188,21 @@ private fun AuthedNavGraph() {
                                         onPick = onPick,
                                         onBack = onPickerBack
                                     )
-                                }
+                                },
+                                // «Загрузить из…» → «Мои» / облако: экраны конфигуратора в режиме выбора.
+                                configurationPicker = { request, onPick, onOpenFirmware, onPickerBack ->
+                                    ConfigurationPickerEntry(
+                                        request = request,
+                                        onPick = onPick,
+                                        onOpenFirmwareUpdate = onOpenFirmware,
+                                        onBack = onPickerBack,
+                                        vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
+                                            ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
+                                        }
+                                    )
+                                },
+                                filePicker = rememberSettingsFilePicker(),
+                                fileSaver = rememberSettingsFileSaver()
                             )
                         },
                         vehicles = { onBack -> DeviceVehicles(device, onBack) }
@@ -227,6 +259,31 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
     }
 }
 
+/**
+ * Выбор автомобиля в конфигураторе: каталог с конфигурациями (облако) или весь каталог (CAN-код в редакторе).
+ * Модель блока не задана — облако для всех моделей (без экрана выбора типа устройства).
+ */
+@Composable
+private fun ConfiguratorVehicles(
+    catalog: VehicleCatalog,
+    deviceName: String?,
+    onPick: (CarSummary) -> Unit,
+    onBack: () -> Unit
+) {
+    VehicleSelectEntry(
+        request = VehicleSelectRequest(
+            mode = VehicleSelectMode.PICK,
+            catalog = catalog,
+            device = deviceName?.let { VehicleDeviceFilter.Device(it) }
+                ?: VehicleDeviceFilter.Type(VehicleDeviceType.ALARM).takeIf {
+                    catalog == VehicleCatalog.WITH_CONFIGURATIONS
+                }
+        ),
+        onPick = onPick,
+        onBack = onBack
+    )
+}
+
 /** Выбор автомобиля для CAN-фильтра архива прошивок: каталог под модель блока, результат — CAN-код и название. */
 @Composable
 private fun ArchiveVehiclePicker(
@@ -253,7 +310,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.AdvancedMount -> backStack.navigateSafe(DeviceSelectionRoute)
 
-        MainNavigationTarget.Configurator -> Unit
+        MainNavigationTarget.Configurator -> backStack.navigateSafe(ConfiguratorRoute)
 
         MainNavigationTarget.FirmwareArchive -> Unit
 

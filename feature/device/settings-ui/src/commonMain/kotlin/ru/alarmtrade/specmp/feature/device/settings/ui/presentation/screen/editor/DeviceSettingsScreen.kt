@@ -30,9 +30,11 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
@@ -58,35 +60,60 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ReadOnlyBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.SettingsLayout
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.SourceTag
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.settingsLayoutOf
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DescriptionDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DiffPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ExitDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ExitSaveDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.LoadErrorDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.LoadSourcesPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.MenuError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.MenuLoading
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ModelMismatchDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.OverwriteDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetConfirmDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ResetProgressDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SaveErrorDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SaveFormDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SaveTargetsPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionTree
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SingleCanFirmwareDialog
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferProgressDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteProgressDialog
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_back
 import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_more
 import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_search
+import specmp.feature.device.settings_ui.generated.resources.settings_copy_name
+import specmp.feature.device.settings_ui.generated.resources.settings_editor_btn_save
+import specmp.feature.device.settings_ui.generated.resources.settings_editor_btn_save_as
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_btn_write
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_crumb_all
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_changed
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_device
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_single_can
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_title_screen
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_defaults
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_open_from
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_copy
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_load_from
 import specmp.feature.device.settings_ui.generated.resources.settings_menu_reset
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_file
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_file_as
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_mine
 import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_to
+import specmp.feature.device.settings_ui.generated.resources.settings_menu_write_device
+import specmp.feature.device.settings_ui.generated.resources.settings_source_cloud
+import specmp.feature.device.settings_ui.generated.resources.settings_source_defaults
+import specmp.feature.device.settings_ui.generated.resources.settings_source_defaults_title
+import specmp.feature.device.settings_ui.generated.resources.settings_source_file
+import specmp.feature.device.settings_ui.generated.resources.settings_source_mine
 
 /** Где пользователь в меню: путь разделов от корня (пусто — корень) или поиск. */
 @Immutable
@@ -112,6 +139,8 @@ internal class DeviceSettingsActions(
     val onResetConfirm: () -> Unit,
     val onSingleCanUpdate: () -> Unit,
     val editor: EditorActions,
+    /** Загрузка и сохранение конфигураций. */
+    val transfer: TransferActions,
     /** Открыть окно настройки корневого уровня из дерева (например «Код модели»). */
     val onEditSetting: (settingId: Int) -> Unit = {}
 )
@@ -148,7 +177,9 @@ internal fun DeviceSettingsContent(
         state.editing?.takeUnless { state.vehiclePicker }?.let {
             EditorPanel(editing = it, cars = state.cars, wide = layout.isWide, actions = actions.editor)
         }
-        Dialogs(state, actions)
+        state.diff?.let { DiffPanel(state = it, wide = layout.isWide, actions = actions.transfer) }
+        state.saveForm?.let { SaveFormDialog(form = it, actions = actions.transfer) }
+        Dialogs(state, layout.isWide, actions)
     }
 }
 
@@ -222,6 +253,10 @@ private fun TreeResizeHandle(onDrag: (Dp) -> Unit, onDragStop: () -> Unit) {
 @Composable
 private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actions: DeviceSettingsActions) {
     val header = state.header
+    if (state.source.kind != SourceKind.DEVICE) {
+        ConfigurationTopBar(state, location, actions)
+        return
+    }
     CmpTopAppBar(
         title = { CmpText(text = stringResource(Res.string.settings_editor_title_screen)) },
         subtitle = header?.let { device ->
@@ -265,10 +300,80 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
     )
 }
 
-/** Меню «⋯»: сброс к заводским (если источник умеет), конфигурации — пока неактивны (второй этап). */
+/** Шапка конфигурации: название, плашка источника, модель блока, «Только просмотр». */
+@Composable
+private fun ConfigurationTopBar(
+    state: DeviceSettingsState,
+    location: SettingsLocation,
+    actions: DeviceSettingsActions
+) {
+    val source = state.source
+    CmpTopAppBar(
+        title = {
+            CmpText(
+                text = source.title.ifEmpty { stringResource(Res.string.settings_source_defaults_title) },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        subtitle = {
+            CmpFlowRow(
+                itemVerticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val (icon, label) = when (source.kind) {
+                    SourceKind.MINE -> CmpIcons.Inventory2 to Res.string.settings_source_mine
+                    SourceKind.FILE -> CmpIcons.Description to Res.string.settings_source_file
+                    SourceKind.CLOUD -> CmpIcons.Cloud to Res.string.settings_source_cloud
+                    SourceKind.DEFAULTS, SourceKind.DEVICE -> CmpIcons.Factory to Res.string.settings_source_defaults
+                }
+                SourceTag(icon = icon, text = stringResource(label))
+                CmpText(text = source.deviceName, style = CmpTextStyle.Caption, maxLines = 1)
+                if (source.isReadOnly) ReadOnlyBadge()
+            }
+        },
+        navigationIcon = {
+            CmpIconButton(
+                onClick = actions.onBack,
+                icon = CmpIcons.ArrowBack,
+                contentDescription = stringResource(Res.string.settings_common_a11y_back)
+            )
+        },
+        actions = {
+            if (!location.isSearch && state.menu is SettingsMenu.Ready) {
+                CmpIconButton(
+                    onClick = actions.onSearch,
+                    modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
+                    icon = CmpIcons.Search,
+                    contentDescription = stringResource(Res.string.settings_common_a11y_search)
+                )
+                MoreMenu(state, actions)
+            }
+        }
+    )
+}
+
+/**
+ * Меню «⋯». Блок: «Загрузить из…», «Сохранить в…», сброс к заводским. Конфигурации — по источнику: «Мои» — в файл,
+ * копия; файл — в мои, как файл; облако и заводские — в мои, в файл. «Записать в блок» — только при подключённом блоке.
+ */
 @Composable
 private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions) {
     var expanded by remember { mutableStateOf(false) }
+    val transfer = actions.transfer
+    val copyName = stringResource(Res.string.settings_copy_name, state.source.title)
+    val item: @Composable (StringResource, CmpIcons, String, () -> Unit) -> Unit = { text, icon, tag, onClick ->
+        CmpDropdownMenuItem(
+            text = stringResource(text),
+            icon = icon,
+            onClick = {
+                expanded = false
+                onClick()
+            },
+            modifier = Modifier.testTag(tag)
+        )
+    }
     CmpBox {
         CmpIconButton(
             onClick = { expanded = true },
@@ -277,35 +382,54 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
             modifier = Modifier.testTag(SettingsTestTags.MENU)
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            if (state.canResetToFactory) {
-                CmpDropdownMenuItem(
-                    text = stringResource(Res.string.settings_menu_reset),
-                    icon = CmpIcons.Refresh,
-                    onClick = {
-                        expanded = false
-                        actions.onResetRequest()
-                    },
-                    modifier = Modifier.testTag(SettingsTestTags.MENU_RESET)
-                )
+            when (state.source.kind) {
+                SourceKind.DEVICE -> {
+                    item(Res.string.settings_menu_load_from, CmpIcons.Download, SettingsTestTags.MENU_LOAD) {
+                        transfer.onLoadRequest()
+                    }
+                    item(Res.string.settings_menu_save_to, CmpIcons.Save, SettingsTestTags.MENU_SAVE_TO) {
+                        transfer.onSaveToRequest()
+                    }
+                    if (state.canResetToFactory) {
+                        CmpDivider(color = cmpThemeColors().outlineVariant)
+                        item(Res.string.settings_menu_reset, CmpIcons.Refresh, SettingsTestTags.MENU_RESET) {
+                            actions.onResetRequest()
+                        }
+                    }
+                }
+
+                SourceKind.MINE -> {
+                    item(Res.string.settings_menu_save_file, CmpIcons.Description, SettingsTestTags.MENU_SAVE_FILE) {
+                        transfer.onExport()
+                    }
+                    item(Res.string.settings_menu_copy, CmpIcons.ContentCopy, SettingsTestTags.MENU_COPY) {
+                        transfer.onCopy(copyName)
+                    }
+                }
+
+                SourceKind.FILE -> {
+                    item(Res.string.settings_menu_save_mine, CmpIcons.Inventory2, SettingsTestTags.MENU_SAVE_MINE) {
+                        transfer.onSaveToMine()
+                    }
+                    item(Res.string.settings_menu_save_file_as, CmpIcons.SaveAs, SettingsTestTags.MENU_SAVE_FILE) {
+                        transfer.onExport()
+                    }
+                }
+
+                SourceKind.CLOUD, SourceKind.DEFAULTS -> {
+                    item(Res.string.settings_menu_save_mine, CmpIcons.Inventory2, SettingsTestTags.MENU_SAVE_MINE) {
+                        transfer.onSaveToMine()
+                    }
+                    item(Res.string.settings_menu_save_file, CmpIcons.Description, SettingsTestTags.MENU_SAVE_FILE) {
+                        transfer.onExport()
+                    }
+                }
             }
-            CmpDropdownMenuItem(
-                text = stringResource(Res.string.settings_menu_open_from),
-                icon = CmpIcons.FolderOpen,
-                onClick = {},
-                enabled = false
-            )
-            CmpDropdownMenuItem(
-                text = stringResource(Res.string.settings_menu_save_to),
-                icon = CmpIcons.Download,
-                onClick = {},
-                enabled = false
-            )
-            CmpDropdownMenuItem(
-                text = stringResource(Res.string.settings_menu_defaults),
-                icon = CmpIcons.Inventory2,
-                onClick = {},
-                enabled = false
-            )
+            if (state.showWriteToDevice) {
+                item(Res.string.settings_menu_write_device, CmpIcons.Upload, SettingsTestTags.MENU_WRITE_DEVICE) {
+                    transfer.onWriteToDevice()
+                }
+            }
         }
     }
 }
@@ -367,16 +491,25 @@ private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions)
                 modifier = Modifier.weight(1f)
             )
             CmpButton(
-                text = stringResource(Res.string.settings_editor_btn_write),
-                onClick = actions.onWrite,
+                text = stringResource(
+                    when (state.barAction) {
+                        BarAction.WRITE -> Res.string.settings_editor_btn_write
+                        BarAction.SAVE -> Res.string.settings_editor_btn_save
+                        BarAction.SAVE_AS -> Res.string.settings_editor_btn_save_as
+                    }
+                ),
+                onClick = actions.transfer.onBarAction,
                 modifier = Modifier.widthIn(min = 160.dp).heightIn(min = 52.dp).testTag(SettingsTestTags.WRITE)
             )
         }
     }
 }
 
+@Suppress("CyclomaticComplexMethod") // плоский when по диалогам экрана
 @Composable
-private fun Dialogs(state: DeviceSettingsState, actions: DeviceSettingsActions) {
+private fun Dialogs(state: DeviceSettingsState, wide: Boolean, actions: DeviceSettingsActions) {
+    val transfer = actions.transfer
+    val deviceName = state.source.deviceName.ifEmpty { state.header?.deviceName.orEmpty() }
     when (val dialog = state.dialog) {
         is SettingsDialog.Description -> DescriptionDialog(node = dialog.node, onDismiss = actions.onDialogDismiss)
 
@@ -410,10 +543,57 @@ private fun Dialogs(state: DeviceSettingsState, actions: DeviceSettingsActions) 
             onDismiss = actions.onDialogDismiss
         )
 
+        SettingsDialog.LoadSources -> LoadSourcesPanel(
+            deviceName = deviceName,
+            wide = wide,
+            onPick = transfer.onLoadSourcePick,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        is SettingsDialog.SaveTargets -> SaveTargetsPanel(
+            deviceName = deviceName,
+            wide = wide,
+            onPick = transfer.onSaveTargetPick,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        is SettingsDialog.ModelMismatch -> ModelMismatchDialog(
+            sourceDeviceName = dialog.sourceDeviceName,
+            deviceName = dialog.deviceName,
+            onContinue = transfer.onMismatchContinue,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        is SettingsDialog.LoadError -> LoadErrorDialog(
+            kind = dialog.kind,
+            onOtherSource = transfer.onLoadRequest,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        is SettingsDialog.SaveError -> SaveErrorDialog(
+            onRetry = transfer.onSaveRetry,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        is SettingsDialog.OverwriteConfirm -> OverwriteDialog(
+            fileName = state.source.title,
+            onConfirm = transfer.onOverwriteConfirm,
+            onDismiss = actions.onDialogDismiss
+        )
+
+        SettingsDialog.ExitSave -> ExitSaveDialog(
+            changed = state.changedCount,
+            saveAs = state.barAction != BarAction.SAVE,
+            onSave = transfer.onExitSave,
+            onDiscard = actions.onExitDiscard,
+            onDismiss = actions.onDialogDismiss
+        )
+
         null -> Unit
     }
     if (state.isWriting) WriteProgressDialog()
     if (state.isResetting) ResetProgressDialog()
+    if (state.isApplying || state.isSaving) TransferProgressDialog(applying = state.isApplying)
 }
 
 /** Ширина дерева: от 180 dp до 480 dp, но не больше половины окна. */

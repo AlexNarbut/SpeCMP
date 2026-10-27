@@ -23,6 +23,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenEvent
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenTone
@@ -35,23 +36,31 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Weekday
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Wire
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.diffTo
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.SectionEntry
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.CarSearch
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsContent
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DiffState
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.ExitTarget
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.LoadErrorKind
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SaveForm
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsMenu
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceHeader
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
 /** Состояния редактора настроек; PNG — в `build/state-gallery/device-settings`. */
@@ -260,7 +269,10 @@ class DeviceSettingsGallery {
         onTreeWidthChange = {}, onWrite = {}, onExitWrite = {}, onExitDiscard = {},
         onDialogDismiss = {
         }, onResetRequest = {
-        }, onResetConfirm = {}, onSingleCanUpdate = {}, editor = EditorActions({}, {}, {}, {}, {}, {}, {})
+        }, onResetConfirm = {}, onSingleCanUpdate = {}, editor = EditorActions({}, {}, {}, {}, {}, {}, {}),
+        transfer = TransferActions(
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}
+        )
     )
 
     private fun render(name: String, state: DeviceSettingsState, path: List<Int>, search: Boolean = false) =
@@ -399,5 +411,106 @@ class DeviceSettingsGallery {
         "18_description",
         base.copy(dialog = SettingsDialog.Description(root.findNode(321) as Setting)),
         listOf(300, 320)
+    )
+
+    // ── Конфигурации: «Загрузить из…» / «Сохранить в…», «Что изменится», редактор конфигурации ─────────────
+
+    private val loaded: SettingsSection = root
+        .replace((root.findNode(321) as SwitchSetting).copy(value = SettingValue.Switch(false)))
+        .replace((root.findNode(322) as IntegerSetting).copy(value = SettingValue.Integer(4)))
+        .replace((root.findNode(323) as OptionSetting).copy(value = SettingValue.Option(2)))
+        .replace((root.findNode(803) as CanCodeSetting).copy(value = SettingValue.Can(CanCode("1032", null))))
+        .replace(
+            (root.findNode(401) as InputSetting).copy(
+                value = SettingValue.Input(InputValue(listOf(true, false, true), InputContactType.NORMALLY_OPEN))
+            )
+        )
+        .replace((root.findNode(101) as TextSetting).copy(value = SettingValue.Text("Шевроле Нива")))
+
+    private val diff = DiffState.Ready("Шевроле Нива — без автозапуска", root.diffTo(loaded), pendingChanges = 2)
+
+    @Test
+    fun loadSources() = render("40_load_sources", base.copy(dialog = SettingsDialog.LoadSources), listOf(300, 320))
+
+    @Test
+    fun diffReady() = render("41_diff", base.copy(diff = diff), listOf(300, 320))
+
+    @Test
+    fun diffSame() = render(
+        "42_diff_same",
+        base.copy(diff = DiffState.Ready("Заводские", root.diffTo(root), pendingChanges = 0)),
+        listOf(300, 320)
+    )
+
+    @Test
+    fun diffBusy() = render("43_diff_busy", base.copy(diff = DiffState.Busy("Нива.dxs")), listOf(300, 320))
+
+    @Test
+    fun diffError() = render("44_diff_error", base.copy(diff = DiffState.Error("Облачная")), listOf(300, 320))
+
+    @Test
+    fun applying() = render("45_applying", base.copy(isApplying = true), listOf(300, 320))
+
+    @Test
+    fun mismatch() = render(
+        "46_model_mismatch",
+        base.copy(
+            dialog = SettingsDialog.ModelMismatch(
+                SettingsSource.LocalConfiguration(1, "DX-4GS", "Нива"),
+                "DX-4GS",
+                "DX-9X",
+                forWrite = false
+            )
+        ),
+        listOf(300, 320)
+    )
+
+    @Test
+    fun loadError() = render(
+        "47_load_error",
+        base.copy(dialog = SettingsDialog.LoadError(LoadErrorKind.MISMATCH)),
+        listOf(300, 320)
+    )
+
+    @Test
+    fun saveTargets() =
+        render("48_save_targets", base.copy(dialog = SettingsDialog.SaveTargets(false)), listOf(300, 320))
+
+    @Test
+    fun saveForm() = render(
+        "49_save_form",
+        base.copy(saveForm = SaveForm("Нива без автозапуска", "Отключён автозапуск, сирена тише", "DX-9X")),
+        listOf(300, 320)
+    )
+
+    @Test
+    fun mineEditor() = render(
+        "50_editor_mine",
+        base.copy(
+            header = null,
+            source = SourceHeader(SourceKind.MINE, "Шевроле Нива — без автозапуска", "DX-9X", false, canSave = true)
+        ),
+        listOf(300, 320)
+    )
+
+    @Test
+    fun cloudEditor() = render(
+        "51_editor_cloud",
+        base.copy(
+            header = null,
+            source = SourceHeader(SourceKind.CLOUD, "Lada Niva Travel — CAN", "DX-9X", true, canSave = false)
+        ),
+        listOf(300, 320)
+    )
+
+    @Test
+    fun exitSave() = render(
+        "52_exit_save",
+        base.copy(
+            header = null,
+            source = SourceHeader(SourceKind.DEFAULTS, "", "DX-9X", true, canSave = false),
+            dialog = SettingsDialog.ExitSave
+        ),
+        emptyList()
     )
 }

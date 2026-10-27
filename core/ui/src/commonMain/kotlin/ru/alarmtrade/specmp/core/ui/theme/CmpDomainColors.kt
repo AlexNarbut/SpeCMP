@@ -4,12 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Доменные цвета дизайн-системы (токены `--success`, `--bus-*` из `design/design-system/tokens/colors.css`):
- * то, чего нет в Material-схеме. Шины автомобиля — по семействам: цвет = семейство, номер шины — текстом.
+ * Доменные цвета дизайн-системы (токены `--success`, `--rating`, `--bus-*` из
+ * `design/design-system/tokens/colors.css`): то, чего нет в Material-схеме. Шины автомобиля — по семействам:
+ * цвет = семейство, номер шины — текстом.
  */
 data class CmpDomainColors(
     /** «Поддерживается», успешный результат. */
     val success: Color,
+    /** Звезда оценки (облачные конфигурации). */
+    val rating: Color,
     val busCan: Color,
     val busCanFd: Color,
     val busLin: Color,
@@ -20,6 +23,7 @@ data class CmpDomainColors(
 
 private val LightDomainColors = CmpDomainColors(
     success = Color(0xFF79BD5B),
+    rating = Color(0xFFE0A100),
     busCan = Color(0xFF1F5FBF),
     busCanFd = Color(0xFF00838F),
     busLin = Color(0xFF7B3FA6),
@@ -30,6 +34,7 @@ private val LightDomainColors = CmpDomainColors(
 
 private val DarkDomainColors = CmpDomainColors(
     success = Color(0xFF79BD5B),
+    rating = Color(0xFFF2C14E),
     busCan = Color(0xFF6FA8F5),
     busCanFd = Color(0xFF4DD0E1),
     busLin = Color(0xFFC79AEB),

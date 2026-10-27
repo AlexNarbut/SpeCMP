@@ -1,0 +1,283 @@
+package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.sheet.CmpBottomSheet
+import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
+import specmp.feature.device.settings_ui.generated.resources.Res
+import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_cancel
+import specmp.feature.device.settings_ui.generated.resources.settings_form_btn_save
+import specmp.feature.device.settings_ui.generated.resources.settings_form_counter
+import specmp.feature.device.settings_ui.generated.resources.settings_form_error_name
+import specmp.feature.device.settings_ui.generated.resources.settings_form_label_description
+import specmp.feature.device.settings_ui.generated.resources.settings_form_label_model
+import specmp.feature.device.settings_ui.generated.resources.settings_form_label_name
+import specmp.feature.device.settings_ui.generated.resources.settings_source_read_only
+
+// Компоненты конфигураций (ТЗ конфигуратора): общие для редактора настроек и экранов конфигуратора.
+
+/** Плашка модели блока («DX-9X») с рамкой. */
+@Composable
+fun ModelBadge(deviceName: String, modifier: Modifier = Modifier) {
+    val colors = cmpThemeColors()
+    CmpText(
+        text = deviceName,
+        style = CmpTextStyle.Body,
+        fontWeight = FontWeight.SemiBold,
+        color = colors.onSurface,
+        maxLines = 1,
+        modifier = modifier
+            .background(colors.surfaceContainerHighest, BadgeShape)
+            .border(BorderStroke(1.dp, colors.outlineVariant), BadgeShape)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    )
+}
+
+/** Плашка «Только просмотр» у облачных и заводских настроек. */
+@Composable
+fun ReadOnlyBadge(modifier: Modifier = Modifier) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = modifier
+            .border(BorderStroke(1.dp, colors.outline), CircleShape)
+            .padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        CmpIcon(
+            icon = CmpIcons.Visibility,
+            contentDescription = null,
+            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(18.dp)
+        )
+        CmpText(
+            text = stringResource(Res.string.settings_source_read_only),
+            style = CmpTextStyle.Body,
+            color = colors.onSurfaceVariant,
+            maxLines = 1
+        )
+    }
+}
+
+/** Плашка источника в шапке: иконка и подпись на цветном фоне. */
+@Composable
+fun SourceTag(icon: CmpIcons, text: String, modifier: Modifier = Modifier) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = modifier
+            .background(colors.secondaryContainer, BadgeShape)
+            .padding(start = 8.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        CmpIcon(
+            icon = icon,
+            contentDescription = null,
+            tint = colors.onSecondaryContainer,
+            modifier = Modifier.size(18.dp)
+        )
+        CmpText(text = text, style = CmpTextStyle.Body, color = colors.onSecondaryContainer, maxLines = 1)
+    }
+}
+
+/** Пункт выбора источника / назначения: иконка, название и пояснение; цель нажатия ≥ 56 dp. */
+@Composable
+fun ConfigurationOptionRow(
+    icon: CmpIcons,
+    title: String,
+    subtitle: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(24.dp))
+        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            CmpText(text = title, style = CmpTextStyle.BodyLarge, color = colors.onSurface)
+            subtitle?.let {
+                CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/**
+ * Список вариантов выбора: нижняя шторка на компактном экране, диалог — на широком. [footer] — пояснение под списком.
+ */
+@Composable
+fun ConfigurationOptionsPanel(
+    title: String,
+    wide: Boolean,
+    onDismiss: () -> Unit,
+    footer: String? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val colors = cmpThemeColors()
+    val body: @Composable ColumnScope.() -> Unit = {
+        content()
+        footer?.let {
+            CmpText(
+                text = it,
+                style = CmpTextStyle.Body,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+            )
+        }
+    }
+    if (wide) {
+        CmpDialog(
+            onDismissRequest = onDismiss,
+            title = { CmpText(text = title) },
+            text = { CmpColumn(modifier = Modifier.fillMaxWidth(), content = body) },
+            confirmButton = {
+                CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+            }
+        )
+    } else {
+        CmpBottomSheet(onDismissRequest = onDismiss) {
+            CmpColumn(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                CmpText(
+                    text = title,
+                    style = CmpTextStyle.Title,
+                    color = colors.onSurface,
+                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
+                )
+                body()
+            }
+        }
+    }
+}
+
+/**
+ * Форма названия и описания конфигурации («Сохранить в мои», «Переименовать»): название 1–50 символов
+ * (обязательно), описание до 500 (необязательно, со счётчиком); [deviceName] — модель блока только для показа
+ * (`null` — не показывать).
+ */
+@Composable
+fun ConfigurationInfoDialog(
+    title: String,
+    name: String,
+    description: String,
+    deviceName: String?,
+    onChange: (name: String, description: String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    confirmText: String = stringResource(Res.string.settings_form_btn_save)
+) {
+    val colors = cmpThemeColors()
+    val nameBlank = name.isBlank()
+    CmpDialog(
+        onDismissRequest = onDismiss,
+        title = { CmpText(text = title) },
+        text = {
+            CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                deviceName?.let {
+                    CmpText(
+                        text = stringResource(Res.string.settings_form_label_model, it),
+                        style = CmpTextStyle.Body,
+                        color = colors.onSurfaceVariant
+                    )
+                }
+                CmpTextField(
+                    value = name,
+                    onValueChange = { onChange(it.take(LocalConfiguration.NAME_MAX_LENGTH), description) },
+                    label = stringResource(Res.string.settings_form_label_name),
+                    singleLine = true,
+                    isError = nameBlank,
+                    supportingText = {
+                        CmpText(
+                            text = if (nameBlank) {
+                                stringResource(Res.string.settings_form_error_name)
+                            } else {
+                                stringResource(
+                                    Res.string.settings_form_counter,
+                                    name.length,
+                                    LocalConfiguration.NAME_MAX_LENGTH
+                                )
+                            },
+                            style = CmpTextStyle.Caption
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag(ConfigurationTestTags.FORM_NAME)
+                )
+                CmpTextField(
+                    value = description,
+                    onValueChange = { onChange(name, it.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH)) },
+                    label = stringResource(Res.string.settings_form_label_description),
+                    maxLines = DESCRIPTION_LINES,
+                    supportingText = {
+                        CmpText(
+                            text = stringResource(
+                                Res.string.settings_form_counter,
+                                description.length,
+                                LocalConfiguration.DESCRIPTION_MAX_LENGTH
+                            ),
+                            style = CmpTextStyle.Caption,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp)
+                        .testTag(ConfigurationTestTags.FORM_DESCRIPTION)
+                )
+            }
+        },
+        confirmButton = {
+            CmpButton(
+                text = confirmText,
+                onClick = onConfirm,
+                enabled = !nameBlank,
+                modifier = Modifier.testTag(ConfigurationTestTags.FORM_SAVE)
+            )
+        },
+        dismissButton = {
+            CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+        }
+    )
+}
+
+/** testTag общих компонентов конфигураций. */
+object ConfigurationTestTags {
+    const val FORM_NAME = "configuration_form_name"
+    const val FORM_DESCRIPTION = "configuration_form_description"
+    const val FORM_SAVE = "configuration_form_save"
+}
+
+private val BadgeShape = RoundedCornerShape(8.dp)
+private const val DESCRIPTION_LINES = 5

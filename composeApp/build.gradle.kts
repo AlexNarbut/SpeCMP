@@ -48,6 +48,8 @@ kotlin {
             implementation(project(":feature:device:settings"))
             implementation(project(":feature:vehicle"))
             implementation(project(":feature:vehicle-ui"))
+            implementation(project(":feature:configurator"))
+            implementation(project(":feature:configurator-ui"))
             implementation(project(":feature:device:settings-ui"))
             implementation(project(":feature:device:interaction-ui"))
             implementation(project(":feature:advanced-mount"))

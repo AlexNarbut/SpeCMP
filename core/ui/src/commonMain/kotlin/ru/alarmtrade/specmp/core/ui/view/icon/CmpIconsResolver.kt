@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Create
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FilterAlt
@@ -82,6 +84,8 @@ import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
@@ -99,6 +103,7 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -301,6 +306,16 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.CloudOff -> Icons.Filled.CloudOff
 
     CmpIcons.Inventory2 -> Icons.Filled.Inventory2
+
+    CmpIcons.Cloud -> Icons.Filled.Cloud
+
+    CmpIcons.Save -> Icons.Filled.Save
+
+    CmpIcons.SaveAs -> Icons.Filled.SaveAs
+
+    CmpIcons.Upload -> Icons.Filled.Upload
+
+    CmpIcons.Factory -> Icons.Filled.Factory
 
     CmpIcons.RecordVoiceOver -> Icons.Filled.RecordVoiceOver
 
