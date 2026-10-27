@@ -69,6 +69,10 @@ function HomeApp({
       const target = isDesktop ? "device-select-desktop" : "device-select";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
+    if (key === "configurator") {
+      const target = isDesktop ? "configurator-desktop" : "configurator";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
   };
 
   // Desktop: check for a newer app build, then surface the update banner.

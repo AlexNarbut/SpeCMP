@@ -52,7 +52,7 @@
                 <div className="wctl"><div className="wbtn"><span className="material-icons">remove</span></div><div className="wbtn"><span className="material-icons">crop_square</span></div><div className="wbtn"><span className="material-icons">close</span></div></div>
               </div>
               <div style={{ flex: 1, minHeight: 0, background: "var(--background)" }}>
-                <window.DeviceSettingsScreen key={c.key} {...c.props} onBack={() => window.psGo("advanced-mount-desktop")} />
+                <window.DeviceSettingsScreen key={c.key} {...c.props} cfgLink="configurator-desktop" onBack={() => window.psGo("advanced-mount-desktop")} />
               </div>
             </div>
           </div>

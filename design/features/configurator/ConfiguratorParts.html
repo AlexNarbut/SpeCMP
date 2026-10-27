@@ -1,0 +1,105 @@
+<!-- @dsCard group="Конфигуратор" viewport="1200x900" name="Конфигуратор — компоненты" subtitle="Новые компоненты кита: карточки конфигураций, плашки источника, сетка вложений, строки «Что изменится»; light & dark рядом" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Конфигуратор — компоненты</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 1180px; padding: 0 12px; }
+  .seg { flex: 0 1 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: nowrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.wrap { flex-wrap: wrap; justify-content: center; }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 7px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  #root { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .scaler { transform-origin: top left; }
+  .theme-fab { position: fixed; top: 14px; right: 14px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; line-height: 1; background: #fff; color: #1A3E7A; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  body.page-dark { background: #101314; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .theme-fab { background: #272b2d; color: #ffd966; }
+  .grid { display: grid; gap: 24px 20px; justify-content: center; padding: 8px 20px; box-sizing: border-box; width: 100%; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .cap { font-size: 14px; font-weight: 600; color: #222; }
+  body.page-dark .cap { color: #dde2e6; }
+  .frame { border-radius: 14px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.25); background: var(--background); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script src="../vehicle-select/vs-data.js"></script>
+<script type="text/babel" src="../vehicle-select/VsKit.jsx"></script>
+<script type="text/babel" src="../vehicle-select/VehicleCard.jsx"></script>
+<script type="text/babel" src="../vehicle-select/VehicleSelect.jsx"></script>
+<script type="text/babel" src="../device-settings/DeviceSettings.jsx"></script>
+<script src="./cfg-data.js"></script>
+<script type="text/babel" src="./CfgKit.jsx"></script>
+<script type="text/babel" src="./Configurator.jsx"></script>
+<script type="text/babel">
+  const K = window.CfgKit, D = window.DSET, CD = window.CFG_DATA, CFG = window.CFG;
+  const noop = () => {};
+  function Block({ t, children, w = 360 }) {
+    return <div style={{ display: "flex", flexDirection: "column", gap: 8, width: w }}><div style={{ font: "600 13px var(--font-sans)", color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: ".04em" }}>{t}</div>{children}</div>;
+  }
+  function Panel({ dark }) {
+    const c1 = CD.MINE[0], long = CD.MINE[5], empty = CD.MINE[2];
+    const cl = CFG.CLOUD;
+    const d = K.diffRows(CFG.BLOCK_VALS, CFG.valsOf(CD.NIVA));
+    const dc = K.diffRows(CFG.BLOCK_VALS, CFG.valsOf({ "6.1": "1032", "3.2.6": 7 }));
+    return (
+      <div data-theme={dark ? "dark" : undefined} style={{ background: "var(--background)", color: "var(--on-background)", padding: 24, borderRadius: 16, display: "flex", flexWrap: "wrap", gap: 28, alignContent: "flex-start", boxSizing: "border-box" }}>
+        <div style={{ width: "100%", font: "600 18px var(--font-sans)" }}>{dark ? "Тёмная тема" : "Светлая тема"}</div>
+        <Block t="MineCard · обычная / выбрана / пустое описание / длинное название">
+          <K.MineCard c={c1} onOpen={noop} onMenu={noop} />
+          <K.MineCard c={c1} selected onOpen={noop} onMenu={noop} />
+          <K.MineCard c={empty} onOpen={noop} onMenu={noop} />
+          <K.MineCard c={long} onOpen={noop} onMenu={noop} />
+          <K.MineCard c={c1} q="капот" onOpen={noop} onMenu={noop} />
+        </Block>
+        <Block t="CloudCard · рейтинг / без оценок / CAN ≠ / только автору">
+          <K.CloudCard c={cl[0]} onOpen={noop} />
+          <K.CloudCard c={cl[2]} onOpen={noop} />
+          <K.CloudCard c={cl[3]} canBad onOpen={noop} />
+          <K.CloudCard c={cl[4]} selected onOpen={noop} />
+        </Block>
+        <Block t="Плашки шапки редактора · модель · рейтинг" w={360}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><D.SrcTag kind="mine" /><D.SrcTag kind="file" /><D.SrcTag kind="cloud" /><D.SrcTag kind="factory" /><D.RoPill /></div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}><K.ModelBadge m="DX-9X" /><K.ModelBadge m="X-1900 BT" big /><K.Rating r={4} /><K.Rating r={4.5} votes={12} /></div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><K.Plaque icon="lock" text="Видна только вам" /><K.Plaque icon="warning" tone="warn" text="Нужна прошивка 1032" /></div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><K.Chip icon="memory" label="Все модели" onClick={noop} /><K.Chip icon="memory" label="DX-4GS" active onClick={noop} onClear={noop} /></div>
+          <div style={{ font: "600 13px var(--font-sans)", color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: ".04em", paddingTop: 12 }}>OptRow · обычная / неактивна / опасная</div>
+          <div style={{ borderRadius: 16, background: "var(--surface-container-high)", overflow: "hidden" }}>
+            <K.OptRow icon="cloud" title="Из облака" sub="Готовые конфигурации специалистов" onClick={noop} />
+            <K.OptRow icon="upload" title="Записать в блок" sub="Блок не подключён" disabled />
+            <K.OptRow icon="delete" title="Удалить" danger onClick={noop} />
+          </div>
+        </Block>
+        <Block t="AttachGrid · вложения (фото / PDF)" w={360}>
+          <K.AttachGrid items={cl[0].att} onOpen={noop} />
+          <div style={{ font: "600 13px var(--font-sans)", color: "var(--on-surface-variant)", textTransform: "uppercase", letterSpacing: ".04em", paddingTop: 12 }}>TextArea · описание со счётчиком</div>
+          <div style={{ background: "var(--surface-container-high)", padding: 16, borderRadius: 16 }}><K.TextArea label="Описание" value="Отключён автозапуск, сирена тише." onChange={noop} max={500} rows={3} /></div>
+        </Block>
+        <Block t="DiffView · компактно (телефон)" w={380}>
+          <div style={{ background: "var(--surface-container-high)", borderRadius: 16, padding: "8px 0", overflow: "hidden" }}><K.DiffView d={d} wide={false} initOpen={["2", "3", "4", "5"]} /></div>
+        </Block>
+        <Block t="DiffView · широкое окно, CAN-код первой строкой" w={640}>
+          <div style={{ background: "var(--surface-container-high)", borderRadius: 16, padding: "8px 0", overflow: "hidden" }}><K.DiffView d={dc} wide initOpen={["3"]} /></div>
+        </Block>
+      </div>
+    );
+  }
+  function App() {
+    return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(820px, 1fr))", gap: 20, padding: "0 20px", width: "100%", boxSizing: "border-box" }}><Panel /><Panel dark /></div>;
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

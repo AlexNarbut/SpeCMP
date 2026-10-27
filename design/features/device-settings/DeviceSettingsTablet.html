@@ -47,7 +47,7 @@
           <div className="scaler" style={{ transform: `scale(${scale})` }}>
             <div className="tablet">
               <div className="screen" data-theme={c.dark ? "dark" : undefined} style={{ width: w, height: h }}>
-                <window.DeviceSettingsScreen key={orient + c.key} {...c.props} onBack={() => window.psGo("advanced-mount-tablet")} />
+                <window.DeviceSettingsScreen key={orient + c.key} {...c.props} cfgLink="configurator-tablet" onBack={() => window.psGo("advanced-mount-tablet")} />
               </div>
             </div>
           </div>

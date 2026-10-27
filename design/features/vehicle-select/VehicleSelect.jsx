@@ -98,7 +98,7 @@ function VsCol({ title, w, children, border = true, grow }) {
 
 function VehicleSelectApp(props) {
   const { entry = "A", net = "ok", netLevel = "all", catVar = "A", headVar = "B", mtxVar = "B", init = {}, onBack = () => {} } = props;
-  const E = VS_ENTRY[entry];
+  const E = props.sub ? { ...VS_ENTRY[entry], sub: props.sub } : VS_ENTRY[entry];
   const [rootRef, layout, w] = VK.useVsWidth();
   const [type, setType] = React.useState(init.type !== undefined ? init.type : E.needType ? null : "alarm");
   const [sel, setSel] = React.useState(() => {
@@ -210,7 +210,7 @@ function VehicleSelectApp(props) {
     if (E.mismatch && c.can !== VD.BLOCK.can) return setDialog({ c });
     finishSelect(c);
   };
-  const finishSelect = (c) => { setDialog(null); pushRecent(c.id); setSnack(E.result(c)); };
+  const finishSelect = (c) => { setDialog(null); pushRecent(c.id); if (props.onPicked) return props.onPicked(c); setSnack(E.result(c)); };
   const setMode = (m) => { setSmode(m); setSel({ brand: null, model: null, trim: null, src: "cat" }); autoOpened.current = null; };
   const changeType = (t) => { setType(t); toTop(); };
   const copy = (c) => { try { navigator.clipboard && navigator.clipboard.writeText(c.can); } catch (e) {} setSnack(`CAN-код ${c.can} скопирован`); };

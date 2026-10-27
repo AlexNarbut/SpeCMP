@@ -568,29 +568,60 @@ function CanBadge() {
 }
 
 // ── Главный экран ────────────────────────────────────────────────────────────
-function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seedEdits = true, canFactory = true, failWrite = false, onBack = () => {} }) {
+const SRC_META = { mine: { i: "inventory_2", t: "Мои конфигурации" }, file: { i: "description", t: "Файл" }, cloud: { i: "cloud", t: "Облако" }, factory: { i: "factory", t: "Заводские" } };
+function SrcTag({ kind }) {
+  const m = SRC_META[kind];
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 28, padding: "0 10px 0 8px", borderRadius: 8, background: "var(--secondary-container)", color: "var(--on-secondary-container)", font: "500 14px var(--font-sans)", whiteSpace: "nowrap", flex: "0 0 auto" }}><CmpIcon icon={m.i} size={18} />{m.t}</span>;
+}
+function RoPill() {
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 28, padding: "0 10px 0 8px", borderRadius: 999, border: "1px solid var(--outline)", color: "var(--on-surface-variant)", font: "500 14px var(--font-sans)", whiteSpace: "nowrap", flex: "0 0 auto", boxSizing: "border-box" }}><CmpIcon icon="visibility" size={18} />Только просмотр</span>;
+}
+
+// source: { kind: block|mine|file|cloud|factory, title, model } — шапка, меню «⋯», панель внизу (ТЗ конфигуратора, K5/K7).
+// writeAvail: ok | hide | disable — пункт «Записать в блок» в конфигурациях. onAction(key) — пункты меню и «Сохранить».
+function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seedEdits = true, canFactory = true, failWrite = false, onBack = () => {},
+  source, baseValues, initialEdits, writeAvail = "hide", writeReason, onAction, apiRef, toast, cfgLink = "configurator" }) {
+  const src = source || { kind: "block" };
+  const isBlock = src.kind === "block";
+  const ro = src.kind === "cloud" || src.kind === "factory";
+  canFactory = canFactory && isBlock;
   const [rootRef, layout] = useWidth();
   const wide = layout !== "compact";
   const dm = demo || "";
   const [st, setSt] = useState(initialState);
   const [cur, setCur] = useState(dm.startsWith("edit:") && !startId ? IDX[dm.slice(5)].parent : (startId || (dm === "empty" ? "7" : "")));
   const [exp, setExp] = useState(() => { const s = startId || (dm.startsWith("edit:") ? IDX[dm.slice(5)].parent : "3"); return chain(s).map((n) => n.id).concat(["3", "3.2"]); });
-  const [edits, setEdits] = useState(seedEdits && !dm.startsWith("noedits") ? SEED : {});
-  const [base, setBase] = useState(BASE0);
+  const [edits, setEdits] = useState(initialEdits || (seedEdits && !dm.startsWith("noedits") ? SEED : {}));
+  const [base, setBase] = useState(() => baseValues ? { ...BASE0, ...baseValues } : BASE0);
   const [ov, setOv] = useState(() => {
     if (dm.startsWith("edit:")) return { k: "edit", id: dm.slice(5) };
     if (dm === "info") return { k: "info", id: "3.2.4" };
+    if (dm === "exit" && !isBlock) return { k: "exit-cfg" };
     if (["exit", "reset", "can", "lost", "menu", "write-error"].includes(dm)) return { k: dm };
     return null;
   });
   const [q, setQ] = useState(dm === "search" ? "дат" : dm === "search-busy" ? "задер" : dm === "search-empty" ? "вертолёт" : null);
   const [busy, setBusy] = useState(dm === "search-busy");
   const [run, setRun] = useState(dm === "write-progress" ? { kind: "write", p: 0.45, hold: true } : dm === "reset-progress" ? { kind: "reset", p: 0.6, hold: true } : null);
-  const [snack, setSnack] = useState(dm === "write-ok" ? "Записано изменений: 3" : null);
+  const [snack, setSnack] = useState(toast || (dm === "write-ok" ? "Записано изменений: 3" : null));
   const [bad, setBad] = useState(null);
   const n = LEAVES.reduce((s, l) => s + (edits[l.id] !== undefined ? 1 : 0), 0);
   const val = (it) => edits[it.id] !== undefined ? edits[it.id] : base[it.id];
   const frozenN = useRef(n); if (!run) frozenN.current = n;
+  const editsRef = useRef(edits); editsRef.current = edits;
+  const baseRef = useRef(base); baseRef.current = base;
+  if (apiRef) apiRef.current = {
+    n,
+    load: (vals) => { const b = baseRef.current, d = {}; Object.keys(vals).forEach((k) => { if (IDX[k] && !same(vals[k], b[k])) d[k] = vals[k]; }); setEdits(d); return Object.keys(d).length; },
+    commit: () => { setBase((b) => ({ ...b, ...editsRef.current })); setEdits({}); },
+    values: () => ({ ...baseRef.current, ...editsRef.current }),
+    snack: setSnack,
+  };
+  const act = (k, o) => {
+    setOv(null);
+    if (onAction) return onAction(k, o || {});
+    if (window.PS_LINKS && window.PS_LINKS[cfgLink]) location.href = window.PS_ROOT + window.PS_LINKS[cfgLink] + "?entry=block&go=" + k;
+  };
 
   useEffect(() => { if (st !== "loading") return; const t = setTimeout(() => setSt("ready"), 1800); return () => clearTimeout(t); }, [st]);
   useEffect(() => { if (!snack) return; const t = setTimeout(() => setSnack(null), 3500); return () => clearTimeout(t); }, [snack]);
@@ -617,7 +648,7 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
   const apply = (it, v) => { setEdits((e) => { const c = { ...e }; if (same(v, base[it.id])) delete c[it.id]; else c[it.id] = v; return c; }); setOv(null); };
   const inline = (it, v) => { if (it.can && canFactory) return setOv({ k: "can" }); apply2(it, v); };
   const apply2 = (it, v) => setEdits((e) => { const c = { ...e }; if (same(v, base[it.id])) delete c[it.id]; else c[it.id] = v; return c; });
-  const goBack = () => { if (q !== null) { setQ(null); return; } if (!wide && cur) return setCur(IDX[cur].parent); if (n > 0) setOv({ k: "exit" }); else onBack(); };
+  const goBack = () => { if (q !== null) { setQ(null); return; } if (!wide && cur) return setCur(IDX[cur].parent); if (n > 0) setOv({ k: isBlock ? "exit" : "exit-cfg" }); else onBack(); };
   const select = (id) => { setCur(id); setExp((e) => e.includes(id) ? e : [...e, id]); };
   const toggle = (id) => setExp((e) => e.includes(id) ? e.filter((x) => x !== id) : [...e, id]);
   const startWrite = () => setRun({ kind: "write", p: 0 });
@@ -649,13 +680,13 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
     </div>
   );
 
-  const sub = (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ flex: "0 0 auto", whiteSpace: "nowrap", font: "var(--body-medium-size) var(--font-sans)", fontSize: "var(--body-medium-size)", color: "var(--on-surface-variant)" }}>DX-9X · 1234567</span><CanBadge />
-    </div>
-  );
+  const title = isBlock ? "Настройки" : src.title;
+  const subInner = isBlock
+    ? <React.Fragment><span style={{ flex: "0 0 auto", whiteSpace: "nowrap", font: "500 14px var(--font-sans)", color: "var(--on-surface-variant)" }}>DX-9X · 1234567</span><CanBadge /></React.Fragment>
+    : <React.Fragment><SrcTag kind={src.kind} /><span style={{ flex: "0 0 auto", whiteSpace: "nowrap", font: "500 14px var(--font-sans)", color: "var(--on-surface-variant)" }}>{src.model}</span>{ro && <RoPill />}</React.Fragment>;
+  const sub = <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>{subInner}</div>;
   const bar = wide ? (
-    <CmpTopAppBar title="Настройки" subtitle={sub} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={goBack} />}
+    <CmpTopAppBar title={title} subtitle={sub} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={goBack} />}
       actions={<React.Fragment>{searchField}<CmpIconButton icon="MoreVert" contentDescription="Ещё" onClick={() => setOv({ k: "menu" })} /></React.Fragment>} />
   ) : q !== null ? (
     <div style={{ height: 64, display: "flex", alignItems: "center", gap: 4, padding: "0 12px 0 8px", flex: "0 0 auto" }}><CmpIconButton icon="ArrowBack" contentDescription="Закрыть поиск" onClick={() => setQ(null)} />{searchField}</div>
@@ -663,13 +694,11 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
     <div style={{ flex: "0 0 auto", background: "var(--surface)" }}>
       <div style={{ height: 64, display: "flex", alignItems: "center", gap: 4, padding: "0 4px 0 4px" }}>
         <CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={goBack} />
-        <CmpText variant="titleLarge" style={{ flex: 1, minWidth: 0, paddingLeft: 4 }} maxLines={1}>Настройки</CmpText>
+        <CmpText variant="titleLarge" style={{ flex: 1, minWidth: 0, paddingLeft: 4 }} maxLines={1}>{title}</CmpText>
         <CmpIconButton icon="Search" contentDescription="Поиск" onClick={() => setQ("")} />
         <CmpIconButton icon="MoreVert" contentDescription="Ещё" onClick={() => setOv({ k: "menu" })} />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", padding: "0 16px 10px 16px" }}>
-        <span style={{ whiteSpace: "nowrap", font: "500 14px var(--font-sans)", color: "var(--on-surface-variant)" }}>DX-9X · 1234567</span><CanBadge />
-      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "0 16px 10px 16px" }}>{subInner}</div>
     </div>
   );
 
@@ -707,11 +736,15 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
   const showBar = n > 0 && st === "ready";
   const eit = ov && ov.k === "edit" ? IDX[ov.id].n : null;
   const iit = ov && ov.k === "info" ? IDX[ov.id].n : null;
-  const menuItems = [
-    { i: "restart_alt", t: "Сбросить к заводским настройкам", on: () => setOv({ k: "reset" }) },
-    { div: true, t: "Конфигурации — второй этап" },
-    { i: "folder_open", t: "Открыть из…", off: true }, { i: "save_alt", t: "Сохранить в…", off: true }, { i: "factory", t: "Заводские настройки модели", off: true },
-  ];
+  const wItem = writeAvail === "hide" ? [] : [{ i: "upload", t: "Записать в блок", on: () => act("write"), off: writeAvail === "disable", sub: writeAvail === "disable" ? (writeReason || "Подключите блок той же модели") : null }];
+  const toMine = { i: "inventory_2", t: "Сохранить в мои", on: () => act("saveMine") };
+  const menuItems = {
+    block: [{ i: "download", t: "Загрузить из…", on: () => act("load") }, { i: "save_alt", t: "Сохранить в…", on: () => act("saveTo") }, { div: true }, { i: "restart_alt", t: "Сбросить к заводским настройкам", on: () => setOv({ k: "reset" }) }],
+    mine: [{ i: "description", t: "Сохранить в файл", on: () => act("saveFile") }, { i: "content_copy", t: "Создать копию", on: () => act("copy") }, ...wItem, { i: "edit", t: "Переименовать", on: () => act("rename") }],
+    file: [toMine, { i: "save_as", t: "Сохранить как файл…", on: () => act("saveFile") }, ...wItem],
+    cloud: [toMine, { i: "description", t: "Сохранить в файл", on: () => act("saveFile") }, ...wItem],
+  }[src.kind === "factory" ? "cloud" : src.kind];
+  const barBtn = isBlock ? { t: "Записать", i: "upload", f: startWrite } : ro ? { t: "Сохранить как…", i: "save_as", f: () => act("saveAs") } : { t: "Сохранить", i: "save", f: () => act("save") };
 
   return (
     <div ref={rootRef} style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)", overflow: "hidden" }}>
@@ -720,7 +753,7 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
       {showBar && (
         <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px 12px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)" }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}><Dot /><CmpText variant="titleMedium">Изменено: {n}</CmpText></div>
-          <DBtn text="Записать" icon="upload" kind="filled" onClick={startWrite} style={{ minWidth: 160 }} />
+          <DBtn text={barBtn.t} icon={barBtn.i} kind="filled" onClick={barBtn.f} style={{ minWidth: 160 }} />
         </div>
       )}
       {snack && <div className="ds-an" style={{ position: "absolute", left: 16, right: 16, bottom: showBar ? 92 : 16, display: "flex", justifyContent: "center", zIndex: 70, animation: "dsUp .2s ease both" }}><CmpSnackbar message={snack} actionLabel="OK" onActionClick={() => setSnack(null)} /></div>}
@@ -730,8 +763,11 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
       {ov && ov.k === "menu" && (
         <div onClick={() => setOv(null)} style={{ position: "absolute", inset: 0, zIndex: 60 }}>
           <div onClick={(e) => e.stopPropagation()} className="ds-an" style={{ position: "absolute", right: 8, top: 60, width: 320, maxWidth: "calc(100% - 16px)", padding: "8px 0", background: "var(--surface-container)", borderRadius: 16, boxShadow: "var(--elevation-3)", animation: "dsPop .15s ease both", transformOrigin: "top right" }}>
-            {menuItems.map((m, i) => m.div ? <div key={i} style={{ padding: "12px 16px 4px", borderTop: "1px solid var(--outline-variant)", marginTop: 6 }}><CmpText variant="labelMedium" color="var(--on-surface-variant)">{m.t}</CmpText></div> : (
-              <button key={i} disabled={m.off} onClick={() => m.on && m.on()} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 56, padding: "0 16px", border: "none", background: "transparent", color: "var(--on-surface)", font: "400 16px var(--font-sans)", textAlign: "left", cursor: m.off ? "default" : "pointer", opacity: m.off ? 0.38 : 1 }}><CmpIcon icon={m.i} size={24} color="var(--on-surface-variant)" />{m.t}</button>
+            {menuItems.map((m, i) => m.div ? <div key={i} role="separator" style={{ borderTop: "1px solid var(--outline-variant)", margin: "6px 0" }} /> : (
+              <button key={i} disabled={m.off} onClick={() => m.on && m.on()} style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", minHeight: 56, padding: "6px 16px", border: "none", background: "transparent", color: "var(--on-surface)", font: "400 16px var(--font-sans)", textAlign: "left", cursor: m.off ? "default" : "pointer" }}>
+                <CmpIcon icon={m.i} size={24} color="var(--on-surface-variant)" style={{ opacity: m.off ? 0.38 : 1 }} />
+                <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}><span style={{ opacity: m.off ? 0.38 : 1 }}>{m.t}</span>{m.sub && <span style={{ font: "400 14px/1.3 var(--font-sans)", color: "var(--on-surface-variant)" }}>{m.sub}</span>}</span>
+              </button>
             ))}
           </div>
         </div>
@@ -740,6 +776,12 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
         <Dlg icon="warning" title={`Есть незаписанные изменения (${n})`} stack onClose={() => setOv(null)}
           actions={<React.Fragment><DBtn kind="filled" text="Записать и выйти" onClick={() => { setOv(null); startWrite(); }} /><DBtn kind="outlined" text="Выйти без записи" onClick={() => { setOv(null); onBack(); }} /><DBtn text="Отмена" onClick={() => setOv(null)} /></React.Fragment>}>
           <CmpText variant="bodyLarge">Изменения ещё не записаны в устройство. Если выйти без записи, они будут потеряны.</CmpText>
+        </Dlg>
+      )}
+      {ov && ov.k === "exit-cfg" && (
+        <Dlg icon="warning" title="Сохранить изменения?" stack onClose={() => setOv(null)}
+          actions={<React.Fragment><DBtn kind="filled" text={ro ? "Сохранить как…" : "Сохранить"} onClick={() => act(ro ? "saveAs" : "save", { exit: true })} /><DBtn kind="outlined" text="Не сохранять" onClick={() => { setOv(null); onBack(); }} /><DBtn text="Отмена" onClick={() => setOv(null)} /></React.Fragment>}>
+          <CmpText variant="bodyLarge">Изменено настроек: {n}. {ro ? "Исходную конфигурацию изменить нельзя — сохраните результат как новую." : "Если не сохранить, изменения пропадут."}</CmpText>
         </Dlg>
       )}
       {ov && ov.k === "reset" && (
@@ -779,5 +821,5 @@ function DeviceSettingsScreen({ initialState = "ready", demo, startId = "", seed
   );
 }
 
-Object.assign(window, { DeviceSettingsScreen, DSET: { TREE, IDX, LEAVES, fmt, Segmented, SettingRow, WireTag, Pol, CountPill, Breadcrumbs, Tree, NumBody, TimeBody, SchBody, SirBody, CanBody, IOBody, SelBody, TxtBody, EditorPanel, Dlg, DBtn, Dot, Check, Radio, CH_BG, EditorBody } });
+Object.assign(window, { DeviceSettingsScreen, DSET: { TREE, IDX, LEAVES, BASE0, chain, same, Overlay, Center, Hero, SrcTag, RoPill, SRC_META, fmt, Segmented, SettingRow, WireTag, Pol, CountPill, Breadcrumbs, Tree, NumBody, TimeBody, SchBody, SirBody, CanBody, IOBody, SelBody, TxtBody, EditorPanel, Dlg, DBtn, Dot, Check, Radio, CH_BG, EditorBody } });
 })();
