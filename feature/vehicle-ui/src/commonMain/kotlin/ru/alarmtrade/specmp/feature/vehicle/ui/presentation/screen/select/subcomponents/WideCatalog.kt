@@ -48,6 +48,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.C
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.valueOrNull
 import specmp.feature.vehicle_ui.generated.resources.Res
 import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_enter
+import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_a11y_recent_remove
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_card_prompt
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_card_prompt_can
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_pick_brand
@@ -160,6 +161,8 @@ private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) 
                             text = car.fullName(),
                             onClick = { actions.onRecentOpen(car) },
                             icon = CmpIcons.DirectionsCar,
+                            onClear = { actions.onRecentRemove(car) },
+                            clearContentDescription = stringResource(Res.string.vehicle_catalog_a11y_recent_remove),
                             modifier = Modifier.testTag(VehicleTestTags.recent(car.id))
                         )
                     }

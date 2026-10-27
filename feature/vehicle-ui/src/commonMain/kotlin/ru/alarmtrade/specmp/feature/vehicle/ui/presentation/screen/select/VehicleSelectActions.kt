@@ -21,6 +21,7 @@ internal class VehicleSelectActions(
     val onTrimOpen: (Int) -> Unit,
     val onCanResultOpen: (CarSummary) -> Unit,
     val onRecentOpen: (CarSummary) -> Unit,
+    val onRecentRemove: (CarSummary) -> Unit,
     val onCrumb: (CrumbTarget) -> Unit,
     val onRetry: (CatalogLevel) -> Unit,
     val onFilterOpen: () -> Unit,

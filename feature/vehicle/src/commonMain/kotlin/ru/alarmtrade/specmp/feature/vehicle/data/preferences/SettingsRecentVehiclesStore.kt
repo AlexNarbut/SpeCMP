@@ -18,7 +18,15 @@ class SettingsRecentVehiclesStore(private val settings: Settings) : RecentVehicl
 
     override fun push(catalog: VehicleCatalog, car: CarSummary) {
         val updated = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
-        settings.putString(catalog.key(), json.encodeToString(serializer, updated.map { it.toStored() }))
+        store(catalog, updated)
+    }
+
+    override fun remove(catalog: VehicleCatalog, carId: Int) {
+        store(catalog, recent(catalog).filter { it.id != carId })
+    }
+
+    private fun store(catalog: VehicleCatalog, cars: List<CarSummary>) {
+        settings.putString(catalog.key(), json.encodeToString(serializer, cars.map { it.toStored() }))
     }
 
     private fun VehicleCatalog.key() = "recent_${name.lowercase()}"

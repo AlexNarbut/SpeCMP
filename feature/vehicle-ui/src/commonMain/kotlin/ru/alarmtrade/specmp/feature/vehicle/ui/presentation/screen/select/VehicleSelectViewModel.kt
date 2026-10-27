@@ -207,6 +207,11 @@ internal class VehicleSelectViewModel(
 
     fun onRecentOpen(car: CarSummary) = openCard(car.id, CardSource.RECENT)
 
+    /** «✕» у недавнего автомобиля: убрать из списка (из каталога он никуда не девается). */
+    fun onRecentRemove(car: CarSummary) {
+        updateRecent { recentStore.remove(request.catalog, car.id) }
+    }
+
     fun onRetry(level: CatalogLevel) {
         val s = _state.value
         when (level) {
@@ -395,10 +400,14 @@ internal class VehicleSelectViewModel(
      * (хранилище не атомарно: два быстрых открытия карточек иначе потеряют одну запись); в state — готовый список.
      */
     private fun rememberRecent(car: CarSummary) {
+        updateRecent { recentStore.push(request.catalog, car) }
+    }
+
+    private fun updateRecent(change: () -> Unit) {
         safeLaunch {
             val recent = recentLock.withLock {
                 withContext(dispatchers.io) {
-                    recentStore.push(request.catalog, car)
+                    change()
                     recentStore.recent(request.catalog)
                 }
             }

@@ -92,6 +92,7 @@ fun VehicleSelectEntry(
                 onTrimOpen = viewModel::onTrimOpen,
                 onCanResultOpen = viewModel::onCanResultOpen,
                 onRecentOpen = viewModel::onRecentOpen,
+                onRecentRemove = viewModel::onRecentRemove,
                 onCrumb = viewModel::onCrumb,
                 onRetry = viewModel::onRetry,
                 onFilterOpen = viewModel::onFilterOpen,

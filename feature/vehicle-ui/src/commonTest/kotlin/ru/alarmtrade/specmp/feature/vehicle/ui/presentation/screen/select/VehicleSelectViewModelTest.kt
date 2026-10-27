@@ -319,6 +319,18 @@ class VehicleSelectViewModelTest {
     }
 
     @Test
+    fun `removing a recent car drops it from the list`() = test {
+        val (vm, _) = viewModel()
+        vm.onRecentOpen(FakeCatalog.camrySummary)
+        advanceUntilIdle()
+
+        vm.onRecentRemove(FakeCatalog.camrySummary)
+        advanceUntilIdle()
+
+        assertEquals(emptyList(), vm.s.recent)
+    }
+
+    @Test
     fun `on expanded window back with an open card leaves the screen`() = test {
         val (vm, effects) = viewModel()
         vm.onRecentOpen(FakeCatalog.camrySummary)
@@ -430,6 +442,10 @@ private class FakeRecent : RecentVehiclesStore {
 
     override fun push(catalog: VehicleCatalog, car: CarSummary) {
         items[catalog] = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
+    }
+
+    override fun remove(catalog: VehicleCatalog, carId: Int) {
+        items[catalog] = recent(catalog).filter { it.id != carId }
     }
 }
 

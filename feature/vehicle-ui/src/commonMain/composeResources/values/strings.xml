@@ -33,6 +33,7 @@
     <string name="vehicle_search_btn_by_name">Search by name</string>
     <string name="vehicle_search_btn_by_can">Search by CAN code</string>
     <string name="vehicle_catalog_title_recent">Recent</string>
+    <string name="vehicle_catalog_a11y_recent_remove">Remove from recent</string>
     <string name="vehicle_catalog_label_recent">%1$s · CAN %2$s</string>
     <string name="vehicle_catalog_label_all_models">All models of the make</string>
     <string name="vehicle_catalog_title_combo">%1$s models</string>

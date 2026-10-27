@@ -33,6 +33,7 @@
     <string name="vehicle_search_btn_by_name">Искать по названию</string>
     <string name="vehicle_search_btn_by_can">Искать по CAN-коду</string>
     <string name="vehicle_catalog_title_recent">Недавние</string>
+    <string name="vehicle_catalog_a11y_recent_remove">Убрать из недавних</string>
     <string name="vehicle_catalog_label_recent">%1$s · CAN %2$s</string>
     <string name="vehicle_catalog_label_all_models">Все модели марки</string>
     <string name="vehicle_catalog_title_combo">Модели %1$s</string>

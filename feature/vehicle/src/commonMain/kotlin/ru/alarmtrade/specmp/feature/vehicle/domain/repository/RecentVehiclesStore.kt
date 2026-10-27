@@ -10,6 +10,9 @@ interface RecentVehiclesStore {
     /** Поднять [car] наверх (без дублей), хранится не больше [MAX_RECENT]. */
     fun push(catalog: VehicleCatalog, car: CarSummary)
 
+    /** Убрать автомобиль [carId] из недавних (нет в списке — ничего). */
+    fun remove(catalog: VehicleCatalog, carId: Int)
+
     companion object {
         const val MAX_RECENT = 5
     }

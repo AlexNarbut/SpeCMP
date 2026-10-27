@@ -324,6 +324,7 @@ class VehicleSelectGallery {
             onTrimOpen = {},
             onCanResultOpen = {},
             onRecentOpen = {},
+            onRecentRemove = {},
             onCrumb = {},
             onRetry = {},
             onFilterOpen = {},

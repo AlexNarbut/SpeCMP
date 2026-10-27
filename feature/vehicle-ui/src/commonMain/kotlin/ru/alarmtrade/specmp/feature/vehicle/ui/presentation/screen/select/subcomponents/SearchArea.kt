@@ -90,9 +90,14 @@ internal fun SearchArea(
         CmpRow(
             modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
-            if (state.mode.canSearchAvailable) segments(Modifier.widthIn(max = 340.dp))
+            // Под полем — строка подсказки: сегменты центрируются по высоте самого поля, а не всего слота.
+            if (state.mode.canSearchAvailable) {
+                CmpBox(modifier = Modifier.height(FIELD_HEIGHT), contentAlignment = Alignment.CenterStart) {
+                    segments(Modifier.widthIn(max = 340.dp))
+                }
+            }
             input(Modifier.widthIn(max = 560.dp).weight(1f, fill = false))
         }
     } else {

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -64,6 +65,7 @@ import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_enter
 import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_found
 import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_none
 import specmp.feature.vehicle_ui.generated.resources.vehicle_can_title_none
+import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_a11y_recent_remove
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_label_all_models
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_label_recent
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_combo_none
@@ -257,6 +259,14 @@ internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: Vehicl
             subtitle = stringResource(Res.string.vehicle_catalog_label_recent, yearsText(car.years), car.canCode),
             onClick = { actions.onRecentOpen(car) },
             dense = true,
+            trailing = {
+                CmpIconButton(
+                    onClick = { actions.onRecentRemove(car) },
+                    icon = CmpIcons.Close,
+                    contentDescription = stringResource(Res.string.vehicle_catalog_a11y_recent_remove),
+                    tint = colors.onSurfaceVariant
+                )
+            },
             lead = {
                 CmpBox(
                     modifier = Modifier
