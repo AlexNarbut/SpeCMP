@@ -388,6 +388,95 @@ class FirmwareUpdateViewModelTest {
         assertNull(vm.state.value.confirm)
     }
 
+    /** Блок с Bluetooth-модулем в загрузчике (BLE), версия подтверждена, передача идёт. */
+    private fun TestScope.startedBluetoothTransfer(): FirmwareUpdateViewModel {
+        sessionRepository.bluetoothVersions = listOf(
+            Response.Success(
+                BluetoothModule(
+                    BluetoothModuleMode.BOOT,
+                    BluetoothManufacturer("1", "BT-DX4G", "DX4G", "1.0", "1.14")
+                )
+            )
+        )
+        prepareMain()
+        repository.latest[2L to FirmwareChannel.RELEASE] = Response.Success(version("1.20"))
+        requester.request(FirmwareBootRequest(2, FirmwareChannel.RELEASE))
+        val (vm, _) = viewModel(ConnectionTransport.BLE)
+        vm.onDownloadClick()
+        runCurrent()
+        vm.onConfirmUpdate()
+        runCurrent()
+        updateRepository.progress.tryEmit(FirmwareUpdateProgress.Sending(30))
+        runCurrent()
+        return vm
+    }
+
+    @Test
+    fun `bluetooth transfer survives a link drop and continues after the module returns`() = test {
+        val vm = startedBluetoothTransfer()
+        assertEquals(listOf(FirmwareUpdateTarget.BluetoothModule), updateRepository.calls.map { it.first })
+
+        linkDrop()
+        runCurrent()
+        assertEquals(UpdatePhase.Transfer(30, reconnecting = true), vm.state.value.phase)
+        assertTrue(vm.state.value.locked)
+
+        linkBack(bootDevice)
+        assertEquals(UpdatePhase.Transfer(30), vm.state.value.phase)
+        // Тот же процесс: обновление не перезапускалось, прогресс SDK продолжает двигать экран.
+        assertEquals(1, updateRepository.calls.size)
+        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(55))
+        runCurrent()
+        assertEquals(UpdatePhase.Transfer(55), vm.state.value.phase)
+    }
+
+    @Test
+    fun `main program transfer over bluetooth survives a link drop without rereading the block`() = test {
+        prepareMain()
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
+        val (vm, _) = viewModel(ConnectionTransport.BLE)
+        vm.onDownloadClick()
+        runCurrent()
+        vm.onConfirmUpdate()
+        runCurrent()
+        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(30))
+        runCurrent()
+        assertEquals(listOf(FirmwareUpdateTarget.MainProgram), updateRepository.calls.map { it.first })
+        val reads = sessionRepository.bluetoothReads
+
+        linkDrop()
+        runCurrent()
+        assertEquals(UpdatePhase.Transfer(30, reconnecting = true), vm.state.value.phase)
+
+        linkBack(bootDevice)
+        assertEquals(UpdatePhase.Transfer(30), vm.state.value.phase)
+        // Режим на переподключении не перечитывался: передача держит протокол блока.
+        assertEquals(reads, sessionRepository.bluetoothReads)
+        assertEquals(1, updateRepository.calls.size)
+
+        // Передача закончилась — дальше (применение) режим блока снова определяется по связи.
+        updateRepository.progress.emit(FirmwareUpdateProgress.Verifying)
+        runCurrent()
+        linkDrop()
+        runCurrent()
+        linkBack(bootDevice)
+        assertTrue(sessionRepository.bluetoothReads > reads)
+    }
+
+    @Test
+    fun `bluetooth transfer that the sdk gave up on is lost and returns to the source step`() = test {
+        val vm = startedBluetoothTransfer()
+        linkDrop()
+        runCurrent()
+
+        updateRepository.progress.emit(FirmwareUpdateProgress.Failed(FirmwareFailure.Unknown))
+        runCurrent()
+        assertEquals(UpdatePhase.Lost(updating = true), vm.state.value.phase)
+
+        linkBack(bootDevice)
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
+    }
+
     @Test
     fun `link loss while choosing the source is lost without an update and the screen stays`() = test {
         prepareMain()

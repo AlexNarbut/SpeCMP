@@ -101,6 +101,7 @@ import specmp.feature.device.firmware.generated.resources.firmware_update_lost_t
 import specmp.feature.device.firmware.generated.resources.firmware_update_msg_power
 import specmp.feature.device.firmware.generated.resources.firmware_update_status_apply
 import specmp.feature.device.firmware.generated.resources.firmware_update_status_prepare
+import specmp.feature.device.firmware.generated.resources.firmware_update_status_reconnecting
 import specmp.feature.device.firmware.generated.resources.firmware_update_status_transfer
 import specmp.feature.device.firmware.generated.resources.firmware_update_status_verify
 import specmp.feature.device.firmware.generated.resources.firmware_update_step_apply
@@ -415,8 +416,15 @@ private const val PERCENT_MAX = 100f
 
 private fun UpdatePhase.statusRes(): StringResource = when (this) {
     UpdatePhase.Prepare -> Res.string.firmware_update_status_prepare
-    is UpdatePhase.Transfer -> Res.string.firmware_update_status_transfer
+
+    is UpdatePhase.Transfer -> if (reconnecting) {
+        Res.string.firmware_update_status_reconnecting
+    } else {
+        Res.string.firmware_update_status_transfer
+    }
+
     UpdatePhase.Verify -> Res.string.firmware_update_status_verify
+
     else -> Res.string.firmware_update_status_apply
 }
 

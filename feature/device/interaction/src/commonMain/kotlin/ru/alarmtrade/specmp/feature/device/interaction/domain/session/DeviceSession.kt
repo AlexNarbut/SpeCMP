@@ -84,6 +84,11 @@ class DeviceSession(
 
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
 
+    // Идёт передача прошивки — режим (загрузчик), в котором она идёт. На переподключении BLE режим не перечитываем:
+    // блок в загрузчике между соединениями не перезагружается, а SDK занят передачей (чтение блока ждало бы протокол
+    // и рвало бы связь по тайм-ауту) и сам продолжает её после переподключения. attach/close сбрасывают.
+    private val transferMode = MutableStateFlow<DeviceSessionState?>(null)
+
     private val expectation = MutableStateFlow<RebootExpectation?>(null)
 
     /** Перезагрузка блока, которую приложение вызвало и ждёт; `null` — не ждём (раздел «ожидаемая перезагрузка»). */
@@ -110,8 +115,14 @@ class DeviceSession(
                     val reconnect = isBleReconnect()
                     wasReady.update { true }
                     if (!reconnect) emit(DeviceSessionState.Connecting)
-                    logStage { "detectMode start" }
-                    val mode = detectMode()
+                    val held = transferMode.value?.takeIf { reconnect }
+                    val mode = if (held != null) {
+                        logStage { "detectMode skipped: firmware transfer" }
+                        held
+                    } else {
+                        logStage { "detectMode start" }
+                        detectMode()
+                    }
                     logStage { "detectMode result=${mode?.let { it::class.simpleName }}" }
                     if (mode != null) {
                         emit(mode)
@@ -138,6 +149,7 @@ class DeviceSession(
         wasReady.update { false }
         databaseSynced.update { false }
         expectation.update { null }
+        transferMode.update { null }
         logStage { "attach transport=$transport" }
         _transport.update { transport }
     }
@@ -151,6 +163,7 @@ class DeviceSession(
         logStage { "close requested" }
         _transport.update { null }
         expectation.update { null }
+        transferMode.update { null }
         return scope.launch {
             sessionMutex.withLock {
                 val response = connectionRepository.closeSessions()
@@ -224,6 +237,19 @@ class DeviceSession(
             delay(REBOOT_TIMEOUT_MILLIS)
             expectation.update { current -> if (current === expected && !current.reached) null else current }
         }
+    }
+
+    /**
+     * Началась передача прошивки в текущем режиме загрузчика: на переподключениях BLE до [endFirmwareTransfer] режим
+     * блока не перечитывается (SDK продолжает передачу сам). Блок не в загрузчике — ничего не меняет.
+     */
+    fun beginFirmwareTransfer() {
+        // Уже держим — не трогаем: прогресс может прийти, когда сессия уже увидела обрыв.
+        transferMode.update { it ?: state.value.takeIf { current -> current.isBoot() } }
+    }
+
+    fun endFirmwareTransfer() {
+        transferMode.update { null }
     }
 
     /** Команда не удалась, ожидаемой перезагрузки не будет. */

@@ -26,7 +26,8 @@ sealed interface UpdatePhase {
 
     data object Prepare : UpdatePhase
 
-    data class Transfer(val percent: Int?) : UpdatePhase
+    /** Передача; [reconnecting] — связь прервалась, передача продолжится с того же места после переподключения. */
+    data class Transfer(val percent: Int?, val reconnecting: Boolean = false) : UpdatePhase
 
     data object Verify : UpdatePhase
 

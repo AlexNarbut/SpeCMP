@@ -532,6 +532,37 @@ class DeviceSessionTest {
     }
 
     @Test
+    fun `firmware transfer keeps the bootloader mode across reconnects without reading the block`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                readResults = listOf(Response.Success(bootDevice))
+            }
+            val session = testSession(repository)
+            session.attach(ConnectionTransport.BLE)
+            backgroundScope.launch { session.state.collect {} }
+            runCurrent()
+            assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+            val reads = repository.readCount to repository.bluetoothReadCount
+
+            session.beginFirmwareTransfer()
+            repository.link.value = DeviceLinkState.DISCONNECTED
+            repository.link.value = DeviceLinkState.READY
+            runCurrent()
+            // Протокол занят передачей (SDK продолжает её сам): режим тот же, блок не читали.
+            assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+            assertEquals(reads, repository.readCount to repository.bluetoothReadCount)
+
+            // Передача закончилась (применение перезагружает блок) — режим снова определяется на переподключении.
+            session.endFirmwareTransfer()
+            repository.readResults = listOf(Response.Success(testDevice))
+            repository.link.value = DeviceLinkState.DISCONNECTED
+            repository.link.value = DeviceLinkState.READY
+            runCurrent()
+            assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        }
+
+    @Test
     fun `unreadable ble module drops the link`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             bluetoothModule = Response.Error(IllegalStateException("no answer"))

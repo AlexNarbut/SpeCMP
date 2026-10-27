@@ -89,6 +89,7 @@
     <string name="firmware_update_step_apply">Applying</string>
     <string name="firmware_update_status_prepare">Preparing the firmware</string>
     <string name="firmware_update_status_transfer">Update in progress</string>
+    <string name="firmware_update_status_reconnecting">Connection lost, reconnecting. The update will continue from where it stopped</string>
     <string name="firmware_update_status_verify">Verifying the uploaded firmware</string>
     <string name="firmware_update_status_apply">Applying the firmware</string>
     <string name="firmware_update_msg_power">Do not turn off the device power and do not break the connection to the device</string>

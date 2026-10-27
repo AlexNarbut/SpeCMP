@@ -89,6 +89,7 @@
     <string name="firmware_update_step_apply">Применение</string>
     <string name="firmware_update_status_prepare">Идёт процесс подготовки прошивки</string>
     <string name="firmware_update_status_transfer">Идёт процесс обновления</string>
+    <string name="firmware_update_status_reconnecting">Связь прервалась, переподключаемся. Обновление продолжится с того же места</string>
     <string name="firmware_update_status_verify">Идёт проверка загруженной прошивки</string>
     <string name="firmware_update_status_apply">Идёт применение прошивки</string>
     <string name="firmware_update_msg_power">Не выключайте питание на устройстве и не разрывайте соединение с устройством</string>

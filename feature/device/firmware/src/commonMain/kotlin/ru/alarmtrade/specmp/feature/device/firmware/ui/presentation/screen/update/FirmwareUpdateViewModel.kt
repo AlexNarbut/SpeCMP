@@ -53,9 +53,13 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  * которое меняют действия пользователя и поток [FirmwareUpdateRepository.update].
  *
  * Связь при процессе: на стадии «Применение» блок перезагружается до результата — ставим ожидание возврата
- * в рабочий режим; если блок вернулся и результата не было — это успех. Обрыв на других стадиях прерывает
- * обновление: после возврата блока в загрузчик экран снова на выборе источника; если блок после применения
- * вернулся в загрузчике — ошибка.
+ * в рабочий режим; если блок вернулся и результата не было — это успех. Передача прошивки по BLE (основная
+ * программа и Bluetooth-модуль) обрыв переживает: SDK ждёт переподключения и продолжает с прерванного кадра (или
+ * начинает передачу заново, если блок продолжение не принял; на iOS загрузчик модуля теряет связь каждые ~30 с),
+ * экран показывает «переподключение» на той же передаче, а сессия на это время не перечитывает режим блока
+ * ([DeviceSession.beginFirmwareTransfer]). Обрыв на других стадиях
+ * (и после того, как SDK сдался) прерывает обновление: после возврата блока в загрузчик экран снова на выборе
+ * источника; если блок после применения вернулся в загрузчике — ошибка.
  */
 class FirmwareUpdateViewModel(
     private val deviceSession: DeviceSession,
@@ -74,7 +78,9 @@ class FirmwareUpdateViewModel(
         val currentVersion: String,
         val modules: List<FirmwareModule>,
         /** Выход из загрузчика командой доступен (BLE). */
-        val canExit: Boolean
+        val canExit: Boolean,
+        /** Связь по BLE: передача прошивки переживает обрыв (SDK переподключается и продолжает). */
+        val overBle: Boolean
     )
 
     private data class Core(
@@ -92,8 +98,14 @@ class FirmwareUpdateViewModel(
         /** Пользователь подтвердил результат («OK»). */
         val acknowledged: Boolean = false,
         /** Связь пропадала, пока шёл процесс обновления. */
-        val linkDropped: Boolean = false
-    )
+        val linkDropped: Boolean = false,
+        /** Поток обновления SDK ещё идёт (не закончился и не сдался). */
+        val running: Boolean = false
+    ) {
+        /** Передача по BLE, которую SDK продолжит после переподключения. */
+        val resumable: Boolean
+            get() = running && stage is UpdatePhase.Transfer && profile?.overBle == true
+    }
 
     /** Откуда берём файл прошивки: версия с сервера или файл пользователя. */
     private sealed interface UpdateSource {
@@ -200,9 +212,19 @@ class FirmwareUpdateViewModel(
             // Блок перезагрузился после применения и вернулся в рабочий режим, а результата SDK не было — успех.
             core.stage == UpdatePhase.Apply && session is DeviceSessionState.Ready -> UpdatePhase.Success
 
-            linkDown && reboot == null -> UpdatePhase.Lost(updating = core.stage.isUpdating())
+            linkDown && reboot == null -> linkDownPhase(core)
 
             else -> core.stage
+        }
+    }
+
+    // Передачу Bluetooth-модуля SDK продолжит после переподключения — это не потеря связи.
+    private fun linkDownPhase(core: Core): UpdatePhase {
+        val stage = core.stage
+        return if (core.resumable && stage is UpdatePhase.Transfer) {
+            stage.copy(reconnecting = true)
+        } else {
+            UpdatePhase.Lost(updating = stage.isUpdating())
         }
     }
 
@@ -231,7 +253,10 @@ class FirmwareUpdateViewModel(
     private fun onBootReturned() {
         val current = core.value
         if (!current.linkDropped) return
-        if (current.stage == UpdatePhase.Apply) {
+        if (current.resumable) {
+            // Передача продолжается сама: SDK дождался связи и шлёт неподтверждённый кадр.
+            core.update { it.copy(linkDropped = false) }
+        } else if (current.stage == UpdatePhase.Apply) {
             // После применения блок должен был вернуться в рабочий режим, а он снова в загрузчике: не применилась.
             updateRequests.tryEmit(null)
             deviceSession.cancelReboot()
@@ -282,7 +307,8 @@ class FirmwareUpdateViewModel(
                     source.title,
                     source.current,
                     modules,
-                    canExit = transport == ConnectionTransport.BLE
+                    canExit = transport == ConnectionTransport.BLE,
+                    overBle = transport == ConnectionTransport.BLE
                 ),
                 selectedModuleId = state.selectedModuleId?.takeIf { id -> modules.any { it.id == id } }
                     ?: modules.firstOrNull()?.id,
@@ -530,17 +556,28 @@ class FirmwareUpdateViewModel(
         }
         // SDK шлёт событие на каждый пакет передачи: маппинг и отсев повторов — в фоне (io), на Main приходит
         // только смена стадии или процента; переходы состояния (onProgress) — в коллекторе, на Main.
-        progress
-            .distinctUntilChanged()
-            .flowOn(dispatchers.io)
-            .collect { onProgress(it) }
+        core.update { it.copy(running = true) }
+        try {
+            progress
+                .distinctUntilChanged()
+                .flowOn(dispatchers.io)
+                .collect { onProgress(it) }
+        } finally {
+            deviceSession.endFirmwareTransfer()
+            core.update { it.copy(running = false) }
+        }
     }
 
     private suspend fun onProgress(progress: FirmwareUpdateProgress) {
+        // После передачи блок снова может сменить режим (применение — перезагрузка): режим опять перечитываем.
+        if (progress !is FirmwareUpdateProgress.Sending) deviceSession.endFirmwareTransfer()
         when (progress) {
             FirmwareUpdateProgress.Preparing -> setStage(UpdatePhase.Prepare)
 
-            is FirmwareUpdateProgress.Sending -> setStage(UpdatePhase.Transfer(progress.percent))
+            is FirmwareUpdateProgress.Sending -> {
+                deviceSession.beginFirmwareTransfer()
+                setStage(UpdatePhase.Transfer(progress.percent))
+            }
 
             FirmwareUpdateProgress.Verifying -> setStage(UpdatePhase.Verify)
 
@@ -558,6 +595,8 @@ class FirmwareUpdateViewModel(
     }
 
     private suspend fun onFailed(failure: FirmwareFailure) {
+        // SDK сдался: продолжения передачи после переподключения больше не будет.
+        core.update { it.copy(running = false) }
         // Неизвестный сбой при потере связи — это обрыв: экран покажет «Связь прервана», а после возврата блока
         // вернётся к выбору источника. Связь оценивается с запасом: поток SDK иногда падает раньше статуса связи.
         if (failure == FirmwareFailure.Unknown && linkWentDown()) {

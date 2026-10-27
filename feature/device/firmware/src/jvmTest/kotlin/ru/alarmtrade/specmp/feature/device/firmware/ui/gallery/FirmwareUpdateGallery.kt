@@ -92,6 +92,10 @@ class FirmwareUpdateGallery {
     fun transferUnknownPercent() = render("12_transfer_no_percent", phase(UpdatePhase.Transfer(null)))
 
     @Test
+    fun transferReconnecting() =
+        render("12b_transfer_reconnecting", phase(UpdatePhase.Transfer(64, reconnecting = true)))
+
+    @Test
     fun verify() = render("13_verify", phase(UpdatePhase.Verify))
 
     @Test
