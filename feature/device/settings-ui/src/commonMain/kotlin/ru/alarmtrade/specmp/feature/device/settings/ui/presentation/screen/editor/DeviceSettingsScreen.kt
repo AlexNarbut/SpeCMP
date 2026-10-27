@@ -24,6 +24,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
@@ -183,7 +184,8 @@ private fun ReadyBody(
         }
         CmpColumn(modifier = Modifier.weight(1f).fillMaxSize().background(cmpThemeColors().background)) {
             if (!layout.isWide && !location.isSearch) Crumbs(root, state, location, actions)
-            CmpBox(modifier = Modifier.weight(1f).fillMaxWidth()) { pane(layout) }
+            // Переход между разделами (запись едет из-за края) не рисуется поверх дерева и крошек.
+            CmpBox(modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds()) { pane(layout) }
         }
     }
 }

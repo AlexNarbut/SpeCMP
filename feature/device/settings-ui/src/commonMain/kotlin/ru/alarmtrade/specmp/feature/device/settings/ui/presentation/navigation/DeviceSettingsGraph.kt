@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +24,7 @@ import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
@@ -201,21 +203,32 @@ private fun SettingsWithNav(
             ),
             entryProvider = entryProvider<NavKey> {
                 entry<SettingsSectionRoute> { key ->
-                    SectionEntry(root, marks, key.sectionId, layout, rowActions)
+                    EntryBackground { SectionEntry(root, marks, key.sectionId, layout, rowActions) }
                 }
                 entry<SettingsSearchRoute> { _ ->
-                    SearchPane(
-                        query = state.searchQuery,
-                        hits = state.searchHits,
-                        marks = marks,
-                        wide = layout.isWide,
-                        onQueryChange = onSearchQueryChange,
-                        actions = rowActions
-                    )
+                    EntryBackground {
+                        SearchPane(
+                            query = state.searchQuery,
+                            hits = state.searchHits,
+                            marks = marks,
+                            wide = layout.isWide,
+                            onQueryChange = onSearchQueryChange,
+                            actions = rowActions
+                        )
+                    }
                 }
             }
         )
     }
+}
+
+/**
+ * Непрозрачный фон записи: на переходе NavDisplay новая запись едет поверх старой, и без фона строки старой
+ * просвечивают сквозь новую.
+ */
+@Composable
+private fun EntryBackground(content: @Composable () -> Unit) {
+    CmpBox(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) { content() }
 }
 
 @Composable
