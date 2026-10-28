@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.interactors.user.UserInteractor
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 
 class SpecialistAccountRepository(private val userInteractor: UserInteractor) : AccountRepository {
 
@@ -23,10 +24,7 @@ class SpecialistAccountRepository(private val userInteractor: UserInteractor) : 
 
             is SpecialistResponse.Error -> {
                 logger.d(response.exception) { "Failed to fetch current account profile" }
-                Response.Error(
-                    exception = response.exception,
-                    message = response.message ?: response.exception.message
-                )
+                response.toResponse()
             }
         }
 }

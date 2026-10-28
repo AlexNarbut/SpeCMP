@@ -15,8 +15,10 @@ import ru.alarmtrade.specialist.interactors.chat.requests.UploadChatFileRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.WriteMessageRequest
 import ru.alarmtrade.specialist.network.errors.NetworkNotConnectedError
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.mapIfError
 import ru.alarmtrade.specmp.core.specialist.account.AccountProfile
 import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.supportchat.data.mapper.SupportChatMessageMapper
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
@@ -151,18 +153,11 @@ class SpecialistSupportChatRepository(
         }
     }
 
-    private fun <T> SpecialistResponse<T>.toProject(): Response<T> = when (this) {
-        is SpecialistResponse.Success -> Response.Success(value)
-
-        is SpecialistResponse.Error -> {
-            val error = if (exception is NetworkNotConnectedError) {
-                SupportChatNotConnectedException(
-                    exception
-                )
-            } else {
-                exception
-            }
-            Response.Error(exception = error, message = message ?: exception.message)
+    private fun <T> SpecialistResponse<T>.toProject(): Response<T> = toResponse().mapIfError { error ->
+        if (error.exception is NetworkNotConnectedError) {
+            Response.Error(SupportChatNotConnectedException(error.exception), error.message)
+        } else {
+            error
         }
     }
 

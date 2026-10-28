@@ -30,6 +30,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:specialist"))
             implementation(project(":core:ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)

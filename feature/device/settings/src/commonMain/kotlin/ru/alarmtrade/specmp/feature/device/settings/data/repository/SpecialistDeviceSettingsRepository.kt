@@ -12,6 +12,9 @@ import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmD
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.settings.data.files.deleteSettingsScratchFile
 import ru.alarmtrade.specmp.feature.device.settings.data.files.settingsScratchDirectory
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting

@@ -17,6 +17,8 @@ import ru.alarmtrade.common.app.interactors.appInformation.requests.SaveUserPref
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.interactors.appDevice.AppDeviceInformationInteractor
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 
 /**
  * Начальная настройка Specialist SDK (по образцу `RootViewModel` настольного приложения): информация о клиенте,
@@ -74,14 +76,9 @@ class SpecialistInitializer(
         val actual = deviceInformationProvider.create().copy(deviceId = clientId())
         val stored = (interactor.getAppDeviceInformationUseCase.execute() as? SpecialistResponse.Success)?.value
         if (stored == actual) return Response.Success(Unit)
-        return when (
-            val response = interactor.saveAppDeviceInformationUseCase.execute(
-                SaveAppDeviceInformationRequest(actual)
-            )
-        ) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> Response.Error(response.exception, response.message)
-        }
+        return interactor.saveAppDeviceInformationUseCase.execute(SaveAppDeviceInformationRequest(actual))
+            .toResponse()
+            .map { }
     }
 
     @OptIn(ExperimentalUuidApi::class)

@@ -24,6 +24,7 @@ import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
 import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppVersion
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
@@ -79,7 +80,7 @@ class SpecialistMainRepository(
                     Response.Success(null)
                 } else {
                     logger.e(response.exception) { "Failed to fetch current settings version" }
-                    response.toProjectError()
+                    response.toResponse()
                 }
             }
         }
@@ -112,7 +113,7 @@ class SpecialistMainRepository(
 
             is SpecialistResponse.Error -> {
                 logger.e(response.exception) { "Failed to check app update" }
-                response.toProjectError()
+                response.toResponse()
             }
         }
     }
@@ -126,7 +127,7 @@ class SpecialistMainRepository(
 
             is SpecialistResponse.Error -> {
                 logger.e(response.exception) { "Failed to fetch user app features" }
-                response.toProjectError()
+                response.toResponse()
             }
         }
 
@@ -139,7 +140,7 @@ class SpecialistMainRepository(
 
             is SpecialistResponse.Error -> {
                 logger.e(response.exception) { "Failed to fetch user commercial" }
-                response.toProjectError()
+                response.toResponse()
             }
         }
 
@@ -168,7 +169,7 @@ class SpecialistMainRepository(
 
             is SpecialistResponse.Error -> {
                 logger.e(response.exception) { "Failed to fetch chat availability" }
-                response.toProjectError()
+                response.toResponse()
             }
         }
 
@@ -181,7 +182,7 @@ class SpecialistMainRepository(
 
             is SpecialistResponse.Error -> {
                 logger.e(response.exception) { "Failed to fetch unread messages count" }
-                response.toProjectError()
+                response.toResponse()
             }
         }
 
@@ -195,7 +196,7 @@ class SpecialistMainRepository(
 
             is SpecialistResponse.Error -> {
                 logger.e(exception) { "Failed to synchronize settings version" }
-                toProjectError()
+                toResponse()
             }
         }
 
@@ -219,11 +220,6 @@ class SpecialistMainRepository(
         is SettingsUpdatingStatus.FinishedVersionNotCompatible ->
             MainDatabaseSyncStatus.Finished.NotCompatible(minRequiredAppVersion = minRequiredAppVersion)
     }
-
-    private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> = Response.Error(
-        exception = exception,
-        message = message ?: exception.message
-    )
 
     private fun UpdateVersionInformation.toUpdateCheckResult(): Response<MainAppUpdateCheckResult> {
         val versionName = version.trim()

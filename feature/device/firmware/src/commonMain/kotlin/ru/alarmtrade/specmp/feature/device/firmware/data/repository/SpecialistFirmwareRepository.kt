@@ -9,6 +9,9 @@ import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirm
 import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwaresRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion

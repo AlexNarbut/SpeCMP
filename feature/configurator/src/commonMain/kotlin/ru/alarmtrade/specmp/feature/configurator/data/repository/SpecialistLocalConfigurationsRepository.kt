@@ -9,6 +9,9 @@ import ru.alarmtrade.specialist.interactors.localConfigurations.requests.CreateL
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationRequest
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationsPageRequest
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource

@@ -7,6 +7,8 @@ import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmD
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.requests.UpdateFirmwareRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateTarget
