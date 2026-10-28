@@ -26,7 +26,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateTarget
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
@@ -77,6 +76,8 @@ class FirmwareUpdateViewModel(
 
     private class Profile(
         val kind: UpdateProfile,
+        /** Что обновляем и чем выходим из загрузчика — основная программа или Bluetooth-модуль. */
+        val target: BootModeTarget,
         /** Модель блока (основная программа) или прошивка Bluetooth-модуля — для базы устройств. */
         val deviceName: String,
         val deviceTitle: String,
@@ -308,6 +309,7 @@ class FirmwareUpdateViewModel(
             state.copy(
                 profile = Profile(
                     source.kind,
+                    source.target,
                     source.deviceName,
                     source.title,
                     source.current,
@@ -479,10 +481,7 @@ class FirmwareUpdateViewModel(
         val current = core.value
         val profile = current.profile ?: return
         if (current.stage != UpdatePhase.Source || !profile.canExit) return
-        val target = when (profile.kind) {
-            UpdateProfile.Main -> BootModeTarget.MainProgram
-            UpdateProfile.Bluetooth -> BootModeTarget.BluetoothModule
-        }
+        val target = profile.target
         safeLaunch {
             executeWithProceedLock {
                 deviceSession.expectReboot(DeviceReboot.ToMain)
@@ -551,11 +550,7 @@ class FirmwareUpdateViewModel(
     // ───── процесс обновления ─────
 
     private suspend fun runUpdate(source: UpdateSource) {
-        val kind = core.value.profile?.kind ?: return
-        val target = when (kind) {
-            UpdateProfile.Main -> FirmwareUpdateTarget.MainProgram
-            UpdateProfile.Bluetooth -> FirmwareUpdateTarget.BluetoothModule
-        }
+        val target = core.value.profile?.target ?: return
         val progress = when (source) {
             is UpdateSource.Server -> updateRepository.update(target, source.version)
             is UpdateSource.File -> updateRepository.updateFromFile(target, source.path)

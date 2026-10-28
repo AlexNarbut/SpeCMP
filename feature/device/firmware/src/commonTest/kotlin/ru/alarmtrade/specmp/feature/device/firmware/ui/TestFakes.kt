@@ -8,7 +8,6 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateTarget
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
@@ -129,16 +128,16 @@ internal class FakeConnectionRepository : DeviceConnectionRepository {
 /** Процесс обновления из тестов: прогресс подаётся в [progress]; параметры запуска запоминаются. */
 internal class FakeUpdateRepository : FirmwareUpdateRepository {
     val progress = MutableSharedFlow<FirmwareUpdateProgress>(extraBufferCapacity = 16)
-    val calls = mutableListOf<Pair<FirmwareUpdateTarget, FirmwareVersion>>()
+    val calls = mutableListOf<Pair<BootModeTarget, FirmwareVersion>>()
 
-    override fun update(target: FirmwareUpdateTarget, firmware: FirmwareVersion): Flow<FirmwareUpdateProgress> {
+    override fun update(target: BootModeTarget, firmware: FirmwareVersion): Flow<FirmwareUpdateProgress> {
         calls += target to firmware
         return progress
     }
 
-    val fileCalls = mutableListOf<Pair<FirmwareUpdateTarget, String>>()
+    val fileCalls = mutableListOf<Pair<BootModeTarget, String>>()
 
-    override fun updateFromFile(target: FirmwareUpdateTarget, path: String): Flow<FirmwareUpdateProgress> {
+    override fun updateFromFile(target: BootModeTarget, path: String): Flow<FirmwareUpdateProgress> {
         fileCalls += target to path
         return progress
     }

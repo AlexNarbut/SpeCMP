@@ -1,8 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.firmware.domain.model
 
-/** Что обновляем: основную программу блока или Bluetooth-модуль (режим берётся из режима сессии). */
-enum class FirmwareUpdateTarget { MainProgram, BluetoothModule }
-
 /** Стадии обновления прошивки. Терминальные — [Finished] и [Failed]. */
 sealed interface FirmwareUpdateProgress {
     /** Подготовка: SDK скачивает файл и разбирает его; процента нет. */
