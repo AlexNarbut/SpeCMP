@@ -1041,7 +1041,7 @@ internal fun SettingsError.text(loadFailed: StringResource): String = when (this
 // state: LCEState<SettingsSection, SettingsError>
 ```
 
-Строк «нет интернета», «Bluetooth выключен» и т.п. фича не заводит — они общие (`common_common_error_*` в `core/localization`).
+Строк «нет интернета», «Bluetooth выключен» и т.п. фича не заводит — они общие (`common_error_*` в `core/localization`).
 
 ```kotlin
 // domain/model — полная детализация для бизнес-правил

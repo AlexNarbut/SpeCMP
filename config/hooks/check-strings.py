@@ -32,7 +32,8 @@ def main() -> int:
             parts = key.split("_")
             if parts[0] != prefix:
                 errors.append(f"{rel(file)}: {key} — префикс должен быть «{prefix}_» (имя файла)")
-            elif len(parts) < 3 or parts[2] not in TYPES:
+            # common.xml: экран необязателен — common_{type}_{name} (общие строки без раздела)
+            elif not (len(parts) >= 3 and parts[2] in TYPES) and not (prefix == "common" and parts[1] in TYPES):
                 errors.append(f"{rel(file)}: {key} — формат {{feature}}_{{screen}}_{{type}}[_{{name}}], тип из таблицы")
         for lang in langs:
             other = lang / file.name
