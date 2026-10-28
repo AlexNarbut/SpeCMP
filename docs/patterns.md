@@ -19,6 +19,7 @@
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
 - **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Res.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
+- **Стабильность для Compose:** state и presentation-модели — `@Immutable`, domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём — см. «Compose: локальное состояние и стабильность».
 - **У каждого `@Serializable` — `@SerialName("<модуль>.<Класс>")`** — см. «Сериализация».
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
@@ -338,8 +339,10 @@ SDK-ответы проходят `toResponse()` (`core/specialist`), он пр�
 `feature/<name>/domain` — модели (`domain/model`) и контракты репозиториев (`domain/repository`).
 
 - **Чистый Kotlin.** Никаких зависимостей на Compose и другие UI-фреймворки:
-  `@Immutable`/`@Stable` в `domain/model` не попадают (стабильность обеспечивает
-  presentation — см. «Compose: локальное состояние и стабильность»).
+  `@Immutable`/`@Stable` в `domain/model` не попадают. Для Compose модели стабильны через
+  `config/compose/stability.conf` — поэтому **модели domain неизменяемы транзитивно**: только `val`,
+  без `var`, мутабельных коллекций, массивов и изменяемого состояния внутри (см. «Compose: локальное
+  состояние и стабильность»).
 - **SDK-типы не протекают в domain.** Модели описываются в терминах фичи, маппинг из SDK-типов —
   в data-слое. Если потребителям нужны только производные значения — модель хранит их,
   а не сырую SDK-структуру:
@@ -942,12 +945,17 @@ val filtered by remember {
 
 - Аннотации из `androidx.compose.runtime` — **только presentation-слой**: state экрана
   (`XxxScreenState`) и `presentation/model`. **Domain — чистый Kotlin** (см. «Domain»).
-- Domain-типы, вложенные в state, в аннотациях не нуждаются: `@Immutable` на самом state-классе
-  покрывает композицию, а стабильность data class'ов из `val`-примитивов того же модуля
-  Compose-компилятор выводит сам.
-- Если domain-тип с интерфейсной статикой (`sealed interface`) передаётся **напрямую** параметром
-  composable — компилятор считает его нестабильным. Решение: маппить в аннотированную
-  presentation-модель, а не тащить аннотацию в domain.
+- **Domain-типы стабильны через конфиг компилятора** (`config/compose/stability.conf`, пакеты
+  `feature.**.domain.model.*`): модули domain собираются без Compose, и без конфига их классы
+  считались бы нестабильными. Поэтому domain-модель можно передавать параметром composable как есть;
+  условие — её транзитивная неизменяемость (см. «Domain»).
+- **Нестабильны и требуют решения:** SDK-типы (маппинг в domain/presentation-модель), коллекции
+  параметром composable (`ImmutableList` или поле `@Immutable`-state), `var`-поля.
+- **Идентичность экземпляров важнее аннотаций:** state обновляется через `copy` поля, неизменённые
+  элементы переиспользуются (образец — `SettingsSection.reusing(old)`), маппинг/сортировка — во VM, а не
+  в теле composable. Подробно — `docs/compose-best-prac.md`, §3 «Стабильность».
+- Проверка — `.agents/skills/perf-audit/scripts/compose-reports.sh <модули…>`, правка стабильности —
+  с отчётом до/после.
 
 > Полные практики работы с Compose — когда разбивать на composable-функции, как правильно читать часто меняемые значения, когда использовать `derivedStateOf`, `rememberUpdatedState`, `remember` с ключами, передавать `Flow` vs `State` — см. **`docs/compose-best-prac.md`**.
 

@@ -149,7 +149,7 @@ subprojects {
 }
 
 // Один конфиг стабильности на все модули с Compose-компилятором: доменные модели собираются без него и иначе
-// считаются нестабильными (docs/compose-best-prac.md, «Стабильность»).
+// считаются нестабильными (docs/compose-best-prac.md, §3.5 «Конфиг стабильности»).
 subprojects {
     plugins.withId("org.jetbrains.kotlin.plugin.compose") {
         extensions.configure<org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension> {

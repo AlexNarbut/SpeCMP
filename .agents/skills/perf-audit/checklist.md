@@ -91,7 +91,8 @@
 - **C1. Unstable-параметры на горячем пути.** Domain-тип / `List` / `IntRange` параметром composable,
   который рекомпозируется часто (элемент списка, строка в ленте), и экземпляр пересоздаётся при каждом
   эмите. Правка: `@Immutable` presentation-модель (не аннотация в domain), `ImmutableList`, либо
-  сохранение идентичности экземпляров во VM.
+  сохранение идентичности экземпляров во VM. Неизменяемый тип из модуля без Compose (domain, `core/common`,
+  библиотека) — в `config/compose/stability.conf` (условия — `docs/compose-best-prac.md` §3.5).
 - **C2. Вычисления в теле composable.** `sortedBy/filter/groupBy/format/Regex/парсинг дат` без
   `remember(keys)`; `remember` с ключом-всем-state (пересчёт на любое изменение). Правка: перенести в
   state VM (инварианты держит state) или `remember` с узкими ключами.
