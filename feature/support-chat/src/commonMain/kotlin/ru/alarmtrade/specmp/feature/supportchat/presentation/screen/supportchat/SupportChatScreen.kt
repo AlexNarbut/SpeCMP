@@ -429,12 +429,16 @@ private fun SupportChatMessageList(
 ) {
     val listState = rememberLazyListState()
     val dateLabeler = rememberCmpDateLabeler()
-    val current = state.value
+    // Узкое чтение state: вложения композера, пагинация, связь ленту не перерисовывают. Набор и скачивание
+    // читаются ниже — в построении списка и в элементе, а не в теле функции.
+    val messages by remember(state) { derivedStateOf { state.value.messages } }
+    val typingAuthor by remember(state) { derivedStateOf { state.value.typingAuthor } }
+    val downloadingId by remember(state) { derivedStateOf { state.value.downloadingAttachmentId } }
     // Список мемоизируется только по сообщениям и меткам: индикатор набора —
     // отдельный item (index 0 при reverseLayout) и ленту не инвалидирует.
-    val listItems = remember(current.messages, dateLabeler) {
+    val listItems = remember(messages, dateLabeler) {
         buildListItems(
-            messages = current.messages,
+            messages = messages,
             dateLabeler = dateLabeler,
             timeZone = TimeZone.currentSystemDefault()
         )
@@ -471,7 +475,7 @@ private fun SupportChatMessageList(
                 )
             }
         } else {
-            current.typingAuthor?.let { author ->
+            typingAuthor?.let { author ->
                 item(key = "$TYPING_KEY_PREFIX$author") {
                     SupportChatTypingIndicator(
                         author = author,
@@ -493,7 +497,6 @@ private fun SupportChatMessageList(
                     }
 
                     is SupportChatListItem.Message -> {
-                        val downloadingId = current.downloadingAttachmentId
                         SupportChatMessageBubble(
                             message = item.message,
                             colors = colors,

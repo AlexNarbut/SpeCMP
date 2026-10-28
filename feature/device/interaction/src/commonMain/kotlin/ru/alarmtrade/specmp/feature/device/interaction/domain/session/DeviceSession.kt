@@ -78,7 +78,16 @@ class DeviceSession(
     // (попытки SDK и чтение режима не подменяют её на «Connecting»). Новая сессия (attach) сбрасывает.
     private val wasReady = MutableStateFlow(false)
 
+    // Базу устройств в этой сессии уже синхронизировали из-за неизвестной модели — второй раз не пытаемся
+    // (без сети синхронизация не поможет, а переподключения не должны каждый раз её запускать). attach сбрасывает.
+    private val databaseSynced = MutableStateFlow(false)
+
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
+
+    // Идёт передача прошивки — режим (загрузчик), в котором она идёт. На переподключении BLE режим не перечитываем:
+    // блок в загрузчике между соединениями не перезагружается, а SDK занят передачей (чтение блока ждало бы протокол
+    // и рвало бы связь по тайм-ауту) и сам продолжает её после переподключения. attach/close сбрасывают.
+    private val transferMode = MutableStateFlow<DeviceSessionState?>(null)
 
     private val expectation = MutableStateFlow<RebootExpectation?>(null)
 
@@ -106,8 +115,14 @@ class DeviceSession(
                     val reconnect = isBleReconnect()
                     wasReady.update { true }
                     if (!reconnect) emit(DeviceSessionState.Connecting)
-                    logStage { "detectMode start" }
-                    val mode = detectMode()
+                    val held = transferMode.value?.takeIf { reconnect }
+                    val mode = if (held != null) {
+                        logStage { "detectMode skipped: firmware transfer" }
+                        held
+                    } else {
+                        logStage { "detectMode start" }
+                        detectMode()
+                    }
                     logStage { "detectMode result=${mode?.let { it::class.simpleName }}" }
                     if (mode != null) {
                         emit(mode)
@@ -132,7 +147,9 @@ class DeviceSession(
     fun attach(transport: ConnectionTransport) {
         stageClock.update { TimeSource.Monotonic.markNow() }
         wasReady.update { false }
+        databaseSynced.update { false }
         expectation.update { null }
+        transferMode.update { null }
         logStage { "attach transport=$transport" }
         _transport.update { transport }
     }
@@ -146,6 +163,7 @@ class DeviceSession(
         logStage { "close requested" }
         _transport.update { null }
         expectation.update { null }
+        transferMode.update { null }
         return scope.launch {
             sessionMutex.withLock {
                 val response = connectionRepository.closeSessions()
@@ -221,6 +239,19 @@ class DeviceSession(
         }
     }
 
+    /**
+     * Началась передача прошивки в текущем режиме загрузчика: на переподключениях BLE до [endFirmwareTransfer] режим
+     * блока не перечитывается (SDK продолжает передачу сам). Блок не в загрузчике — ничего не меняет.
+     */
+    fun beginFirmwareTransfer() {
+        // Уже держим — не трогаем: прогресс может прийти, когда сессия уже увидела обрыв.
+        transferMode.update { it ?: state.value.takeIf { current -> current.isBoot() } }
+    }
+
+    fun endFirmwareTransfer() {
+        transferMode.update { null }
+    }
+
     /** Команда не удалась, ожидаемой перезагрузки не будет. */
     fun cancelReboot() {
         expectation.update { null }
@@ -290,7 +321,17 @@ class DeviceSession(
             val module = readWithRetry { sessionRepository.readBluetoothModule() } ?: return null
             if (module.mode == BluetoothModuleMode.BOOT) return DeviceSessionState.BluetoothBoot(module.manufacturer)
         }
-        val device = readWithRetry { sessionRepository.readDevice() } ?: return null
+        var device = readWithRetry { sessionRepository.readDevice() } ?: return null
+        if (!device.modelInDatabase && !databaseSynced.value) {
+            // Модели нет в базе устройств телефона (свежая установка, база не скачана или устарела): один раз
+            // синхронизируем базу и перечитываем блок — иначе он показался бы «не поддерживается».
+            databaseSynced.update { true }
+            logStage { "device database sync: model ${device.systemName.trim()} not found" }
+            // Сеть может зависнуть: без предела экран остался бы в «Подключение…». Таймаут — неуспех синхронизации.
+            val synced = withTimeoutOrNull(SYNC_TIMEOUT_MILLIS) { sessionRepository.syncDeviceDatabase() }
+            logStage { "device database sync ${if (synced is Response.Success) "ok" else "failed"}" }
+            if (synced is Response.Success) device = readWithRetry { sessionRepository.readDevice() } ?: device
+        }
         return when (device.mode) {
             DeviceOperationMode.MAIN -> DeviceSessionState.Ready(device)
             DeviceOperationMode.BOOT -> DeviceSessionState.FirmwareBoot(device)
@@ -332,6 +373,7 @@ class DeviceSession(
         const val READ_ATTEMPTS = 3
         const val READ_RETRY_DELAY_MILLIS = 500L
         const val READ_TIMEOUT_MILLIS = 10_000L
+        const val SYNC_TIMEOUT_MILLIS = 30_000L
         const val BOOT_MODE_RETRY_DELAY_MILLIS = 3_000L
         const val REBOOT_TIMEOUT_MILLIS = 60_000L
         const val RECONNECT_INTERVAL_MILLIS = 1_000L

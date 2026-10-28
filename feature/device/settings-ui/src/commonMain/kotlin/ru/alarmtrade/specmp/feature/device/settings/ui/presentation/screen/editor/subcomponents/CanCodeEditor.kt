@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,27 +14,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.CmpCodeField
 import ru.alarmtrade.specmp.core.ui.view.input.CmpRadioButton
-import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.Car
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.CAN_CODE_LENGTH
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.CarSearch
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import specmp.feature.device.settings_ui.generated.resources.Res
+import specmp.feature.device.settings_ui.generated.resources.settings_can_a11y_clear
+import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_catalog
 import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_find
 import specmp.feature.device.settings_ui.generated.resources.settings_can_hint_digits
 import specmp.feature.device.settings_ui.generated.resources.settings_can_label_code
@@ -45,39 +45,45 @@ import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_ma
 import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_none
 
 /**
- * CAN-код: поле на 4 цифры (цифровая клавиатура) и «Найти автомобиль». Один найденный автомобиль привязывается
- * к коду сразу, несколько — выбор, ни одного или нет связи — предупреждение (код всё равно можно применить).
+ * CAN-код: 4 ячейки (цифровая клавиатура), «Найти автомобиль» по коду и «Выбрать из каталога». Один
+ * найденный по коду автомобиль привязывается сразу, несколько — выбор, ни одного или нет связи — предупреждение (код
+ * всё равно можно применить). Выбор из каталога подставляет и код, и автомобиль.
  */
 @Suppress("LongMethod")
 @Composable
 internal fun CanCodeEditor(
     value: CanCode,
     carSearch: CarSearch,
-    cars: Map<Int, Car>,
+    cars: Map<Int, CarSummary>,
     onCodeChange: (String) -> Unit,
     onSearch: () -> Unit,
-    onPick: (carId: Int) -> Unit
+    onPick: (carId: Int) -> Unit,
+    onPickFromCatalog: () -> Unit
 ) {
     val complete = value.code.length == CAN_CODE_LENGTH
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CmpTextField(
-            value = value.code,
-            onValueChange = { text -> onCodeChange(text.filter(Char::isDigit).take(CAN_CODE_LENGTH)) },
-            label = stringResource(Res.string.settings_can_label_code),
-            singleLine = true,
-            isError = value.code.isNotEmpty() && !complete,
-            supportingText = if (complete) {
-                null
-            } else {
-                (
-                    {
-                        CmpText(text = stringResource(Res.string.settings_can_hint_digits))
-                    }
-                    )
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.CAN_CODE)
-        )
+        CmpColumn(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            CmpCodeField(
+                value = value.code,
+                onValueChange = onCodeChange,
+                label = stringResource(Res.string.settings_can_label_code),
+                clearContentDescription = stringResource(Res.string.settings_can_a11y_clear),
+                length = CAN_CODE_LENGTH,
+                isError = value.code.isNotEmpty() && !complete,
+                modifier = Modifier.testTag(SettingsTestTags.CAN_CODE)
+            )
+            if (!complete) {
+                CmpText(
+                    text = stringResource(Res.string.settings_can_hint_digits),
+                    style = CmpTextStyle.Body,
+                    color = if (value.code.isEmpty()) cmpThemeColors().onSurfaceVariant else cmpThemeColors().error
+                )
+            }
+        }
         CmpOutlinedButton(
             onClick = onSearch,
             enabled = complete && carSearch != CarSearch.Loading,
@@ -86,13 +92,28 @@ internal fun CanCodeEditor(
             CmpIcon(icon = CmpIcons.Search, contentDescription = null)
             CmpText(text = stringResource(Res.string.settings_can_btn_find), modifier = Modifier.padding(start = 8.dp))
         }
+        CmpOutlinedButton(
+            onClick = onPickFromCatalog,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_PICK_VEHICLE)
+        ) {
+            CmpIcon(icon = CmpIcons.DirectionsCar, contentDescription = null)
+            CmpText(
+                text = stringResource(Res.string.settings_can_btn_catalog),
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
         CarSearchResult(value, carSearch, cars, onPick)
     }
 }
 
 /** Результат поиска автомобиля по коду: привязанный автомобиль, загрузка, выбор из нескольких или предупреждение. */
 @Composable
-private fun CarSearchResult(value: CanCode, carSearch: CarSearch, cars: Map<Int, Car>, onPick: (carId: Int) -> Unit) {
+private fun CarSearchResult(
+    value: CanCode,
+    carSearch: CarSearch,
+    cars: Map<Int, CarSummary>,
+    onPick: (carId: Int) -> Unit
+) {
     val colors = cmpThemeColors()
     when (carSearch) {
         CarSearch.Idle -> value.carId?.let(cars::get)?.let { car -> CarCard(carLabel(car)) }

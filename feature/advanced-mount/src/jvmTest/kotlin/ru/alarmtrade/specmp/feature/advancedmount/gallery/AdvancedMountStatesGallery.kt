@@ -76,6 +76,15 @@ class AdvancedMountStatesGallery {
     )
 
     @Test
+    fun modelNotInDatabase() = render(
+        "04b_model_not_in_database",
+        moduleBase.copy(
+            device = module.copy(features = null, modelInDatabase = false),
+            content = MountContent.Ready(UnsupportedSections, unsupported = true, modelNotInDatabase = true)
+        )
+    )
+
+    @Test
     fun moduleReady() = render(
         "05_usb_module_ready",
         moduleBase.copy(

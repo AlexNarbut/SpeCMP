@@ -48,6 +48,23 @@ fun SettingsSection.replace(setting: Setting): SettingsSection = copy(
     }
 )
 
+/**
+ * Это же дерево, но равные узлы (по id) взяты из [old]: неизменённые ветки сохраняют идентичность экземпляров,
+ * и UI не перерисовывает их строки после перечитывания меню. Ничего не изменилось — возвращается сам [old].
+ */
+fun SettingsSection.reusing(old: SettingsSection): SettingsSection {
+    val oldById = old.children.associateBy { it.id }
+    val reused = children.map { child ->
+        when (val prev = oldById[child.id]) {
+            null -> child
+            is SettingsSection -> if (child is SettingsSection) child.reusing(prev) else child
+            else -> if (child == prev) prev else child
+        }
+    }
+    val sameChildren = reused.size == old.children.size && reused.indices.all { reused[it] === old.children[it] }
+    return if (sameChildren && copy(children = old.children) == old) old else copy(children = reused)
+}
+
 /** Результат поиска: найденный узел и разделы до него (для подписи пути). */
 data class SettingsSearchHit(val node: SettingNode, val path: List<SettingsSection>)
 

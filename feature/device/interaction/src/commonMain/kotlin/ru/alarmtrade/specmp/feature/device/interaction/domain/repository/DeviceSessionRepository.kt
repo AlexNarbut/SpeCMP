@@ -24,6 +24,12 @@ interface DeviceSessionRepository {
     /** Прочитать информацию и возможности подключённого блока. */
     suspend fun readDevice(): Response<AlarmDevice>
 
+    /**
+     * Синхронизировать базу устройств (модели блоков и их возможности) с сервером — та же синхронизация, что на
+     * главном экране. Нужна, когда модели подключённого блока нет в базе ([AlarmDevice.modelInDatabase]).
+     */
+    suspend fun syncDeviceDatabase(): Response<Unit>
+
     /** Прочитать IMEI GSM-модема блока. */
     suspend fun readImei(): Response<String>
 

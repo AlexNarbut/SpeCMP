@@ -1,12 +1,10 @@
 package ru.alarmtrade.specmp.feature.authstate.data.repository
 
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.mapNotNull
+import ru.alarmtrade.common.auth.domain.AuthState as SdkAuthState
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.interactors.auth.AuthInteractor
 import ru.alarmtrade.specmp.core.common.Response
@@ -14,14 +12,21 @@ import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateReposit
 
 class SpecialistAuthStateRepository(private val authInteractor: AuthInteractor) : AuthStateRepository {
 
-    // Заглушка: Specialist SDK пока не отдаёт Flow состояния авторизации,
-    // поэтому наблюдение эмулируется периодическим опросом one-shot use case.
-    // Когда в SDK появится flow-метод, заменить опрос на подписку.
+    // Состояние сессии SDK держит в хранилище токенов: вход и выход меняют его сразу, без опроса.
     override fun observeIsLoggedIn(): Flow<Response<Boolean>> = flow {
-        while (currentCoroutineContext().isActive) {
-            emit(checkIsLoggedIn())
-            delay(POLL_INTERVAL)
-        }
+        emitAll(
+            authInteractor.listenAuthFlowUseCase.execute().mapNotNull { response ->
+                when (response) {
+                    is SpecialistResponse.Success -> when (response.value) {
+                        is SdkAuthState.Authed -> Response.Success(true)
+                        SdkAuthState.NoAuthed -> Response.Success(false)
+                        SdkAuthState.Waiting -> null
+                    }
+
+                    is SpecialistResponse.Error -> response.toProjectError()
+                }
+            }
+        )
     }
 
     override suspend fun logout(): Response<Unit> = when (val response = authInteractor.logoutUseCase.execute()) {
@@ -29,26 +34,8 @@ class SpecialistAuthStateRepository(private val authInteractor: AuthInteractor) 
         is SpecialistResponse.Error -> response.toProjectError()
     }
 
-    private suspend fun checkIsLoggedIn(): Response<Boolean> {
-        val response = withTimeoutOrNull(CHECK_TIMEOUT) {
-            authInteractor.checkIfUserLoggedInUseCase.execute()
-        } ?: return Response.Error(
-            exception = Exception("Auth check timed out"),
-            message = "Auth check timed out"
-        )
-        return when (response) {
-            is SpecialistResponse.Success -> Response.Success(response.value.boolean)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
-    }
-
     private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> = Response.Error(
         exception = exception,
         message = message ?: exception.message
     )
-
-    private companion object {
-        val POLL_INTERVAL = 2.seconds
-        val CHECK_TIMEOUT = 10.seconds
-    }
 }

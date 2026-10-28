@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.data.repository
 
+import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationByIdRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
@@ -41,11 +42,18 @@ class SpecialistFirmwareRepository(
             .map { it.toDomain() }
     }
 
+    override suspend fun mainModuleId(deviceName: String): Response<Long?> {
+        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
+        return interactor.getDeviceInformation.execute(GetDeviceInformationRequest(deviceName)).toResponse()
+            .map { information -> information.subsystems.firstOrNull { it.type == SubsystemType.ALARM_MAIN }?.id }
+    }
+
     override suspend fun archivePage(
         moduleId: Long,
         channel: FirmwareChannel,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        canCode: String?
     ): Response<FirmwareVersionPage> {
         val interactor = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
         return interactor.getSubsystemFirmwaresUseCase
@@ -54,7 +62,8 @@ class SpecialistFirmwareRepository(
                     subsystemId = moduleId,
                     type = channel.toSdk(),
                     pageNumber = page,
-                    pageSize = pageSize
+                    pageSize = pageSize,
+                    canCode = canCode
                 )
             )
             .toResponse()

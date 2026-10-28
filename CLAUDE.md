@@ -14,7 +14,7 @@
 - Локальные workflow-артефакты не являются source of truth проекта.
 - Если изменение затрагивает архитектуру, публичные соглашения модуля или правила разработки, обновляй соответствующую документацию проекта и локальные `AGENTS.md`.
 - Документация модулей и подсистем ведётся в `.ai/agents/**/AGENTS.md` (источник) → `.ai/generate.sh`. НЕ создавай новые `README.md` ради документации: ключевые моменты вноси в соответствующий `.ai/agents/**/AGENTS.md`. Существующие `README.md` не являются source of truth.
-- Скиллы и субагенты для всех агентов (Claude Code, Codex, Kimi Code, Gemini CLI) ведутся в `.ai/skills/<skill>/` (`SKILL.md`, `roles/*.md`, ресурсы) → `.ai/generate.sh` раскладывает их в `.agents/skills/`, `.claude/skills/`, `.claude/agents/`, `.codex/agents/`, `.agents/agents/`, `.gemini/agents/`. Сгенерированное вручную не правь. Скилл UI-тестирования — `ui-test`; результаты прогонов — в `.ai-qa/` (не в git).
+- Скиллы и субагенты для всех агентов (Claude Code, Codex, Kimi Code, Gemini CLI) ведутся в `.ai/skills/<skill>/` (`SKILL.md`, `roles/*.md`, ресурсы) → `.ai/generate.sh` раскладывает их в `.agents/skills/`, `.claude/skills/`, `.claude/agents/`, `.codex/agents/`, `.agents/agents/`, `.gemini/agents/`. Сгенерированное вручную не правь. Скилл UI-тестирования — `ui-test`; результаты прогонов — в `.ai-qa/` (не в git). Скилл аудита производительности (репозитории, ViewModel, Compose) — `perf-audit`; отчёты — в `.ai-perf/` (не в git). Скилл брифа для ручного QA (HTML «что нового и что проверить» по разделам: всё приложение, ветка или период develop) — `qa-brief`; брифы — в `.ai-qa/briefs/` (не в git).
 
 ## Project Map
 
@@ -34,6 +34,8 @@
 - Локализация / строковые ресурсы: `docs/localization.md`
 - Качество кода (ktlint/compose-rules через Spotless, detekt, git-хуки, хук агентов) — перед коммитом Kotlin-кода: `docs/code-quality.md`
 - UI-тестирование агентами (скилл `ui-test`, `ui.sh`, платформы, правка скилла): `docs/test/ui/index.md`
+- Аудит производительности (скилл `perf-audit`, чек-лист R/V/C, отчёты Compose-компилятора): `.ai/skills/perf-audit/checklist.md`
+- Бриф для ручного QA (скилл `qa-brief`, карта разделов приложения): `.ai/skills/qa-brief/sections.md`
 
 ## Build / Platform
 

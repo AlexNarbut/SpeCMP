@@ -35,6 +35,57 @@ class DeviceSessionTest {
     }
 
     @Test
+    fun `unknown model syncs the device database once and reads the device again`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val unknown = testDevice.copy(features = null, modelInDatabase = false)
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                readResults = listOf(Response.Success(unknown), Response.Success(testDevice))
+            }
+            val session = testSession(repository, FakeDeviceConnectionRepository())
+            backgroundScope.launch { session.state.collect {} }
+            advanceUntilIdle()
+
+            assertEquals(1, repository.syncCount)
+            assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        }
+
+    @Test
+    fun `failed database sync keeps the device without features and is not repeated`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val unknown = testDevice.copy(features = null, modelInDatabase = false)
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                readResults = listOf(Response.Success(unknown))
+                syncResult = Response.Error(IllegalStateException("no network"))
+            }
+            val session = testSession(repository, FakeDeviceConnectionRepository())
+            backgroundScope.launch { session.state.collect {} }
+            advanceUntilIdle()
+
+            assertEquals(DeviceSessionState.Ready(unknown), session.state.value)
+            assertEquals(1, repository.syncCount)
+            assertEquals(1, repository.readCount)
+        }
+
+    @Test
+    fun `hanging database sync times out and keeps the device without features`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val unknown = testDevice.copy(features = null, modelInDatabase = false)
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                readResults = listOf(Response.Success(unknown))
+                syncHangs = true
+            }
+            val session = testSession(repository, FakeDeviceConnectionRepository())
+            backgroundScope.launch { session.state.collect {} }
+            advanceUntilIdle()
+            assertEquals(DeviceSessionState.Connecting, session.state.value)
+
+            advanceTimeBy(30_001)
+
+            assertEquals(DeviceSessionState.Ready(unknown), session.state.value)
+            assertEquals(1, repository.syncCount)
+        }
+
+    @Test
     fun `read failures are retried then disconnected`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
             readResults = listOf(Response.Error(IllegalStateException("no answer")))
@@ -479,6 +530,37 @@ class DeviceSessionTest {
         runCurrent()
         assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
     }
+
+    @Test
+    fun `firmware transfer keeps the bootloader mode across reconnects without reading the block`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                readResults = listOf(Response.Success(bootDevice))
+            }
+            val session = testSession(repository)
+            session.attach(ConnectionTransport.BLE)
+            backgroundScope.launch { session.state.collect {} }
+            runCurrent()
+            assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+            val reads = repository.readCount to repository.bluetoothReadCount
+
+            session.beginFirmwareTransfer()
+            repository.link.value = DeviceLinkState.DISCONNECTED
+            repository.link.value = DeviceLinkState.READY
+            runCurrent()
+            // Протокол занят передачей (SDK продолжает её сам): режим тот же, блок не читали.
+            assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+            assertEquals(reads, repository.readCount to repository.bluetoothReadCount)
+
+            // Передача закончилась (применение перезагружает блок) — режим снова определяется на переподключении.
+            session.endFirmwareTransfer()
+            repository.readResults = listOf(Response.Success(testDevice))
+            repository.link.value = DeviceLinkState.DISCONNECTED
+            repository.link.value = DeviceLinkState.READY
+            runCurrent()
+            assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        }
 
     @Test
     fun `unreadable ble module drops the link`() = runTest(UnconfinedTestDispatcher()) {

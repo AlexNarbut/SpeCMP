@@ -2,7 +2,9 @@ package ru.alarmtrade.specmp.feature.device.settings.domain
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
@@ -19,6 +21,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.countIn
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.reusing
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 
@@ -61,6 +64,21 @@ class SettingsTreeTest {
         assertEquals(changed, updated.findNode(33))
         assertEquals(shock, updated.findNode(32))
         assertEquals(root.settings().size, updated.settings().size)
+    }
+
+    @Test
+    fun `reusing keeps instances of unchanged nodes and returns old tree when nothing changed`() {
+        // replace копирует все разделы: равное дерево из новых экземпляров
+        val reread = root.replace(shock.copy())
+        assertNotSame(root, reread)
+        assertSame(root, reread.reusing(root))
+
+        val changed = root.replace(tilt.copy(value = SettingValue.Switch(true)))
+        val updated = changed.reusing(root)
+        assertEquals(changed, updated)
+        assertSame(inputs, updated.findNode(400))
+        assertSame(shock, updated.findNode(32))
+        assertNotSame(extra, updated.findNode(325))
     }
 
     @Test

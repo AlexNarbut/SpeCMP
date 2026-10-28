@@ -1,4 +1,4 @@
-<!-- @dsCard group="Colors" viewport="700x150" name="Domain (success · bus)" subtitle="Pandora Spec tokens: success + CAN/LIN wiring-bus colors" -->
+<!-- @dsCard group="Colors" viewport="1100x150" name="Domain (success · bus)" subtitle="Pandora Spec tokens: success + CAN/LIN wiring-bus colors" -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -19,10 +19,12 @@
     <div class="name">success</div>
     <div class="hex">#79BD5B · «в норме / готово»</div>
   </div>
-  <div class="sw" style="background: var(--bus-can1);">
-    <div class="name">bus · CAN / LIN</div>
-    <div class="hex">#183C7A · схемы подключения</div>
-  </div>
+  <div class="sw" style="background: var(--bus-can);"><div class="name">bus-can</div><div class="hex">CAN1–CAN4</div></div>
+  <div class="sw" style="background: var(--bus-canfd);"><div class="name">bus-canfd</div><div class="hex">CAN1-FD…CAN4-FD, FD1/FD3, FD2/FD4</div></div>
+  <div class="sw" style="background: var(--bus-lin);"><div class="name">bus-lin</div><div class="hex">LIN, LIN (IN-OUT)</div></div>
+  <div class="sw" style="background: var(--bus-bean);"><div class="name">bus-bean</div><div class="hex">BEAN</div></div>
+  <div class="sw" style="background: var(--bus-imo);"><div class="name">bus-imo</div><div class="hex">IMO-KEY1/2, KEY1+KEY2</div></div>
+  <div class="sw" style="background: var(--bus-unknown);"><div class="name">bus-unknown</div><div class="hex">Неизвестно · контур</div></div>
 </div>
 </body>
 </html>

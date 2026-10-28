@@ -94,6 +94,8 @@ import specmp.feature.advanced_mount.generated.resources.advanced_mount_header_m
 import specmp.feature.advanced_mount.generated.resources.advanced_mount_loading
 import specmp.feature.advanced_mount.generated.resources.advanced_mount_mode_boot
 import specmp.feature.advanced_mount.generated.resources.advanced_mount_mode_main
+import specmp.feature.advanced_mount.generated.resources.advanced_mount_no_model_subtitle
+import specmp.feature.advanced_mount.generated.resources.advanced_mount_no_model_title
 import specmp.feature.advanced_mount.generated.resources.advanced_mount_row_can_code
 import specmp.feature.advanced_mount.generated.resources.advanced_mount_row_can_firmware
 import specmp.feature.advanced_mount.generated.resources.advanced_mount_row_firmware
@@ -501,7 +503,7 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
         }
 
         is MountContent.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (content.unsupported) UnsupportedBanner()
+            if (content.unsupported) UnsupportedBanner(modelNotInDatabase = content.modelNotInDatabase)
             SectionsGrid(content.sections, layout, state.canLocked, state.unreadCount, actions.onSectionClick)
         }
     }
@@ -548,8 +550,12 @@ private fun RefreshButton(text: String, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Возможности блока не прочитаны: блок не поддерживается или (если [modelNotInDatabase]) нет модели в базе
+ * устройств телефона.
+ */
 @Composable
-private fun UnsupportedBanner() {
+private fun UnsupportedBanner(modelNotInDatabase: Boolean) {
     val colors = cmpThemeColors()
     CmpSurface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = colors.errorContainer) {
         CmpRow(
@@ -565,13 +571,25 @@ private fun UnsupportedBanner() {
             )
             CmpColumn {
                 CmpText(
-                    text = stringResource(Res.string.advanced_mount_unsupported_title),
+                    text = stringResource(
+                        if (modelNotInDatabase) {
+                            Res.string.advanced_mount_no_model_title
+                        } else {
+                            Res.string.advanced_mount_unsupported_title
+                        }
+                    ),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = colors.onErrorContainer
                 )
                 CmpText(
-                    text = stringResource(Res.string.advanced_mount_unsupported_subtitle),
+                    text = stringResource(
+                        if (modelNotInDatabase) {
+                            Res.string.advanced_mount_no_model_subtitle
+                        } else {
+                            Res.string.advanced_mount_unsupported_subtitle
+                        }
+                    ),
                     fontSize = 14.sp,
                     color = colors.onErrorContainer
                 )

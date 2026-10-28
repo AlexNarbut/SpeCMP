@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,9 +20,11 @@ import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
@@ -88,59 +89,55 @@ internal fun SupportChatMessageBubble(
             )
         }
 
-        BoxWithConstraints {
+        CmpSurface(
             // Пузырь обтягивает контент, но не шире maxWidthFraction от колонки чата.
-            val bubbleMaxWidth = maxWidth * maxWidthFraction
-
-            CmpSurface(
-                modifier = Modifier.widthIn(max = bubbleMaxWidth),
-                shape = bubbleShape(isMine = isMine),
-                color = if (isMine) colors.primaryContainer else colors.surfaceContainerLow,
-                contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
-                border = if (isMine) {
-                    null
-                } else {
-                    BorderStroke(
-                        width = 1.dp,
-                        color = colors.outlineVariant
-                    )
-                }
+            modifier = Modifier.maxWidthFraction(maxWidthFraction),
+            shape = bubbleShape(isMine = isMine),
+            color = if (isMine) colors.primaryContainer else colors.surfaceContainerLow,
+            contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
+            border = if (isMine) {
+                null
+            } else {
+                BorderStroke(
+                    width = 1.dp,
+                    color = colors.outlineVariant
+                )
+            }
+        ) {
+            CmpColumn(
+                modifier = Modifier.padding(
+                    start = if (isImage(message)) 6.dp else 14.dp,
+                    end = if (isImage(message)) 6.dp else 14.dp,
+                    top = if (isImage(message)) 6.dp else 10.dp,
+                    bottom = 8.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                CmpColumn(
-                    modifier = Modifier.padding(
-                        start = if (isImage(message)) 6.dp else 14.dp,
-                        end = if (isImage(message)) 6.dp else 14.dp,
-                        top = if (isImage(message)) 6.dp else 10.dp,
-                        bottom = 8.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    message.text?.let { text ->
-                        CmpText(text = text)
-                    }
+                message.text?.let { text ->
+                    CmpText(text = text)
+                }
 
-                    message.attachment?.let { attachment ->
-                        SupportChatAttachmentContent(
-                            attachment = attachment,
-                            colors = colors,
-                            contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
-                            onImageClick = onImageClick,
-                            onDocumentClick = onDocumentClick,
-                            isDownloading = isDownloading,
-                            downloadAction = attachment.downloadAction(
-                                isMine = isMine,
-                                onDownloadAttachment = onDownloadAttachment
-                            )
-                        )
-                    }
-
-                    MessageMetaRow(
-                        message = message,
+                message.attachment?.let { attachment ->
+                    SupportChatAttachmentContent(
+                        attachment = attachment,
                         colors = colors,
-                        isImage = isImage(message),
-                        modifier = Modifier.align(Alignment.End)
+                        contentColor = if (isMine) colors.onPrimaryContainer else colors.onSurface,
+                        onImageClick = onImageClick,
+                        onDocumentClick = onDocumentClick,
+                        isDownloading = isDownloading,
+                        downloadAction = attachment.downloadAction(
+                            isMine = isMine,
+                            onDownloadAttachment = onDownloadAttachment
+                        )
                     )
                 }
+
+                MessageMetaRow(
+                    message = message,
+                    colors = colors,
+                    isImage = isImage(message),
+                    modifier = Modifier.align(Alignment.End)
+                )
             }
         }
 
@@ -155,6 +152,22 @@ internal fun SupportChatMessageBubble(
             )
         }
     }
+}
+
+/**
+ * Ширина не больше доли [fraction] от доступной. Вместо `BoxWithConstraints`: тот — `SubcomposeLayout`,
+ * дорогой в каждом элементе ленты при скролле.
+ */
+private fun Modifier.maxWidthFraction(fraction: Float): Modifier = layout { measurable, constraints ->
+    val maxWidth = if (constraints.hasBoundedWidth) {
+        (constraints.maxWidth * fraction).roundToInt()
+    } else {
+        constraints.maxWidth
+    }
+    val placeable = measurable.measure(
+        constraints.copy(minWidth = minOf(constraints.minWidth, maxWidth), maxWidth = maxWidth)
+    )
+    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
 }
 
 @Composable

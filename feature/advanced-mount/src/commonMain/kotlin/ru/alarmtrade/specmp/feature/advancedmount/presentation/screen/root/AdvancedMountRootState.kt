@@ -37,8 +37,15 @@ sealed interface MountContent {
     /** Сервер ограничил доступ к блоку; [message] — причина от сервера. */
     data class Denied(val message: String) : MountContent
 
-    /** Разделы; [unsupported] — возможности блока не прочитаны, показаны только базовые разделы. */
-    data class Ready(val sections: List<MountSection>, val unsupported: Boolean) : MountContent
+    /**
+     * Разделы; [unsupported] — возможности блока не прочитаны, показаны только базовые разделы. [modelNotInDatabase] —
+     * причина: модели блока нет в базе устройств телефона (база не скачана/устарела), а не неподдерживаемый блок.
+     */
+    data class Ready(
+        val sections: List<MountSection>,
+        val unsupported: Boolean,
+        val modelNotInDatabase: Boolean = false
+    ) : MountContent
 }
 
 enum class MountDialog {

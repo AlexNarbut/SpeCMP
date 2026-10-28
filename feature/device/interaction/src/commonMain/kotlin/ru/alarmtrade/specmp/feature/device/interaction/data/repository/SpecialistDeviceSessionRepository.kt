@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothManufacturerData
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothOperationMode
@@ -14,11 +15,14 @@ import ru.alarmtrade.specialist.domain.alarmDevice.information.AlarmDeviceOperat
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemFeature
 import ru.alarmtrade.specialist.domain.bluetooth.ConnectionState
 import ru.alarmtrade.specialist.domain.errors.IncorrectServicePinException
+import ru.alarmtrade.specialist.domain.errors.alarmDevice.AlarmDeviceNotFoundException
+import ru.alarmtrade.specialist.interactors.appUpdates.AppUpdatesInteractor
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
+import ru.alarmtrade.specmp.core.common.safeResponseRun
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -37,7 +41,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceS
  * сессией SDK независимо от транспорта (BLE/USB). Интерактор резолвится лениво, как в соседних репозиториях.
  */
 class SpecialistDeviceSessionRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
+    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
+    private val appUpdatesInteractor: () -> AppUpdatesInteractor
 ) : DeviceSessionRepository {
 
     override fun linkState(): Flow<DeviceLinkState> = flow {
@@ -46,8 +51,10 @@ class SpecialistDeviceSessionRepository(
             emit(DeviceLinkState.DISCONNECTED)
             return@flow
         }
+        // Поток текущей сессии SDK: сам переключается на новую сессию после закрытия прежней (поток конкретной
+        // сессии после её закрытия молчит, и долгоживущий подписчик не увидел бы новое подключение).
         emitAll(
-            interactor.getDeviceConnectionStateFlowUseCase.execute().map { response ->
+            interactor.observeCurrentSessionConnectionStateUseCase.execute().map { response ->
                 when (response) {
                     is SpecialistResponse.Success -> response.value.toDomain()
                     is SpecialistResponse.Error -> DeviceLinkState.DISCONNECTED
@@ -92,8 +99,11 @@ class SpecialistDeviceSessionRepository(
             is Response.Success -> response.value
             is Response.Error -> return response
         }
-        // Возможности — со справочника по имени системы; не прочитаны — `null` (блок не поддерживается).
-        val sdkFeatures = interactor.getAlarmDeviceAppFeaturesUseCase.execute().toResponse().getValueIfSuccess()
+        // Возможности — из базы устройств SDK по имени системы; не прочитаны — `null`. Модели нет в базе
+        // (AlarmDeviceNotFoundException) — отдельно: базу нужно синхронизировать, блок при этом может поддерживаться.
+        val featuresResponse = interactor.getAlarmDeviceAppFeaturesUseCase.execute().toResponse()
+        val sdkFeatures = featuresResponse.getValueIfSuccess()
+        val modelMissing = (featuresResponse as? Response.Error)?.exception is AlarmDeviceNotFoundException
         val can = information.canInformation
         return Response.Success(
             AlarmDevice(
@@ -110,9 +120,22 @@ class SpecialistDeviceSessionRepository(
                     )
                 } else {
                     null
-                }
+                },
+                modelInDatabase = !modelMissing
             )
         )
+    }
+
+    override suspend fun syncDeviceDatabase(): Response<Unit> {
+        val interactor = appUpdatesInteractor.resolveOrNull() ?: return interactorUnavailable()
+        // Поток SDK может бросить мимо Response (ошибка встроенной базы) — safeResponseRun превращает это в ошибку.
+        return safeResponseRun {
+            when (val last = interactor.synchronizeSettingsVersionUseCase.execute().lastOrNull()) {
+                is SpecialistResponse.Success -> Response.Success(Unit)
+                is SpecialistResponse.Error -> Response.Error(last.exception, last.message)
+                null -> Response.Error(IllegalStateException("Device database sync produced no result"))
+            }
+        }
     }
 
     override suspend fun readImei(): Response<String> {

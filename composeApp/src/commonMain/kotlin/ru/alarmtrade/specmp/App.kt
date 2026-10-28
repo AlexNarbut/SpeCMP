@@ -34,6 +34,8 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
+import ru.alarmtrade.specmp.feature.configurator.di.configuratorModule
+import ru.alarmtrade.specmp.feature.configurator.ui.di.configuratorUiModule
 import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.ui.di.deviceFirmwareUiModule
 import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
@@ -45,6 +47,8 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.di.deviceSettingsUiModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
 import ru.alarmtrade.specmp.feature.supportchat.di.supportChatModule
+import ru.alarmtrade.specmp.feature.vehicle.di.vehicleModule
+import ru.alarmtrade.specmp.feature.vehicle.ui.di.vehicleUiModule
 import ru.alarmtrade.specmp.navigation.AppNavigation
 
 // App — публичная точка входа платформенных обёрток и одновременно превью
@@ -96,6 +100,10 @@ fun App(
                 add(deviceFirmwareModule)
                 add(deviceFirmwareUiModule)
                 add(deviceSettingsModule)
+                add(vehicleModule)
+                add(vehicleUiModule)
+                add(configuratorModule)
+                add(configuratorUiModule)
                 add(deviceSettingsUiModule)
                 add(deviceSelectionUiModule)
                 add(deviceInteractionUiModule)

@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.settings.domain.repository
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 
@@ -28,8 +29,22 @@ interface DeviceSettingsRepository {
     /** Сохранить правки сессии в источник (для блока — записать в устройство). */
     suspend fun save(source: SettingsSource): Response<Unit>
 
-    /** Скопировать настройки из [from] в [to]; [saveChanges] — сразу сохранить в [to]. Ответ — меню [to]. */
+    /**
+     * Скопировать настройки из [from] в [to]; [saveChanges] — сразу сохранить в [to]. Ответ — меню [to].
+     * Другой набор настроек (размер) — ошибка с [SettingsMismatchException].
+     * Изменённые настройки [to] SDK после копирования не отмечает — [unsavedIds] их не содержит.
+     */
     suspend fun copy(from: SettingsSource, to: SettingsSource, saveChanges: Boolean): Response<SettingsSection>
+
+    /**
+     * Снимок настроек [from] во временном файле, прочитанный моделью [deviceName] — так их увидит блок этой модели
+     * (сравнение «Что изменится» перед загрузкой в блок, в том числе другой модели). Сессия [from] не закрывается.
+     * Снимок открывается как обычный источник; после — [discardSnapshot].
+     */
+    suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File>
+
+    /** Закрыть сессию снимка и удалить его файл. */
+    suspend fun discardSnapshot(snapshot: SettingsSource.File)
 
     /** Сбросить подключённый блок к заводским настройкам (только [SettingsSource.Device]). */
     suspend fun resetDeviceToFactory(): Response<Unit>

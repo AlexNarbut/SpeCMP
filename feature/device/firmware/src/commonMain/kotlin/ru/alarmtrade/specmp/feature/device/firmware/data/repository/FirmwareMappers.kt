@@ -89,7 +89,9 @@ internal fun SubsystemFirmware.toDomain(): FirmwareVersion = FirmwareVersion(
     // Сервер отдаёт локальное время без зоны: дата берётся как есть (см. KDoc FirmwareVersion).
     createdOn = creationTime.date,
     description = description,
-    url = url
+    url = url,
+    canCode = canCode?.takeIf { it.isNotBlank() },
+    canVersion = canVersionString?.takeIf { it.isNotBlank() }
 )
 
 /** Стадия SDK → стадия приложения; процент есть только на передаче. */

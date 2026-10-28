@@ -35,7 +35,10 @@ kotlin {
 
             // Логика настроек (источники, сессия SDK) и сессия устройства (переподключение, шапка)
             implementation(project(":feature:device:settings"))
+            implementation(project(":feature:vehicle"))
             implementation(project(":feature:device:interaction"))
+            // «Мои конфигурации»: «Сохранить в…» из редактора
+            implementation(project(":feature:configurator"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 

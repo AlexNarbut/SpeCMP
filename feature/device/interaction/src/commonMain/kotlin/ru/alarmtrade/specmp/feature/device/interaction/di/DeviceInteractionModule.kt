@@ -21,7 +21,7 @@ val deviceInteractionModule = module {
         )
     }
     single<DeviceSessionRepository> {
-        SpecialistDeviceSessionRepository(bluetoothAlarmDeviceInteractor = { get() })
+        SpecialistDeviceSessionRepository(bluetoothAlarmDeviceInteractor = { get() }, appUpdatesInteractor = { get() })
     }
     single { DeviceSession(get(), get(), get()) }
 }

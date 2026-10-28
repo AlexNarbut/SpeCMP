@@ -1,0 +1,96 @@
+@file:Suppress("MatchingDeclarationName")
+
+package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import org.koin.compose.koinInject
+import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
+import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveVehiclePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateScreen
+
+@Serializable
+internal data object FirmwareUpdateRoute : NavKey
+
+@Serializable
+internal data class FirmwareArchiveRoute(val request: FirmwareArchiveRequest) : NavKey
+
+private val navConfig = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(FirmwareUpdateRoute::class, FirmwareUpdateRoute.serializer())
+            subclass(FirmwareArchiveRoute::class, FirmwareArchiveRoute.serializer())
+        }
+    }
+}
+
+/**
+ * Граф экранов режима загрузчика: «Обновление прошивки» → «Архив прошивок».
+ * Слот `bootContent` хоста устройства (`composeApp`):
+ * хост показывает граф, пока блок в загрузчике или ждёт перезагрузку, и сам решает, когда уйти.
+ *
+ * @param onExit выход из всего flow (закрывает сессию); на экране обновления вызывается после подтверждения.
+ * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
+ * @param filePicker выбор файла прошивки в файловом менеджере (платформа, `composeApp`).
+ * @param vehiclePicker выбор автомобиля для CAN-фильтра архива (фича `vehicle-ui`, `composeApp`);
+ *   `null` — без каталога.
+ */
+@Composable
+fun FirmwareBootGraph(
+    onExit: () -> Unit,
+    onOpenSupportChat: () -> Unit,
+    filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
+    vehiclePicker: ArchiveVehiclePicker? = null
+) {
+    val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
+    val archivePicker = koinInject<FirmwareArchivePicker>()
+
+    NavDisplay(
+        backStack = backStack,
+        modifier = Modifier.fillMaxSize(),
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        onBack = { backStack.popSafe() },
+        entryProvider = entryProvider<NavKey> {
+            entry<FirmwareUpdateRoute> { _ ->
+                FirmwareUpdateScreen(
+                    onExit = onExit,
+                    onOpenSupportChat = onOpenSupportChat,
+                    filePicker = filePicker,
+                    onOpenArchive = { request -> backStack.navigateSafe(FirmwareArchiveRoute(request)) }
+                )
+            }
+            entry<FirmwareArchiveRoute> { key ->
+                FirmwareArchiveEntry(
+                    request = key.request,
+                    onPick = { version ->
+                        // Экран обновления ниже в стеке не отрисован — выбор доходит до его ViewModel через picker.
+                        archivePicker.pick(version)
+                        backStack.popSafe()
+                    },
+                    onBack = { backStack.popSafe() },
+                    vehiclePicker = vehiclePicker
+                )
+            }
+        }
+    )
+}

@@ -1,0 +1,132 @@
+package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation
+
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
+import org.jetbrains.compose.resources.getString
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+import ru.alarmtrade.specmp.core.common.safeRun
+import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.vehicleLayoutOf
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectContent
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectEffect
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectViewModel
+import specmp.feature.vehicle_ui.generated.resources.Res
+import specmp.feature.vehicle_ui.generated.resources.vehicle_select_msg_can_copied
+
+/**
+ * Точка входа «Выбор автомобиля» (каталог и карточка автомобиля). Подключается через слоты навигации в
+ * `composeApp` (главная, расширенный монтаж, настройки блока).
+ *
+ * @param onPick выбранный автомобиль (только [VehicleSelectMode.PICK]); закрыть экран — дело вызывающего.
+ * @param onOpenFirmwareArchive открыть архив прошивок с CAN-кодом (режим просмотра); `null` — кнопки нет.
+ * @param onOpenUserManual открыть народную карту; `null` — строки без перехода.
+ */
+@Composable
+fun VehicleSelectEntry(
+    request: VehicleSelectRequest,
+    onPick: (CarSummary) -> Unit,
+    onBack: () -> Unit,
+    onOpenFirmwareArchive: ((canCode: String) -> Unit)? = null,
+    onOpenUserManual: ((manualId: Int) -> Unit)? = null
+) {
+    // Ключ — запрос: каталог для другого режима в том же владельце (справочник и выбор для архива) — своя ViewModel.
+    val viewModel = koinViewModel<VehicleSelectViewModel>(
+        key = "VehicleSelect:$request",
+        parameters = { parametersOf(request) }
+    )
+    val state by viewModel.state.collectAsState()
+    val snackbarHostState = rememberCmpSnackbarHostState()
+    val uriHandler = LocalUriHandler.current
+
+    @Suppress("DEPRECATION") // LocalClipboard требует платформенный ClipEntry; для текста хватает менеджера
+    val clipboard = LocalClipboardManager.current
+    val currentOnPick by rememberUpdatedState(onPick)
+    val currentOnBack by rememberUpdatedState(onBack)
+
+    viewModel.effect.collectSideEffect { effect ->
+        when (effect) {
+            is VehicleSelectEffect.Picked -> currentOnPick(effect.car)
+
+            VehicleSelectEffect.Exit -> currentOnBack()
+
+            is VehicleSelectEffect.CanCopied -> {
+                clipboard.setText(AnnotatedString(effect.code))
+                snackbarHostState.showSnackbar(getString(Res.string.vehicle_select_msg_can_copied, effect.code))
+            }
+        }
+    }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val layout = vehicleLayoutOf(maxWidth)
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            onBackCompleted = { viewModel.onBack(layout) }
+        )
+        val actions = remember(viewModel, layout, onOpenFirmwareArchive, onOpenUserManual) {
+            VehicleSelectActions(
+                onBack = { viewModel.onBack(layout) },
+                onTypePick = viewModel::onTypePick,
+                onSearchModeChange = viewModel::onSearchModeChange,
+                onQueryChange = viewModel::onQueryChange,
+                onSearchByCan = viewModel::onSearchByCan,
+                onCanCodeChange = viewModel::onCanCodeChange,
+                onBrandPick = viewModel::onBrandPick,
+                onModelPick = { viewModel.onModelPick(it, wide = layout.isWide) },
+                onTrimOpen = viewModel::onTrimOpen,
+                onCanResultOpen = viewModel::onCanResultOpen,
+                onRecentOpen = viewModel::onRecentOpen,
+                onRecentRemove = viewModel::onRecentRemove,
+                onCrumb = viewModel::onCrumb,
+                onRetry = viewModel::onRetry,
+                onFilterOpen = viewModel::onFilterOpen,
+                onFilterToggle = viewModel::onFilterToggle,
+                onFilterDraftReset = viewModel::onFilterDraftReset,
+                onFilterApply = viewModel::onFilterApply,
+                onFilterDismiss = viewModel::onFilterDismiss,
+                onFilterClear = viewModel::onFilterClear,
+                onPick = viewModel::onPick,
+                card = CardActions(
+                    onTabSelect = viewModel::onTabSelect,
+                    onPointOpen = viewModel::onPointOpen,
+                    onPointClose = viewModel::onPointClose,
+                    onPhotoChange = viewModel::onPhotoChange,
+                    onViewerOpen = viewModel::onViewerOpen,
+                    onViewerClose = viewModel::onViewerClose,
+                    onNotesToggle = viewModel::onNotesToggle,
+                    onGroupToggle = viewModel::onGroupToggle,
+                    onCapabilityNote = viewModel::onCapabilityNote,
+                    onCopyCanCode = viewModel::onCopyCanCode,
+                    onOpenDocument = { url -> safeRun { uriHandler.openUri(url) } },
+                    onOpenFirmwareArchive = onOpenFirmwareArchive,
+                    onOpenUserManual = onOpenUserManual,
+                    onDialogDismiss = viewModel::onDialogDismiss,
+                    onMismatchConfirm = viewModel::onMismatchConfirm
+                )
+            )
+        }
+        VehicleSelectContent(
+            state = state,
+            layout = layout,
+            windowWidth = maxWidth,
+            actions = actions,
+            snackbarHostState = snackbarHostState
+        )
+    }
+}

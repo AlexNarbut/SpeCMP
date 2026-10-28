@@ -1,0 +1,94 @@
+<!-- @dsCard group="Выбор автомобиля" viewport="1200x900" name="Выбор автомобиля — состояния" subtitle="Все состояния раздела 6: загрузка, ошибка, нет интернета, пусто, фильтр, длинные названия — в выбранном окне и теме" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Выбор автомобиля — состояния</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 1180px; padding: 0 12px; }
+  .seg { flex: 0 1 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: nowrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.wrap { flex-wrap: wrap; justify-content: center; }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 7px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  #root { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .scaler { transform-origin: top left; }
+  .theme-fab { position: fixed; top: 14px; right: 14px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; line-height: 1; background: #fff; color: #1A3E7A; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  body.page-dark { background: #101314; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .theme-fab { background: #272b2d; color: #ffd966; }
+  .grid { display: grid; gap: 24px 20px; justify-content: center; padding: 8px 20px; box-sizing: border-box; width: 100%; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .cap { font-size: 14px; font-weight: 600; color: #222; }
+  body.page-dark .cap { color: #dde2e6; }
+  .frame { border-radius: 14px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.25); background: var(--background); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script src="./vs-data.js"></script>
+<script type="text/babel" src="./VsKit.jsx"></script>
+<script type="text/babel" src="./VehicleCard.jsx"></script>
+<script type="text/babel" src="./VehicleSelect.jsx"></script>
+<script type="text/babel">
+  const D = window.VS_DATA;
+  const NET = [
+    ["Марки · загрузка", { net: "loading", netLevel: "brands" }],
+    ["Марки · ошибка сети", { net: "error", netLevel: "brands" }],
+    ["Марки · нет интернета", { net: "offline", netLevel: "brands" }],
+    ["Модели · загрузка", { net: "loading", netLevel: "models", init: { brand: "toyota" } }],
+    ["Модели · ошибка (марка сохранена)", { net: "error", netLevel: "models", init: { brand: "toyota" } }],
+    ["Комплектации · нет интернета", { net: "offline", netLevel: "trims", init: { brand: "toyota", model: () => D.CAMRY_MODEL } }],
+    ["Карточка · загрузка", { net: "loading", netLevel: "card", init: { trim: () => D.CAMRY_TRIM } }],
+    ["Карточка · ошибка", { net: "error", netLevel: "card", init: { trim: () => D.CAMRY_TRIM } }],
+    ["CAN-поиск · загрузка", { net: "loading", netLevel: "can", init: { smode: "can", can: "2154" } }],
+    ["CAN-поиск · ошибка", { net: "error", netLevel: "can", init: { smode: "can", can: "2154" } }],
+  ];
+  const ALL = [...NET, ...VS_PRESETS.map((p) => [p[1], p[2]])];
+  const SIZES = { mobile: [412, 840, 0.62], tablet: [1280, 800, 0.42], desktop: [800, 600, 0.55] };
+  function App() {
+    const [dark, setDarkRaw] = React.useState(() => { try { return localStorage.getItem("ps-theme") === "dark"; } catch (e) { return false; } });
+    const setDark = (v) => { setDarkRaw(v); try { localStorage.setItem("ps-theme", v ? "dark" : "light"); } catch (e) {} };
+    React.useEffect(() => { document.body.classList.toggle("page-dark", dark); }, [dark]);
+    const [size, setSize] = React.useState("mobile");
+    const [entry, setEntry] = React.useState("C");
+    const [w, h, s] = SIZES[size];
+    return (
+      <React.Fragment>
+        <div className="toolbar">
+          <VsSeg items={[["l","Светлая"],["d","Тёмная"]]} value={dark ? "d" : "l"} onChange={(x) => setDark(x === "d")} />
+          <VsSeg items={[["mobile","Mobile 412×840"],["tablet","Планшет 1280×800"],["desktop","Desktop min 800×600"]]} value={size} onChange={setSize} />
+          <VsSeg items={[["B","Просмотр (B)"],["C","Выбор (C)"]]} value={entry} onChange={setEntry} />
+        </div>
+        <div className="grid" style={{ gridTemplateColumns: `repeat(auto-fill, ${Math.round(w * s)}px)` }}>
+          {ALL.map(([cap, cfg], i) => {
+            const init = vsResolve(cfg.init);
+            const ent = cfg.entry || entry;
+            if (ent === "A" && init.type === undefined) init.type = "alarm";
+            return (
+              <div className="cell" key={i}>
+                <div className="cap">{cap}</div>
+                <div style={{ width: w * s, height: h * s }}>
+                  <div className="scaler frame" data-theme={dark ? "dark" : undefined} style={{ width: w, height: h, transform: `scale(${s})` }}>
+                    <window.VehicleSelectApp key={size + entry} entry={ent} net={cfg.net || "ok"} netLevel={cfg.netLevel || "all"} init={init} />
+                  </div>
+                </div>
+              </div>);
+          })}
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

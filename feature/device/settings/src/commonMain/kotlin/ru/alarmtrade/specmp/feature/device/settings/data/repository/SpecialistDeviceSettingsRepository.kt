@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.device.settings.data.repository
 
+import kotlin.random.Random
 import ru.alarmtrade.common.core.usecase.EmptyRequest
+import ru.alarmtrade.common.settings.interaction.model.errors.WrongSettingsSizeException
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.AlarmDeviceSettingsInteractor
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CloseDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CopySettingsRequest
@@ -10,8 +12,11 @@ import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmD
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
+import ru.alarmtrade.specmp.feature.device.settings.data.files.deleteSettingsScratchFile
+import ru.alarmtrade.specmp.feature.device.settings.data.files.settingsScratchDirectory
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
@@ -72,10 +77,32 @@ class SpecialistDeviceSettingsRepository(
         saveChanges: Boolean
     ): Response<SettingsSection> {
         val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.copyDeviceSettingsUseCase
+        val response = interactor.copyDeviceSettingsUseCase
             .execute(CopySettingsRequest(from.toPath(), to.toPath(), saveChanges))
             .toResponse()
-            .map { it.toRootSection() }
+        return when (response) {
+            is Response.Success -> Response.Success(response.value.toRootSection())
+
+            is Response.Error ->
+                if (response.exception is WrongSettingsSizeException) {
+                    Response.Error(SettingsMismatchException(response.exception))
+                } else {
+                    response
+                }
+        }
+    }
+
+    // Файла снимка ещё нет: SDK не открывает приёмник и пишет в него байты источника как есть; при чтении меню
+    // строится по модели из пути — так, как настройки увидит блок этой модели.
+    override suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File> {
+        val path = "${settingsScratchDirectory()}/snapshot-${Random.nextLong().toULong().toString(16)}.dxs"
+        val snapshot = SettingsSource.File(path, deviceName)
+        return copy(from, snapshot, saveChanges = true).map { snapshot }
+    }
+
+    override suspend fun discardSnapshot(snapshot: SettingsSource.File) {
+        close(snapshot)
+        deleteSettingsScratchFile(snapshot.path)
     }
 
     override suspend fun resetDeviceToFactory(): Response<Unit> {
