@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
@@ -58,29 +56,6 @@ class MainScreenViewModel(
     private val _effect = sideEffectFlow<MainScreenEffect>()
     val effect: SharedFlow<MainScreenEffect> = _effect.asSharedFlow()
 
-    // Первичная загрузка — холодный flow, расшаренный Lazily: стартует при первой
-    // подписке на state и выполняется ровно один раз за жизнь VM. Guard-флаг не нужен —
-    // «однократность» гарантирует SharingStarted.Lazily (никогда не перезапускается).
-    private val initialLoadingState: StateFlow<Boolean> = flow {
-        logger.d { "Starting initial home data refresh" }
-        safeLaunch { refreshDatabaseVersion() } // параллельно, скелетон не гейтит
-        coroutineScope {
-            awaitAll(
-                async { loadUserProfile() },
-                async { loadUserAppFeatures() },
-                async { loadUserCommercial() },
-                async { checkAppUpdate() }
-            )
-        }
-        logger.d { "Initial home data refresh completed" }
-        emit(false)
-    }
-        .catch { e ->
-            logger.e(e) { "Initial home data refresh failed" }
-            emit(false)
-        }
-        .stateIn(viewModelScope, SharingStarted.Lazily, true)
-
     private val chatAvailabilityState: Flow<LCEState<Boolean, MainError>> = mainRepository
         .observeChatAvailability()
         .map { response ->
@@ -101,16 +76,13 @@ class MainScreenViewModel(
     // источники при уходе с экрана и перезапускает при возврате.
     val state: StateFlow<MainScreenState> = combine(
         _state,
-        initialLoadingState,
         chatAvailabilityState,
         chatUnreadState
-    ) { state, isInitialLoading, chatAvailability, chatUnread ->
-        state.copy(
-            isInitialLoading = isInitialLoading,
-            chatAvailabilityState = chatAvailability,
-            chatUnreadState = chatUnread
-        )
+    ) { state, chatAvailability, chatUnread ->
+        state.copy(chatAvailabilityState = chatAvailability, chatUnreadState = chatUnread)
     }
+        // Первичная загрузка — один раз за жизнь VM, при первой подписке на state; скелетон — пока она идёт.
+        .launchOnFirstStart { initialRefresh() }
         .onStart { resetLogoutTransientState() }
         .flowOn(dispatchers.default)
         .stateIn(
@@ -200,6 +172,25 @@ class MainScreenViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun initialRefresh() {
+        logger.d { "Starting initial home data refresh" }
+        safeLaunch { refreshDatabaseVersion() } // параллельно, скелетон не гейтит
+        try {
+            coroutineScope {
+                awaitAll(
+                    async { loadUserProfile() },
+                    async { loadUserAppFeatures() },
+                    async { loadUserCommercial() },
+                    async { checkAppUpdate() }
+                )
+            }
+            logger.d { "Initial home data refresh completed" }
+        } finally {
+            // Сбой (необработанное исключение логирует safeLaunch) скелетон тоже убирает.
+            _state.update { it.copy(isInitialLoading = false) }
         }
     }
 

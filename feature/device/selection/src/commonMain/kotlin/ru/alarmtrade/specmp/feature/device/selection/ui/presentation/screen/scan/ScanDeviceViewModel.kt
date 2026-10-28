@@ -83,16 +83,6 @@ class ScanDeviceViewModel(
     // Только подключение (не отмена): по нему «Отмена» прерывает попытку. Пишется и читается на main.
     private var connectJob: Job? = null
 
-    // Init-источник: один раз за жизнь VM (Lazily) запрашивает разрешения при первой
-    // подписке на state и переводит на скан/adapterOff/denied. Не «работа из UI».
-    private val permissionGate: StateFlow<Boolean> = flow {
-        // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
-        // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
-        deviceSession.close().join()
-        checkPermissionsExclusively()
-        emit(true)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
-
     private val devicesState: Flow<LCEState<List<DeviceUiItem>, ScanError>> = combine(stepFlow, scanRestartsFlow) {
             step,
             _
@@ -128,9 +118,8 @@ class ScanDeviceViewModel(
         stepFlow,
         devicesState,
         selectedIdFlow,
-        searchedLongEnough,
-        permissionGate
-    ) { step, devices, selectedId, searchedLong, _ ->
+        searchedLongEnough
+    ) { step, devices, selectedId, searchedLong ->
         ScanDeviceState(
             step = step,
             requirements = requirements,
@@ -140,6 +129,13 @@ class ScanDeviceViewModel(
             searchedLongEnough = searchedLong
         )
     }
+        // Старт: при первой подписке на state запросить разрешения и перейти на скан/adapterOff/denied.
+        .launchOnFirstStart {
+            // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
+            // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
+            deviceSession.close().join()
+            checkPermissionsExclusively()
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ScanDeviceState())
 

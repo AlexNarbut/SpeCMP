@@ -3,8 +3,6 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,10 +10,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -46,7 +44,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.set
  * [pickDeviceName] — режим выбора для загрузки в редактор блока: фильтр по модели блока включён сразу (его можно
  * снять — другая модель загрузится с предупреждением).
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class MineViewModel(
     pickDeviceName: String?,
     private val configurations: LocalConfigurationsRepository,
@@ -61,16 +58,13 @@ internal class MineViewModel(
     private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     // Список — одним потоком загрузок: первая при подписке на state, затем на каждое изменение хранилища и «Повторить».
-    // mapLatest отменяет устаревшую загрузку — старый ответ не затрёт новый. При возврате на экран (WhileSubscribed)
-    // список перечитывается.
-    private val listLoads: Flow<Unit> = merge(configurations.changes, retryRequests)
-        .onStart { emit(Unit) }
-        .mapLatest { load() }
-        .onStart { emit(Unit) }
-
-    val state: StateFlow<MineState> = combine(_state, listLoads, connectedDeviceName) { state, _, connected ->
+    // collectLatest отменяет устаревшую загрузку — старый ответ не затрёт новый.
+    val state: StateFlow<MineState> = combine(_state, connectedDeviceName) { state, connected ->
         state.copy(connectedDeviceName = connected).withLists()
     }
+        .launchOnFirstStart {
+            merge(configurations.changes, retryRequests).onStart { emit(Unit) }.collectLatest { load() }
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 

@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
@@ -148,13 +147,6 @@ internal class DeviceSettingsViewModel(
      */
     private val pendingPreviewClose = MutableStateFlow(true)
 
-    // Источник не блока (файл, мои, облако, заводские) читается при первой подписке на state, один раз за жизнь VM
-    // (Lazily). Блок перечитывается на каждое (пере)подключение — это реакция init, живущая всю жизнь VM.
-    private val initialLoad: StateFlow<Unit?> = flow {
-        if (!followsDevice) load()
-        emit(Unit)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-
     /** Поиск: запрос в state попадает вместе с результатом (после debounce), а не на каждый символ. */
     private val search: Flow<Pair<String, List<SettingsSearchHit>>> =
         combine(searchQuery, _state.map { it.menu.content }.distinctUntilChanged { a, b -> a === b }) { query, root ->
@@ -164,14 +156,16 @@ internal class DeviceSettingsViewModel(
             .mapLatest { (query, root) -> query to root?.search(query).orEmpty() }
             .onStart { emit("" to emptyList()) }
 
-    val state: StateFlow<DeviceSettingsState> = combine(_state, initialLoad, connectedDeviceName, search) {
+    // Источник не блока (файл, мои, облако, заводские) читается при первой подписке на state, один раз за жизнь VM.
+    // Блок перечитывается на каждое (пере)подключение — это реакция init, живущая всю жизнь VM.
+    val state: StateFlow<DeviceSettingsState> = combine(_state, connectedDeviceName, search) {
             state,
-            _,
             connected,
             (query, hits)
         ->
         state.copy(connectedDeviceName = connected, searchQuery = query, searchHits = hits)
     }
+        .launchOnFirstStart { if (!followsDevice) load() }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_STOP_TIMEOUT), _state.value)
 

@@ -9,8 +9,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
@@ -75,16 +73,13 @@ internal class VehicleSelectViewModel(
         )
     )
 
-    // Старт экрана — при первой подписке на state, один раз за жизнь VM (Lazily): недавние (хранилище — на io) и
-    // марки, если тип устройства уже известен.
-    private val initialLoad: StateFlow<Unit?> = flow {
-        val recent = withContext(dispatchers.io) { recentStore.recent(request.catalog) }
-        _state.update { it.copy(recent = recent) }
-        if (!_state.value.showTypeChoice) loadBrands()
-        emit(Unit)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-
-    val state: StateFlow<VehicleSelectState> = combine(_state, initialLoad) { state, _ -> state }
+    // Старт экрана — при первой подписке на state: недавние (хранилище — на io) и марки, если тип устройства известен.
+    val state: StateFlow<VehicleSelectState> = _state
+        .launchOnFirstStart {
+            val recent = withContext(dispatchers.io) { recentStore.recent(request.catalog) }
+            _state.update { it.copy(recent = recent) }
+            if (!_state.value.showTypeChoice) loadBrands()
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
     private val _effect = sideEffectFlow<VehicleSelectEffect>()

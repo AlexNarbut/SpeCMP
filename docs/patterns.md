@@ -523,7 +523,7 @@ override fun observeUnreadMessagesCount(): Flow<Response<Int>> {
 
 - **ViewModel зон авторизации живут одну сессию**: `AuthStateNavGraph` оборачивает и авторизованную,
   и неавторизованную зону в `ViewModelScope(name, session)` (`core/ui`), поэтому каждый вход/выход
-  получает новые VM — их загрузка при старте (`stateIn(Lazily)`) выполняется заново, формы входа и
+  получает новые VM — их загрузка при старте (`launchOnFirstStart`) выполняется заново, формы входа и
   регистрации пустые. Сбрасывать state VM «на логаут» вручную (`reset()` из `DisposableEffect`) не
   нужно; своё хранилище VM для зоны, переживающей смену аккаунта, не заводить (`docs/navigation.md`).
 
@@ -596,8 +596,8 @@ presentation/screen/<screen>/
 - **Эффект живёт ровно столько, сколько screen/VM** → `init {}` во VM честен. Примеры: лог
   «открыт экран», старт подписки, которую надо убить вместе с VM (`viewModelScope` сделает сам).
   Повторный запуск при пересоздании VM — не баг, а согласованность: новый инстанс = новая жизнь.
-- **Эффект привязан к подписке UI на state (init-стадия экрана)** → отдельный холодный flow +
-  `stateIn(SharingStarted.Lazily)` в общем `combine` — см. «Запуск работы на старте экрана».
+- **Эффект привязан к подписке UI на state (init-стадия экрана)** → `launchOnFirstStart { … }` на
+  цепочке state — см. «Запуск работы на старте экрана».
 - **Эффект должен пережить экран / выполниться один раз за сессию процесса** → выносим из VM:
   VM не может это гарантировать (пересоздание при навигации, process death). Место — app-scoped
   singleton (репозиторий/контроллер/use-case) с идемпотентным `start()` (guard «уже запущен»:
@@ -756,7 +756,7 @@ class DashboardViewModel(
 | Стратегия | Поведение | Когда использовать |
 |-----------|-----------|-------------------|
 | `WhileSubscribed(stopTimeout)` | Активен пока есть подписчики + таймаут после отписки | **По умолчанию для экранов.** Экономит ресурсы при уходе с экрана, `stopTimeout = 5.seconds` — стандартное значение (переживает поворот экрана) |
-| `Lazily` | Стартует при первом подписчике, **никогда не останавливается** | Работа «один раз за жизнь VM»: init-загрузка экрана, фоновый кэш |
+| `Lazily` | Стартует при первом подписчике, **никогда не останавливается** | Источник со значением на всю жизнь VM: фоновый кэш, подписка, флаг из репозитория (init-загрузка — `launchOnFirstStart`) |
 | `Eagerly` | Стартует немедленно при создании | Критичные данные, нужные сразу (редко используется) |
 
 ```kotlin
@@ -777,9 +777,16 @@ class DashboardViewModel(
 реакции на действия пользователя — явный метод-интент VM (`onRetryClicked()`).
 
 Триггер «экран реально начал слушать state» уже существует — это подписка на `StateFlow`.
-Init-стадия оформляется как **отдельный холодный flow + `stateIn(SharingStarted.Lazily)`**,
-участвующий в общем `combine`: `Lazily` стартует при первой подписке и никогда не перезапускается —
-«один раз за жизнь VM» выражен временем жизни источника, без `var`-флагов и методов «startIfNeeded»:
+Init-стадия оформляется хелпером **`launchOnFirstStart { … }`** из `BaseViewModel` на цепочке state перед
+`stateIn`: блок запускается отдельной корутиной VM при первом старте цепочки и ровно один раз за жизнь VM
+(внутри — `Job` с `CoroutineStart.LAZY`, `onStart { job.start() }`; `start()` идемпотентен). Без `var`-флагов,
+методов «startIfNeeded» и фиктивных источников `flow { load(); emit(Unit) }.stateIn(Lazily)` в `combine`.
+
+Почему не голый `onStart { load() }`:
+- он **блокирует цепочку**: `combine` начинает собирать только после выхода из `onStart`, поэтому `Loading`,
+  записанный в `_state` во время загрузки, экран не увидит — увидит сразу результат;
+- он **повторяется на каждый перезапуск** `WhileSubscribed` — возврат на экран (или из фона) после stopTimeout
+  перезагрузит данные.
 
 ```kotlin
 class MainScreenViewModel(
@@ -787,24 +794,7 @@ class MainScreenViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(MainScreenState())
-
-    // Init-стадия: стартует при первой подписке на state (через combine),
-    // выполняется ровно один раз за жизнь VM — однократность гарантирует Lazily
-    private val initialLoadingState: StateFlow<Boolean> = flow {
-        coroutineScope {
-            awaitAll(
-                async { loadUserProfile() },     // пишут в _state
-                async { loadUserAppFeatures() },
-            )
-        }
-        emit(false)  // загрузка завершена — скелетон убирается
-    }
-        .catch { e ->
-            logger.e(e) { "Initial refresh failed" }  // сбой контракта, не Response.Error
-            emit(false)
-        }
-        .stateIn(viewModelScope, SharingStarted.Lazily, true)
+    private val _state = MutableStateFlow(MainScreenState())  // isInitialLoading = true
 
     // Периодический источник: репозиторий отдаёт Flow<Response<T>>,
     // ручные Job + onCleared во VM не нужны
@@ -814,54 +804,65 @@ class MainScreenViewModel(
         .flowOn(dispatchers.io)
         .onStart { emit(LCEState.None) }  // combine не ждёт первый ответ сети
 
-    val state: StateFlow<MainScreenState> = combine(
-        _state,
-        initialLoadingState,
-        chatUnread,
-    ) { state, isInitialLoading, unread ->
-        state.copy(isInitialLoading = isInitialLoading, chatUnreadState = unread)
+    val state: StateFlow<MainScreenState> = combine(_state, chatUnread) { state, unread ->
+        state.copy(chatUnreadState = unread)
     }
-        .onStart { resetTransientState() }  // на каждый (пере)запуск шаринга
+        .launchOnFirstStart { initialRefresh() }  // один раз за жизнь VM, не блокирует цепочку
+        .onStart { resetTransientState() }       // на каждый (пере)запуск шаринга
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), _state.value)
+
+    private suspend fun initialRefresh() {
+        try {
+            coroutineScope {
+                awaitAll(async { loadUserProfile() }, async { loadUserAppFeatures() })  // пишут в _state
+            }
+        } finally {
+            _state.update { it.copy(isInitialLoading = false) }  // скелетон убирается и при сбое
+        }
+    }
 }
 ```
 
 **Порядок объявлений важен:** свойства инициализируются сверху вниз, поэтому источники
-(`initialLoadingState`, `chatUnread`) объявляются **до** `state` — иначе `combine` захватит
-ещё не инициализированное (null) поле и упадёт в runtime.
+(`chatUnread`) объявляются **до** `state` — иначе `combine` захватит ещё не инициализированное (null)
+поле и упадёт в runtime. Блок `launchOnFirstStart` выполняется позже (при подписке), ему порядок не важен.
 
 **`onStart` vs `onSubscription`:**
 
 | Оператор | Куда ставится | Когда срабатывает | Для чего |
 |----------|---------------|-------------------|----------|
-| `onStart` | на холодную цепочку **до** `stateIn` | при (пере)запуске шаринга: первый подписчик после простоя (`WhileSubscribed`) либо единожды (`Lazily`) | триггер init-загрузки, сброс transient-state при возврате на экран, эмит начального значения в источник |
+| `launchOnFirstStart` | на холодную цепочку state **до** `stateIn` | один раз за жизнь VM — при первом старте шаринга | init-загрузка экрана, потоки перезагрузки (`retries.collectLatest { load() }`) |
+| `onStart` | на холодную цепочку **до** `stateIn` | при (пере)запуске шаринга: первый подписчик после простоя (`WhileSubscribed`) либо единожды (`Lazily`) | сброс transient-state при возврате на экран, эмит начального значения в источник; не для долгой работы |
 | `onSubscription` | на **горячий** `SharedFlow`/`StateFlow` (после `stateIn` / на `MutableSharedFlow`) | на **каждого** нового подписчика | редкие случаи «действие на каждую подписку»; для init не годится — несколько коллекторов (второй `collectAsState`, пересоздание composition) повторят действие |
 
 **Правила:**
 
-- **Один раз за жизнь VM** → отдельный источник со `stateIn(Lazily)` (пример выше), не guard-флаг.
+- **Один раз за жизнь VM** → `launchOnFirstStart` (пример выше), не guard-флаг и не фиктивный источник.
+  `stateIn(Lazily)` — только для источников с настоящим значением (флаг из репозитория, подписка на всю жизнь VM).
   **На каждый (пере)запуск шаринга** (сброс transient-state, обновление «свежести» при возврате
   на экран) → `onStart` на общей цепочке перед `stateIn(WhileSubscribed)` — он сработает повторно,
   когда подписчики вернулись после stopTimeout. `onSubscription` — только когда действие осознанно
   нужно на каждую подписку.
-- Лямбда `onStart` не должна блокировать цепочку долгой suspend-работой: долгие загрузки живут в
-  собственном источнике (как `initialLoadingState`) или запускаются через `safeLaunch`.
+- Лямбда `onStart` не должна блокировать цепочку долгой suspend-работой: долгие загрузки — в
+  `launchOnFirstStart` или через `safeLaunch`.
 - **Поллинг не держать ручными `Job` во VM.** Репозиторий отдаёт `Flow<Response<T>>`
   (см. «Data — репозитории»), VM комбинирует его в state. `WhileSubscribed` сам останавливает
   поллинг, когда экран никто не слушает, и перезапускает при возврате — `Job`-поля и `onCleared`
   не нужны.
 - Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять
   `.onStart { emit(<initial>) }`, иначе `combine` не эмитит, пока не ответят все источники.
-- **Повтор/перезагрузка — тот же источник, а не второй `safeLaunch`.** Триггеры (`MutableSharedFlow`
-  «повторить», изменения хранилища) сливаются в один поток, `mapLatest { load() }` отменяет
+- **Повтор/перезагрузка — тот же поток загрузок, а не второй `safeLaunch`.** Триггеры (`MutableSharedFlow`
+  «повторить», изменения хранилища) сливаются в один поток, `collectLatest { load() }` отменяет
   устаревшую загрузку — гонки двух параллельных загрузок нет:
   ```kotlin
   private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-  private val loads = merge(repository.changes, retryRequests)
-      .onStart { emit(Unit) }
-      .mapLatest { load() }                       // пишет в _state
-      .stateIn(viewModelScope, SharingStarted.Lazily, Unit)
+  val state = combine(_state, …) { … }
+      .launchOnFirstStart {
+          merge(repository.changes, retryRequests).onStart { emit(Unit) }.collectLatest { load() }  // пишет в _state
+      }
+      .flowOn(dispatchers.default)
+      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), _state.value)
   fun onRetry() { retryRequests.tryEmit(Unit) }
   ```
 - **Снимки чужого state не копировать в `_state`.** Значение из `deviceSession.state` и т.п.

@@ -6,9 +6,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
@@ -70,16 +68,11 @@ class FirmwareArchiveViewModel(
         Core(moduleId = args.moduleId, canInput = args.canCode.orEmpty(), canApplied = args.canCode)
     )
 
+    // Первая страница — при первой подписке на state, один раз за жизнь VM: возврат на экран список не сбрасывает.
     // Строки пересобираются только при новом списке версий (загрузка страницы), а не на каждый тап, цифру CAN-кода
     // или диалог: сортировка разбирает номера версий.
-    // Первая страница — при первой подписке на state, один раз за жизнь VM (Lazily):
-    // возврат на экран список не сбрасывает.
-    private val initialLoad: StateFlow<Unit?> = flow {
-        loadFirstPage()
-        emit(Unit)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-
-    val state: StateFlow<FirmwareArchiveState> = combine(core, initialLoad) { current, _ -> current }
+    val state: StateFlow<FirmwareArchiveState> = core
+        .launchOnFirstStart { loadFirstPage() }
         .runningFold(null as Pair<Core, List<ArchiveRowUi>>?) { previous, current ->
             val rows = previous?.takeIf { it.first.items === current.items }?.second ?: rowsOf(current.items)
             current to rows

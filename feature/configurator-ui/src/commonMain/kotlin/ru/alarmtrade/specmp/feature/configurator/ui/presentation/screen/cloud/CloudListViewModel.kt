@@ -2,15 +2,14 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud
 
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -29,7 +28,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
  * K4 список облачных конфигураций автомобиля [carId]: приходит целиком; сортировка «Лучшие / Новые», фильтр по модели
  * блока — локально. [deviceName] — модель блока, под которую запрашивать (пусто — все модели).
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class CloudListViewModel(
     private val carId: Int,
     private val deviceName: String,
@@ -41,14 +39,11 @@ internal class CloudListViewModel(
 
     private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    // Загрузка — при первой подписке на state (Lazily, один раз за жизнь VM) и по «Повторить»; mapLatest отменяет
-    // незаконченную загрузку при повторе.
-    private val loads: StateFlow<Unit?> = retryRequests
-        .onStart { emit(Unit) }
-        .mapLatest { load() }
-        .stateIn(viewModelScope, SharingStarted.Lazily, null)
-
-    val state: StateFlow<CloudListState> = combine(_state, loads) { state, _ -> state.withLists() }
+    // Загрузка — при первой подписке на state и по «Повторить»;
+    // collectLatest отменяет незаконченную загрузку при повторе.
+    val state: StateFlow<CloudListState> = _state
+        .map { it.withLists() }
+        .launchOnFirstStart { retryRequests.onStart { emit(Unit) }.collectLatest { load() } }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 

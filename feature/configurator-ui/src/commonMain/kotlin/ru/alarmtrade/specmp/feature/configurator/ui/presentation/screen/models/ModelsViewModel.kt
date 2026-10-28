@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -41,17 +40,14 @@ internal class ModelsViewModel(
 
     private val _state = MutableStateFlow(ModelsState(fileName = file?.name))
 
-    // Первая загрузка — при первой подписке на state, один раз за жизнь VM (Lazily).
-    private val initialLoad: StateFlow<Unit?> = flow {
-        val recent = withContext(dispatchers.io) { models.recent() }
-        _state.update { it.copy(recent = recent) }
-        load()
-        emit(Unit)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-
-    val state: StateFlow<ModelsState> = combine(_state, initialLoad, connectedDeviceName) { state, _, connected ->
+    val state: StateFlow<ModelsState> = combine(_state, connectedDeviceName) { state, connected ->
         state.copy(connected = connected)
     }
+        .launchOnFirstStart {
+            val recent = withContext(dispatchers.io) { models.recent() }
+            _state.update { it.copy(recent = recent) }
+            load()
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
