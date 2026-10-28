@@ -27,6 +27,21 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_document_actions
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_download
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_status_failed
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_status_pending
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_status_read
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_status_sending
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_status_sent
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_btn_delete
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_label_document_meta
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_label_size_bytes
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_label_size_gb
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_label_size_kb
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_label_size_mb
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -44,21 +59,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_document_actions
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_download
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_failed
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_pending
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_read
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_sending
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_status_sent
-import specmp.feature.support_chat.generated.resources.supportchat_chat_btn_delete
-import specmp.feature.support_chat.generated.resources.supportchat_chat_label_document_meta
-import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_bytes
-import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_gb
-import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_kb
-import specmp.feature.support_chat.generated.resources.supportchat_chat_label_size_mb
-import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
 
 @Composable
 internal fun SupportChatMessageBubble(
@@ -178,12 +178,12 @@ private fun FailedMessageActions(canRetry: Boolean, onRetry: () -> Unit, onDelet
     ) {
         if (canRetry) {
             CmpTextButton(
-                text = stringResource(Res.string.supportchat_common_btn_retry),
+                text = stringResource(Strings.string.supportchat_common_btn_retry),
                 onClick = onRetry
             )
         }
         CmpTextButton(
-            text = stringResource(Res.string.supportchat_chat_btn_delete),
+            text = stringResource(Strings.string.supportchat_chat_btn_delete),
             onClick = onDelete
         )
     }
@@ -232,31 +232,31 @@ private fun MessageStatusIcon(status: SupportChatMessageStatus, metaColor: Color
         SupportChatMessageStatus.Sending -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Res.string.supportchat_chat_a11y_status_sending)
+            stringResource(Strings.string.supportchat_chat_a11y_status_sending)
         )
 
         SupportChatMessageStatus.Sent -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Res.string.supportchat_chat_a11y_status_sent)
+            stringResource(Strings.string.supportchat_chat_a11y_status_sent)
         )
 
         SupportChatMessageStatus.Read -> Triple(
             CmpIcons.DoneAll,
             readColor,
-            stringResource(Res.string.supportchat_chat_a11y_status_read)
+            stringResource(Strings.string.supportchat_chat_a11y_status_read)
         )
 
         SupportChatMessageStatus.Pending -> Triple(
             CmpIcons.Schedule,
             metaColor,
-            stringResource(Res.string.supportchat_chat_a11y_status_pending)
+            stringResource(Strings.string.supportchat_chat_a11y_status_pending)
         )
 
         SupportChatMessageStatus.Failed -> Triple(
             CmpIcons.Warning,
             errorColor,
-            stringResource(Res.string.supportchat_chat_a11y_status_failed)
+            stringResource(Strings.string.supportchat_chat_a11y_status_failed)
         )
     }
 
@@ -332,7 +332,7 @@ private fun SupportChatDocumentAttachment(
             .clip(RoundedCornerShape(8.dp))
             .clickable(
                 enabled = !isDownloading,
-                onClickLabel = stringResource(Res.string.supportchat_chat_a11y_document_actions),
+                onClickLabel = stringResource(Strings.string.supportchat_chat_a11y_document_actions),
                 role = Role.Button,
                 onClick = onClick
             ),
@@ -445,7 +445,7 @@ private fun SupportChatImageAttachment(
                         CmpIconButton(
                             onClick = downloadAction,
                             icon = CmpIcons.Download,
-                            contentDescription = stringResource(Res.string.supportchat_chat_a11y_download),
+                            contentDescription = stringResource(Strings.string.supportchat_chat_a11y_download),
                             modifier = Modifier.size(36.dp)
                         )
                     }
@@ -489,7 +489,7 @@ private fun documentMetadata(name: String, mimeType: String?, sizeBytes: Long?):
     // только одна часть, разделителя нет — это разные ветки, а не joinToString.
     return when {
         size != null && type.isNotBlank() ->
-            stringResource(Res.string.supportchat_chat_label_document_meta, size, type)
+            stringResource(Strings.string.supportchat_chat_label_document_meta, size, type)
 
         size != null -> size
 
@@ -505,10 +505,10 @@ private fun formatFileSize(sizeBytes: Long): String {
     val megabyte = kilobyte * 1_024L
     val gigabyte = megabyte * 1_024L
     return when {
-        sizeBytes < kilobyte -> stringResource(Res.string.supportchat_chat_label_size_bytes, sizeBytes)
-        sizeBytes < megabyte -> stringResource(Res.string.supportchat_chat_label_size_kb, sizeBytes / kilobyte)
-        sizeBytes < gigabyte -> formatWithTenths(sizeBytes, megabyte, Res.string.supportchat_chat_label_size_mb)
-        else -> formatWithTenths(sizeBytes, gigabyte, Res.string.supportchat_chat_label_size_gb)
+        sizeBytes < kilobyte -> stringResource(Strings.string.supportchat_chat_label_size_bytes, sizeBytes)
+        sizeBytes < megabyte -> stringResource(Strings.string.supportchat_chat_label_size_kb, sizeBytes / kilobyte)
+        sizeBytes < gigabyte -> formatWithTenths(sizeBytes, megabyte, Strings.string.supportchat_chat_label_size_mb)
+        else -> formatWithTenths(sizeBytes, gigabyte, Strings.string.supportchat_chat_label_size_gb)
     }
 }
 

@@ -5,9 +5,9 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.common.AppError
 import ru.alarmtrade.specmp.core.common.appError
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_required_fields
 import ru.alarmtrade.specmp.core.ui.error.message
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_error_required_fields
 
 /**
  * Типизированная ошибка submit-флоу auth-форм.
@@ -33,7 +33,7 @@ sealed interface AuthFormError {
 /** Текст ошибки; [rejected] — фраза экрана для отказа сервера. */
 @Composable
 fun AuthFormError.text(rejected: StringResource): String = when (this) {
-    AuthFormError.RequiredFields -> stringResource(Res.string.login_common_error_required_fields)
+    AuthFormError.RequiredFields -> stringResource(Strings.string.login_common_error_required_fields)
     AuthFormError.Rejected -> stringResource(rejected)
     is AuthFormError.Common -> error.message()
 }

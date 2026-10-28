@@ -31,6 +31,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
             // Логика конфигураций (feature/configurator), сессии настроек и редактор (feature/device/settings*)

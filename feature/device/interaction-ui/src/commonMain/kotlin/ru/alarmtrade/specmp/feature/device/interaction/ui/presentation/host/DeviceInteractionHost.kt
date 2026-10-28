@@ -28,6 +28,16 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_common_btn_disconnect
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_common_btn_exit
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_common_msg_waiting
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_connecting_title
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_msg_ble
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_msg_usb
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_title
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -47,15 +57,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import specmp.feature.device.interaction_ui.generated.resources.Res
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_a11y_back
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_btn_disconnect
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_btn_exit
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_connecting_title
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_ble
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_subtitle
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_title
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_disconnected_usb
-import specmp.feature.device.interaction_ui.generated.resources.device_interaction_waiting
 import specmp.feature.device.interaction_ui.generated.resources.device_link_lost
 
 /**
@@ -153,7 +154,7 @@ internal fun DeviceStatusContent(
                         CmpIconButton(
                             onClick = onExit,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Res.string.device_interaction_a11y_back)
+                            contentDescription = stringResource(Strings.string.deviceinteraction_common_a11y_back)
                         )
                     }
                 )
@@ -174,14 +175,14 @@ internal fun DeviceStatusContent(
                         DeviceStatus.Connecting -> {
                             StatusHero(CmpIcons.Link, error = false)
                             CmpText(
-                                text = stringResource(Res.string.device_interaction_connecting_title),
+                                text = stringResource(Strings.string.deviceinteraction_connecting_title),
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Medium,
                                 textAlign = TextAlign.Center
                             )
                             CmpCircularProgressIndicator()
                             CmpButton(
-                                text = stringResource(Res.string.device_interaction_btn_exit),
+                                text = stringResource(Strings.string.deviceinteraction_common_btn_exit),
                                 onClick = onExit,
                                 modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_EXIT_TAG)
                             )
@@ -203,25 +204,25 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
         tint = colors.primary
     )
     Headline(
-        title = stringResource(Res.string.device_interaction_disconnected_title),
+        title = stringResource(Strings.string.deviceinteraction_disconnected_title),
         subtitle = stringResource(
             when (transport) {
-                ConnectionTransport.USB -> Res.string.device_interaction_disconnected_usb
-                ConnectionTransport.BLE -> Res.string.device_interaction_disconnected_ble
-                null -> Res.string.device_interaction_disconnected_subtitle
+                ConnectionTransport.USB -> Strings.string.deviceinteraction_disconnected_msg_usb
+                ConnectionTransport.BLE -> Strings.string.deviceinteraction_disconnected_msg_ble
+                null -> Strings.string.deviceinteraction_disconnected_subtitle
             }
         )
     )
     CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
         CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
         CmpText(
-            text = stringResource(Res.string.device_interaction_waiting),
+            text = stringResource(Strings.string.deviceinteraction_common_msg_waiting),
             fontSize = 14.sp,
             color = colors.onSurfaceVariant
         )
     }
     CmpOutlinedButton(
-        text = stringResource(Res.string.device_interaction_btn_disconnect),
+        text = stringResource(Strings.string.deviceinteraction_common_btn_disconnect),
         onClick = onExit,
         modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_DISCONNECT_TAG)
     )

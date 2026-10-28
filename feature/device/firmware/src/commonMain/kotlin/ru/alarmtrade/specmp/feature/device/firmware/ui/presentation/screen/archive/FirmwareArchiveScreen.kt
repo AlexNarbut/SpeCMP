@@ -27,6 +27,11 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_a11y_refresh
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -55,11 +60,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveLoading
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveRow
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.RollbackDialog
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_archive_a11y_refresh
-import specmp.feature.device.firmware.generated.resources.firmware_archive_title_screen
-import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware.generated.resources.firmware_common_msg_test_channel
 
 private val ListMaxWidth = 760.dp
 private val MasterWidth = 440.dp
@@ -139,7 +139,7 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.firmware_archive_title_screen)) },
+                title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_screen)) },
                 subtitle = state.deviceTitle.takeIf { it.isNotBlank() }?.let { title ->
                     { CmpText(text = deviceSubtitle(state.profile, title), style = CmpTextStyle.Caption) }
                 },
@@ -147,14 +147,14 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.firmware_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
                     )
                 },
                 actions = {
                     CmpIconButton(
                         onClick = actions.onRefresh,
                         icon = CmpIcons.Refresh,
-                        contentDescription = stringResource(Res.string.firmware_archive_a11y_refresh),
+                        contentDescription = stringResource(Strings.string.firmware_archive_a11y_refresh),
                         tint = cmpThemeColors().primary,
                         modifier = Modifier.testTag(ARCHIVE_REFRESH_TAG)
                     )
@@ -281,7 +281,7 @@ private fun VersionList(
     ) {
         if (state.channel.isTest) {
             item(key = "test-channel") {
-                InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
+                InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
             }
         }
         items(content.content, key = { it.version }) { row ->

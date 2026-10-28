@@ -18,6 +18,8 @@ import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.common.safeRun
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_msg_can_copied
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -27,8 +29,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectEffect
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectViewModel
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_select_msg_can_copied
 
 /**
  * Точка входа «Выбор автомобиля» (каталог и карточка автомобиля). Подключается через слоты навигации в
@@ -68,7 +68,7 @@ fun VehicleSelectEntry(
 
             is VehicleSelectEffect.CanCopied -> {
                 clipboard.setText(AnnotatedString(effect.code))
-                snackbarHostState.showSnackbar(getString(Res.string.vehicle_select_msg_can_copied, effect.code))
+                snackbarHostState.showSnackbar(getString(Strings.string.vehicle_select_msg_can_copied, effect.code))
             }
         }
     }

@@ -41,6 +41,8 @@ kotlin {
             implementation(libs.kermit)
 
             implementation(project(":core:common"))
+
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
             implementation(project(":core:permissions"))
 

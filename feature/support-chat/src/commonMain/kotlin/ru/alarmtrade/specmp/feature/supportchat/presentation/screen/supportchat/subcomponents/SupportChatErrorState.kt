@@ -10,6 +10,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_history_title
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -19,9 +22,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_history_title
-import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
 
 /**
  * Полноэкранная ошибка первой загрузки истории: показывается ровно тогда,
@@ -56,7 +56,7 @@ internal fun SupportChatErrorState(
                     is SupportChatError.Common -> error.error.message()
 
                     SupportChatError.HistoryUnavailable -> stringResource(
-                        Res.string.supportchat_chat_error_history_title
+                        Strings.string.supportchat_chat_error_history_title
                     )
                 },
                 fontWeight = FontWeight.Medium,
@@ -65,7 +65,7 @@ internal fun SupportChatErrorState(
             )
 
             CmpButton(
-                text = stringResource(Res.string.supportchat_common_btn_retry),
+                text = stringResource(Strings.string.supportchat_common_btn_retry),
                 onClick = onRetry
             )
         }

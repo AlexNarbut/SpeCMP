@@ -25,6 +25,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_btn_logout
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_logout_failed
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_check
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_checking
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_update
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_updating
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_version
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_email_missing
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_name_missing
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_profile
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_settings
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_theme
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_version
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_subtitle_app_update_available
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_title_app_update_available
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.lce.isContent
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
@@ -45,21 +61,6 @@ import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenStat
 import specmp.feature.main.generated.resources.Res
 import specmp.feature.main.generated.resources.app_settings
 import specmp.feature.main.generated.resources.app_update
-import specmp.feature.main.generated.resources.main_drawer_banner_app_update_available
-import specmp.feature.main.generated.resources.main_drawer_banner_app_update_subtitle
-import specmp.feature.main.generated.resources.main_drawer_btn_logout
-import specmp.feature.main.generated.resources.main_drawer_error_logout_failed
-import specmp.feature.main.generated.resources.main_drawer_label_app_update_check
-import specmp.feature.main.generated.resources.main_drawer_label_app_update_checking
-import specmp.feature.main.generated.resources.main_drawer_label_database_update
-import specmp.feature.main.generated.resources.main_drawer_label_database_updating
-import specmp.feature.main.generated.resources.main_drawer_label_database_version
-import specmp.feature.main.generated.resources.main_drawer_label_email_missing
-import specmp.feature.main.generated.resources.main_drawer_label_name_missing
-import specmp.feature.main.generated.resources.main_drawer_label_profile
-import specmp.feature.main.generated.resources.main_drawer_label_settings
-import specmp.feature.main.generated.resources.main_drawer_label_theme
-import specmp.feature.main.generated.resources.main_drawer_label_version
 
 @Suppress("LongMethod")
 @Composable
@@ -113,7 +114,7 @@ internal fun MainHomeDrawer(
             ) {
                 MainDrawerRow(
                     icon = if (isDark) CmpIcons.DarkMode else CmpIcons.LightMode,
-                    label = stringResource(Res.string.main_drawer_label_theme),
+                    label = stringResource(Strings.string.main_drawer_label_theme),
                     colors = colors,
                     trailing = {
                         CmpSwitch(
@@ -127,9 +128,9 @@ internal fun MainHomeDrawer(
                 MainDrawerRow(
                     icon = CmpIcons.Refresh,
                     label = if (state.isDatabaseSyncing) {
-                        stringResource(Res.string.main_drawer_label_database_updating)
+                        stringResource(Strings.string.main_drawer_label_database_updating)
                     } else {
-                        stringResource(Res.string.main_drawer_label_database_update)
+                        stringResource(Strings.string.main_drawer_label_database_update)
                     },
                     colors = colors,
                     trailing = {
@@ -149,9 +150,9 @@ internal fun MainHomeDrawer(
                     MainDrawerRow(
                         iconPainter = painterResource(Res.drawable.app_update),
                         label = if (state.isAppUpdateChecking) {
-                            stringResource(Res.string.main_drawer_label_app_update_checking)
+                            stringResource(Strings.string.main_drawer_label_app_update_checking)
                         } else {
-                            stringResource(Res.string.main_drawer_label_app_update_check)
+                            stringResource(Strings.string.main_drawer_label_app_update_check)
                         },
                         colors = colors,
                         trailing = {
@@ -170,14 +171,14 @@ internal fun MainHomeDrawer(
 
                 MainDrawerRow(
                     iconPainter = painterResource(Res.drawable.app_settings),
-                    label = stringResource(Res.string.main_drawer_label_settings),
+                    label = stringResource(Strings.string.main_drawer_label_settings),
                     colors = colors,
                     onClick = onSettingsClick
                 )
 
                 MainDrawerRow(
                     icon = CmpIcons.ExitToApp,
-                    label = stringResource(Res.string.main_drawer_btn_logout),
+                    label = stringResource(Strings.string.main_drawer_btn_logout),
                     colors = colors,
                     trailing = {
                         if (state.isLogoutInProgress) {
@@ -217,9 +218,9 @@ private fun MainProfileBlock(profile: MainProfile, colors: CmpThemeColors, modif
     val name = profile.name.trim()
     val email = profile.email.trim()
     val initials = mainProfileInitials(name)
-    val fallbackProfile = stringResource(Res.string.main_drawer_label_profile)
-    val nameMissing = stringResource(Res.string.main_drawer_label_name_missing)
-    val emailMissing = stringResource(Res.string.main_drawer_label_email_missing)
+    val fallbackProfile = stringResource(Strings.string.main_drawer_label_profile)
+    val nameMissing = stringResource(Strings.string.main_drawer_label_name_missing)
+    val emailMissing = stringResource(Strings.string.main_drawer_label_email_missing)
     val primary = when {
         name.isNotBlank() -> name
         email.isNotBlank() -> email
@@ -378,14 +379,14 @@ private fun MainDrawerFooter(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             CmpText(
-                text = stringResource(Res.string.main_drawer_label_version, state.appVersionName),
+                text = stringResource(Strings.string.main_drawer_label_version, state.appVersionName),
                 fontSize = 12.sp,
                 color = colors.onSurfaceVariant
             )
             state.databaseVersion?.let { databaseVersion ->
                 CmpText(
                     text = stringResource(
-                        Res.string.main_drawer_label_database_version,
+                        Strings.string.main_drawer_label_database_version,
                         databaseVersion.toString()
                     ),
                     fontSize = 12.sp,
@@ -428,14 +429,14 @@ private fun MainAppUpdateBanner(
                 verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
                 CmpText(
-                    text = stringResource(Res.string.main_drawer_banner_app_update_available),
+                    text = stringResource(Strings.string.main_drawer_title_app_update_available),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.onPrimaryContainer
                 )
                 CmpText(
                     text = stringResource(
-                        Res.string.main_drawer_banner_app_update_subtitle,
+                        Strings.string.main_drawer_subtitle_app_update_available,
                         version
                     ),
                     fontSize = 12.sp,
@@ -456,7 +457,7 @@ private fun MainAppUpdateBanner(
 private fun MainLogoutErrorMessage(error: MainError, colors: CmpThemeColors, modifier: Modifier = Modifier) {
     val text = when (error) {
         is MainError.Common -> error.error.message()
-        MainError.Failed -> stringResource(Res.string.main_drawer_error_logout_failed)
+        MainError.Failed -> stringResource(Strings.string.main_drawer_error_logout_failed)
     }
 
     CmpSurface(

@@ -7,15 +7,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_file
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileLimits
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
-import specmp.composeapp.generated.resources.Res
-import specmp.composeapp.generated.resources.composeapp_picker_title_file
 
 @Composable
 actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {
-    val title = stringResource(Res.string.composeapp_picker_title_file)
+    val title = stringResource(Strings.string.app_picker_title_file)
     return remember(title) { DesktopFirmwareFilePicker(title) }
 }
 

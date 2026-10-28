@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_date_label_today">Сегодня</string>
+    <string name="common_date_label_yesterday">Вчера</string>
+    <string name="common_date_label_month_january">января</string>
+    <string name="common_date_label_month_february">февраля</string>
+    <string name="common_date_label_month_march">марта</string>
+    <string name="common_date_label_month_april">апреля</string>
+    <string name="common_date_label_month_may">мая</string>
+    <string name="common_date_label_month_june">июня</string>
+    <string name="common_date_label_month_july">июля</string>
+    <string name="common_date_label_month_august">августа</string>
+    <string name="common_date_label_month_september">сентября</string>
+    <string name="common_date_label_month_october">октября</string>
+    <string name="common_date_label_month_november">ноября</string>
+    <string name="common_date_label_month_december">декабря</string>
+    <string name="common_common_error_no_connection">Нет подключения к интернету</string>
+    <string name="common_common_error_timeout">Сервер не отвечает</string>
+    <string name="common_common_error_server">Ошибка сервера</string>
+    <string name="common_common_error_bluetooth_off">Bluetooth выключен</string>
+    <string name="common_common_error_bluetooth_unsupported">Bluetooth не поддерживается на этом устройстве</string>
+    <string name="common_common_error_location_off">Включите геолокацию для поиска устройств</string>
+    <string name="common_common_error_permission_denied">Нет разрешения на доступ к устройствам</string>
+    <string name="common_common_error_device_not_found">Устройство не найдено</string>
+    <string name="common_common_error_device_disconnected">Связь с блоком прервана</string>
+</resources>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="deviceselect_common_title_screen">Выбор устройства</string>
+    <string name="deviceselect_common_a11y_back">Назад</string>
+    <string name="deviceselect_common_a11y_device_photo">фото устройства</string>
+
+    <!-- Экран-обоснование доступа -->
+
+    <!-- Нет доступа -->
+    <string name="deviceselect_denied_title">Нет доступа</string>
+    <string name="deviceselect_denied_subtitle">Без разрешения приложение не сможет найти устройства. Включите доступ в настройках.</string>
+    <string name="deviceselect_fix_item_android_1">Настройки → Приложения → Pandora Spec → Разрешения</string>
+    <string name="deviceselect_fix_item_android_2">Включите «Устройства поблизости» и «Bluetooth»</string>
+    <string name="deviceselect_fix_item_ios_1">Настройки → Pandora Spec → Bluetooth → включить</string>
+    <string name="deviceselect_common_btn_open_settings">Открыть настройки</string>
+    <string name="deviceselect_common_btn_cancel">Отмена</string>
+    <string name="deviceselect_common_btn_retry">Повторить</string>
+
+    <!-- Bluetooth выключен -->
+    <string name="deviceselect_adapter_title">Bluetooth выключен</string>
+    <string name="deviceselect_adapter_subtitle">Включите Bluetooth на устройстве, чтобы найти блок сигнализации.</string>
+    <string name="deviceselect_common_btn_open_bluetooth">Открыть настройки Bluetooth</string>
+
+    <!-- Служба геолокации выключена (BLE-скан на Android < 12) -->
+    <string name="deviceselect_location_title">Геолокация выключена</string>
+    <string name="deviceselect_location_subtitle">На этой версии Android для поиска по Bluetooth нужно включить службу геолокации.</string>
+    <string name="deviceselect_common_btn_open_location">Открыть настройки геолокации</string>
+
+    <!-- Сканирование -->
+    <string name="deviceselect_scanning_title">Поиск устройств…</string>
+    <string name="deviceselect_scanning_subtitle_ble">Держите устройство Pandora рядом. Bluetooth-устройства появятся в списке автоматически.</string>
+    <string name="deviceselect_scanning_subtitle_usb">Подключите устройство Pandora кабелем. USB-устройства появятся в списке автоматически.</string>
+    <string name="deviceselect_scanning_subtitle_both">Держите устройство Pandora рядом. Bluetooth- и USB-устройства появятся в списке автоматически.</string>
+
+    <!-- Пусто -->
+    <string name="deviceselect_empty_title">Устройства не найдены</string>
+    <string name="deviceselect_empty_subtitle">Поиск продолжается. Проверьте, что устройство готово к подключению.</string>
+    <!-- Подсказки «пусто» — по поддерживаемым транспортам -->
+    <string name="deviceselect_empty_item_ble_1">Убедитесь, что на устройстве включено питание</string>
+    <string name="deviceselect_empty_item_ble_2">Поднесите блок ближе — в пределах 1–2 метров</string>
+    <string name="deviceselect_empty_item_ble_3">Проверьте, что Bluetooth включён</string>
+    <string name="deviceselect_empty_item_usb_1">Проверьте, что кабель подключён к устройству и компьютеру</string>
+    <string name="deviceselect_empty_item_usb_2">Попробуйте другой USB-порт или кабель</string>
+    <string name="deviceselect_empty_item_usb_3">Убедитесь, что модуль определяется системой</string>
+    <string name="deviceselect_empty_item_both_1">Убедитесь, что устройство включено, а кабель подключён</string>
+    <string name="deviceselect_empty_item_both_2">Для Bluetooth поднесите блок ближе — в пределах 1–2 метров</string>
+    <string name="deviceselect_empty_item_both_3">Проверьте, что включён Bluetooth или USB-модуль определяется</string>
+    <string name="deviceselect_scan_loading_searching">Идёт поиск…</string>
+
+    <!-- Список -->
+    <string name="deviceselect_list_label_count">Найдено устройств: %1$d</string>
+    <string name="deviceselect_list_loading_searching_short">поиск…</string>
+
+    <!-- Подключение -->
+    <string name="deviceselect_connecting_title">Подключение…</string>
+
+    <!-- Карточка (master-detail) -->
+    <string name="deviceselect_detail_msg_empty">Выберите устройство из списка</string>
+    <string name="deviceselect_detail_label_mac">MAC-адрес</string>
+    <string name="deviceselect_common_btn_connect">Подключить</string>
+    <string name="deviceselect_detail_label_type">Тип устройства</string>
+    <string name="deviceselect_detail_label_mode">Режим</string>
+    <string name="deviceselect_detail_label_signal">Уровень сигнала</string>
+    <string name="deviceselect_detail_label_manufacturer">Производитель</string>
+    <string name="deviceselect_detail_label_vid_pid">VID:PID</string>
+    <string name="deviceselect_detail_label_system_id">ID блока (systemId)</string>
+    <string name="deviceselect_detail_label_firmware">Версия прошивки</string>
+    <string name="deviceselect_detail_label_uuid">ID (UUID)</string>
+    <string name="deviceselect_detail_label_phone_bond">Связь с телефоном</string>
+    <string name="deviceselect_detail_label_device_bond">Связь у самого устройства</string>
+    <string name="deviceselect_detail_msg_note_ble">Версия прошивки и ID блока в эфире не передаются — они появятся после подключения.</string>
+    <string name="deviceselect_common_value_yes">есть</string>
+    <string name="deviceselect_common_value_no">нет</string>
+    <string name="deviceselect_common_value_unknown">не определён</string>
+    <string name="deviceselect_common_btn_close">Закрыть</string>
+    <string name="deviceselect_common_a11y_device_info">Информация об устройстве</string>
+    <string name="deviceselect_common_value_mode_normal">Обычный</string>
+    <string name="deviceselect_common_format_rssi">%1$d dBm</string>
+    <string name="deviceselect_common_value_mode_main">Рабочий</string>
+    <string name="deviceselect_common_value_mode_pairing">Сопряжение</string>
+    <string name="deviceselect_common_value_mode_boot">Загрузчик</string>
+    <string name="deviceselect_common_value_kind_alarm">Сигнализация</string>
+    <string name="deviceselect_common_value_kind_tag">Метка</string>
+    <string name="deviceselect_common_value_kind_relay">Реле</string>
+    <string name="deviceselect_common_value_kind_immobilizer">Иммобилайзер</string>
+    <string name="deviceselect_common_value_kind_remote_control">Пульт</string>
+    <string name="deviceselect_common_value_kind_navigation">Навигация</string>
+    <string name="deviceselect_common_value_kind_module">Модуль</string>
+    <string name="deviceselect_common_value_kind_sensor">Датчик</string>
+    <string name="deviceselect_common_value_kind_other">Устройство</string>
+
+    <!-- Транспорт -->
+    <string name="deviceselect_common_value_transport_ble">Bluetooth</string>
+    <string name="deviceselect_common_value_transport_ble_short">BLE</string>
+    <string name="deviceselect_common_value_transport_usb">USB</string>
+
+    <!-- Ошибки / эффекты -->
+    <string name="deviceselect_common_error_connection_failed">Не удалось подключиться к устройству</string>
+    <string name="deviceselect_common_error_pairing_required">Переведите блок в режим сопряжения и повторите подключение.</string>
+    <string name="deviceselect_common_error_bond_remove_device">Устройство сопряжено с другим телефоном. Сбросьте сопряжение на приборе и повторите.</string>
+</resources>

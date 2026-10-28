@@ -17,6 +17,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_a11y_refresh
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_reinstall
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_update
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_server
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_actual
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_unsupported
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_update_available
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_loading_search
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_loading_version
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_unsupported_hint
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_label_version
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -38,20 +52,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.titleR
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CardStatusUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CurrentVersionUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.ModuleCardUi
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_check_a11y_refresh
-import specmp.feature.device.firmware.generated.resources.firmware_check_btn_description
-import specmp.feature.device.firmware.generated.resources.firmware_check_btn_reinstall
-import specmp.feature.device.firmware.generated.resources.firmware_check_btn_update
-import specmp.feature.device.firmware.generated.resources.firmware_check_error_server
-import specmp.feature.device.firmware.generated.resources.firmware_check_label_actual
-import specmp.feature.device.firmware.generated.resources.firmware_check_label_unsupported
-import specmp.feature.device.firmware.generated.resources.firmware_check_label_update_available
-import specmp.feature.device.firmware.generated.resources.firmware_check_loading_search
-import specmp.feature.device.firmware.generated.resources.firmware_check_loading_version
-import specmp.feature.device.firmware.generated.resources.firmware_check_msg_unsupported_hint
-import specmp.feature.device.firmware.generated.resources.firmware_common_btn_retry
-import specmp.feature.device.firmware.generated.resources.firmware_common_label_version
 
 private val ButtonHeight = 48.dp
 
@@ -124,7 +124,7 @@ private fun CardHeader(module: ModuleCardUi, onRefresh: () -> Unit) {
             CmpIconButton(
                 onClick = onRefresh,
                 icon = CmpIcons.Refresh,
-                contentDescription = stringResource(Res.string.firmware_check_a11y_refresh),
+                contentDescription = stringResource(Strings.string.firmware_check_a11y_refresh),
                 modifier = Modifier.size(ButtonHeight).testTag(moduleRefreshTag(module.id)),
                 enabled = canRefresh
             )
@@ -142,7 +142,7 @@ private fun CurrentVersionRow(currentVersion: CurrentVersionUi) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         CmpText(
-            text = stringResource(Res.string.firmware_common_label_version),
+            text = stringResource(Strings.string.firmware_common_label_version),
             color = colors.onSurfaceVariant,
             style = CmpTextStyle.Body
         )
@@ -152,7 +152,7 @@ private fun CurrentVersionRow(currentVersion: CurrentVersionUi) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CmpText(
-                    text = stringResource(Res.string.firmware_check_loading_version),
+                    text = stringResource(Strings.string.firmware_check_loading_version),
                     color = colors.onSurfaceVariant,
                     style = CmpTextStyle.Body
                 )
@@ -189,13 +189,13 @@ private fun NotSupportedBlock() {
                 tint = colors.error
             )
             CmpText(
-                text = stringResource(Res.string.firmware_check_label_unsupported),
+                text = stringResource(Strings.string.firmware_check_label_unsupported),
                 fontWeight = FontWeight.Medium,
                 color = colors.error
             )
         }
         CmpText(
-            text = stringResource(Res.string.firmware_check_msg_unsupported_hint),
+            text = stringResource(Strings.string.firmware_check_msg_unsupported_hint),
             color = colors.onSurfaceVariant,
             style = CmpTextStyle.Body
         )
@@ -211,7 +211,7 @@ private fun SearchingBlock() {
     ) {
         CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
         CmpText(
-            text = stringResource(Res.string.firmware_check_loading_search),
+            text = stringResource(Strings.string.firmware_check_loading_search),
             color = cmpThemeColors().onSurfaceVariant,
             style = CmpTextStyle.Body
         )
@@ -245,7 +245,7 @@ private fun UpdateAvailableBlock(
                 ) {
                     CmpIcon(icon = CmpIcons.ArrowCircleUp, contentDescription = null, modifier = Modifier.size(24.dp))
                     CmpText(
-                        text = stringResource(Res.string.firmware_check_label_update_available),
+                        text = stringResource(Strings.string.firmware_check_label_update_available),
                         fontWeight = FontWeight.Medium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -255,12 +255,12 @@ private fun UpdateAvailableBlock(
             }
             CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpOutlinedButton(
-                    text = stringResource(Res.string.firmware_check_btn_description),
+                    text = stringResource(Strings.string.firmware_check_btn_description),
                     onClick = onDescription,
                     modifier = Modifier.weight(1f).height(ButtonHeight)
                 )
                 CmpButton(
-                    text = stringResource(Res.string.firmware_check_btn_update),
+                    text = stringResource(Strings.string.firmware_check_btn_update),
                     onClick = onUpdate,
                     modifier = Modifier.weight(
                         UPDATE_BUTTON_WEIGHT
@@ -281,11 +281,11 @@ private fun ActualBlock(moduleId: Long, status: CardStatusUi.Actual, onUpdate: (
                 modifier = Modifier.size(24.dp),
                 tint = cmpThemeColors().primary
             )
-            CmpText(text = stringResource(Res.string.firmware_check_label_actual), style = CmpTextStyle.Body)
+            CmpText(text = stringResource(Strings.string.firmware_check_label_actual), style = CmpTextStyle.Body)
             VersionText(status.version, fontSize = 15.sp)
         }
         CmpTextButton(
-            text = stringResource(Res.string.firmware_check_btn_reinstall),
+            text = stringResource(Strings.string.firmware_check_btn_reinstall),
             onClick = onUpdate,
             modifier = Modifier.height(ButtonHeight).testTag(moduleUpdateTag(moduleId))
         )
@@ -304,10 +304,10 @@ private fun FailedBlock(error: FirmwareError, onRetry: () -> Unit) {
         CmpColumn(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpIcon(icon = CmpIcons.CloudOff, contentDescription = null, modifier = Modifier.size(24.dp))
-                CmpText(text = error.text(Res.string.firmware_check_error_server), style = CmpTextStyle.Body)
+                CmpText(text = error.text(Strings.string.firmware_check_error_server), style = CmpTextStyle.Body)
             }
             CmpOutlinedButton(
-                text = stringResource(Res.string.firmware_common_btn_retry),
+                text = stringResource(Strings.string.firmware_common_btn_retry),
                 onClick = onRetry,
                 modifier = Modifier.height(ButtonHeight)
             )

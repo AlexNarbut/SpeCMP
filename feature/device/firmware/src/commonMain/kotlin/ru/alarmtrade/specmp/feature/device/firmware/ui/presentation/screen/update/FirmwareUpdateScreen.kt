@@ -24,6 +24,14 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_a11y_locked
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_exit_exit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_exit_stay
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_exit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_exit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_screen
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -60,14 +68,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ProgressBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SourceBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SuccessBody
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware.generated.resources.firmware_update_a11y_locked
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_btn_exit
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_btn_stay
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_msg
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_title_screen
 
 private val BodyMaxWidth = 480.dp
 private val CompactHero = 128.dp
@@ -136,7 +136,7 @@ internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: Firmware
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.firmware_update_title_screen)) },
+                title = { CmpText(text = stringResource(Strings.string.firmware_update_title_screen)) },
                 subtitle = state.deviceTitle.takeIf { it.isNotBlank() }?.let { title ->
                     { CmpText(text = subtitleOf(state, title), style = CmpTextStyle.Caption) }
                 },
@@ -147,7 +147,7 @@ internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: Firmware
                         CmpIconButton(
                             onClick = actions.onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Res.string.firmware_common_a11y_back)
+                            contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
                         )
                     }
                 }
@@ -197,7 +197,7 @@ private fun LockedBackIcon() {
     CmpBox(modifier = Modifier.padding(12.dp)) {
         CmpIcon(
             icon = CmpIcons.Lock,
-            contentDescription = stringResource(Res.string.firmware_update_a11y_locked),
+            contentDescription = stringResource(Strings.string.firmware_update_a11y_locked),
             tint = cmpThemeColors().onSurfaceVariant
         )
     }
@@ -269,18 +269,18 @@ private fun ExitDialog(actions: FirmwareUpdateActions) {
         onDismissRequest = actions.onExitDialogDismiss,
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.Warning.imageVector(),
-        title = { CmpText(text = stringResource(Res.string.firmware_update_exit_title)) },
-        text = { CmpText(text = stringResource(Res.string.firmware_update_exit_msg), style = CmpTextStyle.Body) },
+        title = { CmpText(text = stringResource(Strings.string.firmware_update_title_exit)) },
+        text = { CmpText(text = stringResource(Strings.string.firmware_update_msg_exit), style = CmpTextStyle.Body) },
         dismissButton = {
             CmpTextButton(
-                text = stringResource(Res.string.firmware_update_exit_btn_stay),
+                text = stringResource(Strings.string.firmware_update_btn_exit_stay),
                 onClick = actions.onExitDialogDismiss,
                 modifier = Modifier.height(48.dp)
             )
         },
         confirmButton = {
             CmpButton(
-                text = stringResource(Res.string.firmware_update_exit_btn_exit),
+                text = stringResource(Strings.string.firmware_update_btn_exit_exit),
                 onClick = actions.onExitConfirm,
                 modifier = Modifier.height(48.dp).testTag(EXIT_DIALOG_CONFIRM_TAG)
             )

@@ -18,6 +18,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_a11y_note
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_no_data
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_not_supported
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_supported
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -28,11 +33,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_cap_a11y_note
-import specmp.feature.vehicle_ui.generated.resources.vehicle_cap_label_no_data
-import specmp.feature.vehicle_ui.generated.resources.vehicle_cap_label_not_supported
-import specmp.feature.vehicle_ui.generated.resources.vehicle_cap_label_supported
 
 private const val SUCCESS_TINT = 0.22f
 private const val SUCCESS_ICON_MIX = 0.3f
@@ -60,9 +60,13 @@ internal fun CapBadge(
     val colors = cmpThemeColors()
     val success = cmpDomainColors().success
     val (icon, text) = when (capability) {
-        is CarCapability.Supported -> CmpIcons.CheckCircle to stringResource(Res.string.vehicle_cap_label_supported)
-        is CarCapability.NotSupported -> CmpIcons.Cancel to stringResource(Res.string.vehicle_cap_label_not_supported)
-        CarCapability.NoData -> CmpIcons.HelpOutline to stringResource(Res.string.vehicle_cap_label_no_data)
+        is CarCapability.Supported -> CmpIcons.CheckCircle to stringResource(Strings.string.vehicle_cap_label_supported)
+
+        is CarCapability.NotSupported ->
+            CmpIcons.Cancel to
+                stringResource(Strings.string.vehicle_cap_label_not_supported)
+
+        CarCapability.NoData -> CmpIcons.HelpOutline to stringResource(Strings.string.vehicle_cap_label_no_data)
     }
     val (background, border, tint) = when (capability) {
         is CarCapability.Supported -> Triple(
@@ -80,7 +84,7 @@ internal fun CapBadge(
     val clickable = if (hasNote) {
         Modifier.clickable(
             role = Role.Button,
-            onClickLabel = stringResource(Res.string.vehicle_cap_a11y_note),
+            onClickLabel = stringResource(Strings.string.vehicle_cap_a11y_note),
             onClick = onNote
         )
     } else {

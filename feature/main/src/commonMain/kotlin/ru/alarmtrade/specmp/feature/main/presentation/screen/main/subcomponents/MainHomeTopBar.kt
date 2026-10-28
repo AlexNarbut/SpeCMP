@@ -17,6 +17,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.main_common_a11y_open_menu
+import ru.alarmtrade.specmp.core.localization.resources.main_common_loading_database_applying
+import ru.alarmtrade.specmp.core.localization.resources.main_common_loading_database_checking
+import ru.alarmtrade.specmp.core.localization.resources.main_common_loading_database_downloading
+import ru.alarmtrade.specmp.core.localization.resources.main_common_status_database_app_update_required
+import ru.alarmtrade.specmp.core.localization.resources.main_common_status_database_update_failed
+import ru.alarmtrade.specmp.core.localization.resources.main_common_status_database_updated
+import ru.alarmtrade.specmp.core.localization.resources.main_main_title_app
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -28,15 +37,6 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
-import specmp.feature.main.generated.resources.Res
-import specmp.feature.main.generated.resources.main_common_a11y_open_menu
-import specmp.feature.main.generated.resources.main_common_loading_database_applying
-import specmp.feature.main.generated.resources.main_common_loading_database_checking
-import specmp.feature.main.generated.resources.main_common_loading_database_downloading
-import specmp.feature.main.generated.resources.main_common_status_database_app_update_required
-import specmp.feature.main.generated.resources.main_common_status_database_update_failed
-import specmp.feature.main.generated.resources.main_common_status_database_updated
-import specmp.feature.main.generated.resources.main_main_title_app
 
 @Composable
 internal fun MainHomeTopBar(
@@ -53,7 +53,7 @@ internal fun MainHomeTopBar(
             .height(64.dp),
         title = {
             CmpText(
-                text = stringResource(Res.string.main_main_title_app),
+                text = stringResource(Strings.string.main_main_title_app),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.onBackground
@@ -63,7 +63,7 @@ internal fun MainHomeTopBar(
             CmpIconButton(
                 onClick = onMenuClick,
                 icon = CmpIcons.Menu,
-                contentDescription = stringResource(Res.string.main_common_a11y_open_menu),
+                contentDescription = stringResource(Strings.string.main_common_a11y_open_menu),
                 enabled = !isLoading
             )
         },
@@ -144,18 +144,18 @@ private fun MainDatabaseStatusChip(
 
 @Composable
 private fun MainDatabaseSyncBadge.label(): String = when (this) {
-    MainDatabaseSyncBadge.CheckingVersion -> stringResource(Res.string.main_common_loading_database_checking)
+    MainDatabaseSyncBadge.CheckingVersion -> stringResource(Strings.string.main_common_loading_database_checking)
 
-    MainDatabaseSyncBadge.Downloading -> stringResource(Res.string.main_common_loading_database_downloading)
+    MainDatabaseSyncBadge.Downloading -> stringResource(Strings.string.main_common_loading_database_downloading)
 
-    MainDatabaseSyncBadge.Applying -> stringResource(Res.string.main_common_loading_database_applying)
+    MainDatabaseSyncBadge.Applying -> stringResource(Strings.string.main_common_loading_database_applying)
 
-    MainDatabaseSyncBadge.Updated -> stringResource(Res.string.main_common_status_database_updated)
+    MainDatabaseSyncBadge.Updated -> stringResource(Strings.string.main_common_status_database_updated)
 
     is MainDatabaseSyncBadge.UpdateFailed ->
-        error?.message() ?: stringResource(Res.string.main_common_status_database_update_failed)
+        error?.message() ?: stringResource(Strings.string.main_common_status_database_update_failed)
 
     MainDatabaseSyncBadge.AppUpdateRequired -> stringResource(
-        Res.string.main_common_status_database_app_update_required
+        Strings.string.main_common_status_database_app_update_required
     )
 }

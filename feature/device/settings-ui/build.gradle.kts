@@ -31,6 +31,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
             // Логика настроек (источники, сессия SDK) и сессия устройства (переподключение, шапка)

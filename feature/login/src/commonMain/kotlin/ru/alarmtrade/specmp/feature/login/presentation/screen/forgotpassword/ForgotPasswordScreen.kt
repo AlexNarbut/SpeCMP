@@ -16,6 +16,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_btn_go_to_login
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_reset_password_failed
+import ru.alarmtrade.specmp.core.localization.resources.login_common_label_email
+import ru.alarmtrade.specmp.core.localization.resources.login_forgot_btn_submit
+import ru.alarmtrade.specmp.core.localization.resources.login_forgot_link_back_to_login
+import ru.alarmtrade.specmp.core.localization.resources.login_forgot_msg_success
+import ru.alarmtrade.specmp.core.localization.resources.login_forgot_subtitle_screen
+import ru.alarmtrade.specmp.core.localization.resources.login_forgot_title_success
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -28,15 +37,6 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSuccessPanel
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_btn_go_to_login
-import specmp.feature.login.generated.resources.login_common_error_reset_password_failed
-import specmp.feature.login.generated.resources.login_common_label_email
-import specmp.feature.login.generated.resources.login_forgot_btn_submit
-import specmp.feature.login.generated.resources.login_forgot_link_back_to_login
-import specmp.feature.login.generated.resources.login_forgot_msg_success
-import specmp.feature.login.generated.resources.login_forgot_subtitle_screen
-import specmp.feature.login.generated.resources.login_forgot_title_success
 
 @Composable
 fun ForgotPasswordScreen(
@@ -57,17 +57,17 @@ fun ForgotPasswordScreen(
         modifier = modifier,
         colors = colors,
         showCompactBrand = false,
-        error = state.value.resetError?.text(Res.string.login_common_error_reset_password_failed)
+        error = state.value.resetError?.text(Strings.string.login_common_error_reset_password_failed)
     ) {
         if (state.value.isSuccess) {
             AuthSuccessPanel(
-                title = stringResource(Res.string.login_forgot_title_success),
-                text = stringResource(Res.string.login_forgot_msg_success),
+                title = stringResource(Strings.string.login_forgot_title_success),
+                text = stringResource(Strings.string.login_forgot_msg_success),
                 icon = CmpIcons.Email,
                 colors = colors,
                 primaryAction = {
                     AuthSubmitButton(
-                        text = stringResource(Res.string.login_common_btn_go_to_login),
+                        text = stringResource(Strings.string.login_common_btn_go_to_login),
                         onClick = onBackToLogin,
                         colors = colors
                     )
@@ -102,7 +102,7 @@ private fun ForgotPasswordForm(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         CmpText(
-            text = stringResource(Res.string.login_forgot_subtitle_screen),
+            text = stringResource(Strings.string.login_forgot_subtitle_screen),
             modifier = Modifier.fillMaxWidth(),
             fontSize = 14.sp,
             color = colors.onSurfaceVariant
@@ -112,7 +112,7 @@ private fun ForgotPasswordForm(
             value = value.email,
             onValueChange = onEmailChange,
             modifier = Modifier.fillMaxWidth(),
-            label = stringResource(Res.string.login_common_label_email),
+            label = stringResource(Strings.string.login_common_label_email),
             singleLine = true,
             enabled = !value.isLoading,
             isError = value.resetError?.blamesInput == true,
@@ -131,7 +131,7 @@ private fun ForgotPasswordForm(
         )
 
         AuthSubmitButton(
-            text = stringResource(Res.string.login_forgot_btn_submit),
+            text = stringResource(Strings.string.login_forgot_btn_submit),
             onClick = onSubmit,
             enabled = value.canSubmit,
             isLoading = value.isLoading,
@@ -139,7 +139,7 @@ private fun ForgotPasswordForm(
         )
 
         CmpTextButton(
-            text = stringResource(Res.string.login_forgot_link_back_to_login),
+            text = stringResource(Strings.string.login_forgot_link_back_to_login),
             onClick = onBackToLogin,
             enabled = !value.isLoading
         )

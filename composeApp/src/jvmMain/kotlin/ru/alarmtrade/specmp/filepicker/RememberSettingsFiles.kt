@@ -10,16 +10,16 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_file
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
-import specmp.composeapp.generated.resources.Res
-import specmp.composeapp.generated.resources.composeapp_picker_title_file
 
 @Composable
 actual fun rememberSettingsFilePicker(): SettingsFilePicker {
-    val title = stringResource(Res.string.composeapp_picker_title_file)
+    val title = stringResource(Strings.string.app_picker_title_file)
     return remember(title) { DesktopSettingsFilePicker(title) }
 }
 

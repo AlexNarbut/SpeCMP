@@ -21,6 +21,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_msg_enter
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_a11y_recent_remove
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_card_prompt
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_card_prompt_can
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_pick_brand
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_pick_model
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_single_trim
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_brands
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_can_results
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_models
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_recent
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_search_results
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_trims
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -46,20 +60,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.CardPane
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_enter
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_a11y_recent_remove
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_card_prompt
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_card_prompt_can
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_pick_brand
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_pick_model
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_single_trim
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_brands
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_can_results
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_models
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_recent
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_search_results
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_trims
 
 /** Ширина панели карточки, от которой её шапка и матрица — в широком варианте. */
 private val CardWideMinWidth = 640.dp
@@ -150,7 +150,7 @@ private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) 
                             modifier = Modifier.size(20.dp)
                         )
                         CmpText(
-                            text = stringResource(Res.string.vehicle_catalog_title_recent),
+                            text = stringResource(Strings.string.vehicle_catalog_title_recent),
                             style = CmpTextStyle.Body,
                             fontWeight = FontWeight.SemiBold,
                             color = cmpThemeColors().onSurfaceVariant
@@ -162,7 +162,7 @@ private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) 
                             onClick = { actions.onRecentOpen(car) },
                             icon = CmpIcons.DirectionsCar,
                             onClear = { actions.onRecentRemove(car) },
-                            clearContentDescription = stringResource(Res.string.vehicle_catalog_a11y_recent_remove),
+                            clearContentDescription = stringResource(Strings.string.vehicle_catalog_a11y_recent_remove),
                             modifier = Modifier.testTag(VehicleTestTags.recent(car.id))
                         )
                     }
@@ -188,9 +188,9 @@ private fun RowScope.NameColumns(
     }
     Column(
         title = if (state.combo != null) {
-            stringResource(Res.string.vehicle_catalog_title_search_results)
+            stringResource(Strings.string.vehicle_catalog_title_search_results)
         } else {
-            stringResource(Res.string.vehicle_catalog_title_brands, state.brands.content?.size ?: 0)
+            stringResource(Strings.string.vehicle_catalog_title_brands, state.brands.content?.size ?: 0)
         },
         modifier = Modifier.width(brandWidth)
     ) {
@@ -198,12 +198,12 @@ private fun RowScope.NameColumns(
     }
     CmpVerticalDivider()
     Column(
-        title = brand?.name ?: stringResource(Res.string.vehicle_catalog_title_models),
+        title = brand?.name ?: stringResource(Strings.string.vehicle_catalog_title_models),
         modifier = if (expanded) Modifier.width(if (third) 300.dp else 340.dp) else Modifier.weight(1f)
     ) {
         FadeContent(targetState = state, contentKey = { it.selection.brand?.id }) { shown ->
             if (shown.selection.brand == null) {
-                Prompt(stringResource(Res.string.vehicle_catalog_msg_pick_brand))
+                Prompt(stringResource(Strings.string.vehicle_catalog_msg_pick_brand))
             } else {
                 CatalogList { modelItems(shown, actions, accordion = !third, compact = true) }
             }
@@ -219,12 +219,12 @@ private fun RowScope.NameColumns(
 /** Третья колонка «Комплектации» (Expanded от 1400 dp). */
 @Composable
 private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
-    Column(title = stringResource(Res.string.vehicle_catalog_title_trims), modifier = Modifier.width(260.dp)) {
+    Column(title = stringResource(Strings.string.vehicle_catalog_title_trims), modifier = Modifier.width(260.dp)) {
         FadeContent(targetState = state, contentKey = { it.selection.model?.id }) { shown ->
             val single = shown.trims.content?.size == 1
             when {
-                shown.selection.model == null -> Prompt(stringResource(Res.string.vehicle_catalog_msg_pick_model))
-                single -> Prompt(stringResource(Res.string.vehicle_catalog_msg_single_trim))
+                shown.selection.model == null -> Prompt(stringResource(Strings.string.vehicle_catalog_msg_pick_model))
+                single -> Prompt(stringResource(Strings.string.vehicle_catalog_msg_single_trim))
                 else -> CatalogList { trimItems(shown, actions, inline = false) }
             }
         }
@@ -234,11 +234,11 @@ private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions
 @Composable
 private fun CanColumn(state: VehicleSelectState, actions: VehicleSelectActions, modifier: Modifier) {
     Column(
-        title = stringResource(Res.string.vehicle_catalog_title_can_results, state.canCode.ifEmpty { "—" }),
+        title = stringResource(Strings.string.vehicle_catalog_title_can_results, state.canCode.ifEmpty { "—" }),
         modifier = modifier
     ) {
         if (state.canCode.isEmpty()) {
-            Prompt(stringResource(Res.string.vehicle_can_msg_enter))
+            Prompt(stringResource(Strings.string.vehicle_can_msg_enter))
         } else {
             CatalogList { canItems(state, actions, compact = true) }
         }
@@ -275,9 +275,9 @@ private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectA
                     CmpText(
                         text = stringResource(
                             if (state.searchMode == SearchMode.CAN) {
-                                Res.string.vehicle_catalog_msg_card_prompt_can
+                                Strings.string.vehicle_catalog_msg_card_prompt_can
                             } else {
-                                Res.string.vehicle_catalog_msg_card_prompt
+                                Strings.string.vehicle_catalog_msg_card_prompt
                             }
                         ),
                         style = CmpTextStyle.BodyLarge,

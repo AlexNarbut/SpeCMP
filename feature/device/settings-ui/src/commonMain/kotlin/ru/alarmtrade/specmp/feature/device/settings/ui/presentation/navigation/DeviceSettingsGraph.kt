@@ -25,6 +25,16 @@ import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_loaded_same
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_saved
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_saved_file
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_saved_mine
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_error_set_value
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_written
+import ru.alarmtrade.specmp.core.localization.resources.settings_loaded_msg
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_msg_done
+import ru.alarmtrade.specmp.core.localization.resources.settings_saved_btn_open
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
@@ -59,16 +69,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_error_set_value
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_written
-import specmp.feature.device.settings_ui.generated.resources.settings_loaded_msg
-import specmp.feature.device.settings_ui.generated.resources.settings_loaded_same
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_done
-import specmp.feature.device.settings_ui.generated.resources.settings_saved
-import specmp.feature.device.settings_ui.generated.resources.settings_saved_btn_open
-import specmp.feature.device.settings_ui.generated.resources.settings_saved_file
-import specmp.feature.device.settings_ui.generated.resources.settings_saved_mine
 
 /** Раздел меню; `null` — корень. */
 @Serializable
@@ -307,14 +307,16 @@ private suspend fun handleEffect(
 ) {
     when (effect) {
         is DeviceSettingsEffect.Written -> snackbarHostState.showSnackbar(
-            getString(Res.string.settings_editor_msg_written, effect.count)
+            getString(Strings.string.settings_editor_msg_written, effect.count)
         )
 
         DeviceSettingsEffect.SetValueFailed -> snackbarHostState.showSnackbar(
-            getString(Res.string.settings_editor_error_set_value)
+            getString(Strings.string.settings_editor_error_set_value)
         )
 
-        DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(getString(Res.string.settings_reset_msg_done))
+        DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(
+            getString(Strings.string.settings_reset_msg_done)
+        )
 
         is DeviceSettingsEffect.Exit -> when (effect.target) {
             ExitTarget.BACK -> slots.onExit()
@@ -323,9 +325,9 @@ private suspend fun handleEffect(
 
         is DeviceSettingsEffect.Loaded -> snackbarHostState.showSnackbar(
             if (effect.count > 0) {
-                getString(Res.string.settings_loaded_msg, effect.count)
+                getString(Strings.string.settings_loaded_msg, effect.count)
             } else {
-                getString(Res.string.settings_loaded_same)
+                getString(Strings.string.settings_common_msg_loaded_same)
             },
             duration = CmpSnackbarDuration.Long
         )
@@ -336,20 +338,22 @@ private suspend fun handleEffect(
             viewModel.onFileExported(slots.fileSaver.save(effect.path, effect.fileName))
 
         is DeviceSettingsEffect.FileSaved -> snackbarHostState.showSnackbar(
-            getString(Res.string.settings_saved_file, effect.name)
+            getString(Strings.string.settings_common_msg_saved_file, effect.name)
         )
 
         is DeviceSettingsEffect.SavedToMine -> {
             val open = slots.onOpenConfiguration
             val result = snackbarHostState.showSnackbar(
-                getString(Res.string.settings_saved_mine),
-                actionLabel = open?.let { getString(Res.string.settings_saved_btn_open) },
+                getString(Strings.string.settings_common_msg_saved_mine),
+                actionLabel = open?.let { getString(Strings.string.settings_saved_btn_open) },
                 duration = CmpSnackbarDuration.Long
             )
             if (result == CmpSnackbarResult.ActionPerformed) open?.invoke(effect.configuration)
         }
 
-        DeviceSettingsEffect.Saved -> snackbarHostState.showSnackbar(getString(Res.string.settings_saved))
+        DeviceSettingsEffect.Saved -> snackbarHostState.showSnackbar(
+            getString(Strings.string.settings_common_msg_saved)
+        )
 
         is DeviceSettingsEffect.WriteToDevice -> slots.onWriteToDevice?.invoke(effect.source)
     }

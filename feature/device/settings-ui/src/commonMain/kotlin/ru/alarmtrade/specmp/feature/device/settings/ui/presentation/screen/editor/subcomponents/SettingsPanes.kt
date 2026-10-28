@@ -28,6 +28,14 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_empty_section
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_empty_section_hint
+import ru.alarmtrade.specmp.core.localization.resources.settings_search_a11y_clear
+import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_empty
+import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_empty_hint
+import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_prompt
+import ru.alarmtrade.specmp.core.localization.resources.settings_search_placeholder
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
@@ -45,14 +53,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_empty_section
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_empty_section_hint
-import specmp.feature.device.settings_ui.generated.resources.settings_search_a11y_clear
-import specmp.feature.device.settings_ui.generated.resources.settings_search_msg_empty
-import specmp.feature.device.settings_ui.generated.resources.settings_search_msg_empty_hint
-import specmp.feature.device.settings_ui.generated.resources.settings_search_msg_prompt
-import specmp.feature.device.settings_ui.generated.resources.settings_search_placeholder
 
 private val ContentMaxWidth = 720.dp
 private val CardRadius = 16.dp
@@ -66,8 +66,8 @@ internal fun SectionPane(section: SettingsSection, marks: RowMarks, wide: Boolea
     if (section.children.isEmpty()) {
         EmptyMessage(
             icon = CmpIcons.List,
-            title = stringResource(Res.string.settings_editor_msg_empty_section),
-            hint = stringResource(Res.string.settings_editor_msg_empty_section_hint)
+            title = stringResource(Strings.string.settings_editor_msg_empty_section),
+            hint = stringResource(Strings.string.settings_editor_msg_empty_section_hint)
         )
         return
     }
@@ -122,8 +122,8 @@ internal fun SearchPane(
                 text = it
                 onQueryChange(it)
             },
-            placeholder = stringResource(Res.string.settings_search_placeholder),
-            clearContentDescription = stringResource(Res.string.settings_search_a11y_clear),
+            placeholder = stringResource(Strings.string.settings_search_placeholder),
+            clearContentDescription = stringResource(Strings.string.settings_search_a11y_clear),
             modifier = Modifier
                 .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
@@ -133,7 +133,7 @@ internal fun SearchPane(
         when {
             text.isBlank() -> EmptyMessage(
                 icon = CmpIcons.Search,
-                title = stringResource(Res.string.settings_search_msg_prompt),
+                title = stringResource(Strings.string.settings_search_msg_prompt),
                 hint = null
             )
 
@@ -142,8 +142,8 @@ internal fun SearchPane(
 
             hits.isEmpty() -> EmptyMessage(
                 icon = CmpIcons.Search,
-                title = stringResource(Res.string.settings_search_msg_empty, query.trim()),
-                hint = stringResource(Res.string.settings_search_msg_empty_hint)
+                title = stringResource(Strings.string.settings_search_msg_empty, query.trim()),
+                hint = stringResource(Strings.string.settings_search_msg_empty_hint)
             )
 
             else -> LazyColumn(

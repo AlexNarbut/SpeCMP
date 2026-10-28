@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_picker_title_image">Choose an image</string>
+    <string name="app_picker_label_images">Images</string>
+    <string name="app_picker_title_file">Choose a file</string>
+</resources>

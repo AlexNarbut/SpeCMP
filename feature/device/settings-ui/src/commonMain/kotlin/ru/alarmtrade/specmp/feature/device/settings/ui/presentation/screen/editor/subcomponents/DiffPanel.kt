@@ -27,6 +27,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_a11y_close
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_close
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_nc
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_no
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_empty
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_minus_sign
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_plus_sign
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_btn_load
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_error
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_hint_can
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_label_col_number
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_label_col_setting
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_label_col_was
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_label_col_will
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_label_root
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_label_was
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_label_will
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_loading_busy
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_msg_pending
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_msg_same
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_msg_search_empty
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_msg_summary
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_placeholder_search
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.settings_diff_title
+import ru.alarmtrade.specmp.core.localization.resources.settings_source_title_defaults
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -59,35 +88,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.logicsChange
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DiffState
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_close
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_cancel
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_close
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_retry
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_btn_load
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_busy
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_can_hint
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_col_number
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_col_setting
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_col_was
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_col_will
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_error
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_pending
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_root
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_same
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_search
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_search_empty
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_subtitle
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_summary
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_title
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_was
-import specmp.feature.device.settings_ui.generated.resources.settings_diff_will
-import specmp.feature.device.settings_ui.generated.resources.settings_source_defaults_title
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_nc
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_no
-import specmp.feature.device.settings_ui.generated.resources.settings_value_empty
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_minus_sign
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_plus_sign
 
 /**
  * K9 «Что изменится» перед загрузкой конфигурации: итог одной строкой, предупреждение о незаписанных правках, CAN-код
@@ -97,10 +97,10 @@ import specmp.feature.device.settings_ui.generated.resources.settings_value_pola
  */
 @Composable
 internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions) {
-    val title = stringResource(Res.string.settings_diff_title)
+    val title = stringResource(Strings.string.settings_diff_title)
     val subtitle = stringResource(
-        Res.string.settings_diff_subtitle,
-        state.title.ifEmpty { stringResource(Res.string.settings_source_defaults_title) }
+        Strings.string.settings_diff_subtitle,
+        state.title.ifEmpty { stringResource(Strings.string.settings_source_title_defaults) }
     )
     if (wide) {
         CmpDialog(
@@ -129,7 +129,7 @@ internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions
                         CmpIconButton(
                             onClick = actions.onDiffDismiss,
                             icon = CmpIcons.Close,
-                            contentDescription = stringResource(Res.string.settings_common_a11y_close)
+                            contentDescription = stringResource(Strings.string.settings_common_a11y_close)
                         )
                     }
                 )
@@ -149,27 +149,33 @@ private fun DiffButtons(state: DiffState, actions: TransferActions) {
     CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         when (state) {
             is DiffState.Busy -> CmpTextButton(
-                text = stringResource(Res.string.settings_common_btn_cancel),
+                text = stringResource(Strings.string.settings_common_btn_cancel),
                 onClick = actions.onDiffDismiss
             )
 
             is DiffState.Error -> {
                 CmpTextButton(
-                    text = stringResource(Res.string.settings_common_btn_close),
-                    onClick = actions.onDiffDismiss
-                )
-                CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = actions.onDiffRetry)
-            }
-
-            is DiffState.Ready -> if (state.diff.isEmpty) {
-                CmpButton(text = stringResource(Res.string.settings_common_btn_close), onClick = actions.onDiffDismiss)
-            } else {
-                CmpTextButton(
-                    text = stringResource(Res.string.settings_common_btn_cancel),
+                    text = stringResource(Strings.string.settings_common_btn_close),
                     onClick = actions.onDiffDismiss
                 )
                 CmpButton(
-                    text = stringResource(Res.string.settings_diff_btn_load),
+                    text = stringResource(Strings.string.settings_common_btn_retry),
+                    onClick = actions.onDiffRetry
+                )
+            }
+
+            is DiffState.Ready -> if (state.diff.isEmpty) {
+                CmpButton(
+                    text = stringResource(Strings.string.settings_common_btn_close),
+                    onClick = actions.onDiffDismiss
+                )
+            } else {
+                CmpTextButton(
+                    text = stringResource(Strings.string.settings_common_btn_cancel),
+                    onClick = actions.onDiffDismiss
+                )
+                CmpButton(
+                    text = stringResource(Strings.string.settings_diff_btn_load),
                     onClick = actions.onDiffConfirm,
                     modifier = Modifier.widthIn(min = 140.dp).testTag(SettingsTestTags.DIFF_LOAD)
                 )
@@ -187,11 +193,11 @@ private fun DiffBody(state: DiffState, wide: Boolean) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            CmpText(text = stringResource(Res.string.settings_diff_busy), color = colors.onSurfaceVariant)
+            CmpText(text = stringResource(Strings.string.settings_diff_loading_busy), color = colors.onSurfaceVariant)
         }
 
         is DiffState.Error -> CmpText(
-            text = stringResource(Res.string.settings_diff_error),
+            text = stringResource(Strings.string.settings_diff_error),
             modifier = Modifier.padding(24.dp)
         )
 
@@ -236,7 +242,7 @@ private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
         if (q.isNotEmpty() && sections.isEmpty() && canCode == null) {
             item(key = "nothing") {
                 CmpText(
-                    text = stringResource(Res.string.settings_diff_search_empty, q),
+                    text = stringResource(Strings.string.settings_diff_msg_search_empty, q),
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth().padding(24.dp)
                 )
@@ -261,16 +267,16 @@ private fun DiffSummary(
     ) {
         CmpText(
             text = if (diff.isEmpty) {
-                stringResource(Res.string.settings_diff_same)
+                stringResource(Strings.string.settings_diff_msg_same)
             } else {
-                stringResource(Res.string.settings_diff_summary, diff.total, diff.sectionCount)
+                stringResource(Strings.string.settings_diff_msg_summary, diff.total, diff.sectionCount)
             },
             style = CmpTextStyle.BodyLarge,
             fontWeight = FontWeight.SemiBold
         )
         if (pendingChanges > 0 && !diff.isEmpty) {
             CmpText(
-                text = stringResource(Res.string.settings_diff_pending, pendingChanges),
+                text = stringResource(Strings.string.settings_diff_msg_pending, pendingChanges),
                 style = CmpTextStyle.Body,
                 color = colors.onErrorContainer,
                 modifier = Modifier.fillMaxWidth().background(colors.errorContainer, RowShape)
@@ -281,8 +287,8 @@ private fun DiffSummary(
             CmpSearchField(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = stringResource(Res.string.settings_diff_search),
-                clearContentDescription = stringResource(Res.string.settings_common_a11y_close),
+                placeholder = stringResource(Strings.string.settings_diff_placeholder_search),
+                clearContentDescription = stringResource(Strings.string.settings_common_a11y_close),
                 modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.DIFF_SEARCH)
             )
         }
@@ -307,7 +313,7 @@ private fun CanRow(change: SettingChange, wide: Boolean, open: Boolean, onToggle
                 modifier = Modifier.size(18.dp)
             )
             CmpText(
-                text = stringResource(Res.string.settings_diff_can_hint),
+                text = stringResource(Strings.string.settings_diff_hint_can),
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant
             )
@@ -369,7 +375,7 @@ private fun SectionHeader(section: SectionChanges, expanded: Boolean, onToggle: 
                 CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
             }
             CmpText(
-                text = section.section?.name ?: stringResource(Res.string.settings_diff_root),
+                text = section.section?.name ?: stringResource(Strings.string.settings_diff_label_root),
                 style = CmpTextStyle.BodyLarge,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
@@ -389,10 +395,10 @@ private fun ColumnsHeader() {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         listOf(
-            Res.string.settings_diff_col_number to null,
-            Res.string.settings_diff_col_setting to NAME_WEIGHT,
-            Res.string.settings_diff_col_was to 1f,
-            Res.string.settings_diff_col_will to 1f
+            Strings.string.settings_diff_label_col_number to null,
+            Strings.string.settings_diff_label_col_setting to NAME_WEIGHT,
+            Strings.string.settings_diff_label_col_was to 1f,
+            Strings.string.settings_diff_label_col_will to 1f
         ).forEach { (text, weight) ->
             CmpText(
                 text = stringResource(text).uppercase(),
@@ -510,11 +516,11 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
                         parts.forEach { CmpText(text = it, style = CmpTextStyle.BodyLarge, color = content) }
                     } else {
                         CmpText(
-                            text = stringResource(Res.string.settings_diff_was, was),
+                            text = stringResource(Strings.string.settings_diff_label_was, was),
                             color = colors.onSurfaceVariant
                         )
                         CmpText(
-                            text = stringResource(Res.string.settings_diff_will, will),
+                            text = stringResource(Strings.string.settings_diff_label_will, will),
                             fontWeight = FontWeight.SemiBold,
                             color = content
                         )
@@ -547,16 +553,16 @@ private fun channelParts(change: SettingChange): List<String>? {
 
 @Composable
 private fun contactText(type: InputContactType): String = when (type) {
-    InputContactType.NORMALLY_OPEN -> stringResource(Res.string.settings_value_contact_no)
-    InputContactType.NORMALLY_CLOSED -> stringResource(Res.string.settings_value_contact_nc)
-    InputContactType.UNDEFINED -> stringResource(Res.string.settings_value_empty)
+    InputContactType.NORMALLY_OPEN -> stringResource(Strings.string.settings_common_value_contact_no)
+    InputContactType.NORMALLY_CLOSED -> stringResource(Strings.string.settings_common_value_contact_nc)
+    InputContactType.UNDEFINED -> stringResource(Strings.string.settings_common_value_empty)
 }
 
 @Composable
 private fun polarityText(polarity: Polarity): String = when (polarity) {
-    Polarity.PLUS -> stringResource(Res.string.settings_value_polarity_plus_sign)
-    Polarity.MINUS -> stringResource(Res.string.settings_value_polarity_minus_sign)
-    Polarity.UNDEFINED -> stringResource(Res.string.settings_value_empty)
+    Polarity.PLUS -> stringResource(Strings.string.settings_common_value_polarity_plus_sign)
+    Polarity.MINUS -> stringResource(Strings.string.settings_common_value_polarity_minus_sign)
+    Polarity.UNDEFINED -> stringResource(Strings.string.settings_common_value_empty)
 }
 
 /** Название строки: у каналов — «IN1 · Концевик дверей». */

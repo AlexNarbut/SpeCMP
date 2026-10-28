@@ -21,6 +21,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_all_versions
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_install
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_refresh
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_reinstall
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_error_more
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_error_msg
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_error_title
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_loading
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_loading_more
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_older
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_rollback
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_same
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_empty
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_empty_can
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_rollback
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_dialog_full_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_dialog_no_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
@@ -46,26 +66,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.RollbackUi
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_all_versions
-import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_install
-import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_refresh
-import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_reinstall
-import specmp.feature.device.firmware.generated.resources.firmware_archive_empty_can_title
-import specmp.feature.device.firmware.generated.resources.firmware_archive_empty_title
-import specmp.feature.device.firmware.generated.resources.firmware_archive_error_more
-import specmp.feature.device.firmware.generated.resources.firmware_archive_error_msg
-import specmp.feature.device.firmware.generated.resources.firmware_archive_error_title
-import specmp.feature.device.firmware.generated.resources.firmware_archive_loading
-import specmp.feature.device.firmware.generated.resources.firmware_archive_loading_more
-import specmp.feature.device.firmware.generated.resources.firmware_archive_msg_older
-import specmp.feature.device.firmware.generated.resources.firmware_archive_msg_same
-import specmp.feature.device.firmware.generated.resources.firmware_archive_rollback_msg
-import specmp.feature.device.firmware.generated.resources.firmware_archive_rollback_title
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_label_full_description
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_msg_no_description
-import specmp.feature.device.firmware.generated.resources.firmware_common_btn_cancel
-import specmp.feature.device.firmware.generated.resources.firmware_common_btn_retry
 
 private val CenterMaxWidth = 440.dp
 private val ButtonHeight = 48.dp
@@ -80,7 +80,7 @@ internal fun ArchiveLoading() {
     CenteredBody {
         CmpCircularProgressIndicator()
         CmpText(
-            text = stringResource(Res.string.firmware_archive_loading),
+            text = stringResource(Strings.string.firmware_archive_loading),
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center
         )
@@ -92,8 +92,8 @@ internal fun ArchiveEmpty(onRefresh: () -> Unit, canCode: String? = null, onShow
     CenteredBody {
         FirmwareHero(icon = CmpIcons.Inventory2, tone = HeroTone.Neutral, size = 88.dp)
         CmpText(
-            text = canCode?.let { stringResource(Res.string.firmware_archive_empty_can_title, it) }
-                ?: stringResource(Res.string.firmware_archive_empty_title),
+            text = canCode?.let { stringResource(Strings.string.firmware_archive_title_empty_can, it) }
+                ?: stringResource(Strings.string.firmware_archive_title_empty),
             style = CmpTextStyle.Title,
             textAlign = TextAlign.Center
         )
@@ -103,9 +103,9 @@ internal fun ArchiveEmpty(onRefresh: () -> Unit, canCode: String? = null, onShow
                 if (canCode !=
                     null
                 ) {
-                    Res.string.firmware_archive_btn_all_versions
+                    Strings.string.firmware_archive_btn_all_versions
                 } else {
-                    Res.string.firmware_archive_btn_refresh
+                    Strings.string.firmware_archive_btn_refresh
                 }
             ),
             onClick = if (canCode != null) onShowAll else onRefresh,
@@ -119,17 +119,17 @@ internal fun ArchiveError(error: FirmwareError, onRetry: () -> Unit) {
     CenteredBody {
         FirmwareHero(icon = CmpIcons.CloudOff, tone = HeroTone.Neutral, size = 88.dp)
         CmpText(
-            text = error.text(Res.string.firmware_archive_error_title),
+            text = error.text(Strings.string.firmware_archive_error_title),
             style = CmpTextStyle.Title,
             textAlign = TextAlign.Center
         )
         CmpText(
-            text = stringResource(Res.string.firmware_archive_error_msg),
+            text = stringResource(Strings.string.firmware_archive_error_msg),
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         CmpButton(
-            text = stringResource(Res.string.firmware_common_btn_retry),
+            text = stringResource(Strings.string.firmware_common_btn_retry),
             onClick = onRetry,
             modifier = Modifier.fillMaxWidth().height(52.dp)
         )
@@ -165,19 +165,19 @@ internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRe
         ) {
             CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp)
             CmpText(
-                text = stringResource(Res.string.firmware_archive_loading_more),
+                text = stringResource(Strings.string.firmware_archive_loading_more),
                 color = cmpThemeColors().onSurfaceVariant,
                 style = CmpTextStyle.Body
             )
         }
 
         moreError != null -> InfoBanner(
-            text = moreError.text(Res.string.firmware_archive_error_more),
+            text = moreError.text(Strings.string.firmware_archive_error_more),
             tone = BannerTone.Error,
             icon = CmpIcons.CloudOff,
             action = {
                 CmpTextButton(
-                    text = stringResource(Res.string.firmware_common_btn_retry),
+                    text = stringResource(Strings.string.firmware_common_btn_retry),
                     onClick = onRetryMore,
                     modifier = Modifier.height(ButtonHeight)
                 )
@@ -219,13 +219,13 @@ internal fun ArchiveDetail(
             ArchiveRowCan(row)
             CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CmpText(
-                    text = stringResource(Res.string.firmware_check_dialog_label_full_description),
+                    text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
                     fontWeight = FontWeight.Medium,
                     color = colors.onSurfaceVariant
                 )
                 CmpText(
                     text = row.description.ifBlank {
-                        stringResource(Res.string.firmware_check_dialog_msg_no_description)
+                        stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
                     modifier = Modifier.heightIn(max = DetailDescriptionMaxHeight).verticalScroll(rememberScrollState())
                 )
@@ -234,11 +234,11 @@ internal fun ArchiveDetail(
             if (onInstall == null) return@CmpColumn
             when (row.kind) {
                 ArchiveRowKind.Older -> installedVersion?.let {
-                    InfoBanner(text = stringResource(Res.string.firmware_archive_msg_older, it))
+                    InfoBanner(text = stringResource(Strings.string.firmware_archive_msg_older, it))
                 }
 
                 ArchiveRowKind.Installed -> InfoBanner(
-                    text = stringResource(Res.string.firmware_archive_msg_same),
+                    text = stringResource(Strings.string.firmware_archive_msg_same),
                     tone = BannerTone.Ok,
                     icon = CmpIcons.Info
                 )
@@ -248,9 +248,9 @@ internal fun ArchiveDetail(
             CmpButton(
                 text = stringResource(
                     if (row.kind == ArchiveRowKind.Installed) {
-                        Res.string.firmware_archive_btn_reinstall
+                        Strings.string.firmware_archive_btn_reinstall
                     } else {
-                        Res.string.firmware_archive_btn_install
+                        Strings.string.firmware_archive_btn_install
                     }
                 ),
                 onClick = onInstall,
@@ -267,11 +267,11 @@ internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismi
         onDismissRequest = onDismiss,
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.Warning.imageVector(),
-        title = { CmpText(text = stringResource(Res.string.firmware_archive_rollback_title)) },
+        title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_rollback)) },
         text = {
             CmpText(
                 text = stringResource(
-                    Res.string.firmware_archive_rollback_msg,
+                    Strings.string.firmware_archive_msg_rollback,
                     rollback.version,
                     rollback.installedVersion
                 ),
@@ -280,14 +280,14 @@ internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismi
         },
         dismissButton = {
             CmpTextButton(
-                text = stringResource(Res.string.firmware_common_btn_cancel),
+                text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
                 modifier = Modifier.height(ButtonHeight)
             )
         },
         confirmButton = {
             CmpButton(
-                text = stringResource(Res.string.firmware_archive_btn_install),
+                text = stringResource(Strings.string.firmware_archive_btn_install),
                 onClick = onConfirm,
                 modifier = Modifier.height(ButtonHeight).testTag(ARCHIVE_ROLLBACK_CONFIRM_TAG)
             )

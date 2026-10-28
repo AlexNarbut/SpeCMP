@@ -14,6 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_msg
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_title
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_loading_modules
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -26,11 +31,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.F
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_check_error_msg
-import specmp.feature.device.firmware.generated.resources.firmware_check_error_title
-import specmp.feature.device.firmware.generated.resources.firmware_check_loading_modules
-import specmp.feature.device.firmware.generated.resources.firmware_common_btn_retry
 
 private val CenterMaxWidth = 440.dp
 
@@ -39,7 +39,7 @@ internal fun ModulesLoading() {
     CenteredBody {
         CmpCircularProgressIndicator()
         CmpText(
-            text = stringResource(Res.string.firmware_check_loading_modules),
+            text = stringResource(Strings.string.firmware_check_loading_modules),
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center
         )
@@ -51,17 +51,17 @@ internal fun ModulesError(error: FirmwareError, onRetry: () -> Unit) {
     CenteredBody {
         FirmwareHero(icon = CmpIcons.ErrorOutline, tone = HeroTone.Neutral, size = 88.dp)
         CmpText(
-            text = error.text(Res.string.firmware_check_error_title),
+            text = error.text(Strings.string.firmware_check_error_title),
             textAlign = TextAlign.Center,
             style = CmpTextStyle.Title
         )
         CmpText(
-            text = stringResource(Res.string.firmware_check_error_msg),
+            text = stringResource(Strings.string.firmware_check_error_msg),
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         CmpButton(
-            text = stringResource(Res.string.firmware_common_btn_retry),
+            text = stringResource(Strings.string.firmware_common_btn_retry),
             onClick = onRetry,
             modifier = Modifier.fillMaxWidth().height(52.dp)
         )

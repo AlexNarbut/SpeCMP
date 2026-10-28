@@ -27,6 +27,45 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_label_updated
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_clear
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_create
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_delete
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_open
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_reset_filter
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_error_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_format_copy_name
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_create_item_cloud
+import ru.alarmtrade.specmp.core.localization.resources.configurator_create_item_file
+import ru.alarmtrade.specmp.core.localization.resources.configurator_create_item_scratch
+import ru.alarmtrade.specmp.core.localization.resources.configurator_create_subtitle_cloud
+import ru.alarmtrade.specmp.core.localization.resources.configurator_create_subtitle_file
+import ru.alarmtrade.specmp.core.localization.resources.configurator_create_subtitle_scratch
+import ru.alarmtrade.specmp.core.localization.resources.configurator_create_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_delete_msg
+import ru.alarmtrade.specmp.core.localization.resources.configurator_delete_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_detail_label_created
+import ru.alarmtrade.specmp.core.localization.resources.configurator_detail_msg_empty
+import ru.alarmtrade.specmp.core.localization.resources.configurator_detail_msg_no_description
+import ru.alarmtrade.specmp.core.localization.resources.configurator_empty_msg
+import ru.alarmtrade.specmp.core.localization.resources.configurator_empty_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_menu_item_copy
+import ru.alarmtrade.specmp.core.localization.resources.configurator_menu_item_delete
+import ru.alarmtrade.specmp.core.localization.resources.configurator_menu_item_rename
+import ru.alarmtrade.specmp.core.localization.resources.configurator_menu_item_save_file
+import ru.alarmtrade.specmp.core.localization.resources.configurator_menu_item_write
+import ru.alarmtrade.specmp.core.localization.resources.configurator_mine_msg_empty_pick
+import ru.alarmtrade.specmp.core.localization.resources.configurator_mine_placeholder_search
+import ru.alarmtrade.specmp.core.localization.resources.configurator_mine_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_mine_title_empty_pick
+import ru.alarmtrade.specmp.core.localization.resources.configurator_mine_value_all_models
+import ru.alarmtrade.specmp.core.localization.resources.configurator_nothing_msg
+import ru.alarmtrade.specmp.core.localization.resources.configurator_nothing_title
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -64,45 +103,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.C
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionRow
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionsPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ModelBadge
-import specmp.feature.configurator_ui.generated.resources.Res
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_back
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_clear
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_cancel
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_create
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_delete
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_open
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_reset_filter
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_retry
-import specmp.feature.configurator_ui.generated.resources.configurator_card_updated
-import specmp.feature.configurator_ui.generated.resources.configurator_copy_name
-import specmp.feature.configurator_ui.generated.resources.configurator_create_cloud
-import specmp.feature.configurator_ui.generated.resources.configurator_create_cloud_sub
-import specmp.feature.configurator_ui.generated.resources.configurator_create_file
-import specmp.feature.configurator_ui.generated.resources.configurator_create_file_sub
-import specmp.feature.configurator_ui.generated.resources.configurator_create_scratch
-import specmp.feature.configurator_ui.generated.resources.configurator_create_scratch_sub
-import specmp.feature.configurator_ui.generated.resources.configurator_create_title
-import specmp.feature.configurator_ui.generated.resources.configurator_delete_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_delete_title
-import specmp.feature.configurator_ui.generated.resources.configurator_detail_created
-import specmp.feature.configurator_ui.generated.resources.configurator_detail_empty
-import specmp.feature.configurator_ui.generated.resources.configurator_detail_no_description
-import specmp.feature.configurator_ui.generated.resources.configurator_empty_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_empty_pick_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_empty_pick_title
-import specmp.feature.configurator_ui.generated.resources.configurator_empty_title
-import specmp.feature.configurator_ui.generated.resources.configurator_error_title
-import specmp.feature.configurator_ui.generated.resources.configurator_filter_all_models
-import specmp.feature.configurator_ui.generated.resources.configurator_menu_copy
-import specmp.feature.configurator_ui.generated.resources.configurator_menu_delete
-import specmp.feature.configurator_ui.generated.resources.configurator_menu_rename
-import specmp.feature.configurator_ui.generated.resources.configurator_menu_save_file
-import specmp.feature.configurator_ui.generated.resources.configurator_menu_write
-import specmp.feature.configurator_ui.generated.resources.configurator_mine_title
-import specmp.feature.configurator_ui.generated.resources.configurator_nothing_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_nothing_title
-import specmp.feature.configurator_ui.generated.resources.configurator_search
-import specmp.feature.configurator_ui.generated.resources.configurator_title
 
 /**
  * K1 «Мои конфигурации» (и режим выбора для «Загрузить из…» блока). Телефон — список; широкое окно (≥ 600 dp) —
@@ -117,9 +117,9 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
                 CmpTopAppBar(
                     title = {
                         val title = if (state.pickMode) {
-                            Res.string.configurator_mine_title
+                            Strings.string.configurator_mine_title
                         } else {
-                            Res.string.configurator_title
+                            Strings.string.configurator_common_title
                         }
                         CmpText(text = stringResource(title))
                     },
@@ -127,7 +127,7 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
                         CmpIconButton(
                             onClick = actions.onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Res.string.configurator_a11y_back)
+                            contentDescription = stringResource(Strings.string.configurator_common_a11y_back)
                         )
                     }
                 )
@@ -144,7 +144,7 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             CmpIcon(icon = CmpIcons.Add, contentDescription = null)
-                            CmpText(text = stringResource(Res.string.configurator_btn_create))
+                            CmpText(text = stringResource(Strings.string.configurator_common_btn_create))
                         }
                     }
                 }
@@ -183,8 +183,8 @@ private fun MineToolbar(state: MineState, actions: MineActions) {
         CmpSearchField(
             value = state.query,
             onValueChange = actions.onQueryChange,
-            placeholder = stringResource(Res.string.configurator_search),
-            clearContentDescription = stringResource(Res.string.configurator_a11y_clear),
+            placeholder = stringResource(Strings.string.configurator_mine_placeholder_search),
+            clearContentDescription = stringResource(Strings.string.configurator_common_a11y_clear),
             modifier = Modifier.fillMaxWidth().testTag(ConfiguratorTestTags.SEARCH)
         )
         ModelFilterChip(
@@ -199,10 +199,10 @@ private fun MineToolbar(state: MineState, actions: MineActions) {
 @Composable
 internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: (String?) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val clear = stringResource(Res.string.configurator_a11y_clear)
+    val clear = stringResource(Strings.string.configurator_common_a11y_clear)
     CmpBox {
         CmpChip(
-            text = selected ?: stringResource(Res.string.configurator_filter_all_models),
+            text = selected ?: stringResource(Strings.string.configurator_mine_value_all_models),
             onClick = { expanded = true },
             icon = CmpIcons.FilterAlt,
             selected = selected != null,
@@ -212,7 +212,7 @@ internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: 
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             CmpDropdownMenuItem(
-                text = stringResource(Res.string.configurator_filter_all_models),
+                text = stringResource(Strings.string.configurator_mine_value_all_models),
                 selected = selected == null,
                 onClick = {
                     expanded = false
@@ -245,12 +245,12 @@ private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
 
         is LCEState.Error -> CmpStateBox(
             icon = CmpIcons.ErrorOutline,
-            title = stringResource(Res.string.configurator_error_title),
+            title = stringResource(Strings.string.configurator_common_error_title),
             tone = CmpStateTone.Error,
             modifier = Modifier.fillMaxSize()
         ) {
             CmpButton(
-                text = stringResource(Res.string.configurator_btn_retry),
+                text = stringResource(Strings.string.configurator_common_btn_retry),
                 onClick = actions.onRetry,
                 modifier = Modifier.testTag(ConfiguratorTestTags.RETRY)
             )
@@ -266,12 +266,12 @@ private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
 
                 items.isEmpty() -> CmpStateBox(
                     icon = CmpIcons.SearchOff,
-                    title = stringResource(Res.string.configurator_nothing_title),
-                    text = stringResource(Res.string.configurator_nothing_msg),
+                    title = stringResource(Strings.string.configurator_nothing_title),
+                    text = stringResource(Strings.string.configurator_nothing_msg),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     CmpOutlinedButton(
-                        text = stringResource(Res.string.configurator_btn_reset_filter),
+                        text = stringResource(Strings.string.configurator_common_btn_reset_filter),
                         onClick = actions.onResetFilter
                     )
                 }
@@ -287,13 +287,13 @@ private fun EmptyState(state: MineState, actions: MineActions) {
     if (state.pickMode) {
         CmpStateBox(
             icon = CmpIcons.Inventory2,
-            title = stringResource(Res.string.configurator_empty_pick_title, state.modelFilter.orEmpty()),
-            text = stringResource(Res.string.configurator_empty_pick_msg),
+            title = stringResource(Strings.string.configurator_mine_title_empty_pick, state.modelFilter.orEmpty()),
+            text = stringResource(Strings.string.configurator_mine_msg_empty_pick),
             modifier = Modifier.fillMaxSize()
         ) {
             if (state.modelFilter != null) {
                 CmpOutlinedButton(
-                    text = stringResource(Res.string.configurator_btn_reset_filter),
+                    text = stringResource(Strings.string.configurator_common_btn_reset_filter),
                     onClick = actions.onResetFilter
                 )
             }
@@ -301,17 +301,20 @@ private fun EmptyState(state: MineState, actions: MineActions) {
     } else {
         CmpStateBox(
             icon = CmpIcons.Inventory2,
-            title = stringResource(Res.string.configurator_empty_title),
-            text = stringResource(Res.string.configurator_empty_msg),
+            title = stringResource(Strings.string.configurator_empty_title),
+            text = stringResource(Strings.string.configurator_empty_msg),
             modifier = Modifier.fillMaxSize()
         ) {
-            CmpButton(text = stringResource(Res.string.configurator_create_scratch), onClick = actions.onCreateScratch)
+            CmpButton(
+                text = stringResource(Strings.string.configurator_create_item_scratch),
+                onClick = actions.onCreateScratch
+            )
             CmpOutlinedButton(
-                text = stringResource(Res.string.configurator_create_cloud),
+                text = stringResource(Strings.string.configurator_create_item_cloud),
                 onClick = actions.onCreateCloud
             )
             CmpOutlinedButton(
-                text = stringResource(Res.string.configurator_create_file),
+                text = stringResource(Strings.string.configurator_create_item_file),
                 onClick = actions.onCreateFile
             )
         }
@@ -365,14 +368,14 @@ private fun MineDetail(state: MineState, actions: MineActions) {
     if (item == null) {
         CmpStateBox(
             icon = CmpIcons.Inventory2,
-            title = stringResource(Res.string.configurator_detail_empty),
+            title = stringResource(Strings.string.configurator_detail_msg_empty),
             compact = true,
             modifier = Modifier.fillMaxSize()
         )
         return
     }
     val dateText = rememberDateTimeText()
-    val copyName = stringResource(Res.string.configurator_copy_name, item.name)
+    val copyName = stringResource(Strings.string.configurator_common_format_copy_name, item.name)
     CmpColumn(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -385,18 +388,18 @@ private fun MineDetail(state: MineState, actions: MineActions) {
         ) {
             ModelBadge(item.deviceName)
             CmpText(
-                text = stringResource(Res.string.configurator_card_updated, dateText(item.updated)),
+                text = stringResource(Strings.string.configurator_card_label_updated, dateText(item.updated)),
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant
             )
             CmpText(
-                text = stringResource(Res.string.configurator_detail_created, dateText(item.created)),
+                text = stringResource(Strings.string.configurator_detail_label_created, dateText(item.created)),
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant
             )
         }
         CmpText(
-            text = item.description.ifBlank { stringResource(Res.string.configurator_detail_no_description) },
+            text = item.description.ifBlank { stringResource(Strings.string.configurator_detail_msg_no_description) },
             style = CmpTextStyle.BodyLarge,
             color = if (item.description.isBlank()) colors.onSurfaceVariant else colors.onSurface
         )
@@ -405,18 +408,18 @@ private fun MineDetail(state: MineState, actions: MineActions) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CmpButton(
-                text = stringResource(Res.string.configurator_btn_open),
+                text = stringResource(Strings.string.configurator_common_btn_open),
                 onClick = { actions.onOpen(item) },
                 modifier = Modifier.testTag(ConfiguratorTestTags.OPEN)
             )
             if (state.connectedDeviceName != null) {
                 CmpOutlinedButton(
-                    text = stringResource(Res.string.configurator_menu_write),
+                    text = stringResource(Strings.string.configurator_menu_item_write),
                     onClick = { actions.onWrite(item) }
                 )
             }
             CmpOutlinedButton(
-                text = stringResource(Res.string.configurator_menu_save_file),
+                text = stringResource(Strings.string.configurator_menu_item_save_file),
                 onClick = { actions.onExport(item) }
             )
         }
@@ -425,14 +428,14 @@ private fun MineDetail(state: MineState, actions: MineActions) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CmpTextButton(
-                text = stringResource(Res.string.configurator_menu_rename),
+                text = stringResource(Strings.string.configurator_menu_item_rename),
                 onClick = { actions.onRenameRequest(item) }
             )
-            CmpTextButton(text = stringResource(Res.string.configurator_menu_copy), onClick = {
+            CmpTextButton(text = stringResource(Strings.string.configurator_menu_item_copy), onClick = {
                 actions.onCopy(item, copyName)
             })
             CmpTextButton(
-                text = stringResource(Res.string.configurator_menu_delete),
+                text = stringResource(Strings.string.configurator_menu_item_delete),
                 onClick = { actions.onDeleteRequest(item) }
             )
         }
@@ -443,28 +446,28 @@ private fun MineDetail(state: MineState, actions: MineActions) {
 private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
     when (val dialog = state.dialog) {
         MineDialog.Create -> ConfigurationOptionsPanel(
-            title = stringResource(Res.string.configurator_create_title),
+            title = stringResource(Strings.string.configurator_create_title),
             wide = wide,
             onDismiss = actions.onDialogDismiss
         ) {
             ConfigurationOptionRow(
                 icon = CmpIcons.Factory,
-                title = stringResource(Res.string.configurator_create_scratch),
-                subtitle = stringResource(Res.string.configurator_create_scratch_sub),
+                title = stringResource(Strings.string.configurator_create_item_scratch),
+                subtitle = stringResource(Strings.string.configurator_create_subtitle_scratch),
                 onClick = actions.onCreateScratch,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_SCRATCH)
             )
             ConfigurationOptionRow(
                 icon = CmpIcons.Cloud,
-                title = stringResource(Res.string.configurator_create_cloud),
-                subtitle = stringResource(Res.string.configurator_create_cloud_sub),
+                title = stringResource(Strings.string.configurator_create_item_cloud),
+                subtitle = stringResource(Strings.string.configurator_create_subtitle_cloud),
                 onClick = actions.onCreateCloud,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_CLOUD)
             )
             ConfigurationOptionRow(
                 icon = CmpIcons.Description,
-                title = stringResource(Res.string.configurator_create_file),
-                subtitle = stringResource(Res.string.configurator_create_file_sub),
+                title = stringResource(Strings.string.configurator_create_item_file),
+                subtitle = stringResource(Strings.string.configurator_create_subtitle_file),
                 onClick = actions.onCreateFile,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_FILE)
             )
@@ -473,7 +476,7 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
         is MineDialog.Menu -> ItemMenu(dialog.item, state.connectedDeviceName != null, wide, actions)
 
         is MineDialog.Rename -> ConfigurationInfoDialog(
-            title = stringResource(Res.string.configurator_menu_rename),
+            title = stringResource(Strings.string.configurator_menu_item_rename),
             name = dialog.name,
             description = dialog.description,
             deviceName = null,
@@ -484,18 +487,18 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
 
         is MineDialog.Delete -> CmpDialog(
             onDismissRequest = actions.onDialogDismiss,
-            title = { CmpText(text = stringResource(Res.string.configurator_delete_title, dialog.item.name)) },
-            text = { CmpText(text = stringResource(Res.string.configurator_delete_msg)) },
+            title = { CmpText(text = stringResource(Strings.string.configurator_delete_title, dialog.item.name)) },
+            text = { CmpText(text = stringResource(Strings.string.configurator_delete_msg)) },
             confirmButton = {
                 CmpButton(
-                    text = stringResource(Res.string.configurator_btn_delete),
+                    text = stringResource(Strings.string.configurator_common_btn_delete),
                     onClick = actions.onDeleteConfirm,
                     modifier = Modifier.testTag(ConfiguratorTestTags.DELETE_CONFIRM)
                 )
             },
             dismissButton = {
                 CmpTextButton(
-                    text = stringResource(Res.string.configurator_btn_cancel),
+                    text = stringResource(Strings.string.configurator_common_btn_cancel),
                     onClick = actions.onDialogDismiss
                 )
             }
@@ -508,25 +511,25 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
 /** Меню ⋮ карточки: название и описание, копия, в файл, «Записать в блок» (при подключённом блоке), удалить. */
 @Composable
 private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean, actions: MineActions) {
-    val copyName = stringResource(Res.string.configurator_copy_name, item.name)
+    val copyName = stringResource(Strings.string.configurator_common_format_copy_name, item.name)
     ConfigurationOptionsPanel(title = item.name, wide = wide, onDismiss = actions.onDialogDismiss) {
         ConfigurationOptionRow(
             icon = CmpIcons.Edit,
-            title = stringResource(Res.string.configurator_menu_rename),
+            title = stringResource(Strings.string.configurator_menu_item_rename),
             subtitle = null,
             onClick = { actions.onRenameRequest(item) },
             modifier = Modifier.testTag(ConfiguratorTestTags.MENU_RENAME)
         )
         ConfigurationOptionRow(
             icon = CmpIcons.ContentCopy,
-            title = stringResource(Res.string.configurator_menu_copy),
+            title = stringResource(Strings.string.configurator_menu_item_copy),
             subtitle = null,
             onClick = { actions.onCopy(item, copyName) },
             modifier = Modifier.testTag(ConfiguratorTestTags.MENU_COPY)
         )
         ConfigurationOptionRow(
             icon = CmpIcons.Description,
-            title = stringResource(Res.string.configurator_menu_save_file),
+            title = stringResource(Strings.string.configurator_menu_item_save_file),
             subtitle = null,
             onClick = { actions.onExport(item) },
             modifier = Modifier.testTag(ConfiguratorTestTags.MENU_SAVE_FILE)
@@ -534,7 +537,7 @@ private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean,
         if (canWrite) {
             ConfigurationOptionRow(
                 icon = CmpIcons.Upload,
-                title = stringResource(Res.string.configurator_menu_write),
+                title = stringResource(Strings.string.configurator_menu_item_write),
                 subtitle = null,
                 onClick = { actions.onWrite(item) },
                 modifier = Modifier.testTag(ConfiguratorTestTags.MENU_WRITE)
@@ -542,7 +545,7 @@ private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean,
         }
         ConfigurationOptionRow(
             icon = CmpIcons.Delete,
-            title = stringResource(Res.string.configurator_menu_delete),
+            title = stringResource(Strings.string.configurator_menu_item_delete),
             subtitle = null,
             onClick = { actions.onDeleteRequest(item) },
             modifier = Modifier.testTag(ConfiguratorTestTags.MENU_DELETE)

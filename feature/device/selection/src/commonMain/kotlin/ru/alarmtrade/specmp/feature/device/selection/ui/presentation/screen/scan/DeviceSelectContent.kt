@@ -24,6 +24,42 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_a11y_device_info
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_close
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_connect
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_format_rssi
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_alarm
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_immobilizer
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_module
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_navigation
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_other
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_relay
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_remote_control
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_sensor
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_tag
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_mode_boot
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_mode_main
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_mode_normal
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_mode_pairing
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_no
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_transport_ble
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_transport_ble_short
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_transport_usb
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_unknown
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_yes
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_device_bond
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_firmware
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_mac
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_manufacturer
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_mode
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_phone_bond
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_signal
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_system_id
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_type
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_uuid
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_vid_pid
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_msg_note_ble
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -41,42 +77,6 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
-import specmp.feature.device.selection.generated.resources.Res
-import specmp.feature.device.selection.generated.resources.device_select_a11y_device_info
-import specmp.feature.device.selection.generated.resources.device_select_btn_close
-import specmp.feature.device.selection.generated.resources.device_select_btn_connect
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_device_bond
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_firmware
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_mac
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_manufacturer
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_mode
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_phone_bond
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_signal
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_system_id
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_type
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_uuid
-import specmp.feature.device.selection.generated.resources.device_select_detail_label_vid_pid
-import specmp.feature.device.selection.generated.resources.device_select_detail_note_ble
-import specmp.feature.device.selection.generated.resources.device_select_kind_alarm
-import specmp.feature.device.selection.generated.resources.device_select_kind_immobilizer
-import specmp.feature.device.selection.generated.resources.device_select_kind_module
-import specmp.feature.device.selection.generated.resources.device_select_kind_navigation
-import specmp.feature.device.selection.generated.resources.device_select_kind_other
-import specmp.feature.device.selection.generated.resources.device_select_kind_relay
-import specmp.feature.device.selection.generated.resources.device_select_kind_remote_control
-import specmp.feature.device.selection.generated.resources.device_select_kind_sensor
-import specmp.feature.device.selection.generated.resources.device_select_kind_tag
-import specmp.feature.device.selection.generated.resources.device_select_mode_boot
-import specmp.feature.device.selection.generated.resources.device_select_mode_main
-import specmp.feature.device.selection.generated.resources.device_select_mode_normal
-import specmp.feature.device.selection.generated.resources.device_select_mode_pairing
-import specmp.feature.device.selection.generated.resources.device_select_rssi
-import specmp.feature.device.selection.generated.resources.device_select_transport_ble
-import specmp.feature.device.selection.generated.resources.device_select_transport_ble_short
-import specmp.feature.device.selection.generated.resources.device_select_transport_usb
-import specmp.feature.device.selection.generated.resources.device_select_value_no
-import specmp.feature.device.selection.generated.resources.device_select_value_unknown
-import specmp.feature.device.selection.generated.resources.device_select_value_yes
 
 private const val LARGE_TILE_MIN_SIZE_DP = 96
 
@@ -95,22 +95,22 @@ internal enum class HeroTone { Primary, Error, Neutral }
 
 @Composable
 internal fun transportLabel(transport: DeviceTransport): String = when (transport) {
-    DeviceTransport.BLE -> stringResource(Res.string.device_select_transport_ble)
-    DeviceTransport.USB -> stringResource(Res.string.device_select_transport_usb)
+    DeviceTransport.BLE -> stringResource(Strings.string.deviceselect_common_value_transport_ble)
+    DeviceTransport.USB -> stringResource(Strings.string.deviceselect_common_value_transport_usb)
 }
 
 @Composable
 internal fun kindLabel(kind: DeviceKind): String = stringResource(
     when (kind) {
-        DeviceKind.ALARM -> Res.string.device_select_kind_alarm
-        DeviceKind.TAG -> Res.string.device_select_kind_tag
-        DeviceKind.RELAY -> Res.string.device_select_kind_relay
-        DeviceKind.IMMOBILIZER -> Res.string.device_select_kind_immobilizer
-        DeviceKind.REMOTE_CONTROL -> Res.string.device_select_kind_remote_control
-        DeviceKind.NAVIGATION -> Res.string.device_select_kind_navigation
-        DeviceKind.MODULE -> Res.string.device_select_kind_module
-        DeviceKind.SENSOR -> Res.string.device_select_kind_sensor
-        DeviceKind.OTHER -> Res.string.device_select_kind_other
+        DeviceKind.ALARM -> Strings.string.deviceselect_common_value_kind_alarm
+        DeviceKind.TAG -> Strings.string.deviceselect_common_value_kind_tag
+        DeviceKind.RELAY -> Strings.string.deviceselect_common_value_kind_relay
+        DeviceKind.IMMOBILIZER -> Strings.string.deviceselect_common_value_kind_immobilizer
+        DeviceKind.REMOTE_CONTROL -> Strings.string.deviceselect_common_value_kind_remote_control
+        DeviceKind.NAVIGATION -> Strings.string.deviceselect_common_value_kind_navigation
+        DeviceKind.MODULE -> Strings.string.deviceselect_common_value_kind_module
+        DeviceKind.SENSOR -> Strings.string.deviceselect_common_value_kind_sensor
+        DeviceKind.OTHER -> Strings.string.deviceselect_common_value_kind_other
     }
 )
 
@@ -119,13 +119,13 @@ internal fun kindLabel(kind: DeviceKind): String = stringResource(
 internal fun modeLabel(mode: ScannedDeviceMode, transport: DeviceTransport): String = stringResource(
     when (mode) {
         ScannedDeviceMode.BASE -> when (transport) {
-            DeviceTransport.BLE -> Res.string.device_select_mode_normal
-            DeviceTransport.USB -> Res.string.device_select_mode_main
+            DeviceTransport.BLE -> Strings.string.deviceselect_common_value_mode_normal
+            DeviceTransport.USB -> Strings.string.deviceselect_common_value_mode_main
         }
 
-        ScannedDeviceMode.PAIRING -> Res.string.device_select_mode_pairing
+        ScannedDeviceMode.PAIRING -> Strings.string.deviceselect_common_value_mode_pairing
 
-        ScannedDeviceMode.BOOT -> Res.string.device_select_mode_boot
+        ScannedDeviceMode.BOOT -> Strings.string.deviceselect_common_value_mode_boot
     }
 )
 
@@ -166,11 +166,11 @@ internal fun ModeBadge(mode: ScannedDeviceMode) {
  */
 @Composable
 internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
-    val yes = stringResource(Res.string.device_select_value_yes)
-    val no = stringResource(Res.string.device_select_value_no)
+    val yes = stringResource(Strings.string.deviceselect_common_value_yes)
+    val no = stringResource(Strings.string.deviceselect_common_value_no)
     val modeRow = item.modeOrNull?.let { mode ->
         DeviceInfoRow(
-            label = stringResource(Res.string.device_select_detail_label_mode),
+            label = stringResource(Strings.string.deviceselect_detail_label_mode),
             value = modeLabel(mode, item.transport),
             strong = mode != ScannedDeviceMode.BASE
         )
@@ -182,37 +182,37 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
                     if (item.hasPhoneBond ==
                         null
                     ) {
-                        Res.string.device_select_detail_label_uuid
+                        Strings.string.deviceselect_detail_label_uuid
                     } else {
-                        Res.string.device_select_detail_label_mac
+                        Strings.string.deviceselect_detail_label_mac
                     }
                 ),
                 value = item.address
             ),
-            DeviceInfoRow(stringResource(Res.string.device_select_detail_label_type), kindLabel(item.kind)),
+            DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_type), kindLabel(item.kind)),
             DeviceInfoRow(
-                stringResource(Res.string.device_select_detail_label_signal),
-                stringResource(Res.string.device_select_rssi, item.rssi)
+                stringResource(Strings.string.deviceselect_detail_label_signal),
+                stringResource(Strings.string.deviceselect_common_format_rssi, item.rssi)
             ),
             modeRow,
             item.hasPhoneBond?.let {
-                DeviceInfoRow(stringResource(Res.string.device_select_detail_label_phone_bond), if (it) yes else no)
+                DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_phone_bond), if (it) yes else no)
             },
             DeviceInfoRow(
-                stringResource(Res.string.device_select_detail_label_device_bond),
+                stringResource(Strings.string.deviceselect_detail_label_device_bond),
                 if (item.hasDeviceBond) yes else no
             )
         )
 
         is DeviceUiItem.Usb -> listOfNotNull(
             DeviceInfoRow(
-                stringResource(Res.string.device_select_detail_label_system_id),
-                item.systemId?.toString() ?: stringResource(Res.string.device_select_value_unknown)
+                stringResource(Strings.string.deviceselect_detail_label_system_id),
+                item.systemId?.toString() ?: stringResource(Strings.string.deviceselect_common_value_unknown)
             ),
-            DeviceInfoRow(stringResource(Res.string.device_select_detail_label_manufacturer), item.manufacturerName),
-            DeviceInfoRow(stringResource(Res.string.device_select_detail_label_vid_pid), item.vidPid),
+            DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_manufacturer), item.manufacturerName),
+            DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_vid_pid), item.vidPid),
             item.firmwareVersion?.let {
-                DeviceInfoRow(stringResource(Res.string.device_select_detail_label_firmware), it)
+                DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_firmware), it)
             },
             modeRow
         )
@@ -222,7 +222,7 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
 /** Сноска под полями: у BLE прошивка и ID блока появятся только после подключения. */
 @Composable
 internal fun deviceInfoNote(item: DeviceUiItem): String? = when (item) {
-    is DeviceUiItem.Ble -> stringResource(Res.string.device_select_detail_note_ble)
+    is DeviceUiItem.Ble -> stringResource(Strings.string.deviceselect_detail_msg_note_ble)
     is DeviceUiItem.Usb -> null
 }
 
@@ -273,10 +273,10 @@ internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConne
             }
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Res.string.device_select_btn_close), onClick = onDismiss)
+            CmpTextButton(text = stringResource(Strings.string.deviceselect_common_btn_close), onClick = onDismiss)
         },
         confirmButton = {
-            CmpTextButton(text = stringResource(Res.string.device_select_btn_connect), onClick = onConnect)
+            CmpTextButton(text = stringResource(Strings.string.deviceselect_common_btn_connect), onClick = onConnect)
         }
     )
 }
@@ -324,7 +324,7 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
             )
             CmpText(
                 text = if (short && transport == DeviceTransport.BLE) {
-                    stringResource(Res.string.device_select_transport_ble_short)
+                    stringResource(Strings.string.deviceselect_common_value_transport_ble_short)
                 } else {
                     transportLabel(transport)
                 },
@@ -397,7 +397,7 @@ internal fun DeviceRow(
                     if (showMode) item.notableMode?.let { ModeBadge(it) }
                     if (item is DeviceUiItem.Ble) {
                         CmpText(
-                            text = stringResource(Res.string.device_select_rssi, item.rssi),
+                            text = stringResource(Strings.string.deviceselect_common_format_rssi, item.rssi),
                             fontSize = DsType.LabelLarge,
                             fontWeight = FontWeight.Medium,
                             color = secondary,
@@ -425,7 +425,7 @@ internal fun DeviceRow(
                     CmpIconButton(
                         onClick = it,
                         icon = CmpIcons.MoreVert,
-                        contentDescription = stringResource(Res.string.device_select_a11y_device_info),
+                        contentDescription = stringResource(Strings.string.deviceselect_common_a11y_device_info),
                         tint = colors.onSurfaceVariant
                     )
                 }

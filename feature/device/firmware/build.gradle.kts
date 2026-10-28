@@ -37,6 +37,8 @@ kotlin {
             implementation(libs.kermit)
 
             implementation(project(":core:common"))
+
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
             // Сессия устройства: подключение, переход в загрузчик

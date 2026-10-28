@@ -17,6 +17,11 @@ import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.LocalAppLocale
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_language_en
+import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_language_ru
+import ru.alarmtrade.specmp.core.localization.resources.login_common_btn_language_en
+import ru.alarmtrade.specmp.core.localization.resources.login_common_btn_language_ru
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -24,11 +29,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_a11y_language_en
-import specmp.feature.login.generated.resources.login_common_a11y_language_ru
-import specmp.feature.login.generated.resources.login_common_btn_language_en
-import specmp.feature.login.generated.resources.login_common_btn_language_ru
 
 @Composable
 fun AuthLanguageSegment(
@@ -49,15 +49,15 @@ fun AuthLanguageSegment(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AuthLanguageSegmentItem(
-                text = stringResource(Res.string.login_common_btn_language_en),
-                contentDescription = stringResource(Res.string.login_common_a11y_language_en),
+                text = stringResource(Strings.string.login_common_btn_language_en),
+                contentDescription = stringResource(Strings.string.login_common_a11y_language_en),
                 selected = appLocale == AppLocale.English,
                 colors = colors,
                 onClick = { onLocaleChange(AppLocale.English) }
             )
             AuthLanguageSegmentItem(
-                text = stringResource(Res.string.login_common_btn_language_ru),
-                contentDescription = stringResource(Res.string.login_common_a11y_language_ru),
+                text = stringResource(Strings.string.login_common_btn_language_ru),
+                contentDescription = stringResource(Strings.string.login_common_a11y_language_ru),
                 selected = appLocale == AppLocale.Russian,
                 colors = colors,
                 onClick = { onLocaleChange(AppLocale.Russian) }

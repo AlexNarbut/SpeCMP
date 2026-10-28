@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_type_title_screen
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -24,8 +26,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeLabel
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_type_title_screen
 
 /**
  * Выбор типа устройства, когда блок не подключён: каталог фильтруется под сигнализацию или микробот.
@@ -38,7 +38,7 @@ internal fun TypeChoice(wide: Boolean, onPick: (VehicleDeviceType) -> Unit, modi
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CmpText(text = stringResource(Res.string.vehicle_type_title_screen), style = CmpTextStyle.Title)
+        CmpText(text = stringResource(Strings.string.vehicle_type_title_screen), style = CmpTextStyle.Title)
         if (wide) {
             CmpRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 VehicleDeviceType.entries.forEach { type ->

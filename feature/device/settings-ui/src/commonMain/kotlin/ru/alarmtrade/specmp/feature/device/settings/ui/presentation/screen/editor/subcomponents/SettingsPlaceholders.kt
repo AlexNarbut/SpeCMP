@@ -12,6 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_error_read_text
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_error_read_title
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_hint_read
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_loading_read
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -23,12 +29,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_retry
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_error_read_text
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_error_read_title
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_hint_read
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_loading_read
 
 private val PlaceholderMaxWidth = 420.dp
 
@@ -38,12 +38,12 @@ internal fun MenuLoading() {
     Centered {
         CmpCircularProgressIndicator()
         CmpText(
-            text = stringResource(Res.string.settings_editor_loading_read),
+            text = stringResource(Strings.string.settings_editor_loading_read),
             style = CmpTextStyle.Body,
             textAlign = TextAlign.Center
         )
         CmpText(
-            text = stringResource(Res.string.settings_editor_hint_read),
+            text = stringResource(Strings.string.settings_editor_hint_read),
             style = CmpTextStyle.Caption,
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -57,18 +57,18 @@ internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
     Centered {
         CmpIcon(icon = CmpIcons.AlertCircle, contentDescription = null, tint = cmpThemeColors().error)
         CmpText(
-            text = error.text(Res.string.settings_editor_error_read_title),
+            text = error.text(Strings.string.settings_editor_error_read_title),
             style = CmpTextStyle.Title,
             textAlign = TextAlign.Center
         )
         CmpText(
-            text = stringResource(Res.string.settings_editor_error_read_text),
+            text = stringResource(Strings.string.settings_editor_error_read_text),
             style = CmpTextStyle.Body,
             color = cmpThemeColors().onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         CmpButton(
-            text = stringResource(Res.string.settings_common_btn_retry),
+            text = stringResource(Strings.string.settings_common_btn_retry),
             onClick = onRetry,
             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
         )

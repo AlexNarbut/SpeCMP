@@ -23,6 +23,72 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_alpha
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_beta
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_release
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_archive
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_disconnect
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_download
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_exit_boot
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_file
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_ok
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_reconnect
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_support
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_update
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_data
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_exit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_applying
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_crc
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_device_not_ready
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_lost_packet
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_preparation
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_timeout
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_unknown
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_failure_wrong_packet_length
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_file
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_file_too_large
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_msg
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_source
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_title
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_apply
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_prepare
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_transfer
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_verify
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_channel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_current
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_found
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_whats_new
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_subsystem
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_version
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_loading
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_local_file
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_no_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_older
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_download
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_entering
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_entering_waiting
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_finishing
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_lost_idle
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_lost_updating
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_power
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_success
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_success_boot_ble
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_success_boot_usb
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_status_apply
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_status_prepare
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_status_reconnecting
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_status_transfer
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_status_verify
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_confirm
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_download
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_entering
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_finishing
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_lost
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_success
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
@@ -47,79 +113,13 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateActions
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateState
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdatePhase
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_common_btn_cancel
-import specmp.feature.device.firmware.generated.resources.firmware_common_btn_retry
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_alpha
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_beta
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_release
-import specmp.feature.device.firmware.generated.resources.firmware_common_msg_test_channel
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_archive
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_disconnect
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_download
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_exit_boot
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_file
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_ok
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_reconnect
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_support
-import specmp.feature.device.firmware.generated.resources.firmware_update_btn_update
-import specmp.feature.device.firmware.generated.resources.firmware_update_confirm_label_current
-import specmp.feature.device.firmware.generated.resources.firmware_update_confirm_label_found
-import specmp.feature.device.firmware.generated.resources.firmware_update_confirm_label_whats_new
-import specmp.feature.device.firmware.generated.resources.firmware_update_confirm_msg_local_file
-import specmp.feature.device.firmware.generated.resources.firmware_update_confirm_msg_no_description
-import specmp.feature.device.firmware.generated.resources.firmware_update_confirm_msg_older
-import specmp.feature.device.firmware.generated.resources.firmware_update_confirm_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_download_msg
-import specmp.feature.device.firmware.generated.resources.firmware_update_download_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_entering_msg
-import specmp.feature.device.firmware.generated.resources.firmware_update_entering_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_entering_waiting
-import specmp.feature.device.firmware.generated.resources.firmware_update_error_data
-import specmp.feature.device.firmware.generated.resources.firmware_update_error_exit
-import specmp.feature.device.firmware.generated.resources.firmware_update_error_file
-import specmp.feature.device.firmware.generated.resources.firmware_update_error_file_too_large
-import specmp.feature.device.firmware.generated.resources.firmware_update_error_msg
-import specmp.feature.device.firmware.generated.resources.firmware_update_error_source
-import specmp.feature.device.firmware.generated.resources.firmware_update_error_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_applying
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_crc
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_device_not_ready
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_lost_packet
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_preparation
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_timeout
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_unknown
-import specmp.feature.device.firmware.generated.resources.firmware_update_failure_wrong_packet_length
-import specmp.feature.device.firmware.generated.resources.firmware_update_finishing_msg
-import specmp.feature.device.firmware.generated.resources.firmware_update_finishing_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_label_channel
-import specmp.feature.device.firmware.generated.resources.firmware_update_label_subsystem
-import specmp.feature.device.firmware.generated.resources.firmware_update_label_version
-import specmp.feature.device.firmware.generated.resources.firmware_update_loading
-import specmp.feature.device.firmware.generated.resources.firmware_update_lost_msg_idle
-import specmp.feature.device.firmware.generated.resources.firmware_update_lost_msg_updating
-import specmp.feature.device.firmware.generated.resources.firmware_update_lost_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_msg_power
-import specmp.feature.device.firmware.generated.resources.firmware_update_status_apply
-import specmp.feature.device.firmware.generated.resources.firmware_update_status_prepare
-import specmp.feature.device.firmware.generated.resources.firmware_update_status_reconnecting
-import specmp.feature.device.firmware.generated.resources.firmware_update_status_transfer
-import specmp.feature.device.firmware.generated.resources.firmware_update_status_verify
-import specmp.feature.device.firmware.generated.resources.firmware_update_step_apply
-import specmp.feature.device.firmware.generated.resources.firmware_update_step_prepare
-import specmp.feature.device.firmware.generated.resources.firmware_update_step_transfer
-import specmp.feature.device.firmware.generated.resources.firmware_update_step_verify
-import specmp.feature.device.firmware.generated.resources.firmware_update_success_msg
-import specmp.feature.device.firmware.generated.resources.firmware_update_success_msg_boot_ble
-import specmp.feature.device.firmware.generated.resources.firmware_update_success_msg_boot_usb
-import specmp.feature.device.firmware.generated.resources.firmware_update_success_title
 
 /** Шаги обновления на экране прогресса (подготовка → передача → проверка → применение). */
 private val ProgressSteps = listOf(
-    Res.string.firmware_update_step_prepare,
-    Res.string.firmware_update_step_transfer,
-    Res.string.firmware_update_step_verify,
-    Res.string.firmware_update_step_apply
+    Strings.string.firmware_update_item_step_prepare,
+    Strings.string.firmware_update_item_step_transfer,
+    Strings.string.firmware_update_item_step_verify,
+    Strings.string.firmware_update_item_step_apply
 )
 
 private val BigButtonHeight = 52.dp
@@ -153,28 +153,28 @@ internal fun Message(text: String) {
 @Composable
 internal fun LoadingBody() {
     CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
-    Message(stringResource(Res.string.firmware_update_loading))
+    Message(stringResource(Strings.string.firmware_update_loading))
 }
 
 @Composable
 internal fun EnteringBody() {
-    Headline(stringResource(Res.string.firmware_update_entering_title))
-    Message(stringResource(Res.string.firmware_update_entering_msg))
+    Headline(stringResource(Strings.string.firmware_update_title_entering))
+    Message(stringResource(Strings.string.firmware_update_msg_entering))
     CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp)
         CmpText(
-            text = stringResource(Res.string.firmware_update_entering_waiting),
+            text = stringResource(Strings.string.firmware_update_msg_entering_waiting),
             color = cmpThemeColors().onSurfaceVariant
         )
     }
-    InfoBanner(text = stringResource(Res.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
+    InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
 }
 
 /** Выбор источника: подсистема, версия блока, канал, «Скачать прошивку», «Архив прошивок». */
 @Composable
 internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions) {
     CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        LabeledField(stringResource(Res.string.firmware_update_label_subsystem)) {
+        LabeledField(stringResource(Strings.string.firmware_update_label_subsystem)) {
             if (state.moduleTitles.size <= 1) {
                 CmpText(
                     text = state.moduleTitles.firstOrNull().orEmpty(),
@@ -192,11 +192,11 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             }
         }
         state.currentVersion?.let { version ->
-            LabeledField(stringResource(Res.string.firmware_update_label_version)) {
+            LabeledField(stringResource(Strings.string.firmware_update_label_version)) {
                 VersionText(version, fontSize = 20.sp)
             }
         }
-        LabeledField(stringResource(Res.string.firmware_update_label_channel)) {
+        LabeledField(stringResource(Strings.string.firmware_update_label_channel)) {
             val options = FirmwareChannel.entries.map { stringResource(it.longLabel()) }
             CmpDropdown(
                 selectedValue = options[state.channel.ordinal],
@@ -205,17 +205,17 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
                 onOptionSelect = { index, _ -> actions.onChannelSelected(FirmwareChannel.entries[index]) }
             )
         }
-        if (state.channel.isTest) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
+        if (state.channel.isTest) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
         if (state.exitError) {
             InfoBanner(
-                text = stringResource(Res.string.firmware_update_error_exit),
+                text = stringResource(Strings.string.firmware_update_error_exit),
                 tone = BannerTone.Error,
                 icon = CmpIcons.LinkOff
             )
         }
         state.sourceError?.let { error ->
             InfoBanner(
-                text = error.text(Res.string.firmware_update_error_source),
+                text = error.text(Strings.string.firmware_update_error_source),
                 tone = BannerTone.Error,
                 icon = CmpIcons.CloudOff
             )
@@ -224,8 +224,8 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             InfoBanner(
                 text = stringResource(
                     when (error) {
-                        FileError.TooLarge -> Res.string.firmware_update_error_file_too_large
-                        FileError.Failed -> Res.string.firmware_update_error_file
+                        FileError.TooLarge -> Strings.string.firmware_update_error_file_too_large
+                        FileError.Failed -> Strings.string.firmware_update_error_file
                     }
                 ),
                 tone = BannerTone.Error,
@@ -233,23 +233,23 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             )
         }
         CmpButton(
-            text = stringResource(Res.string.firmware_update_btn_download),
+            text = stringResource(Strings.string.firmware_update_btn_download),
             onClick = actions.onDownloadClick,
             modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_DOWNLOAD_TAG)
         )
         CmpOutlinedButton(
-            text = stringResource(Res.string.firmware_update_btn_archive),
+            text = stringResource(Strings.string.firmware_update_btn_archive),
             onClick = actions.onArchiveClick,
             modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG)
         )
         CmpOutlinedButton(
-            text = stringResource(Res.string.firmware_update_btn_file),
+            text = stringResource(Strings.string.firmware_update_btn_file),
             onClick = actions.onFileClick,
             modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_FILE_TAG)
         )
         if (state.canExitBoot) {
             CmpOutlinedButton(
-                text = stringResource(Res.string.firmware_update_btn_exit_boot),
+                text = stringResource(Strings.string.firmware_update_btn_exit_boot),
                 onClick = actions.onExitBootClick,
                 modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(EXIT_BOOT_TAG)
             )
@@ -258,9 +258,9 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
 }
 
 private fun FirmwareChannel.longLabel(): StringResource = when (this) {
-    FirmwareChannel.RELEASE -> Res.string.firmware_common_channel_release
-    FirmwareChannel.BETA -> Res.string.firmware_common_channel_beta
-    FirmwareChannel.ALPHA -> Res.string.firmware_common_channel_alpha
+    FirmwareChannel.RELEASE -> Strings.string.firmware_common_value_channel_release
+    FirmwareChannel.BETA -> Strings.string.firmware_common_value_channel_beta
+    FirmwareChannel.ALPHA -> Strings.string.firmware_common_value_channel_alpha
 }
 
 @Composable
@@ -273,9 +273,9 @@ private fun LabeledField(label: String, content: @Composable () -> Unit) {
 
 @Composable
 internal fun DataErrorBody(onRetry: () -> Unit) {
-    Message(stringResource(Res.string.firmware_update_error_data))
+    Message(stringResource(Strings.string.firmware_update_error_data))
     CmpButton(
-        text = stringResource(Res.string.firmware_common_btn_retry),
+        text = stringResource(Strings.string.firmware_common_btn_retry),
         onClick = onRetry,
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_RETRY_TAG)
     )
@@ -283,8 +283,8 @@ internal fun DataErrorBody(onRetry: () -> Unit) {
 
 @Composable
 internal fun DownloadBody() {
-    Headline(stringResource(Res.string.firmware_update_download_title))
-    Message(stringResource(Res.string.firmware_update_download_msg))
+    Headline(stringResource(Strings.string.firmware_update_title_download))
+    Message(stringResource(Strings.string.firmware_update_msg_download))
     CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
 }
 
@@ -292,7 +292,7 @@ internal fun DownloadBody() {
 @Composable
 internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () -> Unit, onCancel: () -> Unit) {
     val colors = cmpThemeColors()
-    Headline(stringResource(Res.string.firmware_update_confirm_title))
+    Headline(stringResource(Strings.string.firmware_update_title_confirm))
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -301,10 +301,10 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
     ) {
         CmpColumn(modifier = Modifier.padding(16.dp)) {
             confirm.currentVersion?.let { current ->
-                VersionRow(stringResource(Res.string.firmware_update_confirm_label_current), current)
+                VersionRow(stringResource(Strings.string.firmware_update_label_confirm_current), current)
                 CmpDivider()
             }
-            VersionRow(stringResource(Res.string.firmware_update_confirm_label_found), confirm.newVersion)
+            VersionRow(stringResource(Strings.string.firmware_update_label_confirm_found), confirm.newVersion)
         }
     }
     CmpSurface(
@@ -314,13 +314,13 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
     ) {
         CmpColumn(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             CmpText(
-                text = stringResource(Res.string.firmware_update_confirm_label_whats_new),
+                text = stringResource(Strings.string.firmware_update_label_confirm_whats_new),
                 fontWeight = FontWeight.Medium,
                 color = colors.onSurfaceVariant
             )
             CmpText(
                 text = confirm.description.ifBlank {
-                    stringResource(Res.string.firmware_update_confirm_msg_no_description)
+                    stringResource(Strings.string.firmware_update_msg_confirm_no_description)
                 },
                 style = CmpTextStyle.Body,
                 modifier = Modifier.heightIn(max = WhatsNewMaxHeight).verticalScroll(rememberScrollState())
@@ -328,18 +328,21 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
         }
     }
     if (confirm.localFile) {
-        InfoBanner(text = stringResource(Res.string.firmware_update_confirm_msg_local_file), icon = CmpIcons.FolderOpen)
+        InfoBanner(
+            text = stringResource(Strings.string.firmware_update_msg_confirm_local_file),
+            icon = CmpIcons.FolderOpen
+        )
     }
-    if (confirm.older) InfoBanner(text = stringResource(Res.string.firmware_update_confirm_msg_older))
-    if (testChannel) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
+    if (confirm.older) InfoBanner(text = stringResource(Strings.string.firmware_update_msg_confirm_older))
+    if (testChannel) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
     CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         CmpButton(
-            text = stringResource(Res.string.firmware_update_btn_update),
+            text = stringResource(Strings.string.firmware_update_btn_update),
             onClick = onUpdate,
             modifier = Modifier.weight(1f).height(BigButtonHeight).testTag(UPDATE_CONFIRM_TAG)
         )
         CmpOutlinedButton(
-            text = stringResource(Res.string.firmware_common_btn_cancel),
+            text = stringResource(Strings.string.firmware_common_btn_cancel),
             onClick = onCancel,
             modifier = Modifier.weight(1f).height(BigButtonHeight).testTag(UPDATE_CANCEL_TAG)
         )
@@ -409,41 +412,41 @@ internal fun ProgressBody(phase: UpdatePhase) {
             progress = percent?.let { it / PERCENT_MAX },
             color = colors.primary
         )
-        InfoBanner(text = stringResource(Res.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
+        InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
     }
 }
 
 private const val PERCENT_MAX = 100f
 
 private fun UpdatePhase.statusRes(): StringResource = when (this) {
-    UpdatePhase.Prepare -> Res.string.firmware_update_status_prepare
+    UpdatePhase.Prepare -> Strings.string.firmware_update_status_prepare
 
     is UpdatePhase.Transfer -> if (reconnecting) {
-        Res.string.firmware_update_status_reconnecting
+        Strings.string.firmware_update_status_reconnecting
     } else {
-        Res.string.firmware_update_status_transfer
+        Strings.string.firmware_update_status_transfer
     }
 
-    UpdatePhase.Verify -> Res.string.firmware_update_status_verify
+    UpdatePhase.Verify -> Strings.string.firmware_update_status_verify
 
-    else -> Res.string.firmware_update_status_apply
+    else -> Strings.string.firmware_update_status_apply
 }
 
 /** Успех: блок остался в загрузчике (подсказка по способу выйти зависит от связи) или уже вернулся в рабочий режим. */
 @Composable
 internal fun SuccessBody(inBoot: Boolean, canExitBoot: Boolean, onOk: () -> Unit) {
-    Headline(stringResource(Res.string.firmware_update_success_title))
+    Headline(stringResource(Strings.string.firmware_update_title_success))
     Message(
         stringResource(
             when {
-                !inBoot -> Res.string.firmware_update_success_msg
-                canExitBoot -> Res.string.firmware_update_success_msg_boot_ble
-                else -> Res.string.firmware_update_success_msg_boot_usb
+                !inBoot -> Strings.string.firmware_update_msg_success
+                canExitBoot -> Strings.string.firmware_update_msg_success_boot_ble
+                else -> Strings.string.firmware_update_msg_success_boot_usb
             }
         )
     )
     CmpButton(
-        text = stringResource(Res.string.firmware_update_btn_ok),
+        text = stringResource(Strings.string.firmware_update_btn_ok),
         onClick = onOk,
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(RESULT_OK_TAG)
     )
@@ -451,59 +454,63 @@ internal fun SuccessBody(inBoot: Boolean, canExitBoot: Boolean, onOk: () -> Unit
 
 @Composable
 internal fun FinishingBody() {
-    Headline(stringResource(Res.string.firmware_update_finishing_title))
-    Message(stringResource(Res.string.firmware_update_finishing_msg))
+    Headline(stringResource(Strings.string.firmware_update_title_finishing))
+    Message(stringResource(Strings.string.firmware_update_msg_finishing))
     CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
 }
 
 @Composable
 internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: () -> Unit) {
-    Headline(stringResource(Res.string.firmware_update_error_title))
+    Headline(stringResource(Strings.string.firmware_update_error_title))
     InfoBanner(text = stringResource(failure.messageRes()), tone = BannerTone.Error, icon = CmpIcons.AlertCircle)
     CmpText(
-        text = stringResource(Res.string.firmware_update_error_msg),
+        text = stringResource(Strings.string.firmware_update_error_msg),
         color = cmpThemeColors().onSurfaceVariant,
         style = CmpTextStyle.Body,
         textAlign = TextAlign.Center
     )
     CmpButton(
-        text = stringResource(Res.string.firmware_common_btn_retry),
+        text = stringResource(Strings.string.firmware_common_btn_retry),
         onClick = onRetry,
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_RETRY_TAG)
     )
     CmpOutlinedButton(
-        text = stringResource(Res.string.firmware_update_btn_support),
+        text = stringResource(Strings.string.firmware_update_btn_support),
         onClick = onSupport,
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_SUPPORT_TAG)
     )
 }
 
 private fun FailureKind.messageRes(): StringResource = when (this) {
-    FailureKind.Crc -> Res.string.firmware_update_failure_crc
-    FailureKind.Timeout -> Res.string.firmware_update_failure_timeout
-    FailureKind.LostPacket -> Res.string.firmware_update_failure_lost_packet
-    FailureKind.WrongPacketLength -> Res.string.firmware_update_failure_wrong_packet_length
-    FailureKind.DeviceNotReady -> Res.string.firmware_update_failure_device_not_ready
-    FailureKind.ApplyingError -> Res.string.firmware_update_failure_applying
-    FailureKind.Preparation -> Res.string.firmware_update_failure_preparation
-    FailureKind.Unknown -> Res.string.firmware_update_failure_unknown
+    FailureKind.Crc -> Strings.string.firmware_update_error_failure_crc
+    FailureKind.Timeout -> Strings.string.firmware_update_error_failure_timeout
+    FailureKind.LostPacket -> Strings.string.firmware_update_error_failure_lost_packet
+    FailureKind.WrongPacketLength -> Strings.string.firmware_update_error_failure_wrong_packet_length
+    FailureKind.DeviceNotReady -> Strings.string.firmware_update_error_failure_device_not_ready
+    FailureKind.ApplyingError -> Strings.string.firmware_update_error_failure_applying
+    FailureKind.Preparation -> Strings.string.firmware_update_error_failure_preparation
+    FailureKind.Unknown -> Strings.string.firmware_update_error_failure_unknown
 }
 
 @Composable
 internal fun LostBody(updating: Boolean, onReconnect: () -> Unit, onDisconnect: () -> Unit) {
-    Headline(stringResource(Res.string.firmware_update_lost_title))
+    Headline(stringResource(Strings.string.firmware_update_title_lost))
     Message(
         stringResource(
-            if (updating) Res.string.firmware_update_lost_msg_updating else Res.string.firmware_update_lost_msg_idle
+            if (updating) {
+                Strings.string.firmware_update_msg_lost_updating
+            } else {
+                Strings.string.firmware_update_msg_lost_idle
+            }
         )
     )
     CmpButton(
-        text = stringResource(Res.string.firmware_update_btn_reconnect),
+        text = stringResource(Strings.string.firmware_update_btn_reconnect),
         onClick = onReconnect,
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(LOST_RECONNECT_TAG)
     )
     CmpOutlinedButton(
-        text = stringResource(Res.string.firmware_update_btn_disconnect),
+        text = stringResource(Strings.string.firmware_update_btn_disconnect),
         onClick = onDisconnect,
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(LOST_DISCONNECT_TAG)
     )

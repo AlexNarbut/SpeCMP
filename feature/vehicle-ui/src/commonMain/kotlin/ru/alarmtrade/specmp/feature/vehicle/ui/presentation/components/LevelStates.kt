@@ -15,6 +15,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_btn_filter_reset
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_error
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_filter_empty
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_offline
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_error
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_filter_empty
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
@@ -26,14 +34,6 @@ import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_btn_filter_reset
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_error
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_filter_empty
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_offline
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_error
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_filter_empty
-import specmp.feature.vehicle_ui.generated.resources.vehicle_common_btn_retry
 
 /** Ошибка загрузки уровня: сбой связи (общий заголовок) или отказ сервера, с «Повторить». */
 @Composable
@@ -48,16 +48,16 @@ internal fun LoadFailed(
         icon = if (offline) CmpIcons.WifiOff else CmpIcons.CloudOff,
         title = when (error) {
             is CatalogError.Common -> error.error.message()
-            CatalogError.LoadFailed -> stringResource(Res.string.vehicle_catalog_title_error)
+            CatalogError.LoadFailed -> stringResource(Strings.string.vehicle_catalog_title_error)
         },
         text = stringResource(
-            if (offline) Res.string.vehicle_catalog_msg_offline else Res.string.vehicle_catalog_msg_error
+            if (offline) Strings.string.vehicle_catalog_msg_offline else Strings.string.vehicle_catalog_msg_error
         ),
         tone = CmpStateTone.Error,
         compact = compact,
         modifier = modifier
     ) {
-        StateAction(text = stringResource(Res.string.vehicle_common_btn_retry), onClick = onRetry, primary = true)
+        StateAction(text = stringResource(Strings.string.vehicle_common_btn_retry), onClick = onRetry, primary = true)
     }
 }
 
@@ -71,12 +71,12 @@ internal fun FilteredOut(
 ) {
     CmpStateBox(
         icon = CmpIcons.FilterAltOff,
-        title = stringResource(Res.string.vehicle_catalog_title_filter_empty),
-        text = text ?: stringResource(Res.string.vehicle_catalog_msg_filter_empty),
+        title = stringResource(Strings.string.vehicle_catalog_title_filter_empty),
+        text = text ?: stringResource(Strings.string.vehicle_catalog_msg_filter_empty),
         compact = compact,
         modifier = modifier
     ) {
-        StateAction(text = stringResource(Res.string.vehicle_catalog_btn_filter_reset), onClick = onReset)
+        StateAction(text = stringResource(Strings.string.vehicle_catalog_btn_filter_reset), onClick = onReset)
     }
 }
 

@@ -20,6 +20,10 @@ import androidx.compose.ui.unit.dp
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_chat_auth
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_msg_reconnecting
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_title_connecting
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -28,10 +32,6 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_chat_auth
-import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_reconnecting
-import specmp.feature.support_chat.generated.resources.supportchat_chat_title_connecting
 
 /**
  * Компактная плашка соединения поверх ленты: не сдвигает сообщения и не мигает.
@@ -91,9 +91,9 @@ internal fun SupportChatConnectionStatus(
                 CmpText(
                     text = stringResource(
                         when (current) {
-                            SupportChatConnectionBanner.Connecting -> Res.string.supportchat_chat_title_connecting
-                            SupportChatConnectionBanner.Reconnecting -> Res.string.supportchat_chat_msg_reconnecting
-                            SupportChatConnectionBanner.AuthFailed -> Res.string.supportchat_chat_error_chat_auth
+                            SupportChatConnectionBanner.Connecting -> Strings.string.supportchat_chat_title_connecting
+                            SupportChatConnectionBanner.Reconnecting -> Strings.string.supportchat_chat_msg_reconnecting
+                            SupportChatConnectionBanner.AuthFailed -> Strings.string.supportchat_chat_error_chat_auth
                         }
                     ),
                     maxLines = 2,

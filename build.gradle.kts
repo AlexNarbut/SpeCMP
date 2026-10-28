@@ -117,6 +117,9 @@ subprojects {
     // Compose Resources, BuildConfig и прочий генерируемый код лежат в build/ и попадают в type-resolution задачи.
     tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
         exclude("**/build/**", "**/generated/**")
+        // Шаблоны выше — относительно корня source set; у сгенерированных source set'ов (аксессоры Strings) сам корень
+        // лежит в build/, поэтому отсекаем по абсолютному пути.
+        exclude { it.file.absolutePath.contains("${File.separator}build${File.separator}") }
     }
 
     // Агрегатор `detekt` в KMP ничего не запускает. detektCheck собирает задачи с type resolution по production- и

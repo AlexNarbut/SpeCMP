@@ -16,6 +16,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_format_meta
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_label_only_author
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_more
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_rating
 import ru.alarmtrade.specmp.core.ui.format.rememberCmpDateLabeler
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -32,11 +37,6 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ModelBadge
-import specmp.feature.configurator_ui.generated.resources.Res
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_more
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_rating
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_meta
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_only_author
 
 /** Дата и время изменения: «Сегодня, 14:20», «21 октября, 09:05». */
 @Composable
@@ -51,7 +51,7 @@ internal fun rememberDateTimeText(): (LocalDateTime) -> String {
 @Composable
 internal fun RatingLabel(rating: Int?, modifier: Modifier = Modifier) {
     rating ?: return
-    val description = stringResource(Res.string.configurator_a11y_rating, rating)
+    val description = stringResource(Strings.string.configurator_common_a11y_rating, rating)
     CmpRow(
         modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically,
@@ -114,7 +114,7 @@ internal fun MineCard(
                 CmpIconButton(
                     onClick = it,
                     icon = CmpIcons.MoreVert,
-                    contentDescription = stringResource(Res.string.configurator_a11y_more),
+                    contentDescription = stringResource(Strings.string.configurator_common_a11y_more),
                     modifier = Modifier.testTag(ConfiguratorTestTags.mineMenu(item.id))
                 )
             }
@@ -176,13 +176,13 @@ internal fun CloudMeta(item: CloudConfigurationSummary, dateText: (LocalDateTime
         ModelBadge(item.deviceName)
         if (item.onlyForAuthor) {
             CmpText(
-                text = stringResource(Res.string.configurator_cloud_only_author),
+                text = stringResource(Strings.string.configurator_cloud_label_only_author),
                 style = CmpTextStyle.Body,
                 color = colors.onTertiaryContainer
             )
         }
         CmpText(
-            text = stringResource(Res.string.configurator_cloud_meta, item.author, dateText(item.updated)),
+            text = stringResource(Strings.string.configurator_cloud_format_meta, item.author, dateText(item.updated)),
             style = CmpTextStyle.Body,
             color = colors.onSurfaceVariant
         )

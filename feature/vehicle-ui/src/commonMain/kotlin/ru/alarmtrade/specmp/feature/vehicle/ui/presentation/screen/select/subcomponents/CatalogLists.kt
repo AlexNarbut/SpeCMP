@@ -22,6 +22,33 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_label_result
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_msg_enter
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_msg_found
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_msg_none
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_title_none
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_a11y_recent_remove
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_label_all_models
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_label_recent
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_combo_none
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_digits
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_models_none_query
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_nothing
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_nothing_can
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_trims_empty
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_msg_trims_none_query
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_combo
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_combo_query
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_digits
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_empty
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_models_empty
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_nothing
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_recent
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_title_trims_empty
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_btn_pick
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_btn_by_can
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_btn_by_name
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -60,33 +87,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Catalo
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_label_result
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_enter
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_found
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_none
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_title_none
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_a11y_recent_remove
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_label_all_models
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_label_recent
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_combo_none
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_digits
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_models_none_query
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_nothing
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_nothing_can
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_trims_empty
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_trims_none_query
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_combo
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_combo_query
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_digits
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_empty
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_models_empty
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_nothing
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_recent
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_title_trims_empty
-import specmp.feature.vehicle_ui.generated.resources.vehicle_common_btn_pick
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_btn_by_can
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_btn_by_name
 
 /** Список уровня каталога: прокрутка, отступы. */
 @Composable
@@ -175,36 +175,36 @@ private fun EmptyBrands(state: VehicleSelectState, actions: VehicleSelectActions
 
         q.isEmpty() -> CmpStateBox(
             icon = CmpIcons.Inventory2,
-            title = stringResource(Res.string.vehicle_catalog_title_empty),
+            title = stringResource(Strings.string.vehicle_catalog_title_empty),
             compact = compact
         )
 
         looksLikeCanCode(q) && state.mode.canSearchAvailable -> CmpStateBox(
             icon = CmpIcons.Pin,
-            title = stringResource(Res.string.vehicle_catalog_title_digits, q),
-            text = stringResource(Res.string.vehicle_catalog_msg_digits),
+            title = stringResource(Strings.string.vehicle_catalog_title_digits, q),
+            text = stringResource(Strings.string.vehicle_catalog_msg_digits),
             compact = compact
         ) {
-            StateAction(text = stringResource(Res.string.vehicle_search_btn_by_can), onClick = {
+            StateAction(text = stringResource(Strings.string.vehicle_search_btn_by_can), onClick = {
                 actions.onSearchByCan(q)
             })
         }
 
         else -> CmpStateBox(
             icon = CmpIcons.SearchOff,
-            title = stringResource(Res.string.vehicle_catalog_title_nothing),
+            title = stringResource(Strings.string.vehicle_catalog_title_nothing),
             text = stringResource(
                 if (state.mode.canSearchAvailable) {
-                    Res.string.vehicle_catalog_msg_nothing_can
+                    Strings.string.vehicle_catalog_msg_nothing_can
                 } else {
-                    Res.string.vehicle_catalog_msg_nothing
+                    Strings.string.vehicle_catalog_msg_nothing
                 }
             ),
             compact = compact
         ) {
             if (state.mode.canSearchAvailable) {
                 StateAction(
-                    text = stringResource(Res.string.vehicle_search_btn_by_can),
+                    text = stringResource(Strings.string.vehicle_search_btn_by_can),
                     onClick = { actions.onSearchByCan("") }
                 )
             }
@@ -217,7 +217,7 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
     fadeItem("combo-brand") {
         VehicleRow(
             title = highlighted(combo.brand.name, state.query),
-            subtitle = stringResource(Res.string.vehicle_catalog_label_all_models),
+            subtitle = stringResource(Strings.string.vehicle_catalog_label_all_models),
             onClick = { actions.onBrandPick(combo.brand) },
             lead = { BrandLogo(name = combo.brand.name, url = combo.brand.logoUrl) },
             modifier = Modifier.testTag(VehicleTestTags.brand(combo.brand.id))
@@ -226,9 +226,9 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
     fadeItem("combo-title") {
         SectionTitle(
             if (combo.rest.isEmpty()) {
-                stringResource(Res.string.vehicle_catalog_title_combo, combo.brand.name)
+                stringResource(Strings.string.vehicle_catalog_title_combo, combo.brand.name)
             } else {
-                stringResource(Res.string.vehicle_catalog_title_combo_query, combo.brand.name, combo.rest)
+                stringResource(Strings.string.vehicle_catalog_title_combo_query, combo.brand.name, combo.rest)
             }
         )
     }
@@ -239,8 +239,8 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
         fadeItem("combo-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
-                title = stringResource(Res.string.vehicle_catalog_title_nothing),
-                text = stringResource(Res.string.vehicle_catalog_msg_combo_none, combo.brand.name, combo.rest),
+                title = stringResource(Strings.string.vehicle_catalog_title_nothing),
+                text = stringResource(Strings.string.vehicle_catalog_msg_combo_none, combo.brand.name, combo.rest),
                 compact = true
             )
         }
@@ -252,19 +252,19 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
 }
 
 internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: VehicleSelectActions) {
-    fadeItem("recent-title") { SectionTitle(stringResource(Res.string.vehicle_catalog_title_recent)) }
+    fadeItem("recent-title") { SectionTitle(stringResource(Strings.string.vehicle_catalog_title_recent)) }
     fadeItems(recent, key = { "recent-${it.id}" }) { car ->
         val colors = cmpThemeColors()
         VehicleRow(
             title = AnnotatedString(car.fullName()),
-            subtitle = stringResource(Res.string.vehicle_catalog_label_recent, yearsText(car.years), car.canCode),
+            subtitle = stringResource(Strings.string.vehicle_catalog_label_recent, yearsText(car.years), car.canCode),
             onClick = { actions.onRecentOpen(car) },
             dense = true,
             trailing = {
                 CmpIconButton(
                     onClick = { actions.onRecentRemove(car) },
                     icon = CmpIcons.Close,
-                    contentDescription = stringResource(Res.string.vehicle_catalog_a11y_recent_remove),
+                    contentDescription = stringResource(Strings.string.vehicle_catalog_a11y_recent_remove),
                     tint = colors.onSurfaceVariant
                 )
             },
@@ -315,7 +315,7 @@ internal fun LazyListScope.modelItems(
             } else {
                 CmpStateBox(
                     icon = CmpIcons.Inventory2,
-                    title = stringResource(Res.string.vehicle_catalog_title_models_empty),
+                    title = stringResource(Strings.string.vehicle_catalog_title_models_empty),
                     compact = compact
                 )
             }
@@ -328,8 +328,12 @@ internal fun LazyListScope.modelItems(
         fadeItem("models-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
-                title = stringResource(Res.string.vehicle_catalog_title_nothing),
-                text = stringResource(Res.string.vehicle_catalog_msg_models_none_query, brand.name, state.query.trim()),
+                title = stringResource(Strings.string.vehicle_catalog_title_nothing),
+                text = stringResource(
+                    Strings.string.vehicle_catalog_msg_models_none_query,
+                    brand.name,
+                    state.query.trim()
+                ),
                 compact = compact
             )
         }
@@ -393,8 +397,8 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
         fadeItem("trims-empty") {
             CmpStateBox(
                 icon = CmpIcons.Inventory2,
-                title = stringResource(Res.string.vehicle_catalog_title_trims_empty),
-                text = stringResource(Res.string.vehicle_catalog_msg_trims_empty, model.name),
+                title = stringResource(Strings.string.vehicle_catalog_title_trims_empty),
+                text = stringResource(Strings.string.vehicle_catalog_msg_trims_empty, model.name),
                 compact = true
             )
         }
@@ -406,8 +410,8 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
         fadeItem("trims-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
-                title = stringResource(Res.string.vehicle_catalog_title_nothing),
-                text = stringResource(Res.string.vehicle_catalog_msg_trims_none_query),
+                title = stringResource(Strings.string.vehicle_catalog_title_nothing),
+                text = stringResource(Strings.string.vehicle_catalog_msg_trims_none_query),
                 compact = true
             )
         }
@@ -462,7 +466,7 @@ private fun TrimRow(
 @Composable
 internal fun PickButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     CmpOutlinedButton(
-        text = stringResource(Res.string.vehicle_common_btn_pick),
+        text = stringResource(Strings.string.vehicle_common_btn_pick),
         onClick = onClick,
         modifier = modifier.padding(top = 6.dp).heightIn(min = 48.dp)
     )
@@ -474,7 +478,7 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
     if (state.canCode.length < CAN_LENGTH) {
         fadeItem("can-enter") {
             CmpText(
-                text = stringResource(Res.string.vehicle_can_msg_enter),
+                text = stringResource(Strings.string.vehicle_can_msg_enter),
                 style = CmpTextStyle.BodyLarge,
                 color = cmpThemeColors().onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -488,23 +492,23 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
         fadeItem("can-none") {
             CmpStateBox(
                 icon = CmpIcons.SearchOff,
-                title = stringResource(Res.string.vehicle_can_title_none, state.canCode),
-                text = stringResource(Res.string.vehicle_can_msg_none),
+                title = stringResource(Strings.string.vehicle_can_title_none, state.canCode),
+                text = stringResource(Strings.string.vehicle_can_msg_none),
                 compact = compact
             ) {
                 StateAction(
-                    text = stringResource(Res.string.vehicle_search_btn_by_name),
+                    text = stringResource(Strings.string.vehicle_search_btn_by_name),
                     onClick = { actions.onSearchModeChange(SearchMode.NAME) }
                 )
             }
         }
         return
     }
-    fadeItem("can-found") { SectionTitle(stringResource(Res.string.vehicle_can_msg_found, cars.size)) }
+    fadeItem("can-found") { SectionTitle(stringResource(Strings.string.vehicle_can_msg_found, cars.size)) }
     fadeItems(cars, key = { "can-${it.id}" }) { car ->
         VehicleRow(
             title = AnnotatedString("${car.brand} ${car.model}"),
-            subtitle = stringResource(Res.string.vehicle_can_label_result, yearsText(car.years), car.name),
+            subtitle = stringResource(Strings.string.vehicle_can_label_result, yearsText(car.years), car.name),
             onClick = { actions.onCanResultOpen(car) },
             selected = state.selection.carId == car.id,
             lead = { CarPhoto(url = car.imageUrl, radius = ThumbRadius, modifier = Modifier.size(PhotoThumbSize)) },

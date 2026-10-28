@@ -14,6 +14,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_label_email
+import ru.alarmtrade.specmp.core.localization.resources.login_common_loading_auth
+import ru.alarmtrade.specmp.core.localization.resources.login_login_btn_submit
+import ru.alarmtrade.specmp.core.localization.resources.login_login_link_forgot_password
+import ru.alarmtrade.specmp.core.localization.resources.login_login_link_signup
+import ru.alarmtrade.specmp.core.localization.resources.login_login_msg_no_account
+import ru.alarmtrade.specmp.core.localization.resources.login_login_title_screen
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -26,14 +34,6 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.subcomponents.ActivationRequiredDialog
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_label_email
-import specmp.feature.login.generated.resources.login_common_loading_auth
-import specmp.feature.login.generated.resources.login_login_btn_submit
-import specmp.feature.login.generated.resources.login_login_link_forgot_password
-import specmp.feature.login.generated.resources.login_login_link_signup
-import specmp.feature.login.generated.resources.login_login_msg_no_account
-import specmp.feature.login.generated.resources.login_login_title_screen
 
 @Composable
 fun LoginScreen(
@@ -59,7 +59,7 @@ fun LoginScreen(
     ) {
         if (layoutMode == AuthLayoutMode.Expanded) {
             CmpText(
-                text = stringResource(Res.string.login_login_title_screen),
+                text = stringResource(Strings.string.login_login_title_screen),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.onSurface
@@ -70,7 +70,7 @@ fun LoginScreen(
             value = state.login,
             onValueChange = onLoginChange,
             modifier = Modifier.fillMaxWidth(),
-            label = stringResource(Res.string.login_common_label_email),
+            label = stringResource(Strings.string.login_common_label_email),
             singleLine = true,
             enabled = !state.isAuthLoading,
             isError = isAuthError,
@@ -102,7 +102,7 @@ fun LoginScreen(
         )
 
         CmpTextButton(
-            text = stringResource(Res.string.login_login_link_forgot_password),
+            text = stringResource(Strings.string.login_login_link_forgot_password),
             onClick = onOpenForgotPassword,
             modifier = Modifier.align(Alignment.End),
             enabled = !state.isAuthLoading
@@ -110,9 +110,9 @@ fun LoginScreen(
 
         AuthSubmitButton(
             text = if (state.isAuthLoading) {
-                stringResource(Res.string.login_common_loading_auth)
+                stringResource(Strings.string.login_common_loading_auth)
             } else {
-                stringResource(Res.string.login_login_btn_submit)
+                stringResource(Strings.string.login_login_btn_submit)
             },
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -127,11 +127,11 @@ fun LoginScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             CmpText(
-                text = stringResource(Res.string.login_login_msg_no_account),
+                text = stringResource(Strings.string.login_login_msg_no_account),
                 color = colors.onSurfaceVariant
             )
             CmpTextButton(
-                text = stringResource(Res.string.login_login_link_signup),
+                text = stringResource(Strings.string.login_login_link_signup),
                 onClick = onOpenRegistration,
                 enabled = !state.isAuthLoading
             )

@@ -20,6 +20,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_collapse_description
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_expand_description
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_btn_done
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_btn_reset
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_label_was
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -49,12 +55,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accept
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_collapse_description
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_expand_description
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_btn_done
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_btn_reset
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_label_was
 
 /** Ширина окна редактирования на широком экране: 50 % окна, 480–600 dp. */
 private val EditorDialogWidth = CmpDialogWidth(fraction = 0.5f, min = 480.dp, max = 600.dp)
@@ -137,9 +137,9 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
                     icon = if (expanded) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                     contentDescription = stringResource(
                         if (expanded) {
-                            Res.string.settings_edit_a11y_collapse_description
+                            Strings.string.settings_edit_a11y_collapse_description
                         } else {
-                            Res.string.settings_edit_a11y_expand_description
+                            Strings.string.settings_edit_a11y_expand_description
                         }
                     )
                 )
@@ -179,7 +179,7 @@ private fun WasChip(editing: EditingSetting) {
     val colors = cmpThemeColors()
     val differs = editing.draft != editing.original
     CmpText(
-        text = stringResource(Res.string.settings_edit_label_was, valueText(editing.setting, editing.original)),
+        text = stringResource(Strings.string.settings_edit_label_was, valueText(editing.setting, editing.original)),
         style = CmpTextStyle.Caption,
         color = if (differs) colors.onTertiaryContainer else colors.onSurfaceVariant,
         maxLines = 1,
@@ -248,13 +248,13 @@ private fun EditorBody(editing: EditingSetting, cars: Map<Int, CarSummary>, wide
 private fun EditorButtons(editing: EditingSetting, actions: EditorActions) {
     CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         CmpOutlinedButton(
-            text = stringResource(Res.string.settings_edit_btn_reset),
+            text = stringResource(Strings.string.settings_edit_btn_reset),
             onClick = actions.onReset,
             enabled = editing.draft != editing.original,
             modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_RESET)
         )
         CmpButton(
-            text = stringResource(Res.string.settings_edit_btn_done),
+            text = stringResource(Strings.string.settings_edit_btn_done),
             onClick = actions.onApply,
             enabled = editing.setting.accepts(editing.draft),
             modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_DONE)

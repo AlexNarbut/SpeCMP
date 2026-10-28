@@ -16,6 +16,21 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_btn_go_to_login
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_email_invalid
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_full_name_required
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_password_short
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_phone_invalid
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_registration_failed
+import ru.alarmtrade.specmp.core.localization.resources.login_common_label_email
+import ru.alarmtrade.specmp.core.localization.resources.login_common_label_full_name
+import ru.alarmtrade.specmp.core.localization.resources.login_common_label_phone
+import ru.alarmtrade.specmp.core.localization.resources.login_registration_btn_back_to_login
+import ru.alarmtrade.specmp.core.localization.resources.login_registration_btn_submit
+import ru.alarmtrade.specmp.core.localization.resources.login_registration_label_installer_confirm
+import ru.alarmtrade.specmp.core.localization.resources.login_registration_msg_success
+import ru.alarmtrade.specmp.core.localization.resources.login_registration_title_success
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -32,21 +47,6 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButt
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSuccessPanel
 import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldError
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_btn_go_to_login
-import specmp.feature.login.generated.resources.login_common_error_email_invalid
-import specmp.feature.login.generated.resources.login_common_error_full_name_required
-import specmp.feature.login.generated.resources.login_common_error_password_short
-import specmp.feature.login.generated.resources.login_common_error_phone_invalid
-import specmp.feature.login.generated.resources.login_common_error_registration_failed
-import specmp.feature.login.generated.resources.login_common_label_email
-import specmp.feature.login.generated.resources.login_common_label_full_name
-import specmp.feature.login.generated.resources.login_common_label_phone
-import specmp.feature.login.generated.resources.login_registration_btn_back_to_login
-import specmp.feature.login.generated.resources.login_registration_btn_submit
-import specmp.feature.login.generated.resources.login_registration_label_installer_confirm
-import specmp.feature.login.generated.resources.login_registration_msg_success
-import specmp.feature.login.generated.resources.login_registration_title_success
 
 @Composable
 fun RegistrationScreen(
@@ -67,17 +67,17 @@ fun RegistrationScreen(
         modifier = modifier,
         colors = colors,
         showCompactBrand = false,
-        error = state.value.registrationError?.text(Res.string.login_common_error_registration_failed)
+        error = state.value.registrationError?.text(Strings.string.login_common_error_registration_failed)
     ) {
         if (state.value.isSuccess) {
             AuthSuccessPanel(
-                title = stringResource(Res.string.login_registration_title_success),
-                text = stringResource(Res.string.login_registration_msg_success),
+                title = stringResource(Strings.string.login_registration_title_success),
+                text = stringResource(Strings.string.login_registration_msg_success),
                 icon = CmpIcons.CheckCircle,
                 colors = colors,
                 primaryAction = {
                     AuthSubmitButton(
-                        text = stringResource(Res.string.login_common_btn_go_to_login),
+                        text = stringResource(Strings.string.login_common_btn_go_to_login),
                         onClick = onBackToLogin,
                         colors = colors
                     )
@@ -125,13 +125,13 @@ private fun RegistrationForm(
             value = value.fullName,
             onValueChange = onFullNameChange,
             modifier = Modifier.fillMaxWidth(),
-            label = stringResource(Res.string.login_common_label_full_name),
+            label = stringResource(Strings.string.login_common_label_full_name),
             singleLine = true,
             enabled = !value.isLoading,
             isError = RegistrationFieldError.FullName in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.FullName in value.fieldErrors,
-                text = Res.string.login_common_error_full_name_required
+                text = Strings.string.login_common_error_full_name_required
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             leadingIcon = {
@@ -143,13 +143,13 @@ private fun RegistrationForm(
             value = value.email,
             onValueChange = onEmailChange,
             modifier = Modifier.fillMaxWidth(),
-            label = stringResource(Res.string.login_common_label_email),
+            label = stringResource(Strings.string.login_common_label_email),
             singleLine = true,
             enabled = !value.isLoading,
             isError = RegistrationFieldError.Email in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.Email in value.fieldErrors,
-                text = Res.string.login_common_error_email_invalid
+                text = Strings.string.login_common_error_email_invalid
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -164,13 +164,13 @@ private fun RegistrationForm(
             value = value.phoneNumber,
             onValueChange = onPhoneNumberChange,
             modifier = Modifier.fillMaxWidth(),
-            label = stringResource(Res.string.login_common_label_phone),
+            label = stringResource(Strings.string.login_common_label_phone),
             singleLine = true,
             enabled = !value.isLoading,
             isError = RegistrationFieldError.Phone in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.Phone in value.fieldErrors,
-                text = Res.string.login_common_error_phone_invalid
+                text = Strings.string.login_common_error_phone_invalid
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
@@ -191,7 +191,7 @@ private fun RegistrationForm(
             isError = RegistrationFieldError.Password in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.Password in value.fieldErrors,
-                text = Res.string.login_common_error_password_short
+                text = Strings.string.login_common_error_password_short
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
@@ -211,13 +211,13 @@ private fun RegistrationForm(
                 enabled = !value.isLoading
             )
             CmpText(
-                text = stringResource(Res.string.login_registration_label_installer_confirm),
+                text = stringResource(Strings.string.login_registration_label_installer_confirm),
                 color = colors.onBackground
             )
         }
 
         AuthSubmitButton(
-            text = stringResource(Res.string.login_registration_btn_submit),
+            text = stringResource(Strings.string.login_registration_btn_submit),
             onClick = onSubmit,
             enabled = value.canSubmit,
             isLoading = value.isLoading,
@@ -225,7 +225,7 @@ private fun RegistrationForm(
         )
 
         CmpTextButton(
-            text = stringResource(Res.string.login_registration_btn_back_to_login),
+            text = stringResource(Strings.string.login_registration_btn_back_to_login),
             onClick = onBackToLogin,
             enabled = !value.isLoading
         )

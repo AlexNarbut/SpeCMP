@@ -26,6 +26,15 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.common.safeRun
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_open
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_copied
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_deleted
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_failed
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_file_failed
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_file_saved
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_renamed
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_saved_mine
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
@@ -64,15 +73,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.Set
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
-import specmp.feature.configurator_ui.generated.resources.Res
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_open
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_copied
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_deleted
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_failed
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_file_failed
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_file_saved
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_renamed
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_saved_mine
 
 /**
  * Выбор автомобиля из каталога (фича `vehicle-ui`, подключается в `composeApp`): [VehicleCatalog.WITH_CONFIGURATIONS] —
@@ -238,7 +238,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
     val snackbarHostState = remember { CmpSnackbarHostState() }
     val scope = rememberCoroutineScope()
     val filePicker = full?.filePicker ?: NoSettingsFilePicker
-    val fileFailed = stringResource(Res.string.configurator_msg_file_failed)
+    val fileFailed = stringResource(Strings.string.configurator_common_msg_file_failed)
 
     LaunchedEffect(filePicker) {
         filePicker.results.collect { result ->
@@ -259,8 +259,8 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
 
             is MineEffect.Copied -> {
                 val result = snackbarHostState.showSnackbar(
-                    getString(Res.string.configurator_msg_copied),
-                    actionLabel = getString(Res.string.configurator_btn_open),
+                    getString(Strings.string.configurator_common_msg_copied),
+                    actionLabel = getString(Strings.string.configurator_common_btn_open),
                     duration = CmpSnackbarDuration.Long
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
@@ -273,7 +273,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
             }
 
             is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
-                getString(Res.string.configurator_msg_file_saved, effect.name)
+                getString(Strings.string.configurator_common_msg_file_saved, effect.name)
             )
         }
     }
@@ -405,8 +405,8 @@ private fun cloudCard(
 
             is CloudCardEffect.SavedToMine -> {
                 val result = snackbarHostState.showSnackbar(
-                    getString(Res.string.configurator_msg_saved_mine),
-                    actionLabel = if (full != null) getString(Res.string.configurator_btn_open) else null,
+                    getString(Strings.string.configurator_common_msg_saved_mine),
+                    actionLabel = if (full != null) getString(Strings.string.configurator_common_btn_open) else null,
                     duration = CmpSnackbarDuration.Long
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
@@ -414,7 +414,9 @@ private fun cloudCard(
                 }
             }
 
-            CloudCardEffect.SaveFailed -> snackbarHostState.showSnackbar(getString(Res.string.configurator_msg_failed))
+            CloudCardEffect.SaveFailed -> snackbarHostState.showSnackbar(
+                getString(Strings.string.configurator_common_msg_failed)
+            )
         }
     }
     val actions = remember(viewModel, backStack) {
@@ -441,10 +443,10 @@ private fun cloudCard(
 }
 
 private fun MineMessage.text() = when (this) {
-    MineMessage.COPIED -> Res.string.configurator_msg_copied
-    MineMessage.DELETED -> Res.string.configurator_msg_deleted
-    MineMessage.RENAMED -> Res.string.configurator_msg_renamed
-    MineMessage.FAILED -> Res.string.configurator_msg_failed
+    MineMessage.COPIED -> Strings.string.configurator_common_msg_copied
+    MineMessage.DELETED -> Strings.string.configurator_common_msg_deleted
+    MineMessage.RENAMED -> Strings.string.configurator_common_msg_renamed
+    MineMessage.FAILED -> Strings.string.configurator_common_msg_failed
 }
 
 private fun CarSummary.title(): String = listOf(brand, model, name).filter { it.isNotBlank() }.joinToString(" ")

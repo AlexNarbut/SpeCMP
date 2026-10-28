@@ -20,6 +20,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_source_read_only
+import ru.alarmtrade.specmp.core.localization.resources.settings_form_btn_save
+import ru.alarmtrade.specmp.core.localization.resources.settings_form_error_name
+import ru.alarmtrade.specmp.core.localization.resources.settings_form_format_counter
+import ru.alarmtrade.specmp.core.localization.resources.settings_form_label_description
+import ru.alarmtrade.specmp.core.localization.resources.settings_form_label_model
+import ru.alarmtrade.specmp.core.localization.resources.settings_form_label_name
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -33,15 +42,6 @@ import ru.alarmtrade.specmp.core.ui.view.sheet.CmpBottomSheet
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_cancel
-import specmp.feature.device.settings_ui.generated.resources.settings_form_btn_save
-import specmp.feature.device.settings_ui.generated.resources.settings_form_counter
-import specmp.feature.device.settings_ui.generated.resources.settings_form_error_name
-import specmp.feature.device.settings_ui.generated.resources.settings_form_label_description
-import specmp.feature.device.settings_ui.generated.resources.settings_form_label_model
-import specmp.feature.device.settings_ui.generated.resources.settings_form_label_name
-import specmp.feature.device.settings_ui.generated.resources.settings_source_read_only
 
 // Компоненты конфигураций (ТЗ конфигуратора): общие для редактора настроек и экранов конфигуратора.
 
@@ -80,7 +80,7 @@ fun ReadOnlyBadge(modifier: Modifier = Modifier) {
             modifier = Modifier.size(18.dp)
         )
         CmpText(
-            text = stringResource(Res.string.settings_source_read_only),
+            text = stringResource(Strings.string.settings_common_value_source_read_only),
             style = CmpTextStyle.Body,
             color = colors.onSurfaceVariant,
             maxLines = 1
@@ -167,7 +167,7 @@ fun ConfigurationOptionsPanel(
             title = { CmpText(text = title) },
             text = { CmpColumn(modifier = Modifier.fillMaxWidth(), content = body) },
             confirmButton = {
-                CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+                CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
             }
         )
     } else {
@@ -199,7 +199,7 @@ fun ConfigurationInfoDialog(
     onChange: (name: String, description: String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    confirmText: String = stringResource(Res.string.settings_form_btn_save)
+    confirmText: String = stringResource(Strings.string.settings_form_btn_save)
 ) {
     val colors = cmpThemeColors()
     val nameBlank = name.isBlank()
@@ -210,7 +210,7 @@ fun ConfigurationInfoDialog(
             CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 deviceName?.let {
                     CmpText(
-                        text = stringResource(Res.string.settings_form_label_model, it),
+                        text = stringResource(Strings.string.settings_form_label_model, it),
                         style = CmpTextStyle.Body,
                         color = colors.onSurfaceVariant
                     )
@@ -218,16 +218,16 @@ fun ConfigurationInfoDialog(
                 CmpTextField(
                     value = name,
                     onValueChange = { onChange(it.take(LocalConfiguration.NAME_MAX_LENGTH), description) },
-                    label = stringResource(Res.string.settings_form_label_name),
+                    label = stringResource(Strings.string.settings_form_label_name),
                     singleLine = true,
                     isError = nameBlank,
                     supportingText = {
                         CmpText(
                             text = if (nameBlank) {
-                                stringResource(Res.string.settings_form_error_name)
+                                stringResource(Strings.string.settings_form_error_name)
                             } else {
                                 stringResource(
-                                    Res.string.settings_form_counter,
+                                    Strings.string.settings_form_format_counter,
                                     name.length,
                                     LocalConfiguration.NAME_MAX_LENGTH
                                 )
@@ -240,12 +240,12 @@ fun ConfigurationInfoDialog(
                 CmpTextField(
                     value = description,
                     onValueChange = { onChange(name, it.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH)) },
-                    label = stringResource(Res.string.settings_form_label_description),
+                    label = stringResource(Strings.string.settings_form_label_description),
                     maxLines = DESCRIPTION_LINES,
                     supportingText = {
                         CmpText(
                             text = stringResource(
-                                Res.string.settings_form_counter,
+                                Strings.string.settings_form_format_counter,
                                 description.length,
                                 LocalConfiguration.DESCRIPTION_MAX_LENGTH
                             ),
@@ -267,7 +267,7 @@ fun ConfigurationInfoDialog(
             )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
         }
     )
 }

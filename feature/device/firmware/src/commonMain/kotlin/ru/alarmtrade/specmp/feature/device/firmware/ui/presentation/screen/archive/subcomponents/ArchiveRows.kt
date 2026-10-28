@@ -25,6 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_less
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_more
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_select
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_installed
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_older
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -39,12 +45,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_archive_badge_installed
-import specmp.feature.device.firmware.generated.resources.firmware_archive_badge_older
-import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_less
-import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_more
-import specmp.feature.device.firmware.generated.resources.firmware_archive_btn_select
 
 private val ButtonHeight = 48.dp
 private val ExpandedDescriptionMaxHeight = 200.dp
@@ -85,9 +85,9 @@ internal fun VersionBadge(kind: ArchiveRowKind, modifier: Modifier = Modifier) {
             CmpText(
                 text = stringResource(
                     if (installed) {
-                        Res.string.firmware_archive_badge_installed
+                        Strings.string.firmware_archive_status_installed
                     } else {
-                        Res.string.firmware_archive_badge_older
+                        Strings.string.firmware_archive_status_older
                     }
                 ),
                 fontSize = 13.sp,
@@ -188,7 +188,7 @@ private fun RowActions(
         if (hasDescription) {
             CmpTextButton(
                 text = stringResource(
-                    if (expanded) Res.string.firmware_archive_btn_less else Res.string.firmware_archive_btn_more
+                    if (expanded) Strings.string.firmware_archive_btn_less else Strings.string.firmware_archive_btn_more
                 ),
                 onClick = onToggle,
                 modifier = Modifier.height(ButtonHeight)
@@ -198,7 +198,7 @@ private fun RowActions(
         }
         if (showPick && onPick != null) {
             CmpOutlinedButton(
-                text = stringResource(Res.string.firmware_archive_btn_select),
+                text = stringResource(Strings.string.firmware_archive_btn_select),
                 onClick = onPick,
                 modifier = Modifier.height(ButtonHeight).testTag(archiveSelectTag(row.version))
             )

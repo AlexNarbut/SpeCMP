@@ -8,6 +8,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_btn_close
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_activation_resend_failed
+import ru.alarmtrade.specmp.core.localization.resources.login_common_loading_send_email
+import ru.alarmtrade.specmp.core.localization.resources.login_login_btn_resend_activation
+import ru.alarmtrade.specmp.core.localization.resources.login_login_msg_activation_email_sent
+import ru.alarmtrade.specmp.core.localization.resources.login_login_msg_activation_required
+import ru.alarmtrade.specmp.core.localization.resources.login_login_title_confirm_email
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
@@ -19,14 +27,6 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_btn_close
-import specmp.feature.login.generated.resources.login_common_error_activation_resend_failed
-import specmp.feature.login.generated.resources.login_common_loading_send_email
-import specmp.feature.login.generated.resources.login_login_btn_resend_activation
-import specmp.feature.login.generated.resources.login_login_msg_activation_email_sent
-import specmp.feature.login.generated.resources.login_login_msg_activation_required
-import specmp.feature.login.generated.resources.login_login_title_confirm_email
 
 @Composable
 fun ActivationRequiredDialog(
@@ -42,7 +42,7 @@ fun ActivationRequiredDialog(
         icon = CmpIcons.Email.imageVector(),
         title = {
             CmpText(
-                text = stringResource(Res.string.login_login_title_confirm_email),
+                text = stringResource(Strings.string.login_login_title_confirm_email),
                 fontWeight = FontWeight.Medium
             )
         },
@@ -52,13 +52,13 @@ fun ActivationRequiredDialog(
                 CmpText(
                     text = when {
                         resendSucceeded ->
-                            stringResource(Res.string.login_login_msg_activation_email_sent)
+                            stringResource(Strings.string.login_login_msg_activation_email_sent)
 
                         resendError != null ->
-                            resendError.text(Res.string.login_common_error_activation_resend_failed)
+                            resendError.text(Strings.string.login_common_error_activation_resend_failed)
 
                         else ->
-                            stringResource(Res.string.login_login_msg_activation_required)
+                            stringResource(Strings.string.login_login_msg_activation_required)
                     }
                 )
                 if (state.isActivationResendLoading) {
@@ -70,7 +70,7 @@ fun ActivationRequiredDialog(
                             modifier = Modifier.size(18.dp),
                             strokeWidth = 2.dp
                         )
-                        CmpText(text = stringResource(Res.string.login_common_loading_send_email))
+                        CmpText(text = stringResource(Strings.string.login_common_loading_send_email))
                     }
                 }
             }
@@ -78,7 +78,7 @@ fun ActivationRequiredDialog(
         confirmButton = {
             if (!resendSucceeded) {
                 CmpTextButton(
-                    text = stringResource(Res.string.login_login_btn_resend_activation),
+                    text = stringResource(Strings.string.login_login_btn_resend_activation),
                     onClick = onResendActivationEmail,
                     enabled = !state.isActivationResendLoading
                 )
@@ -86,7 +86,7 @@ fun ActivationRequiredDialog(
         },
         dismissButton = {
             CmpTextButton(
-                text = stringResource(Res.string.login_common_btn_close),
+                text = stringResource(Strings.string.login_common_btn_close),
                 onClick = onDismissActivationRequest,
                 enabled = !state.isActivationResendLoading
             )

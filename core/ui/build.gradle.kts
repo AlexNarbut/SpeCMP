@@ -37,6 +37,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             // Жизненный цикл приложения для BaseViewModel (onAppForeground / onAppBackground)
             implementation(project(":core:lifecycle"))
 

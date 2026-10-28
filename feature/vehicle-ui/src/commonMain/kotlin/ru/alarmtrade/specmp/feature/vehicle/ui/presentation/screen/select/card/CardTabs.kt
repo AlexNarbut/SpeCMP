@@ -21,6 +21,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_doc_a11y_open
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_features_label_control
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_features_label_none
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_features_label_read
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_features_msg_filtered
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_features_msg_filtered_none
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_features_msg_legend
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_features_msg_warning
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_points_label_no_photos
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_points_label_photos
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -41,17 +52,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.BusChip
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.VehicleRow
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.groupLabel
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_doc_a11y_open
-import specmp.feature.vehicle_ui.generated.resources.vehicle_features_label_control
-import specmp.feature.vehicle_ui.generated.resources.vehicle_features_label_none
-import specmp.feature.vehicle_ui.generated.resources.vehicle_features_label_read
-import specmp.feature.vehicle_ui.generated.resources.vehicle_features_msg_filtered
-import specmp.feature.vehicle_ui.generated.resources.vehicle_features_msg_filtered_none
-import specmp.feature.vehicle_ui.generated.resources.vehicle_features_msg_legend
-import specmp.feature.vehicle_ui.generated.resources.vehicle_features_msg_warning
-import specmp.feature.vehicle_ui.generated.resources.vehicle_points_label_no_photos
-import specmp.feature.vehicle_ui.generated.resources.vehicle_points_label_photos
 
 /** Доля столбца названия функции на широком окне (столбцы шин — по 1). */
 private const val FEATURE_NAME_WEIGHT = 1.2f
@@ -112,7 +112,7 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
     val colors = cmpThemeColors()
     CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         CmpText(
-            text = stringResource(Res.string.vehicle_features_msg_legend),
+            text = stringResource(Strings.string.vehicle_features_msg_legend),
             style = CmpTextStyle.Body,
             color = colors.onSurfaceVariant
         )
@@ -125,7 +125,7 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
                     modifier = Modifier.size(18.dp)
                 )
                 CmpText(
-                    text = stringResource(Res.string.vehicle_features_msg_filtered, shown, total),
+                    text = stringResource(Strings.string.vehicle_features_msg_filtered, shown, total),
                     style = CmpTextStyle.Body,
                     color = colors.primary
                 )
@@ -134,7 +134,7 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
         if (shown == 0) {
             CmpStateBox(
                 icon = CmpIcons.FilterAltOff,
-                title = stringResource(Res.string.vehicle_features_msg_filtered_none),
+                title = stringResource(Strings.string.vehicle_features_msg_filtered_none),
                 compact = true
             )
         }
@@ -153,7 +153,7 @@ private fun FeaturesWarning(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onSurfaceVariant)
-        CmpText(text = stringResource(Res.string.vehicle_features_msg_warning), style = CmpTextStyle.Body)
+        CmpText(text = stringResource(Strings.string.vehicle_features_msg_warning), style = CmpTextStyle.Body)
     }
 }
 
@@ -218,8 +218,8 @@ private fun FeatureRow(feature: CarFeature, wide: Boolean, modifier: Modifier = 
         ) {
             name()
             // Подписи — только на узком окне: на широком они в заголовке столбцов.
-            BusList(label = stringResource(Res.string.vehicle_features_label_read), buses = feature.reads)
-            BusList(label = stringResource(Res.string.vehicle_features_label_control), buses = feature.controls)
+            BusList(label = stringResource(Strings.string.vehicle_features_label_read), buses = feature.reads)
+            BusList(label = stringResource(Strings.string.vehicle_features_label_control), buses = feature.controls)
         }
     }
 }
@@ -244,7 +244,7 @@ private fun BusList(label: String?, buses: List<CarBus>, modifier: Modifier = Mo
         }
         if (buses.isEmpty()) {
             CmpText(
-                text = stringResource(Res.string.vehicle_features_label_none),
+                text = stringResource(Strings.string.vehicle_features_label_none),
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant
             )
@@ -264,14 +264,14 @@ internal fun FeaturesColumnsHeader() {
     ) {
         CmpBox(modifier = Modifier.weight(FEATURE_NAME_WEIGHT))
         CmpText(
-            text = stringResource(Res.string.vehicle_features_label_read),
+            text = stringResource(Strings.string.vehicle_features_label_read),
             style = CmpTextStyle.Body,
             fontWeight = FontWeight.SemiBold,
             color = colors.onSurfaceVariant,
             modifier = Modifier.weight(1f)
         )
         CmpText(
-            text = stringResource(Res.string.vehicle_features_label_control),
+            text = stringResource(Strings.string.vehicle_features_label_control),
             style = CmpTextStyle.Body,
             fontWeight = FontWeight.SemiBold,
             color = colors.onSurfaceVariant,
@@ -300,9 +300,9 @@ internal fun MountPointsList(points: List<MountPoint>, onOpen: (Int) -> Unit) {
             VehicleRow(
                 title = AnnotatedString(point.title),
                 subtitle = if (point.photos.isEmpty()) {
-                    stringResource(Res.string.vehicle_points_label_no_photos, point.type)
+                    stringResource(Strings.string.vehicle_points_label_no_photos, point.type)
                 } else {
-                    stringResource(Res.string.vehicle_points_label_photos, point.type, point.photos.size)
+                    stringResource(Strings.string.vehicle_points_label_photos, point.type, point.photos.size)
                 },
                 onClick = { onOpen(index) },
                 lead = { TileIcon(CmpIcons.Cable, colors.secondaryContainer, colors.onSecondaryContainer) },
@@ -316,7 +316,7 @@ internal fun MountPointsList(points: List<MountPoint>, onOpen: (Int) -> Unit) {
 @Composable
 internal fun DocumentsList(documents: List<CarDocument>, onOpen: (String) -> Unit) {
     val colors = cmpThemeColors()
-    val openLabel = stringResource(Res.string.vehicle_doc_a11y_open)
+    val openLabel = stringResource(Strings.string.vehicle_doc_a11y_open)
     CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         documents.forEach { document ->
             VehicleRow(

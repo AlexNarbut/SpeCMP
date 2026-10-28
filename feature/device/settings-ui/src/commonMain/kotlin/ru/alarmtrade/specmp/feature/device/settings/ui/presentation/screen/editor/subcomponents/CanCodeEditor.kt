@@ -16,6 +16,17 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_a11y_clear
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_btn_catalog
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_btn_find
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_hint_digits
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_label_code
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_loading
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_msg_apply_without_car
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_msg_error
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_msg_many
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_msg_none
 import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -36,17 +47,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.CAN_CO
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_can_a11y_clear
-import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_catalog
-import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_find
-import specmp.feature.device.settings_ui.generated.resources.settings_can_hint_digits
-import specmp.feature.device.settings_ui.generated.resources.settings_can_label_code
-import specmp.feature.device.settings_ui.generated.resources.settings_can_loading
-import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_apply_without_car
-import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_error
-import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_many
-import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_none
 
 /**
  * CAN-код: 4 ячейки (цифровая клавиатура), «Найти автомобиль» по коду и «Выбрать из каталога». Один
@@ -74,15 +74,15 @@ internal fun CanCodeEditor(
             CmpCodeField(
                 value = value.code,
                 onValueChange = onCodeChange,
-                label = stringResource(Res.string.settings_can_label_code),
-                clearContentDescription = stringResource(Res.string.settings_can_a11y_clear),
+                label = stringResource(Strings.string.settings_can_label_code),
+                clearContentDescription = stringResource(Strings.string.settings_can_a11y_clear),
                 length = CAN_CODE_LENGTH,
                 isError = value.code.isNotEmpty() && !complete,
                 modifier = Modifier.testTag(SettingsTestTags.CAN_CODE)
             )
             if (!complete) {
                 CmpText(
-                    text = stringResource(Res.string.settings_can_hint_digits),
+                    text = stringResource(Strings.string.settings_can_hint_digits),
                     style = CmpTextStyle.Body,
                     color = if (value.code.isEmpty()) cmpThemeColors().onSurfaceVariant else cmpThemeColors().error
                 )
@@ -94,7 +94,10 @@ internal fun CanCodeEditor(
             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_FIND)
         ) {
             CmpIcon(icon = CmpIcons.Search, contentDescription = null)
-            CmpText(text = stringResource(Res.string.settings_can_btn_find), modifier = Modifier.padding(start = 8.dp))
+            CmpText(
+                text = stringResource(Strings.string.settings_can_btn_find),
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
         CmpOutlinedButton(
             onClick = onPickFromCatalog,
@@ -102,7 +105,7 @@ internal fun CanCodeEditor(
         ) {
             CmpIcon(icon = CmpIcons.DirectionsCar, contentDescription = null)
             CmpText(
-                text = stringResource(Res.string.settings_can_btn_catalog),
+                text = stringResource(Strings.string.settings_can_btn_catalog),
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -125,7 +128,7 @@ private fun CarSearchResult(
         LCEState.Loading -> CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             CmpText(
-                text = stringResource(Res.string.settings_can_loading),
+                text = stringResource(Strings.string.settings_can_loading),
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant
             )
@@ -133,21 +136,21 @@ private fun CarSearchResult(
 
         is LCEState.Error -> Warning(
             when (val error = carSearch.error) {
-                SettingsError.LoadFailed -> stringResource(Res.string.settings_can_msg_error)
+                SettingsError.LoadFailed -> stringResource(Strings.string.settings_can_msg_error)
 
                 is SettingsError.Common ->
-                    "${error.error.message()}. ${stringResource(Res.string.settings_can_msg_apply_without_car)}"
+                    "${error.error.message()}. ${stringResource(Strings.string.settings_can_msg_apply_without_car)}"
             }
         )
 
         is LCEState.Content -> when (carSearch.content.size) {
-            0 -> Warning(stringResource(Res.string.settings_can_msg_none, value.code))
+            0 -> Warning(stringResource(Strings.string.settings_can_msg_none, value.code))
 
             1 -> CarCard(carLabel(carSearch.content.single()))
 
             else -> CmpColumn {
                 CmpText(
-                    text = stringResource(Res.string.settings_can_msg_many),
+                    text = stringResource(Strings.string.settings_can_msg_many),
                     style = CmpTextStyle.Body,
                     color = colors.onSurfaceVariant
                 )

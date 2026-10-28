@@ -20,6 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_boot_failed
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_modules
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_label_device_id
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -44,13 +51,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesLoading
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.PinDialog
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_check_msg_boot_failed
-import specmp.feature.device.firmware.generated.resources.firmware_check_title_modules
-import specmp.feature.device.firmware.generated.resources.firmware_check_title_screen
-import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware.generated.resources.firmware_common_label_device_id
-import specmp.feature.device.firmware.generated.resources.firmware_common_msg_test_channel
 
 private val ContentMaxWidth = 1040.dp
 
@@ -88,7 +88,7 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.firmware_check_title_screen)) },
+                title = { CmpText(text = stringResource(Strings.string.firmware_check_title_screen)) },
                 subtitle = state.deviceId?.let { id ->
                     { CmpText(text = "${state.deviceName}  $id", style = CmpTextStyle.Caption) }
                 },
@@ -96,7 +96,7 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.firmware_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
                     )
                 }
             )
@@ -135,14 +135,14 @@ private fun ReadyBody(
         ) {
             if (state.bootFailed) {
                 InfoBanner(
-                    text = stringResource(Res.string.firmware_check_msg_boot_failed),
+                    text = stringResource(Strings.string.firmware_check_msg_boot_failed),
                     tone = BannerTone.Error,
                     icon = CmpIcons.CloudOff
                 )
             }
             state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
-            if (state.channel.isTest) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
-            CmpText(text = stringResource(Res.string.firmware_check_title_modules), style = CmpTextStyle.Title)
+            if (state.channel.isTest) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+            CmpText(text = stringResource(Strings.string.firmware_check_title_modules), style = CmpTextStyle.Title)
             modules.chunked(columns).forEach { rowCards ->
                 CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
                     rowCards.forEach { card ->
@@ -179,7 +179,7 @@ private fun DeviceRow(
     onChannelSelect: (FirmwareChannel) -> Unit
 ) {
     val colors = cmpThemeColors()
-    val idText = stringResource(Res.string.firmware_common_label_device_id, id.toString())
+    val idText = stringResource(Strings.string.firmware_common_label_device_id, id.toString())
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),

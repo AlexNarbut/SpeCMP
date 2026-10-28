@@ -10,21 +10,21 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.app_picker_label_images
+import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_file
+import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_image
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickKind
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
-import specmp.composeapp.generated.resources.Res
-import specmp.composeapp.generated.resources.composeapp_picker_label_images
-import specmp.composeapp.generated.resources.composeapp_picker_title_file
-import specmp.composeapp.generated.resources.composeapp_picker_title_image
 
 @Composable
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
-    val imageTitle = stringResource(Res.string.composeapp_picker_title_image)
-    val imagesLabel = stringResource(Res.string.composeapp_picker_label_images)
-    val fileTitle = stringResource(Res.string.composeapp_picker_title_file)
+    val imageTitle = stringResource(Strings.string.app_picker_title_image)
+    val imagesLabel = stringResource(Strings.string.app_picker_label_images)
+    val fileTitle = stringResource(Strings.string.app_picker_title_file)
     return remember(imageTitle, imagesLabel, fileTitle) {
         DesktopSupportChatFilePicker(
             imageTitle = imageTitle,

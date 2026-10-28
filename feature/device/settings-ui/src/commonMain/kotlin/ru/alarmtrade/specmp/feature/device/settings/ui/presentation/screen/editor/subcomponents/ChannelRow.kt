@@ -16,6 +16,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_not_assigned
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_locked
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_toggle_contact
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_toggle_polarity
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -43,11 +48,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.C
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ContactBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.PolarityBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_io_a11y_locked
-import specmp.feature.device.settings_ui.generated.resources.settings_io_a11y_toggle_contact
-import specmp.feature.device.settings_ui.generated.resources.settings_io_a11y_toggle_polarity
-import specmp.feature.device.settings_ui.generated.resources.settings_value_not_assigned
 
 private const val CHANGED_TINT_ALPHA = 0.5f
 private const val FUNCTIONS_MAX_LINES = 2
@@ -111,7 +111,7 @@ internal fun ChannelRow(
             }
             functionsOf(setting)?.let { functions ->
                 CmpText(
-                    text = functions.ifEmpty { stringResource(Res.string.settings_value_not_assigned) },
+                    text = functions.ifEmpty { stringResource(Strings.string.settings_common_value_not_assigned) },
                     style = CmpTextStyle.BodyLarge,
                     color = if (functions.isEmpty()) colors.onSurfaceVariant else colors.primary,
                     maxLines = FUNCTIONS_MAX_LINES,
@@ -158,7 +158,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             CmpIconButton(
                 onClick = { actions.onValueChange(setting.id, SettingValue.Input(setting.value.value.toggled())) },
                 icon = CmpIcons.SwapHoriz,
-                contentDescription = stringResource(Res.string.settings_io_a11y_toggle_contact),
+                contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_contact),
                 tint = colors.primary,
                 modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
             )
@@ -168,7 +168,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             CmpIconButton(
                 onClick = { actions.onValueChange(setting.id, SettingValue.Output(setting.value.value.toggled())) },
                 icon = CmpIcons.SwapHoriz,
-                contentDescription = stringResource(Res.string.settings_io_a11y_toggle_polarity),
+                contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_polarity),
                 tint = colors.primary,
                 modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
             )
@@ -176,7 +176,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                 CmpIcon(
                     icon = CmpIcons.Lock,
-                    contentDescription = stringResource(Res.string.settings_io_a11y_locked),
+                    contentDescription = stringResource(Strings.string.settings_io_a11y_locked),
                     tint = colors.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )

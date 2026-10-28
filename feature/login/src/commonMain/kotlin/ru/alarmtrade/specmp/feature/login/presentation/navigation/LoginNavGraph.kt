@@ -23,6 +23,11 @@ import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_auth_failed
+import ru.alarmtrade.specmp.core.localization.resources.login_forgot_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.login_registration_title_screen
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
@@ -40,11 +45,6 @@ import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenViewModel
 import ru.alarmtrade.specmp.feature.login.presentation.screen.registration.RegistrationScreen
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_a11y_back
-import specmp.feature.login.generated.resources.login_common_error_auth_failed
-import specmp.feature.login.generated.resources.login_forgot_title_screen
-import specmp.feature.login.generated.resources.login_registration_title_screen
 
 @Serializable
 @SerialName("login.LoginRoute")
@@ -93,7 +93,7 @@ fun LoginNavGraph(onLocaleChange: (AppLocale) -> Unit) {
                 CmpIconButton(
                     onClick = { backStack.popSafe() },
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Res.string.login_common_a11y_back)
+                    contentDescription = stringResource(Strings.string.login_common_a11y_back)
                 )
             }
         },
@@ -138,7 +138,7 @@ private fun LoginNavDisplay(
                     layoutMode = layoutMode,
                     modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    error = state.value.authError?.text(Res.string.login_common_error_auth_failed)
+                    error = state.value.authError?.text(Strings.string.login_common_error_auth_failed)
                 ) {
                     LoginScreen(
                         state = state.value,
@@ -184,7 +184,7 @@ private fun LoginNavDisplay(
 
 @Composable
 private fun routeTitle(route: NavKey): String = when (route) {
-    RegistrationRoute -> stringResource(Res.string.login_registration_title_screen)
-    ForgotPasswordRoute -> stringResource(Res.string.login_forgot_title_screen)
+    RegistrationRoute -> stringResource(Strings.string.login_registration_title_screen)
+    ForgotPasswordRoute -> stringResource(Strings.string.login_forgot_title_screen)
     else -> ""
 }

@@ -9,14 +9,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_hide_password
+import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_show_password
+import ru.alarmtrade.specmp.core.localization.resources.login_common_label_password
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_a11y_hide_password
-import specmp.feature.login.generated.resources.login_common_a11y_show_password
-import specmp.feature.login.generated.resources.login_common_label_password
 
 @Composable
 fun AuthPasswordField(
@@ -35,7 +35,7 @@ fun AuthPasswordField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
-        label = stringResource(Res.string.login_common_label_password),
+        label = stringResource(Strings.string.login_common_label_password),
         singleLine = true,
         enabled = enabled,
         isError = isError,
@@ -61,9 +61,9 @@ fun AuthPasswordField(
                 onClick = onPasswordVisibilityChange,
                 icon = if (isPasswordVisible) CmpIcons.VisibilityOff else CmpIcons.Visibility,
                 contentDescription = if (isPasswordVisible) {
-                    stringResource(Res.string.login_common_a11y_hide_password)
+                    stringResource(Strings.string.login_common_a11y_hide_password)
                 } else {
-                    stringResource(Res.string.login_common_a11y_show_password)
+                    stringResource(Strings.string.login_common_a11y_show_password)
                 },
                 enabled = enabled
             )

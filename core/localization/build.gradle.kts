@@ -21,6 +21,8 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+        // обязательно для модулей с compose resources (см. docs/build.md)
+        androidResources.enable = true
     }
 
     listOf(
@@ -38,6 +40,16 @@ kotlin {
 
             // api: LocalAppLocale — публичный CompositionLocal этого модуля
             api(libs.compose.runtime)
+            // api: Strings — публичный класс строк всех фич (docs/localization.md)
+            api(libs.compose.resources)
         }
     }
+}
+
+// Все строки приложения: composeResources/values*/<префикс фичи>.xml → Strings.string.<ключ>
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "ru.alarmtrade.specmp.core.localization.resources"
+    nameOfResClass = "Strings"
+    generateResClass = always
 }
