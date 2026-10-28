@@ -517,7 +517,7 @@ class FirmwareUpdateViewModel(
     }
 
     fun onReconnect() {
-        safeLaunch { deviceSession.reconnectNow() }
+        safeLaunch { withContext(dispatchers.io) { deviceSession.reconnectNow() } }
     }
 
     fun onDisconnect() {

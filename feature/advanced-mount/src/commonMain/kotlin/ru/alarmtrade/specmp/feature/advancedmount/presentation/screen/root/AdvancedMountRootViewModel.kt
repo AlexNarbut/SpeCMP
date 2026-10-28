@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
@@ -44,7 +45,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 class AdvancedMountRootViewModel(
     private val deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
-    dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
     private val deviceScope = DeviceScope(viewModelScope, deviceSession)
@@ -54,6 +55,7 @@ class AdvancedMountRootViewModel(
     // Поллинг непрочитанных живёт в репозитории; WhileSubscribed общего state останавливает его, пока корень
     // перекрыт дочерним экраном. Ошибка опроса не сбрасывает последнее известное значение.
     private val unreadCount: Flow<Int> = repository.observeUnreadChatCount()
+        .flowOn(dispatchers.io)
         .mapNotNull { it.getValueIfSuccess() }
         .onStart { emit(0) }
 
@@ -62,7 +64,9 @@ class AdvancedMountRootViewModel(
     private val remoteAvailable: StateFlow<Boolean> = flow {
         _state.first { it.content.content is MountAccess.Ready }
         emitAll(repository.remoteMountAvailable())
-    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
+    }
+        .flowOn(dispatchers.io)
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
     val state: StateFlow<AdvancedMountRootState> = combine(_state, unreadCount, remoteAvailable) {
             state,
@@ -88,7 +92,8 @@ class AdvancedMountRootViewModel(
         }
         deviceScope.onReady(::onDeviceReady)
         safeLaunch {
-            val enabled = (repository.isProductInfoEnabled() as? Response.Success)?.value ?: false
+            val enabled =
+                (withContext(dispatchers.io) { repository.isProductInfoEnabled() } as? Response.Success)?.value ?: false
             _state.update { it.copy(productInfo = enabled) }
         }
     }
@@ -99,7 +104,8 @@ class AdvancedMountRootViewModel(
         val sameDevice = previous.device?.systemId == device.systemId
         if (!sameDevice || previous.content is LCEState.Error) load(device)
 
-        val imei = (deviceSession.readImei() as? Response.Success)?.value?.takeIf { it.isNotBlank() }
+        val imei = (withContext(dispatchers.io) { deviceSession.readImei() } as? Response.Success)?.value
+            ?.takeIf { it.isNotBlank() }
         _state.update { it.copy(imei = imei ?: it.imei) }
     }
 
@@ -108,11 +114,9 @@ class AdvancedMountRootViewModel(
         loadJob = safeLaunch {
             _state.update { it.copy(content = LCEState.Loading, dialog = null) }
             val content = when (
-                val access = repository.verify(
-                    device.systemId,
-                    device.systemName,
-                    device.firmwareVersion
-                )
+                val access = withContext(dispatchers.io) {
+                    repository.verify(device.systemId, device.systemName, device.firmwareVersion)
+                }
             ) {
                 is Response.Error -> LCEState.Error(MountError.from(access.exception))
 

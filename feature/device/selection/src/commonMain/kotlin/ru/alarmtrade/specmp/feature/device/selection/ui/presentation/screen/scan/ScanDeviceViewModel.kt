@@ -64,7 +64,7 @@ class ScanDeviceViewModel(
     private val connectionRepository: DeviceConnectionRepository,
     private val deviceSession: DeviceSession,
     private val permissionsProvider: PermissionsProvider,
-    dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
     private val requirements = deviceAccessRequirements()
@@ -104,8 +104,10 @@ class ScanDeviceViewModel(
                 flowOf(LCEState.None)
             } else {
                 combine(
-                    scanRepository.scanBluetooth().onStart { emit(Response.Success(emptyList())) },
-                    scanRepository.scanUsb().onStart { emit(Response.Success(emptyList())) }
+                    scanRepository.scanBluetooth().flowOn(dispatchers.io).onStart {
+                        emit(Response.Success(emptyList()))
+                    },
+                    scanRepository.scanUsb().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) }
                 ) { bleResponse, usbResponse -> mergeDevices(bleResponse, usbResponse) }
             }
         }
@@ -305,7 +307,10 @@ class ScanDeviceViewModel(
         val startedAt = TimeSource.Monotonic.markNow()
         repeat(BLE_CONNECT_ATTEMPTS) { attempt ->
             logger.i { "connectBle id=${item.id} attempt=${attempt + 1} start" }
-            val result = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal()
+            val result = connectionRepository.connectBle(
+                item.id,
+                CONNECT_TIMEOUT_MILLIS
+            ).flowOn(dispatchers.io).awaitTerminal()
             logger.i {
                 "connectBle id=${item.id} attempt=${attempt + 1} result=$result " +
                     "total=${startedAt.elapsedNow().inWholeMilliseconds}ms"
@@ -330,7 +335,7 @@ class ScanDeviceViewModel(
         ((state.value.devices as? LCEState.Content)?.content?.firstOrNull { it.id == id } as? DeviceUiItem.Ble)?.mode
 
     private suspend fun connectUsb(item: DeviceUiItem.Usb): Boolean =
-        connectionRepository.connectUsb(item.id).awaitTerminal().isConnected()
+        connectionRepository.connectUsb(item.id).flowOn(dispatchers.io).awaitTerminal().isConnected()
 
     private fun Response<DeviceConnectionState>?.isConnected(): Boolean {
         val connected = this is Response.Success && value == DeviceConnectionState.CONNECTED
