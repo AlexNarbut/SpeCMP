@@ -134,7 +134,7 @@ private fun AuthedNavGraph() {
                 DeviceSelectionNavGraph(
                     // Сессия создана — поиск заменяется flow работы с устройством:
                     // «Назад» из монтажа не возвращает в поиск.
-                    onSessionCreate = { _ -> backStack.replaceCurrent(AdvancedMountRoute) },
+                    onSessionCreate = { backStack.replaceCurrent(AdvancedMountRoute) },
                     onClose = { backStack.popSafe() }
                 )
             }

@@ -173,7 +173,7 @@ internal fun DeviceStatusContent(
                         DeviceStatus.Disconnected -> DisconnectedBody(transport, onExit)
 
                         DeviceStatus.Connecting -> {
-                            StatusHero(CmpIcons.Link, error = false)
+                            StatusHero(CmpIcons.Link)
                             CmpText(
                                 text = stringResource(Strings.string.deviceinteraction_connecting_title),
                                 fontSize = 24.sp,
@@ -229,19 +229,19 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
 }
 
 @Composable
-private fun StatusHero(icon: CmpIcons, error: Boolean) {
+private fun StatusHero(icon: CmpIcons) {
     val colors = cmpThemeColors()
     CmpSurface(
         modifier = Modifier.size(96.dp),
         shape = CircleShape,
-        color = if (error) colors.errorContainer else colors.primaryContainer
+        color = colors.primaryContainer
     ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = icon,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
-                tint = if (error) colors.onErrorContainer else colors.onPrimaryContainer
+                tint = colors.onPrimaryContainer
             )
         }
     }

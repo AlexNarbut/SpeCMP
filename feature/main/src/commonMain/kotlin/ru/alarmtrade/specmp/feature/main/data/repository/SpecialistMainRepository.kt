@@ -153,13 +153,6 @@ class SpecialistMainRepository(
         }
     }
 
-    override fun observeUnreadMessagesCount(): Flow<Response<Int>> = flow {
-        while (currentCoroutineContext().isActive) {
-            emit(unreadMessagesCount())
-            delay(CHAT_UNREAD_POLL_INTERVAL)
-        }
-    }
-
     private suspend fun chatAvailability(): Response<Boolean> =
         when (val response = chatInteractor.isAvailableUseCase.execute()) {
             is SpecialistResponse.Success -> {
@@ -169,19 +162,6 @@ class SpecialistMainRepository(
 
             is SpecialistResponse.Error -> {
                 logger.e(response.exception) { "Failed to fetch chat availability" }
-                response.toResponse()
-            }
-        }
-
-    private suspend fun unreadMessagesCount(): Response<Int> =
-        when (val response = chatInteractor.getUnreadMessagesCountUseCase.execute()) {
-            is SpecialistResponse.Success -> {
-                logger.d { "Unread messages count fetched: ${response.value.int}" }
-                Response.Success(response.value.int)
-            }
-
-            is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to fetch unread messages count" }
                 response.toResponse()
             }
         }
@@ -247,6 +227,5 @@ class SpecialistMainRepository(
 
     private companion object {
         val CHAT_AVAILABILITY_POLL_INTERVAL = 10.seconds
-        val CHAT_UNREAD_POLL_INTERVAL = 60.seconds
     }
 }

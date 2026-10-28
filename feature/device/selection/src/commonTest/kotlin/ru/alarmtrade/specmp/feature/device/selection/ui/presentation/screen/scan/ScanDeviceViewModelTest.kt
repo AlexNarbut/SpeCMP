@@ -24,7 +24,6 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
 import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
@@ -109,9 +108,7 @@ class ScanDeviceViewModelTest {
         )
         advanceUntilIdle()
 
-        val created = effects.filterIsInstance<ScanDeviceEffect.SessionCreated>().singleOrNull()
-        assertTrue(created != null)
-        assertEquals(ConnectedDevice("AA:BB", "Pandora", ConnectionTransport.BLE), created.device)
+        assertEquals(1, effects.count { it is ScanDeviceEffect.SessionCreated })
         assertEquals(ConnectionTransport.BLE, lastSession?.transport?.value)
     }
 

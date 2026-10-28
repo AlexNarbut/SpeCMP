@@ -64,7 +64,6 @@ internal class VehicleSelectViewModel(
                 firmwareCanCode = request.firmwareCanCode
             ),
             deviceType = (request.device as? VehicleDeviceFilter.Type)?.type,
-            needsType = request.device == null,
             canCode = request.firmwareCanCode.takeUnless { configurationsOnly }.orEmpty()
         )
     )

@@ -17,14 +17,7 @@ package ru.alarmtrade.specmp.core.common
  * ## Usage
  * ```kotlin
  * // Repository layer
- * suspend fun getUser(id: String): Response<User> {
- *     return try {
- *         val user = apiClient.fetchUser(id)
- *         Response.Success(user)
- *     } catch (e: Exception) {
- *         Response.Error(e, "Failed to fetch user")
- *     }
- * }
+ * suspend fun getUser(id: String): Response<User> = safeRun { apiClient.fetchUser(id) }
  *
  * // Use case layer
  * suspend fun invoke(id: String): Response<User> {

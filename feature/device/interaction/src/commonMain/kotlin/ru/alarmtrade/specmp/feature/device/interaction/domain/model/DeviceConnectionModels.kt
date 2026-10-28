@@ -26,6 +26,3 @@ enum class DeviceConnectionState {
 
 /** Транспорт, по которому создана сессия. */
 enum class ConnectionTransport { BLE, USB }
-
-/** Результат поиска: сессия с устройством создана — дальше flow работы с устройством. */
-data class ConnectedDevice(val id: String, val name: String, val transport: ConnectionTransport)

@@ -33,9 +33,6 @@ internal class FakeFirmwareRepository : FirmwareRepository {
 
     override suspend fun modules(deviceName: String, transport: ConnectionTransport) = modulesResult
 
-    override suspend fun moduleById(id: Long, transport: ConnectionTransport): Response<FirmwareModule> =
-        Response.Error(IllegalStateException("not used"))
-
     override suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion> {
         latestCalls += moduleId to channel
         return latest[moduleId to channel] ?: Response.Error(IllegalStateException("no version"))

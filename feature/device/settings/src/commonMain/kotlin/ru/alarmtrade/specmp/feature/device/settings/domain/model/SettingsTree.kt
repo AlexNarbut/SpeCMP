@@ -34,9 +34,6 @@ fun SettingsSection.settings(): List<Setting> = children.flatMap { child ->
     }
 }
 
-/** Сколько настроек раздела (на любой глубине) входит в [ids] — счётчик изменений раздела. */
-fun SettingsSection.countIn(ids: Set<Int>): Int = settings().count { it.id in ids }
-
 /** Дерево, в котором настройка с тем же id заменена на [setting]; без совпадения — то же дерево. */
 fun SettingsSection.replace(setting: Setting): SettingsSection = copy(
     children = children.map { child ->

@@ -8,7 +8,6 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.presentation.model.MAIN_UNKNOWN_APP_VERSION
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
@@ -26,8 +25,6 @@ data class MainScreenState(
     val userCommercialState: LCEState<MainUserCommercial, MainError> = LCEState.None,
     val appUpdateState: LCEState<MainAppUpdateCheckResult, MainError> = LCEState.None,
     val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
-    val chatUnreadState: LCEState<Int, MainError> = LCEState.None,
-    val cardVariant: MainCardVariant = MainCardVariant.Centered,
     val logoutState: LCEState<Unit, MainError> = LCEState.None
 ) {
     val logoutError: MainError? get() = (logoutState as? LCEState.Error)?.error
@@ -74,9 +71,6 @@ data class MainScreenState(
 
     val chatAvailability: Boolean
         get() = chatAvailabilityState.content ?: false
-
-    val chatUnreadCount: Int
-        get() = chatUnreadState.content ?: 0
 
     val isAppUpdateChecking: Boolean
         get() = appUpdateState is LCEState.Loading

@@ -14,7 +14,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 private const val SUPPORT_CHAT_SETTINGS = "supportchat"
 
 val supportChatModule = module {
-    single { SpecialistSupportChatRepository(get(), get()) } bind SupportChatRepository::class bind AuthCloseable::class
+    single { SpecialistSupportChatRepository(get(), get()) } bind SupportChatRepository::class
     // Outbox дополнительно регистрируется как AuthCloseable: LogoutUseCase
     // очищает очередь при смене аккаунта.
     single {

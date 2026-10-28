@@ -70,7 +70,6 @@ internal data class VehicleSelectState(
     val mode: VehicleSelectModeUi,
     /** Тип устройства не задан запросом и ещё не выбран — экран выбора типа. */
     val deviceType: VehicleDeviceType? = null,
-    val needsType: Boolean = false,
     val searchMode: SearchMode = SearchMode.NAME,
     val query: String = "",
     val canCode: String = "",
@@ -91,7 +90,7 @@ internal data class VehicleSelectState(
     /** Идёт получение данных автомобиля для «Выбрать» из строки. */
     val picking: Boolean = false
 ) {
-    val showTypeChoice: Boolean get() = needsType && deviceType == null
+    val showTypeChoice: Boolean get() = mode.typeSelectable && deviceType == null
 }
 
 /** Постоянные параметры экрана из запроса. */

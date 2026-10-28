@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
@@ -11,10 +10,9 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFi
 /**
  * Контракт чата техподдержки — тонкая обёртка над SDK. Соединением (подключение, подписка
  * комнаты, переподключение, ожидание сети) владеет SDK; вызывающий решает, когда чат нужен.
- *
- * Реализация — app-scoped синглтон и наследует [AuthCloseable] (`LogoutUseCase`).
+ * Состояния аккаунта не держит — на логауте соединение гасит сам SDK, сбрасывать нечего.
  */
-interface SupportChatRepository : AuthCloseable {
+interface SupportChatRepository {
 
     /**
      * Чат-сессия: пока поток собирается, SDK держит соединение; отмена сбора его отпускает.

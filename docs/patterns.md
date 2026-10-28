@@ -290,7 +290,7 @@ internal sealed interface SourceKey {
 | `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища) |
 | `core/ui` | `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel`, `sideEffectFlow`/`collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
 | `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`SpecialistAppVersionProvider`, device info) |
-| `core/network` | `HttpClientFactory`, Ktor-клиент |
+| `core/network` | HTTP-движки Ktor (для SDK и Coil), `NetworkMonitor` |
 | `core/localization` | `AppLocale`, чтение/применение локали |
 
 **Правила:**
@@ -462,7 +462,7 @@ suspend fun refreshUser(id: String): Response<User> {
 
 // ✅ Правильно — Response-цепочка без обёртки, композиция через ResponseExt
 suspend fun refreshUser(id: String): Response<UserProfile> {
-    return userRepository.fetchUser(id).mapValueIfSuccess { it.toProfile() }
+    return userRepository.fetchUser(id).map { it.toProfile() }
 }
 ```
 
@@ -472,23 +472,22 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
 - НИКОГДА не бросать исключения из репозиториев.
 - **Безопасные конструкции — только готовые хелперы из `core/common` `ResponseExt`**,
   не самописные try/catch: `safeRun` (бросающий код → `Response`), `safeResponseRun` (блок сам
-  возвращает `Response`, но содержит бросающий код), `safeFlowRun` / `safeFlowResponseRun`
-  (для `Flow`). Хелперы уже пробрасывают `CancellationException` и логируют ошибку — ручная
+  возвращает `Response`, но содержит бросающий код), `safeFlowRun` (для `Flow<Response<T>>`). Хелперы уже пробрасывают `CancellationException` и логируют ошибку — ручная
   обёртка обычно теряет одно из двух.
 - **Не оборачивать то, что уже возвращает `Response`.** Если вызываемый метод (или цепочка)
   возвращает `Response<T>` — в том числе SDK-Response с той же семантикой `Success`/`Error` —
   его контракт уже гарантирует, что исключение не вылетит; повторная обёртка — шум. Обёртка
   нужна только на границе с кодом, который реально может бросить: HTTP/DB-клиент, парсинг,
   файловый I/O, коллекция «сырого» Flow, SDK-вызов без Response-контракта.
-- Ветвление и трансформации `Response` — через расширения `ResponseExt` (`map`,
-  `mapValueIfSuccess`, `mapIfSuccess`, `mapIfError`, `onSuccess`/`onError`, `getValueIfSuccess`),
+- Ветвление и трансформации `Response` — через расширения `ResponseExt` (по одному имени на операцию:
+  `map`, `mapIfSuccess`, `mapIfError`, `onError`, `getValueIfSuccess`; новое — только под реальный вызов),
   а не ручной `when`, когда расширение выражает то же самое. Одинаковая конвертация
   SDK-Response → `Response`, повторённая в нескольких методах, выносится в одно приватное
   расширение репозитория (`private fun <T> SdkResponse<T>.toResponse(): Response<T>`),
   а не копируется `when`-блоком в каждый метод.
 - **Flow-цепочки — без ручных обёрток.** `flow { upstream.collect { emit(it) } }` над уже
   холодной цепочкой избыточен — верни цепочку напрямую; `map { … }.filterNotNull()` → `mapNotNull`;
-  `catch` — один раз и через `safeFlowRun`/`safeFlowResponseRun`. Помни, что `catch` **завершает**
+  `catch` — один раз и через `safeFlowRun`. Помни, что `catch` **завершает**
   поток: для долгоживущей подписки (WebSocket, события SDK) это значит «событий больше не будет».
   Либо поток самовосстанавливается (`retryWhen`) в репозитории, либо VM явно пересоздаёт подписку
   при ручном реконнекте — «баннер снят, а события не приходят» недопустимо.
@@ -505,12 +504,10 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
   интервал — константа репозитория; цикл — по `isActive`:
 
 ```kotlin
-override fun observeUnreadMessagesCount(): Flow<Response<Int>> {
-    return flow {
-        while (currentCoroutineContext().isActive) {
-            emit(unreadMessagesCount())
-            delay(CHAT_UNREAD_POLL_INTERVAL)
-        }
+override fun observeChatAvailability(): Flow<Response<Boolean>> = flow {
+    while (currentCoroutineContext().isActive) {
+        emit(chatAvailability())
+        delay(CHAT_AVAILABILITY_POLL_INTERVAL)
     }
 }
 ```
@@ -798,14 +795,14 @@ class MainScreenViewModel(
 
     // Периодический источник: репозиторий отдаёт Flow<Response<T>>,
     // ручные Job + onCleared во VM не нужны
-    private val chatUnread: Flow<LCEState<Int, MainError>> = mainRepository
-        .observeUnreadMessagesCount()
+    private val chatAvailability: Flow<LCEState<Boolean, MainError>> = mainRepository
+        .observeChatAvailability()
         .map { response -> response.asLCEState(MainError::from) }
         .flowOn(dispatchers.io)
         .onStart { emit(LCEState.None) }  // combine не ждёт первый ответ сети
 
-    val state: StateFlow<MainScreenState> = combine(_state, chatUnread) { state, unread ->
-        state.copy(chatUnreadState = unread)
+    val state: StateFlow<MainScreenState> = combine(_state, chatAvailability) { state, chat ->
+        state.copy(chatAvailabilityState = chat)
     }
         .launchOnFirstStart { initialRefresh() }  // один раз за жизнь VM, не блокирует цепочку
         .onStart { resetTransientState() }       // на каждый (пере)запуск шаринга
@@ -825,7 +822,7 @@ class MainScreenViewModel(
 ```
 
 **Порядок объявлений важен:** свойства инициализируются сверху вниз, поэтому источники
-(`chatUnread`) объявляются **до** `state` — иначе `combine` захватит ещё не инициализированное (null)
+(`chatAvailability`) объявляются **до** `state` — иначе `combine` захватит ещё не инициализированное (null)
 поле и упадёт в runtime. Блок `launchOnFirstStart` выполняется позже (при подписке), ему порядок не важен.
 
 **`onStart` vs `onSubscription`:**

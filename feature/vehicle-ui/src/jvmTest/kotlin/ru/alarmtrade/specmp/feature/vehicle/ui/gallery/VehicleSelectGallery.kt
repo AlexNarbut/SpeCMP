@@ -128,7 +128,6 @@ class VehicleSelectGallery {
             firmwareCanCode = if (typeSelectable) null else "2154"
         ),
         deviceType = VehicleDeviceType.ALARM,
-        needsType = typeSelectable,
         brands = LCEState.Content(brands),
         recent = recent
     )

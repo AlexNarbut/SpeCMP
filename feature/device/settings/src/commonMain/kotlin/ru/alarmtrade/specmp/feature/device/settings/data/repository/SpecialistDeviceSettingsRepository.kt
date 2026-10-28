@@ -11,6 +11,7 @@ import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.OpenDev
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.mapIfError
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
@@ -80,19 +81,19 @@ class SpecialistDeviceSettingsRepository(
         saveChanges: Boolean
     ): Response<SettingsSection> {
         val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        val response = interactor.copyDeviceSettingsUseCase
+        return interactor.copyDeviceSettingsUseCase
             .execute(CopySettingsRequest(from.toPath(), to.toPath(), saveChanges))
             .toResponse()
-        return when (response) {
-            is Response.Success -> Response.Success(response.value.toRootSection())
-
-            is Response.Error ->
-                if (response.exception is WrongSettingsSizeException) {
-                    Response.Error(SettingsMismatchException(response.exception))
+            .map { it.toRootSection() }
+            .mapIfError { error ->
+                if (error.exception is WrongSettingsSizeException) {
+                    Response.Error(
+                        SettingsMismatchException(error.exception)
+                    )
                 } else {
-                    response
+                    error
                 }
-        }
+            }
     }
 
     // Файла снимка ещё нет: SDK не открывает приёмник и пишет в него байты источника как есть; при чтении меню

@@ -64,22 +64,10 @@ class MainScreenViewModel(
         .flowOn(dispatchers.io)
         .onStart { emit(LCEState.None) }
 
-    private val chatUnreadState: Flow<LCEState<Int, MainError>> = mainRepository
-        .observeUnreadMessagesCount()
-        .map { response ->
-            response.asLCEState(MainError::from)
-        }
-        .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None) }
-
     // Поллинг чата живёт только пока экран подписан: WhileSubscribed останавливает
     // источники при уходе с экрана и перезапускает при возврате.
-    val state: StateFlow<MainScreenState> = combine(
-        _state,
-        chatAvailabilityState,
-        chatUnreadState
-    ) { state, chatAvailability, chatUnread ->
-        state.copy(chatAvailabilityState = chatAvailability, chatUnreadState = chatUnread)
+    val state: StateFlow<MainScreenState> = combine(_state, chatAvailabilityState) { state, chatAvailability ->
+        state.copy(chatAvailabilityState = chatAvailability)
     }
         // Первичная загрузка — один раз за жизнь VM, при первой подписке на state; скелетон — пока она идёт.
         .launchOnFirstStart { initialRefresh() }

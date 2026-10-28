@@ -103,7 +103,7 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 
 ### core/network
 - Пакет: `ru.alarmtrade.specmp.core.network`
-- `HttpClientFactory` — Ktor HttpClient (OkHttp на Android, Darwin на iOS)
+- HTTP-движки Ktor для SDK и Coil (OkHttp на Android/JVM, Darwin на iOS); `NetworkMonitor` — доступность сети
 
 ### core/localization
 - Пакет: `ru.alarmtrade.specmp.core.localization`
@@ -216,7 +216,7 @@ Feature-модули:
 | `:core:common` | `Response<T>`, `ResponseExt`, `AppDispatchers` | **Всегда** — каждый feature-модуль обязан зависеть от `core:common` |
 | `:core:localization` | `AppLocale`, чтение/применение локали приложения | Если фича показывает переключение языка или зависит от текущей локали |
 | `:core:ui` | `LCEState<T, E>`, `LCEStateExt`, `AppError.message()`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
-| `:core:network` | `HttpClientFactory`, Ktor-клиент | Только если фича работает с сетью |
+| `:core:network` | `NetworkMonitor`, HTTP-движки Ktor процесса | Фичам обычно не нужен — сеть идёт через Specialist SDK |
 
 Примеры `build.gradle.kts`:
 

@@ -176,7 +176,7 @@ ViewModel через несколько composable, эффекты читают 
 
 `TooGenericExceptionCaught` не проверяется на границах, где по нашим правилам ловится всё и нормализуется в
 `Response.Error`: `core/network` и safe*-хелперы `core/common/.../ResponseExt.kt` (`safeRun`, `safeResponseRun`,
-`safeFlowRun`, `safeFlowResponseRun`). Остальной код ловит конкретный тип либо идёт через `safeRun`. Если исключение
+`safeFlowRun`). Остальной код ловит конкретный тип либо идёт через `safeRun`. Если исключение
 сознательно игнорируется (например, SDK бросает на недоступном транспорте и это означает «нет зависимости»), переменная
 называется `ignored`: так её пропускают и `TooGenericExceptionCaught`, и `SwallowedException`
 (`allowedExceptionNameRegex` по умолчанию — `_|(ignore|expected).*`).

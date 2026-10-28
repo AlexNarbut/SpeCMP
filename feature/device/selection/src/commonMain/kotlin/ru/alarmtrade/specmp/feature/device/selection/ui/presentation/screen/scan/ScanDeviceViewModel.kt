@@ -35,7 +35,6 @@ import ru.alarmtrade.specmp.core.permissions.isBluetoothEnabled
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
@@ -279,9 +278,8 @@ class ScanDeviceViewModel(
                 }
                 if (connected) {
                     // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
-                    val device = item.toConnectedDevice()
-                    deviceSession.attach(device.transport)
-                    _effect.tryEmit(ScanDeviceEffect.SessionCreated(device))
+                    deviceSession.attach(item.transport.toConnection())
+                    _effect.tryEmit(ScanDeviceEffect.SessionCreated)
                 } else {
                     deviceSession.close().join()
                     stepFlow.update { ScanStep.Scanning }
@@ -339,14 +337,10 @@ class ScanDeviceViewModel(
         return connected
     }
 
-    private fun DeviceUiItem.toConnectedDevice() = ConnectedDevice(
-        id = id,
-        name = name,
-        transport = when (transport) {
-            DeviceTransport.BLE -> ConnectionTransport.BLE
-            DeviceTransport.USB -> ConnectionTransport.USB
-        }
-    )
+    private fun DeviceTransport.toConnection() = when (this) {
+        DeviceTransport.BLE -> ConnectionTransport.BLE
+        DeviceTransport.USB -> ConnectionTransport.USB
+    }
 
     // Общий предел ожидания: SDK переподключается по кругу, а USB может не дать финального статуса.
     // null (таймаут или поток завершился без финала) — неудача.

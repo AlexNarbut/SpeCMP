@@ -19,7 +19,6 @@ import ru.alarmtrade.specmp.core.lifecycle.appLifecycleModule
 import ru.alarmtrade.specmp.core.localization.LocalAppLocale
 import ru.alarmtrade.specmp.core.localization.applyAppLocale
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
-import ru.alarmtrade.specmp.core.network.di.networkModule
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
@@ -85,7 +84,6 @@ fun App(
             buildList {
                 addAll(platformModules)
                 add(commonModule)
-                add(networkModule)
                 add(specialistModule)
                 overrideAppVersionModule?.let { add(it) }
                 add(permissionsModule())

@@ -17,7 +17,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.countIn
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
@@ -79,13 +78,6 @@ class SettingsTreeTest {
         assertSame(inputs, updated.findNode(400))
         assertSame(shock, updated.findNode(32))
         assertNotSame(extra, updated.findNode(325))
-    }
-
-    @Test
-    fun `section counter counts changed settings at any depth`() {
-        assertEquals(2, guard.countIn(setOf(32, 33, 41)))
-        assertEquals(1, extra.countIn(setOf(32, 33, 41)))
-        assertEquals(0, inputs.countIn(setOf(32)))
     }
 
     @Test

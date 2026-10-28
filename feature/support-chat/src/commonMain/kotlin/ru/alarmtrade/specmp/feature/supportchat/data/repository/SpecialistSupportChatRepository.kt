@@ -110,9 +110,6 @@ class SpecialistSupportChatRepository(
     override suspend fun markMessagesAsRead(ids: List<Long>): Response<Unit> =
         chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids)).toResponse()
 
-    // Соединение закрывает сам SDK на логауте: заявки, взятые до него, гасятся.
-    override suspend fun release() = Unit
-
     private fun ChatConnectionState.toDomain(): SupportChatConnectionState? = when (this) {
         // Заявка взята, но SDK ещё не начал подключение — для экрана это то же «подключение».
         ChatConnectionState.Idle, ChatConnectionState.Connecting -> SupportChatConnectionState.Connecting

@@ -178,8 +178,8 @@ onBack = { backStack.popSafe() }          // pop только если в сте
 onBack = { if (!backStack.popSafe()) onClose() } // на корне графа — выйти из графа
 ```
 
-Полный набор: `navigateSafe`, `navigateClearingTop`, `replaceCurrent`, `resetTo`,
-`popSafe()`, `popSafe(route, inclusive)`, `popSafe<R>(inclusive)`, свойство `currentRoute`.
+Полный набор: `navigateSafe`, `replaceCurrent`, `popSafe()`, свойство `currentRoute`. Новый хелпер
+добавляется под реальный вызов, «про запас» не держим.
 
 ## Настройка Gradle
 

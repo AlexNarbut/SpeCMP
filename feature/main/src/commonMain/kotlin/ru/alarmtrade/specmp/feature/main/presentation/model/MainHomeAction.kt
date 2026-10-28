@@ -50,8 +50,7 @@ enum class MainHomeAction(
     val group: MainHomeActionGroup,
     val icon: DrawableResource,
     val title: StringResource,
-    val description: StringResource,
-    val isVisibleByDefault: Boolean = true
+    val description: StringResource
 ) {
     QuickMount(
         target = MainNavigationTarget.QuickMount,
@@ -136,17 +135,13 @@ enum class MainHomeAction(
             features: MainUserAppFeatures = MainUserAppFeatures(),
             commercial: MainUserCommercial = MainUserCommercial(),
             showChat: Boolean = false
-        ): List<MainHomeAction> {
-            return entries.filter { action ->
-                if (!action.isVisibleByDefault) return@filter false
-
-                when (action) {
-                    CanScanner -> features.hasCanScanner
-                    ProductInfo -> features.hasProductSearch
-                    Warehouse1C -> features.hasOrdersRequest && !commercial.warehouse1CUrl.isNullOrBlank()
-                    TechSupportChat -> showChat
-                    else -> true
-                }
+        ): List<MainHomeAction> = entries.filter { action ->
+            when (action) {
+                CanScanner -> features.hasCanScanner
+                ProductInfo -> features.hasProductSearch
+                Warehouse1C -> features.hasOrdersRequest && !commercial.warehouse1CUrl.isNullOrBlank()
+                TechSupportChat -> showChat
+                else -> true
             }
         }
     }

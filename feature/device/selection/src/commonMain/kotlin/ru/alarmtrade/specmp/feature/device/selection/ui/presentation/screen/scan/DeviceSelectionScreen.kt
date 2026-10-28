@@ -84,7 +84,6 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 
@@ -95,7 +94,7 @@ private enum class DeviceSelectLayout { Compact, Stacked, Split }
  * one-shot эффекты и адаптивную раскладку (compact / stacked / split).
  */
 @Composable
-internal fun DeviceSelectionScreen(onSessionCreate: (ConnectedDevice) -> Unit, onClose: () -> Unit) {
+internal fun DeviceSelectionScreen(onSessionCreate: () -> Unit, onClose: () -> Unit) {
     val viewModel = koinViewModel<ScanDeviceViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
@@ -106,7 +105,7 @@ internal fun DeviceSelectionScreen(onSessionCreate: (ConnectedDevice) -> Unit, o
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
-            is ScanDeviceEffect.SessionCreated -> onSessionCreate(effect.device)
+            ScanDeviceEffect.SessionCreated -> onSessionCreate()
             ScanDeviceEffect.Close -> onClose()
             ScanDeviceEffect.ConnectionFailed -> snackbarHostState.showSnackbar(connectionFailedText)
             ScanDeviceEffect.BoundToAnotherPhone -> snackbarHostState.showSnackbar(boundToAnotherPhoneText)

@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.data.repository
 
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
-import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationByIdRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
 import ru.alarmtrade.specialist.interactors.firmwareFiles.FirmwareFilesInteractor
 import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwareRequest
@@ -29,12 +28,6 @@ class SpecialistFirmwareRepository(
         val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
         return interactor.getDeviceInformation.execute(GetDeviceInformationRequest(deviceName)).toResponse()
             .map { information -> information.subsystems.map { it.toModule(transport) } }
-    }
-
-    override suspend fun moduleById(id: Long, transport: ConnectionTransport): Response<FirmwareModule> {
-        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getSubsystemInformationById.execute(GetDeviceInformationByIdRequest(id)).toResponse()
-            .map { it.toModule(transport) }
     }
 
     override suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion> {

@@ -35,7 +35,6 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
@@ -44,7 +43,6 @@ private const val SHIMMER_BAND_WIDTH = 600f
 @Composable
 internal fun MainHomeSkeleton(
     mode: MainHomeMode,
-    cardVariant: MainCardVariant,
     modifier: Modifier = Modifier,
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
@@ -87,7 +85,6 @@ internal fun MainHomeSkeleton(
                 itemCount = primaryActionsCount
             ) { itemModifier ->
                 MainCardSkeleton(
-                    variant = cardVariant,
                     colors = colors,
                     shimmerBrush = shimmerBrush,
                     modifier = itemModifier
@@ -112,57 +109,27 @@ internal fun MainHomeSkeleton(
 }
 
 @Composable
-private fun MainCardSkeleton(
-    variant: MainCardVariant,
-    colors: CmpThemeColors,
-    shimmerBrush: Brush,
-    modifier: Modifier = Modifier
-) {
-    val isCentered = variant == MainCardVariant.Centered
-
+private fun MainCardSkeleton(colors: CmpThemeColors, shimmerBrush: Brush, modifier: Modifier = Modifier) {
     CmpSurface(
         modifier = modifier.fillMaxSize(),
         shape = RoundedCornerShape(MainHomeTokens.PrimaryCardRadius),
         color = colors.surfaceContainerLow,
         border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
-        if (isCentered) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+        ) {
+            SkeletonBlock(size = 64.dp, shimmerBrush = shimmerBrush)
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SkeletonBlock(size = 64.dp, shimmerBrush = shimmerBrush)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    SkeletonBlock(width = 150.dp, height = 18.dp, shimmerBrush = shimmerBrush)
-                    SkeletonBlock(width = 200.dp, height = 13.dp, shimmerBrush = shimmerBrush)
-                }
-            }
-        } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SkeletonBlock(size = 64.dp, shimmerBrush = shimmerBrush)
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    SkeletonBlock(width = 180.dp, height = 18.dp, shimmerBrush = shimmerBrush)
-                    SkeletonBlock(
-                        modifier = Modifier.fillMaxWidth(fraction = 0.8f),
-                        height = 13.dp,
-                        shimmerBrush = shimmerBrush
-                    )
-                }
+                SkeletonBlock(width = 150.dp, height = 18.dp, shimmerBrush = shimmerBrush)
+                SkeletonBlock(width = 200.dp, height = 13.dp, shimmerBrush = shimmerBrush)
             }
         }
     }

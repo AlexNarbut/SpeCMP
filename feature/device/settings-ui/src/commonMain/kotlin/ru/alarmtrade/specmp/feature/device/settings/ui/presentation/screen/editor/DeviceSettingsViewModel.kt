@@ -969,15 +969,27 @@ private fun SettingsSource.header(): SourceHeader {
     return when (this) {
         SettingsSource.Device -> SourceHeader.Device
 
-        is SettingsSource.File -> SourceHeader(SourceKind.FILE, name, deviceName, false, capabilities.canSave)
+        is SettingsSource.File -> SourceHeader(
+            SourceKind.FILE,
+            name,
+            deviceName,
+            capabilities.isReadOnly,
+            capabilities.canSave
+        )
 
         is SettingsSource.LocalConfiguration ->
-            SourceHeader(SourceKind.MINE, title, deviceName, false, capabilities.canSave)
+            SourceHeader(SourceKind.MINE, title, deviceName, capabilities.isReadOnly, capabilities.canSave)
 
         is SettingsSource.RemoteConfiguration ->
-            SourceHeader(SourceKind.CLOUD, title, deviceName, true, capabilities.canSave)
+            SourceHeader(SourceKind.CLOUD, title, deviceName, capabilities.isReadOnly, capabilities.canSave)
 
-        is SettingsSource.Defaults -> SourceHeader(SourceKind.DEFAULTS, "", deviceName, true, capabilities.canSave)
+        is SettingsSource.Defaults -> SourceHeader(
+            SourceKind.DEFAULTS,
+            "",
+            deviceName,
+            capabilities.isReadOnly,
+            capabilities.canSave
+        )
     }
 }
 

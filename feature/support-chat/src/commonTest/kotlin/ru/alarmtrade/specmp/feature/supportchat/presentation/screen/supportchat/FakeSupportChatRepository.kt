@@ -134,8 +134,6 @@ class FakeSupportChatRepository : SupportChatRepository {
         return markMessagesAsReadResult
     }
 
-    override suspend fun release() = Unit
-
     /** Событие внутри активной сессии. */
     fun emitEvent(event: SupportChatEvent) {
         val emitted = events.tryEmit(event)
