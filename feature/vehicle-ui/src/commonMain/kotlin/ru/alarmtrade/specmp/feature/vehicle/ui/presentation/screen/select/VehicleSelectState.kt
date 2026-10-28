@@ -113,3 +113,14 @@ internal sealed interface VehicleSelectEffect {
     data object Exit : VehicleSelectEffect
     data class CanCopied(val code: String) : VehicleSelectEffect
 }
+
+/** Шаг узкой раскладки — выводится из state. */
+internal enum class CompactStep { BRANDS, MODELS, TRIMS, CAN, CARD }
+
+internal fun VehicleSelectState.compactStep(): CompactStep = when {
+    selection.carId != null -> CompactStep.CARD
+    searchMode == SearchMode.CAN -> CompactStep.CAN
+    selection.model != null -> CompactStep.TRIMS
+    selection.brand != null -> CompactStep.MODELS
+    else -> CompactStep.BRANDS
+}

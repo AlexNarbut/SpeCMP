@@ -172,13 +172,3 @@ class AdvancedMountRootViewModel(
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
-
-sealed interface AdvancedMountRootEffect {
-    data class OpenSection(val section: MountSection) : AdvancedMountRootEffect
-
-    data object OpenSupportChat : AdvancedMountRootEffect
-
-    data object OpenRemoteSync : AdvancedMountRootEffect
-
-    data object OpenProductInfo : AdvancedMountRootEffect
-}

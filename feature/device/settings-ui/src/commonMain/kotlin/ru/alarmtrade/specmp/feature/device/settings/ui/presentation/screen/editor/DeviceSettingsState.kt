@@ -218,3 +218,20 @@ internal sealed interface DeviceSettingsEffect {
 
 /** Куда уходим из настроек: назад (корень монтажа) или в «Проверку прошивок» (единая CAN-прошивка). */
 internal enum class ExitTarget { BACK, FIRMWARE_UPDATE }
+
+/** Где пользователь в меню: путь разделов от корня (пусто — корень) или поиск. */
+@Immutable
+internal data class SettingsLocation(val sectionPath: List<Int>, val isSearch: Boolean) {
+    val sectionId: Int? get() = sectionPath.lastOrNull()
+}
+
+/**
+ * Пометки строк: изменённые настройки, счётчики разделов, автомобили CAN-кодов. Отдельно от state экрана — строки
+ * не перерисовываются от ввода, диалогов и прочих полей, которые их не касаются.
+ */
+@Immutable
+internal data class RowMarks(
+    val changedIds: Set<Int>,
+    val sectionChanges: Map<Int, Int>,
+    val cars: Map<Int, CarSummary>
+)

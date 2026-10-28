@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -160,10 +159,6 @@ internal fun ModeBadge(mode: ScannedDeviceMode) {
         )
     }
 }
-
-/** Строка деталей «подпись — значение»; [strong] — выделенное значение (режим сопряжения / загрузчика). */
-@Immutable
-internal data class DeviceInfoRow(val label: String, val value: String, val strong: Boolean = false)
 
 /**
  * Поля устройства «до подключения» — общие для панели деталей (split) и диалога «⋮» (compact / stacked).

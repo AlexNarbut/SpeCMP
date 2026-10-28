@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models
 
-import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -109,22 +108,4 @@ internal class ModelsViewModel(
             }
         }
     }
-}
-
-@Immutable
-internal data class ModelsState(
-    val list: LCEState<List<String>, ConfiguratorError> = LCEState.Loading,
-    /** Имя файла (K3) — подзаголовок; `null` — «С нуля». */
-    val fileName: String? = null,
-    val recent: List<String> = emptyList(),
-    val connected: String? = null,
-    val query: String = "",
-    /** Проверяем файл в выбранной модели. */
-    val checking: Boolean = false,
-    /** Файл не открылся для этой модели. */
-    val fileError: String? = null
-)
-
-internal sealed interface ModelsEffect {
-    data class Open(val source: SourceKey) : ModelsEffect
 }

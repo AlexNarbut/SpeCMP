@@ -163,6 +163,7 @@ ViewModel через несколько composable, эффекты читают 
 | `println` / `print` | логгер Kermit |
 | `MutableStateFlow.value = …` (запись) | `flow.update { … }` ([`patterns.md`](patterns.md#корутины-и-flow)); чтение `.value` разрешено |
 | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита (обычные `TODO` разрешены) |
+| импорт `androidx.lifecycle.ViewModel` вне `core/ui` (`ForbiddenImport`) | наследоваться от `BaseViewModel` ([`patterns.md`](patterns.md), «BaseViewModel») |
 
 `ForbiddenMethodCall` не проверяет тестовые source set'ы: тестовые фейки по [`patterns.md`](patterns.md#корутины-и-flow)
 могут писать `MutableStateFlow.value` напрямую.

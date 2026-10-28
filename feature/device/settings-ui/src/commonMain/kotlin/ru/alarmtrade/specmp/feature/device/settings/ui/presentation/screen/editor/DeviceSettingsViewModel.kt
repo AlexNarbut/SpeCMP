@@ -937,9 +937,6 @@ internal class DeviceSettingsViewModel(
     private data class Export(val snapshot: SettingsSource.File, val exitAfter: Boolean)
 }
 
-/** Параметры редактора от хоста: что загрузить сразу после чтения блока, умеет ли хост «Записать в блок». */
-internal data class SettingsEditorOptions(val loadOnOpen: SettingsSource? = null, val canWriteToDevice: Boolean = false)
-
 /** Шапка источника; название заводских настроек и подписи — в UI. */
 private fun SettingsSource.header(): SourceHeader {
     val capabilities = capabilities

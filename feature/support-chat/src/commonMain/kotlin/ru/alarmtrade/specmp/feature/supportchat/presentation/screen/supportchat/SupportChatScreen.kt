@@ -58,7 +58,6 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatComposer
@@ -626,18 +625,6 @@ private fun SupportChatVisibilityEffect(listState: LazyListState, onMessagesVisi
     }
 }
 
-internal sealed interface SupportChatListItem {
-    val key: String
-
-    data class DateDivider(val date: LocalDate, val label: String) : SupportChatListItem {
-        override val key: String get() = "$DATE_KEY_PREFIX$date"
-    }
-
-    data class Message(val message: SupportChatUiMessage) : SupportChatListItem {
-        override val key: String get() = "$MESSAGE_KEY_PREFIX${message.id}"
-    }
-}
-
 /**
  * Элементы списка в отображаемом порядке (newest-first; экран использует
  * `reverseLayout = true`, поэтому index 0 — внизу, индикатор набора — первым).
@@ -679,6 +666,4 @@ private enum class SupportChatLayoutMode {
 
 private const val FOLLOW_NEWEST_THRESHOLD = 2
 private const val SMOOTH_SCROLL_DISTANCE = 6
-private const val DATE_KEY_PREFIX = "date_"
-private const val MESSAGE_KEY_PREFIX = "msg_"
 private const val TYPING_KEY_PREFIX = "typing_"

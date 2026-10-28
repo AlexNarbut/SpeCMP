@@ -34,17 +34,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcom
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.modelItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.trimItems
 
-/** Шаг узкой раскладки — выводится из state. */
-internal enum class CompactStep { BRANDS, MODELS, TRIMS, CAN, CARD }
-
-internal fun VehicleSelectState.compactStep(): CompactStep = when {
-    selection.carId != null -> CompactStep.CARD
-    searchMode == SearchMode.CAN -> CompactStep.CAN
-    selection.model != null -> CompactStep.TRIMS
-    selection.brand != null -> CompactStep.MODELS
-    else -> CompactStep.BRANDS
-}
-
 /** Экран выбора автомобиля без ViewModel: каркас, тело по раскладке, фильтр, диалоги, просмотр фото. */
 @Composable
 internal fun VehicleSelectContent(

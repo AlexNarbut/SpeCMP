@@ -12,7 +12,8 @@
 - Предпочитать `commonMain`; `expect`/`actual` — только для по-настоящему платформо-специфичного кода.
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
 - **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
-- **ViewModel — только через `BaseViewModel`**, корутины — через `safeLaunch` — см. «BaseViewModel».
+- **ViewModel — только через `BaseViewModel`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`), корутины — через `safeLaunch` — см. «BaseViewModel».
+- **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
@@ -526,10 +527,38 @@ single { MyChatRepository(get(), get()) } bind ChatRepository::class bind AuthCl
 
 ## Presentation
 
+### Файлы экрана: ViewModel, State, Effect
+
+Экран (или view со своим состоянием) раскладывается по файлам **с самого создания**:
+
+```
+presentation/screen/<screen>/
+├── XxxScreen.kt          ← composable экрана
+├── XxxActions.kt         ← набор колбэков экрана (если есть)
+├── XxxViewModel.kt       ← только ViewModel: один класс на файл (+ его private-константы/хелперы)
+├── XxxState.kt           ← State экрана и ВСЕ его подстейты
+├── XxxEffect.kt          ← one-shot эффекты экрана (если есть)
+└── subcomponents/        ← composable-части экрана
+```
+
+- **В `XxxViewModel.kt` — только ViewModel.** State, его подстейты, эффекты, опции/параметры VM не объявляются
+  в файле VM: открыв VM, читатель видит логику, а не модель; модель экрана читается одним файлом.
+- **`XxxState.kt` — State и все подстейты**, которые в нём лежат или из него выводятся: диалоги (`XxxDialog`),
+  режимы и шаги (`CompactStep`, `MineMessage`), формы (`CloudSaveForm`), элементы списков, которые строит экран
+  (`SupportChatListItem`), «местоположение» и пометки строк (`SettingsLocation`, `RowMarks`), производные функции
+  от State (`VehicleSelectState.compactStep()`). Ошибка фичи — в `presentation/model` (общая для экранов фичи).
+- **Одна ViewModel — один файл.** Несколько VM в одном файле (`CloudViewModels.kt`) не держим.
+- **View со своим состоянием** (компонент, которому передаётся собственная модель) — та же схема: модель — в
+  `XxxState.kt` экрана или в `presentation/model`, а не в файле composable.
+- **В файле composable допустимы** только private-детали отрисовки, не являющиеся состоянием: режим раскладки по
+  ширине окна (`DeviceSelectLayout`), промежуточные структуры обхода/рисования (`TreeRow`, `WrenchDraw`),
+  стилевые enum-параметры компонента (`HeroTone`).
+
 ### BaseViewModel
 
-Все ViewModel наследуются от `BaseViewModel` (`core/ui`, пакет
-`ru.alarmtrade.specmp.core.ui.viewmodel`), а не от androidx `ViewModel` напрямую. Что даёт:
+**Все ViewModel фич наследуются от `BaseViewModel`** (`core/ui`, пакет
+`ru.alarmtrade.specmp.core.ui.viewmodel`), а не от androidx `ViewModel` напрямую — импорт
+`androidx.lifecycle.ViewModel` вне `core/ui` запрещён detekt (`ForbiddenImport`). Что даёт:
 
 - **`safeLaunch { }`** (есть перегрузка с `CoroutineContext`) — вместо `viewModelScope.launch`:
   в контекст добавлен `CoroutineExceptionHandler`, логирующий необработанные исключения.

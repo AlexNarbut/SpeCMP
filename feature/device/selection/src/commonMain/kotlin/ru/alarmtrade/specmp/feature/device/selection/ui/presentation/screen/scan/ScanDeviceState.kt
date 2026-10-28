@@ -41,3 +41,7 @@ data class ScanDeviceState(
     /** На стадии Scanning без найденных устройств прошло достаточно времени → показать «пусто». */
     val searchedLongEnough: Boolean = false
 )
+
+/** Строка деталей «подпись — значение»; [strong] — выделенное значение (режим сопряжения / загрузчика). */
+@Immutable
+internal data class DeviceInfoRow(val label: String, val value: String, val strong: Boolean = false)

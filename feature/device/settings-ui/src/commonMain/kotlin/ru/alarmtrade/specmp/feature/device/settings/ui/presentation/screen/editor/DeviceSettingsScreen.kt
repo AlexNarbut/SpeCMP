@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,7 +67,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.S
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.settingsLayoutOf
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DescriptionDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DiffPanel
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ExitDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ExitSaveDialog
@@ -86,7 +84,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SaveTargetsPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionTree
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SingleCanFirmwareDialog
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferProgressDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteProgressDialog
@@ -116,36 +113,6 @@ import specmp.feature.device.settings_ui.generated.resources.settings_source_def
 import specmp.feature.device.settings_ui.generated.resources.settings_source_defaults_title
 import specmp.feature.device.settings_ui.generated.resources.settings_source_file
 import specmp.feature.device.settings_ui.generated.resources.settings_source_mine
-
-/** Где пользователь в меню: путь разделов от корня (пусто — корень) или поиск. */
-@Immutable
-internal data class SettingsLocation(val sectionPath: List<Int>, val isSearch: Boolean) {
-    val sectionId: Int? get() = sectionPath.lastOrNull()
-}
-
-/** Действия экрана, кроме строк меню (они — в панелях). */
-@Immutable
-internal class DeviceSettingsActions(
-    val onBack: () -> Unit,
-    val onSearch: () -> Unit,
-    /** Перейти к разделу по пути от корня (крошки, дерево). */
-    val onNavigateTo: (sectionPath: List<Int>) -> Unit,
-    val onRetry: () -> Unit,
-    /** Ширина колонки дерева изменена перетаскиванием (dp, по окончании). */
-    val onTreeWidthChange: (Int) -> Unit,
-    val onWrite: () -> Unit,
-    val onExitWrite: () -> Unit,
-    val onExitDiscard: () -> Unit,
-    val onDialogDismiss: () -> Unit,
-    val onResetRequest: () -> Unit,
-    val onResetConfirm: () -> Unit,
-    val onSingleCanUpdate: () -> Unit,
-    val editor: EditorActions,
-    /** Загрузка и сохранение конфигураций. */
-    val transfer: TransferActions,
-    /** Открыть окно настройки корневого уровня из дерева (например «Код модели»). */
-    val onEditSetting: (settingId: Int) -> Unit = {}
-)
 
 /**
  * Каркас редактора: шапка (устройство, бейдж единой CAN), крошки (compact), дерево разделов (medium/expanded),

@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,7 +44,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchH
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
-import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_empty_section
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_empty_section_hint
@@ -58,17 +57,6 @@ import specmp.feature.device.settings_ui.generated.resources.settings_search_pla
 private val ContentMaxWidth = 720.dp
 private val CardRadius = 16.dp
 private val CardBorder = 1.dp
-
-/**
- * Пометки строк: изменённые настройки, счётчики разделов, автомобили CAN-кодов. Отдельно от state экрана — строки
- * не перерисовываются от ввода, диалогов и прочих полей, которые их не касаются.
- */
-@Immutable
-internal data class RowMarks(
-    val changedIds: Set<Int>,
-    val sectionChanges: Map<Int, Int>,
-    val cars: Map<Int, CarSummary>
-)
 
 /**
  * Содержимое раздела: строки его пунктов. На широкой раскладке — заголовок раздела со счётчиком и строки в карточке.
