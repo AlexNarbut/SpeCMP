@@ -21,6 +21,8 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_retry
 import specmp.feature.device.settings_ui.generated.resources.settings_editor_error_read_text
@@ -51,11 +53,11 @@ internal fun MenuLoading() {
 
 /** Ошибка чтения меню и «Повторить». */
 @Composable
-internal fun MenuError(onRetry: () -> Unit) {
+internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
     Centered {
         CmpIcon(icon = CmpIcons.AlertCircle, contentDescription = null, tint = cmpThemeColors().error)
         CmpText(
-            text = stringResource(Res.string.settings_editor_error_read_title),
+            text = error.text(Res.string.settings_editor_error_read_title),
             style = CmpTextStyle.Title,
             textAlign = TextAlign.Center
         )

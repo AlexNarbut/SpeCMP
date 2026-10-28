@@ -16,8 +16,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.error.message
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -32,8 +33,8 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.CAN_CODE_LENGTH
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.CarSearch
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import specmp.feature.device.settings_ui.generated.resources.Res
 import specmp.feature.device.settings_ui.generated.resources.settings_can_a11y_clear
@@ -56,7 +57,7 @@ import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_no
 @Composable
 internal fun CanCodeEditor(
     value: CanCode,
-    carSearch: CarSearch,
+    carSearch: LCEState<List<CarSummary>, SettingsError>,
     cars: Map<Int, CarSummary>,
     onCodeChange: (String) -> Unit,
     onSearch: () -> Unit,
@@ -89,7 +90,7 @@ internal fun CanCodeEditor(
         }
         CmpOutlinedButton(
             onClick = onSearch,
-            enabled = complete && carSearch != CarSearch.Loading,
+            enabled = complete && carSearch != LCEState.Loading,
             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_FIND)
         ) {
             CmpIcon(icon = CmpIcons.Search, contentDescription = null)
@@ -113,15 +114,15 @@ internal fun CanCodeEditor(
 @Composable
 private fun CarSearchResult(
     value: CanCode,
-    carSearch: CarSearch,
+    carSearch: LCEState<List<CarSummary>, SettingsError>,
     cars: Map<Int, CarSummary>,
     onPick: (carId: Int) -> Unit
 ) {
     val colors = cmpThemeColors()
     when (carSearch) {
-        CarSearch.Idle -> value.carId?.let(cars::get)?.let { car -> CarCard(carLabel(car)) }
+        LCEState.None -> value.carId?.let(cars::get)?.let { car -> CarCard(carLabel(car)) }
 
-        CarSearch.Loading -> CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LCEState.Loading -> CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             CmpText(
                 text = stringResource(Res.string.settings_can_loading),
@@ -130,19 +131,19 @@ private fun CarSearchResult(
             )
         }
 
-        is CarSearch.Failed -> Warning(
+        is LCEState.Error -> Warning(
             when (val error = carSearch.error) {
-                RequestError.Failed -> stringResource(Res.string.settings_can_msg_error)
+                SettingsError.LoadFailed -> stringResource(Res.string.settings_can_msg_error)
 
-                is RequestError.Network ->
-                    "${error.failure.message()}. ${stringResource(Res.string.settings_can_msg_apply_without_car)}"
+                is SettingsError.Common ->
+                    "${error.error.message()}. ${stringResource(Res.string.settings_can_msg_apply_without_car)}"
             }
         )
 
-        is CarSearch.Found -> when (carSearch.cars.size) {
+        is LCEState.Content -> when (carSearch.content.size) {
             0 -> Warning(stringResource(Res.string.settings_can_msg_none, value.code))
 
-            1 -> CarCard(carLabel(carSearch.cars.single()))
+            1 -> CarCard(carLabel(carSearch.content.single()))
 
             else -> CmpColumn {
                 CmpText(
@@ -150,7 +151,7 @@ private fun CarSearchResult(
                     style = CmpTextStyle.Body,
                     color = colors.onSurfaceVariant
                 )
-                carSearch.cars.forEach { car ->
+                carSearch.content.forEach { car ->
                     val selected = car.id == value.carId
                     CmpRow(
                         modifier = Modifier

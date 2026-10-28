@@ -26,6 +26,7 @@ import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -50,7 +51,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.ExitTarget
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsEditorOptions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsMenu
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.firstSectionId
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.RowMarks
@@ -208,7 +208,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
     val rowActions = remember(viewModel, backStack) {
         SettingRowActions(
             onOpenSection = { id ->
-                (viewModel.state.value.menu as? SettingsMenu.Ready)?.root?.let { root ->
+                viewModel.state.value.menu.content?.let { root ->
                     backStack.navigateTo(root.pathTo(id).orEmpty().map { it.id } + id)
                 }
             },
@@ -370,7 +370,7 @@ private fun SettingsWithNav(
     val marks = remember(state.changedIds, state.sectionChanges, state.cars) {
         RowMarks(state.changedIds, state.sectionChanges, state.cars)
     }
-    val root = (state.menu as? SettingsMenu.Ready)?.root
+    val root = state.menu.content
     DeviceSettingsContent(
         state = state,
         location = backStack.location(),

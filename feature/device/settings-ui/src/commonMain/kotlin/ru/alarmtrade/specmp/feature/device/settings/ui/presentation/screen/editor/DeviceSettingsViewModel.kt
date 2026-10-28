@@ -26,7 +26,8 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
@@ -51,6 +52,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
@@ -156,7 +158,7 @@ internal class DeviceSettingsViewModel(
                 .onEach { name -> _state.update { it.copy(connectedDeviceName = name) } }
                 .launchIn(viewModelScope)
         }
-        val menuRoot = _state.map { (it.menu as? SettingsMenu.Ready)?.root }.distinctUntilChanged { a, b -> a === b }
+        val menuRoot = _state.map { it.menu.content }.distinctUntilChanged { a, b -> a === b }
         combine(searchQuery, menuRoot) { query, root -> query to root }
             .debounce(SEARCH_DEBOUNCE_MILLIS)
             .mapLatest { (query, root) -> query to root?.search(query).orEmpty() }
@@ -175,7 +177,7 @@ internal class DeviceSettingsViewModel(
     private suspend fun load() {
         readMenu()
         // «Записать в блок» из конфигуратора: после первого чтения блока — сравнение с конфигурацией.
-        if (_state.value.menu is SettingsMenu.Ready) {
+        if (_state.value.menu is LCEState.Content) {
             pendingLoad.getAndUpdate { null }?.let { requestLoad(it, closeAfter = false) }
         }
     }
@@ -185,7 +187,7 @@ internal class DeviceSettingsViewModel(
         loadedIds.update { emptySet() }
         _state.update {
             it.copy(
-                menu = SettingsMenu.Loading,
+                menu = LCEState.Loading,
                 changedIds = emptySet(),
                 sectionChanges = emptyMap(),
                 editing = null,
@@ -197,7 +199,7 @@ internal class DeviceSettingsViewModel(
         when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
             is Response.Error -> {
                 logger.w(response.exception) { "Settings menu read failed: ${response.message}" }
-                _state.update { it.copy(menu = SettingsMenu.Error) }
+                _state.update { it.copy(menu = LCEState.Error(SettingsError.from(response.exception))) }
             }
 
             is Response.Success -> {
@@ -260,7 +262,7 @@ internal class DeviceSettingsViewModel(
             state.copy(
                 editing = editing.copy(
                     draft = draft,
-                    carSearch = if (codeChanged) CarSearch.Idle else editing.carSearch
+                    carSearch = if (codeChanged) LCEState.None else editing.carSearch
                 )
             )
         }
@@ -271,7 +273,7 @@ internal class DeviceSettingsViewModel(
         val editing = _state.value.editing ?: return
         val code = (editing.draft as? SettingValue.Can)?.value?.code ?: return
         if (!editing.setting.accepts(editing.draft)) return
-        _state.update { it.copy(editing = it.editing?.copy(carSearch = CarSearch.Loading)) }
+        _state.update { it.copy(editing = it.editing?.copy(carSearch = LCEState.Loading)) }
         safeLaunch {
             val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code, vehicleDevice()) }
             _state.update { state ->
@@ -279,14 +281,14 @@ internal class DeviceSettingsViewModel(
                 if ((current.draft as? SettingValue.Can)?.value?.code != code) return@update state
                 when (response) {
                     is Response.Error -> state.copy(
-                        editing = current.copy(carSearch = CarSearch.Failed(RequestError.from(response.exception)))
+                        editing = current.copy(carSearch = LCEState.Error(SettingsError.from(response.exception)))
                     )
 
                     is Response.Success -> {
                         val cars = response.value
                         val draft = cars.singleOrNull()?.let { SettingValue.Can(CanCode(code, it.id)) } ?: current.draft
                         state.copy(
-                            editing = current.copy(draft = draft, carSearch = CarSearch.Found(cars)),
+                            editing = current.copy(draft = draft, carSearch = LCEState.Content(cars)),
                             cars = state.cars + cars.associateBy { it.id }
                         )
                     }
@@ -320,7 +322,7 @@ internal class DeviceSettingsViewModel(
                 vehiclePicker = false,
                 editing = editing.copy(
                     draft = SettingValue.Can(CanCode(car.canCode, car.id)),
-                    carSearch = CarSearch.Idle
+                    carSearch = LCEState.None
                 ),
                 cars = state.cars + (car.id to car)
             )
@@ -870,7 +872,7 @@ internal class DeviceSettingsViewModel(
         val settings = withContext(dispatchers.default) { root.settings() }
         val (changedIds, sectionChanges) = changesOf(root, settings)
         _state.update {
-            it.copy(menu = SettingsMenu.Ready(root), changedIds = changedIds, sectionChanges = sectionChanges)
+            it.copy(menu = LCEState.Content(root), changedIds = changedIds, sectionChanges = sectionChanges)
         }
         loadCarNames(settings)
     }
@@ -915,7 +917,7 @@ internal class DeviceSettingsViewModel(
     private fun vehicleDevice(): VehicleDeviceFilter? =
         _state.value.header?.let { VehicleDeviceFilter.Device(it.deviceName) }
 
-    private fun currentRoot(): SettingsSection? = (_state.value.menu as? SettingsMenu.Ready)?.root
+    private fun currentRoot(): SettingsSection? = _state.value.menu.content
 
     /** Работа с источником: для блока — только при связи (отменяется при обрыве), иначе — в скоупе VM. */
     private fun work(block: suspend CoroutineScope.() -> Unit): Job? =

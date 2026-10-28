@@ -27,7 +27,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -65,6 +66,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -179,7 +181,7 @@ class DeviceSettingsViewModelTest {
         }
     }
 
-    private fun DeviceSettingsViewModel.root() = (state.value.menu as SettingsMenu.Ready).root
+    private fun DeviceSettingsViewModel.root() = (state.value.menu as LCEState.Content).content
 
     @Test
     fun `menu is read from the device with reload and the header shows the unit`() = test {
@@ -296,7 +298,7 @@ class DeviceSettingsViewModelTest {
     fun `read error shows error and retry reads again`() = test {
         repository.openResult = Response.Error(IllegalStateException("timeout"))
         val vm = viewModel()
-        assertIs<SettingsMenu.Error>(vm.state.value.menu)
+        assertIs<LCEState.Error<*>>(vm.state.value.menu)
 
         repository.openResult = null
         vm.onRetry()
@@ -498,7 +500,7 @@ class DeviceSettingsViewModelTest {
 
         val editing = assertNotNull(vm.state.value.editing)
         assertEquals(SettingValue.Can(CanCode("7001", 21)), editing.draft)
-        assertEquals(CarSearch.Found(listOf(cars.rio)), editing.carSearch)
+        assertEquals(LCEState.Content(listOf(cars.rio)), editing.carSearch)
     }
 
     @Test
@@ -513,11 +515,11 @@ class DeviceSettingsViewModelTest {
         assertEquals(SettingValue.Can(CanCode("7002", 22)), vm.state.value.editing?.draft)
 
         vm.onDraftChange(SettingValue.Can(CanCode("9999", null)))
-        assertEquals(CarSearch.Idle, vm.state.value.editing?.carSearch)
+        assertEquals(LCEState.None, vm.state.value.editing?.carSearch)
         cars.fail = true
         vm.onCarSearch()
         settle()
-        assertEquals(CarSearch.Failed(RequestError.Failed), vm.state.value.editing?.carSearch)
+        assertEquals(LCEState.Error(SettingsError.LoadFailed), vm.state.value.editing?.carSearch)
     }
 
     @Test

@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -168,9 +170,9 @@ internal fun DeviceSettingsContent(
         ) { padding ->
             CmpColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
                 when (val menu = state.menu) {
-                    SettingsMenu.Loading -> MenuLoading()
-                    SettingsMenu.Error -> MenuError(onRetry = actions.onRetry)
-                    is SettingsMenu.Ready -> ReadyBody(menu.root, state, location, layout, windowWidth, actions, pane)
+                    LCEState.None, LCEState.Loading -> MenuLoading()
+                    is LCEState.Error -> MenuError(error = menu.error, onRetry = actions.onRetry)
+                    is LCEState.Content -> ReadyBody(menu.content, state, location, layout, windowWidth, actions, pane)
                 }
             }
         }
@@ -287,7 +289,7 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
             )
         },
         actions = {
-            if (!location.isSearch && state.menu is SettingsMenu.Ready) {
+            if (!location.isSearch && state.menu is LCEState.Content) {
                 CmpIconButton(
                     onClick = actions.onSearch,
                     modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
@@ -341,7 +343,7 @@ private fun ConfigurationTopBar(
             )
         },
         actions = {
-            if (!location.isSearch && state.menu is SettingsMenu.Ready) {
+            if (!location.isSearch && state.menu is LCEState.Content) {
                 CmpIconButton(
                     onClick = actions.onSearch,
                     modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
@@ -475,7 +477,7 @@ private fun Crumbs(
 
 @Composable
 private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions) {
-    if (state.changedCount == 0 || state.menu !is SettingsMenu.Ready) return
+    if (state.changedCount == 0 || state.menu !is LCEState.Content) return
     val colors = cmpThemeColors()
     CmpColumn(modifier = Modifier.fillMaxWidth().background(colors.surfaceContainer)) {
         CmpDivider(color = colors.outlineVariant)
