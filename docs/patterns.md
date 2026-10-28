@@ -140,8 +140,8 @@ val testDispatchers = AppDispatchers(
   логируют сами.
 - **Ожидаемые ошибки (`Response.Error`) НЕ логируются на каждом слое.** Они — часть контракта:
   всплывают в state → UI. Допустимо одно диагностическое логирование на границе data-слоя
-  (repository, при маппинге SDK-ошибки), но не дублирование в VM: error-mapper `asLCEState { }`
-  только маппит сообщение, без `logger.e`.
+  (repository, при маппинге SDK-ошибки), но не дублирование в VM: `asLCEState(XxxError::from)`
+  только маппит ошибку, без `logger.e`.
 - `logger.d` — трассировка значимых событий (старт/завершение загрузки, результат операции).
 - **Тег — от имени класса, не литералом**: `Logger.withTag(this::class.simpleName.orEmpty())`.
   Строковый литерал (`withTag("MyRepository")`) разъедется при переименовании. Во ViewModel свой
@@ -151,13 +151,13 @@ val testDispatchers = AppDispatchers(
 // ✅ ViewModel: свой logger не создаём — есть protected logger из BaseViewModel
 logger.d { "Initial home data refresh completed" }
 
-// ✅ error-mapper без логирования — ошибка уже в state
-response.asLCEState { e -> e.message ?: "Error" }
+// ✅ маппинг без логирования — ошибка уже в state
+response.asLCEState(ProfileError::from)
 
 // ❌ Плохо — logger.e на каждую ожидаемую ошибку в VM
 response.asLCEState { e ->
     logger.e(e) { "Failed to load profile" }   // дублирует data-слой, шумит в логах
-    e.message ?: "Error"
+    ProfileError.from(e)
 }
 ```
 
@@ -271,7 +271,7 @@ internal sealed interface SourceKey {
 | Модуль | Что даёт фичам |
 |--------|----------------|
 | `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища) |
-| `core/ui` | `LCEState<T>` + ext, `BaseViewModel`, `sideEffectFlow`/`collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
+| `core/ui` | `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel`, `sideEffectFlow`/`collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
 | `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`SpecialistAppVersionProvider`, device info) |
 | `core/network` | `HttpClientFactory`, Ktor-клиент |
 | `core/localization` | `AppLocale`, чтение/применение локали |
@@ -322,17 +322,16 @@ internal sealed interface SourceKey {
 | Слой | Тип результата | Состояния |
 |------|----------------|-----------|
 | `data` (репозитории) | `Response<T>` / `Flow<Response<T>>` | `Success<T>` / `Error` |
-| `presentation` (VM, Compose) | `LCEState<T>` | `None` / `Loading` / `Content<T>` / `Error` |
+| `presentation` (VM, Compose) | `LCEState<T, E>` | `None` / `Loading` / `Content<T>` / `Error<E>` (E — ошибка фичи) |
 
-Конвертация на границе VM: `response.asLCEState { it.message ?: "Error" }`
+Конвертация на границе VM: `response.asLCEState(XxxError::from)`
 
-**Сбой связи с сервером** не маппится в фиче. SDK-ответы проходят `toResponse()` (`core/specialist`),
-он приводит «нет сети / таймаут / ошибку сервера» к `NetworkException(failure: NetworkFailure)`
-(`core/common`). VM кладёт в состояние `RequestError.from(response.exception)` (или берёт
-`LCEState.Error.networkFailure` — `asLCEState` заполняет его сам), экран показывает
-`error.text(Res.string.<фраза экрана>)`: при сбое связи — общий текст `core/ui`
-(«Нет подключения к интернету», «Сервер не отвечает», «Ошибка сервера»), иначе — фразу экрана.
-Свои «Проверьте интернет» на любую ошибку и проверка сети через `NetworkMonitor` во VM не нужны.
+**Общие ошибки (связь с сервером, Bluetooth, разрешения, связь с блоком)** не маппятся в фиче.
+SDK-ответы проходят `toResponse()` (`core/specialist`), он приводит их к `AppException(error: AppError)`
+(`core/common`: `ApiError` — нет сети / таймаут / ошибка сервера, `PlatformError` — Bluetooth выключен,
+нет разрешения, блок не найден / связь прервана…). Ошибка фичи оборачивает их подтипом
+`Common(AppError)`, экран показывает общий текст `AppError.message()` (`core/ui`). Свои «Проверьте интернет»
+на любую ошибку и проверка сети через `NetworkMonitor` во VM не нужны — см. «Ошибки фичи».
 
 ## Domain
 
@@ -591,124 +590,79 @@ single { MyChatRepository(get(), get()) } bind ChatRepository::class bind AuthCl
 
 ### LCEState — ViewModel + Compose
 
+`LCEState<T, E>` (`core/ui/lce`): `None` / `Loading` / `Content(content, isUpdating, updateError)` / `Error(error)`.
+`T` — контент, `E` — **ошибка фичи** (см. «Ошибки фичи»). `None`/`Loading` — `data object`.
+
+- `Content.isUpdating` — поверх показанного контента идёт фоновая операция (догрузка страницы, обновление);
+  `Content.updateError` — она не удалась, контент остаётся (баннер с «Повторить» вместо экрана ошибки).
+  Пустой `Content` — «данных нет» (empty-state), а не отдельный подтип.
+- `Response` → `LCEState`: `response.asLCEState(XxxError::from)`; ошибка формы сбрасывается при вводе —
+  `state.dismissError()`. Своих `Loading/Ready/Failed`-иерархий в фичах не заводим.
+
 ```kotlin
 // ViewModel
 class UserViewModel(
     private val repository: UserRepository,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
-    private val _state = MutableStateFlow<LCEState<User>>(LCEState.None())
-    val state: StateFlow<LCEState<User>> = _state.asStateFlow()
+    private val _state = MutableStateFlow<LCEState<User, ProfileError>>(LCEState.None)
+    val state: StateFlow<LCEState<User, ProfileError>> = _state.asStateFlow()
 
     fun load(id: String) {
         safeLaunch {
-            _state.update { LCEState.Loading() }
-            val response = withContext(dispatchers.io) {
-                repository.fetchUser(id)
-            }
-            _state.update { response.asLCEState { it.message ?: "Error" } }
+            _state.update { LCEState.Loading }
+            val response = withContext(dispatchers.io) { repository.fetchUser(id) }
+            _state.update { response.asLCEState(ProfileError::from) }
         }
     }
 }
 
-// Compose UI
-val state by viewModel.state.collectAsState()
-when (state) {
-    is LCEState.None    -> { /* начальное состояние */ }
-    is LCEState.Loading -> CmpCircularProgressIndicator()
-    is LCEState.Content -> UserCard((state as LCEState.Content).data)
-    is LCEState.Error   -> ErrorMessage((state as LCEState.Error).message)
+// Compose UI — исчерпывающий when, ошибка → локализованная строка
+when (val user = state.value) {
+    LCEState.None, LCEState.Loading -> CmpCircularProgressIndicator()
+    is LCEState.Content -> UserCard(user.content)
+    is LCEState.Error -> ErrorBox(user.error.text(Res.string.profile_error_load))
 }
 ```
 
 ### State экрана: множественные LCEState
 
-Когда экрану нужно несколько независимых асинхронных данных, каждое оборачивается в отдельный `LCEState<T>` внутри общего State:
+Когда экрану нужно несколько независимых асинхронных данных, каждое оборачивается в отдельный `LCEState` внутри
+общего State (тип ошибки — один на фичу):
 
 ```kotlin
 @Immutable
 data class DashboardState(
-    val profile: LCEState<ProfileContent> = LCEState.None(),
-    val transactions: LCEState<List<Transaction>> = LCEState.None(),
-    val settings: LCEState<UserSettings> = LCEState.None(),
+    val profile: LCEState<ProfileContent, DashboardError> = LCEState.None,
+    val transactions: LCEState<List<Transaction>, DashboardError> = LCEState.None,
 )
 ```
 
-#### Императивный подход — `applyFromExecuting`
+#### Императивный подход — загрузка по запросу
 
-Подходит когда данные грузятся **по запросу** (one-shot), а не реактивно обновляются. Каждый `MutableStateFlow<LCEState<T>>` загружается отдельно.
-
-```kotlin
-class DashboardViewModel(
-    private val profileRepo: ProfileRepository,
-    private val transactionsRepo: TransactionsRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
-
-    private val _profile = MutableStateFlow<LCEState<ProfileContent>>(LCEState.None())
-    private val _transactions = MutableStateFlow<LCEState<List<Transaction>>>(LCEState.None())
-
-    // Составной State собирается через combine
-    val state: StateFlow<DashboardState> = combine(
-        _profile,
-        _transactions,
-    ) { profile, transactions ->
-        DashboardState(profile = profile, transactions = transactions)
-    }
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), DashboardState())
-
-    fun loadData() {
-        // Параллельная загрузка — каждый запуск независим
-        safeLaunch {
-            _profile.applyFromExecuting(
-                execute = { profileRepo.getProfile() },
-                errorMapper = { it.message ?: "Ошибка профиля" },
-                dispatcher = dispatchers.default,
-                map = { it.toContent() }
-            )
-        }
-        safeLaunch {
-            _transactions.applyFromExecuting(
-                execute = { transactionsRepo.getTransactions() },
-                errorMapper = { it.message ?: "Ошибка транзакций" },
-                dispatcher = dispatchers.default,
-                map = { it }
-            )
-        }
-    }
-}
-```
-
-**Важно**: запускайте загрузки в **отдельных `safeLaunch`-блоках** для параллельности. Если запустить последовательно в одном блоке, каждый `applyFromExecuting` заблокирует следующий.
-
-Когда второй запрос зависит от результата первого — последовательно в одном `safeLaunch`:
+Подходит когда данные грузятся **по запросу** (one-shot). Каждое поле грузится в своём `safeLaunch` — параллельно:
 
 ```kotlin
 fun loadData() {
     safeLaunch {
-        _profile.applyFromExecuting(
-            execute = { profileRepo.getProfile() },
-            errorMapper = { it.message ?: "Ошибка" },
-            dispatcher = dispatchers.default,
-            map = { it.toContent() }
-        )
-        // Загружаем транзакции только после успешной загрузки профиля
-        _profile.value.content?.let { profile ->
-            _transactions.applyFromExecuting(
-                execute = { transactionsRepo.getByUserId(profile.userId) },
-                errorMapper = { it.message ?: "Ошибка" },
-                dispatcher = dispatchers.default,
-                map = { it }
-            )
-        }
+        _state.update { it.copy(profile = LCEState.Loading) }
+        val response = withContext(dispatchers.io) { profileRepo.getProfile() }
+        _state.update { it.copy(profile = response.asLCEState(DashboardError::from).mapContent { p -> p.toContent() }) }
+    }
+    safeLaunch {
+        _state.update { it.copy(transactions = LCEState.Loading) }
+        val response = withContext(dispatchers.io) { transactionsRepo.getTransactions() }
+        _state.update { it.copy(transactions = response.asLCEState(DashboardError::from)) }
     }
 }
 ```
 
+Когда второй запрос зависит от результата первого — последовательно в одном `safeLaunch`
+(`_state.value.profile.content?.let { … }`).
+
 #### Реактивный подход — combine / zip + stateIn
 
-Когда репозитории возвращают `Flow` (реактивные источники, подписки на БД, поллинг, WebSocket), вместо ручного управления `MutableStateFlow<LCEState<T>>` лучше **комбинировать Flow-ы** и преобразовывать в `StateFlow`.
+Когда репозитории возвращают `Flow` (реактивные источники, подписки на БД, поллинг, WebSocket), вместо ручного управления `MutableStateFlow<LCEState<T, E>>` лучше **комбинировать Flow-ы** и преобразовывать в `StateFlow`.
 
 | Оператор | Когда использовать |
 |----------|-------------------|
@@ -727,8 +681,8 @@ class DashboardViewModel(
         transactionsRepo.observeTransactions(),
     ) { profileResponse, transactionsResponse ->
         DashboardState(
-            profile = profileResponse.asLCEState { it.message ?: "Ошибка" },
-            transactions = transactionsResponse.asLCEState { it.message ?: "Ошибка" },
+            profile = profileResponse.asLCEState(DashboardError::from),
+            transactions = transactionsResponse.asLCEState(DashboardError::from),
         )
     }
         .flowOn(dispatchers.default)  // маппинг НЕ на Main потоке
@@ -801,11 +755,11 @@ class MainScreenViewModel(
 
     // Периодический источник: репозиторий отдаёт Flow<Response<T>>,
     // ручные Job + onCleared во VM не нужны
-    private val chatUnread: Flow<LCEState<Int>> = mainRepository
+    private val chatUnread: Flow<LCEState<Int, MainError>> = mainRepository
         .observeUnreadMessagesCount()
-        .map { response -> response.asLCEState { it.message ?: "Error" } }
+        .map { response -> response.asLCEState(MainError::from) }
         .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None()) }  // combine не ждёт первый ответ сети
+        .onStart { emit(LCEState.None) }  // combine не ждёт первый ответ сети
 
     val state: StateFlow<MainScreenState> = combine(
         _state,
@@ -887,7 +841,7 @@ fun onAllowClicked(controller: PermissionsController) { … }
   вызова с таймаутом (см. «Domain»: гарантированный финал), плюс при переходе в offline и при
   закрытии сессии.
 - **Ошибка первой загрузки ≠ пустой экран.** Если загрузка упала, а state выглядит как «данных
-  нет», пользователь увидит empty-state («Напишите нам») вместо ошибки. Данные — `LCEState<T>`;
+  нет», пользователь увидит empty-state («Напишите нам») вместо ошибки. Данные — `LCEState<T, E>`;
   отличать «первую» ошибку от ошибки пагинации флагом не нужно — это следует из контента:
 
 ```kotlin
@@ -895,7 +849,7 @@ fun onAllowClicked(controller: PermissionsController) { … }
 if (_state.value.history is LCEState.Content) {
     emitEffect(Effect.PageLoadFailed)                            // лента остаётся, тост
 } else {
-    _state.update { it.copy(history = LCEState.Error(message)) } // полноэкранная ошибка + Retry
+    _state.update { it.copy(history = LCEState.Error(ChatError.from(e))) } // полноэкранная ошибка + Retry
 }
 // Живое сообщение во время первой загрузки само переводит history в Content —
 // поэтому полноэкранная ошибка уже не затрёт ленту.
@@ -1009,6 +963,41 @@ val filtered by remember {
   случаю не нужен payload. ViewModel маппит domain → presentation, UI маппит
   presentation → `stringResource`.
 
+**Общие ошибки — `AppError` (`core/common`)**, одинаковые для всех фич и с общим текстом:
+
+- `ApiError` — `NoConnection` / `Timeout` / `ServerError`;
+- `PlatformError` — `BluetoothOff` / `BluetoothUnsupported` / `LocationOff` / `PermissionDenied` /
+  `DeviceNotFound` / `DeviceDisconnected`.
+
+Их проставляет граница data-слоя: `toResponse()` (`core/specialist`) кладёт в `Response.Error.exception`
+`AppException(error, cause)`; исключение, пойманное не из `Response`, приводится через `Throwable.sdkAppError()`.
+Наследоваться от `AppError` ошибка фичи не может (sealed — только в своём модуле), поэтому **оборачивает** её:
+
+```kotlin
+// feature/<name>/presentation/model
+internal sealed interface SettingsError {
+    data class Common(val error: AppError) : SettingsError   // общий текст: error.message()
+    data object LoadFailed : SettingsError                   // свои случаи фичи
+    data object Mismatch : SettingsError
+
+    companion object {
+        fun from(error: Throwable): SettingsError = error.appError?.let(::Common) ?: LoadFailed
+    }
+}
+
+// UI — исчерпывающий when, общий случай — в AppError.message() из core/ui
+@Composable
+internal fun SettingsError.text(loadFailed: StringResource): String = when (this) {
+    is SettingsError.Common -> error.message()
+    SettingsError.LoadFailed -> stringResource(loadFailed)
+    SettingsError.Mismatch -> stringResource(Res.string.settings_error_mismatch)
+}
+
+// state: LCEState<SettingsSection, SettingsError>
+```
+
+Строк «нет интернета», «Bluetooth выключен» и т.п. фича не заводит — они в `core/ui` (`coreui_common_error_*`).
+
 ```kotlin
 // domain/model — полная детализация для бизнес-правил
 sealed interface AuthValidationError
@@ -1036,15 +1025,15 @@ sealed interface ProfileFormError {
 }
 ```
 
-**Ошибки из ViewModel — только типизированные**, не строковые коды. `LCEState.Error(message)`
-со строкой-«кодом» (`"required_fields"`), которую UI сравнивает с собственной константой, —
-запрещён: контракт держится на двух независимых литералах в разных файлах и при рассинхронизации
+**Ошибки из ViewModel — только типизированные**, не строковые коды. Ошибка-строка
+(`"required_fields"`), которую UI сравнивает с собственной константой, —
+запрещена (поэтому `LCEState.Error` и держит ошибку фичи, а не текст): контракт держится на двух независимых литералах в разных файлах и при рассинхронизации
 ломается молча (маппинг в текст — `docs/localization.md`, правило 4).
 
 ```kotlin
 // ❌ Плохо — строковый код как контракт VM ↔ UI
 // ViewModel:
-_state.update { it.copy(registrationState = LCEState.Error("required_fields")) }
+_state.update { it.copy(registrationError = "required_fields") }
 // UI (другой файл, своя копия константы):
 if (state.error == REQUIRED_FIELDS_ERROR) { /* ... */ }
 

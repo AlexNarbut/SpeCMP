@@ -20,10 +20,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.NetworkFailure
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.networkFailure
+import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
@@ -212,7 +212,7 @@ class SupportChatScreenViewModel(
 
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to send message" }
-                if (response.exception.networkFailure == NetworkFailure.NoConnection || !_state.value.isInputEnabled) {
+                if (response.exception.appError == ApiError.NoConnection || !_state.value.isInputEnabled) {
                     // Отправку оборвала потеря связи — это не ошибка пользователя:
                     // сообщение ждёт переподключения в очереди.
                     park(message)

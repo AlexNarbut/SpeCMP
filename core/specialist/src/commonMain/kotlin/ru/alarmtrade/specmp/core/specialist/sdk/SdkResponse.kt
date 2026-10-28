@@ -18,7 +18,8 @@ fun <T> (() -> T).resolveOrNull(): T? = try {
 
 /**
  * Переводит ответ SDK в проектный [Response]; без сообщения SDK берётся сообщение исключения.
- * Сбой связи приходит как [ru.alarmtrade.specmp.core.common.NetworkException] (см. [toAppException]).
+ * Общая ошибка (связь, Bluetooth, разрешения…) приходит как [ru.alarmtrade.specmp.core.common.AppException]
+ * (см. [toAppException]).
  */
 fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
     is SpecialistResponse.Success -> Response.Success(value)

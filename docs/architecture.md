@@ -120,7 +120,8 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 
 ### core/ui
 - Пакет: `ru.alarmtrade.specmp.core.ui`
-- `LCEState<T>` — UI-состояние: `None` | `Loading` | `Content<T>` | `Error`
+- `LCEState<T, E>` — UI-состояние: `None` | `Loading` | `Content<T>` (+ `isUpdating`/`updateError`) | `Error<E>`, `E` — ошибка фичи с подтипом `Common(AppError)` (`docs/patterns.md`, «Ошибки фичи»)
+- `AppError` (`core/common`) — общие ошибки `ApiError` / `PlatformError`; текст — `AppError.message()` в `core/ui`
 - `AppTheme` — Material3 тема, светлая/тёмная
 - **UI Kit** — все Cmp* компоненты дизайн-системы (см. `docs/ui-kit.md`)
 
@@ -214,7 +215,7 @@ Feature-модули:
 |-------------|----------|-------------|
 | `:core:common` | `Response<T>`, `ResponseExt`, `AppDispatchers` | **Всегда** — каждый feature-модуль обязан зависеть от `core:common` |
 | `:core:localization` | `AppLocale`, чтение/применение локали приложения | Если фича показывает переключение языка или зависит от текущей локали |
-| `:core:ui` | `LCEState<T>`, `LCEStateExt`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
+| `:core:ui` | `LCEState<T, E>`, `LCEStateExt`, `AppError.message()`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
 | `:core:network` | `HttpClientFactory`, Ktor-клиент | Только если фича работает с сетью |
 
 Примеры `build.gradle.kts`:

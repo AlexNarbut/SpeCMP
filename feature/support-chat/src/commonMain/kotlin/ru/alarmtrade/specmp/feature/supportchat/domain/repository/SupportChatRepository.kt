@@ -31,7 +31,7 @@ interface SupportChatRepository : AuthCloseable {
 
     /**
      * Вне `Ready` или без сети — `Response.Error` с
-     * [ru.alarmtrade.specmp.core.common.NetworkException] (`NetworkFailure.NoConnection`).
+     * [ru.alarmtrade.specmp.core.common.AppException] (`ApiError.NoConnection`).
      */
     suspend fun sendMessage(text: String): Response<Unit>
     suspend fun sendImage(file: SupportChatPickedFile): Response<Unit>
