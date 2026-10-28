@@ -21,8 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.error.RequestError
-import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
@@ -43,6 +41,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.F
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.RollbackUi
@@ -115,7 +115,7 @@ internal fun ArchiveEmpty(onRefresh: () -> Unit, canCode: String? = null, onShow
 }
 
 @Composable
-internal fun ArchiveError(error: RequestError, onRetry: () -> Unit) {
+internal fun ArchiveError(error: FirmwareError, onRetry: () -> Unit) {
     CenteredBody {
         FirmwareHero(icon = CmpIcons.CloudOff, tone = HeroTone.Neutral, size = 88.dp)
         CmpText(
@@ -156,7 +156,7 @@ private fun CenteredBody(content: @Composable () -> Unit) {
 
 /** Подвал списка: индикатор догрузки или ошибка догрузки (список выше остаётся). */
 @Composable
-internal fun ArchiveFooter(loadingMore: Boolean, moreError: RequestError?, onRetryMore: () -> Unit) {
+internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRetryMore: () -> Unit) {
     when {
         loadingMore -> CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),

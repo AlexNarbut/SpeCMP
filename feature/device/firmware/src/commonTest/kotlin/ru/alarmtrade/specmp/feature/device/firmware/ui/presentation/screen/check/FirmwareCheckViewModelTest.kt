@@ -26,7 +26,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
@@ -37,6 +37,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCoo
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -123,7 +124,7 @@ class FirmwareCheckViewModelTest {
         return vm
     }
 
-    private fun FirmwareCheckViewModel.cards(): List<ModuleCardUi> = (state.value.content as CheckContent.Ready).modules
+    private fun FirmwareCheckViewModel.cards(): List<ModuleCardUi> = (state.value.content as LCEState.Content).content
 
     private fun FirmwareCheckViewModel.card(id: Long): ModuleCardUi = cards().first { it.id == id }
 
@@ -172,24 +173,24 @@ class FirmwareCheckViewModelTest {
         )
         val vm = viewModel()
 
-        assertEquals(CardStatusUi.Failed(RequestError.Failed), vm.card(1).status)
+        assertEquals(CardStatusUi.Failed(FirmwareError.LoadFailed), vm.card(1).status)
         assertEquals(CurrentVersionUi.Absent, vm.card(2).currentVersion)
         // Текущая версия BLE-модуля неизвестна — обновление предлагается (лучше предложить, чем скрыть).
-        assertEquals(CardStatusUi.Failed(RequestError.Failed), vm.card(2).status)
+        assertEquals(CardStatusUi.Failed(FirmwareError.LoadFailed), vm.card(2).status)
     }
 
     @Test
     fun `module list failure shows an error and retry loads it`() = test {
         repository.modulesResult = Response.Error(IllegalStateException("offline"))
         val vm = viewModel()
-        assertEquals(CheckContent.Error, vm.state.value.content)
+        assertEquals(LCEState.Error(FirmwareError.LoadFailed), vm.state.value.content)
 
         repository.modulesResult = Response.Success(listOf(alarmModule))
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
         vm.onRetry()
         runCurrent()
 
-        assertIs<CheckContent.Ready>(vm.state.value.content)
+        assertIs<LCEState.Content<*, *>>(vm.state.value.content)
         assertIs<CardStatusUi.UpdateAvailable>(vm.card(1).status)
     }
 
@@ -219,7 +220,7 @@ class FirmwareCheckViewModelTest {
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Error(IllegalStateException("503"))
         repository.latest[2L to FirmwareChannel.RELEASE] = Response.Success(version("1.14"))
         val vm = viewModel()
-        assertEquals(CardStatusUi.Failed(RequestError.Failed), vm.card(1).status)
+        assertEquals(CardStatusUi.Failed(FirmwareError.LoadFailed), vm.card(1).status)
 
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
         vm.onRefreshModule(1)

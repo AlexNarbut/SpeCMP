@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
@@ -41,6 +40,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FailureKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError

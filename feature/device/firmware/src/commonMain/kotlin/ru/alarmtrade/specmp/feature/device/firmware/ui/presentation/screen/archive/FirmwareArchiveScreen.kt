@@ -28,6 +28,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -44,6 +45,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.F
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.deviceSubtitle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ARCHIVE_REFRESH_TAG
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveCanFilter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveDetail
@@ -166,17 +168,19 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                 state.canFilter?.let { filter -> CanFilterBar(filter, layout, actions) }
                 CmpBox(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     when (val content = state.content) {
-                        ArchiveContent.Loading -> ArchiveLoading()
+                        LCEState.None, LCEState.Loading -> ArchiveLoading()
 
-                        is ArchiveContent.Error -> ArchiveError(error = content.error, onRetry = actions.onRefresh)
+                        is LCEState.Error -> ArchiveError(error = content.error, onRetry = actions.onRefresh)
 
-                        ArchiveContent.Empty -> ArchiveEmpty(
-                            onRefresh = actions.onRefresh,
-                            canCode = state.canFilter?.applied,
-                            onShowAll = { actions.onCanInput("") }
-                        )
-
-                        is ArchiveContent.Ready -> ReadyBody(state, content, layout, actions)
+                        is LCEState.Content -> if (content.content.isEmpty()) {
+                            ArchiveEmpty(
+                                onRefresh = actions.onRefresh,
+                                canCode = state.canFilter?.applied,
+                                onShowAll = { actions.onCanInput("") }
+                            )
+                        } else {
+                            ReadyBody(state, content, layout, actions)
+                        }
                     }
                 }
             }
@@ -210,12 +214,12 @@ private fun CanFilterBar(filter: CanFilterUi, layout: FirmwareLayout, actions: F
 @Composable
 private fun ReadyBody(
     state: FirmwareArchiveState,
-    content: ArchiveContent.Ready,
+    content: LCEState.Content<List<ArchiveRowUi>, FirmwareError>,
     layout: FirmwareLayout,
     actions: FirmwareArchiveActions
 ) {
     if (layout == FirmwareLayout.Expanded) {
-        val selected = content.rows.firstOrNull { it.version == state.selected } ?: content.rows.first()
+        val selected = content.content.firstOrNull { it.version == state.selected } ?: content.content.first()
         CmpRow(
             modifier = Modifier.fillMaxSize().widthIn(max = DetailMaxWidth).padding(24.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
@@ -252,7 +256,7 @@ private fun ReadyBody(
 @Composable
 private fun VersionList(
     state: FirmwareArchiveState,
-    content: ArchiveContent.Ready,
+    content: LCEState.Content<List<ArchiveRowUi>, FirmwareError>,
     master: Boolean,
     actions: FirmwareArchiveActions,
     modifier: Modifier = Modifier,
@@ -267,7 +271,7 @@ private fun VersionList(
             last >= info.totalItemsCount - 1 - END_THRESHOLD
         }
     }
-    LaunchedEffect(nearEnd, content.rows.size) { if (nearEnd) actions.onEndReached() }
+    LaunchedEffect(nearEnd, content.content.size) { if (nearEnd) actions.onEndReached() }
 
     LazyColumn(
         state = listState,
@@ -280,7 +284,7 @@ private fun VersionList(
                 InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
             }
         }
-        items(content.rows, key = { it.version }) { row ->
+        items(content.content, key = { it.version }) { row ->
             ArchiveRow(
                 row = row,
                 master = master,
@@ -290,7 +294,7 @@ private fun VersionList(
             )
         }
         item(key = "footer") {
-            ArchiveFooter(content.loadingMore, content.moreError, actions.onRetryMore)
+            ArchiveFooter(content.isUpdating, content.updateError, actions.onRetryMore)
         }
     }
 }

@@ -17,8 +17,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.error.RequestError
-import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -34,6 +32,8 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.titleRes
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CardStatusUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CurrentVersionUi
@@ -293,7 +293,7 @@ private fun ActualBlock(moduleId: Long, status: CardStatusUi.Actual, onUpdate: (
 }
 
 @Composable
-private fun FailedBlock(error: RequestError, onRetry: () -> Unit) {
+private fun FailedBlock(error: FirmwareError, onRetry: () -> Unit) {
     val colors = cmpThemeColors()
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),

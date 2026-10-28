@@ -24,6 +24,8 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import specmp.feature.device.firmware.generated.resources.Res
 import specmp.feature.device.firmware.generated.resources.firmware_check_error_msg
 import specmp.feature.device.firmware.generated.resources.firmware_check_error_title
@@ -45,11 +47,11 @@ internal fun ModulesLoading() {
 }
 
 @Composable
-internal fun ModulesError(onRetry: () -> Unit) {
+internal fun ModulesError(error: FirmwareError, onRetry: () -> Unit) {
     CenteredBody {
         FirmwareHero(icon = CmpIcons.ErrorOutline, tone = HeroTone.Neutral, size = 88.dp)
         CmpText(
-            text = stringResource(Res.string.firmware_check_error_title),
+            text = error.text(Res.string.firmware_check_error_title),
             textAlign = TextAlign.Center,
             style = CmpTextStyle.Title
         )

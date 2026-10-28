@@ -23,7 +23,6 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
@@ -39,6 +38,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -256,7 +256,7 @@ class FirmwareUpdateViewModelTest {
         vm.onDownloadClick()
         runCurrent()
         assertEquals(UpdatePhase.Source, vm.state.value.phase)
-        assertEquals(RequestError.Failed, vm.state.value.sourceError)
+        assertEquals(FirmwareError.LoadFailed, vm.state.value.sourceError)
 
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
         vm.onDownloadClick()

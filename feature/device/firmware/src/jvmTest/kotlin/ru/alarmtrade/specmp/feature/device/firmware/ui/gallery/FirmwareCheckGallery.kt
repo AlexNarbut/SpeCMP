@@ -3,12 +3,12 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.gallery
 import java.io.File
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
-import ru.alarmtrade.specmp.core.common.NetworkFailure
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CardStatusUi
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckContent
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CurrentVersionUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckActions
@@ -48,17 +48,17 @@ class FirmwareCheckGallery {
     private val base = FirmwareCheckState(
         deviceName = "Pandora DX-4GS",
         deviceId = 107131,
-        content = CheckContent.Ready(listOf(update, actual, unsupported))
+        content = LCEState.Content(listOf(update, actual, unsupported))
     )
 
     private fun render(name: String, state: FirmwareCheckState) =
         StateGallery.render(outDir, name) { FirmwareCheckContent(state, FirmwareCheckActions()) }
 
     @Test
-    fun loading() = render("01_loading", base.copy(content = CheckContent.Loading))
+    fun loading() = render("01_loading", base.copy(content = LCEState.Loading))
 
     @Test
-    fun listError() = render("02_list_error", base.copy(content = CheckContent.Error))
+    fun listError() = render("02_list_error", base.copy(content = LCEState.Error(FirmwareError.LoadFailed)))
 
     @Test
     fun list() = render("03_list", base)
@@ -67,7 +67,7 @@ class FirmwareCheckGallery {
     fun cardStates() = render(
         "04_card_states",
         base.copy(
-            content = CheckContent.Ready(
+            content = LCEState.Content(
                 listOf(
                     update.copy(currentVersion = CurrentVersionUi.Reading, status = CardStatusUi.Searching),
                     actual.copy(status = CardStatusUi.Searching),
@@ -75,7 +75,7 @@ class FirmwareCheckGallery {
                         kind = FirmwareModuleKind.GpsTracker,
                         title = "Pandora GPS (GPS2)",
                         currentVersion = CurrentVersionUi.Absent,
-                        status = CardStatusUi.Failed(RequestError.Network(NetworkFailure.NoConnection))
+                        status = CardStatusUi.Failed(FirmwareError.Common(ApiError.NoConnection))
                     )
                 )
             )
@@ -124,7 +124,7 @@ class FirmwareCheckGallery {
         "14_long_names",
         base.copy(
             deviceName = "Pandora DX-4GS Premium Long Edition 4G+",
-            content = CheckContent.Ready(
+            content = LCEState.Content(
                 listOf(
                     update.copy(title = "Pandora DX 4G Premium Long (DX4G-LX)"),
                     actual.copy(title = "Pandora Bluetooth Module Long (BTM2-LNG)"),

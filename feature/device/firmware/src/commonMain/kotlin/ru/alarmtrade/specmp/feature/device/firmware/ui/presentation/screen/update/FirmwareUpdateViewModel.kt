@@ -21,7 +21,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
@@ -36,6 +35,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
@@ -93,7 +93,7 @@ class FirmwareUpdateViewModel(
         /** Прошивка из файла пользователя (вместо [candidate]). */
         val localFile: FirmwareFilePickResult.Picked? = null,
         val fileError: FileError? = null,
-        val sourceError: RequestError? = null,
+        val sourceError: FirmwareError? = null,
         val exitDialog: Boolean = false,
         val exitError: Boolean = false,
         /** Пользователь подтвердил результат («OK»). */
@@ -366,7 +366,7 @@ class FirmwareUpdateViewModel(
 
                         is Response.Error -> state.copy(
                             stage = UpdatePhase.Source,
-                            sourceError = RequestError.from(response.exception)
+                            sourceError = FirmwareError.from(response.exception)
                         )
                     }
                 }

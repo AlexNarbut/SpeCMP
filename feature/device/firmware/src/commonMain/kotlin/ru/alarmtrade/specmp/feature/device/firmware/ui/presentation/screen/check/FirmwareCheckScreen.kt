@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -104,9 +105,9 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = firmwareLayoutOf(maxWidth)
             when (val content = state.content) {
-                CheckContent.Loading -> ModulesLoading()
-                CheckContent.Error -> ModulesError(onRetry = actions.onRetry)
-                is CheckContent.Ready -> ReadyBody(state, content, layout, actions)
+                LCEState.None, LCEState.Loading -> ModulesLoading()
+                is LCEState.Error -> ModulesError(error = content.error, onRetry = actions.onRetry)
+                is LCEState.Content -> ReadyBody(state, content.content, layout, actions)
             }
         }
     }
@@ -116,7 +117,7 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
 @Composable
 private fun ReadyBody(
     state: FirmwareCheckState,
-    content: CheckContent.Ready,
+    modules: List<ModuleCardUi>,
     layout: FirmwareLayout,
     actions: FirmwareCheckActions
 ) {
@@ -142,7 +143,7 @@ private fun ReadyBody(
             state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
             if (state.channel.isTest) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
             CmpText(text = stringResource(Res.string.firmware_check_title_modules), style = CmpTextStyle.Title)
-            content.modules.chunked(columns).forEach { rowCards ->
+            modules.chunked(columns).forEach { rowCards ->
                 CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
                     rowCards.forEach { card ->
                         ModuleCard(

@@ -3,10 +3,10 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.gallery
 import java.io.File
 import kotlin.test.Test
 import kotlinx.datetime.LocalDate
-import ru.alarmtrade.specmp.core.common.NetworkFailure
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveContent
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.CanFilterUi
@@ -40,7 +40,7 @@ class FirmwareArchiveGallery {
         ArchiveRowUi("3.52", LocalDate(2026, 2, 3), "", ArchiveRowKind.Older)
     )
     private val base = FirmwareArchiveState(
-        content = ArchiveContent.Ready(rows),
+        content = LCEState.Content(rows),
         selected = "3.61",
         installedVersion = "3.57",
         deviceTitle = "Pandora DX-4GS  107131"
@@ -50,14 +50,13 @@ class FirmwareArchiveGallery {
         StateGallery.render(outDir, name) { FirmwareArchiveContent(state, FirmwareArchiveActions()) }
 
     @Test
-    fun loading() = render("01_loading", base.copy(content = ArchiveContent.Loading))
+    fun loading() = render("01_loading", base.copy(content = LCEState.Loading))
 
     @Test
-    fun error() =
-        render("02_error", base.copy(content = ArchiveContent.Error(RequestError.Network(NetworkFailure.NoConnection))))
+    fun error() = render("02_error", base.copy(content = LCEState.Error(FirmwareError.Common(ApiError.NoConnection))))
 
     @Test
-    fun empty() = render("03_empty", base.copy(content = ArchiveContent.Empty))
+    fun empty() = render("03_empty", base.copy(content = LCEState.Content(emptyList<ArchiveRowUi>())))
 
     @Test
     fun list() = render("04_list", base)
@@ -69,11 +68,11 @@ class FirmwareArchiveGallery {
     fun selectedOlder() = render("06_selected_older", base.copy(selected = "3.55"))
 
     @Test
-    fun loadingMore() = render("07_loading_more", base.copy(content = ArchiveContent.Ready(rows, loadingMore = true)))
+    fun loadingMore() = render("07_loading_more", base.copy(content = LCEState.Content(rows, isUpdating = true)))
 
     @Test
     fun moreError() =
-        render("08_more_error", base.copy(content = ArchiveContent.Ready(rows, moreError = RequestError.Failed)))
+        render("08_more_error", base.copy(content = LCEState.Content(rows, updateError = FirmwareError.LoadFailed)))
 
     @Test
     fun betaChannel() = render("09_beta_channel", base.copy(channel = FirmwareChannel.BETA))
@@ -95,7 +94,7 @@ class FirmwareArchiveGallery {
     fun canFilterFromVehicle() = render(
         "13_can_vehicle",
         withFilter.copy(
-            content = ArchiveContent.Ready(canRows),
+            content = LCEState.Content(canRows),
             canFilter = CanFilterUi("0213", "0213", "Toyota Camry XV70 2018–2024", canPickVehicle = true)
         )
     )
@@ -103,14 +102,17 @@ class FirmwareArchiveGallery {
     @Test
     fun canFilterEmpty() = render(
         "14_can_empty",
-        withFilter.copy(content = ArchiveContent.Empty, canFilter = CanFilterUi("9999", "9999", canPickVehicle = true))
+        withFilter.copy(
+            content = LCEState.Content(emptyList<ArchiveRowUi>()),
+            canFilter = CanFilterUi("9999", "9999", canPickVehicle = true)
+        )
     )
 
     @Test
     fun viewOnly() = render(
         "15_view_only",
         withFilter.copy(
-            content = ArchiveContent.Ready(canRows),
+            content = LCEState.Content(canRows),
             canFilter = CanFilterUi("0213", "0213", canPickVehicle = true),
             viewOnly = true
         )

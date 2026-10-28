@@ -16,13 +16,14 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionNumber
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 
 /**
  * «Архив прошивок»: версии модуля в выбранном канале, страницами по [PAGE_SIZE]; выбранная версия уходит экрану
@@ -44,16 +45,14 @@ class FirmwareArchiveViewModel(
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
-    private enum class Load { Loading, Error, Ready }
-
     private data class Core(
-        val load: Load = Load.Loading,
+        /** Первая страница: `Content(Unit)` — загружена (строки — в [items]). */
+        val load: LCEState<Unit, FirmwareError> = LCEState.Loading,
         val items: List<FirmwareVersion> = emptyList(),
         val page: Int = 0,
         val hasMore: Boolean = false,
         val loadingMore: Boolean = false,
-        val loadError: RequestError = RequestError.Failed,
-        val moreError: RequestError? = null,
+        val moreError: FirmwareError? = null,
         val selected: String? = null,
         val rollback: String? = null,
         val moduleId: Long? = null,
@@ -62,7 +61,7 @@ class FirmwareArchiveViewModel(
         val carTitle: String? = null,
         val vehiclePicker: Boolean = false
     ) {
-        val canLoadMore: Boolean get() = load == Load.Ready && hasMore && !loadingMore && moreError == null
+        val canLoadMore: Boolean get() = load is LCEState.Content && hasMore && !loadingMore && moreError == null
     }
 
     private val core = MutableStateFlow(
@@ -108,16 +107,10 @@ class FirmwareArchiveViewModel(
         }
 
     private fun toState(core: Core, rows: List<ArchiveRowUi>): FirmwareArchiveState {
-        val content = when (core.load) {
-            Load.Loading -> ArchiveContent.Loading
-
-            Load.Error -> ArchiveContent.Error(core.loadError)
-
-            Load.Ready -> if (rows.isEmpty()) {
-                ArchiveContent.Empty
-            } else {
-                ArchiveContent.Ready(rows, loadingMore = core.loadingMore, moreError = core.moreError)
-            }
+        val content = when (val load = core.load) {
+            LCEState.None, LCEState.Loading -> LCEState.Loading
+            is LCEState.Error -> load
+            is LCEState.Content -> LCEState.Content(rows, isUpdating = core.loadingMore, updateError = core.moreError)
         }
         val installed = args.installedVersion
         return FirmwareArchiveState(
@@ -156,7 +149,7 @@ class FirmwareArchiveViewModel(
     private fun loadFirstPage() {
         core.update {
             it.copy(
-                load = Load.Loading,
+                load = LCEState.Loading,
                 items = emptyList(),
                 page = 0,
                 hasMore = false,
@@ -190,14 +183,14 @@ class FirmwareArchiveViewModel(
         val moduleId = when (val module = moduleId()) {
             is Response.Error -> {
                 core.update {
-                    it.copy(load = Load.Error, loadError = RequestError.from(module.exception), loadingMore = false)
+                    it.copy(load = LCEState.Error(FirmwareError.from(module.exception)), loadingMore = false)
                 }
                 return
             }
 
             // У модели нет основного модуля — версий нет.
             is Response.Success -> module.value ?: run {
-                core.update { it.copy(load = Load.Ready, hasMore = false, loadingMore = false) }
+                core.update { it.copy(load = LCEState.Content(Unit), hasMore = false, loadingMore = false) }
                 return
             }
         }
@@ -211,7 +204,7 @@ class FirmwareArchiveViewModel(
                 val known = state.items.mapTo(mutableSetOf()) { it.version }
                 val fresh = response.value.items.filter { known.add(it.version) }
                 state.copy(
-                    load = Load.Ready,
+                    load = LCEState.Content(Unit),
                     items = state.items + fresh,
                     page = page,
                     // Нет новых версий — конец (источник признак не отдаёт; см. KDoc класса).
@@ -224,12 +217,11 @@ class FirmwareArchiveViewModel(
             is Response.Error -> core.update { state ->
                 if (page == FIRST_PAGE) {
                     state.copy(
-                        load = Load.Error,
-                        loadError = RequestError.from(response.exception),
+                        load = LCEState.Error(FirmwareError.from(response.exception)),
                         loadingMore = false
                     )
                 } else {
-                    state.copy(loadingMore = false, moreError = RequestError.from(response.exception))
+                    state.copy(loadingMore = false, moreError = FirmwareError.from(response.exception))
                 }
             }
         }

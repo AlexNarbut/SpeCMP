@@ -19,7 +19,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
@@ -31,6 +32,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
@@ -101,20 +103,22 @@ class FirmwareCheckViewModel(
         val previous = _state.value
         _state.update { it.copy(deviceName = device.systemName, deviceId = device.systemId) }
         val sameDevice = previous.deviceId == device.systemId
-        if (!sameDevice || previous.content !is CheckContent.Ready) load(device)
+        if (!sameDevice || previous.content !is LCEState.Content) load(device)
     }
 
     private suspend fun load(device: AlarmDevice) = executeWithProceedLock {
         val transport = deviceSession.transport.value ?: return@executeWithProceedLock
-        _state.update { it.copy(content = CheckContent.Loading, dialog = null, bootFailed = false) }
+        _state.update { it.copy(content = LCEState.Loading, dialog = null, bootFailed = false) }
         val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }
         when (response) {
-            is Response.Error -> _state.update { it.copy(content = CheckContent.Error) }
+            is Response.Error -> _state.update {
+                it.copy(content = LCEState.Error(FirmwareError.from(response.exception)))
+            }
 
             is Response.Success -> {
                 val list = response.value
                 modules.update { list.associateBy { module -> module.id } }
-                _state.update { it.copy(content = CheckContent.Ready(list.map(::initialCard))) }
+                _state.update { it.copy(content = LCEState.Content(list.map(::initialCard))) }
                 list.forEach { module -> safeLaunch { resolveModule(device, module) } }
             }
         }
@@ -177,7 +181,7 @@ class FirmwareCheckViewModel(
 
     private fun statusOf(response: Response<FirmwareVersion>, current: CurrentVersionUi): CardStatusUi =
         when (response) {
-            is Response.Error -> CardStatusUi.Failed(RequestError.from(response.exception))
+            is Response.Error -> CardStatusUi.Failed(FirmwareError.from(response.exception))
 
             is Response.Success -> {
                 val server = response.value
@@ -302,7 +306,7 @@ class FirmwareCheckViewModel(
     private fun CheckDialog?.isSending(): Boolean = (this as? CheckDialog.ConfirmBoot)?.sending == true ||
         (this as? CheckDialog.Pin)?.sending == true
 
-    private fun cards(): List<ModuleCardUi> = (_state.value.content as? CheckContent.Ready)?.modules.orEmpty()
+    private fun cards(): List<ModuleCardUi> = _state.value.content.content.orEmpty()
 
     private fun updateCard(moduleId: Long, transform: (ModuleCardUi) -> ModuleCardUi) {
         _state.update { it.withCard(moduleId, transform) }
@@ -312,10 +316,10 @@ class FirmwareCheckViewModel(
         moduleId: Long,
         transform: (ModuleCardUi) -> ModuleCardUi
     ): FirmwareCheckState {
-        val ready = content as? CheckContent.Ready ?: return this
+        val ready = content as? LCEState.Content ?: return this
         return copy(
             content = ready.copy(
-                modules = ready.modules.map { card ->
+                content = ready.content.map { card ->
                     if (card.id ==
                         moduleId
                     ) {
