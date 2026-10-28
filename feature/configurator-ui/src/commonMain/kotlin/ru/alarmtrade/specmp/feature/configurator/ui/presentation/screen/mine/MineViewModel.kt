@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.reusing
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -77,7 +78,8 @@ internal class MineViewModel(
             }
 
             is Response.Success -> _state.update { state ->
-                val items = response.value
+                // Список перечитывается на каждое изменение хранилища: неизменённые карточки — прежние экземпляры.
+                val items = response.value.reusing(state.list.content) { it.id }
                 state.copy(
                     list = LCEState.Content(items),
                     selectedId = state.selectedId?.takeIf { id -> items.any { it.id == id } }
