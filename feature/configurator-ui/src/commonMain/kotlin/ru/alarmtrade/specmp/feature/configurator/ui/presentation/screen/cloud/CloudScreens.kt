@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -63,7 +62,6 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImage
@@ -86,8 +84,11 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationSummary
 import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationAttachment
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.BusyOverlay
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.CloudItemCard
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.CloudMeta
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.ListDetailPane
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.ListDetailWideFrom
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.RatingLabel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.rememberDateTimeText
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
@@ -112,7 +113,7 @@ internal fun CloudListScreen(
     detail: @Composable (id: Int) -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val wide = maxWidth >= WideFrom
+        val wide = maxWidth >= ListDetailWideFrom
         CmpScaffold(
             topBar = {
                 CmpTopAppBar(
@@ -129,18 +130,13 @@ internal fun CloudListScreen(
             },
             snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) }
         ) { padding ->
-            CmpRow(modifier = Modifier.fillMaxSize().padding(padding)) {
-                val listModifier = if (wide) Modifier.weight(LIST_WEIGHT).fillMaxHeight() else Modifier.fillMaxSize()
-                CmpColumn(modifier = listModifier) {
-                    CloudToolbar(state, onOrder, onModelFilter)
-                    CloudListContent(state, wide, onRetry, onOpen, onSelect)
-                }
-                if (wide) {
-                    CmpVerticalDivider()
-                    CmpBox(modifier = Modifier.weight(1f - LIST_WEIGHT).fillMaxHeight()) {
-                        state.selectedId?.let { detail(it) }
-                    }
-                }
+            ListDetailPane(
+                wide,
+                detail = { state.selectedId?.let { detail(it) } },
+                modifier = Modifier.padding(padding)
+            ) {
+                CloudToolbar(state, onOrder, onModelFilter)
+                CloudListContent(state, wide, onRetry, onOpen, onSelect)
             }
         }
     }
@@ -329,11 +325,7 @@ internal fun CloudCardContent(state: CloudCardState, actions: CloudCardActions) 
                 onDismiss = actions.onSaveDismiss
             )
         }
-        if (state.busy) {
-            CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CmpCircularProgressIndicator()
-            }
-        }
+        if (state.busy) BusyOverlay()
     }
 }
 
@@ -527,8 +519,6 @@ private fun AttachmentViewer(attachment: ConfigurationAttachment, onClose: () ->
     }
 }
 
-private val WideFrom = 600.dp
-private const val LIST_WEIGHT = 0.45f
 private const val DESCRIPTION_COLLAPSED_LINES = 4
 private val CardShape = RoundedCornerShape(12.dp)
 private val TileWidth = 120.dp

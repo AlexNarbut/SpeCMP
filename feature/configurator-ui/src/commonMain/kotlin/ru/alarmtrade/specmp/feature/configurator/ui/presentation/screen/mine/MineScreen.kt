@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -77,7 +76,6 @@ import ru.alarmtrade.specmp.core.ui.view.chip.CmpChip
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
@@ -97,6 +95,9 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.BusyOverlay
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.ListDetailPane
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.ListDetailWideFrom
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.MineCard
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.rememberDateTimeText
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
@@ -112,7 +113,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.M
 @Composable
 internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostState: CmpSnackbarHostState) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val wide = maxWidth >= WideFrom
+        val wide = maxWidth >= ListDetailWideFrom
         CmpScaffold(
             topBar = {
                 CmpTopAppBar(
@@ -152,26 +153,13 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
             },
             snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) }
         ) { padding ->
-            CmpRow(modifier = Modifier.fillMaxSize().padding(padding)) {
-                val listModifier = if (wide) Modifier.weight(LIST_WEIGHT).fillMaxHeight() else Modifier.fillMaxSize()
-                CmpColumn(modifier = listModifier) {
-                    MineToolbar(state, actions)
-                    MineContent(state, actions, wide)
-                }
-                if (wide) {
-                    CmpVerticalDivider()
-                    CmpBox(modifier = Modifier.weight(1f - LIST_WEIGHT).fillMaxHeight()) {
-                        MineDetail(state, actions)
-                    }
-                }
+            ListDetailPane(wide, detail = { MineDetail(state, actions) }, modifier = Modifier.padding(padding)) {
+                MineToolbar(state, actions)
+                MineContent(state, actions, wide)
             }
         }
         MineDialogs(state, actions, wide)
-        if (state.busy) {
-            CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CmpCircularProgressIndicator()
-            }
-        }
+        if (state.busy) BusyOverlay()
     }
 }
 
@@ -554,7 +542,5 @@ private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean,
     }
 }
 
-private val WideFrom = 600.dp
-private const val LIST_WEIGHT = 0.45f
 private const val SKELETON_ROWS = 4
 private const val LOAD_MORE_AHEAD = 3

@@ -7,6 +7,8 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationSummary
 import ru.alarmtrade.specmp.feature.configurator.domain.model.sortedBy
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.matchesModel
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.modelOptions
 
 @Immutable
 internal data class CloudListState(
@@ -25,9 +27,7 @@ internal data class CloudListState(
 internal fun CloudListState.withLists(): CloudListState {
     val all = list.content.orEmpty()
     return copy(
-        models = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() },
-        shown = all.filter {
-            modelFilter == null || it.deviceName.equals(modelFilter, ignoreCase = true)
-        }.sortedBy(order)
+        models = all.modelOptions { it.deviceName },
+        shown = all.filter { matchesModel(it.deviceName, modelFilter) }.sortedBy(order)
     )
 }

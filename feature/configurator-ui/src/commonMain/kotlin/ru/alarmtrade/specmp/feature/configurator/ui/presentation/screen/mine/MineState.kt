@@ -5,6 +5,8 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.matchesModel
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.modelOptions
 
 @Immutable
 internal data class MineState(
@@ -52,9 +54,9 @@ internal enum class MineMessage { COPIED, DELETED, RENAMED, FAILED }
 internal fun MineState.withLists(): MineState {
     val q = query.trim()
     return copy(
-        models = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() },
+        models = all.modelOptions { it.deviceName },
         filtered = all.filter { item ->
-            (modelFilter == null || item.deviceName.equals(modelFilter, ignoreCase = true)) &&
+            matchesModel(item.deviceName, modelFilter) &&
                 (
                     q.isEmpty() || item.name.contains(q, ignoreCase = true) ||
                         item.description.contains(q, ignoreCase = true)
