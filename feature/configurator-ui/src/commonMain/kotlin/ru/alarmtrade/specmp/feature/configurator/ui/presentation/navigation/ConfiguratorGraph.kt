@@ -73,6 +73,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.Set
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 
 /**
  * Выбор автомобиля из каталога (фича `vehicle-ui`, подключается в `composeApp`): [VehicleCatalog.WITH_CONFIGURATIONS] —
@@ -201,7 +202,7 @@ private fun ConfiguratorGraph(
                     vehiclePicker(
                         VehicleCatalog.WITH_CONFIGURATIONS,
                         (mode as? GraphMode.Pick)?.request?.deviceName,
-                        { car -> backStack.navigateSafe(CloudListRoute(car.id, car.title())) },
+                        { car -> backStack.navigateSafe(CloudListRoute(car.id, car.fullName())) },
                         back
                     )
                 }
@@ -448,8 +449,6 @@ private fun MineMessage.text() = when (this) {
     MineMessage.RENAMED -> Strings.string.configurator_common_msg_renamed
     MineMessage.FAILED -> Strings.string.configurator_common_msg_failed
 }
-
-private fun CarSummary.title(): String = listOf(brand, model, name).filter { it.isNotBlank() }.joinToString(" ")
 
 /** Сохранение файла недоступно (режим выбора). */
 private object NoSaver : SettingsFileSaver {

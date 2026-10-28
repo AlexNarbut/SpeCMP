@@ -30,6 +30,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateT
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
@@ -43,6 +44,9 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 /**
@@ -165,7 +169,7 @@ class FirmwareUpdateViewModel(
         val selected = modules.indexOfFirst { it.id == core.selectedModuleId }.coerceAtLeast(0)
         val current = profile?.currentVersion
         val title = when (profile?.kind) {
-            UpdateProfile.Bluetooth -> modules.getOrNull(selected)?.let { "${it.title} (${it.systemName})" }
+            UpdateProfile.Bluetooth -> modules.getOrNull(selected)?.displayTitle
                 ?: profile.deviceTitle
 
             UpdateProfile.Main, null -> profile?.deviceTitle.orEmpty()
@@ -174,14 +178,14 @@ class FirmwareUpdateViewModel(
             phase = phaseOf(core, session, reboot),
             profile = profile?.kind ?: UpdateProfile.Main,
             deviceTitle = title,
-            moduleTitles = modules.map { "${it.title} (${it.systemName})" },
+            moduleTitles = modules.map { it.displayTitle },
             selectedModule = selected,
             currentVersion = current,
             channel = core.channel,
             confirm = confirmOf(core, current),
             sourceError = core.sourceError,
             exitDialog = core.exitDialog,
-            inBoot = session is DeviceSessionState.FirmwareBoot || session is DeviceSessionState.BluetoothBoot,
+            inBoot = session.isBoot,
             canExitBoot = profile?.canExit == true,
             exitError = core.exitError,
             fileError = core.fileError
@@ -203,8 +207,8 @@ class FirmwareUpdateViewModel(
     }
 
     private fun phaseOf(core: Core, session: DeviceSessionState, reboot: DeviceReboot?): UpdatePhase {
-        val inBoot = session is DeviceSessionState.FirmwareBoot || session is DeviceSessionState.BluetoothBoot
-        val linkDown = session is DeviceSessionState.Disconnected || session is DeviceSessionState.Connecting
+        val inBoot = session.isBoot
+        val linkDown = session.isLinkDown
         return when {
             reboot == DeviceReboot.ToBoot && !inBoot -> UpdatePhase.Entering
 
@@ -280,7 +284,7 @@ class FirmwareUpdateViewModel(
                     UpdateProfile.Main,
                     BootModeTarget.MainProgram,
                     device.systemName,
-                    "${device.systemName}  ${device.systemId}",
+                    device.title,
                     device.displayFirmwareVersion
                 )
             }
@@ -485,9 +489,7 @@ class FirmwareUpdateViewModel(
                 deviceSession.acknowledgeReboot()
                 core.update { it.copy(acknowledged = true, exitError = false) }
                 val response = withContext(dispatchers.io) { deviceSession.exitBootMode(target) }
-                val stillInBoot = deviceSession.state.value.let {
-                    it is DeviceSessionState.FirmwareBoot || it is DeviceSessionState.BluetoothBoot
-                }
+                val stillInBoot = deviceSession.state.value.isBoot
                 if (response is Response.Error && stillInBoot) {
                     logger.d { "Exit boot mode failed: ${response.exception::class.simpleName}" }
                     deviceSession.cancelReboot()
@@ -612,9 +614,7 @@ class FirmwareUpdateViewModel(
     }
 
     private suspend fun linkWentDown(): Boolean = withTimeoutOrNull(LINK_GRACE) {
-        deviceSession.state.first {
-            it is DeviceSessionState.Disconnected || it is DeviceSessionState.Connecting
-        }
+        deviceSession.state.first { it.isLinkDown }
     } != null
 
     // Стадия меняется, только пока процесс идёт: запоздавшее событие отменённого процесса экран не трогает.

@@ -51,6 +51,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesLoading
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.PinDialog
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 
 private val ContentMaxWidth = 1040.dp
 
@@ -90,7 +91,7 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
             CmpTopAppBar(
                 title = { CmpText(text = stringResource(Strings.string.firmware_check_title_screen)) },
                 subtitle = state.deviceId?.let { id ->
-                    { CmpText(text = "${state.deviceName}  $id", style = CmpTextStyle.Caption) }
+                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Caption) }
                 },
                 navigationIcon = {
                     CmpIconButton(

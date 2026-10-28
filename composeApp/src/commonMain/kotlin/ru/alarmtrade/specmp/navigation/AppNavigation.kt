@@ -43,6 +43,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
@@ -58,6 +59,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
@@ -223,7 +225,7 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
                 moduleId = null,
                 channel = FirmwareChannel.RELEASE,
                 installedVersion = device.displayFirmwareVersion,
-                deviceTitle = "${device.systemName}  ${device.systemId}",
+                deviceTitle = device.title,
                 profile = UpdateProfile.Main,
                 deviceName = device.systemName,
                 canCode = canCode,
@@ -329,7 +331,7 @@ private fun ArchiveVehiclePicker(
             device = deviceName?.let { VehicleDeviceFilter.Device(it) }
         ),
         onPick = { car ->
-            onPick(car.canCode, listOf(car.brand, car.model, car.name).filter { it.isNotBlank() }.joinToString(" "))
+            onPick(car.canCode, car.fullName())
         },
         onBack = onBack
     )

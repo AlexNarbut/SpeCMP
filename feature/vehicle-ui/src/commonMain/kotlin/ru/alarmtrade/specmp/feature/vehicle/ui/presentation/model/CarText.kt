@@ -14,7 +14,6 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_type_btn_microbo
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_type_label_alarm
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_type_label_microbot
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
-import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 
 /** Годы выпуска: «2017–2023» или «2018». */
@@ -24,9 +23,6 @@ internal fun yearsText(years: IntRange): String = if (years.first == years.last)
 } else {
     stringResource(Strings.string.vehicle_common_format_years_range, years.first, years.last)
 }
-
-/** «Toyota Camry 2.5 AT»: марка, модель и комплектация без пустых частей. */
-internal fun CarSummary.fullName(): String = listOf(brand, model, name).filter { it.isNotBlank() }.joinToString(" ")
 
 @Composable
 internal fun groupLabel(group: CarFeatureGroup): String = stringResource(

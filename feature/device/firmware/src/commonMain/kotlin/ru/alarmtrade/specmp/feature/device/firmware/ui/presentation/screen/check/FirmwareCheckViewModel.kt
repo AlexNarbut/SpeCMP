@@ -26,6 +26,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
@@ -125,7 +126,7 @@ class FirmwareCheckViewModel(
     private fun initialCard(module: FirmwareModule): ModuleCardUi = ModuleCardUi(
         id = module.id,
         kind = module.kind,
-        title = "${module.title} (${module.systemName})",
+        title = module.displayTitle,
         currentVersion = CurrentVersionUi.Reading,
         status = if (module.isBootSupported) CardStatusUi.Searching else CardStatusUi.NotSupported
     )

@@ -49,10 +49,10 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.ThirdColumnMinWidth
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardUi
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CenteredCard
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode

@@ -45,9 +45,9 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumb
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumbs
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.yearsText
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CrumbTarget
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode

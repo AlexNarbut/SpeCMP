@@ -44,12 +44,12 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.LoadFailed
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PHOTO_RATIO
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardTab
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardUi

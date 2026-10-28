@@ -64,6 +64,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarTrim
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.BrandLogo
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.CarPhoto
@@ -79,7 +80,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.fadeItem
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.fadeItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.highlighted
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.looksLikeCanCode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.matchesQuery
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.yearsText
