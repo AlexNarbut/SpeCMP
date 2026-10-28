@@ -21,8 +21,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
-        // обязательно для модулей с compose resources (см. docs/build.md)
-        androidResources.enable = true
     }
 
     listOf(
@@ -93,10 +91,4 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
     }
-}
-
-// Общие строковые ресурсы (см. docs/localization.md, правило 2)
-compose.resources {
-    publicResClass = false
-    generateResClass = always
 }

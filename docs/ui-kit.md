@@ -50,12 +50,12 @@ CmpText(text = "Hello")
 CmpScaffold(
     topBar = {
         CmpTopAppBar(
-            title = { CmpText(text = stringResource(Res.string.login_login_title_screen)) },
+            title = { CmpText(text = stringResource(Strings.string.login_login_title_screen)) },
             navigationIcon = {
                 CmpIconButton(
                     onClick = onBack,
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Res.string.login_common_a11y_back),
+                    contentDescription = stringResource(Strings.string.login_common_a11y_back),
                 )
             },
         )

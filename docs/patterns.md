@@ -18,7 +18,7 @@
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
-- **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Res.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
+- **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
 - **Стабильность для Compose:** state и presentation-модели — `@Immutable`, domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
 - **У каждого `@Serializable` — `@SerialName("<модуль>.<Класс>")`** — см. «Сериализация».
@@ -506,6 +506,11 @@ override fun observeUnreadMessagesCount(): Flow<Response<Int>> {
 про текущий аккаунт (открытое соединение, кэш, незакрытая сессия, офлайн-очередь), после смены
 аккаунта протечёт в новую сессию, если его не сбросить явно.
 
+- **ViewModel авторизованной зоны живут одну сессию аккаунта**: `AuthStateNavGraph` даёт зоне
+  `ViewModelScope(session)` (`core/ui`), и каждый вход получает новые VM — их загрузка при старте
+  (`init` / `stateIn(Lazily)`) выполняется заново. Сбрасывать state VM «на логаут» вручную не нужно;
+  своё хранилище VM для зоны, переживающей смену аккаунта, не заводить (`docs/navigation.md`).
+
 - **Identity пользователя — из `AccountRepository` (`feature/account`)**, а не полем
   `private var currentUserEmail` в репозитории фичи и не собственным вызовом
   `userInteractor.getUserUseCase`. Профиль резолвится один раз при открытии сессии фичи.
@@ -653,7 +658,7 @@ class UserViewModel(
 when (val user = state.value) {
     LCEState.None, LCEState.Loading -> CmpCircularProgressIndicator()
     is LCEState.Content -> UserCard(user.content)
-    is LCEState.Error -> ErrorBox(user.error.text(Res.string.profile_error_load))
+    is LCEState.Error -> ErrorBox(user.error.text(Strings.string.profile_common_error_load))
 }
 ```
 
@@ -1030,13 +1035,13 @@ internal sealed interface SettingsError {
 internal fun SettingsError.text(loadFailed: StringResource): String = when (this) {
     is SettingsError.Common -> error.message()
     SettingsError.LoadFailed -> stringResource(loadFailed)
-    SettingsError.Mismatch -> stringResource(Res.string.settings_error_mismatch)
+    SettingsError.Mismatch -> stringResource(Strings.string.settings_common_error_mismatch)
 }
 
 // state: LCEState<SettingsSection, SettingsError>
 ```
 
-Строк «нет интернета», «Bluetooth выключен» и т.п. фича не заводит — они в `core/ui` (`coreui_common_error_*`).
+Строк «нет интернета», «Bluetooth выключен» и т.п. фича не заводит — они общие (`common_common_error_*` в `core/localization`).
 
 ```kotlin
 // domain/model — полная детализация для бизнес-правил
@@ -1082,8 +1087,8 @@ enum class RegistrationError { RequiredFields, RequestFailed }
 _state.update { it.copy(error = RegistrationError.RequiredFields) }
 // UI:
 val text = when (error) {
-    RegistrationError.RequiredFields -> stringResource(Res.string.login_common_error_required_fields)
-    RegistrationError.RequestFailed -> stringResource(Res.string.login_common_error_registration_failed)
+    RegistrationError.RequiredFields -> stringResource(Strings.string.login_common_error_required_fields)
+    RegistrationError.RequestFailed -> stringResource(Strings.string.login_common_error_registration_failed)
 }
 ```
 

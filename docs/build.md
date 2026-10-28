@@ -102,44 +102,32 @@ iosMain.dependencies {
 
 ## Ресурсы
 
-Расположение: `composeApp/src/commonMain/composeResources/`
-
-```
-composeResources/
-├── drawable/   # XML vector drawables
-├── values/     # strings.xml
-└── font/       # TTF / OTF шрифты
-```
+- **Строки** — только в `core/localization` (`composeResources/values*/<префикс фичи>.xml`, публичный класс `Strings`).
+  Правила — `docs/localization.md`. Модулю для строк нужна лишь зависимость `implementation(project(":core:localization"))`.
+- **Картинки и шрифты** — в `composeResources/` своего модуля (`drawable/`, `font/`), класс `Res` модуля.
 
 ```kotlin
-import specmp.composeapp.generated.resources.Res
-import specmp.composeapp.generated.resources.app_name
-
-stringResource(Res.string.app_name)
-painterResource(Res.drawable.ic_logo)
+stringResource(Strings.string.login_login_title_screen)   // core/localization
+painterResource(Res.drawable.ic_logo)                      // ресурс модуля
 ```
 
-### Ресурсы в других модулях (`core/*`, `feature/*`)
+### Модуль со своими ресурсами (картинки)
 
-Сейчас `composeResources/` есть только в `composeApp`. При выносе ресурсов в
-library-модуль учитывать:
-
-- Каждый KMP-library-модуль с `composeResources/` **обязан** включить
-  `androidResources.enable = true` в блоке `android { … }` — иначе ресурсы не
-  попадут в Android APK (в `composeApp/build.gradle.kts` это уже стоит).
-- Настроить блок `compose.resources`:
+- В блоке `android { … }` — `androidResources.enable = true`, иначе ресурсы не попадут в Android APK.
+- Блок `compose.resources`:
 
   ```kotlin
+  // Ресурсы фичи — только картинки (drawable); строки — в core/localization (docs/localization.md)
   compose.resources {
-      publicResClass = true          // true для общих модулей (core/ui); false для feature-модулей
+      publicResClass = false
       generateResClass = always
   }
   ```
 
-- Пакет `Res`-класса формируется из `rootProject.name` + путь модуля:
-  `composeApp` → `specmp.composeapp.generated.resources`,
-  `core/ui` → `specmp.core.ui.generated.resources`,
-  `feature/login` → `specmp.feature.login.generated.resources`.
+- Пакет `Res`-класса формируется из `rootProject.name` + путь модуля: `feature/login` →
+  `specmp.feature.login.generated.resources`. У `core/localization` пакет и имя заданы явно:
+  `ru.alarmtrade.specmp.core.localization.resources.Strings` (`packageOfResClass`, `nameOfResClass`).
+- Модулю без своих ресурсов ни блок, ни `androidResources.enable` не нужны.
 
 ---
 

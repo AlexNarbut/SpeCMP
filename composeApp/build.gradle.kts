@@ -20,7 +20,6 @@ kotlin {
         namespace = "ru.alarmtrade.specmp"
         compileSdk = libs.versions.android.targetSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
-        androidResources.enable = true
         compilerOptions { jvmTargetVersion }
     }
 

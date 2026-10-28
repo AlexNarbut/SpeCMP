@@ -21,8 +21,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
-        // обязательно для модулей с compose resources (см. docs/build.md)
-        androidResources.enable = true
     }
 
     iosArm64()
@@ -50,10 +48,4 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
     }
-}
-
-// Строковые ресурсы фичи (см. docs/localization.md)
-compose.resources {
-    publicResClass = false
-    generateResClass = always
 }

@@ -551,7 +551,7 @@ LaunchedEffect(listState) {
 ### Доступность кликабельных областей
 
 Кликабельная область, которая не является `Cmp*`-кнопкой, получает `onClickLabel` (строка из
-ресурсов) и `role`: `Modifier.clickable(onClickLabel = stringResource(Res.string.…_a11y_retry),
+ресурсов) и `role`: `Modifier.clickable(onClickLabel = stringResource(Strings.string.…_a11y_retry),
 role = Role.Button) { … }`. Иначе скринридер озвучит безымянную область.
 
 ---
