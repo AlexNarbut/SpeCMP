@@ -46,6 +46,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmw
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
@@ -144,7 +145,16 @@ private fun AuthedNavGraph() {
                         ConfiguratorVehicles(catalog, deviceName, onPick, onPickerBack)
                     },
                     filePicker = rememberSettingsFilePicker(),
-                    fileSaver = rememberSettingsFileSaver()
+                    fileSaver = rememberSettingsFileSaver(),
+                    // «Записать в блок» виден только при активной сессии блока; единой CAN-прошивки
+                    // («Проверка прошивок») вне монтажа нет — переход к ней возвращает в конфигуратор.
+                    deviceEditor = { load, onEditorBack ->
+                        DeviceSettingsEditor(
+                            onExit = onEditorBack,
+                            onOpenFirmwareUpdate = onEditorBack,
+                            loadOnOpen = load
+                        )
+                    }
                 )
             }
             entry<VehicleSelectRoute> { key ->
@@ -174,36 +184,7 @@ private fun AuthedNavGraph() {
                         onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
                         firmwareCheck = { onBack -> FirmwareCheckScreen(onBack = onBack) },
                         settingsEditor = { onBack, onOpenFirmwareUpdate ->
-                            DeviceSettingsEntry(
-                                onExit = onBack,
-                                onOpenFirmwareUpdate = onOpenFirmwareUpdate,
-                                // CAN-код из каталога: автомобили под модель блока, выбор подставляет код и carId.
-                                vehiclePicker = { deviceName, onPick, onPickerBack ->
-                                    VehicleSelectEntry(
-                                        request = VehicleSelectRequest(
-                                            mode = VehicleSelectMode.PICK,
-                                            catalog = VehicleCatalog.ALL,
-                                            device = deviceName?.let { VehicleDeviceFilter.Device(it) }
-                                        ),
-                                        onPick = onPick,
-                                        onBack = onPickerBack
-                                    )
-                                },
-                                // «Загрузить из…» → «Мои» / облако: экраны конфигуратора в режиме выбора.
-                                configurationPicker = { request, onPick, onOpenFirmware, onPickerBack ->
-                                    ConfigurationPickerEntry(
-                                        request = request,
-                                        onPick = onPick,
-                                        onOpenFirmwareUpdate = onOpenFirmware,
-                                        onBack = onPickerBack,
-                                        vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
-                                            ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
-                                        }
-                                    )
-                                },
-                                filePicker = rememberSettingsFilePicker(),
-                                fileSaver = rememberSettingsFileSaver()
-                            )
+                            DeviceSettingsEditor(onExit = onBack, onOpenFirmwareUpdate = onOpenFirmwareUpdate)
                         },
                         vehicles = { onBack -> DeviceVehicles(device, onBack) }
                     )
@@ -257,6 +238,41 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
             }
         )
     }
+}
+
+/**
+ * Редактор настроек подключённого блока: раздел «Настройки» монтажа и «Записать в блок» из конфигуратора
+ * ([loadOnOpen] — конфигурация, сразу открываемая в «Что изменится»).
+ */
+@Composable
+private fun DeviceSettingsEditor(
+    onExit: () -> Unit,
+    onOpenFirmwareUpdate: () -> Unit,
+    loadOnOpen: SettingsSource? = null
+) {
+    DeviceSettingsEntry(
+        onExit = onExit,
+        onOpenFirmwareUpdate = onOpenFirmwareUpdate,
+        // CAN-код из каталога: автомобили под модель блока, выбор подставляет код и carId.
+        vehiclePicker = { deviceName, onPick, onPickerBack ->
+            ConfiguratorVehicles(VehicleCatalog.ALL, deviceName, onPick, onPickerBack)
+        },
+        // «Загрузить из…» → «Мои» / облако: экраны конфигуратора в режиме выбора.
+        configurationPicker = { request, onPick, onOpenFirmware, onPickerBack ->
+            ConfigurationPickerEntry(
+                request = request,
+                onPick = onPick,
+                onOpenFirmwareUpdate = onOpenFirmware,
+                onBack = onPickerBack,
+                vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
+                    ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
+                }
+            )
+        },
+        filePicker = rememberSettingsFilePicker(),
+        fileSaver = rememberSettingsFileSaver(),
+        loadOnOpen = loadOnOpen
+    )
 }
 
 /**
