@@ -59,7 +59,9 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.decimalNumber
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.decimalText
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.edgeText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.matchesPattern
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.withUnits
 
 /** Больше делений — ползунок без отметок (значение всё равно округляется к шагу). */
 private const val MAX_SLIDER_STEPS = 20
@@ -93,11 +95,7 @@ internal fun IntRangeEditor(
     minValueText: String? = null,
     maxValueText: String? = null
 ) {
-    val edgeLabel = when (value) {
-        range.first -> minValueText
-        range.last -> maxValueText
-        else -> null
-    }
+    val edgeLabel = edgeText(value, range.first, range.last, minValueText, maxValueText)
     NumberEditor(
         bigText = edgeLabel ?: value.toString(),
         units = units.takeIf { edgeLabel == null },
@@ -112,8 +110,8 @@ internal fun IntRangeEditor(
             steps = (range.last - range.first - 1).takeIf { it in 0..MAX_SLIDER_STEPS } ?: 0,
             onChange = { onChange(it.roundToInt().coerceIn(range)) }
         ),
-        minLabel = minValueText ?: unitsOf(range.first.toString(), units),
-        maxLabel = maxValueText ?: unitsOf(range.last.toString(), units)
+        minLabel = minValueText ?: withUnits(range.first.toString(), units),
+        maxLabel = maxValueText ?: withUnits(range.last.toString(), units)
     )
 }
 
@@ -125,11 +123,7 @@ internal fun DecimalEditor(setting: DecimalSetting, value: Float, onChange: (Flo
             setting.maxValue
         )
     }
-    val edgeLabel = when (value) {
-        setting.minValue -> setting.minValueText
-        setting.maxValue -> setting.maxValueText
-        else -> null
-    }
+    val edgeLabel = edgeText(value, setting.minValue, setting.maxValue, setting.minValueText, setting.maxValueText)
     val stepsCount = ((setting.maxValue - setting.minValue) / setting.step).roundToInt() - 1
     NumberEditor(
         bigText = edgeLabel ?: decimalNumber(setting, value),
@@ -266,8 +260,6 @@ private fun <T> NumberEditor(
         }
     }
 }
-
-private fun unitsOf(number: String, units: String?): String = if (units.isNullOrBlank()) number else "$number $units"
 
 /** Список вариантов с радиокнопками; длинные названия переносятся, текущий вариант виден сразу. */
 @Composable

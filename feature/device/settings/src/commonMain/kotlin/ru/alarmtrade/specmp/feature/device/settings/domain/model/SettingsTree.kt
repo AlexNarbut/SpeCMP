@@ -85,12 +85,4 @@ fun SettingsSection.search(query: String): List<SettingsSearchHit> {
 
 private fun SettingNode.matches(query: String): Boolean = name.contains(query, ignoreCase = true) ||
     (number.isNotEmpty() && number.startsWith(query)) ||
-    channelName?.contains(query, ignoreCase = true) == true
-
-private val SettingNode.channelName: String?
-    get() = when (this) {
-        is InputSetting -> channel.name
-        is OutputSetting -> channel.name
-        is SwitchOutputSetting -> channel.name
-        else -> null
-    }
+    channelOrNull?.name?.contains(query, ignoreCase = true) == true

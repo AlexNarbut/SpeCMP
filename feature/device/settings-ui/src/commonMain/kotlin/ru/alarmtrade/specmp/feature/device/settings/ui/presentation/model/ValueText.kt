@@ -58,11 +58,9 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
 
     setting is OptionSetting && value is SettingValue.Option -> setting.options.getOrElse(value.index) { "" }
 
-    setting is IntegerSetting && value is SettingValue.Integer -> when (value.value) {
-        setting.range.first -> setting.minValueText ?: withUnits(value.value.toString(), setting.units)
-        setting.range.last -> setting.maxValueText ?: withUnits(value.value.toString(), setting.units)
-        else -> withUnits(value.value.toString(), setting.units)
-    }
+    setting is IntegerSetting && value is SettingValue.Integer ->
+        edgeText(value.value, setting.range.first, setting.range.last, setting.minValueText, setting.maxValueText)
+            ?: withUnits(value.value.toString(), setting.units)
 
     setting is DecimalSetting && value is SettingValue.Decimal -> decimalText(setting, value.value)
 
@@ -124,11 +122,9 @@ private fun polarityText(polarity: Polarity): String? = when (polarity) {
 }
 
 @Composable
-internal fun decimalText(setting: DecimalSetting, value: Float): String = when (value) {
-    setting.minValue -> setting.minValueText
-    setting.maxValue -> setting.maxValueText
-    else -> null
-} ?: withUnits(decimalNumber(setting, value), setting.units)
+internal fun decimalText(setting: DecimalSetting, value: Float): String =
+    edgeText(value, setting.minValue, setting.maxValue, setting.minValueText, setting.maxValueText)
+        ?: withUnits(decimalNumber(setting, value), setting.units)
 
 /** Число дробной настройки с количеством знаков по шагу и разделителем языка (без единиц). */
 @Composable
@@ -137,8 +133,6 @@ internal fun decimalNumber(setting: DecimalSetting, value: Float): String = form
     decimalsOf(setting.step),
     stringResource(Strings.string.settings_common_format_decimal_separator)
 )
-
-private fun withUnits(number: String, units: String?): String = if (units.isNullOrBlank()) number else "$number $units"
 
 internal fun TimeOfDay.text(): String =
     "${hours.toString().padStart(TIME_DIGITS, '0')}:${minutes.toString().padStart(TIME_DIGITS, '0')}"

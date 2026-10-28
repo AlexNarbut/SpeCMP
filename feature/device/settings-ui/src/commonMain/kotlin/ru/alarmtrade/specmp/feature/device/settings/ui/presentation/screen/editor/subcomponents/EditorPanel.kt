@@ -52,6 +52,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitle
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -106,11 +107,7 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
         CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ChannelEditorHeader(
                 number = setting.number,
-                title = if (channel.name.isBlank() || channel.name == setting.name) {
-                    setting.name
-                } else {
-                    "${channel.name} · ${setting.name}"
-                },
+                title = settingTitle(setting.name, channel),
                 channel = channel,
                 draft = editing.draft,
                 editablePolarity = editablePolarity,

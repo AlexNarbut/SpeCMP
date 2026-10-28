@@ -76,16 +76,15 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SectionChanges
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingChange
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsDiff
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.channelOrNull
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.logicsChange
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitle
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DiffState
 
@@ -566,15 +565,7 @@ private fun polarityText(polarity: Polarity): String = when (polarity) {
 }
 
 /** Название строки: у каналов — «IN1 · Концевик дверей». */
-private fun SettingChange.title(): String {
-    val channel = when (val setting = after) {
-        is InputSetting -> setting.channel.name
-        is OutputSetting -> setting.channel.name
-        is SwitchOutputSetting -> setting.channel.name
-        else -> null
-    }
-    return if (channel.isNullOrBlank() || channel == after.name) after.name else "$channel · ${after.name}"
-}
+private fun SettingChange.title(): String = settingTitle(after.name, after.channelOrNull)
 
 private fun SettingChange.matches(query: String): Boolean =
     after.name.contains(query, ignoreCase = true) || (after.number.isNotEmpty() && after.number.startsWith(query))

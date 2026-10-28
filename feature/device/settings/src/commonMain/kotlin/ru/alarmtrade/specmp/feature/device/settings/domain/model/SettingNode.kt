@@ -25,6 +25,15 @@ sealed interface Setting : SettingNode {
     val value: SettingValue
 }
 
+/** Канал входа, выхода или переключаемого выхода; у прочих настроек — `null`. */
+val SettingNode.channelOrNull: Channel?
+    get() = when (this) {
+        is InputSetting -> channel
+        is OutputSetting -> channel
+        is SwitchOutputSetting -> channel
+        else -> null
+    }
+
 data class SwitchSetting(
     override val id: Int,
     override val number: String,
