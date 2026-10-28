@@ -1173,6 +1173,7 @@ val dep = koinInject<MyDependency>()
 **Правила:**
 
 - `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
+- **Один Koin-модуль на gradle-модуль, в его корневом пакете `di/`** (`feature/<name>/…/<name>/di/<Name>Module.kt`). Не заводить `ui/di`, `data/di` внутри модуля: ViewModel и репозитории одного gradle-модуля регистрируются вместе. Отдельный UI-модуль Koin бывает только у отдельного gradle-модуля `<name>-ui`.
 - App-level инфраструктура и SDK-контейнеры регистрируются в `core/*`/`composeApp`,
   не в фиче — см. раздел «Core».
 - Не добавляй use case, если он только прокидывает один вызов в repository. В таком случае

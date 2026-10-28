@@ -1,12 +1,14 @@
 package ru.alarmtrade.specmp.feature.device.selection.di
 
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.device.selection.data.repository.SpecialistDeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.ScanDeviceViewModel
 
 /**
- * Koin-модуль логической фичи `feature/device/selection`.
- * Отдаёт репозиторий-фасад скана; SDK-интеракторы берёт из `core/specialist`.
+ * Koin-модуль фичи `feature/device/selection`: репозиторий-фасад скана и ViewModel экрана поиска.
+ * SDK-интеракторы берёт из `core/specialist`, сессию устройства — из `device:interaction`.
  */
 val deviceSelectionModule = module {
     single<DeviceScanRepository> {
@@ -17,4 +19,5 @@ val deviceSelectionModule = module {
             usbConnectorInteractor = { get() }
         )
     }
+    viewModelOf(::ScanDeviceViewModel)
 }

@@ -38,11 +38,9 @@ import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.configurator.di.configuratorModule
 import ru.alarmtrade.specmp.feature.configurator.ui.di.configuratorUiModule
 import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
-import ru.alarmtrade.specmp.feature.device.firmware.ui.di.deviceFirmwareUiModule
 import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
 import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
-import ru.alarmtrade.specmp.feature.device.selection.ui.di.deviceSelectionUiModule
 import ru.alarmtrade.specmp.feature.device.settings.di.deviceSettingsModule
 import ru.alarmtrade.specmp.feature.device.settings.ui.di.deviceSettingsUiModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
@@ -99,7 +97,6 @@ fun App(
                 add(deviceSelectionModule)
                 add(deviceInteractionModule)
                 add(deviceFirmwareModule)
-                add(deviceFirmwareUiModule)
                 add(deviceSettingsModule)
                 add(vehicleModule)
                 add(accountModule)
@@ -107,7 +104,6 @@ fun App(
                 add(configuratorModule)
                 add(configuratorUiModule)
                 add(deviceSettingsUiModule)
-                add(deviceSelectionUiModule)
                 add(deviceInteractionUiModule)
                 add(advancedMountModule)
             }
