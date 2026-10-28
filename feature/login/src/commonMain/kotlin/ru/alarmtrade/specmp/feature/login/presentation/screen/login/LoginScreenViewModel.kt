@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
@@ -24,9 +25,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         _state.update {
             it.copy(
                 login = value,
-                authError = null,
-                activationResendState = LCEState.None(),
-                activationResendError = null
+                authState = it.authState.dismissError(),
+                activationResendState = LCEState.None
             )
         }
     }
@@ -35,9 +35,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         _state.update {
             it.copy(
                 password = value,
-                authError = null,
-                activationResendState = LCEState.None(),
-                activationResendError = null
+                authState = it.authState.dismissError(),
+                activationResendState = LCEState.None
             )
         }
     }
@@ -56,10 +55,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         safeLaunch {
             _state.update {
                 it.copy(
-                    authState = LCEState.Loading(),
-                    authError = null,
-                    activationResendState = LCEState.None(),
-                    activationResendError = null
+                    authState = LCEState.Loading,
+                    activationResendState = LCEState.None
                 )
             }
 
@@ -74,8 +71,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
 
                 is Response.Error -> _state.update {
                     it.copy(
-                        authState = LCEState.None(),
-                        authError = AuthFormError.from(response.exception)
+                        authState = LCEState.Error(AuthFormError.from(response.exception))
                     )
                 }
             }
@@ -88,8 +84,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         safeLaunch {
             _state.update {
                 it.copy(
-                    activationResendState = LCEState.Loading(),
-                    activationResendError = null
+                    activationResendState = LCEState.Loading
                 )
             }
 
@@ -106,8 +101,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
 
                 is Response.Error -> _state.update {
                     it.copy(
-                        activationResendState = LCEState.None(),
-                        activationResendError = AuthFormError.from(response.exception)
+                        activationResendState = LCEState.Error(AuthFormError.from(response.exception))
                     )
                 }
             }
@@ -117,10 +111,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     fun dismissActivationRequest() {
         _state.update {
             it.copy(
-                authState = LCEState.None(),
-                authError = null,
-                activationResendState = LCEState.None(),
-                activationResendError = null
+                authState = LCEState.None,
+                activationResendState = LCEState.None
             )
         }
     }

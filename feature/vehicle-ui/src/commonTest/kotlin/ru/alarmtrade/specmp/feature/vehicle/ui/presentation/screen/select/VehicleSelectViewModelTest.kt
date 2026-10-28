@@ -20,8 +20,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.NetworkException
+import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.NetworkFailure
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.error.RequestError
@@ -183,7 +184,7 @@ class VehicleSelectViewModelTest {
 
     @Test
     fun `connection failure is kept as a network error`() = test {
-        repository.failure = NetworkException(NetworkFailure.NoConnection, IllegalStateException("offline"))
+        repository.failure = AppException(ApiError.NoConnection, IllegalStateException("offline"))
         repository.failBrands = true
         val (vm, _) = viewModel()
         assertEquals(Load.Failed(RequestError.Network(NetworkFailure.NoConnection)), vm.s.brands)

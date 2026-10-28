@@ -153,7 +153,7 @@ private fun MainDatabaseSyncBadge.label(): String = when (this) {
     MainDatabaseSyncBadge.Updated -> stringResource(Res.string.main_common_status_database_updated)
 
     is MainDatabaseSyncBadge.UpdateFailed ->
-        networkFailure?.message() ?: stringResource(Res.string.main_common_status_database_update_failed)
+        error?.message() ?: stringResource(Res.string.main_common_status_database_update_failed)
 
     MainDatabaseSyncBadge.AppUpdateRequired -> stringResource(
         Res.string.main_common_status_database_app_update_required

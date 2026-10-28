@@ -1,87 +1,45 @@
 package ru.alarmtrade.specmp.core.ui.lce
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.core.common.NetworkFailure
 
 /**
- * Loading-Content-Error (LCE) state for UI layer.
+ * Loading-Content-Error (LCE) — состояние загрузки для UI-слоя (VM state → Compose).
  *
- * This class is used in ViewModels to represent UI states.
- * Unlike Response (which is for business logic), LCEState includes Loading state.
+ * [T] — контент, [E] — ошибка **фичи**: её `sealed interface` в `presentation/model` со своими подтипами и
+ * подтипом-обёрткой над общей ошибкой (`data class Common(val error: AppError)`). Compose разбирает ошибку
+ * исчерпывающим `when` и приводит к локализованной строке; общие случаи — `AppError.message()`.
+ * Правила — docs/patterns.md, «Ошибки фичи» и «LCE».
  *
- * ## States:
- * - **None**: Initial state, no data and no loading
- * - **Loading**: Data is being fetched
- * - **Content**: Data successfully loaded
- * - **Error**: An error occurred
- *
- * ## Usage in ViewModel:
  * ```kotlin
- * class UserViewModel : ViewModel() {
- *     private val _userState = MutableStateFlow<LCEState<User>>(LCEState.None())
- *     val userState: StateFlow<LCEState<User>> = _userState.asStateFlow()
+ * val brands: LCEState<List<CarBrand>, CatalogError> = LCEState.None
  *
- *     fun loadUser(id: String) {
- *         viewModelScope.launch {
- *             _userState.update { LCEState.Loading() }
- *             val response = getUserUseCase(id)
- *             _userState.update { response.asLCEState { it.message ?: "Error" } }
- *         }
- *     }
+ * _state.update { it.copy(brands = LCEState.Loading) }
+ * val response = repository.brands(query)
+ * _state.update { it.copy(brands = response.asLCEState(CatalogError::from)) }
+ *
+ * // Compose
+ * when (val brands = state.brands) {
+ *     LCEState.None, LCEState.Loading -> Progress()
+ *     is LCEState.Content -> BrandList(brands.content)
+ *     is LCEState.Error -> ErrorBox(brands.error.title())
  * }
  * ```
- *
- * ## Usage in Compose:
- * ```kotlin
- * val userState by viewModel.userState.collectAsState()
- * when (userState) {
- *     is LCEState.None -> { /* Show placeholder */ }
- *     is LCEState.Loading -> { CircularProgressIndicator() }
- *     is LCEState.Content -> { UserCard(userState.content) }
- *     is LCEState.Error -> { ErrorMessage(userState.error) }
- * }
- * ```
- *
- * @see ru.alarmtrade.specmp.core.common.Response for business logic results
  */
 @Immutable
-sealed class LCEState<out T> {
-    /**
-     * Initial state - no data, not loading.
-     */
-    class None : LCEState<Nothing>() {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-            return true
-        }
+sealed interface LCEState<out T, out E> {
+    /** Загрузка ещё не запускалась. */
+    data object None : LCEState<Nothing, Nothing>
 
-        override fun hashCode(): Int = 0
-    }
+    /** Первая загрузка: показать нечего. */
+    data object Loading : LCEState<Nothing, Nothing>
 
     /**
-     * Loading state - data is being fetched.
+     * Контент показан. [isUpdating] — поверх него идёт фоновая операция (догрузка страницы, обновление);
+     * [updateError] — она не удалась, а контент остаётся (баннер с повтором вместо экрана ошибки).
      */
-    class Loading : LCEState<Nothing>() {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-            return true
-        }
+    data class Content<out T, out E>(val content: T, val isUpdating: Boolean = false, val updateError: E? = null) :
+        LCEState<T, E>
 
-        override fun hashCode(): Int = 1
-    }
-
-    /**
-     * Content state - data successfully loaded.
-     * @param content The loaded data
-     */
-    data class Content<T>(val content: T) : LCEState<T>()
-
-    /**
-     * Error state - an error occurred.
-     * @param error Error message to display to the user
-     * @param networkFailure Категория сбоя связи, если ошибка сетевая (текст — `NetworkFailure.message()`)
-     */
-    class Error(val error: String, val networkFailure: NetworkFailure? = null) : LCEState<Nothing>()
+    /** Загрузка не удалась, контента нет. */
+    data class Error<out E>(val error: E) : LCEState<Nothing, E>
 }

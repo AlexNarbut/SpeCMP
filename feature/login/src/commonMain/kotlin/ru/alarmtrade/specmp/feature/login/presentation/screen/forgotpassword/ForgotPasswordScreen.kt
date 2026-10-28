@@ -115,7 +115,7 @@ private fun ForgotPasswordForm(
             label = stringResource(Res.string.login_common_label_email),
             singleLine = true,
             enabled = !value.isLoading,
-            isError = value.resetError != null && !value.resetError.isNetwork,
+            isError = value.resetError?.blamesInput == true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done

@@ -3,8 +3,9 @@ package ru.alarmtrade.specmp.feature.login.presentation.model
 import androidx.compose.runtime.Composable
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.error.RequestError
-import ru.alarmtrade.specmp.core.ui.error.text
+import ru.alarmtrade.specmp.core.common.AppError
+import ru.alarmtrade.specmp.core.common.appError
+import ru.alarmtrade.specmp.core.ui.error.message
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_error_required_fields
 
@@ -15,23 +16,24 @@ import specmp.feature.login.generated.resources.login_common_error_required_fiel
 sealed interface AuthFormError {
     data object RequiredFields : AuthFormError
 
-    /** Запрос не прошёл: отказ сервера или сбой связи (см. [RequestError]). */
-    data class Request(val error: RequestError) : AuthFormError
+    /** Сервер отклонил запрос (неверные данные и т.п.). */
+    data object Rejected : AuthFormError
 
-    /** Сбой связи: поля формы не подсвечиваются — они не виноваты. */
-    val isNetwork: Boolean get() = this is Request && error is RequestError.Network
+    /** Общая ошибка приложения (нет связи, сервер не отвечает…) — текст общий. */
+    data class Common(val error: AppError) : AuthFormError
+
+    /** Виноват ввод — поля формы подсвечиваются; при общей ошибке поля не виноваты. */
+    val blamesInput: Boolean get() = this !is Common
 
     companion object {
-        /** Сервер отклонил запрос — не сбой связи. */
-        val Rejected = Request(RequestError.Failed)
-
-        fun from(error: Throwable): AuthFormError = Request(RequestError.from(error))
+        fun from(error: Throwable): AuthFormError = error.appError?.let(::Common) ?: Rejected
     }
 }
 
-/** Текст ошибки; [requestFailed] — фраза экрана для отказа сервера. */
+/** Текст ошибки; [rejected] — фраза экрана для отказа сервера. */
 @Composable
-fun AuthFormError.text(requestFailed: StringResource): String = when (this) {
+fun AuthFormError.text(rejected: StringResource): String = when (this) {
     AuthFormError.RequiredFields -> stringResource(Res.string.login_common_error_required_fields)
-    is AuthFormError.Request -> error.text(requestFailed)
+    AuthFormError.Rejected -> stringResource(rejected)
+    is AuthFormError.Common -> error.message()
 }

@@ -39,6 +39,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRep
 import ru.alarmtrade.specmp.feature.supportchat.domain.timeline.SupportChatTimeline
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.isResendable
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toDomain
@@ -353,7 +354,13 @@ class SupportChatScreenViewModel(
                         connection = SupportChatConnection.Offline,
                         hasConnectionIssue = true,
                         // Показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии).
-                        history = if (it.history is LCEState.Content) it.history else LCEState.Error(HISTORY_ERROR)
+                        history = if (it.history is LCEState.Content) {
+                            it.history
+                        } else {
+                            LCEState.Error(
+                                SupportChatError.HistoryUnavailable
+                            )
+                        }
                     )
                 }
             }
@@ -427,7 +434,7 @@ class SupportChatScreenViewModel(
         when {
             // Сессию не удалось начать — начать заново.
             sessionJob?.isActive != true -> {
-                _state.update { it.copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading()) }
+                _state.update { it.copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading) }
                 sessionJob = safeLaunch { collectSession() }
             }
 
@@ -452,7 +459,7 @@ class SupportChatScreenViewModel(
                 isLoadingMore = false,
                 // Лента (восстановленный outbox, live-сообщение) остаётся на экране.
                 history = if (!current.isInitialHistoryLoaded && current.history !is LCEState.Content) {
-                    LCEState.Loading()
+                    LCEState.Loading
                 } else {
                     current.history
                 }
@@ -493,7 +500,13 @@ class SupportChatScreenViewModel(
                         isLoadingMore = false,
                         isHistoryPagingFailed = true,
                         // Показывать нечего — полноэкранная ошибка с «Повторить».
-                        history = if (hadContent) current.history else LCEState.Error(HISTORY_ERROR)
+                        history = if (hadContent) {
+                            current.history
+                        } else {
+                            LCEState.Error(
+                                SupportChatError.from(response.exception)
+                            )
+                        }
                     )
                 }
                 if (hadContent) _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
@@ -698,6 +711,5 @@ class SupportChatScreenViewModel(
         val PENDING = setOf(SupportChatMessageStatus.Pending)
         val SENT = setOf(SupportChatMessageStatus.Sent)
         const val LOCAL_ID_PREFIX = "local-"
-        const val HISTORY_ERROR = "History load failed"
     }
 }

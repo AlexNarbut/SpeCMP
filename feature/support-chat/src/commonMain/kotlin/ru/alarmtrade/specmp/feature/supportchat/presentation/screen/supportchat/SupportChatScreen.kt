@@ -374,7 +374,7 @@ private fun SupportChatHistory(
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
     scrollToNewestRequests: MutableIntState
 ) {
-    when (state.value.history) {
+    when (val history = state.value.history) {
         is LCEState.None, is LCEState.Loading -> {
             CmpBox(
                 modifier = Modifier.fillMaxSize(),
@@ -392,6 +392,7 @@ private fun SupportChatHistory(
 
         is LCEState.Error -> {
             SupportChatErrorState(
+                error = history.error,
                 onRetry = actions.onHistoryRetry,
                 colors = colors,
                 modifier = Modifier

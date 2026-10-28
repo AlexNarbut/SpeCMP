@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
@@ -11,6 +10,7 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.presentation.model.MAIN_UNKNOWN_APP_VERSION
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 
 @Immutable
@@ -19,18 +19,19 @@ data class MainScreenState(
     val isMenuOpen: Boolean = false,
     val isAppUpdateSupported: Boolean = false,
     val appVersionName: String = MAIN_UNKNOWN_APP_VERSION,
-    val profileState: LCEState<MainProfile> = LCEState.None(),
-    val databaseSyncState: LCEState<MainDatabaseSyncStatus> = LCEState.None(),
+    val profileState: LCEState<MainProfile, MainError> = LCEState.None,
+    val databaseSyncState: LCEState<MainDatabaseSyncStatus, MainError> = LCEState.None,
     val databaseVersion: Long? = null,
-    val appFeaturesState: LCEState<MainUserAppFeatures> = LCEState.None(),
-    val userCommercialState: LCEState<MainUserCommercial> = LCEState.None(),
-    val appUpdateState: LCEState<MainAppUpdateCheckResult> = LCEState.None(),
-    val chatAvailabilityState: LCEState<Boolean> = LCEState.None(),
-    val chatUnreadState: LCEState<Int> = LCEState.None(),
+    val appFeaturesState: LCEState<MainUserAppFeatures, MainError> = LCEState.None,
+    val userCommercialState: LCEState<MainUserCommercial, MainError> = LCEState.None,
+    val appUpdateState: LCEState<MainAppUpdateCheckResult, MainError> = LCEState.None,
+    val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
+    val chatUnreadState: LCEState<Int, MainError> = LCEState.None,
     val cardVariant: MainCardVariant = MainCardVariant.Centered,
-    val logoutState: LCEState<Unit> = LCEState.None(),
-    val logoutError: RequestError? = null
+    val logoutState: LCEState<Unit, MainError> = LCEState.None
 ) {
+    val logoutError: MainError? get() = (logoutState as? LCEState.Error)?.error
+
     val profile: MainProfile
         get() = profileState.content ?: MainProfile()
 
@@ -41,7 +42,7 @@ data class MainScreenState(
     val databaseSyncBadge: MainDatabaseSyncBadge
         get() {
             if (databaseSyncState is LCEState.Error) {
-                return MainDatabaseSyncBadge.UpdateFailed(databaseSyncState.networkFailure)
+                return MainDatabaseSyncBadge.UpdateFailed((databaseSyncState.error as? MainError.Common)?.error)
             }
 
             return when (databaseSyncState.content) {

@@ -17,4 +17,10 @@
     <string name="coreui_common_error_no_connection">Нет подключения к интернету</string>
     <string name="coreui_common_error_timeout">Сервер не отвечает</string>
     <string name="coreui_common_error_server">Ошибка сервера</string>
+    <string name="coreui_common_error_bluetooth_off">Bluetooth выключен</string>
+    <string name="coreui_common_error_bluetooth_unsupported">Bluetooth не поддерживается на этом устройстве</string>
+    <string name="coreui_common_error_location_off">Включите геолокацию для поиска устройств</string>
+    <string name="coreui_common_error_permission_denied">Нет разрешения на доступ к устройствам</string>
+    <string name="coreui_common_error_device_not_found">Устройство не найдено</string>
+    <string name="coreui_common_error_device_disconnected">Связь с блоком прервана</string>
 </resources>

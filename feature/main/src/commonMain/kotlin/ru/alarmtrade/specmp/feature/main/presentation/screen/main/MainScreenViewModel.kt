@@ -28,7 +28,6 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.mapContent
@@ -36,6 +35,7 @@ import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
@@ -81,21 +81,21 @@ class MainScreenViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, true)
 
-    private val chatAvailabilityState: Flow<LCEState<Boolean>> = mainRepository
+    private val chatAvailabilityState: Flow<LCEState<Boolean, MainError>> = mainRepository
         .observeChatAvailability()
         .map { response ->
-            response.asLCEState { e -> e.message ?: "Error" }
+            response.asLCEState(MainError::from)
         }
         .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None()) }
+        .onStart { emit(LCEState.None) }
 
-    private val chatUnreadState: Flow<LCEState<Int>> = mainRepository
+    private val chatUnreadState: Flow<LCEState<Int, MainError>> = mainRepository
         .observeUnreadMessagesCount()
         .map { response ->
-            response.asLCEState { e -> e.message ?: "Error" }
+            response.asLCEState(MainError::from)
         }
         .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None()) }
+        .onStart { emit(LCEState.None) }
 
     // Поллинг чата живёт только пока экран подписан: WhileSubscribed останавливает
     // источники при уходе с экрана и перезапускает при возврате.
@@ -171,8 +171,7 @@ class MainScreenViewModel(
         safeLaunch {
             _state.update {
                 it.copy(
-                    logoutState = LCEState.Loading(),
-                    logoutError = null
+                    logoutState = LCEState.Loading
                 )
             }
 
@@ -181,13 +180,13 @@ class MainScreenViewModel(
                     logger.d { "Logout succeeded" }
                     _state.update {
                         it.copy(
-                            logoutState = LCEState.None(),
-                            profileState = LCEState.None(),
-                            databaseSyncState = LCEState.None(),
+                            logoutState = LCEState.None,
+                            profileState = LCEState.None,
+                            databaseSyncState = LCEState.None,
                             databaseVersion = null,
-                            appFeaturesState = LCEState.None(),
-                            userCommercialState = LCEState.None(),
-                            appUpdateState = LCEState.None()
+                            appFeaturesState = LCEState.None,
+                            userCommercialState = LCEState.None,
+                            appUpdateState = LCEState.None
                         )
                     }
                 }
@@ -196,8 +195,7 @@ class MainScreenViewModel(
                     logger.d { "Logout failed" }
                     _state.update {
                         it.copy(
-                            logoutState = LCEState.None(),
-                            logoutError = RequestError.from(response.exception)
+                            logoutState = LCEState.Error(MainError.from(response.exception))
                         )
                     }
                 }
@@ -206,12 +204,12 @@ class MainScreenViewModel(
     }
 
     private suspend fun loadUserProfile() {
-        _state.update { it.copy(profileState = LCEState.Loading()) }
+        _state.update { it.copy(profileState = LCEState.Loading) }
 
         val response = loadWithTimeout { mainRepository.currentUserProfile() }
         _state.update {
             it.copy(
-                profileState = response.asLCEState { e -> e.message ?: "Error" }
+                profileState = response.asLCEState(MainError::from)
                     .mapContent { profile ->
                         MainProfile(name = profile.name, email = profile.email)
                     }
@@ -220,23 +218,23 @@ class MainScreenViewModel(
     }
 
     private suspend fun loadUserAppFeatures() {
-        _state.update { it.copy(appFeaturesState = LCEState.Loading()) }
+        _state.update { it.copy(appFeaturesState = LCEState.Loading) }
 
         val response = loadWithTimeout { mainRepository.currentUserAppFeatures() }
         _state.update {
             it.copy(
-                appFeaturesState = response.asLCEState { e -> e.message ?: "Error" }
+                appFeaturesState = response.asLCEState(MainError::from)
             )
         }
     }
 
     private suspend fun loadUserCommercial() {
-        _state.update { it.copy(userCommercialState = LCEState.Loading()) }
+        _state.update { it.copy(userCommercialState = LCEState.Loading) }
 
         val response = loadWithTimeout { mainRepository.currentUserCommercial() }
         _state.update {
             it.copy(
-                userCommercialState = response.asLCEState { e -> e.message ?: "Error" }
+                userCommercialState = response.asLCEState(MainError::from)
             )
         }
     }
@@ -244,13 +242,13 @@ class MainScreenViewModel(
     // Синхронизация — процесс: стадии зеркалятся в state по мере эмита,
     // поток всегда завершается одним из MainDatabaseSyncStatus.Finished.
     private suspend fun refreshDatabaseVersion() {
-        _state.update { it.copy(databaseSyncState = LCEState.Loading()) }
+        _state.update { it.copy(databaseSyncState = LCEState.Loading) }
 
         val lastStatus = mainRepository.synchronizeSettingsVersion()
             .flowOn(dispatchers.io)
             .onEach { response ->
                 _state.update {
-                    it.copy(databaseSyncState = response.asLCEState { e -> e.message ?: "Error" })
+                    it.copy(databaseSyncState = response.asLCEState(MainError::from))
                 }
             }
             .lastOrNull()
@@ -274,27 +272,20 @@ class MainScreenViewModel(
     private suspend fun checkAppUpdate() {
         if (!_state.value.isAppUpdateSupported) return
 
-        _state.update { it.copy(appUpdateState = LCEState.Loading()) }
+        _state.update { it.copy(appUpdateState = LCEState.Loading) }
         logger.d { "Checking for app update" }
 
         val response = loadWithTimeout { mainRepository.checkAppUpdate() }
         _state.update {
             it.copy(
-                appUpdateState = response.asLCEState { e -> e.message ?: "Error" }
+                appUpdateState = response.asLCEState(MainError::from)
             )
         }
     }
 
     private fun resetLogoutTransientState() {
         _state.update {
-            if (it.logoutState is LCEState.None && it.logoutError == null) {
-                it
-            } else {
-                it.copy(
-                    logoutState = LCEState.None(),
-                    logoutError = null
-                )
-            }
+            if (it.logoutState is LCEState.None) it else it.copy(logoutState = LCEState.None)
         }
     }
 

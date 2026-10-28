@@ -9,6 +9,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.timeline.SupportChatTimeline
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 
 /**
@@ -25,7 +26,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUi
 @Immutable
 data class SupportChatScreenState(
     // None/Loading → скелетон, Content → лента, Error → полный экран.
-    val history: LCEState<SupportChatTimeline> = LCEState.None(),
+    val history: LCEState<SupportChatTimeline, SupportChatError> = LCEState.None,
     // Первая страница истории получена: пока false, подгрузка — это первичная загрузка.
     val isInitialHistoryLoaded: Boolean = false,
     // Курсор следующей (более старой) страницы истории.

@@ -1,115 +1,30 @@
 package ru.alarmtrade.specmp.core.ui.lce
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.networkFailure
 
-/*
- * Extension functions for LCEState.
- */
+/** `Response` → `LCEState`; [toError] приводит исключение к ошибке фичи (обычно `XxxError::from`). */
+inline fun <T, E> Response<T>.asLCEState(toError: (Throwable) -> E): LCEState<T, E> = when (this) {
+    is Response.Success -> LCEState.Content(value)
+    is Response.Error -> LCEState.Error(toError(exception))
+}
 
-/**
- * Maps content of LCEState to another type.
- */
-fun <T, R> LCEState<T>.mapContent(mapper: (T) -> R): LCEState<R> = when (this) {
-    is LCEState.Content -> LCEState.Content(mapper(content))
+/** Преобразует контент, сохраняя признаки фоновой операции. */
+inline fun <T, E, R> LCEState<T, E>.mapContent(mapper: (T) -> R): LCEState<R, E> = when (this) {
+    is LCEState.Content -> LCEState.Content(mapper(content), isUpdating, updateError)
     is LCEState.Error -> this
-    is LCEState.Loading -> this
-    is LCEState.None -> this
+    LCEState.Loading -> LCEState.Loading
+    LCEState.None -> LCEState.None
 }
 
-/**
- * Executes a suspend function and updates the MutableStateFlow with LCEState.
- *
- * @param execute The suspend function to execute that returns Response<R>
- * @param needReload If true, always shows loading. If false, only shows loading if current state is not success
- * @param errorMapper Maps exception to user-friendly error message
- * @param dispatcher The CoroutineDispatcher to use for mapping
- * @param map Maps the Response value to the desired UI state type
- */
-suspend fun <R, L> MutableStateFlow<LCEState<L>>.applyFromExecuting(
-    execute: suspend () -> Response<R>,
-    needReload: Boolean = true,
-    errorMapper: (Throwable) -> String,
-    dispatcher: CoroutineDispatcher,
-    map: suspend (R) -> L
-) {
-    val currentState = this.value
-    if (!currentState.isSuccess() || needReload) {
-        update { LCEState.Loading() }
-    }
+/** Контент, если он показан; иначе null. */
+val <T> LCEState<T, *>.content: T?
+    get() = (this as? LCEState.Content)?.content
 
-    update {
-        when (val response = execute()) {
-            is Response.Success -> {
-                val content = withContext(dispatcher) { map(response.value) }
-                LCEState.Content(content)
-            }
+val LCEState<*, *>.isLoading: Boolean
+    get() = this is LCEState.Loading
 
-            is Response.Error -> createLCEError(errorMapper.invoke(response.exception))
-        }
-    }
-}
+val LCEState<*, *>.isContent: Boolean
+    get() = this is LCEState.Content
 
-/**
- * Creates an LCEState.Error with the given error message.
- */
-fun createLCEError(error: String): LCEState.Error = LCEState.Error(error)
-
-/**
- * Executes action if state is Content.
- */
-inline fun <T> LCEState<T>.content(action: (T) -> Unit) {
-    if (this is LCEState.Content) action(content)
-}
-
-/**
- * Executes action if state is Content (alias for content).
- */
-inline fun <T> LCEState<T>.ifSuccess(action: (T) -> Unit) {
-    if (this is LCEState.Content) action(content)
-}
-
-/**
- * Returns true if state is Error.
- */
-fun <T> LCEState<T>.isError(): Boolean = this is LCEState.Error
-
-/**
- * Returns true if state is Content.
- */
-fun <T> LCEState<T>.isSuccess(): Boolean = this is LCEState.Content
-
-/**
- * Returns true if state is not Loading (i.e., it's a final state).
- */
-fun <T> LCEState<T>.isFinalState(): Boolean = this !is LCEState.Loading
-
-/**
- * Returns true if state is Loading.
- */
-fun <T> LCEState<T>.isLoading(): Boolean = this is LCEState.Loading
-
-/**
- * Wraps value in LCEState.Content.
- */
-fun <T> T.asLCEState() = LCEState.Content(this)
-
-/**
- * Converts Response to LCEState.
- *
- * @param errorMapper Maps exception to user-friendly error message
- */
-fun <T> Response<T>.asLCEState(errorMapper: (Throwable) -> String): LCEState<T> = when (this) {
-    is Response.Success -> LCEState.Content(this.value)
-    is Response.Error -> LCEState.Error(errorMapper.invoke(this.exception), exception.networkFailure)
-}
-
-/**
- * Gets content if state is Content, otherwise returns null.
- */
-val <T> LCEState<T>.content: T?
-    get() = if (this is LCEState.Content) content else null
+/** Ошибка → [LCEState.None] (пользователь начал править форму); прочие состояния — как есть. */
+fun <T, E> LCEState<T, E>.dismissError(): LCEState<T, E> = if (this is LCEState.Error) LCEState.None else this

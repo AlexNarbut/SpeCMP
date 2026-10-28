@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpValidationError
@@ -42,7 +43,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
     }
 
     fun onInstallerConfirmedChanged(value: Boolean) {
-        _state.update { it.copy(isInstallerConfirmed = value, registrationError = null) }
+        _state.update { it.copy(isInstallerConfirmed = value, registrationState = it.registrationState.dismissError()) }
     }
 
     fun reset() {
@@ -57,7 +58,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
             _state.update {
                 it.copy(
                     fieldErrors = fieldErrors.mapTo(mutableSetOf()) { error -> error.toFieldError() },
-                    registrationError = null
+                    registrationState = it.registrationState.dismissError()
                 )
             }
             return
@@ -66,8 +67,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         safeLaunch {
             _state.update {
                 it.copy(
-                    registrationState = LCEState.Loading(),
-                    registrationError = null
+                    registrationState = LCEState.Loading
                 )
             }
 
@@ -82,8 +82,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
 
                 is Response.Error -> _state.update {
                     it.copy(
-                        registrationState = LCEState.None(),
-                        registrationError = AuthFormError.from(response.exception)
+                        registrationState = LCEState.Error(AuthFormError.from(response.exception))
                     )
                 }
             }
@@ -94,7 +93,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         field: RegistrationFieldError,
         edit: RegistrationScreenState.() -> RegistrationScreenState
     ): RegistrationScreenState = edit().copy(
-        registrationError = null,
+        registrationState = registrationState.dismissError(),
         fieldErrors = fieldErrors - field
     )
 

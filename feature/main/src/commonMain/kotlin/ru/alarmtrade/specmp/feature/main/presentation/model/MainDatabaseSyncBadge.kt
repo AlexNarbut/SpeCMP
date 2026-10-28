@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.presentation.model
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.core.common.NetworkFailure
+import ru.alarmtrade.specmp.core.common.AppError
 
 @Immutable
 sealed interface MainDatabaseSyncBadge {
@@ -13,8 +13,8 @@ sealed interface MainDatabaseSyncBadge {
 
     data object Updated : MainDatabaseSyncBadge
 
-    /** [networkFailure] — синхронизация упала из-за связи; null — прочая ошибка. */
-    data class UpdateFailed(val networkFailure: NetworkFailure?) : MainDatabaseSyncBadge
+    /** [error] — общая причина сбоя синхронизации (нет связи…); null — прочая ошибка. */
+    data class UpdateFailed(val error: AppError?) : MainDatabaseSyncBadge
 
     data object AppUpdateRequired : MainDatabaseSyncBadge
 }

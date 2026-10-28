@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
@@ -20,7 +21,7 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
     val state: StateFlow<ForgotPasswordScreenState> = _state.asStateFlow()
 
     fun onEmailChanged(value: String) {
-        _state.update { it.copy(email = value, resetError = null) }
+        _state.update { it.copy(email = value, resetState = it.resetState.dismissError()) }
     }
 
     fun reset() {
@@ -33,16 +34,14 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
         safeLaunch {
             _state.update {
                 it.copy(
-                    resetState = LCEState.Loading(),
-                    resetError = null
+                    resetState = LCEState.Loading
                 )
             }
 
             if (credentials.validationError() != null) {
                 _state.update {
                     it.copy(
-                        resetState = LCEState.None(),
-                        resetError = AuthFormError.RequiredFields
+                        resetState = LCEState.Error(AuthFormError.RequiredFields)
                     )
                 }
                 return@safeLaunch
@@ -59,8 +58,7 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
 
                 is Response.Error -> _state.update {
                     it.copy(
-                        resetState = LCEState.None(),
-                        resetError = AuthFormError.from(response.exception)
+                        resetState = LCEState.Error(AuthFormError.from(response.exception))
                     )
                 }
             }

@@ -45,6 +45,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.ScanError
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiItem
 
 /**
@@ -92,12 +93,15 @@ class ScanDeviceViewModel(
         emit(true)
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    private val devicesState: Flow<LCEState<List<DeviceUiItem>>> = combine(stepFlow, scanRestartsFlow) { step, _ ->
+    private val devicesState: Flow<LCEState<List<DeviceUiItem>, ScanError>> = combine(stepFlow, scanRestartsFlow) {
+            step,
+            _
+        ->
         step
     }
         .flatMapLatest { step ->
             if (step !is ScanStep.Scanning) {
-                flowOf(LCEState.None())
+                flowOf(LCEState.None)
             } else {
                 combine(
                     scanRepository.scanBluetooth().onStart { emit(Response.Success(emptyList())) },
@@ -357,15 +361,15 @@ class ScanDeviceViewModel(
     private fun mergeDevices(
         bleResponse: Response<List<ScannedDevice.Ble>>,
         usbResponse: Response<List<ScannedDevice.Usb>>
-    ): LCEState<List<DeviceUiItem>> {
+    ): LCEState<List<DeviceUiItem>, ScanError> {
         // Ошибка одного транспорта не прячет устройства, найденные другим.
         val ble = (bleResponse as? Response.Success)?.value.orEmpty()
         val usb = (usbResponse as? Response.Success)?.value.orEmpty()
         val items = ble.map(ScannedDevice::toUiItem) + usb.map(ScannedDevice::toUiItem)
         if (items.isNotEmpty()) return LCEState.Content(items)
         val error = (bleResponse as? Response.Error) ?: (usbResponse as? Response.Error)
-        // Текст ошибки экран не показывает: Error рисуется как продолжающийся поиск.
-        return if (error != null) LCEState.Error(error.message.orEmpty()) else LCEState.Loading()
+        // Экран рисует Error как продолжающийся поиск.
+        return if (error != null) LCEState.Error(ScanError.from(error.exception)) else LCEState.Loading
     }
 
     private companion object {
