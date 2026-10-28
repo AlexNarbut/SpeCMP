@@ -19,6 +19,8 @@
     <string name="advancedmount_sections_subtitle_firmware_update">Обновите прошивки системы до актуальных версий</string>
     <string name="advancedmount_sections_title_settings">Расширенные настройки</string>
     <string name="advancedmount_sections_subtitle_settings">Выполните полную настройку системы</string>
+    <string name="advancedmount_sections_title_configurator">Конфигуратор настроек</string>
+    <string name="advancedmount_sections_subtitle_configurator">Свои и облачные конфигурации, запись в блок</string>
     <string name="advancedmount_sections_title_bypass_learning">Бесключевой обход</string>
     <string name="advancedmount_sections_subtitle_bypass_learning">Обучение бесключевому обходу штатного иммобилайзера</string>
     <string name="advancedmount_sections_title_clone">Процедура Clone</string>

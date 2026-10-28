@@ -139,23 +139,8 @@ private fun AuthedNavGraph() {
                 )
             }
             entry<ConfiguratorRoute> { _ ->
-                ConfiguratorEntry(
-                    onExit = { backStack.popSafe() },
-                    vehiclePicker = { catalog, deviceName, onPick, onPickerBack ->
-                        ConfiguratorVehicles(catalog, deviceName, onPick, onPickerBack)
-                    },
-                    filePicker = rememberSettingsFilePicker(),
-                    fileSaver = rememberSettingsFileSaver(),
-                    // «Записать в блок» виден только при активной сессии блока; единой CAN-прошивки
-                    // («Проверка прошивок») вне монтажа нет — переход к ней возвращает в конфигуратор.
-                    deviceEditor = { load, onEditorBack ->
-                        DeviceSettingsEditor(
-                            onExit = onEditorBack,
-                            onOpenFirmwareUpdate = onEditorBack,
-                            loadOnOpen = load
-                        )
-                    }
-                )
+                // С главной сессии блока нет — без «Записать в блок» (он — в разделе «Конфигуратор» монтажа).
+                AppConfigurator(onExit = { backStack.popSafe() })
             }
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(
@@ -185,6 +170,19 @@ private fun AuthedNavGraph() {
                         firmwareCheck = { onBack -> FirmwareCheckScreen(onBack = onBack) },
                         settingsEditor = { onBack, onOpenFirmwareUpdate ->
                             DeviceSettingsEditor(onExit = onBack, onOpenFirmwareUpdate = onOpenFirmwareUpdate)
+                        },
+                        // Конфигуратор при активной сессии: «Записать в блок» — редактор блока с конфигурацией.
+                        configurator = { onBack, onOpenFirmwareUpdate ->
+                            AppConfigurator(
+                                onExit = onBack,
+                                deviceEditor = { load, onEditorBack ->
+                                    DeviceSettingsEditor(
+                                        onExit = onEditorBack,
+                                        onOpenFirmwareUpdate = onOpenFirmwareUpdate,
+                                        loadOnOpen = load
+                                    )
+                                }
+                            )
                         },
                         vehicles = { onBack -> DeviceVehicles(device, onBack) }
                     )
@@ -238,6 +236,23 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
             }
         )
     }
+}
+
+/** Конфигуратор: с главной (без [deviceEditor]) и раздел монтажа (с «Записать в блок»). */
+@Composable
+private fun AppConfigurator(
+    onExit: () -> Unit,
+    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null
+) {
+    ConfiguratorEntry(
+        onExit = onExit,
+        vehiclePicker = { catalog, deviceName, onPick, onPickerBack ->
+            ConfiguratorVehicles(catalog, deviceName, onPick, onPickerBack)
+        },
+        filePicker = rememberSettingsFilePicker(),
+        fileSaver = rememberSettingsFileSaver(),
+        deviceEditor = deviceEditor
+    )
 }
 
 /**

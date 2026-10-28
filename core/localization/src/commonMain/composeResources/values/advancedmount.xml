@@ -19,6 +19,8 @@
     <string name="advancedmount_sections_subtitle_firmware_update">Update system firmware to the latest versions</string>
     <string name="advancedmount_sections_title_settings">Advanced settings</string>
     <string name="advancedmount_sections_subtitle_settings">Configure the system completely</string>
+    <string name="advancedmount_sections_title_configurator">Settings configurator</string>
+    <string name="advancedmount_sections_subtitle_configurator">Your and cloud configurations, write to the device</string>
     <string name="advancedmount_sections_title_bypass_learning">Keyless bypass</string>
     <string name="advancedmount_sections_subtitle_bypass_learning">Learn keyless bypass of the factory immobilizer</string>
     <string name="advancedmount_sections_title_clone">Clone procedure</string>

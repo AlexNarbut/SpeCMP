@@ -63,6 +63,9 @@ private val navConfig = SavedStateConfiguration {
  * @param settingsEditor раздел «Настройки» (фича `device/settings-ui`, подключается в `composeApp`); получает выход на
  *   корень монтажа и переход в «Проверку прошивок» (заменяет раздел настроек: CAN-код блока с единой CAN-прошивкой
  *   меняется прошивкой).
+ * @param configurator раздел «Конфигуратор» (фича `configurator-ui`, подключается в `composeApp`): тот же конфигуратор,
+ *   что с главной, но при активной сессии — с «Записать в блок»; получает выход на корень монтажа и переход
+ *   в «Проверку прошивок» (из редактора блока, единая CAN-прошивка).
  * @param vehicles раздел «Автомобили» (фича `vehicle-ui`, подключается в `composeApp` с моделью и CAN-кодом блока);
  *   получает выход на корень монтажа.
  */
@@ -72,6 +75,7 @@ fun AdvancedMountNavGraph(
     onOpenSupportChat: () -> Unit,
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
     settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
+    configurator: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
@@ -101,14 +105,17 @@ fun AdvancedMountNavGraph(
                 when (key.section) {
                     MountSection.FIRMWARE_UPDATE -> firmwareCheck { backStack.popSafe() }
 
-                    MountSection.SETTINGS -> settingsEditor(
-                        { backStack.popSafe() },
-                        {
-                            backStack.replaceCurrent(
-                                AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
-                            )
-                        }
-                    )
+                    MountSection.SETTINGS -> settingsEditor({ backStack.popSafe() }) {
+                        backStack.replaceCurrent(
+                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
+                        )
+                    }
+
+                    MountSection.CONFIGURATOR -> configurator({ backStack.popSafe() }) {
+                        backStack.replaceCurrent(
+                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
+                        )
+                    }
 
                     MountSection.VEHICLES -> vehicles { backStack.popSafe() }
 

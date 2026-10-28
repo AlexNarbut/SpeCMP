@@ -13,6 +13,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeatur
 enum class MountSection(val needsCan: Boolean = false) {
     FIRMWARE_UPDATE,
     SETTINGS(needsCan = true),
+    CONFIGURATOR,
     BYPASS_LEARNING(needsCan = true),
     CLONE(needsCan = true),
     DYNAMIC_DEVICES(needsCan = true),
@@ -38,6 +39,7 @@ internal fun Set<DeviceFeature>?.toSections(): List<MountSection> {
             MountSection.FIRMWARE_UPDATE -> DeviceFeature.FIRMWARE_UPDATE in this
 
             MountSection.SETTINGS,
+            MountSection.CONFIGURATOR,
             MountSection.TECH_REQUESTS,
             MountSection.COMMUNITY_MAPS -> DeviceFeature.SETTINGS in this
 

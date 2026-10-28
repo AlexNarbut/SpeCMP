@@ -24,6 +24,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_m
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_bypass_learning
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_clone
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_community_maps
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_configurator
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_dynamic_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_settings
@@ -34,6 +35,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_s
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_bypass_learning
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_clone
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_community_maps
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_configurator
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_dynamic_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_settings
@@ -58,6 +60,7 @@ import specmp.feature.advanced_mount.generated.resources.mount_remote_sync
 import specmp.feature.advanced_mount.generated.resources.mount_section_bypass_learning
 import specmp.feature.advanced_mount.generated.resources.mount_section_clone
 import specmp.feature.advanced_mount.generated.resources.mount_section_community_maps
+import specmp.feature.advanced_mount.generated.resources.mount_section_configurator
 import specmp.feature.advanced_mount.generated.resources.mount_section_dynamic_devices
 import specmp.feature.advanced_mount.generated.resources.mount_section_firmware_update
 import specmp.feature.advanced_mount.generated.resources.mount_section_settings
@@ -80,6 +83,12 @@ private val MountSection.res: SectionRes
             Strings.string.advancedmount_sections_title_settings,
             Strings.string.advancedmount_sections_subtitle_settings,
             Res.drawable.mount_section_settings
+        )
+
+        MountSection.CONFIGURATOR -> SectionRes(
+            Strings.string.advancedmount_sections_title_configurator,
+            Strings.string.advancedmount_sections_subtitle_configurator,
+            Res.drawable.mount_section_configurator
         )
 
         MountSection.BYPASS_LEARNING -> SectionRes(
