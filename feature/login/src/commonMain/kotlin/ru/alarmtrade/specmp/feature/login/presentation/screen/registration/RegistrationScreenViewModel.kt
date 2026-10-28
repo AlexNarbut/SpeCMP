@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
@@ -67,21 +67,8 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
                 )
             }
 
-            val response = withContext(dispatchers.io) {
-                repository.signUp(credentials)
-            }
-
-            when (response) {
-                is Response.Success -> _state.update {
-                    it.copy(registrationState = LCEState.Content(Unit))
-                }
-
-                is Response.Error -> _state.update {
-                    it.copy(
-                        registrationState = LCEState.Error(AuthFormError.from(response.exception))
-                    )
-                }
-            }
+            val response = withContext(dispatchers.io) { repository.signUp(credentials) }
+            _state.update { it.copy(registrationState = response.asLCEState(AuthFormError::from)) }
         }
     }
 

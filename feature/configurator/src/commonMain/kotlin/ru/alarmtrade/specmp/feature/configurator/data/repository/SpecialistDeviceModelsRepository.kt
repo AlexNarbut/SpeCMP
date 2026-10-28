@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.configurator.data.repository
 
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -24,6 +26,8 @@ class SpecialistDeviceModelsRepository(
     private val settings: Settings
 ) : DeviceModelsRepository {
 
+    private val recentLock = Mutex()
+
     override suspend fun models(): Response<List<String>> {
         val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
         return sdk.getSubsystemNamesUseCase.execute(EmptyRequest()).toResponse()
@@ -35,17 +39,17 @@ class SpecialistDeviceModelsRepository(
         return safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess().orEmpty()
     }
 
-    override fun pushRecent(deviceName: String) {
-        val updated = (
-            listOf(deviceName) + recent().filter {
-                it != deviceName
-            }
-            ).take(DeviceModelsRepository.MAX_RECENT)
-        settings.putString(RECENT_KEY, json.encodeToString(serializer, updated))
+    override suspend fun pushRecent(deviceName: String): List<String> = updateRecent { recent ->
+        (listOf(deviceName) + recent.filter { it != deviceName }).take(DeviceModelsRepository.MAX_RECENT)
     }
 
-    override fun removeRecent(deviceName: String) {
-        settings.putString(RECENT_KEY, json.encodeToString(serializer, recent().filter { it != deviceName }))
+    override suspend fun removeRecent(deviceName: String): List<String> = updateRecent { recent ->
+        recent.filter { it != deviceName }
+    }
+
+    // Settings не атомарен: две быстрые правки (выбор и «✕») без замка потеряли бы одну.
+    private suspend fun updateRecent(change: (List<String>) -> List<String>): List<String> = recentLock.withLock {
+        change(recent()).also { settings.putString(RECENT_KEY, json.encodeToString(serializer, it)) }
     }
 
     private companion object {

@@ -138,15 +138,6 @@ internal class DeviceSettingsViewModel(
     /** Снимок, отданный системному сохранению файла; [Export.commit] — правки считаются сохранёнными («как…»). */
     private val export = MutableStateFlow<Export?>(null)
 
-    /** Откуда было последнее сравнение — «Повторить» после ошибки. */
-    private val lastPreviewSource = MutableStateFlow<SettingsSource?>(null)
-
-    /**
-     * Закрыть ли сессию источника после сравнения: её открыло копирование SDK; источник, открытый другим редактором
-     * («Записать в блок» из конфигурации), не закрывается.
-     */
-    private val pendingPreviewClose = MutableStateFlow(true)
-
     /** Поиск: запрос в state попадает вместе с результатом (после debounce), а не на каждый символ. */
     private val search: Flow<Pair<String, List<SettingsSearchHit>>> =
         combine(searchQuery, _state.map { it.menu.content }.distinctUntilChanged { a, b -> a === b }) { query, root ->
@@ -191,6 +182,8 @@ internal class DeviceSettingsViewModel(
     private suspend fun readMenu() = executeWithProceedLock(needSkipAnother = false) {
         requestedCarIds.update { emptySet() }
         loadedIds.update { emptySet() }
+        // Сравнение с прежним меню устарело (а прерванное обрывом связи осталось бы в Busy) — сбрасываем.
+        discardPreview()
         _state.update {
             it.copy(
                 menu = LCEState.Loading,
@@ -198,6 +191,7 @@ internal class DeviceSettingsViewModel(
                 sectionChanges = emptyMap(),
                 editing = null,
                 dialog = null,
+                diff = null,
                 isWriting = false,
                 isResetting = false
             )
@@ -509,9 +503,16 @@ internal class DeviceSettingsViewModel(
         val sourceDeviceName = from.deviceNameOrNull
         if (sourceDeviceName != null && !sourceDeviceName.equals(deviceName, ignoreCase = true)) {
             _state.update {
-                it.copy(dialog = SettingsDialog.ModelMismatch(from, sourceDeviceName, deviceName, forWrite = false))
+                it.copy(
+                    dialog = SettingsDialog.ModelMismatch(
+                        from,
+                        sourceDeviceName,
+                        deviceName,
+                        forWrite = false,
+                        closeAfter = closeAfter
+                    )
+                )
             }
-            pendingPreviewClose.update { closeAfter }
             return
         }
         work { preview(from, closeAfter) }
@@ -524,22 +525,20 @@ internal class DeviceSettingsViewModel(
         if (dialog.forWrite) {
             _effect.tryEmit(DeviceSettingsEffect.WriteToDevice(source))
         } else {
-            val closeAfter = pendingPreviewClose.value
-            work { preview(dialog.source, closeAfter) }
+            work { preview(dialog.source, dialog.closeAfter) }
         }
     }
 
     /** «Повторить» в ошибке сравнения. */
     fun onDiffRetry() {
-        val from = preview.value?.from ?: lastPreviewSource.value ?: return
-        work { preview(from, closeAfter = true) }
+        val error = _state.value.diff as? DiffState.Error ?: return
+        work { preview(error.from, error.closeAfter) }
     }
 
     private suspend fun preview(from: SettingsSource, closeAfter: Boolean) = executeWithProceedLock {
         val deviceName = deviceModel() ?: return@executeWithProceedLock
         val current = currentRoot() ?: return@executeWithProceedLock
         val title = from.title()
-        lastPreviewSource.update { from }
         discardPreview()
         _state.update { it.copy(diff = DiffState.Busy(title), dialog = null) }
         val snapshot = withContext(dispatchers.io) { repository.snapshot(from, deviceName) }
@@ -557,7 +556,7 @@ internal class DeviceSettingsViewModel(
                 if (from is SettingsSource.File) {
                     it.copy(diff = null, dialog = SettingsDialog.LoadError(LoadErrorKind.FILE))
                 } else {
-                    it.copy(diff = DiffState.Error(title))
+                    it.copy(diff = DiffState.Error(title, from, closeAfter))
                 }
             }
             return@executeWithProceedLock
@@ -570,18 +569,27 @@ internal class DeviceSettingsViewModel(
     /** «Загрузить» в «Что изменится»: значения конфигурации — в сессию блока (в блок — только по «Записать»). */
     fun onDiffConfirm() {
         val ready = _state.value.diff as? DiffState.Ready ?: return
-        val snapshot = preview.getAndUpdate { null }?.snapshot ?: return
-        _state.update { it.copy(diff = null, isApplying = true) }
-        work { apply(snapshot, ready.diff.total) }
+        // Снимок забирается и флаг ставится уже в запущенной работе: без связи work не стартует — сравнение остаётся.
+        work {
+            val snapshot = preview.getAndUpdate { null }?.snapshot ?: return@work
+            apply(snapshot, ready.diff.total)
+        }
     }
 
-    private suspend fun apply(snapshot: SettingsSource.File, total: Int) = executeWithProceedLock(
-        needSkipAnother = false
-    ) {
-        val response = try {
-            withContext(dispatchers.io) { repository.copy(from = snapshot, to = source, saveChanges = false) }
+    /** Флаг и снимок снимаются в finally: работу с блоком отменяет обрыв связи (в т.ч. пока ждёт lock). */
+    private suspend fun apply(snapshot: SettingsSource.File, total: Int) {
+        _state.update { it.copy(diff = null, isApplying = true) }
+        try {
+            executeWithProceedLock(needSkipAnother = false) { copyIntoSource(snapshot, total) }
         } finally {
             discard(snapshot)
+            _state.update { it.copy(isApplying = false) }
+        }
+    }
+
+    private suspend fun copyIntoSource(snapshot: SettingsSource.File, total: Int) {
+        val response = withContext(dispatchers.io) {
+            repository.copy(from = snapshot, to = source, saveChanges = false)
         }
         when (response) {
             is Response.Error -> {
@@ -591,7 +599,7 @@ internal class DeviceSettingsViewModel(
                 } else {
                     LoadErrorKind.OTHER
                 }
-                _state.update { it.copy(isApplying = false, dialog = SettingsDialog.LoadError(kind)) }
+                _state.update { it.copy(dialog = SettingsDialog.LoadError(kind)) }
             }
 
             is Response.Success -> {
@@ -605,7 +613,6 @@ internal class DeviceSettingsViewModel(
                     }
                 }
                 showMenu(current?.let { root.reusing(it) } ?: root)
-                _state.update { it.copy(isApplying = false) }
                 _effect.tryEmit(DeviceSettingsEffect.Loaded(total))
             }
         }
@@ -712,18 +719,26 @@ internal class DeviceSettingsViewModel(
     private suspend fun exportFile(exitAfter: Boolean) = executeWithProceedLock(needSkipAnother = false) {
         val deviceName = deviceModel() ?: return@executeWithProceedLock
         _state.update { it.copy(isSaving = true, dialog = null) }
-        when (val response = withContext(dispatchers.io) { repository.snapshot(source, deviceName) }) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Settings export failed: ${response.message}" }
-                _state.update { it.copy(isSaving = false, dialog = SettingsDialog.SaveError(SaveRetry.File)) }
-            }
+        try {
+            when (val response = withContext(dispatchers.io) { repository.snapshot(source, deviceName) }) {
+                is Response.Error -> {
+                    logger.w(response.exception) { "Settings export failed: ${response.message}" }
+                    _state.update { it.copy(dialog = SettingsDialog.SaveError(SaveRetry.File)) }
+                }
 
-            is Response.Success -> {
-                export.update { Export(response.value, exitAfter) }
-                _effect.tryEmit(
-                    DeviceSettingsEffect.ExportFile(response.value.path, settingsFileName(deviceName, exportTitle()))
-                )
+                is Response.Success -> {
+                    export.update { Export(response.value, exitAfter) }
+                    _effect.tryEmit(
+                        DeviceSettingsEffect.ExportFile(
+                            response.value.path,
+                            settingsFileName(deviceName, exportTitle())
+                        )
+                    )
+                }
             }
+        } finally {
+            // Снимок отдан системному сохранению — флаг снимет onFileExported; иначе (ошибка, отмена) — здесь.
+            if (export.value == null) _state.update { it.copy(isSaving = false) }
         }
     }
 

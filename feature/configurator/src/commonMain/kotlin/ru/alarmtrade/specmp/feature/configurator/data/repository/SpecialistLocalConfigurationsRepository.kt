@@ -83,12 +83,18 @@ class SpecialistLocalConfigurationsRepository(
     ): Response<SettingsSource.LocalConfiguration> {
         val old = configuration.toSource()
         val created = create(name, description, configuration.deviceName, from = old)
-        if (created is Response.Success) {
-            // Сессию старой записи открыло копирование — закрыть до удаления.
-            settings.close(old)
-            delete(configuration.id)
+        if (created !is Response.Success) return created
+        // Сессию старой записи открыло копирование — закрыть до удаления.
+        settings.close(old)
+        return when (val deleted = delete(configuration.id)) {
+            // Старая не удалилась — убираем копию, иначе в списке окажутся обе (старое и новое название).
+            is Response.Error -> {
+                delete(created.value.id)
+                deleted
+            }
+
+            is Response.Success -> created
         }
-        return created
     }
 
     override suspend fun delete(id: Long): Response<Unit> {

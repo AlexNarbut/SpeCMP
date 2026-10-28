@@ -103,7 +103,8 @@ internal sealed interface DiffState {
     /** [pendingChanges] — незаписанные правки в редакторе (загрузка их заменит). */
     data class Ready(override val title: String, val diff: SettingsDiff, val pendingChanges: Int) : DiffState
 
-    data class Error(override val title: String) : DiffState
+    /** «Повторить» — то же сравнение: [from] с тем же [closeAfter] (сессию чужого редактора не закрываем). */
+    data class Error(override val title: String, val from: SettingsSource, val closeAfter: Boolean) : DiffState
 }
 
 /**
@@ -156,7 +157,9 @@ internal sealed interface SettingsDialog {
         val source: SettingsSource,
         val sourceDeviceName: String,
         val deviceName: String,
-        val forWrite: Boolean
+        val forWrite: Boolean,
+        /** Для загрузки: закрыть ли сессию источника после сравнения (см. [DiffState.Error.closeAfter]). */
+        val closeAfter: Boolean = true
     ) : SettingsDialog
 
     data class LoadError(val kind: LoadErrorKind) : SettingsDialog

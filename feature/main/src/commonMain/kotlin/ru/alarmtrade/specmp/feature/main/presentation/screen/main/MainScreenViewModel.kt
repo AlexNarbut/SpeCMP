@@ -148,20 +148,9 @@ class MainScreenViewModel(
             }
 
             when (val response = withContext(dispatchers.io) { logoutUseCase.execute() }) {
-                is Response.Success -> {
-                    logger.d { "Logout succeeded" }
-                    _state.update {
-                        it.copy(
-                            logoutState = LCEState.None,
-                            profileState = LCEState.None,
-                            databaseSyncState = LCEState.None,
-                            databaseVersion = null,
-                            appFeaturesState = LCEState.None,
-                            userCommercialState = LCEState.None,
-                            appUpdateState = LCEState.None
-                        )
-                    }
-                }
+                // Остаёмся в Loading: кнопка заблокирована, пока auth-state не сменит зону; эта VM уйдёт вместе с
+                // авторизованной зоной (ViewModelScope по сессии) — state сбрасывать не нужно.
+                is Response.Success -> logger.d { "Logout succeeded" }
 
                 is Response.Error -> {
                     logger.d { "Logout failed" }
@@ -274,10 +263,9 @@ class MainScreenViewModel(
         }
     }
 
+    /** Ошибка выхода — разовая: при возврате на экран не показываем. Loading (выход идёт или удался) не трогаем. */
     private fun resetLogoutTransientState() {
-        _state.update {
-            if (it.logoutState is LCEState.None) it else it.copy(logoutState = LCEState.None)
-        }
+        _state.update { if (it.logoutState is LCEState.Error) it.copy(logoutState = LCEState.None) else it }
     }
 
     private suspend fun <T> loadWithTimeout(block: suspend () -> Response<T>): Response<T> =

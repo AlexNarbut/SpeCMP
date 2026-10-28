@@ -116,13 +116,10 @@ internal class ModelsViewModel(
         }
     }
 
-    /** Недавние — хранилище (Settings + JSON): правка и перечитка на io. */
-    private fun updateRecent(change: () -> Unit) {
+    /** Недавние — хранилище (Settings + JSON, атомарно само): правка на io, в state — новый список. */
+    private fun updateRecent(change: suspend () -> List<String>) {
         safeLaunch {
-            val recent = withContext(dispatchers.io) {
-                change()
-                models.recent()
-            }
+            val recent = withContext(dispatchers.io) { change() }
             _state.update { it.copy(recent = recent) }
         }
     }

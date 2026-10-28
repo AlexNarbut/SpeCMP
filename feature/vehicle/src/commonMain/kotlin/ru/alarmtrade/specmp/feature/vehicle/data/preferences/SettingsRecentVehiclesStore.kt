@@ -1,10 +1,14 @@
 package ru.alarmtrade.specmp.feature.vehicle.data.preferences
 
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
@@ -12,23 +16,28 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStor
 /** [RecentVehiclesStore] в именованном хранилище приложения: JSON-список на каталог. Битые данные — пустой список. */
 class SettingsRecentVehiclesStore(private val settings: Settings) : RecentVehiclesStore {
 
+    private val lock = Mutex()
+
     override fun recent(catalog: VehicleCatalog): List<CarSummary> {
         val raw = settings.getStringOrNull(catalog.key()) ?: return emptyList()
-        return runCatching { json.decodeFromString(serializer, raw) }.getOrDefault(emptyList()).map { it.toDomain() }
+        return safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess().orEmpty().map { it.toDomain() }
     }
 
-    override fun push(catalog: VehicleCatalog, car: CarSummary) {
-        val updated = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
-        store(catalog, updated)
+    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): List<CarSummary> = update(catalog) { recent ->
+        (listOf(car) + recent.filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
     }
 
-    override fun remove(catalog: VehicleCatalog, carId: Int) {
-        store(catalog, recent(catalog).filter { it.id != carId })
+    override suspend fun remove(catalog: VehicleCatalog, carId: Int): List<CarSummary> = update(catalog) { recent ->
+        recent.filter { it.id != carId }
     }
 
-    private fun store(catalog: VehicleCatalog, cars: List<CarSummary>) {
-        settings.putString(catalog.key(), json.encodeToString(serializer, cars.map { it.toStored() }))
-    }
+    // Settings не атомарен: две быстрые правки без замка потеряли бы одну.
+    private suspend fun update(catalog: VehicleCatalog, change: (List<CarSummary>) -> List<CarSummary>) =
+        lock.withLock {
+            change(recent(catalog)).also { cars ->
+                settings.putString(catalog.key(), json.encodeToString(serializer, cars.map { it.toStored() }))
+            }
+        }
 
     private fun VehicleCatalog.key() = "recent_${name.lowercase()}"
 

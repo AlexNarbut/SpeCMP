@@ -99,6 +99,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.MineCard
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.rememberDateTimeText
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationInfoDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionRow
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionsPanel
@@ -245,7 +246,7 @@ private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
 
         is LCEState.Error -> CmpStateBox(
             icon = CmpIcons.ErrorOutline,
-            title = stringResource(Strings.string.configurator_common_error_title),
+            title = state.list.error.text(Strings.string.configurator_common_error_title),
             tone = CmpStateTone.Error,
             modifier = Modifier.fillMaxSize()
         ) {

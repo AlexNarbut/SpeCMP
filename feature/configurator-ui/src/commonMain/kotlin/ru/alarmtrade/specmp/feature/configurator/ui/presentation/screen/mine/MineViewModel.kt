@@ -79,7 +79,7 @@ internal class MineViewModel(
         when (val response = withContext(dispatchers.io) { configurations.all() }) {
             is Response.Error -> {
                 logger.w(response.exception) { "Configurations read failed: ${response.message}" }
-                _state.update { it.copy(list = LCEState.Error(ConfiguratorError.LoadFailed)) }
+                _state.update { it.copy(list = LCEState.Error(ConfiguratorError.from(response.exception))) }
             }
 
             is Response.Success -> _state.update { state ->

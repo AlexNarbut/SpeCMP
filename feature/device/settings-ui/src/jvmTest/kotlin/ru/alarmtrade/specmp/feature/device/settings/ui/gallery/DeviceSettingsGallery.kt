@@ -451,7 +451,17 @@ class DeviceSettingsGallery {
     fun diffBusy() = render("43_diff_busy", base.copy(diff = DiffState.Busy("Нива.dxs")), listOf(300, 320))
 
     @Test
-    fun diffError() = render("44_diff_error", base.copy(diff = DiffState.Error("Облачная")), listOf(300, 320))
+    fun diffError() = render(
+        "44_diff_error",
+        base.copy(
+            diff = DiffState.Error(
+                "Облачная",
+                SettingsSource.LocalConfiguration(1, "DX-4GS", "Нива"),
+                closeAfter = true
+            )
+        ),
+        listOf(300, 320)
+    )
 
     @Test
     fun applying() = render("45_applying", base.copy(isApplying = true), listOf(300, 320))

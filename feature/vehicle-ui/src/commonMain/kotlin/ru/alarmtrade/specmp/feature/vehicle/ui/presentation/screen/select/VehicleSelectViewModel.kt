@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -53,8 +51,6 @@ internal class VehicleSelectViewModel(
     private val recentStore: RecentVehiclesStore,
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
-
-    private val recentLock = Mutex()
 
     private val configurationsOnly = request.catalog == VehicleCatalog.WITH_CONFIGURATIONS
 
@@ -306,7 +302,10 @@ internal class VehicleSelectViewModel(
             _state.update { it.copy(picking = false) }
             when (response) {
                 is Response.Success -> choose(response.value)
-                is Response.Error -> logger.w { "Car $carId summary failed: ${response.message}" }
+
+                is Response.Error -> _effect.tryEmit(
+                    VehicleSelectEffect.PickFailed(CatalogError.from(response.exception))
+                )
             }
         }
     }
@@ -405,22 +404,14 @@ internal class VehicleSelectViewModel(
         _effect.tryEmit(VehicleSelectEffect.Picked(car))
     }
 
-    /**
-     * Запомнить автомобиль в «недавних»: чтение-изменение-запись `Settings` — в фоне (io) и под [recentLock]
-     * (хранилище не атомарно: два быстрых открытия карточек иначе потеряют одну запись); в state — готовый список.
-     */
+    /** Запомнить автомобиль в «недавних» (хранилище атомарно само; Settings — на io); в state — готовый список. */
     private fun rememberRecent(car: CarSummary) {
         updateRecent { recentStore.push(request.catalog, car) }
     }
 
-    private fun updateRecent(change: () -> Unit) {
+    private fun updateRecent(change: suspend () -> List<CarSummary>) {
         safeLaunch {
-            val recent = recentLock.withLock {
-                withContext(dispatchers.io) {
-                    change()
-                    recentStore.recent(request.catalog)
-                }
-            }
+            val recent = withContext(dispatchers.io) { change() }
             _state.update { it.copy(recent = recent) }
         }
     }

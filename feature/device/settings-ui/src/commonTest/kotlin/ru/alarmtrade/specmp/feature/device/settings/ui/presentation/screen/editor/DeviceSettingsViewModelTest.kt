@@ -10,6 +10,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -253,6 +254,42 @@ class DeviceSettingsViewModelTest {
 
         assertEquals(SettingsDialog.LoadError(LoadErrorKind.MISMATCH), vm.state.value.dialog)
         assertTrue(vm.state.value.changedIds.isEmpty())
+    }
+
+    @Test
+    fun `retry after a failed compare keeps the session of the editor that owns the source`() = test {
+        // «Записать в блок» из конфигурации: её сессию держит редактор конфигурации — не закрываем.
+        val owned = SettingsSource.LocalConfiguration(5, "DX-9X", "Нива")
+        repository.snapshotResult = Response.Error(IllegalStateException("snapshot"))
+        val vm = viewModel(options = SettingsEditorOptions(loadOnOpen = owned))
+        assertIs<DiffState.Error>(vm.state.value.diff)
+
+        repository.snapshotResult = null
+        vm.onDiffRetry()
+        settle()
+
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+        assertEquals(listOf<SettingsSource>(owned, owned), repository.snapshotSources)
+        assertTrue(repository.closed.none { it == owned })
+    }
+
+    @Test
+    fun `lost link while applying a configuration releases the progress and the snapshot`() = test {
+        repository.snapshotTree = tree.replace(shock.copy(value = SettingValue.Switch(true)))
+        repository.copyGate = CompletableDeferred<Unit>()
+        val vm = viewModel()
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+
+        vm.onDiffConfirm()
+        settle()
+        assertTrue(vm.state.value.isApplying)
+
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        settle()
+
+        assertFalse(vm.state.value.isApplying)
+        assertEquals(1, repository.discarded.size)
     }
 
     @Test
@@ -649,10 +686,19 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     /** Меню снимка конфигурации (что загрузится). */
     var snapshotTree: SettingsSection = initial
     var copyResult: Response<SettingsSection>? = null
+
+    /** Копирование «висит», пока не завершён (обрыв связи посреди загрузки). */
+    var copyGate: CompletableDeferred<Unit>? = null
+    var snapshotResult: Response<SettingsSource.File>? = null
     val snapshotSources = mutableListOf<SettingsSource>()
     val discarded = mutableListOf<SettingsSource.File>()
 
-    override suspend fun close(source: SettingsSource): Response<Unit> = Response.Success(Unit)
+    val closed = mutableListOf<SettingsSource>()
+
+    override suspend fun close(source: SettingsSource): Response<Unit> {
+        closed += source
+        return Response.Success(Unit)
+    }
 
     override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> {
         setCalls += settingId to value
@@ -694,6 +740,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
         to: SettingsSource,
         saveChanges: Boolean
     ): Response<SettingsSection> {
+        copyGate?.await()
         copyResult?.let { return it }
         if (from is SettingsSource.File) current = snapshotTree
         return Response.Success(current)
@@ -701,6 +748,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
 
     override suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File> {
         snapshotSources += from
+        snapshotResult?.let { return it }
         return Response.Success(SettingsSource.File("snapshot.dxs", deviceName))
     }
 

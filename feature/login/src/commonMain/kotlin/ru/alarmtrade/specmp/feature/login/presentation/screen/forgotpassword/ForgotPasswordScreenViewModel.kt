@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
@@ -26,38 +26,16 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
 
     fun submit() {
         val credentials = ResetPasswordCredentials(email = _state.value.email)
+        // Валидация — до запроса (как в регистрации): без мигания Loading перед ошибкой формы.
+        if (credentials.validationError() != null) {
+            _state.update { it.copy(resetState = LCEState.Error(AuthFormError.RequiredFields)) }
+            return
+        }
 
         safeLaunch {
-            _state.update {
-                it.copy(
-                    resetState = LCEState.Loading
-                )
-            }
-
-            if (credentials.validationError() != null) {
-                _state.update {
-                    it.copy(
-                        resetState = LCEState.Error(AuthFormError.RequiredFields)
-                    )
-                }
-                return@safeLaunch
-            }
-
-            val response = withContext(dispatchers.io) {
-                repository.resetPassword(credentials)
-            }
-
-            when (response) {
-                is Response.Success -> _state.update {
-                    it.copy(resetState = LCEState.Content(Unit))
-                }
-
-                is Response.Error -> _state.update {
-                    it.copy(
-                        resetState = LCEState.Error(AuthFormError.from(response.exception))
-                    )
-                }
-            }
+            _state.update { it.copy(resetState = LCEState.Loading) }
+            val response = withContext(dispatchers.io) { repository.resetPassword(credentials) }
+            _state.update { it.copy(resetState = response.asLCEState(AuthFormError::from)) }
         }
     }
 }

@@ -24,6 +24,7 @@ import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.vehicleLayoutOf
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.messageText
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectContent
@@ -70,6 +71,8 @@ fun VehicleSelectEntry(
                 clipboard.setText(AnnotatedString(effect.code))
                 snackbarHostState.showSnackbar(getString(Strings.string.vehicle_select_msg_can_copied, effect.code))
             }
+
+            is VehicleSelectEffect.PickFailed -> snackbarHostState.showSnackbar(effect.error.messageText())
         }
     }
 

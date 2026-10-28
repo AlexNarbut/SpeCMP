@@ -444,11 +444,13 @@ private class FakeRecent : RecentVehiclesStore {
 
     override fun recent(catalog: VehicleCatalog): List<CarSummary> = items[catalog].orEmpty()
 
-    override fun push(catalog: VehicleCatalog, car: CarSummary) {
+    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): List<CarSummary> {
         items[catalog] = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
+        return recent(catalog)
     }
 
-    override fun remove(catalog: VehicleCatalog, carId: Int) {
+    override suspend fun remove(catalog: VehicleCatalog, carId: Int): List<CarSummary> {
         items[catalog] = recent(catalog).filter { it.id != carId }
+        return recent(catalog)
     }
 }
