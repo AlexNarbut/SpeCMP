@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.mapContent
@@ -36,7 +37,6 @@ import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSupported
@@ -176,7 +176,7 @@ class MainScreenViewModel(
                 )
             }
 
-            when (withContext(dispatchers.io) { logoutUseCase.execute() }) {
+            when (val response = withContext(dispatchers.io) { logoutUseCase.execute() }) {
                 is Response.Success -> {
                     logger.d { "Logout succeeded" }
                     _state.update {
@@ -197,7 +197,7 @@ class MainScreenViewModel(
                     _state.update {
                         it.copy(
                             logoutState = LCEState.None(),
-                            logoutError = MainLogoutError.RequestFailed
+                            logoutError = RequestError.from(response.exception)
                         )
                     }
                 }

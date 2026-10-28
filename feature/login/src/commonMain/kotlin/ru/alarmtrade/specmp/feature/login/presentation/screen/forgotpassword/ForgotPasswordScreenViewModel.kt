@@ -60,7 +60,7 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
                 is Response.Error -> _state.update {
                     it.copy(
                         resetState = LCEState.None(),
-                        resetError = AuthFormError.RequestFailed
+                        resetError = AuthFormError.from(response.exception)
                     )
                 }
             }

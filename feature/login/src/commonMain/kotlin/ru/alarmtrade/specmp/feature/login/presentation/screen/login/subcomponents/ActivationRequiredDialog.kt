@@ -17,6 +17,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_btn_close
@@ -34,7 +35,7 @@ fun ActivationRequiredDialog(
     onDismissActivationRequest: () -> Unit
 ) {
     val resendSucceeded = state.activationResendState is LCEState.Content
-    val resendFailed = state.activationResendError != null
+    val resendError = state.activationResendError
 
     CmpDialog(
         onDismissRequest = onDismissActivationRequest,
@@ -53,8 +54,8 @@ fun ActivationRequiredDialog(
                         resendSucceeded ->
                             stringResource(Res.string.login_login_msg_activation_email_sent)
 
-                        resendFailed ->
-                            stringResource(Res.string.login_common_error_activation_resend_failed)
+                        resendError != null ->
+                            resendError.text(Res.string.login_common_error_activation_resend_failed)
 
                         else ->
                             stringResource(Res.string.login_login_msg_activation_required)

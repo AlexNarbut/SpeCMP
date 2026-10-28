@@ -25,11 +25,13 @@ import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.login.presentation.components.AuthErrorBanner
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSuccessPanel
 import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldError
+import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_btn_go_to_login
 import specmp.feature.login.generated.resources.login_common_error_email_invalid
@@ -47,7 +49,12 @@ import specmp.feature.login.generated.resources.login_registration_msg_success
 import specmp.feature.login.generated.resources.login_registration_title_success
 
 @Composable
-fun RegistrationScreen(colors: CmpThemeColors, onBackToLogin: () -> Unit, modifier: Modifier = Modifier) {
+fun RegistrationScreen(
+    layoutMode: AuthLayoutMode,
+    colors: CmpThemeColors,
+    onBackToLogin: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val viewModel = koinViewModel<RegistrationScreenViewModel>()
     val state = viewModel.state.collectAsState()
 
@@ -55,35 +62,41 @@ fun RegistrationScreen(colors: CmpThemeColors, onBackToLogin: () -> Unit, modifi
         onDispose(viewModel::reset)
     }
 
-    if (state.value.isSuccess) {
-        AuthSuccessPanel(
-            title = stringResource(Res.string.login_registration_title_success),
-            text = stringResource(Res.string.login_registration_msg_success),
-            modifier = modifier,
-            icon = CmpIcons.CheckCircle,
-            colors = colors,
-            primaryAction = {
-                AuthSubmitButton(
-                    text = stringResource(Res.string.login_common_btn_go_to_login),
-                    onClick = onBackToLogin,
-                    colors = colors
-                )
-            }
-        )
-    } else {
-        RegistrationForm(
-            state = state,
-            colors = colors,
-            onFullNameChange = viewModel::onFullNameChanged,
-            onEmailChange = viewModel::onEmailChanged,
-            onPhoneNumberChange = viewModel::onPhoneNumberChanged,
-            onPasswordChange = viewModel::onPasswordChanged,
-            onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
-            onInstallerConfirmedChange = viewModel::onInstallerConfirmedChanged,
-            onSubmit = viewModel::submit,
-            onBackToLogin = onBackToLogin,
-            modifier = modifier
-        )
+    AuthBody(
+        layoutMode = layoutMode,
+        modifier = modifier,
+        colors = colors,
+        showCompactBrand = false,
+        error = state.value.registrationError?.text(Res.string.login_common_error_registration_failed)
+    ) {
+        if (state.value.isSuccess) {
+            AuthSuccessPanel(
+                title = stringResource(Res.string.login_registration_title_success),
+                text = stringResource(Res.string.login_registration_msg_success),
+                icon = CmpIcons.CheckCircle,
+                colors = colors,
+                primaryAction = {
+                    AuthSubmitButton(
+                        text = stringResource(Res.string.login_common_btn_go_to_login),
+                        onClick = onBackToLogin,
+                        colors = colors
+                    )
+                }
+            )
+        } else {
+            RegistrationForm(
+                state = state,
+                colors = colors,
+                onFullNameChange = viewModel::onFullNameChanged,
+                onEmailChange = viewModel::onEmailChanged,
+                onPhoneNumberChange = viewModel::onPhoneNumberChanged,
+                onPasswordChange = viewModel::onPasswordChanged,
+                onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
+                onInstallerConfirmedChange = viewModel::onInstallerConfirmedChanged,
+                onSubmit = viewModel::submit,
+                onBackToLogin = onBackToLogin
+            )
+        }
     }
 }
 
@@ -108,13 +121,6 @@ private fun RegistrationForm(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        if (value.registrationError != null) {
-            AuthErrorBanner(
-                text = stringResource(Res.string.login_common_error_registration_failed),
-                colors = colors
-            )
-        }
-
         CmpTextField(
             value = value.fullName,
             onValueChange = onFullNameChange,

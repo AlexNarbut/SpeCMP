@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -120,7 +121,7 @@ private fun MainDatabaseStatusChip(
                 tint = MainHomeTokens.Success
             )
 
-            MainDatabaseSyncBadge.UpdateFailed,
+            is MainDatabaseSyncBadge.UpdateFailed,
             MainDatabaseSyncBadge.AppUpdateRequired
             -> CmpIcon(
                 icon = CmpIcons.Warning,
@@ -151,7 +152,8 @@ private fun MainDatabaseSyncBadge.label(): String = when (this) {
 
     MainDatabaseSyncBadge.Updated -> stringResource(Res.string.main_common_status_database_updated)
 
-    MainDatabaseSyncBadge.UpdateFailed -> stringResource(Res.string.main_common_status_database_update_failed)
+    is MainDatabaseSyncBadge.UpdateFailed ->
+        networkFailure?.message() ?: stringResource(Res.string.main_common_status_database_update_failed)
 
     MainDatabaseSyncBadge.AppUpdateRequired -> stringResource(
         Res.string.main_common_status_database_app_update_required

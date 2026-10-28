@@ -16,7 +16,9 @@ data class LoginScreenState(
     val activationResendError: AuthFormError? = null
 ) {
     val isAuthLoading: Boolean get() = authState is LCEState.Loading
-    val isAuthError: Boolean get() = authError != null
+
+    /** Сервер отклонил логин/пароль — подсвечиваем поля; при сбое связи поля не виноваты. */
+    val isAuthError: Boolean get() = authError == AuthFormError.Rejected
     val isActivationResendLoading: Boolean get() = activationResendState is LCEState.Loading
     val isActivationRequired: Boolean
         get() = authState is LCEState.Content && authState.content is LoginResult.ActivationRequired

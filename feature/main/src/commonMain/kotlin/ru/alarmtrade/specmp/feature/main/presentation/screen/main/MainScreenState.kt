@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
@@ -10,7 +11,6 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.presentation.model.MAIN_UNKNOWN_APP_VERSION
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 
 @Immutable
@@ -29,7 +29,7 @@ data class MainScreenState(
     val chatUnreadState: LCEState<Int> = LCEState.None(),
     val cardVariant: MainCardVariant = MainCardVariant.Centered,
     val logoutState: LCEState<Unit> = LCEState.None(),
-    val logoutError: MainLogoutError? = null
+    val logoutError: RequestError? = null
 ) {
     val profile: MainProfile
         get() = profileState.content ?: MainProfile()
@@ -40,7 +40,9 @@ data class MainScreenState(
 
     val databaseSyncBadge: MainDatabaseSyncBadge
         get() {
-            if (databaseSyncState is LCEState.Error) return MainDatabaseSyncBadge.UpdateFailed
+            if (databaseSyncState is LCEState.Error) {
+                return MainDatabaseSyncBadge.UpdateFailed(databaseSyncState.networkFailure)
+            }
 
             return when (databaseSyncState.content) {
                 MainDatabaseSyncStatus.InProgress.CheckingVersion -> MainDatabaseSyncBadge.CheckingVersion

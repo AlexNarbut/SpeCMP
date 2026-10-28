@@ -154,8 +154,10 @@ class SpecialistSupportChatRepository(
     }
 
     private fun <T> SpecialistResponse<T>.toProject(): Response<T> = toResponse().mapIfError { error ->
-        if (error.exception is NetworkNotConnectedError) {
-            Response.Error(SupportChatNotConnectedException(error.exception), error.message)
+        // toResponse() уже завернул сбой связи в NetworkException — смотрим на исходную ошибку SDK.
+        val cause = error.exception.cause
+        if (cause is NetworkNotConnectedError) {
+            Response.Error(SupportChatNotConnectedException(cause), error.message)
         } else {
             error
         }

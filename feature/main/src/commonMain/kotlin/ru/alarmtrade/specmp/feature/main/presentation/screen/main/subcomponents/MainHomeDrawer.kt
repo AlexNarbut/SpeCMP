@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.lce.isSuccess
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -38,7 +40,6 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
 import specmp.feature.main.generated.resources.Res
@@ -452,10 +453,8 @@ private fun MainAppUpdateBanner(
 }
 
 @Composable
-private fun MainLogoutErrorMessage(error: MainLogoutError, colors: CmpThemeColors, modifier: Modifier = Modifier) {
-    val text = when (error) {
-        MainLogoutError.RequestFailed -> stringResource(Res.string.main_drawer_error_logout_failed)
-    }
+private fun MainLogoutErrorMessage(error: RequestError, colors: CmpThemeColors, modifier: Modifier = Modifier) {
+    val text = error.text(Res.string.main_drawer_error_logout_failed)
 
     CmpSurface(
         modifier = modifier.fillMaxWidth(),

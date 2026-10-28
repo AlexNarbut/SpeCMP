@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.core.ui.lce
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.common.NetworkFailure
 
 /**
  * Loading-Content-Error (LCE) state for UI layer.
@@ -80,6 +81,7 @@ sealed class LCEState<out T> {
     /**
      * Error state - an error occurred.
      * @param error Error message to display to the user
+     * @param networkFailure Категория сбоя связи, если ошибка сетевая (текст — `NetworkFailure.message()`)
      */
-    class Error(val error: String) : LCEState<Nothing>()
+    class Error(val error: String, val networkFailure: NetworkFailure? = null) : LCEState<Nothing>()
 }

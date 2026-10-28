@@ -14,4 +14,7 @@
     <string name="coreui_common_month_october">октября</string>
     <string name="coreui_common_month_november">ноября</string>
     <string name="coreui_common_month_december">декабря</string>
+    <string name="coreui_common_error_no_connection">Нет подключения к интернету</string>
+    <string name="coreui_common_error_timeout">Сервер не отвечает</string>
+    <string name="coreui_common_error_server">Ошибка сервера</string>
 </resources>

@@ -298,6 +298,14 @@ import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
 
 Конвертация на границе VM: `response.asLCEState { it.message ?: "Error" }`
 
+**Сбой связи с сервером** не маппится в фиче. SDK-ответы проходят `toResponse()` (`core/specialist`),
+он приводит «нет сети / таймаут / ошибку сервера» к `NetworkException(failure: NetworkFailure)`
+(`core/common`). VM кладёт в состояние `RequestError.from(response.exception)` (или берёт
+`LCEState.Error.networkFailure` — `asLCEState` заполняет его сам), экран показывает
+`error.text(Res.string.<фраза экрана>)`: при сбое связи — общий текст `core/ui`
+(«Нет подключения к интернету», «Сервер не отвечает», «Ошибка сервера»), иначе — фразу экрана.
+Свои «Проверьте интернет» на любую ошибку и проверка сети через `NetworkMonitor` во VM не нужны.
+
 ## Domain
 
 `feature/<name>/domain` — модели (`domain/model`) и контракты репозиториев (`domain/repository`).

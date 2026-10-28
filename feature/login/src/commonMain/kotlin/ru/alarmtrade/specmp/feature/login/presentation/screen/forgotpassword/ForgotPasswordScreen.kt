@@ -23,13 +23,13 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.login.presentation.components.AuthErrorBanner
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
+import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSuccessPanel
-import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
+import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_btn_go_to_login
-import specmp.feature.login.generated.resources.login_common_error_required_fields
 import specmp.feature.login.generated.resources.login_common_error_reset_password_failed
 import specmp.feature.login.generated.resources.login_common_label_email
 import specmp.feature.login.generated.resources.login_forgot_btn_submit
@@ -39,7 +39,12 @@ import specmp.feature.login.generated.resources.login_forgot_subtitle_screen
 import specmp.feature.login.generated.resources.login_forgot_title_success
 
 @Composable
-fun ForgotPasswordScreen(colors: CmpThemeColors, onBackToLogin: () -> Unit, modifier: Modifier = Modifier) {
+fun ForgotPasswordScreen(
+    layoutMode: AuthLayoutMode,
+    colors: CmpThemeColors,
+    onBackToLogin: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val viewModel = koinViewModel<ForgotPasswordScreenViewModel>()
     val state = viewModel.state.collectAsState()
 
@@ -47,30 +52,36 @@ fun ForgotPasswordScreen(colors: CmpThemeColors, onBackToLogin: () -> Unit, modi
         onDispose(viewModel::reset)
     }
 
-    if (state.value.isSuccess) {
-        AuthSuccessPanel(
-            title = stringResource(Res.string.login_forgot_title_success),
-            text = stringResource(Res.string.login_forgot_msg_success),
-            modifier = modifier,
-            icon = CmpIcons.Email,
-            colors = colors,
-            primaryAction = {
-                AuthSubmitButton(
-                    text = stringResource(Res.string.login_common_btn_go_to_login),
-                    onClick = onBackToLogin,
-                    colors = colors
-                )
-            }
-        )
-    } else {
-        ForgotPasswordForm(
-            state = state,
-            colors = colors,
-            onEmailChange = viewModel::onEmailChanged,
-            onSubmit = viewModel::submit,
-            onBackToLogin = onBackToLogin,
-            modifier = modifier
-        )
+    AuthBody(
+        layoutMode = layoutMode,
+        modifier = modifier,
+        colors = colors,
+        showCompactBrand = false,
+        error = state.value.resetError?.text(Res.string.login_common_error_reset_password_failed)
+    ) {
+        if (state.value.isSuccess) {
+            AuthSuccessPanel(
+                title = stringResource(Res.string.login_forgot_title_success),
+                text = stringResource(Res.string.login_forgot_msg_success),
+                icon = CmpIcons.Email,
+                colors = colors,
+                primaryAction = {
+                    AuthSubmitButton(
+                        text = stringResource(Res.string.login_common_btn_go_to_login),
+                        onClick = onBackToLogin,
+                        colors = colors
+                    )
+                }
+            )
+        } else {
+            ForgotPasswordForm(
+                state = state,
+                colors = colors,
+                onEmailChange = viewModel::onEmailChanged,
+                onSubmit = viewModel::submit,
+                onBackToLogin = onBackToLogin
+            )
+        }
     }
 }
 
@@ -97,19 +108,6 @@ private fun ForgotPasswordForm(
             color = colors.onSurfaceVariant
         )
 
-        if (value.resetError != null) {
-            AuthErrorBanner(
-                text = when (value.resetError) {
-                    AuthFormError.RequiredFields ->
-                        stringResource(Res.string.login_common_error_required_fields)
-
-                    AuthFormError.RequestFailed ->
-                        stringResource(Res.string.login_common_error_reset_password_failed)
-                },
-                colors = colors
-            )
-        }
-
         CmpTextField(
             value = value.email,
             onValueChange = onEmailChange,
@@ -117,7 +115,7 @@ private fun ForgotPasswordForm(
             label = stringResource(Res.string.login_common_label_email),
             singleLine = true,
             enabled = !value.isLoading,
-            isError = value.resetError != null,
+            isError = value.resetError != null && !value.resetError.isNetwork,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done

@@ -22,13 +22,11 @@ import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.login.presentation.components.AuthErrorBanner
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.subcomponents.ActivationRequiredDialog
 import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_error_auth_failed
 import specmp.feature.login.generated.resources.login_common_label_email
 import specmp.feature.login.generated.resources.login_common_loading_auth
 import specmp.feature.login.generated.resources.login_login_btn_submit
@@ -65,13 +63,6 @@ fun LoginScreen(
                 fontSize = 24.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.onSurface
-            )
-        }
-
-        if (isAuthError) {
-            AuthErrorBanner(
-                text = stringResource(Res.string.login_common_error_auth_failed),
-                colors = colors
             )
         }
 

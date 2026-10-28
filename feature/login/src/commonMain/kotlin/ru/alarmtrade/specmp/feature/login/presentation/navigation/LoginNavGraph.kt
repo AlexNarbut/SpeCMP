@@ -33,6 +33,7 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLanguageSegment
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthScreenChrome
+import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
@@ -40,6 +41,7 @@ import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenV
 import ru.alarmtrade.specmp.feature.login.presentation.screen.registration.RegistrationScreen
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.login_common_a11y_back
+import specmp.feature.login.generated.resources.login_common_error_auth_failed
 import specmp.feature.login.generated.resources.login_forgot_title_screen
 import specmp.feature.login.generated.resources.login_registration_title_screen
 
@@ -131,7 +133,8 @@ private fun LoginNavDisplay(
                 AuthBody(
                     layoutMode = layoutMode,
                     modifier = Modifier.fillMaxSize(),
-                    colors = colors
+                    colors = colors,
+                    error = state.value.authError?.text(Res.string.login_common_error_auth_failed)
                 ) {
                     LoginScreen(
                         state = state.value,
@@ -156,30 +159,20 @@ private fun LoginNavDisplay(
                 }
             }
             entry<RegistrationRoute> { _ ->
-                AuthBody(
+                RegistrationScreen(
                     layoutMode = layoutMode,
-                    modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    showCompactBrand = false
-                ) {
-                    RegistrationScreen(
-                        colors = colors,
-                        onBackToLogin = { backStack.popSafe() }
-                    )
-                }
+                    onBackToLogin = { backStack.popSafe() },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
             entry<ForgotPasswordRoute> { _ ->
-                AuthBody(
+                ForgotPasswordScreen(
                     layoutMode = layoutMode,
-                    modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    showCompactBrand = false
-                ) {
-                    ForgotPasswordScreen(
-                        colors = colors,
-                        onBackToLogin = { backStack.popSafe() }
-                    )
-                }
+                    onBackToLogin = { backStack.popSafe() },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     )

@@ -75,7 +75,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
                 is Response.Error -> _state.update {
                     it.copy(
                         authState = LCEState.None(),
-                        authError = AuthFormError.RequestFailed
+                        authError = AuthFormError.from(response.exception)
                     )
                 }
             }
@@ -107,7 +107,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
                 is Response.Error -> _state.update {
                     it.copy(
                         activationResendState = LCEState.None(),
-                        activationResendError = AuthFormError.RequestFailed
+                        activationResendError = AuthFormError.from(response.exception)
                     )
                 }
             }

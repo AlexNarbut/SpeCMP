@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.networkFailure
 
 /*
  * Extension functions for LCEState.
@@ -104,7 +105,7 @@ fun <T> T.asLCEState() = LCEState.Content(this)
  */
 fun <T> Response<T>.asLCEState(errorMapper: (Throwable) -> String): LCEState<T> = when (this) {
     is Response.Success -> LCEState.Content(this.value)
-    is Response.Error -> LCEState.Error(errorMapper.invoke(this.exception))
+    is Response.Error -> LCEState.Error(errorMapper.invoke(this.exception), exception.networkFailure)
 }
 
 /**

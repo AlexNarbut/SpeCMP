@@ -83,7 +83,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
                 is Response.Error -> _state.update {
                     it.copy(
                         registrationState = LCEState.None(),
-                        registrationError = AuthFormError.RequestFailed
+                        registrationError = AuthFormError.from(response.exception)
                     )
                 }
             }

@@ -16,10 +16,13 @@ fun <T> (() -> T).resolveOrNull(): T? = try {
     null
 }
 
-/** Переводит ответ SDK в проектный [Response]; без сообщения SDK берётся сообщение исключения. */
+/**
+ * Переводит ответ SDK в проектный [Response]; без сообщения SDK берётся сообщение исключения.
+ * Сбой связи приходит как [ru.alarmtrade.specmp.core.common.NetworkException] (см. [toAppException]).
+ */
 fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
     is SpecialistResponse.Success -> Response.Success(value)
-    is SpecialistResponse.Error -> Response.Error(exception, message ?: exception.message)
+    is SpecialistResponse.Error -> Response.Error(toAppException(), message ?: exception.message)
 }
 
 /** Ошибка «интерактор SDK недоступен на этой платформе» — результат неудачного [resolveOrNull]. */

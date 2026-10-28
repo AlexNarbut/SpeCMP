@@ -1,11 +1,19 @@
 package ru.alarmtrade.specmp.feature.login.presentation.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -29,29 +37,60 @@ fun AuthBody(
     colors: CmpThemeColors = cmpThemeColors(),
     showCompactBrand: Boolean = true,
     showExpandedBrandRail: Boolean = true,
+    error: String? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    when (layoutMode) {
-        AuthLayoutMode.Compact -> AuthCompactBody(
-            modifier = modifier,
-            colors = colors,
-            showBrand = showCompactBrand,
-            content = content
-        )
+    CmpBox(modifier = modifier.fillMaxSize()) {
+        when (layoutMode) {
+            AuthLayoutMode.Compact -> AuthCompactBody(
+                modifier = Modifier,
+                colors = colors,
+                showBrand = showCompactBrand,
+                content = content
+            )
 
-        AuthLayoutMode.Medium -> AuthMediumBody(
-            modifier = modifier,
-            colors = colors,
-            showBrand = showCompactBrand,
-            content = content
-        )
+            AuthLayoutMode.Medium -> AuthMediumBody(
+                modifier = Modifier,
+                colors = colors,
+                showBrand = showCompactBrand,
+                content = content
+            )
 
-        AuthLayoutMode.Expanded -> AuthExpandedBody(
-            modifier = modifier,
+            AuthLayoutMode.Expanded -> AuthExpandedBody(
+                modifier = Modifier,
+                colors = colors,
+                showBrandRail = showExpandedBrandRail,
+                content = content
+            )
+        }
+
+        AuthErrorOverlay(
+            error = error,
             colors = colors,
-            showBrandRail = showExpandedBrandRail,
-            content = content
+            modifier = Modifier.align(Alignment.BottomCenter)
         )
+    }
+}
+
+/**
+ * Ошибка отправки формы — поверх контента внизу экрана, вне потока формы: карточка центрирована,
+ * и баннер внутри неё сдвигал бы поля и кнопку.
+ */
+@Composable
+private fun AuthErrorOverlay(error: String?, colors: CmpThemeColors, modifier: Modifier = Modifier) {
+    // AnimatedContent держит прежний текст, пока баннер уезжает.
+    AnimatedContent(
+        targetState = error,
+        modifier = modifier
+            .imePadding()
+            .navigationBarsPadding()
+            .padding(24.dp)
+            .widthIn(max = 460.dp),
+        transitionSpec = {
+            (fadeIn() + slideInVertically { it / 2 }) togetherWith (fadeOut() + slideOutVertically { it / 2 })
+        }
+    ) { text ->
+        if (text != null) AuthErrorBanner(text = text, colors = colors)
     }
 }
 
