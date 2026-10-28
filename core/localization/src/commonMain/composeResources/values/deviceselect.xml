@@ -8,10 +8,14 @@
 
     <!-- Denied -->
     <string name="deviceselect_denied_title">No access</string>
-    <string name="deviceselect_denied_subtitle">Without permission the app can\'t find devices. Enable access in settings.</string>
-    <string name="deviceselect_fix_item_android_1">Settings → Apps → Pandora Spec → Permissions</string>
-    <string name="deviceselect_fix_item_android_2">Enable “Nearby devices” and “Bluetooth”</string>
-    <string name="deviceselect_fix_item_ios_1">Settings → Pandora Spec → Bluetooth → enable</string>
+    <string name="deviceselect_denied_subtitle">Without permission the app can't find devices. Enable access in settings.</string>
+    <string-array name="deviceselect_fix_item_android">
+        <item>Settings → Apps → Pandora Spec → Permissions</item>
+        <item>Enable “Nearby devices” and “Bluetooth”</item>
+    </string-array>
+    <string-array name="deviceselect_fix_item_ios">
+        <item>Settings → Pandora Spec → Bluetooth → enable</item>
+    </string-array>
     <string name="deviceselect_common_btn_open_settings">Open settings</string>
     <string name="deviceselect_common_btn_cancel">Cancel</string>
     <string name="deviceselect_common_btn_retry">Retry</string>
@@ -36,15 +40,21 @@
     <string name="deviceselect_empty_title">No devices found</string>
     <string name="deviceselect_empty_subtitle">The search continues. Make sure the device is ready to connect.</string>
     <!-- Подсказки «пусто» — по поддерживаемым транспортам -->
-    <string name="deviceselect_empty_item_ble_1">Make sure the device is powered on</string>
-    <string name="deviceselect_empty_item_ble_2">Bring the unit closer — within 1–2 meters</string>
-    <string name="deviceselect_empty_item_ble_3">Check that Bluetooth is on</string>
-    <string name="deviceselect_empty_item_usb_1">Check that the cable is connected to the device and the computer</string>
-    <string name="deviceselect_empty_item_usb_2">Try another USB port or cable</string>
-    <string name="deviceselect_empty_item_usb_3">Make sure the module is detected by the system</string>
-    <string name="deviceselect_empty_item_both_1">Make sure the device is powered on and the cable is connected</string>
-    <string name="deviceselect_empty_item_both_2">For Bluetooth, bring the unit closer — within 1–2 meters</string>
-    <string name="deviceselect_empty_item_both_3">Check that Bluetooth is on or the USB module is detected</string>
+    <string-array name="deviceselect_empty_item_ble">
+        <item>Make sure the device is powered on</item>
+        <item>Bring the unit closer — within 1–2 meters</item>
+        <item>Check that Bluetooth is on</item>
+    </string-array>
+    <string-array name="deviceselect_empty_item_usb">
+        <item>Check that the cable is connected to the device and the computer</item>
+        <item>Try another USB port or cable</item>
+        <item>Make sure the module is detected by the system</item>
+    </string-array>
+    <string-array name="deviceselect_empty_item_both">
+        <item>Make sure the device is powered on and the cable is connected</item>
+        <item>For Bluetooth, bring the unit closer — within 1–2 meters</item>
+        <item>Check that Bluetooth is on or the USB module is detected</item>
+    </string-array>
     <string name="deviceselect_scan_loading_searching">Searching…</string>
 
     <!-- List -->

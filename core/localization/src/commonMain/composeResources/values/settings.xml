@@ -16,13 +16,13 @@
     <string name="settings_editor_loading_read">Reading settings from the device…</string>
     <string name="settings_editor_hint_read">Over Bluetooth this may take up to a minute</string>
     <string name="settings_editor_error_read_title">Failed to read settings</string>
-    <string name="settings_editor_error_read_text">The device did not respond. Check the connection and the unit\'s power.</string>
+    <string name="settings_editor_error_read_text">The device did not respond. Check the connection and the unit's power.</string>
     <string name="settings_editor_msg_empty_section">This section has no settings</string>
     <string name="settings_editor_msg_empty_section_hint">The device sent no items for this section.</string>
     <string name="settings_editor_label_changed">Changed: %1$d</string>
     <string name="settings_editor_btn_write">Write</string>
     <string name="settings_editor_msg_written">Changes written: %1$d</string>
-    <string name="settings_editor_error_set_value">Couldn\'t change the setting. Try again.</string>
+    <string name="settings_editor_error_set_value">Couldn't change the setting. Try again.</string>
 
     <string name="settings_edit_label_was">Was: %1$s</string>
     <string name="settings_edit_btn_reset">Reset</string>
@@ -44,7 +44,7 @@
     <string name="settings_write_title_progress">Writing changes…</string>
     <string name="settings_write_msg_progress">Do not turn off the power or close the app.</string>
     <string name="settings_write_title_error">Failed to write</string>
-    <string name="settings_write_msg_error">No response from the device. Check the connection and the unit\'s power. Changes (%1$d) are kept, you can write them again.</string>
+    <string name="settings_write_msg_error">No response from the device. Check the connection and the unit's power. Changes (%1$d) are kept, you can write them again.</string>
 
     <string name="settings_exit_title">Unsaved changes (%1$d)</string>
     <string name="settings_exit_msg">The changes have not been written to the device yet. If you leave without writing, they will be lost.</string>
@@ -95,7 +95,7 @@
     <string name="settings_can_loading">Looking for the vehicle…</string>
     <string name="settings_can_msg_many">Several vehicles match the code</string>
     <string name="settings_can_msg_none">No vehicle found for code %1$s. The code can still be applied.</string>
-    <string name="settings_can_msg_error">Couldn\'t reach the server to find the vehicle. The code can be applied without it.</string>
+    <string name="settings_can_msg_error">Couldn't reach the server to find the vehicle. The code can be applied without it.</string>
     <string name="settings_can_msg_apply_without_car">The code can be applied without finding the vehicle.</string>
     <string name="settings_can_format_car">%1$s, %2$d–%3$d</string>
     <string name="settings_common_a11y_more">More</string>
@@ -110,7 +110,7 @@
     <string name="settings_reset_title_progress">Resetting settings…</string>
     <string name="settings_reset_msg_progress">The device is returning to factory settings. Do not turn off the power.</string>
     <string name="settings_reset_title_error">Failed to reset</string>
-    <string name="settings_reset_msg_error">No response from the device. Check the connection and the unit\'s power.</string>
+    <string name="settings_reset_msg_error">No response from the device. Check the connection and the unit's power.</string>
     <string name="settings_reset_msg_done">The device has been reset to factory settings</string>
     <string name="settings_can_title_single">CAN code is changed by firmware</string>
     <string name="settings_can_msg_single">This unit has a single CAN firmware (code %1$s): the CAN code is changed by flashing the CAN firmware for the vehicle. Go to the firmware update.</string>
@@ -189,7 +189,7 @@
     <string name="settings_exit_title_save">Save changes?</string>
     <string name="settings_exit_msg_save">Settings changed: %1$d. If you do not save, the changes are lost.</string>
     <string name="settings_exit_msg_save_as">Settings changed: %1$d. The original configuration cannot be changed — save the result as a new one.</string>
-    <string name="settings_exit_btn_dont_save">Don\'t save</string>
+    <string name="settings_exit_btn_dont_save">Don't save</string>
     <string name="settings_common_msg_saved_mine">Saved to “My configurations”</string>
     <string name="settings_saved_btn_open">Open</string>
     <string name="settings_common_msg_saved">Saved</string>

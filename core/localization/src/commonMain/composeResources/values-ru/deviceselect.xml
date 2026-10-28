@@ -9,9 +9,13 @@
     <!-- Нет доступа -->
     <string name="deviceselect_denied_title">Нет доступа</string>
     <string name="deviceselect_denied_subtitle">Без разрешения приложение не сможет найти устройства. Включите доступ в настройках.</string>
-    <string name="deviceselect_fix_item_android_1">Настройки → Приложения → Pandora Spec → Разрешения</string>
-    <string name="deviceselect_fix_item_android_2">Включите «Устройства поблизости» и «Bluetooth»</string>
-    <string name="deviceselect_fix_item_ios_1">Настройки → Pandora Spec → Bluetooth → включить</string>
+    <string-array name="deviceselect_fix_item_android">
+        <item>Настройки → Приложения → Pandora Spec → Разрешения</item>
+        <item>Включите «Устройства поблизости» и «Bluetooth»</item>
+    </string-array>
+    <string-array name="deviceselect_fix_item_ios">
+        <item>Настройки → Pandora Spec → Bluetooth → включить</item>
+    </string-array>
     <string name="deviceselect_common_btn_open_settings">Открыть настройки</string>
     <string name="deviceselect_common_btn_cancel">Отмена</string>
     <string name="deviceselect_common_btn_retry">Повторить</string>
@@ -36,15 +40,21 @@
     <string name="deviceselect_empty_title">Устройства не найдены</string>
     <string name="deviceselect_empty_subtitle">Поиск продолжается. Проверьте, что устройство готово к подключению.</string>
     <!-- Подсказки «пусто» — по поддерживаемым транспортам -->
-    <string name="deviceselect_empty_item_ble_1">Убедитесь, что на устройстве включено питание</string>
-    <string name="deviceselect_empty_item_ble_2">Поднесите блок ближе — в пределах 1–2 метров</string>
-    <string name="deviceselect_empty_item_ble_3">Проверьте, что Bluetooth включён</string>
-    <string name="deviceselect_empty_item_usb_1">Проверьте, что кабель подключён к устройству и компьютеру</string>
-    <string name="deviceselect_empty_item_usb_2">Попробуйте другой USB-порт или кабель</string>
-    <string name="deviceselect_empty_item_usb_3">Убедитесь, что модуль определяется системой</string>
-    <string name="deviceselect_empty_item_both_1">Убедитесь, что устройство включено, а кабель подключён</string>
-    <string name="deviceselect_empty_item_both_2">Для Bluetooth поднесите блок ближе — в пределах 1–2 метров</string>
-    <string name="deviceselect_empty_item_both_3">Проверьте, что включён Bluetooth или USB-модуль определяется</string>
+    <string-array name="deviceselect_empty_item_ble">
+        <item>Убедитесь, что на устройстве включено питание</item>
+        <item>Поднесите блок ближе — в пределах 1–2 метров</item>
+        <item>Проверьте, что Bluetooth включён</item>
+    </string-array>
+    <string-array name="deviceselect_empty_item_usb">
+        <item>Проверьте, что кабель подключён к устройству и компьютеру</item>
+        <item>Попробуйте другой USB-порт или кабель</item>
+        <item>Убедитесь, что модуль определяется системой</item>
+    </string-array>
+    <string-array name="deviceselect_empty_item_both">
+        <item>Убедитесь, что устройство включено, а кабель подключён</item>
+        <item>Для Bluetooth поднесите блок ближе — в пределах 1–2 метров</item>
+        <item>Проверьте, что включён Bluetooth или USB-модуль определяется</item>
+    </string-array>
     <string name="deviceselect_scan_loading_searching">Идёт поиск…</string>
 
     <!-- Список -->

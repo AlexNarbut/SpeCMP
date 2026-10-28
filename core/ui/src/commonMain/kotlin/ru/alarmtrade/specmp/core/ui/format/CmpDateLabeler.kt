@@ -8,20 +8,10 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_april
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_august
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_december
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_february
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_january
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_july
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_june
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_march
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_may
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_november
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_october
-import ru.alarmtrade.specmp.core.localization.resources.common_date_label_month_september
+import ru.alarmtrade.specmp.core.localization.resources.common_date_label_months
 import ru.alarmtrade.specmp.core.localization.resources.common_date_label_today
 import ru.alarmtrade.specmp.core.localization.resources.common_date_label_yesterday
 
@@ -38,20 +28,7 @@ import ru.alarmtrade.specmp.core.localization.resources.common_date_label_yester
 fun rememberCmpDateLabeler(): (LocalDate) -> String {
     val todayLabel = stringResource(Strings.string.common_date_label_today)
     val yesterdayLabel = stringResource(Strings.string.common_date_label_yesterday)
-    val monthLabels = listOf(
-        stringResource(Strings.string.common_date_label_month_january),
-        stringResource(Strings.string.common_date_label_month_february),
-        stringResource(Strings.string.common_date_label_month_march),
-        stringResource(Strings.string.common_date_label_month_april),
-        stringResource(Strings.string.common_date_label_month_may),
-        stringResource(Strings.string.common_date_label_month_june),
-        stringResource(Strings.string.common_date_label_month_july),
-        stringResource(Strings.string.common_date_label_month_august),
-        stringResource(Strings.string.common_date_label_month_september),
-        stringResource(Strings.string.common_date_label_month_october),
-        stringResource(Strings.string.common_date_label_month_november),
-        stringResource(Strings.string.common_date_label_month_december)
-    )
+    val monthLabels = stringArrayResource(Strings.array.common_date_label_months)
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val yesterday = now.minus(DatePeriod(days = 1))
 

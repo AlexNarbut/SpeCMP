@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -49,20 +50,13 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceselect_connecting_
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_denied_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_denied_title
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_msg_empty
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_ble_1
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_ble_2
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_ble_3
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_both_1
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_both_2
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_both_3
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_usb_1
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_usb_2
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_usb_3
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_ble
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_both
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_usb
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_title
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_fix_item_android_1
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_fix_item_android_2
-import ru.alarmtrade.specmp.core.localization.resources.deviceselect_fix_item_ios_1
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_fix_item_android
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_fix_item_ios
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_list_label_count
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_list_loading_searching_short
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_location_subtitle
@@ -255,12 +249,9 @@ private fun DeniedBody(
     onRetry: () -> Unit
 ) {
     val fixItems = if (requirements.contains(DeviceAccessRequirement.USB)) {
-        listOf(
-            stringResource(Strings.string.deviceselect_fix_item_android_1),
-            stringResource(Strings.string.deviceselect_fix_item_android_2)
-        )
+        stringArrayResource(Strings.array.deviceselect_fix_item_android)
     } else {
-        listOf(stringResource(Strings.string.deviceselect_fix_item_ios_1))
+        stringArrayResource(Strings.array.deviceselect_fix_item_ios)
     }
     CenterState {
         Hero(icon = CmpIcons.Lock, tone = HeroTone.Error)
@@ -337,23 +328,9 @@ private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
     val hasBle = supportedTransports.contains(DeviceTransport.BLE)
     val hasUsb = supportedTransports.contains(DeviceTransport.USB)
     val hints = when {
-        hasBle && hasUsb -> listOf(
-            stringResource(Strings.string.deviceselect_empty_item_both_1),
-            stringResource(Strings.string.deviceselect_empty_item_both_2),
-            stringResource(Strings.string.deviceselect_empty_item_both_3)
-        )
-
-        hasUsb -> listOf(
-            stringResource(Strings.string.deviceselect_empty_item_usb_1),
-            stringResource(Strings.string.deviceselect_empty_item_usb_2),
-            stringResource(Strings.string.deviceselect_empty_item_usb_3)
-        )
-
-        else -> listOf(
-            stringResource(Strings.string.deviceselect_empty_item_ble_1),
-            stringResource(Strings.string.deviceselect_empty_item_ble_2),
-            stringResource(Strings.string.deviceselect_empty_item_ble_3)
-        )
+        hasBle && hasUsb -> stringArrayResource(Strings.array.deviceselect_empty_item_both)
+        hasUsb -> stringArrayResource(Strings.array.deviceselect_empty_item_usb)
+        else -> stringArrayResource(Strings.array.deviceselect_empty_item_ble)
     }
     CenterState {
         Hero(icon = CmpIcons.SearchOff, tone = HeroTone.Neutral)

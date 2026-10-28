@@ -29,7 +29,7 @@
     <string name="firmware_common_value_kind_unknown">Unknown module</string>
     <string name="firmware_check_title_screen">Firmware check</string>
     <string name="firmware_check_title_modules">Modules available for update</string>
-    <string name="firmware_check_loading_modules">Reading the unit\'s module list…</string>
+    <string name="firmware_check_loading_modules">Reading the unit's module list…</string>
     <string name="firmware_check_error_title">Could not get the module list</string>
     <string name="firmware_check_error_msg">Check the connection to the unit and try again.</string>
     <string name="firmware_check_a11y_refresh">Check server version again</string>
@@ -78,7 +78,7 @@
     <string name="firmware_update_title_confirm">Confirm the version</string>
     <string name="firmware_update_label_confirm_current">Current version</string>
     <string name="firmware_update_label_confirm_found">Found software version</string>
-    <string name="firmware_update_label_confirm_whats_new">What\'s new</string>
+    <string name="firmware_update_label_confirm_whats_new">What's new</string>
     <string name="firmware_update_msg_confirm_no_description">No description</string>
     <string name="firmware_update_msg_confirm_local_file">The file is not checked against the server: the version and compatibility are verified by the device only. Make sure it is firmware for this device and subsystem.</string>
     <string name="firmware_update_msg_confirm_older">The selected version is older than the installed one</string>

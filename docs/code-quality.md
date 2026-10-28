@@ -29,7 +29,8 @@
 
 ```
 git commit ──► pre-commit ──► ./gradlew spotlessCheck        (стиль, только файлы изменённые с HEAD)
-                          └─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
+                          ├─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
+                          └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck          (смысл, весь проект, с type resolution)
 Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotlessCheck (отчёт по правленому файлу)
 ```
@@ -41,6 +42,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt |
 | [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `spotless-check`, `serial-name-check` (pre-commit) и `detekt-check` (pre-push) |
+| [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
 | [`.claude/settings.json`](../.claude/settings.json), [`.claude/hooks/kotlin-quality.sh`](../.claude/hooks/kotlin-quality.sh) | хук для агентов: после правки `.kt`/`.kts` возвращает нарушения этого файла |
 
@@ -98,6 +100,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | Смысловая проверка всего проекта | `./gradlew detektCheck` |
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
+| Строки и ключи локализации | `config/hooks/check-strings.py` |
 
 Порядок перед коммитом:
 
