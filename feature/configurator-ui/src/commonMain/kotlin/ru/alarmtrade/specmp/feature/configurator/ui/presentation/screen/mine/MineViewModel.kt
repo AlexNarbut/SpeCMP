@@ -1,17 +1,26 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine
 
 import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,6 +49,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.set
  * [pickDeviceName] — режим выбора для загрузки в редактор блока: фильтр по модели блока включён сразу (его можно
  * снять — другая модель загрузится с предупреждением).
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class MineViewModel(
     pickDeviceName: String?,
     private val configurations: LocalConfigurationsRepository,
@@ -50,23 +60,32 @@ internal class MineViewModel(
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(MineState(modelFilter = pickDeviceName, pickMode = pickDeviceName != null))
-    val state: StateFlow<MineState> = _state.asStateFlow()
+
+    private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    // Список — одним потоком загрузок: первая при подписке на state, затем на каждое изменение хранилища и «Повторить».
+    // mapLatest отменяет устаревшую загрузку — старый ответ не затрёт новый. При возврате на экран (WhileSubscribed)
+    // список перечитывается.
+    private val listLoads: Flow<Unit> = merge(configurations.changes, retryRequests)
+        .onStart { emit(Unit) }
+        .mapLatest { load() }
+        .onStart { emit(Unit) }
+
+    private val connectedDeviceName: Flow<String?> = deviceSession.state
+        .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
+        .distinctUntilChanged()
+
+    val state: StateFlow<MineState> = combine(_state, listLoads, connectedDeviceName) { state, _, connected ->
+        state.copy(connectedDeviceName = connected)
+    }
+        .flowOn(dispatchers.default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
     private val _effect = sideEffectFlow<MineEffect>()
     val effect: SharedFlow<MineEffect> = _effect.asSharedFlow()
 
     /** Снимок «Сохранить в файл», отданный системному сохранению. */
     private val export = MutableStateFlow<SettingsSource.File?>(null)
-
-    init {
-        safeLaunch { load() }
-        configurations.changes.onEach { load() }.launchIn(viewModelScope)
-        deviceSession.state
-            .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
-            .distinctUntilChanged()
-            .onEach { name -> _state.update { it.copy(connectedDeviceName = name) } }
-            .launchIn(viewModelScope)
-    }
 
     private suspend fun load() {
         if (_state.value.list !is LCEState.Content) _state.update { it.copy(list = LCEState.Loading) }
@@ -88,7 +107,7 @@ internal class MineViewModel(
     }
 
     fun onRetry() {
-        safeLaunch { load() }
+        retryRequests.tryEmit(Unit)
     }
 
     fun onQueryChange(query: String) = _state.update { it.copy(query = query, shown = PAGE_SIZE) }
@@ -132,12 +151,16 @@ internal class MineViewModel(
     fun onCopy(item: LocalConfiguration, name: String) {
         run(MineMessage.COPIED) {
             val source = item.toSource()
-            configurations.create(
-                name.take(LocalConfiguration.NAME_MAX_LENGTH),
-                item.description,
-                item.deviceName,
-                from = source
-            ).also { settings.close(source) }
+            try {
+                configurations.create(
+                    name.take(LocalConfiguration.NAME_MAX_LENGTH),
+                    item.description,
+                    item.deviceName,
+                    from = source
+                )
+            } finally {
+                settings.close(source)
+            }
         }
     }
 
@@ -154,7 +177,11 @@ internal class MineViewModel(
         safeLaunch {
             val source = item.toSource()
             val response = withContext(dispatchers.io) {
-                settings.snapshot(source, item.deviceName).also { settings.close(source) }
+                try {
+                    settings.snapshot(source, item.deviceName)
+                } finally {
+                    settings.close(source)
+                }
             }
             when (response) {
                 is Response.Error -> {
@@ -219,5 +246,6 @@ internal class MineViewModel(
 
     companion object {
         const val PAGE_SIZE = 20
+        private val STOP_TIMEOUT = 5.seconds
     }
 }

@@ -12,9 +12,9 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -46,7 +46,8 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 
 class VehicleSelectViewModelTest {
 
-    private val dispatcher = StandardTestDispatcher()
+    // Unconfined: state — stateIn поверх _state, значение доходит сразу после интента (без runCurrent в каждом шаге).
+    private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeCatalog()
     private val recent = FakeRecent()
     private val viewModels = mutableListOf<VehicleSelectViewModel>()
@@ -80,6 +81,8 @@ class VehicleSelectViewModelTest {
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        // Как экран: state стартует работу по подписке (stateIn).
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         advanceUntilIdle()
         return vm to effects
     }

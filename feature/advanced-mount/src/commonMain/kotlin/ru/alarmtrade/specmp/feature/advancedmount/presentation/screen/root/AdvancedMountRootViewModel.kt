@@ -10,12 +10,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
@@ -31,6 +31,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
@@ -68,12 +69,25 @@ class AdvancedMountRootViewModel(
         .flowOn(dispatchers.io)
         .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    val state: StateFlow<AdvancedMountRootState> = combine(_state, unreadCount, remoteAvailable) {
-            state,
-            unread,
-            remote
-        ->
-        state.copy(unreadCount = unread, remoteAvailable = remote)
+    // Транспорт последнего подключения: на время переподключения (null) показываем прежний.
+    private val transport: Flow<ConnectionTransport?> = deviceSession.transport
+        .runningFold(null as ConnectionTransport?) { last, current -> current ?: last }
+
+    // Кнопка «Информация о товаре» — один раз за жизнь VM, при первой подписке на state.
+    private val productInfo: StateFlow<Boolean> = flow {
+        emit((repository.isProductInfoEnabled() as? Response.Success)?.value ?: false)
+    }
+        .flowOn(dispatchers.io)
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+    val state: StateFlow<AdvancedMountRootState> = combine(
+        _state,
+        unreadCount,
+        remoteAvailable,
+        transport,
+        productInfo
+    ) { state, unread, remote, transport, productInfo ->
+        state.copy(unreadCount = unread, remoteAvailable = remote, transport = transport, productInfo = productInfo)
     }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
@@ -85,17 +99,8 @@ class AdvancedMountRootViewModel(
     private var loadJob: Job? = null
 
     init {
-        safeLaunch {
-            deviceSession.transport.filterNotNull().collect { transport ->
-                _state.update { it.copy(transport = transport) }
-            }
-        }
+        // Реакция на каждое (пере)подключение блока живёт всю жизнь VM: проверка нового блока и IMEI.
         deviceScope.onReady(::onDeviceReady)
-        safeLaunch {
-            val enabled =
-                (withContext(dispatchers.io) { repository.isProductInfoEnabled() } as? Response.Success)?.value ?: false
-            _state.update { it.copy(productInfo = enabled) }
-        }
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {

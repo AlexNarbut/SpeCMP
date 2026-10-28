@@ -17,9 +17,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -80,7 +80,8 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepo
 
 class DeviceSettingsViewModelTest {
 
-    private val dispatcher = StandardTestDispatcher()
+    // Unconfined: state — stateIn поверх _state, значение доходит сразу после интента.
+    private val dispatcher = UnconfinedTestDispatcher()
     private val viewModels = mutableListOf<DeviceSettingsViewModel>()
 
     private val device = AlarmDevice(

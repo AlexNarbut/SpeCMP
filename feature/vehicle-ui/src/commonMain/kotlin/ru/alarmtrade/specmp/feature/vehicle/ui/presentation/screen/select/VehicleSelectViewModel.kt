@@ -1,11 +1,17 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
+import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -65,11 +71,21 @@ internal class VehicleSelectViewModel(
             ),
             deviceType = (request.device as? VehicleDeviceFilter.Type)?.type,
             needsType = request.device == null,
-            canCode = request.firmwareCanCode.takeUnless { configurationsOnly }.orEmpty(),
-            recent = recentStore.recent(request.catalog)
+            canCode = request.firmwareCanCode.takeUnless { configurationsOnly }.orEmpty()
         )
     )
-    val state: StateFlow<VehicleSelectState> = _state.asStateFlow()
+
+    // Старт экрана — при первой подписке на state, один раз за жизнь VM (Lazily): недавние (хранилище — на io) и
+    // марки, если тип устройства уже известен.
+    private val initialLoad: StateFlow<Unit?> = flow {
+        val recent = withContext(dispatchers.io) { recentStore.recent(request.catalog) }
+        _state.update { it.copy(recent = recent) }
+        if (!_state.value.showTypeChoice) loadBrands()
+        emit(Unit)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+    val state: StateFlow<VehicleSelectState> = combine(_state, initialLoad) { state, _ -> state }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
     private val _effect = sideEffectFlow<VehicleSelectEffect>()
     val effect: SharedFlow<VehicleSelectEffect> = _effect.asSharedFlow()
@@ -78,10 +94,6 @@ internal class VehicleSelectViewModel(
 
     /** CAN-код, по которому единственный результат уже открывался автоматически (не открывать повторно). */
     private var autoOpenedCode: String? = null
-
-    init {
-        if (!_state.value.showTypeChoice) loadBrands()
-    }
 
     // ── Тип устройства ─────────────────────────────────────────
 
@@ -554,6 +566,10 @@ internal class VehicleSelectViewModel(
     }
 
     private fun updateCardUi(transform: (CardUi) -> CardUi) = _state.update { it.copy(cardUi = transform(it.cardUi)) }
+
+    private companion object {
+        val STOP_TIMEOUT = 5.seconds
+    }
 }
 
 /** Первая непустая вкладка карточки (`null` — вкладок нет). */

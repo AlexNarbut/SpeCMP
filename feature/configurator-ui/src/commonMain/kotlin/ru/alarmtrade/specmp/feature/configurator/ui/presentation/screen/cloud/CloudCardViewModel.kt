@@ -1,10 +1,23 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud
 
+import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -30,6 +43,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
  * K4 карточка облачной конфигурации: полное описание, монтажная карта, вложения, CAN-код (из настроек конфигурации)
  * и предупреждение, если он не совпадает с единой CAN-прошивкой блока ([firmwareCanCode]); «Сохранить в мои».
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class CloudCardViewModel(
     private val id: Int,
     firmwareCanCode: String?,
@@ -40,20 +54,30 @@ internal class CloudCardViewModel(
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(
-        CloudCardState(
-            firmwareCanCode = firmwareCanCode,
-            connectedDeviceName = (deviceSession.state.value as? DeviceSessionState.Ready)?.device?.systemName
-        )
-    )
-    val state: StateFlow<CloudCardState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(CloudCardState(firmwareCanCode = firmwareCanCode))
+
+    private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    // Загрузка — при первой подписке на state (Lazily, один раз за жизнь VM) и по «Повторить»; mapLatest отменяет
+    // незаконченную загрузку при повторе.
+    private val loads: StateFlow<Unit?> = retryRequests
+        .onStart { emit(Unit) }
+        .mapLatest { load() }
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+    // Модель подключённого блока — из сессии, а не снимком на старте.
+    private val connectedDeviceName: Flow<String?> = deviceSession.state
+        .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
+        .distinctUntilChanged()
+
+    val state: StateFlow<CloudCardState> = combine(_state, loads, connectedDeviceName) { state, _, connected ->
+        state.copy(connectedDeviceName = connected)
+    }
+        .flowOn(dispatchers.default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
     private val _effect = sideEffectFlow<CloudCardEffect>()
     val effect: SharedFlow<CloudCardEffect> = _effect.asSharedFlow()
-
-    init {
-        safeLaunch { load() }
-    }
 
     private suspend fun load() {
         _state.update { it.copy(card = LCEState.Loading) }
@@ -74,15 +98,18 @@ internal class CloudCardViewModel(
     private suspend fun loadCanCode(card: CloudConfiguration) {
         val source = card.toSource()
         val code = withContext(dispatchers.io) {
-            settings.open(source, reload = true).getValueIfSuccess()
-                ?.settings()?.filterIsInstance<CanCodeSetting>()?.firstOrNull()?.value?.value?.code
-                .also { settings.close(source) }
+            try {
+                settings.open(source, reload = true).getValueIfSuccess()
+                    ?.settings()?.filterIsInstance<CanCodeSetting>()?.firstOrNull()?.value?.value?.code
+            } finally {
+                settings.close(source)
+            }
         }
         _state.update { it.copy(canCode = code?.takeIf { value -> value.isNotBlank() }) }
     }
 
     fun onRetry() {
-        safeLaunch { load() }
+        retryRequests.tryEmit(Unit)
     }
 
     fun onDescriptionToggle() = _state.update { it.copy(descriptionExpanded = !it.descriptionExpanded) }
@@ -124,12 +151,16 @@ internal class CloudCardViewModel(
             val source = card.toSource()
             val response = try {
                 withContext(dispatchers.io) {
-                    configurations.create(
-                        form.name.trim(),
-                        form.description.trim(),
-                        card.summary.deviceName,
-                        from = source
-                    ).also { settings.close(source) }
+                    try {
+                        configurations.create(
+                            form.name.trim(),
+                            form.description.trim(),
+                            card.summary.deviceName,
+                            source
+                        )
+                    } finally {
+                        settings.close(source)
+                    }
                 }
             } finally {
                 _state.update { it.copy(busy = false) }
@@ -143,5 +174,9 @@ internal class CloudCardViewModel(
                 is Response.Success -> _effect.tryEmit(CloudCardEffect.SavedToMine(response.value))
             }
         }
+    }
+
+    private companion object {
+        val STOP_TIMEOUT = 5.seconds
     }
 }

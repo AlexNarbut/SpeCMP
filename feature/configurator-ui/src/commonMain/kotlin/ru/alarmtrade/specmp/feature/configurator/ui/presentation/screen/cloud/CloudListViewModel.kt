@@ -1,8 +1,17 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud
 
+import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -19,6 +28,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
  * K4 список облачных конфигураций автомобиля [carId]: приходит целиком; сортировка «Лучшие / Новые», фильтр по модели
  * блока — локально. [deviceName] — модель блока, под которую запрашивать (пусто — все модели).
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class CloudListViewModel(
     private val carId: Int,
     private val deviceName: String,
@@ -27,11 +37,18 @@ internal class CloudListViewModel(
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(CloudListState(modelFilter = deviceName.ifEmpty { null }))
-    val state: StateFlow<CloudListState> = _state.asStateFlow()
 
-    init {
-        safeLaunch { load() }
-    }
+    private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    // Загрузка — при первой подписке на state (Lazily, один раз за жизнь VM) и по «Повторить»; mapLatest отменяет
+    // незаконченную загрузку при повторе.
+    private val loads: StateFlow<Unit?> = retryRequests
+        .onStart { emit(Unit) }
+        .mapLatest { load() }
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+    val state: StateFlow<CloudListState> = combine(_state, loads) { state, _ -> state }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
     private suspend fun load() {
         _state.update { it.copy(list = LCEState.Loading) }
@@ -51,7 +68,7 @@ internal class CloudListViewModel(
     }
 
     fun onRetry() {
-        safeLaunch { load() }
+        retryRequests.tryEmit(Unit)
     }
 
     fun onOrder(order: CloudConfigurationOrder) = _state.update { it.copy(order = order) }
@@ -59,6 +76,10 @@ internal class CloudListViewModel(
     fun onModelFilter(deviceName: String?) = _state.update { it.copy(modelFilter = deviceName) }
 
     fun onSelect(id: Int) = _state.update { it.copy(selectedId = id) }
+
+    private companion object {
+        val STOP_TIMEOUT = 5.seconds
+    }
 }
 
 internal fun CloudConfiguration.toSource(): SettingsSource.RemoteConfiguration =

@@ -1,24 +1,28 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
 import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,6 +44,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchHit
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
@@ -65,6 +70,9 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 
 private const val SEARCH_DEBOUNCE_MILLIS = 150L
+private val STATE_STOP_TIMEOUT = 5.seconds
+
+private fun DeviceSessionState.connectedName(): String? = (this as? DeviceSessionState.Ready)?.device?.systemName
 
 /**
  * Сессия редактора настроек для [source] (одна на граф настроек).
@@ -89,7 +97,7 @@ internal class DeviceSettingsViewModel(
     private val localConfigurations: LocalConfigurationsRepository,
     private val preferences: DeviceSettingsPreferences,
     private val carsRepository: VehicleCatalogRepository,
-    deviceSession: DeviceSession,
+    private val deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
@@ -105,8 +113,6 @@ internal class DeviceSettingsViewModel(
             canWriteToDevice = options.canWriteToDevice
         )
     )
-    val state: StateFlow<DeviceSettingsState> = _state.asStateFlow()
-
     private val _effect = sideEffectFlow<DeviceSettingsEffect>()
     val effect: SharedFlow<DeviceSettingsEffect> = _effect.asSharedFlow()
 
@@ -147,24 +153,40 @@ internal class DeviceSettingsViewModel(
      */
     private val pendingPreviewClose = MutableStateFlow(true)
 
-    init {
-        if (followsDevice) {
-            deviceScope.onReady(::onDeviceReady)
-        } else {
-            safeLaunch { load() }
-            deviceSession.state
-                .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
-                .distinctUntilChanged()
-                .onEach { name -> _state.update { it.copy(connectedDeviceName = name) } }
-                .launchIn(viewModelScope)
+    // Источник не блока (файл, мои, облако, заводские) читается при первой подписке на state, один раз за жизнь VM
+    // (Lazily). Блок перечитывается на каждое (пере)подключение — это реакция init, живущая всю жизнь VM.
+    private val initialLoad: StateFlow<Unit?> = flow {
+        if (!followsDevice) load()
+        emit(Unit)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+    /** Модель подключённого блока (для «Записать в блок»). */
+    private val connectedDeviceName: Flow<String?> = deviceSession.state
+        .map { it.connectedName() }
+        .distinctUntilChanged()
+
+    /** Поиск: запрос в state попадает вместе с результатом (после debounce), а не на каждый символ. */
+    private val search: Flow<Pair<String, List<SettingsSearchHit>>> =
+        combine(searchQuery, _state.map { it.menu.content }.distinctUntilChanged { a, b -> a === b }) { query, root ->
+            query to root
         }
-        val menuRoot = _state.map { it.menu.content }.distinctUntilChanged { a, b -> a === b }
-        combine(searchQuery, menuRoot) { query, root -> query to root }
             .debounce(SEARCH_DEBOUNCE_MILLIS)
             .mapLatest { (query, root) -> query to root?.search(query).orEmpty() }
-            .flowOn(dispatchers.default)
-            .onEach { (query, hits) -> _state.update { it.copy(searchQuery = query, searchHits = hits) } }
-            .launchIn(viewModelScope)
+            .onStart { emit("" to emptyList()) }
+
+    val state: StateFlow<DeviceSettingsState> = combine(_state, initialLoad, connectedDeviceName, search) {
+            state,
+            _,
+            connected,
+            (query, hits)
+        ->
+        state.copy(connectedDeviceName = connected, searchQuery = query, searchHits = hits)
+    }
+        .flowOn(dispatchers.default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_STOP_TIMEOUT), _state.value)
+
+    init {
+        if (followsDevice) deviceScope.onReady(::onDeviceReady)
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
@@ -800,7 +822,7 @@ internal class DeviceSettingsViewModel(
 
     /** «Записать в блок» из конфигурации: другая модель — предупреждение. */
     fun onWriteToDeviceRequest() {
-        val connected = _state.value.connectedDeviceName ?: return
+        val connected = deviceSession.state.value.connectedName() ?: return
         val model = source.deviceNameOrNull
         if (model != null && !model.equals(connected, ignoreCase = true)) {
             _state.update {

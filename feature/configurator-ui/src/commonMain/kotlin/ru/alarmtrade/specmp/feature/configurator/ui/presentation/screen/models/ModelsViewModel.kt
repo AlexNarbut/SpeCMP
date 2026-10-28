@@ -1,10 +1,20 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models
 
+import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -33,21 +43,29 @@ internal class ModelsViewModel(
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(
-        ModelsState(
-            fileName = file?.name,
-            recent = models.recent(),
-            connected = (deviceSession.state.value as? DeviceSessionState.Ready)?.device?.systemName
-        )
-    )
-    val state: StateFlow<ModelsState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(ModelsState(fileName = file?.name))
+
+    // Первая загрузка — при первой подписке на state, один раз за жизнь VM (Lazily).
+    private val initialLoad: StateFlow<Unit?> = flow {
+        val recent = withContext(dispatchers.io) { models.recent() }
+        _state.update { it.copy(recent = recent) }
+        load()
+        emit(Unit)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+    // Модель подключённого блока — из сессии, а не снимком на старте: блок подключают и отключают при открытом экране.
+    private val connected: Flow<String?> = deviceSession.state
+        .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
+        .distinctUntilChanged()
+
+    val state: StateFlow<ModelsState> = combine(_state, initialLoad, connected) { state, _, connected ->
+        state.copy(connected = connected)
+    }
+        .flowOn(dispatchers.default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
     private val _effect = sideEffectFlow<ModelsEffect>()
     val effect: SharedFlow<ModelsEffect> = _effect.asSharedFlow()
-
-    init {
-        safeLaunch { load() }
-    }
 
     private suspend fun load() {
         _state.update { it.copy(list = LCEState.Loading) }
@@ -67,7 +85,7 @@ internal class ModelsViewModel(
     }
 
     fun onRetry() {
-        safeLaunch { load() }
+        safeLaunch { executeWithProceedLock { load() } }
     }
 
     fun onQueryChange(query: String) = _state.update { it.copy(query = query) }
@@ -76,13 +94,11 @@ internal class ModelsViewModel(
 
     /** «✕» у недавней модели: убрать из списка. */
     fun onRecentRemove(deviceName: String) {
-        models.removeRecent(deviceName)
-        _state.update { it.copy(recent = models.recent()) }
+        updateRecent { models.removeRecent(deviceName) }
     }
 
     fun onPick(deviceName: String) {
-        models.pushRecent(deviceName)
-        _state.update { it.copy(recent = models.recent()) }
+        updateRecent { models.pushRecent(deviceName) }
         if (file == null) {
             _effect.tryEmit(ModelsEffect.Open(SourceKey.Defaults(deviceName)))
             return
@@ -93,7 +109,11 @@ internal class ModelsViewModel(
             val source = key.toSource()
             val response = try {
                 withContext(dispatchers.io) {
-                    settings.open(source, reload = true).also { settings.close(source) }
+                    try {
+                        settings.open(source, reload = true)
+                    } finally {
+                        settings.close(source)
+                    }
                 }
             } finally {
                 _state.update { it.copy(checking = false) }
@@ -107,5 +127,20 @@ internal class ModelsViewModel(
                 is Response.Success -> _effect.tryEmit(ModelsEffect.Open(key))
             }
         }
+    }
+
+    /** Недавние — хранилище (Settings + JSON): правка и перечитка на io. */
+    private fun updateRecent(change: () -> Unit) {
+        safeLaunch {
+            val recent = withContext(dispatchers.io) {
+                change()
+                models.recent()
+            }
+            _state.update { it.copy(recent = recent) }
+        }
+    }
+
+    private companion object {
+        val STOP_TIMEOUT = 5.seconds
     }
 }
