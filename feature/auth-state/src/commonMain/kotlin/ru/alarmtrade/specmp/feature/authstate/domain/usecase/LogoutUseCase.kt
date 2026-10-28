@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.authstate.domain.usecase
 
 import co.touchlab.kermit.Logger
+import kotlin.time.measureTimedValue
 import kotlinx.coroutines.CancellationException
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.Response
@@ -20,7 +21,7 @@ class LogoutUseCase(private val authStateRepository: AuthStateRepository, privat
 
     // Сбой release() одного AuthCloseable не должен сорвать выход: ловим всё, кроме отмены, и логируем
     @Suppress("TooGenericExceptionCaught")
-    suspend fun execute(): Response<Unit> = when (val response = authStateRepository.logout()) {
+    suspend fun execute(): Response<Unit> = when (val response = timedLogout()) {
         is Response.Success -> {
             closeables.forEach { closeable ->
                 try {
@@ -35,5 +36,13 @@ class LogoutUseCase(private val authStateRepository: AuthStateRepository, privat
         }
 
         is Response.Error -> response
+    }
+
+    // Время выхода в логе: SDK стирает токены сразу, сервер уведомляет в фоне — долгий выход здесь был бы виден.
+    private suspend fun timedLogout(): Response<Unit> {
+        val (response, elapsed) = measureTimedValue { authStateRepository.logout() }
+        val result = if (response is Response.Success) "succeeded" else "failed"
+        logger.i { "Logout $result in ${elapsed.inWholeMilliseconds} ms" }
+        return response
     }
 }
