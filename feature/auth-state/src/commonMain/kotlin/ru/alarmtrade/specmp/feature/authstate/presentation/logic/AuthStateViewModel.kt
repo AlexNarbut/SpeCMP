@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.update
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 
 class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispatchers) : BaseViewModel() {

@@ -11,14 +11,12 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 enum class VehicleSelectMode { VIEW, PICK }
 
 /**
- * Запрос на открытие выбора автомобиля ([VehicleSelectEntry]). Сериализуется — годится в ключ маршрута.
+ * Запрос на открытие выбора автомобиля ([VehicleSelectEntry]). В ключ маршрута — через [VehicleSelectRoute].
  *
  * @property device под какое устройство фильтровать каталог; `null` — сначала экран выбора типа устройства.
  * @property firmwareCanCode CAN-код прошивки подключённого блока: подзаголовок и предзаполненный поиск по CAN.
  * @property warnOnCanMismatch в режиме выбора предупредить, если CAN-код автомобиля не совпадает с [firmwareCanCode].
  */
-@Serializable
-@SerialName("vehicle-ui.VehicleSelectRequest")
 data class VehicleSelectRequest(
     val mode: VehicleSelectMode,
     val catalog: VehicleCatalog,

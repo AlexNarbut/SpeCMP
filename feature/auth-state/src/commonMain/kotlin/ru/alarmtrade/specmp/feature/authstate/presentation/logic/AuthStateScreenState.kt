@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.authstate.presentation.logic
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
 
 /**
  * Состояние корня авторизации. [session] растёт при каждом входе в [AuthState.AUTHED] — ключ хранилища ViewModel

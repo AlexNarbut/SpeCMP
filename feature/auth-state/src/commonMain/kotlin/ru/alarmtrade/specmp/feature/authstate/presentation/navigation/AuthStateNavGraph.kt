@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.ui.navigation.ViewModelScope
-import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
+import ru.alarmtrade.specmp.feature.authstate.presentation.logic.AuthState
 import ru.alarmtrade.specmp.feature.authstate.presentation.logic.AuthStateViewModel
 
 @Composable

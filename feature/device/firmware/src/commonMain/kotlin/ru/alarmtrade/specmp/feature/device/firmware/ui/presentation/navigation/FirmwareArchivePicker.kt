@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.firmware.domain.session
+package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation
 
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 
 /**
- * Результат экрана «Архив прошивок»: выбранная версия возвращается экрану обновления, который лежит под ним в стеке
+ * Канал результата между экранами графа загрузчика (presentation, не domain): «Архив прошивок»: выбранная версия возвращается экрану обновления, который лежит под ним в стеке
  * (его ViewModel жива и собирает [picks]). Нет повтора: версия, выбранная до появления подписчика, не нужна —
  * архив открывается только с экрана обновления.
  */
