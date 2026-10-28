@@ -20,25 +20,13 @@ internal data class MineState(
     val busy: Boolean = false,
     /** Модель подключённого блока: «Записать в блок» только при связи. */
     val connectedDeviceName: String? = null,
-    val pickMode: Boolean = false
+    val pickMode: Boolean = false,
+    /** Модели, которые есть в списке, — варианты фильтра. Производное — [withLists]. */
+    val models: List<String> = emptyList(),
+    /** Список после поиска и фильтра по модели. Производное — [withLists]. */
+    val filtered: List<LocalConfiguration> = emptyList()
 ) {
     val all: List<LocalConfiguration> get() = list.content.orEmpty()
-
-    /** Модели, которые есть в списке, — варианты фильтра. */
-    val models: List<String> get() = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() }
-
-    val filtered: List<LocalConfiguration>
-        get() {
-            val q = query.trim()
-            return all.filter { item ->
-                (modelFilter == null || item.deviceName.equals(modelFilter, ignoreCase = true)) &&
-                    (
-                        q.isEmpty() ||
-                            item.name.contains(q, ignoreCase = true) ||
-                            item.description.contains(q, ignoreCase = true)
-                        )
-            }
-        }
 
     val selected: LocalConfiguration? get() = selectedId?.let { id -> all.firstOrNull { it.id == id } }
 }
@@ -56,3 +44,21 @@ internal sealed interface MineDialog {
 }
 
 internal enum class MineMessage { COPIED, DELETED, RENAMED, FAILED }
+
+/**
+ * Производные списки — фильтр, поиск, варианты моделей. Считаются во VM в `combine` на `default` (один раз на изменение
+ * state), а не геттером на каждую рекомпозицию на Main.
+ */
+internal fun MineState.withLists(): MineState {
+    val q = query.trim()
+    return copy(
+        models = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() },
+        filtered = all.filter { item ->
+            (modelFilter == null || item.deviceName.equals(modelFilter, ignoreCase = true)) &&
+                (
+                    q.isEmpty() || item.name.contains(q, ignoreCase = true) ||
+                        item.description.contains(q, ignoreCase = true)
+                    )
+        }
+    )
+}

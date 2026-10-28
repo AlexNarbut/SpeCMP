@@ -76,7 +76,7 @@ internal class MineViewModel(
         .distinctUntilChanged()
 
     val state: StateFlow<MineState> = combine(_state, listLoads, connectedDeviceName) { state, _, connected ->
-        state.copy(connectedDeviceName = connected)
+        state.copy(connectedDeviceName = connected).withLists()
     }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)

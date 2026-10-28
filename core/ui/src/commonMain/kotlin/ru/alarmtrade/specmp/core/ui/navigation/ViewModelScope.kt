@@ -15,10 +15,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  * Поэтому границу задаёт ключ: новый [scopeKey] (например, номер сессии аккаунта) очищает VM прежнего, а пересоздание
  * Activity при том же ключе их сохраняет. Включая VM записей nav3 (`rememberViewModelStoreNavEntryDecorator` хранит
  * их в ближайшем [LocalViewModelStoreOwner]).
+ *
+ * [name] — своё хранилище на каждую зону: соседние зоны (обе видны во время перехода) не очищают VM друг друга.
  */
 @Composable
-fun ViewModelScope(scopeKey: Any, content: @Composable () -> Unit) {
-    val stores = viewModel { ScopedViewModelStores() }
+fun ViewModelScope(name: String, scopeKey: Any, content: @Composable () -> Unit) {
+    val stores = viewModel(key = name) { ScopedViewModelStores() }
     CompositionLocalProvider(LocalViewModelStoreOwner provides stores.ownerFor(scopeKey), content = content)
 }
 

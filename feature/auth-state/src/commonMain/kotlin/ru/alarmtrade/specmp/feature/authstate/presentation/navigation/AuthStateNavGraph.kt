@@ -33,10 +33,11 @@ fun AuthStateNavGraph(
         when (current.state) {
             AuthState.WAITING -> waitingState()
 
-            AuthState.NO_AUTH -> noAuthState()
+            // Зона входа — тоже на сессию: формы прошлого входа (регистрация, сброс пароля) не достаются следующему.
+            AuthState.NO_AUTH -> ViewModelScope(name = NO_AUTH_SCOPE, scopeKey = current.session) { noAuthState() }
 
             // Сессия — из target анимации: уходящая при выходе зона дорисовывается со своим хранилищем VM.
-            AuthState.AUTHED -> ViewModelScope(scopeKey = current.session) { authedState() }
+            AuthState.AUTHED -> ViewModelScope(name = AUTHED_SCOPE, scopeKey = current.session) { authedState() }
 
             AuthState.CHECK_FAILED -> errorState(viewModel::retry)
         }
@@ -45,3 +46,5 @@ fun AuthStateNavGraph(
 
 private const val TRANSITION_DURATION_MILLIS = 220
 private const val ANIMATION_LABEL = "AuthStateNavGraph"
+private const val NO_AUTH_SCOPE = "auth.no-auth"
+private const val AUTHED_SCOPE = "auth.authed"

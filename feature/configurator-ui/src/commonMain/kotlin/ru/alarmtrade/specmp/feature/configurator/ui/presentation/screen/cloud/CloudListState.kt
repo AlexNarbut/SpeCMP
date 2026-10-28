@@ -14,13 +14,20 @@ internal data class CloudListState(
     val order: CloudConfigurationOrder = CloudConfigurationOrder.BEST,
     val modelFilter: String? = null,
     /** Выбранная (широкое окно — карточка справа). */
-    val selectedId: Int? = null
-) {
-    private val all: List<CloudConfigurationSummary> get() = list.content.orEmpty()
+    val selectedId: Int? = null,
+    /** Модели в списке — варианты фильтра. Производное — [withLists]. */
+    val models: List<String> = emptyList(),
+    /** Список после фильтра по модели и сортировки. Производное — [withLists]. */
+    val shown: List<CloudConfigurationSummary> = emptyList()
+)
 
-    val models: List<String> get() = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() }
-
-    val shown: List<CloudConfigurationSummary>
-        get() = all.filter { modelFilter == null || it.deviceName.equals(modelFilter, ignoreCase = true) }
-            .sortedBy(order)
+/** Производные списки — во VM в `combine` на `default`, а не геттером на каждую рекомпозицию на Main. */
+internal fun CloudListState.withLists(): CloudListState {
+    val all = list.content.orEmpty()
+    return copy(
+        models = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() },
+        shown = all.filter {
+            modelFilter == null || it.deviceName.equals(modelFilter, ignoreCase = true)
+        }.sortedBy(order)
+    )
 }

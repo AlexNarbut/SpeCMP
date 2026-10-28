@@ -110,6 +110,19 @@ val state = _state
 не зависимая от UI фоновая логика (пуллинг, периодическая синхронизация): такая работа живёт
 в доменном объекте и сама владеет своим диспетчером.
 
+**`withContext` внутри `flow {}` vs `flowOn`.** Внутри `flow {}` `withContext` можно — для вычисления
+значения (`val recent = withContext(dispatchers.io) { models.recent() }`, затем `emit(recent)`).
+Нельзя вызывать `emit` **внутри** `withContext` — это нарушает инвариант контекста Flow
+(`IllegalStateException: Flow invariant is violated`). Если на другом диспетчере должен работать
+весь upstream (сбор SDK-flow, скан, `combine` с маппингом) — `.flowOn(dispatchers.io/default)` после
+цепочки; он влияет только на операторы **выше** себя.
+
+**Что не должно работать на Main:** вызовы SDK/сети/BLE/БД (включая `suspend`-методы SDK, которые
+«выглядят» асинхронными — внутри может быть блокирующий вызов), обход больших деревьев и сортировка/
+фильтрация списков. Производные списки экрана (фильтр по поиску, сортировка) считаются в `combine`
+перед `.flowOn(dispatchers.default)` и кладутся в state готовыми полями (`MineState.withLists()`),
+а не `get()`-свойствами, которые пересчитываются на Main при каждом чтении из Compose.
+
 **Хардкод запрещён** — иначе нельзя подменить в тестах:
 
 ```kotlin
@@ -507,10 +520,11 @@ override fun observeUnreadMessagesCount(): Flow<Response<Int>> {
 про текущий аккаунт (открытое соединение, кэш, незакрытая сессия, офлайн-очередь), после смены
 аккаунта протечёт в новую сессию, если его не сбросить явно.
 
-- **ViewModel авторизованной зоны живут одну сессию аккаунта**: `AuthStateNavGraph` даёт зоне
-  `ViewModelScope(session)` (`core/ui`), и каждый вход получает новые VM — их загрузка при старте
-  (`init` / `stateIn(Lazily)`) выполняется заново. Сбрасывать state VM «на логаут» вручную не нужно;
-  своё хранилище VM для зоны, переживающей смену аккаунта, не заводить (`docs/navigation.md`).
+- **ViewModel зон авторизации живут одну сессию**: `AuthStateNavGraph` оборачивает и авторизованную,
+  и неавторизованную зону в `ViewModelScope(name, session)` (`core/ui`), поэтому каждый вход/выход
+  получает новые VM — их загрузка при старте (`stateIn(Lazily)`) выполняется заново, формы входа и
+  регистрации пустые. Сбрасывать state VM «на логаут» вручную (`reset()` из `DisposableEffect`) не
+  нужно; своё хранилище VM для зоны, переживающей смену аккаунта, не заводить (`docs/navigation.md`).
 
 - **Identity пользователя — из `AccountRepository` (`feature/account`)**, а не полем
   `private var currentUserEmail` в репозитории фичи и не собственным вызовом
@@ -838,6 +852,25 @@ class MainScreenViewModel(
   не нужны.
 - Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять
   `.onStart { emit(<initial>) }`, иначе `combine` не эмитит, пока не ответят все источники.
+- **Повтор/перезагрузка — тот же источник, а не второй `safeLaunch`.** Триггеры (`MutableSharedFlow`
+  «повторить», изменения хранилища) сливаются в один поток, `mapLatest { load() }` отменяет
+  устаревшую загрузку — гонки двух параллельных загрузок нет:
+  ```kotlin
+  private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+  private val loads = merge(repository.changes, retryRequests)
+      .onStart { emit(Unit) }
+      .mapLatest { load() }                       // пишет в _state
+      .stateIn(viewModelScope, SharingStarted.Lazily, Unit)
+  fun onRetry() { retryRequests.tryEmit(Unit) }
+  ```
+- **Снимки чужого state не копировать в `_state`.** Значение из `deviceSession.state` и т.п.
+  комбинируется в `state` как источник; внутри интентов читать `deviceSession.state.value`, а не
+  поле, скопированное в `init`.
+- Ресурсы, открытые на время загрузки (`settings.open/close`), закрываются в `finally` — загрузку
+  может отменить `mapLatest` или уход VM.
+- **Тесты VM с `stateIn`:** `state.value` обновляется, только пока есть подписчик — тест
+  подписывается (`backgroundScope.launch { vm.state.collect {} }`), а `Dispatchers.setMain` —
+  `UnconfinedTestDispatcher`, чтобы источники отработали без `advanceUntilIdle()` на каждом шаге.
 
 **Запрещено, без исключений (частые «оправдания», которые не работают):**
 

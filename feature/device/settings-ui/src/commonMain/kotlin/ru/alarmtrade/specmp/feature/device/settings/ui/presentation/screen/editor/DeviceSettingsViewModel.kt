@@ -226,7 +226,9 @@ internal class DeviceSettingsViewModel(
 
             is Response.Success -> {
                 val root = response.value
-                baseline.update { root.valuesById() }
+                // Обход всего дерева — на default, как и в showMenu.
+                val values = withContext(dispatchers.default) { root.valuesById() }
+                baseline.update { values }
                 showMenu(root)
             }
         }
@@ -450,7 +452,10 @@ internal class DeviceSettingsViewModel(
 
     /** Правки записаны/сохранены: снимок «как было» = текущее меню, подсветка снимается. */
     private suspend fun commit() {
-        currentRoot()?.let { root -> baseline.update { root.valuesById() } }
+        currentRoot()?.let { root ->
+            val values = withContext(dispatchers.default) { root.valuesById() }
+            baseline.update { values }
+        }
         loadedIds.update { emptySet() }
         refreshChanged()
     }

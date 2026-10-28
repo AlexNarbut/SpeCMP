@@ -22,9 +22,9 @@ class MineStateTest {
     fun `search covers name and description, model filter ignores case`() {
         val state = MineState(list = LCEState.Content(items))
 
-        assertEquals(listOf(2L), state.copy(query = "автозапуск по").filtered.map { it.id })
-        assertEquals(listOf(1L, 2L), state.copy(query = "АВТОЗАПУСК").filtered.map { it.id })
-        assertEquals(listOf(1L, 3L), state.copy(modelFilter = "DX-9X").filtered.map { it.id })
-        assertEquals(listOf("DX-4GS", "DX-9X", "dx-9x"), state.models)
+        assertEquals(listOf(2L), state.copy(query = "автозапуск по").withLists().filtered.map { it.id })
+        assertEquals(listOf(1L, 2L), state.copy(query = "АВТОЗАПУСК").withLists().filtered.map { it.id })
+        assertEquals(listOf(1L, 3L), state.copy(modelFilter = "DX-9X").withLists().filtered.map { it.id })
+        assertEquals(listOf("DX-4GS", "DX-9X", "dx-9x"), state.withLists().models)
     }
 }

@@ -46,10 +46,6 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         _state.update { it.copy(isInstallerConfirmed = value, registrationState = it.registrationState.dismissError()) }
     }
 
-    fun reset() {
-        _state.update { RegistrationScreenState() }
-    }
-
     fun submit() {
         val credentials = _state.value.toCredentials()
 

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -47,7 +48,8 @@ internal class CloudListViewModel(
         .mapLatest { load() }
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    val state: StateFlow<CloudListState> = combine(_state, loads) { state, _ -> state }
+    val state: StateFlow<CloudListState> = combine(_state, loads) { state, _ -> state.withLists() }
+        .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
 
     private suspend fun load() {

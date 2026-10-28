@@ -119,7 +119,9 @@ class FirmwareCheckViewModel(
                 val list = response.value
                 modules.update { list.associateBy { module -> module.id } }
                 _state.update { it.copy(content = LCEState.Content(list.map(::initialCard))) }
-                list.forEach { module -> safeLaunch { resolveModule(device, module) } }
+                // Через deviceScope: чтение модулей и запросы версий отменяются при потере связи
+                // и не пишут в карточки нового блока.
+                list.forEach { module -> deviceScope.launch { resolveModule(device, module) } }
             }
         }
     }
@@ -196,7 +198,7 @@ class FirmwareCheckViewModel(
 
     fun onRetry() {
         val device = deviceSession.state.value.let { (it as? DeviceSessionState.Ready)?.device } ?: return
-        safeLaunch { load(device) }
+        deviceScope.launch { load(device) }
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
@@ -204,14 +206,14 @@ class FirmwareCheckViewModel(
         _state.update { it.copy(channel = channel, bootFailed = false) }
         // Модули, у которых версия ещё читается, сами запросят сервер уже по новому каналу.
         cards().filter { it.status !is CardStatusUi.NotSupported && it.currentVersion !is CurrentVersionUi.Reading }
-            .forEach { card -> safeLaunch { lookup(card.id) } }
+            .forEach { card -> deviceScope.launch { lookup(card.id) } }
     }
 
     fun onRefreshModule(moduleId: Long) {
         val card = cards().firstOrNull { it.id == moduleId } ?: return
         if (card.status is CardStatusUi.NotSupported || card.status is CardStatusUi.Searching) return
         if (card.currentVersion is CurrentVersionUi.Reading) return
-        safeLaunch { lookup(moduleId) }
+        deviceScope.launch { lookup(moduleId) }
     }
 
     fun onDescriptionClick(moduleId: Long) {

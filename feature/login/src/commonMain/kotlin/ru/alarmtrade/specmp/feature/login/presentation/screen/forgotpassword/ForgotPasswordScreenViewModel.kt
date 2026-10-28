@@ -24,10 +24,6 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
         _state.update { it.copy(email = value, resetState = it.resetState.dismissError()) }
     }
 
-    fun reset() {
-        _state.update { ForgotPasswordScreenState() }
-    }
-
     fun submit() {
         val credentials = ResetPasswordCredentials(email = _state.value.email)
 

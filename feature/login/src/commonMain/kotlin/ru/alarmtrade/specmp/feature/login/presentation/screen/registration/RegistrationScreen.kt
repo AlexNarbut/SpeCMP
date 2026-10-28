@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,10 +56,6 @@ fun RegistrationScreen(
 ) {
     val viewModel = koinViewModel<RegistrationScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
-
-    DisposableEffect(viewModel) {
-        onDispose(viewModel::reset)
-    }
 
     AuthBody(
         layoutMode = layoutMode,
