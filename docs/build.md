@@ -94,6 +94,12 @@ iosMain.dependencies {
 
 ---
 
+## Compose-компилятор: конфиг стабильности
+
+Корневой `build.gradle.kts` подключает `config/compose/stability.conf` ко всем модулям с плагином Compose-компилятора
+(`plugins.withId("org.jetbrains.kotlin.plugin.compose")`) — в модулях ничего настраивать не нужно. Что и почему там
+объявлено стабильным — `docs/compose-best-prac.md`, «Стабильность: конфиг компилятора».
+
 ## Ресурсы
 
 Расположение: `composeApp/src/commonMain/composeResources/`

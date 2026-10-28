@@ -163,6 +163,24 @@ data class BrokenState(var count: Int)  // var без mutableStateOf
 @Immutable data class Items(val list: List<Item>)
 ```
 
+### Стабильность: конфиг компилятора (`config/compose/stability.conf`)
+
+Модули `domain` (и `core/common`) собираются **без** Compose-компилятора, поэтому их неизменяемые data-классы
+по умолчанию считаются нестабильными — `@Immutable` на них не ставим (domain без Compose, см. `docs/patterns.md`).
+Вместо этого они объявлены стабильными в одном конфиге, который корневой `build.gradle.kts` подключает ко всем модулям
+с плагином `org.jetbrains.kotlin.plugin.compose`:
+
+- `ru.alarmtrade.specmp.feature.**.domain.model.*` — доменные модели фич;
+- `AppError` / `ApiError` / `PlatformError` из `core/common`;
+- `kotlinx.datetime.*`, `kotlin.ranges.IntRange`.
+
+**Что требуется от типа в конфиге:** все поля `val`, без мутабельных коллекций, массивов и изменяемого состояния
+внутри; иначе Compose будет пропускать рекомпозицию при реальном изменении данных. Новый пакет или библиотечный тип —
+только с проверкой этого условия. Presentation-модели в модулях с Compose по-прежнему помечаются `@Immutable`.
+
+Проверка: `.agents/skills/perf-audit/scripts/compose-reports.sh <модули…>` — список нестабильных классов и
+composable с нестабильными параметрами (до/после правки).
+
 ---
 
 ## 4. Flow vs State в composable-функциях
