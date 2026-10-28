@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
@@ -19,6 +20,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
  * @property viewOnly просмотр версий без выбора для установки.
  */
 @Serializable
+@SerialName("device.firmware.FirmwareArchiveRequest")
 data class FirmwareArchiveRequest(
     val moduleId: Long?,
     val channel: FirmwareChannel,

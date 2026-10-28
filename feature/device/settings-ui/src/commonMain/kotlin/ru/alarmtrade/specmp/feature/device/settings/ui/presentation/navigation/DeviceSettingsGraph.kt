@@ -18,6 +18,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -71,9 +72,11 @@ import specmp.feature.device.settings_ui.generated.resources.settings_saved_mine
 
 /** Раздел меню; `null` — корень. */
 @Serializable
+@SerialName("device.settings-ui.SettingsSectionRoute")
 internal data class SettingsSectionRoute(val sectionId: Int?) : NavKey
 
 @Serializable
+@SerialName("device.settings-ui.SettingsSearchRoute")
 internal data object SettingsSearchRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {

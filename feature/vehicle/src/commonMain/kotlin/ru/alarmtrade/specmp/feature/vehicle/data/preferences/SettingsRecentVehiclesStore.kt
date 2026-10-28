@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.vehicle.data.preferences
 
 import com.russhwolf.settings.Settings
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -32,6 +33,7 @@ class SettingsRecentVehiclesStore(private val settings: Settings) : RecentVehicl
     private fun VehicleCatalog.key() = "recent_${name.lowercase()}"
 
     @Serializable
+    @SerialName("vehicle.SettingsRecentVehiclesStore.StoredCar")
     private data class StoredCar(
         val id: Int,
         val brand: String,

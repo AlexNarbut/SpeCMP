@@ -12,6 +12,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -21,6 +22,7 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
 /** Внутренний роут графа фичи — экран поиска устройства. */
 @Serializable
+@SerialName("device.selection.ScanDeviceRoute")
 internal data object ScanDeviceRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {

@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 
@@ -8,6 +9,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeatur
  * [needsCan] — раздел недоступен, пока у блока заводские CAN-настройки (сначала CAN-прошивка).
  */
 @Serializable
+@SerialName("advanced-mount.MountSection")
 enum class MountSection(val needsCan: Boolean = false) {
     FIRMWARE_UPDATE,
     SETTINGS(needsCan = true),
@@ -55,6 +57,7 @@ internal fun Set<DeviceFeature>?.toSections(): List<MountSection> {
 
 /** Экраны монтажа вне сетки разделов (кнопки шапки и верхней панели); пока заглушки — в дизайне не проработаны. */
 @Serializable
+@SerialName("advanced-mount.MountExtra")
 enum class MountExtra {
     PRODUCT_INFO,
     REMOTE_SYNC

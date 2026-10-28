@@ -69,11 +69,13 @@ Nav3 back stack используется **внутри каждой зоны**:
 
 ## Объявление маршрутов
 
-Каждый маршрут — это `@Serializable data object` или `data class`, реализующий `NavKey`.
-Для multiplatform требуется `SavedStateConfiguration` с явной регистрацией типов.
+Каждый маршрут — это `@Serializable data object` или `data class`, реализующий `NavKey`, с явным
+`@SerialName("<модуль>.<Маршрут>")` (дискриминатор в сохранённом back stack; правило — `docs/patterns.md`,
+«Сериализация»). Для multiplatform требуется `SavedStateConfiguration` с явной регистрацией типов.
 
 ```kotlin
 @Serializable
+@SerialName("main.MainRoute")
 data object MainRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {
@@ -193,7 +195,7 @@ commonMain.dependencies {
 
 ```kotlin
 // 1. Объявить маршрут
-@Serializable data object NewFeatureRoute : NavKey
+@Serializable @SerialName("new-feature.NewFeatureRoute") data object NewFeatureRoute : NavKey
 
 // 2. Зарегистрировать в navConfig
 subclass(NewFeatureRoute::class, NewFeatureRoute.serializer())

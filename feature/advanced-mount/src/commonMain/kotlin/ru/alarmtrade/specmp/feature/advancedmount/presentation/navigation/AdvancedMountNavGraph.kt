@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -24,16 +25,20 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.Se
 
 /** App-level ключ расширенного монтажа (регистрируется в графе `composeApp`). */
 @Serializable
+@SerialName("advanced-mount.AdvancedMountRoute")
 data object AdvancedMountRoute : NavKey
 
 @Serializable
+@SerialName("advanced-mount.AdvancedMountRootRoute")
 internal data object AdvancedMountRootRoute : NavKey
 
 /** Раздел; [deviceTitle] — «Название  ID» блока для подзаголовка. */
 @Serializable
+@SerialName("advanced-mount.AdvancedMountSectionRoute")
 internal data class AdvancedMountSectionRoute(val section: MountSection, val deviceTitle: String) : NavKey
 
 @Serializable
+@SerialName("advanced-mount.AdvancedMountExtraRoute")
 internal data class AdvancedMountExtraRoute(val extra: MountExtra, val deviceTitle: String) : NavKey
 
 private val navConfig = SavedStateConfiguration {

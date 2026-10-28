@@ -16,6 +16,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -46,12 +47,15 @@ import specmp.feature.login.generated.resources.login_forgot_title_screen
 import specmp.feature.login.generated.resources.login_registration_title_screen
 
 @Serializable
+@SerialName("login.LoginRoute")
 data object LoginRoute : NavKey
 
 @Serializable
+@SerialName("login.RegistrationRoute")
 data object RegistrationRoute : NavKey
 
 @Serializable
+@SerialName("login.ForgotPasswordRoute")
 data object ForgotPasswordRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {

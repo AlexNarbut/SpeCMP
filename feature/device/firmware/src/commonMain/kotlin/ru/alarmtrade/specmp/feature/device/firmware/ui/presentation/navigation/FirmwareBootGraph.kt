@@ -12,6 +12,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -27,9 +28,11 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateScreen
 
 @Serializable
+@SerialName("device.firmware.FirmwareUpdateRoute")
 internal data object FirmwareUpdateRoute : NavKey
 
 @Serializable
+@SerialName("device.firmware.FirmwareArchiveRoute")
 internal data class FirmwareArchiveRoute(val request: FirmwareArchiveRequest) : NavKey
 
 private val navConfig = SavedStateConfiguration {

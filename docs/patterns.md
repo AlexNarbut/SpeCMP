@@ -19,6 +19,7 @@
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
 - **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Res.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
+- **У каждого `@Serializable` — `@SerialName("<модуль>.<Класс>")`** — см. «Сериализация».
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
 - **Сессия экрана — `init {}` / `onCleared()` per-entry VM**, без `DisposableEffect`, полей-`Job` и `var`-флагов, которые пишутся с разных диспетчеров — см. «Жизненный цикл ViewModel и сессии».
@@ -184,6 +185,33 @@ fun submit(credentials: LoginCredentials) { }
 // ✅ Хорошо — alias при конфликте имён
 import androidx.compose.ui.graphics.Color as ComposeColor
 import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
+```
+
+## Сериализация
+
+- **Каждый `@Serializable`-класс, объект, интерфейс и enum — с `@SerialName`.** Имя по умолчанию — FQN класса:
+  оно меняется при переносе в другой пакет или переименовании и участвует в данных — дискриминатор полиморфных
+  типов (`NavKey`-маршруты в `SavedStateConfiguration`, sealed-иерархии), сохранённый back stack. С явным именем
+  рефакторинг пакетов и R8 не ломают сохранённое состояние.
+- **Формат:** `"<модуль>.<Класс>"`, где модуль — путь Gradle-модуля без `feature:`/`core:`, через точку
+  (`login`, `device.firmware`, `configurator-ui`); у вложенных — через точку с внешним (`configurator-ui.SourceKey.Mine`).
+  Имя уникально в проекте и после появления **не меняется** — это контракт сохранённых данных.
+- `@SerialName` стоит рядом с `@Serializable` (порядок не важен).
+- Проверка — pre-commit хук `serial-name-check` (`config/hooks/check-serial-name.sh`); весь репозиторий:
+  `config/hooks/check-serial-name.sh`.
+
+```kotlin
+@Serializable
+@SerialName("login.LoginRoute")
+data object LoginRoute : NavKey
+
+@Serializable
+@SerialName("configurator-ui.SourceKey")
+internal sealed interface SourceKey {
+    @Serializable
+    @SerialName("configurator-ui.SourceKey.Mine")
+    data class Mine(val id: Long) : SourceKey
+}
 ```
 
 ## Что проверяют анализаторы (Spotless + detekt)
