@@ -32,6 +32,7 @@ import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
 import ru.alarmtrade.specmp.core.ui.view.image.rememberCmpImageLoader
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
+import ru.alarmtrade.specmp.feature.account.di.accountModule
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.configurator.di.configuratorModule
@@ -101,6 +102,7 @@ fun App(
                 add(deviceFirmwareUiModule)
                 add(deviceSettingsModule)
                 add(vehicleModule)
+                add(accountModule)
                 add(vehicleUiModule)
                 add(configuratorModule)
                 add(configuratorUiModule)

@@ -506,7 +506,7 @@ override fun observeUnreadMessagesCount(): Flow<Response<Int>> {
 про текущий аккаунт (открытое соединение, кэш, незакрытая сессия, офлайн-очередь), после смены
 аккаунта протечёт в новую сессию, если его не сбросить явно.
 
-- **Identity пользователя — из `AccountRepository` (`core:specialist`)**, а не полем
+- **Identity пользователя — из `AccountRepository` (`feature/account`)**, а не полем
   `private var currentUserEmail` в репозитории фичи и не собственным вызовом
   `userInteractor.getUserUseCase`. Профиль резолвится один раз при открытии сессии фичи.
 - **Неуспех резолва зависимости — ошибка операции, а не деградация.** Нельзя молча считать

@@ -5,7 +5,6 @@
 - Сетевые логи SDK выключены во всех сборках (`SpecialistConfig.Network(logLevel = NONE, logWebSocketFrames = false)`): SDK не маскирует тела ответов (переписка) и query (email).
 - SDK `ru.alarmtrade.common:specialist` 1.2.0 / `core` 2.0.93 пока тянется из `mavenLocal()` (публикация в `git.pandora.pri` — до мержа).
 - Фичи НЕ обращаются к SDK-интеракторам напрямую — только через профильные API этого модуля.
-- `AccountRepository` (`account/`) — общий источник identity аккаунта (`currentProfile(): Response<AccountProfile>`, маппинг SDK-типов внутри модуля). Две и более фич с потребностью в профиле пользователя подключают его, а не дублируют вызов `userInteractor.getUserUseCase`.
 - `sdk/SdkResponse.kt` — общие хелперы границы с SDK, локальные копии в фичах не заводить:
   - `SpecialistResponse<T>.toResponse()` — ответ SDK в проектный `Response` (без `message` SDK берётся `exception.message`); специфичные ошибки фичи — поверх него (`toResponse().mapIfError { … }`), `Unit`-ответ — `toResponse().map { }`;
   - `(() -> T).resolveOrNull()` — ленивый провайдер интерактора, недоступного на платформе (бросает при резолве) → `null`, отмена пробрасывается;

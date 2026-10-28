@@ -1,10 +1,12 @@
-package ru.alarmtrade.specmp.core.specialist.account
+package ru.alarmtrade.specmp.feature.account.data.repository
 
 import co.touchlab.kermit.Logger
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.interactors.user.UserInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
+import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
 
 class SpecialistAccountRepository(private val userInteractor: UserInteractor) : AccountRepository {
 

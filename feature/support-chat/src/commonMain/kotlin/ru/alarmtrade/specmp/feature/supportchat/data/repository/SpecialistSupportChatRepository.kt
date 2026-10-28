@@ -14,9 +14,9 @@ import ru.alarmtrade.specialist.interactors.chat.requests.MarkMessagesAsReadRequ
 import ru.alarmtrade.specialist.interactors.chat.requests.UploadChatFileRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.WriteMessageRequest
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.specialist.account.AccountProfile
-import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
+import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
 import ru.alarmtrade.specmp.feature.supportchat.data.mapper.SupportChatMessageMapper
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent

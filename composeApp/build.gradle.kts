@@ -35,6 +35,7 @@ kotlin {
             implementation(project(":core:permissions"))
             implementation(project(":core:lifecycle"))
             implementation(project(":core:specialist"))
+            implementation(project(":feature:account"))
             implementation(project(":core:ui"))
 
             // Feature modules

@@ -1,13 +1,14 @@
-package ru.alarmtrade.specmp.core.specialist.account
+package ru.alarmtrade.specmp.feature.account.domain.repository
 
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
 
 /**
  * Профильный источник данных аккаунта.
  *
  * Единая точка доступа к identity текущего пользователя для всех фич
- * (см. `patterns.md`: потребность, общая для двух и более фич, выносится
- * в профильный core-модуль, а не дублируется через SDK-интеракторы).
+ * (потребность, общая для двух и более фич, живёт в своей фиче, а не дублируется
+ * через SDK-интеракторы).
  *
  * Методы не кэшируют результат: жизненным циклом сессии владеет вызывающий
  * код (обычно открытие сессии фичи). Ошибка получения профиля — это ошибка
