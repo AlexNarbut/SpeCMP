@@ -20,10 +20,8 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsR
  * [DeviceModelsRepository]: модели с заводскими настройками — `deviceInformationInteractor` (с сервера), недавние —
  * JSON-список в именованном хранилище приложения (битые данные — пустой список).
  */
-class SpecialistDeviceModelsRepository(
-    private val interactor: () -> DeviceInformationInteractor,
-    private val settings: Settings
-) : DeviceModelsRepository {
+class SpecialistDeviceModelsRepository(private val interactor: () -> DeviceInformationInteractor, settings: Settings) :
+    DeviceModelsRepository {
 
     private val recent = RecentList<String, String>(
         max = DeviceModelsRepository.MAX_RECENT,

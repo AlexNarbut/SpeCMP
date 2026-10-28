@@ -13,7 +13,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
 
 /** [RecentVehiclesStore] в именованном хранилище приложения: JSON-список на каталог. Битые данные — пустой список. */
-class SettingsRecentVehiclesStore(private val settings: Settings) : RecentVehiclesStore {
+class SettingsRecentVehiclesStore(settings: Settings) : RecentVehiclesStore {
 
     // Отдельный список (и замок) на каталог.
     private val lists = VehicleCatalog.entries.associateWith { catalog ->

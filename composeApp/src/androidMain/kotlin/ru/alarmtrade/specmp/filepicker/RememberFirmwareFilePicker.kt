@@ -1,17 +1,13 @@
 package ru.alarmtrade.specmp.filepicker
 
-import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import co.touchlab.kermit.Logger
-import java.io.File
-import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -69,51 +65,29 @@ actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {
 // Граница платформенного I/O: любой сбой копирования логируется и превращается в Failed
 @Suppress("TooGenericExceptionCaught")
 private fun Uri.copyToCache(context: Context): FirmwareFilePickResult {
-    val resolver = context.contentResolver
-    val (name, size) = resolver.queryNameAndSize(this)
-    if ((size ?: 0L) > FirmwareFileLimits.MAX_BYTES) return FirmwareFilePickResult.TooLarge
+    val meta = context.contentResolver.queryNameAndSize(this)
+    if ((meta.sizeBytes ?: 0L) > FirmwareFileLimits.MAX_BYTES) return FirmwareFilePickResult.TooLarge
 
-    val fileName = safeFileName(name ?: DEFAULT_NAME)
-    val root = File(context.cacheDir, FIRMWARE_DIR)
-    val directory = File(root, UUID.randomUUID().toString())
+    val fileName = safeFileName(meta.name ?: DEFAULT_NAME)
     return try {
-        root.deleteRecursively()
-        directory.mkdirs()
-        val target = File(directory, fileName)
-        val copied = resolver.openInputStream(this)?.use { input ->
-            target.outputStream().use { output -> input.copyTo(output) }
-        }
+        val copy = context.copyToCache(this, FIRMWARE_DIR, fileName)
         when {
-            copied == null -> {
+            copy == null -> {
                 logger.w { "Cannot open input stream for picked uri: $this" }
-                directory.deleteRecursively()
                 FirmwareFilePickResult.Failed
             }
 
-            copied > FirmwareFileLimits.MAX_BYTES -> {
-                directory.deleteRecursively()
+            // Провайдер мог не отдать SIZE — проверяем фактический размер.
+            copy.bytes > FirmwareFileLimits.MAX_BYTES -> {
+                copy.file.parentFile?.deleteRecursively()
                 FirmwareFilePickResult.TooLarge
             }
 
-            else -> FirmwareFilePickResult.Picked(fileName, target.absolutePath)
+            else -> FirmwareFilePickResult.Picked(fileName, copy.file.absolutePath)
         }
     } catch (e: Exception) {
         logger.w(e) { "Failed to copy picked firmware '$fileName'" }
-        directory.deleteRecursively()
         FirmwareFilePickResult.Failed
-    }
-}
-
-/** Имя и размер документа от провайдера (любое может отсутствовать). */
-private fun ContentResolver.queryNameAndSize(uri: Uri): Pair<String?, Long?> {
-    val cursor = query(uri, null, null, null, null) ?: return null to null
-    return cursor.use {
-        if (!it.moveToFirst()) return@use null to null
-        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
-        val name = nameIndex.takeIf { index -> index != -1 }?.let(it::getString)
-        val size = sizeIndex.takeIf { index -> index != -1 && !it.isNull(index) }?.let(it::getLong)
-        name to size
     }
 }
 
