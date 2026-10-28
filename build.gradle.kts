@@ -38,6 +38,11 @@ allprojects {
         mavenLocal()
         mavenCentral()
         google()
+        // usb-serial-for-android (JitPack) — транзитивно из serialport-android Specialist SDK (common 2.0.114+)
+        maven {
+            url = uri("https://jitpack.io")
+            content { includeGroup("com.github.mik3y") }
+        }
         maven {
             url = uri("http://git.pandora.pri/api/packages/mobile_guild/maven")
             isAllowInsecureProtocol = true

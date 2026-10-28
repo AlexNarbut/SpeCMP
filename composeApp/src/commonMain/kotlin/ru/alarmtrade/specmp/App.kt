@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
@@ -49,32 +48,17 @@ import ru.alarmtrade.specmp.feature.vehicle.di.vehicleModule
 import ru.alarmtrade.specmp.feature.vehicle.ui.di.vehicleUiModule
 import ru.alarmtrade.specmp.navigation.AppNavigation
 
-// App — публичная точка входа платформенных обёрток и одновременно превью
-@Suppress("ktlint:compose:preview-public-check")
-@Preview
+/**
+ * Точка входа платформенных обёрток. Версию передаёт платформа (Android — `PackageInfo`, iOS — Info.plist,
+ * desktop — сгенерированный `version.properties`); примитивами — обёртки не зависят от `core/specialist`.
+ */
 @Composable
-fun App(
-    appVersionName: String? = null,
-    appVersionCode: Int? = null,
-    onThemeChange: @Composable (isDark: Boolean) -> Unit = {}
-) {
+fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable (isDark: Boolean) -> Unit = {}) {
     var appLocale by remember { mutableStateOf(prepareAppLocale()) }
 
-    val overrideAppVersionModule = remember(appVersionName, appVersionCode) {
-        if (appVersionName != null && appVersionCode != null) {
-            module {
-                single<SpecialistAppVersionProvider> {
-                    SpecialistAppVersionProvider {
-                        SpecialistAppVersion(
-                            name = appVersionName,
-                            code = appVersionCode
-                        )
-                    }
-                }
-            }
-        } else {
-            null
-        }
+    val appVersionModule = remember(appVersionName, appVersionCode) {
+        val version = SpecialistAppVersion(name = appVersionName, code = appVersionCode)
+        module { single<SpecialistAppVersionProvider> { SpecialistAppVersionProvider { version } } }
     }
 
     val platformModules = rememberPlatformKoinModules()
@@ -85,7 +69,7 @@ fun App(
                 addAll(platformModules)
                 add(commonModule)
                 add(specialistModule)
-                overrideAppVersionModule?.let { add(it) }
+                add(appVersionModule)
                 add(permissionsModule())
                 add(appLifecycleModule)
                 add(authStateModule)

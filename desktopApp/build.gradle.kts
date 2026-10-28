@@ -19,6 +19,20 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+// version.properties (versionName/versionCode) — из каталога версий, а не руками в resources.
+val generateVersionProperties by tasks.registering {
+    val name = libs.versions.app.versionName.get()
+    val code = libs.versions.app.versionCode.get()
+    val output = layout.buildDirectory.dir("generated/version")
+    inputs.property("versionName", name)
+    inputs.property("versionCode", code)
+    outputs.dir(output)
+    doLast {
+        output.get().file("version.properties").asFile.writeText("versionName=$name\nversionCode=$code\n")
+    }
+}
+sourceSets.main { resources.srcDir(generateVersionProperties) }
+
 dependencies {
     implementation(project(":composeApp"))
     implementation(compose.desktop.currentOs)
@@ -71,7 +85,7 @@ compose.desktop {
                 TargetFormat.Deb
             )
             packageName = "SpeCMP"
-            packageVersion = "2.0.40"
+            packageVersion = libs.versions.app.versionName.get()
 
             macOS {
                 iconFile.set(project.file("icons/macos.icns"))

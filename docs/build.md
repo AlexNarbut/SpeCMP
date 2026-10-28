@@ -164,6 +164,18 @@ actual fun platformName(): String = UIDevice.currentDevice.systemName()
 | Kotlinx Serialization | 1.9.0 | JSON |
 | Kotlinx Coroutines | 1.10.2 | Async |
 | Coil | 3.3.0 | Загрузка изображений |
+| Specialist SDK (`ru.alarmtrade.common:specialist`) | 1.2.2 | SDK специалиста; common-либы `ru.alarmtrade.common:*` — 2.0.114 (одна линия с SDK) |
+
+Актуальные версии — только в `gradle/libs.versions.toml`; таблица — ориентир. `usb-serial-for-android` (транзитивно из
+`serialport-android` SDK) приходит с JitPack — репозиторий подключён в корневом `build.gradle.kts` только для группы
+`com.github.mik3y`.
+
+## Версия приложения
+
+Единый источник — `app-versionName` / `app-versionCode` в `gradle/libs.versions.toml`: из него Android
+(`versionName`/`versionCode`), desktop (`packageVersion` и генерируемый задачей `generateVersionProperties`
+`version.properties`). iOS берёт версию из `iosApp/iosApp/Info.plist` (её ведёт Xcode) — при выпуске обновлять и его.
+Платформа передаёт версию в `App(appVersionName, appVersionCode)`; в коде (`core/specialist`, обёртки) номеров версии нет.
 
 ---
 
