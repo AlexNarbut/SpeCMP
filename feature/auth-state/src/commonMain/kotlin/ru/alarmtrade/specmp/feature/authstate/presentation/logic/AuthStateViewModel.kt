@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -25,7 +26,7 @@ class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispat
     private val retryTrigger = MutableStateFlow(0)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val state: StateFlow<AuthState> = retryTrigger
+    val state: StateFlow<AuthStateScreenState> = retryTrigger
         .flatMapLatest { _ ->
             repository.observeIsLoggedIn()
                 .map { it.toAuthState() }
@@ -33,11 +34,16 @@ class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispat
                 .onStart { emit(AuthState.WAITING) }
         }
         .distinctUntilChanged()
+        // Каждый вход — новая сессия авторизованной зоны (новое хранилище её ViewModel).
+        .scan(AuthStateScreenState()) { previous, state ->
+            val newSession = state == AuthState.AUTHED && previous.state != AuthState.AUTHED
+            AuthStateScreenState(state, if (newSession) previous.session + 1 else previous.session)
+        }
         .flowOn(dispatchers.io)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeout = 5.seconds),
-            initialValue = AuthState.WAITING
+            initialValue = AuthStateScreenState()
         )
 
     fun retry() {

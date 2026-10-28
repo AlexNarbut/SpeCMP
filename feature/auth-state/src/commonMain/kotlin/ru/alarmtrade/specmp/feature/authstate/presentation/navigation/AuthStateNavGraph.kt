@@ -8,6 +8,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.ui.navigation.ViewModelScope
 import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
 import ru.alarmtrade.specmp.feature.authstate.presentation.logic.AuthStateViewModel
 
@@ -28,11 +29,15 @@ fun AuthStateNavGraph(
                 .togetherWith(fadeOut(animationSpec = tween(TRANSITION_DURATION_MILLIS)))
         },
         label = ANIMATION_LABEL
-    ) { currentState ->
-        when (currentState) {
+    ) { current ->
+        when (current.state) {
             AuthState.WAITING -> waitingState()
+
             AuthState.NO_AUTH -> noAuthState()
-            AuthState.AUTHED -> authedState()
+
+            // Сессия — из target анимации: уходящая при выходе зона дорисовывается со своим хранилищем VM.
+            AuthState.AUTHED -> ViewModelScope(scopeKey = current.session) { authedState() }
+
             AuthState.CHECK_FAILED -> errorState(viewModel::retry)
         }
     }
