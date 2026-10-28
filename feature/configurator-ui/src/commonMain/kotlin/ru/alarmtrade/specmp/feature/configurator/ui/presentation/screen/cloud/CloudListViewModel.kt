@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationOrder
@@ -50,18 +50,7 @@ internal class CloudListViewModel(
     private suspend fun load() {
         _state.update { it.copy(list = LCEState.Loading) }
         val response = withContext(dispatchers.io) { cloud.byCar(carId, deviceName) }
-        _state.update {
-            it.copy(
-                list = when (response) {
-                    is Response.Error -> {
-                        logger.w(response.exception) { "Cloud configurations read failed: ${response.message}" }
-                        LCEState.Error(ConfiguratorError.from(response.exception))
-                    }
-
-                    is Response.Success -> LCEState.Content(response.value)
-                }
-            )
-        }
+        _state.update { it.copy(list = response.asLCEState(ConfiguratorError::from)) }
     }
 
     fun onRetry() {

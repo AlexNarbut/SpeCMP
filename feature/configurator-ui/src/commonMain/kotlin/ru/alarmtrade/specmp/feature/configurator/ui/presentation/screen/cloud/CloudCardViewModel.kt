@@ -21,6 +21,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationAttachment
@@ -66,17 +67,9 @@ internal class CloudCardViewModel(
 
     private suspend fun load() {
         _state.update { it.copy(card = LCEState.Loading) }
-        when (val response = withContext(dispatchers.io) { cloud.card(id) }) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Cloud configuration read failed: ${response.message}" }
-                _state.update { it.copy(card = LCEState.Error(ConfiguratorError.from(response.exception))) }
-            }
-
-            is Response.Success -> {
-                _state.update { it.copy(card = LCEState.Content(response.value)) }
-                loadCanCode(response.value)
-            }
-        }
+        val response = withContext(dispatchers.io) { cloud.card(id) }
+        _state.update { it.copy(card = response.asLCEState(ConfiguratorError::from)) }
+        response.getValueIfSuccess()?.let { loadCanCode(it) }
     }
 
     /** CAN-код — из настроек конфигурации (в метаданных его нет). Не прочитался — без строки CAN. */

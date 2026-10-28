@@ -1,13 +1,12 @@
 package ru.alarmtrade.specmp.feature.configurator.data.repository
 
 import com.russhwolf.settings.Settings
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import ru.alarmtrade.common.core.usecase.EmptyRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
+import ru.alarmtrade.specmp.core.common.RecentList
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
@@ -26,7 +25,16 @@ class SpecialistDeviceModelsRepository(
     private val settings: Settings
 ) : DeviceModelsRepository {
 
-    private val recentLock = Mutex()
+    private val recent = RecentList<String, String>(
+        max = DeviceModelsRepository.MAX_RECENT,
+        key = { it },
+        read = {
+            settings.getStringOrNull(RECENT_KEY)
+                ?.let { raw -> safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess() }
+                .orEmpty()
+        },
+        write = { settings.putString(RECENT_KEY, json.encodeToString(serializer, it)) }
+    )
 
     override suspend fun models(): Response<List<String>> {
         val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
@@ -34,23 +42,11 @@ class SpecialistDeviceModelsRepository(
             .map { names -> names.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() } }
     }
 
-    override fun recent(): List<String> {
-        val raw = settings.getStringOrNull(RECENT_KEY) ?: return emptyList()
-        return safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess().orEmpty()
-    }
+    override fun recent(): List<String> = recent.all()
 
-    override suspend fun pushRecent(deviceName: String): List<String> = updateRecent { recent ->
-        (listOf(deviceName) + recent.filter { it != deviceName }).take(DeviceModelsRepository.MAX_RECENT)
-    }
+    override suspend fun pushRecent(deviceName: String): List<String> = recent.push(deviceName)
 
-    override suspend fun removeRecent(deviceName: String): List<String> = updateRecent { recent ->
-        recent.filter { it != deviceName }
-    }
-
-    // Settings не атомарен: две быстрые правки (выбор и «✕») без замка потеряли бы одну.
-    private suspend fun updateRecent(change: (List<String>) -> List<String>): List<String> = recentLock.withLock {
-        change(recent()).also { settings.putString(RECENT_KEY, json.encodeToString(serializer, it)) }
-    }
+    override suspend fun removeRecent(deviceName: String): List<String> = recent.remove(deviceName)
 
     private companion object {
         const val RECENT_KEY = "recent_models"

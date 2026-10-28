@@ -77,9 +77,8 @@ internal class MineViewModel(
     private suspend fun load() {
         if (_state.value.list !is LCEState.Content) _state.update { it.copy(list = LCEState.Loading) }
         when (val response = withContext(dispatchers.io) { configurations.all() }) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Configurations read failed: ${response.message}" }
-                _state.update { it.copy(list = LCEState.Error(ConfiguratorError.from(response.exception))) }
+            is Response.Error -> _state.update {
+                it.copy(list = LCEState.Error(ConfiguratorError.from(response.exception)))
             }
 
             is Response.Success -> _state.update { state ->

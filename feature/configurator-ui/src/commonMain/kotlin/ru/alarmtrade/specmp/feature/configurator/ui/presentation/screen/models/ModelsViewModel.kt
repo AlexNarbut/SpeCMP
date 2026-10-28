@@ -17,6 +17,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
@@ -57,18 +58,7 @@ internal class ModelsViewModel(
     private suspend fun load() {
         _state.update { it.copy(list = LCEState.Loading) }
         val response = withContext(dispatchers.io) { models.models() }
-        _state.update {
-            it.copy(
-                list = when (response) {
-                    is Response.Error -> {
-                        logger.w(response.exception) { "Device models read failed: ${response.message}" }
-                        LCEState.Error(ConfiguratorError.from(response.exception))
-                    }
-
-                    is Response.Success -> LCEState.Content(response.value)
-                }
-            )
-        }
+        _state.update { it.copy(list = response.asLCEState(ConfiguratorError::from)) }
     }
 
     fun onRetry() {

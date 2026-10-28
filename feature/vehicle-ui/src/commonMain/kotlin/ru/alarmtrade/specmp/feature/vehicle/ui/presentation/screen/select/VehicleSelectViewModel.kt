@@ -14,8 +14,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
@@ -527,17 +529,9 @@ internal class VehicleSelectViewModel(
         jobs.remove(level)?.cancel()
         _state.update { set(it, LCEState.Loading) }
         jobs[level] = safeLaunch {
-            when (val response = withContext(dispatchers.io) { fetch() }) {
-                is Response.Success -> {
-                    _state.update { set(it, LCEState.Content(response.value)) }
-                    onReady(response.value)
-                }
-
-                is Response.Error -> {
-                    logger.w { "Vehicle $level load failed: ${response.message}" }
-                    _state.update { set(it, LCEState.Error(CatalogError.from(response.exception))) }
-                }
-            }
+            val response = withContext(dispatchers.io) { fetch() }
+            _state.update { set(it, response.asLCEState(CatalogError::from)) }
+            response.getValueIfSuccess()?.let(onReady)
         }
     }
 
