@@ -49,7 +49,6 @@
     <string name="vehicle_catalog_msg_trims_none_query">Check the trim spelling.</string>
     <string name="vehicle_catalog_title_error">Failed to load</string>
     <string name="vehicle_catalog_msg_error">The server did not respond. The chosen make and model are kept.</string>
-    <string name="vehicle_catalog_title_offline">No internet connection</string>
     <string name="vehicle_catalog_msg_offline">The catalog is loaded from the server. Connect to the network and retry.</string>
     <string name="vehicle_catalog_title_empty">The list is empty</string>
     <string name="vehicle_catalog_title_models_empty">No models</string>

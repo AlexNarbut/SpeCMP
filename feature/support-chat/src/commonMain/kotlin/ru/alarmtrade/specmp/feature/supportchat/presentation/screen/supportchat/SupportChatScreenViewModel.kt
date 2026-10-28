@@ -21,7 +21,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.NetworkFailure
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.networkFailure
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
@@ -31,7 +33,6 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatNotConnectedException
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
@@ -210,7 +211,7 @@ class SupportChatScreenViewModel(
 
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to send message" }
-                if (response.exception is SupportChatNotConnectedException || !_state.value.isInputEnabled) {
+                if (response.exception.networkFailure == NetworkFailure.NoConnection || !_state.value.isInputEnabled) {
                     // Отправку оборвала потеря связи — это не ошибка пользователя:
                     // сообщение ждёт переподключения в очереди.
                     park(message)

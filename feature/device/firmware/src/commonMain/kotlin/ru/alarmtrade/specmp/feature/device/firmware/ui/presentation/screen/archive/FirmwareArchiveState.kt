@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.arch
 
 import androidx.compose.runtime.Immutable
 import kotlinx.datetime.LocalDate
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
@@ -24,16 +25,19 @@ data class ArchiveRowUi(
 sealed interface ArchiveContent {
     data object Loading : ArchiveContent
 
-    /** Первая страница не загрузилась (нет связи с сервером). */
-    data object Error : ArchiveContent
+    /** Первая страница не загрузилась: сбой связи или отказ сервера. */
+    data class Error(val error: RequestError) : ArchiveContent
 
     /** Сервер вернул пустой список. */
     data object Empty : ArchiveContent
 
     /** [moreError] — догрузка не удалась: список остаётся, внизу баннер с повтором. */
     @Immutable
-    data class Ready(val rows: List<ArchiveRowUi>, val loadingMore: Boolean = false, val moreError: Boolean = false) :
-        ArchiveContent
+    data class Ready(
+        val rows: List<ArchiveRowUi>,
+        val loadingMore: Boolean = false,
+        val moreError: RequestError? = null
+    ) : ArchiveContent
 }
 
 /**

@@ -27,6 +27,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -516,7 +517,7 @@ class DeviceSettingsViewModelTest {
         cars.fail = true
         vm.onCarSearch()
         settle()
-        assertEquals(CarSearch.Failed, vm.state.value.editing?.carSearch)
+        assertEquals(CarSearch.Failed(RequestError.Failed), vm.state.value.editing?.carSearch)
     }
 
     @Test

@@ -2,6 +2,8 @@ package ru.alarmtrade.specmp.feature.advancedmount.gallery
 
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.common.NetworkFailure
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.UnsupportedSections
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
@@ -58,7 +60,10 @@ class AdvancedMountStatesGallery {
     fun loading() = render("01_loading", moduleBase)
 
     @Test
-    fun verifyError() = render("02_verify_error", moduleBase.copy(content = MountContent.VerifyError))
+    fun verifyError() = render(
+        "02_verify_error",
+        moduleBase.copy(content = MountContent.VerifyError(RequestError.Network(NetworkFailure.NoConnection)))
+    )
 
     @Test
     fun denied() = render(

@@ -21,6 +21,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
@@ -92,7 +93,7 @@ class FirmwareUpdateViewModel(
         /** Прошивка из файла пользователя (вместо [candidate]). */
         val localFile: FirmwareFilePickResult.Picked? = null,
         val fileError: FileError? = null,
-        val sourceError: Boolean = false,
+        val sourceError: RequestError? = null,
         val exitDialog: Boolean = false,
         val exitError: Boolean = false,
         /** Пользователь подтвердил результат («OK»). */
@@ -339,7 +340,7 @@ class FirmwareUpdateViewModel(
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        core.update { it.copy(channel = channel, sourceError = false, exitError = false, fileError = null) }
+        core.update { it.copy(channel = channel, sourceError = null, exitError = false, fileError = null) }
     }
 
     /** «Скачать прошивку»: запросить последнюю версию выбранного канала и перейти к подтверждению. */
@@ -349,7 +350,7 @@ class FirmwareUpdateViewModel(
                 val start = core.value
                 val moduleId = start.selectedModuleId ?: return@executeWithProceedLock
                 if (!transition({ it.stage == UpdatePhase.Source }) {
-                        it.copy(stage = UpdatePhase.Download, sourceError = false, fileError = null)
+                        it.copy(stage = UpdatePhase.Download, sourceError = null, fileError = null)
                     }
                 ) {
                     return@executeWithProceedLock
@@ -363,7 +364,10 @@ class FirmwareUpdateViewModel(
                             localFile = null
                         )
 
-                        is Response.Error -> state.copy(stage = UpdatePhase.Source, sourceError = true)
+                        is Response.Error -> state.copy(
+                            stage = UpdatePhase.Source,
+                            sourceError = RequestError.from(response.exception)
+                        )
                     }
                 }
             }
@@ -400,7 +404,7 @@ class FirmwareUpdateViewModel(
                     stage = UpdatePhase.Confirm,
                     candidate = null,
                     localFile = result,
-                    sourceError = false,
+                    sourceError = null,
                     fileError = null
                 )
 
@@ -414,7 +418,7 @@ class FirmwareUpdateViewModel(
     // Версия выбрана в архиве: сразу на подтверждение (версия, описание и ссылка уже известны — запрашивать нечего).
     private fun onArchivePicked(version: FirmwareVersion) {
         transition({ it.stage == UpdatePhase.Source }) {
-            it.copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = false)
+            it.copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = null)
         }
     }
 
@@ -452,7 +456,7 @@ class FirmwareUpdateViewModel(
                     stage = UpdatePhase.Source,
                     candidate = null,
                     localFile = null,
-                    sourceError = false,
+                    sourceError = null,
                     exitError = false
                 )
             }
@@ -498,7 +502,7 @@ class FirmwareUpdateViewModel(
         val stage = core.value.stage
         when {
             stage is UpdatePhase.Error -> core.update {
-                it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = false)
+                it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = null)
             }
 
             stage == UpdatePhase.DataError -> {

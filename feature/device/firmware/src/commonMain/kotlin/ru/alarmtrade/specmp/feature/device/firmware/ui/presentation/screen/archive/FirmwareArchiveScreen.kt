@@ -168,7 +168,7 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                     when (val content = state.content) {
                         ArchiveContent.Loading -> ArchiveLoading()
 
-                        ArchiveContent.Error -> ArchiveError(onRetry = actions.onRefresh)
+                        is ArchiveContent.Error -> ArchiveError(error = content.error, onRetry = actions.onRefresh)
 
                         ArchiveContent.Empty -> ArchiveEmpty(
                             onRefresh = actions.onRefresh,

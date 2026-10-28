@@ -32,8 +32,6 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:ui"))
-            // Монитор сети: «нет интернета» отдельно от ошибки сервера
-            implementation(project(":core:network"))
 
             // Логика каталога автомобилей (feature/vehicle)
             implementation(project(":feature:vehicle"))

@@ -3,6 +3,8 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.gallery
 import java.io.File
 import kotlin.test.Test
 import kotlinx.datetime.LocalDate
+import ru.alarmtrade.specmp.core.common.NetworkFailure
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveContent
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
@@ -51,7 +53,8 @@ class FirmwareArchiveGallery {
     fun loading() = render("01_loading", base.copy(content = ArchiveContent.Loading))
 
     @Test
-    fun error() = render("02_error", base.copy(content = ArchiveContent.Error))
+    fun error() =
+        render("02_error", base.copy(content = ArchiveContent.Error(RequestError.Network(NetworkFailure.NoConnection))))
 
     @Test
     fun empty() = render("03_empty", base.copy(content = ArchiveContent.Empty))
@@ -69,7 +72,8 @@ class FirmwareArchiveGallery {
     fun loadingMore() = render("07_loading_more", base.copy(content = ArchiveContent.Ready(rows, loadingMore = true)))
 
     @Test
-    fun moreError() = render("08_more_error", base.copy(content = ArchiveContent.Ready(rows, moreError = true)))
+    fun moreError() =
+        render("08_more_error", base.copy(content = ArchiveContent.Ready(rows, moreError = RequestError.Failed)))
 
     @Test
     fun betaChannel() = render("09_beta_channel", base.copy(channel = FirmwareChannel.BETA))

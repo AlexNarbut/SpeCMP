@@ -12,8 +12,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -45,7 +45,6 @@ internal class VehicleSelectViewModel(
     private val request: VehicleSelectRequest,
     private val repository: VehicleCatalogRepository,
     private val recentStore: RecentVehiclesStore,
-    private val networkMonitor: NetworkMonitor?,
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
@@ -535,7 +534,7 @@ internal class VehicleSelectViewModel(
 
                 is Response.Error -> {
                     logger.w { "Vehicle $level load failed: ${response.message}" }
-                    _state.update { set(it, Load.Failed(offline = networkMonitor?.isAvailable?.value == false)) }
+                    _state.update { set(it, Load.Failed(RequestError.from(response.exception))) }
                 }
             }
         }

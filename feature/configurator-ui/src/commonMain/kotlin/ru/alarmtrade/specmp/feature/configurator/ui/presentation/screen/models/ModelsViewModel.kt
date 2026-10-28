@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
@@ -56,7 +57,7 @@ internal class ModelsViewModel(
                 list = when (response) {
                     is Response.Error -> {
                         logger.w(response.exception) { "Device models read failed: ${response.message}" }
-                        ModelsList.Error
+                        ModelsList.Error(RequestError.from(response.exception))
                     }
 
                     is Response.Success -> ModelsList.Ready(response.value)
@@ -125,7 +126,7 @@ internal data class ModelsState(
 
 internal sealed interface ModelsList {
     data object Loading : ModelsList
-    data object Error : ModelsList
+    data class Error(val error: RequestError) : ModelsList
     data class Ready(val models: List<String>) : ModelsList
 }
 

@@ -17,6 +17,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -171,7 +173,7 @@ private fun StatusBlock(module: ModuleCardUi, onDescription: () -> Unit, onUpdat
         CardStatusUi.Searching -> SearchingBlock()
         is CardStatusUi.UpdateAvailable -> UpdateAvailableBlock(module.id, status, onDescription, onUpdate)
         is CardStatusUi.Actual -> ActualBlock(module.id, status, onUpdate)
-        CardStatusUi.Failed -> FailedBlock(onRefresh)
+        is CardStatusUi.Failed -> FailedBlock(status.error, onRefresh)
     }
 }
 
@@ -291,7 +293,7 @@ private fun ActualBlock(moduleId: Long, status: CardStatusUi.Actual, onUpdate: (
 }
 
 @Composable
-private fun FailedBlock(onRetry: () -> Unit) {
+private fun FailedBlock(error: RequestError, onRetry: () -> Unit) {
     val colors = cmpThemeColors()
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
@@ -302,7 +304,7 @@ private fun FailedBlock(onRetry: () -> Unit) {
         CmpColumn(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpIcon(icon = CmpIcons.CloudOff, contentDescription = null, modifier = Modifier.size(24.dp))
-                CmpText(text = stringResource(Res.string.firmware_check_error_server), style = CmpTextStyle.Body)
+                CmpText(text = error.text(Res.string.firmware_check_error_server), style = CmpTextStyle.Body)
             }
             CmpOutlinedButton(
                 text = stringResource(Res.string.firmware_common_btn_retry),

@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
@@ -32,7 +33,7 @@ sealed interface MountContent {
     data object Loading : MountContent
 
     /** Проверка на сервере не удалась (сеть / сервер) — «Исправить». */
-    data object VerifyError : MountContent
+    data class VerifyError(val error: RequestError) : MountContent
 
     /** Сервер ограничил доступ к блоку; [message] — причина от сервера. */
     data class Denied(val message: String) : MountContent

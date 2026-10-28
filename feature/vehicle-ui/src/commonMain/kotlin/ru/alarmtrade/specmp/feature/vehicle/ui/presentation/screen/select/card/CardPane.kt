@@ -95,7 +95,7 @@ private fun CardPaneState(
     when (card) {
         Load.Idle, Load.Loading -> CardSkeleton(wide = wide, modifier = modifier.padding(padding))
 
-        is Load.Failed -> LoadFailed(offline = card.offline, onRetry = {
+        is Load.Failed -> LoadFailed(error = card.error, onRetry = {
             onRetry(CatalogLevel.CARD)
         }, modifier = modifier)
 

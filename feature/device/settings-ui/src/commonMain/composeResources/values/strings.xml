@@ -96,6 +96,7 @@
     <string name="settings_can_msg_many">Several vehicles match the code</string>
     <string name="settings_can_msg_none">No vehicle found for code %1$s. The code can still be applied.</string>
     <string name="settings_can_msg_error">Couldn\'t reach the server to find the vehicle. The code can be applied without it.</string>
+    <string name="settings_can_msg_apply_without_car">The code can be applied without finding the vehicle.</string>
     <string name="settings_can_car">%1$s, %2$d–%3$d</string>
     <string name="settings_common_a11y_more">More</string>
     <string name="settings_menu_reset">Reset to factory settings</string>

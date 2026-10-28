@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.chec
 
 import androidx.compose.runtime.Immutable
 import kotlin.time.Duration
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 
@@ -56,8 +57,8 @@ sealed interface CardStatusUi {
     /** Установленная версия актуальна. */
     data class Actual(val version: String) : CardStatusUi
 
-    /** Версию с сервера получить не удалось. */
-    data object Failed : CardStatusUi
+    /** Версию с сервера получить не удалось: сбой связи или отказ сервера. */
+    data class Failed(val error: RequestError) : CardStatusUi
 
     /** Режим обновления модуля приложение не поддерживает. */
     data object NotSupported : CardStatusUi

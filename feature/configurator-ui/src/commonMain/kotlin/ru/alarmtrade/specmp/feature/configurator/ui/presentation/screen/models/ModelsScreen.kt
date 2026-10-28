@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -105,9 +106,9 @@ internal fun ModelsScreen(
                     CmpCircularProgressIndicator()
                 }
 
-                ModelsList.Error -> CmpStateBox(
+                is ModelsList.Error -> CmpStateBox(
                     icon = CmpIcons.CloudOff,
-                    title = stringResource(Res.string.configurator_models_error),
+                    title = list.error.text(Res.string.configurator_models_error),
                     text = stringResource(Res.string.configurator_models_error_msg),
                     tone = CmpStateTone.Error,
                     modifier = Modifier.fillMaxSize()

@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -16,8 +17,8 @@ internal sealed interface Load<out T> {
     data object Loading : Load<Nothing>
     data class Ready<T>(val value: T) : Load<T>
 
-    /** [offline] — сети нет (по монитору), иначе — сервер не ответил. */
-    data class Failed(val offline: Boolean) : Load<Nothing>
+    /** [error] — сбой связи (общий текст) или отказ сервера. */
+    data class Failed(val error: RequestError) : Load<Nothing>
 }
 
 internal fun <T> Load<T>.valueOrNull(): T? = (this as? Load.Ready)?.value

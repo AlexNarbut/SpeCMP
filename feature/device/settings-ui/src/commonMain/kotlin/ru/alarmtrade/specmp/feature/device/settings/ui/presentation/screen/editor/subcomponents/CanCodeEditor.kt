@@ -16,6 +16,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -40,6 +42,7 @@ import specmp.feature.device.settings_ui.generated.resources.settings_can_btn_fi
 import specmp.feature.device.settings_ui.generated.resources.settings_can_hint_digits
 import specmp.feature.device.settings_ui.generated.resources.settings_can_label_code
 import specmp.feature.device.settings_ui.generated.resources.settings_can_loading
+import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_apply_without_car
 import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_error
 import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_many
 import specmp.feature.device.settings_ui.generated.resources.settings_can_msg_none
@@ -127,7 +130,14 @@ private fun CarSearchResult(
             )
         }
 
-        CarSearch.Failed -> Warning(stringResource(Res.string.settings_can_msg_error))
+        is CarSearch.Failed -> Warning(
+            when (val error = carSearch.error) {
+                RequestError.Failed -> stringResource(Res.string.settings_can_msg_error)
+
+                is RequestError.Network ->
+                    "${error.failure.message()}. ${stringResource(Res.string.settings_can_msg_apply_without_car)}"
+            }
+        )
 
         is CarSearch.Found -> when (carSearch.cars.size) {
             0 -> Warning(stringResource(Res.string.settings_can_msg_none, value.code))

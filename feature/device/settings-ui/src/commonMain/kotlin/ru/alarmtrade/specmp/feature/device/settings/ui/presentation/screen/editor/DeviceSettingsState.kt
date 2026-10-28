@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -141,8 +142,8 @@ internal sealed interface CarSearch {
     /** Найдено (пусто — для кода автомобиля нет, код всё равно можно применить). */
     data class Found(val cars: List<CarSummary>) : CarSearch
 
-    /** Нет связи с сервером — код можно применить без автомобиля. */
-    data object Failed : CarSearch
+    /** Поиск не удался (сбой связи или отказ сервера) — код можно применить без автомобиля. */
+    data class Failed(val error: RequestError) : CarSearch
 }
 
 internal sealed interface SettingsDialog {

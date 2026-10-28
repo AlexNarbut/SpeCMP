@@ -2,6 +2,8 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.gallery
 
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.common.NetworkFailure
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FailureKind
@@ -59,7 +61,7 @@ class FirmwareUpdateGallery {
             deviceTitle = "Pandora BT (BTM2)",
             moduleTitles = listOf("Pandora BT (BTM2)"),
             currentVersion = "1.14",
-            sourceError = true
+            sourceError = RequestError.Network(NetworkFailure.Timeout)
         )
     )
 

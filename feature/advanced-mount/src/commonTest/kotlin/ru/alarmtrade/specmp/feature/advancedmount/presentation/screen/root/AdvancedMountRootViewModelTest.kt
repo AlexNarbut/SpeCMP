@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
@@ -160,7 +161,7 @@ class AdvancedMountRootViewModelTest {
     fun `verify error then retry`(): TestResult = test {
         mountRepository.access = Response.Error(IllegalStateException("offline"))
         val (vm, _) = viewModel()
-        assertEquals(MountContent.VerifyError, vm.state.value.content)
+        assertEquals(MountContent.VerifyError(RequestError.Failed), vm.state.value.content)
 
         mountRepository.access = Response.Success(DeviceAccess(true, ""))
         vm.onRetry()

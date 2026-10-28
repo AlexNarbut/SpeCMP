@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionNumber
@@ -51,7 +52,8 @@ class FirmwareArchiveViewModel(
         val page: Int = 0,
         val hasMore: Boolean = false,
         val loadingMore: Boolean = false,
-        val moreError: Boolean = false,
+        val loadError: RequestError = RequestError.Failed,
+        val moreError: RequestError? = null,
         val selected: String? = null,
         val rollback: String? = null,
         val moduleId: Long? = null,
@@ -60,7 +62,7 @@ class FirmwareArchiveViewModel(
         val carTitle: String? = null,
         val vehiclePicker: Boolean = false
     ) {
-        val canLoadMore: Boolean get() = load == Load.Ready && hasMore && !loadingMore && !moreError
+        val canLoadMore: Boolean get() = load == Load.Ready && hasMore && !loadingMore && moreError == null
     }
 
     private val core = MutableStateFlow(
@@ -109,7 +111,7 @@ class FirmwareArchiveViewModel(
         val content = when (core.load) {
             Load.Loading -> ArchiveContent.Loading
 
-            Load.Error -> ArchiveContent.Error
+            Load.Error -> ArchiveContent.Error(core.loadError)
 
             Load.Ready -> if (rows.isEmpty()) {
                 ArchiveContent.Empty
@@ -159,7 +161,7 @@ class FirmwareArchiveViewModel(
                 page = 0,
                 hasMore = false,
                 loadingMore = false,
-                moreError = false,
+                moreError = null,
                 rollback = null
             )
         }
@@ -177,7 +179,7 @@ class FirmwareArchiveViewModel(
 
     /** «Повторить» под списком после ошибки догрузки. */
     fun onRetryMore() {
-        if (transition({ it.moreError }) { it.copy(moreError = false, loadingMore = true) }) {
+        if (transition({ it.moreError != null }) { it.copy(moreError = null, loadingMore = true) }) {
             val next = core.value.page + 1
             safeLaunch { executeWithProceedLock { loadPage(next) } }
         }
@@ -187,7 +189,9 @@ class FirmwareArchiveViewModel(
         val filter = core.value.canApplied
         val moduleId = when (val module = moduleId()) {
             is Response.Error -> {
-                core.update { it.copy(load = Load.Error, loadingMore = false) }
+                core.update {
+                    it.copy(load = Load.Error, loadError = RequestError.from(module.exception), loadingMore = false)
+                }
                 return
             }
 
@@ -213,15 +217,19 @@ class FirmwareArchiveViewModel(
                     // Нет новых версий — конец (источник признак не отдаёт; см. KDoc класса).
                     hasMore = fresh.isNotEmpty(),
                     loadingMore = false,
-                    moreError = false
+                    moreError = null
                 )
             }
 
             is Response.Error -> core.update { state ->
                 if (page == FIRST_PAGE) {
-                    state.copy(load = Load.Error, loadingMore = false)
+                    state.copy(
+                        load = Load.Error,
+                        loadError = RequestError.from(response.exception),
+                        loadingMore = false
+                    )
                 } else {
-                    state.copy(loadingMore = false, moreError = true)
+                    state.copy(loadingMore = false, moreError = RequestError.from(response.exception))
                 }
             }
         }

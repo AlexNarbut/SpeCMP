@@ -11,8 +11,6 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -23,8 +21,10 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.NetworkException
+import ru.alarmtrade.specmp.core.common.NetworkFailure
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -47,7 +47,6 @@ class VehicleSelectViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = FakeCatalog()
     private val recent = FakeRecent()
-    private val network = FakeNetwork()
     private val viewModels = mutableListOf<VehicleSelectViewModel>()
 
     @BeforeTest
@@ -75,7 +74,6 @@ class VehicleSelectViewModelTest {
             request = VehicleSelectRequest(mode, catalog, device, firmwareCanCode, warnOnCanMismatch),
             repository = repository,
             recentStore = recent,
-            networkMonitor = network,
             dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
@@ -171,7 +169,7 @@ class VehicleSelectViewModelTest {
         val (vm, _) = viewModel()
         vm.onBrandPick(FakeCatalog.toyota)
         advanceUntilIdle()
-        assertEquals(Load.Failed(offline = false), vm.s.models)
+        assertEquals(Load.Failed(RequestError.Failed), vm.s.models)
         assertEquals(FakeCatalog.toyota, vm.s.selection.brand)
 
         repository.failModels = false
@@ -184,11 +182,11 @@ class VehicleSelectViewModelTest {
     }
 
     @Test
-    fun `failure without network is offline`() = test {
+    fun `connection failure is kept as a network error`() = test {
+        repository.failure = NetworkException(NetworkFailure.NoConnection, IllegalStateException("offline"))
         repository.failBrands = true
-        network.available.value = false
         val (vm, _) = viewModel()
-        assertEquals(Load.Failed(offline = true), vm.s.brands)
+        assertEquals(Load.Failed(RequestError.Network(NetworkFailure.NoConnection)), vm.s.brands)
     }
 
     @Test
@@ -372,6 +370,7 @@ private class FakeCatalog : VehicleCatalogRepository {
     val canQueries = mutableListOf<String>()
     var failBrands = false
     var failModels = false
+    var failure: Throwable = IllegalStateException("server")
 
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> {
         brandQueries += query
@@ -406,7 +405,7 @@ private class FakeCatalog : VehicleCatalogRepository {
 
     private fun summaryOf(carId: Int) = camrySummary.copy(id = carId)
 
-    private fun error() = Response.Error(IllegalStateException("server"))
+    private fun error() = Response.Error(failure)
 
     companion object {
         val toyota = CarBrand(1, "Toyota", null)
@@ -447,9 +446,4 @@ private class FakeRecent : RecentVehiclesStore {
     override fun remove(catalog: VehicleCatalog, carId: Int) {
         items[catalog] = recent(catalog).filter { it.id != carId }
     }
-}
-
-private class FakeNetwork : NetworkMonitor {
-    val available = MutableStateFlow(true)
-    override val isAvailable: StateFlow<Boolean> = available
 }

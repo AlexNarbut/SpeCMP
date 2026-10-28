@@ -49,7 +49,6 @@
     <string name="vehicle_catalog_msg_trims_none_query">Проверьте написание комплектации.</string>
     <string name="vehicle_catalog_title_error">Не удалось загрузить</string>
     <string name="vehicle_catalog_msg_error">Сервер не ответил. Выбранные марка и модель сохранены.</string>
-    <string name="vehicle_catalog_title_offline">Нет подключения к интернету</string>
     <string name="vehicle_catalog_msg_offline">Каталог загружается с сервера. Подключитесь к сети и повторите.</string>
     <string name="vehicle_catalog_title_empty">Список пуст</string>
     <string name="vehicle_catalog_title_models_empty">Нет моделей</string>

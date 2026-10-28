@@ -46,6 +46,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -468,10 +469,10 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
             )
         }
 
-        MountContent.VerifyError -> CenterBlock {
+        is MountContent.VerifyError -> CenterBlock {
             Hero(CmpIcons.WifiOff, error = false)
             CmpText(
-                text = stringResource(Res.string.advanced_mount_error_title),
+                text = content.error.text(Res.string.advanced_mount_error_title),
                 fontSize = 22.sp,
                 textAlign = TextAlign.Center
             )

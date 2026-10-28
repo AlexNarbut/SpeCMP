@@ -116,7 +116,7 @@ internal fun <T> LazyListScope.levelState(
 
     is Load.Failed -> {
         fadeItem("failed-$level") {
-            LoadFailed(offline = load.offline, onRetry = { actions.onRetry(level) }, compact = compact)
+            LoadFailed(error = load.error, onRetry = { actions.onRetry(level) }, compact = compact)
         }
         null
     }

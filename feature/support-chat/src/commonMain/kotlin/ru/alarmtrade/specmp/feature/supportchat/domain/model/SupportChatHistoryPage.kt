@@ -9,6 +9,3 @@ data class SupportChatHistoryPage(val messages: List<SupportChatMessage>, val ne
 
 /** Непрозрачный курсор истории: только хранить и передавать обратно. */
 data class SupportChatHistoryCursor(val token: Int)
-
-/** Команда отклонена: соединение не в состоянии `Ready`. Сообщение ждёт в очереди, а не падает. */
-class SupportChatNotConnectedException(cause: Throwable? = null) : Exception("Chat is not connected", cause)

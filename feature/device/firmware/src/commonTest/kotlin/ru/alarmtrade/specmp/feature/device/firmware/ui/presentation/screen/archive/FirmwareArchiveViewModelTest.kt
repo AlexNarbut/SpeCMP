@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
@@ -134,7 +135,7 @@ class FirmwareArchiveViewModelTest {
 
         // Страница 2 — ошибка: список остаётся, баннер с повтором, новые запросы не идут сами.
         val ready = vm.state.value.content as ArchiveContent.Ready
-        assertEquals(true, ready.moreError)
+        assertEquals(RequestError.Failed, ready.moreError)
         assertEquals(false, ready.loadingMore)
         assertEquals(listOf("3.61"), ready.rows.map { it.version })
         vm.onEndReached()
@@ -145,13 +146,13 @@ class FirmwareArchiveViewModelTest {
         vm.onRetryMore()
         runCurrent()
         assertEquals(listOf("3.61", "3.60"), vm.rows().map { it.version })
-        assertEquals(false, (vm.state.value.content as ArchiveContent.Ready).moreError)
+        assertEquals(null, (vm.state.value.content as ArchiveContent.Ready).moreError)
     }
 
     @Test
     fun `first page failure is a full screen error and refresh loads again`() = test {
         val (vm, _) = viewModel()
-        assertEquals(ArchiveContent.Error, vm.state.value.content)
+        assertEquals(ArchiveContent.Error(RequestError.Failed), vm.state.value.content)
 
         repository.archivePages[1] = page(1, "3.61")
         vm.onRefresh()

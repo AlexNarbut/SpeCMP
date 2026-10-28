@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
@@ -171,10 +172,10 @@ class FirmwareCheckViewModelTest {
         )
         val vm = viewModel()
 
-        assertEquals(CardStatusUi.Failed, vm.card(1).status)
+        assertEquals(CardStatusUi.Failed(RequestError.Failed), vm.card(1).status)
         assertEquals(CurrentVersionUi.Absent, vm.card(2).currentVersion)
         // Текущая версия BLE-модуля неизвестна — обновление предлагается (лучше предложить, чем скрыть).
-        assertEquals(CardStatusUi.Failed, vm.card(2).status)
+        assertEquals(CardStatusUi.Failed(RequestError.Failed), vm.card(2).status)
     }
 
     @Test
@@ -218,7 +219,7 @@ class FirmwareCheckViewModelTest {
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Error(IllegalStateException("503"))
         repository.latest[2L to FirmwareChannel.RELEASE] = Response.Success(version("1.14"))
         val vm = viewModel()
-        assertEquals(CardStatusUi.Failed, vm.card(1).status)
+        assertEquals(CardStatusUi.Failed(RequestError.Failed), vm.card(1).status)
 
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
         vm.onRefreshModule(1)

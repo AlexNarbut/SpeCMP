@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
@@ -212,9 +213,9 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
                 icon = CmpIcons.LinkOff
             )
         }
-        if (state.sourceError) {
+        state.sourceError?.let { error ->
             InfoBanner(
-                text = stringResource(Res.string.firmware_update_error_source),
+                text = error.text(Res.string.firmware_update_error_source),
                 tone = BannerTone.Error,
                 icon = CmpIcons.CloudOff
             )

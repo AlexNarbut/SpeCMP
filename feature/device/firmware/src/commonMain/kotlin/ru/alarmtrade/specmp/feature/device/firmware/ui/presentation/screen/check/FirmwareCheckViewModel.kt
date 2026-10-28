@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
@@ -176,7 +177,7 @@ class FirmwareCheckViewModel(
 
     private fun statusOf(response: Response<FirmwareVersion>, current: CurrentVersionUi): CardStatusUi =
         when (response) {
-            is Response.Error -> CardStatusUi.Failed
+            is Response.Error -> CardStatusUi.Failed(RequestError.from(response.exception))
 
             is Response.Success -> {
                 val server = response.value

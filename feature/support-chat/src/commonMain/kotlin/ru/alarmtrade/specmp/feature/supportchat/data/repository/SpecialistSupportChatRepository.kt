@@ -13,9 +13,7 @@ import ru.alarmtrade.specialist.interactors.chat.requests.LoadChatMessagesReques
 import ru.alarmtrade.specialist.interactors.chat.requests.MarkMessagesAsReadRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.UploadChatFileRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.WriteMessageRequest
-import ru.alarmtrade.specialist.network.errors.NetworkNotConnectedError
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.mapIfError
 import ru.alarmtrade.specmp.core.specialist.account.AccountProfile
 import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
@@ -24,7 +22,6 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnecti
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatNotConnectedException
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
@@ -88,30 +85,30 @@ class SpecialistSupportChatRepository(
                 )
             )
 
-            is SpecialistResponse.Error -> response.toProject()
+            is SpecialistResponse.Error -> response.toResponse()
         }
     }
 
     override suspend fun sendMessage(text: String): Response<Unit> =
-        chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text)).toProject()
+        chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text)).toResponse()
 
     override suspend fun sendImage(file: SupportChatPickedFile): Response<Unit> =
-        chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path)).toProject()
+        chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path)).toResponse()
 
     override suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit> =
-        chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path)).toProject()
+        chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path)).toResponse()
 
     override suspend fun downloadFile(url: String): Response<ByteArray> {
         // Лимит размера (20 МБ) проверяет SDK.
         return chatInteractor.downloadChatFileUseCase.execute(
             DownloadChatFileRequest(url)
-        ).toProject().also { response ->
+        ).toResponse().also { response ->
             if (response is Response.Error) logger.d(response.exception) { "Failed to download chat file" }
         }
     }
 
     override suspend fun markMessagesAsRead(ids: List<Long>): Response<Unit> =
-        chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids)).toProject()
+        chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids)).toResponse()
 
     // Соединение закрывает сам SDK на логауте: заявки, взятые до него, гасятся.
     override suspend fun release() = Unit
@@ -150,16 +147,6 @@ class SpecialistSupportChatRepository(
         else -> {
             logger.d { "Ignored unsupported chat event: $this" }
             null
-        }
-    }
-
-    private fun <T> SpecialistResponse<T>.toProject(): Response<T> = toResponse().mapIfError { error ->
-        // toResponse() уже завернул сбой связи в NetworkException — смотрим на исходную ошибку SDK.
-        val cause = error.exception.cause
-        if (cause is NetworkNotConnectedError) {
-            Response.Error(SupportChatNotConnectedException(cause), error.message)
-        } else {
-            error
         }
     }
 

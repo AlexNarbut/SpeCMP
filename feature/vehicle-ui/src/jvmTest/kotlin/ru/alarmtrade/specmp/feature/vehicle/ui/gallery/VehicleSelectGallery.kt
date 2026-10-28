@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.common.NetworkFailure
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBus
@@ -153,10 +155,13 @@ class VehicleSelectGallery {
     fun `02 brands loading`() = render("02-brands-loading", state().copy(brands = Load.Loading))
 
     @Test
-    fun `03 brands error`() = render("03-brands-error", state().copy(brands = Load.Failed(offline = false)))
+    fun `03 brands error`() = render("03-brands-error", state().copy(brands = Load.Failed(RequestError.Failed)))
 
     @Test
-    fun `04 brands offline`() = render("04-brands-offline", state().copy(brands = Load.Failed(offline = true)))
+    fun `04 brands offline`() = render(
+        "04-brands-offline",
+        state().copy(brands = Load.Failed(RequestError.Network(NetworkFailure.NoConnection)))
+    )
 
     @Test
     fun `05 search brands`() = render("05-search", state().copy(query = "la"))
@@ -258,7 +263,7 @@ class VehicleSelectGallery {
     fun `27 card loading`() = render("27-card-loading", cardState().copy(card = Load.Loading))
 
     @Test
-    fun `28 card error`() = render("28-card-error", cardState().copy(card = Load.Failed(offline = false)))
+    fun `28 card error`() = render("28-card-error", cardState().copy(card = Load.Failed(RequestError.Failed)))
 
     @Test
     fun `29 card without tabs`() = render(

@@ -26,6 +26,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
@@ -277,7 +278,9 @@ internal class DeviceSettingsViewModel(
                 val current = state.editing ?: return@update state
                 if ((current.draft as? SettingValue.Can)?.value?.code != code) return@update state
                 when (response) {
-                    is Response.Error -> state.copy(editing = current.copy(carSearch = CarSearch.Failed))
+                    is Response.Error -> state.copy(
+                        editing = current.copy(carSearch = CarSearch.Failed(RequestError.from(response.exception)))
+                    )
 
                     is Response.Success -> {
                         val cars = response.value

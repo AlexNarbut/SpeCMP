@@ -3,6 +3,8 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.gallery
 import java.io.File
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
+import ru.alarmtrade.specmp.core.common.NetworkFailure
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CardStatusUi
@@ -73,7 +75,7 @@ class FirmwareCheckGallery {
                         kind = FirmwareModuleKind.GpsTracker,
                         title = "Pandora GPS (GPS2)",
                         currentVersion = CurrentVersionUi.Absent,
-                        status = CardStatusUi.Failed
+                        status = CardStatusUi.Failed(RequestError.Network(NetworkFailure.NoConnection))
                     )
                 )
             )

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.error.text
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -182,14 +183,14 @@ private fun CloudListContent(
     onOpen: (CloudConfigurationSummary) -> Unit,
     onSelect: (Int) -> Unit
 ) {
-    when (state.list) {
+    when (val list = state.list) {
         CloudList.Loading -> CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpCircularProgressIndicator()
         }
 
-        CloudList.Error -> CmpStateBox(
+        is CloudList.Error -> CmpStateBox(
             icon = CmpIcons.CloudOff,
-            title = stringResource(Res.string.configurator_cloud_error),
+            title = list.error.text(Res.string.configurator_cloud_error),
             text = stringResource(Res.string.configurator_cloud_error_msg),
             tone = CmpStateTone.Error,
             modifier = Modifier.fillMaxSize()
@@ -293,9 +294,9 @@ internal fun CloudCardContent(state: CloudCardState, actions: CloudCardActions) 
                 CmpCircularProgressIndicator()
             }
 
-            CloudCard.Error -> CmpStateBox(
+            is CloudCard.Error -> CmpStateBox(
                 icon = CmpIcons.CloudOff,
-                title = stringResource(Res.string.configurator_card_error),
+                title = card.error.text(Res.string.configurator_card_error),
                 text = stringResource(Res.string.configurator_cloud_error_msg),
                 tone = CmpStateTone.Error,
                 modifier = Modifier.fillMaxSize()

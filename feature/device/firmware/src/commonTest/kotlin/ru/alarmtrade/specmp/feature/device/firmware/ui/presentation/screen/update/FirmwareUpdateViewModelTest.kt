@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
@@ -255,13 +256,13 @@ class FirmwareUpdateViewModelTest {
         vm.onDownloadClick()
         runCurrent()
         assertEquals(UpdatePhase.Source, vm.state.value.phase)
-        assertEquals(true, vm.state.value.sourceError)
+        assertEquals(RequestError.Failed, vm.state.value.sourceError)
 
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
         vm.onDownloadClick()
         runCurrent()
         assertEquals(UpdatePhase.Confirm, vm.state.value.phase)
-        assertEquals(false, vm.state.value.sourceError)
+        assertEquals(null, vm.state.value.sourceError)
 
         vm.onCancelConfirm()
         runCurrent()

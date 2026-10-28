@@ -12,6 +12,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationOrder
@@ -54,7 +55,7 @@ internal class CloudListViewModel(
                 list = when (response) {
                     is Response.Error -> {
                         logger.w(response.exception) { "Cloud configurations read failed: ${response.message}" }
-                        CloudList.Error
+                        CloudList.Error(RequestError.from(response.exception))
                     }
 
                     is Response.Success -> CloudList.Ready(response.value)
@@ -93,7 +94,7 @@ internal data class CloudListState(
 
 internal sealed interface CloudList {
     data object Loading : CloudList
-    data object Error : CloudList
+    data class Error(val error: RequestError) : CloudList
     data class Ready(val items: List<CloudConfigurationSummary>) : CloudList
 }
 
@@ -131,7 +132,7 @@ internal class CloudCardViewModel(
         when (val response = withContext(dispatchers.io) { cloud.card(id) }) {
             is Response.Error -> {
                 logger.w(response.exception) { "Cloud configuration read failed: ${response.message}" }
-                _state.update { it.copy(card = CloudCard.Error) }
+                _state.update { it.copy(card = CloudCard.Error(RequestError.from(response.exception))) }
             }
 
             is Response.Success -> {
@@ -242,7 +243,7 @@ internal data class CloudSaveForm(val name: String, val description: String)
 
 internal sealed interface CloudCard {
     data object Loading : CloudCard
-    data object Error : CloudCard
+    data class Error(val error: RequestError) : CloudCard
     data class Ready(val card: CloudConfiguration) : CloudCard
 }
 

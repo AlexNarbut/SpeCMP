@@ -22,6 +22,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.error.RequestError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
@@ -94,7 +95,7 @@ class AdvancedMountRootViewModel(
         val previous = _state.value
         _state.update { it.copy(device = device) }
         val sameDevice = previous.device?.systemId == device.systemId
-        if (!sameDevice || previous.content == MountContent.VerifyError) load(device)
+        if (!sameDevice || previous.content is MountContent.VerifyError) load(device)
 
         val imei = (deviceSession.readImei() as? Response.Success)?.value?.takeIf { it.isNotBlank() }
         _state.update { it.copy(imei = imei ?: it.imei) }
@@ -111,7 +112,7 @@ class AdvancedMountRootViewModel(
                     device.firmwareVersion
                 )
             ) {
-                is Response.Error -> MountContent.VerifyError
+                is Response.Error -> MountContent.VerifyError(RequestError.from(access.exception))
 
                 is Response.Success -> if (access.value.hasAccess) {
                     MountContent.Ready(
