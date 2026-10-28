@@ -21,6 +21,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.chip.CmpChip
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
@@ -39,13 +41,11 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.ThirdColu
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardUi
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CenteredCard
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Load
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleLayout
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.CardPane
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.valueOrNull
 import specmp.feature.vehicle_ui.generated.resources.Res
 import specmp.feature.vehicle_ui.generated.resources.vehicle_can_msg_enter
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_a11y_recent_remove
@@ -107,16 +107,16 @@ internal fun WideCatalog(
 
 /** Срез для колонок каталога и поиска: без карточки, диалогов и фильтра. */
 private fun VehicleSelectState.forCatalog(): VehicleSelectState =
-    copy(card = Load.Idle, cardUi = CardUi(), dialog = null, filterDraft = null, picking = false)
+    copy(card = LCEState.None, cardUi = CardUi(), dialog = null, filterDraft = null, picking = false)
 
 /** Срез для колонки карточки (с крошками): без списков каталога и ввода поиска по названию. */
 private fun VehicleSelectState.forCard(): VehicleSelectState = copy(
     query = "",
-    brands = Load.Idle,
-    models = Load.Idle,
+    brands = LCEState.None,
+    models = LCEState.None,
     combo = null,
-    comboModels = Load.Idle,
-    canResults = Load.Idle,
+    comboModels = LCEState.None,
+    canResults = LCEState.None,
     recent = emptyList(),
     dialog = null,
     filterDraft = null,
@@ -190,7 +190,7 @@ private fun RowScope.NameColumns(
         title = if (state.combo != null) {
             stringResource(Res.string.vehicle_catalog_title_search_results)
         } else {
-            stringResource(Res.string.vehicle_catalog_title_brands, state.brands.valueOrNull()?.size ?: 0)
+            stringResource(Res.string.vehicle_catalog_title_brands, state.brands.content?.size ?: 0)
         },
         modifier = Modifier.width(brandWidth)
     ) {
@@ -221,7 +221,7 @@ private fun RowScope.NameColumns(
 private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
     Column(title = stringResource(Res.string.vehicle_catalog_title_trims), modifier = Modifier.width(260.dp)) {
         FadeContent(targetState = state, contentKey = { it.selection.model?.id }) { shown ->
-            val single = shown.trims.valueOrNull()?.size == 1
+            val single = shown.trims.content?.size == 1
             when {
                 shown.selection.model == null -> Prompt(stringResource(Res.string.vehicle_catalog_msg_pick_model))
                 single -> Prompt(stringResource(Res.string.vehicle_catalog_msg_single_trim))

@@ -23,9 +23,9 @@ import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AppException
-import ru.alarmtrade.specmp.core.common.NetworkFailure
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -40,6 +40,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 
@@ -95,7 +96,7 @@ class VehicleSelectViewModelTest {
         advanceUntilIdle()
 
         assertEquals(VehicleDeviceFilter.Type(VehicleDeviceType.MICROBOT), repository.brandQueries.last().device)
-        assertEquals(FakeCatalog.brands, vm.s.brands.valueOrNull())
+        assertEquals(FakeCatalog.brands, vm.s.brands.content)
     }
 
     @Test
@@ -103,13 +104,13 @@ class VehicleSelectViewModelTest {
         val (vm, _) = viewModel()
         vm.onBrandPick(FakeCatalog.toyota)
         advanceUntilIdle()
-        assertEquals(FakeCatalog.models, vm.s.models.valueOrNull())
+        assertEquals(FakeCatalog.models, vm.s.models.content)
 
         vm.onModelPick(FakeCatalog.corolla, wide = false)
         advanceUntilIdle()
 
         assertEquals(FakeCatalog.corollaTrim.id, vm.s.selection.carId)
-        assertIs<Load.Ready<CarCard>>(vm.s.card)
+        assertIs<LCEState.Content<CarCard, CatalogError>>(vm.s.card)
         assertEquals(CardTab.FEATURES, vm.s.cardUi.tab)
     }
 
@@ -120,7 +121,7 @@ class VehicleSelectViewModelTest {
         advanceUntilIdle()
         vm.onModelPick(FakeCatalog.camry, wide = false)
         advanceUntilIdle()
-        assertEquals(FakeCatalog.camryTrims, vm.s.trims.valueOrNull())
+        assertEquals(FakeCatalog.camryTrims, vm.s.trims.content)
         assertNull(vm.s.selection.carId)
 
         vm.onTrimOpen(32)
@@ -170,7 +171,7 @@ class VehicleSelectViewModelTest {
         val (vm, _) = viewModel()
         vm.onBrandPick(FakeCatalog.toyota)
         advanceUntilIdle()
-        assertEquals(Load.Failed(RequestError.Failed), vm.s.models)
+        assertEquals(LCEState.Error(CatalogError.LoadFailed), vm.s.models)
         assertEquals(FakeCatalog.toyota, vm.s.selection.brand)
 
         repository.failModels = false
@@ -178,7 +179,7 @@ class VehicleSelectViewModelTest {
         vm.onRetry(CatalogLevel.MODELS)
         advanceUntilIdle()
 
-        assertEquals(FakeCatalog.models, vm.s.models.valueOrNull())
+        assertEquals(FakeCatalog.models, vm.s.models.content)
         assertEquals(brandLoads, repository.brandQueries.size)
     }
 
@@ -187,7 +188,7 @@ class VehicleSelectViewModelTest {
         repository.failure = AppException(ApiError.NoConnection, IllegalStateException("offline"))
         repository.failBrands = true
         val (vm, _) = viewModel()
-        assertEquals(Load.Failed(RequestError.Network(NetworkFailure.NoConnection)), vm.s.brands)
+        assertEquals(LCEState.Error(CatalogError.Common(ApiError.NoConnection)), vm.s.brands)
     }
 
     @Test
@@ -219,7 +220,7 @@ class VehicleSelectViewModelTest {
         advanceUntilIdle()
 
         assertEquals(ComboSearch(FakeCatalog.toyota, "cam"), vm.s.combo)
-        assertEquals(FakeCatalog.models, vm.s.comboModels.valueOrNull())
+        assertEquals(FakeCatalog.models, vm.s.comboModels.content)
 
         vm.onModelPick(FakeCatalog.camry, wide = false)
         advanceUntilIdle()
@@ -253,12 +254,12 @@ class VehicleSelectViewModelTest {
 
         vm.onBack(VehicleLayout.COMPACT)
         assertNull(vm.s.selection.carId)
-        assertEquals(listOf(FakeCatalog.camrySummary), vm.s.canResults.valueOrNull())
+        assertEquals(listOf(FakeCatalog.camrySummary), vm.s.canResults.content)
 
         vm.onCanCodeChange("1032")
         advanceUntilIdle()
         assertNull(vm.s.selection.carId)
-        assertEquals(2, vm.s.canResults.valueOrNull()?.size)
+        assertEquals(2, vm.s.canResults.content?.size)
     }
 
     @Test

@@ -14,9 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.common.NetworkFailure
-import ru.alarmtrade.specmp.core.ui.error.RequestError
-import ru.alarmtrade.specmp.core.ui.error.text
+import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -26,6 +25,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import specmp.feature.vehicle_ui.generated.resources.Res
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_btn_filter_reset
 import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_msg_error
@@ -38,15 +38,18 @@ import specmp.feature.vehicle_ui.generated.resources.vehicle_common_btn_retry
 /** Ошибка загрузки уровня: сбой связи (общий заголовок) или отказ сервера, с «Повторить». */
 @Composable
 internal fun LoadFailed(
-    error: RequestError,
+    error: CatalogError,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     compact: Boolean = false
 ) {
-    val offline = error == RequestError.Network(NetworkFailure.NoConnection)
+    val offline = error == CatalogError.Common(ApiError.NoConnection)
     CmpStateBox(
         icon = if (offline) CmpIcons.WifiOff else CmpIcons.CloudOff,
-        title = error.text(Res.string.vehicle_catalog_title_error),
+        title = when (error) {
+            is CatalogError.Common -> error.error.message()
+            CatalogError.LoadFailed -> stringResource(Res.string.vehicle_catalog_title_error)
+        },
         text = stringResource(
             if (offline) Res.string.vehicle_catalog_msg_offline else Res.string.vehicle_catalog_msg_error
         ),

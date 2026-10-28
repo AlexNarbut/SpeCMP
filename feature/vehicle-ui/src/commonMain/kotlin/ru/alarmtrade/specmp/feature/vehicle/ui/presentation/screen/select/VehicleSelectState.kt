@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -10,18 +10,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarTrim
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
-
-/** Загрузка уровня каталога с сервера. */
-internal sealed interface Load<out T> {
-    data object Idle : Load<Nothing>
-    data object Loading : Load<Nothing>
-    data class Ready<T>(val value: T) : Load<T>
-
-    /** [error] — сбой связи (общий текст) или отказ сервера. */
-    data class Failed(val error: RequestError) : Load<Nothing>
-}
-
-internal fun <T> Load<T>.valueOrNull(): T? = (this as? Load.Ready)?.value
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 
 internal enum class SearchMode { NAME, CAN }
 
@@ -86,13 +75,13 @@ internal data class VehicleSelectState(
     val query: String = "",
     val canCode: String = "",
     val selection: CatalogSelection = CatalogSelection(),
-    val brands: Load<List<CarBrand>> = Load.Idle,
-    val models: Load<List<CarModel>> = Load.Idle,
-    val trims: Load<List<CarTrim>> = Load.Idle,
+    val brands: LCEState<List<CarBrand>, CatalogError> = LCEState.None,
+    val models: LCEState<List<CarModel>, CatalogError> = LCEState.None,
+    val trims: LCEState<List<CarTrim>, CatalogError> = LCEState.None,
     val combo: ComboSearch? = null,
-    val comboModels: Load<List<CarModel>> = Load.Idle,
-    val canResults: Load<List<CarSummary>> = Load.Idle,
-    val card: Load<CarCard> = Load.Idle,
+    val comboModels: LCEState<List<CarModel>, CatalogError> = LCEState.None,
+    val canResults: LCEState<List<CarSummary>, CatalogError> = LCEState.None,
+    val card: LCEState<CarCard, CatalogError> = LCEState.None,
     val cardUi: CardUi = CardUi(),
     val recent: List<CarSummary> = emptyList(),
     /** Применённый фильтр групп функций; [filterDraft] не `null` — открыт фильтр. */

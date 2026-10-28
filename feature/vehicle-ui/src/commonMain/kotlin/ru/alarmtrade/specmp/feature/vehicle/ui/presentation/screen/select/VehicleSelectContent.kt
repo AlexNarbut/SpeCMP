@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -69,7 +70,7 @@ internal fun VehicleSelectContent(
     }
     state.filterDraft?.let { FilterPanel(draft = it, wide = layout.isWide, actions = actions) }
     state.dialog?.let { VehicleDialogs(dialog = it, wide = layout.isWide, actions = actions.card) }
-    val point = state.cardUi.point?.let { index -> state.card.valueOrNull()?.mountPoints?.getOrNull(index) }
+    val point = state.cardUi.point?.let { index -> state.card.content?.mountPoints?.getOrNull(index) }
     if (state.cardUi.viewerOpen && point != null) {
         PhotoViewer(
             point = point,

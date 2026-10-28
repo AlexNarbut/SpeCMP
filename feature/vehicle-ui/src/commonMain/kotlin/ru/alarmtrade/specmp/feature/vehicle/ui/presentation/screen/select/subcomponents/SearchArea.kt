@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.chip.CmpChip
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -28,14 +30,13 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumbs
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.yearsText
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CrumbTarget
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Load
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.valueOrNull
 import specmp.feature.vehicle_ui.generated.resources.Res
 import specmp.feature.vehicle_ui.generated.resources.vehicle_can_hint_firmware
 import specmp.feature.vehicle_ui.generated.resources.vehicle_can_hint_prompt
@@ -241,7 +242,7 @@ internal fun FilterChip(count: Int, actions: VehicleSelectActions) {
 @Composable
 private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> {
     val selection = state.selection
-    val card = state.card.valueOrNull()?.summary?.takeIf { it.id == selection.carId }
+    val card = state.card.content?.summary?.takeIf { it.id == selection.carId }
     val items = mutableListOf<Pair<String, CrumbTarget?>>()
     if (state.searchMode == SearchMode.CAN) {
         items += stringResource(Res.string.vehicle_catalog_label_crumb_can, state.canCode) to CrumbTarget.TOP
@@ -256,7 +257,7 @@ private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> 
             CrumbTarget.MODEL
     }
     if (selection.carId != null) {
-        val trimName = state.trims.valueOrNull()?.firstOrNull { it.id == selection.carId }?.name
+        val trimName = state.trims.content?.firstOrNull { it.id == selection.carId }?.name
         val label = when {
             selection.brand == null && card != null -> card.fullName()
             trimName != null -> trimName
@@ -269,4 +270,4 @@ private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> 
 }
 
 /** Уровень, ещё не загруженный, — для подсказок «пусто». */
-internal fun <T> Load<List<T>>.isEmptyReady(): Boolean = (this as? Load.Ready)?.value?.isEmpty() == true
+internal fun <T> LCEState<List<T>, CatalogError>.isEmptyReady(): Boolean = content?.isEmpty() == true

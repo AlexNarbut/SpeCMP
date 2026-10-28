@@ -22,6 +22,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
@@ -50,12 +51,12 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.VehicleRo
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.fadeItem
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.fadeItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.highlighted
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.looksLikeCanCode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.matchesQuery
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.yearsText
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CatalogLevel
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Load
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
@@ -105,23 +106,23 @@ internal fun CatalogList(
 
 /** Состояние загрузки уровня вместо списка; `null` — данные готовы, рисуем список. */
 internal fun <T> LazyListScope.levelState(
-    load: Load<T>,
+    load: LCEState<T, CatalogError>,
     level: CatalogLevel,
     actions: VehicleSelectActions,
     skeleton: Int,
     thumb: Boolean = false,
     compact: Boolean = false
 ): T? = when (load) {
-    is Load.Ready -> load.value
+    is LCEState.Content -> load.content
 
-    is Load.Failed -> {
+    is LCEState.Error -> {
         fadeItem("failed-$level") {
             LoadFailed(error = load.error, onRetry = { actions.onRetry(level) }, compact = compact)
         }
         null
     }
 
-    Load.Idle, Load.Loading -> {
+    LCEState.None, LCEState.Loading -> {
         fadeItem("skeleton-$level") { SkeletonRows(count = skeleton, thumb = thumb) }
         null
     }

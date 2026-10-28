@@ -13,7 +13,8 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -26,6 +27,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.detectCombo
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
@@ -91,10 +93,10 @@ internal class VehicleSelectViewModel(
                 selection = CatalogSelection(),
                 query = "",
                 combo = null,
-                models = Load.Idle,
-                trims = Load.Idle,
-                card = Load.Idle,
-                canResults = Load.Idle
+                models = LCEState.None,
+                trims = LCEState.None,
+                card = LCEState.None,
+                canResults = LCEState.None
             )
         }
         loadBrands()
@@ -108,7 +110,7 @@ internal class VehicleSelectViewModel(
         autoOpenedCode = null
         cancel(CatalogLevel.CARD)
         _state.update {
-            it.copy(searchMode = mode, selection = CatalogSelection(), query = "", combo = null, card = Load.Idle)
+            it.copy(searchMode = mode, selection = CatalogSelection(), query = "", combo = null, card = LCEState.None)
         }
         if (mode == SearchMode.CAN) searchCan()
     }
@@ -126,10 +128,10 @@ internal class VehicleSelectViewModel(
 
     fun onCanCodeChange(code: String) {
         val digits = code.filter(Char::isDigit).take(CAN_CODE_LENGTH)
-        if (digits == _state.value.canCode && _state.value.canResults != Load.Idle) return
+        if (digits == _state.value.canCode && _state.value.canResults != LCEState.None) return
         autoOpenedCode = null
         cancel(CatalogLevel.CARD)
-        _state.update { it.copy(canCode = digits, selection = CatalogSelection(), card = Load.Idle) }
+        _state.update { it.copy(canCode = digits, selection = CatalogSelection(), card = LCEState.None) }
         searchCan()
     }
 
@@ -137,7 +139,7 @@ internal class VehicleSelectViewModel(
 
     fun onBrandPick(brand: CarBrand) {
         val current = _state.value
-        val reuse = current.combo?.brand?.id == brand.id && current.comboModels is Load.Ready
+        val reuse = current.combo?.brand?.id == brand.id && current.comboModels is LCEState.Content
         cancel(CatalogLevel.TRIMS)
         cancel(CatalogLevel.CARD)
         _state.update {
@@ -145,9 +147,9 @@ internal class VehicleSelectViewModel(
                 selection = CatalogSelection(brand = brand),
                 query = "",
                 combo = null,
-                models = if (reuse) current.comboModels else Load.Idle,
-                trims = Load.Idle,
-                card = Load.Idle
+                models = if (reuse) current.comboModels else LCEState.None,
+                trims = LCEState.None,
+                card = LCEState.None
             )
         }
         if (!reuse) loadModels(brand.id)
@@ -161,7 +163,7 @@ internal class VehicleSelectViewModel(
         val current = _state.value
         if (wide && current.selection.model?.id == model.id && current.selection.carId == null) {
             cancel(CatalogLevel.TRIMS)
-            _state.update { it.copy(selection = it.selection.copy(model = null), trims = Load.Idle) }
+            _state.update { it.copy(selection = it.selection.copy(model = null), trims = LCEState.None) }
             return
         }
         val brand = current.selection.brand ?: current.combo?.brand
@@ -173,8 +175,8 @@ internal class VehicleSelectViewModel(
                 models = models,
                 query = "",
                 combo = null,
-                trims = Load.Loading,
-                card = Load.Idle
+                trims = LCEState.Loading,
+                card = LCEState.None
             )
         }
         loadTrims(model.id, openSingle = true)
@@ -193,9 +195,9 @@ internal class VehicleSelectViewModel(
             it.copy(
                 selection = selection,
                 query = "",
-                card = Load.Idle,
+                card = LCEState.None,
                 cardUi = CardUi(),
-                trims = if (selection.model == null) Load.Idle else it.trims
+                trims = if (selection.model == null) LCEState.None else it.trims
             )
         }
     }
@@ -264,7 +266,7 @@ internal class VehicleSelectViewModel(
     }
 
     fun onCapabilityNote(kind: CapabilityKind) {
-        val card = _state.value.card.valueOrNull() ?: return
+        val card = _state.value.card.content ?: return
         val capability = when (kind) {
             CapabilityKind.ENGINE_BLOCK -> card.engineBlockByCan
             CapabilityKind.KEYLESS_BYPASS -> card.keylessBypass
@@ -273,7 +275,7 @@ internal class VehicleSelectViewModel(
     }
 
     fun onCopyCanCode() {
-        val code = _state.value.card.valueOrNull()?.summary?.canCode ?: return
+        val code = _state.value.card.content?.summary?.canCode ?: return
         _effect.tryEmit(VehicleSelectEffect.CanCopied(code))
     }
 
@@ -285,8 +287,8 @@ internal class VehicleSelectViewModel(
     fun onPick(carId: Int) {
         val current = _state.value
         if (!current.mode.pick || current.picking) return
-        val known = current.card.valueOrNull()?.summary?.takeIf { it.id == carId }
-            ?: current.canResults.valueOrNull()?.firstOrNull { it.id == carId }
+        val known = current.card.content?.summary?.takeIf { it.id == carId }
+            ?: current.canResults.content?.firstOrNull { it.id == carId }
         if (known != null) {
             choose(known)
             return
@@ -330,10 +332,12 @@ internal class VehicleSelectViewModel(
         val compactName = layout == VehicleLayout.COMPACT && s.searchMode == SearchMode.NAME
         when {
             compactName && s.selection.model != null ->
-                _state.update { it.copy(selection = it.selection.copy(model = null), trims = Load.Idle, query = "") }
+                _state.update {
+                    it.copy(selection = it.selection.copy(model = null), trims = LCEState.None, query = "")
+                }
 
             compactName && s.selection.brand != null ->
-                _state.update { it.copy(selection = CatalogSelection(), models = Load.Idle, query = "") }
+                _state.update { it.copy(selection = CatalogSelection(), models = LCEState.None, query = "") }
 
             s.mode.typeSelectable && s.deviceType != null -> resetType()
 
@@ -352,14 +356,14 @@ internal class VehicleSelectViewModel(
             CardSource.RECENT -> CatalogSelection()
 
             CardSource.CATALOG -> {
-                val singleTrim = s.trims.valueOrNull()?.size == 1
+                val singleTrim = s.trims.content?.size == 1
                 s.selection.copy(
                     carId = null,
                     model = if (singleTrim && layout == VehicleLayout.COMPACT) null else s.selection.model
                 )
             }
         }
-        _state.update { it.copy(selection = selection, card = Load.Idle, cardUi = CardUi()) }
+        _state.update { it.copy(selection = selection, card = LCEState.None, cardUi = CardUi()) }
     }
 
     private fun resetType() {
@@ -370,12 +374,12 @@ internal class VehicleSelectViewModel(
                 selection = CatalogSelection(),
                 query = "",
                 combo = null,
-                brands = Load.Idle,
-                models = Load.Idle,
-                trims = Load.Idle,
-                comboModels = Load.Idle,
-                card = Load.Idle,
-                canResults = Load.Idle
+                brands = LCEState.None,
+                models = LCEState.None,
+                trims = LCEState.None,
+                comboModels = LCEState.None,
+                card = LCEState.None,
+                canResults = LCEState.None
             )
         }
     }
@@ -435,13 +439,13 @@ internal class VehicleSelectViewModel(
     private fun updateCombo() {
         val s = _state.value
         if (s.searchMode != SearchMode.NAME || s.selection.brand != null) return
-        val combo = s.brands.valueOrNull()?.let { detectCombo(s.query, it) }
+        val combo = s.brands.content?.let { detectCombo(s.query, it) }
         val sameBrand = combo?.brand?.id == s.combo?.brand?.id
         _state.update { it.copy(combo = combo) }
         when {
             combo == null -> {
                 cancel(CatalogLevel.COMBO)
-                _state.update { it.copy(comboModels = Load.Idle) }
+                _state.update { it.copy(comboModels = LCEState.None) }
             }
 
             !sameBrand -> loadComboModels(combo.brand.id)
@@ -490,7 +494,7 @@ internal class VehicleSelectViewModel(
         val s = _state.value
         if (s.searchMode != SearchMode.CAN || s.canCode.length != CAN_CODE_LENGTH || s.showTypeChoice) {
             cancel(CatalogLevel.CAN)
-            _state.update { it.copy(canResults = Load.Idle) }
+            _state.update { it.copy(canResults = LCEState.None) }
             return
         }
         val code = s.canCode
@@ -519,22 +523,22 @@ internal class VehicleSelectViewModel(
 
     private fun <T> load(
         level: CatalogLevel,
-        set: (VehicleSelectState, Load<T>) -> VehicleSelectState,
+        set: (VehicleSelectState, LCEState<T, CatalogError>) -> VehicleSelectState,
         fetch: suspend () -> Response<T>,
         onReady: (T) -> Unit = {}
     ) {
         jobs.remove(level)?.cancel()
-        _state.update { set(it, Load.Loading) }
+        _state.update { set(it, LCEState.Loading) }
         jobs[level] = safeLaunch {
             when (val response = withContext(dispatchers.io) { fetch() }) {
                 is Response.Success -> {
-                    _state.update { set(it, Load.Ready(response.value)) }
+                    _state.update { set(it, LCEState.Content(response.value)) }
                     onReady(response.value)
                 }
 
                 is Response.Error -> {
                     logger.w { "Vehicle $level load failed: ${response.message}" }
-                    _state.update { set(it, Load.Failed(RequestError.from(response.exception))) }
+                    _state.update { set(it, LCEState.Error(CatalogError.from(response.exception))) }
                 }
             }
         }
