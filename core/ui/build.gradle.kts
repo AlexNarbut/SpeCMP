@@ -59,7 +59,8 @@ kotlin {
 
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime)
+            // api: collectAsStateWithLifecycle — сбор state экранов во всех фичах (docs/compose-best-prac.md §4)
+            api(libs.androidx.lifecycle.runtime)
 
             // Kotlinx
             implementation(libs.kotlinx.coroutines.core)

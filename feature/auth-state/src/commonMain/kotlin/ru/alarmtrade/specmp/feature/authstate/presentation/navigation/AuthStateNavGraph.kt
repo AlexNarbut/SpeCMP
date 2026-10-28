@@ -6,7 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.ui.navigation.ViewModelScope
 import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
@@ -20,7 +20,7 @@ fun AuthStateNavGraph(
     errorState: @Composable (onRetry: () -> Unit) -> Unit
 ) {
     val viewModel = koinViewModel<AuthStateViewModel>()
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
 
     AnimatedContent(
         targetState = state.value,

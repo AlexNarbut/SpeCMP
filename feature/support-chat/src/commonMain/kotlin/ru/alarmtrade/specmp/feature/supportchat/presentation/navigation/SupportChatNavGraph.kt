@@ -4,10 +4,10 @@ package ru.alarmtrade.specmp.feature.supportchat.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -50,7 +50,7 @@ fun SupportChatEntry(
     val viewModel = koinViewModel<SupportChatScreenViewModel> {
         parametersOf(fileSaver, attachmentFiles, fileOpener)
     }
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
     val currentOnBack by rememberUpdatedState(onBack)
     val currentPicker by rememberUpdatedState(filePicker)
 

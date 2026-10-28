@@ -1,5 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
+import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -23,7 +25,11 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessio
 class DeviceScope(private val scope: CoroutineScope, deviceSession: DeviceSession) {
     val state: StateFlow<DeviceSessionState> = deviceSession.state
 
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
     private val deviceJob = SupervisorJob(scope.coroutineContext[Job])
+
+    // Как у BaseViewModel.safeLaunch: необработанное исключение работы с устройством — в лог, а не крэш приложения.
+    private val errors = CoroutineExceptionHandler { _, e -> logger.e(e) { "Unhandled device work error" } }
 
     init {
         scope.launch {
@@ -34,11 +40,11 @@ class DeviceScope(private val scope: CoroutineScope, deviceSession: DeviceSessio
     /** Работа с устройством; без связи не запускается (возвращает null). */
     fun launch(block: suspend CoroutineScope.() -> Unit): Job? {
         if (state.value !is DeviceSessionState.Ready) return null
-        return scope.launch(deviceJob, block = block)
+        return scope.launch(deviceJob + errors, block = block)
     }
 
     /** [action] на каждое подключение (в т.ч. повторное); отменяется при потере связи. */
-    fun onReady(action: suspend (AlarmDevice) -> Unit): Job = scope.launch {
+    fun onReady(action: suspend (AlarmDevice) -> Unit): Job = scope.launch(errors) {
         state.map { (it as? DeviceSessionState.Ready)?.device }
             .distinctUntilChanged()
             .collectLatest { device -> if (device != null) action(device) }

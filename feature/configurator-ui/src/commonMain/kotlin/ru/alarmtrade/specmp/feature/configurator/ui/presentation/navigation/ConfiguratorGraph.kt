@@ -4,12 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -234,7 +234,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
     val pick = mode as? GraphMode.Pick
     val full = mode as? GraphMode.Full
     val viewModel = koinViewModel<MineViewModel>(parameters = { parametersOf(pick?.request?.deviceName) })
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { CmpSnackbarHostState() }
     val scope = rememberCoroutineScope()
     val filePicker = full?.filePicker ?: NoSettingsFilePicker
@@ -343,7 +343,7 @@ private fun mineActions(
 @Composable
 private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBack: () -> Unit) {
     val viewModel = koinViewModel<ModelsViewModel>(parameters = { parametersOf(key.file) })
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
             // Модель выбрана — вместо выбора модели открывается редактор: «назад» из него ведёт к списку.
@@ -365,7 +365,7 @@ private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBac
 private fun CloudListEntry(key: CloudListRoute, backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: () -> Unit) {
     val deviceName = (mode as? GraphMode.Pick)?.request?.deviceName.orEmpty()
     val viewModel = koinViewModel<CloudListViewModel>(parameters = { parametersOf(key.carId, deviceName) })
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { CmpSnackbarHostState() }
     CloudListScreen(
         state = state,
@@ -397,7 +397,7 @@ private fun cloudCard(
         key = "cloud_card_$id",
         parameters = { parametersOf(id, pick?.request?.firmwareCanCode) }
     )
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {

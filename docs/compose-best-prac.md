@@ -262,8 +262,15 @@ fun Screen(vm: MyViewModel) {
 
 ### `collectAsState` vs `collectAsStateWithLifecycle`
 
-- **Android-приложение**: всегда использовать `collectAsStateWithLifecycle` — приостанавливает сбор в фоне
-- **KMP / платформо-независимый код**: `collectAsState` подходит
+**State экрана собирается только через `collectAsStateWithLifecycle()`** (`androidx.lifecycle.compose`, KMP-артефакт
+`lifecycle-runtime-compose` — доступен в `commonMain` всем фичам через `core/ui`). Сбор останавливается, когда
+экран ниже `STARTED` (приложение в фоне), — и тогда `stateIn(WhileSubscribed(…))` во VM действительно гасит
+поллинг, сканирование и прочие источники. `collectAsState()` держит подписку и в фоне — им state экрана не собираем.
+
+- **Что не должно останавливаться в фоне** (сессия сокета, счётчик сессий, идущее обновление прошивки), — не
+  через `WhileSubscribed`: `Lazily`/`Eagerly` или `init` VM с обоснованием (`docs/patterns.md`, «BaseViewModel»).
+  Пример: `AuthStateViewModel` — `Lazily`, иначе возврат из фона обнулил бы номер сессии авторизованной зоны.
+- Эффекты — `collectSideEffect` из `core/ui` (lifecycle-aware), не `collectAsState` и не ручной `LaunchedEffect`.
 
 ### Архитектура потока данных
 
@@ -598,7 +605,7 @@ Compose-код проверяется `./gradlew spotlessCheck` (ktlint + compos
 | **`ImmutableList`** | List передаётся как параметр composable | Внутренняя обработка, не пересекающая границу composable |
 | **`stability.conf`** | Крайняя мера: неизменяемый тип из модуля без Compose, кодом (§3.4, `@Immutable`, `ImmutableList`) не решается | Есть решение кодом; тип с `var`/мутабельными коллекциями; presentation-модель (её — `@Immutable`) |
 | **Переиспользовать экземпляр** | Частичное обновление дерева/списка в VM | Данные действительно изменились |
-| **`collectAsStateWithLifecycle`** | Android-приложение | KMP общий код |
+| **`collectAsStateWithLifecycle`** | Всегда для state экрана (KMP, `commonMain`) | — (`collectAsState` для state экрана не используем) |
 | **Передать `State<T>` дочернему** | Дочерний читает всё состояние, у родителя есть дорогие соседи | Только один дочерний читает состояние — просто собрать в нём |
 | **`rememberUpdatedState`** | Долгий эффект + коллбэк может меняться + эффект НЕ должен перезапускаться | Эффект ДОЛЖЕН перезапускаться при изменении коллбэка |
 | **`derivedStateOf`** | Вход меняется быстрее, чем значимый выход | Вход и выход меняются с одинаковой частотой |

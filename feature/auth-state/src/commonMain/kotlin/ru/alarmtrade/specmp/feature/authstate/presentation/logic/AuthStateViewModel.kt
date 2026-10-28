@@ -1,12 +1,10 @@
 package ru.alarmtrade.specmp.feature.authstate.presentation.logic
 
 import androidx.lifecycle.viewModelScope
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
@@ -40,9 +38,11 @@ class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispat
             AuthStateScreenState(state, if (newSession) previous.session + 1 else previous.session)
         }
         .flowOn(dispatchers.io)
+        // Lazily, не WhileSubscribed: счётчик сессий в scan живёт всю жизнь VM — перезапуск подписки (уход в фон
+        // при collectAsStateWithLifecycle) начал бы его заново и очистил бы ViewModelScope авторизованной зоны.
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeout = 5.seconds),
+            started = SharingStarted.Lazily,
             initialValue = AuthStateScreenState()
         )
 

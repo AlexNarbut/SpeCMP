@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -71,7 +71,7 @@ private val navConfig = SavedStateConfiguration {
 @Composable
 fun LoginNavGraph(onLocaleChange: (AppLocale) -> Unit) {
     val viewModel = koinViewModel<LoginScreenViewModel>()
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
     val colors = cmpThemeColors()
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
     val currentRoute = backStack.lastOrNull() ?: LoginRoute

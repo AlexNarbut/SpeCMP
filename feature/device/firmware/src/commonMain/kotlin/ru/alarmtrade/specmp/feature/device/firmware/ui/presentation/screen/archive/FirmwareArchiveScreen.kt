@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -93,7 +93,7 @@ fun FirmwareArchiveEntry(
         key = "FirmwareArchive:$request",
         parameters = { parametersOf(request) }
     )
-    val vmState by viewModel.state.collectAsState()
+    val vmState by viewModel.state.collectAsStateWithLifecycle()
     val hasPicker = vehiclePicker != null
     val state = remember(vmState, hasPicker) {
         vmState.copy(canFilter = vmState.canFilter?.copy(canPickVehicle = hasPicker))

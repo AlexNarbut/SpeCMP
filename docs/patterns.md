@@ -24,6 +24,7 @@
 - **У каждого `@Serializable` — `@SerialName("<модуль>.<Класс>")`** — см. «Сериализация».
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
+- **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()`: в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
 - **Сессия экрана — `init {}` / `onCleared()` per-entry VM**, без `DisposableEffect`, полей-`Job` и `var`-флагов, которые пишутся с разных диспетчеров — см. «Жизненный цикл ViewModel и сессии».
 - **У каждого флага загрузки — гарантированный сброс; ошибка первой загрузки ≠ пустой экран; «нечего делать» ≠ `Success`** — см. «Корректность state».
 - **Код проходит `./gradlew spotlessCheck` и `./gradlew detektCheck` без замечаний** (строка ≤ 120, без `runCatching`/`!!`/`println`, generic `catch` только на границах) — см. «Что проверяют анализаторы (Spotless + detekt)» и [`code-quality.md`](code-quality.md).
