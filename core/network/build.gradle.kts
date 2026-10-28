@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kmp.library)
-    alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -33,26 +32,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":core:common"))
-            implementation(libs.koin.core)
-
-            // Ktor
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.json)
-            implementation(libs.ktor.client.logging)
-
-            // Kotlinx
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.serialization.json)
-
-            // Logging
-            implementation(libs.kermit)
-
-            // DI
-            implementation(libs.koin.core)
         }
 
+        // HTTP-движки Ktor для всего процесса: Specialist SDK и Coil (coil-network-ktor3) используют ktor-client,
+        // но движок не тянут — без этих зависимостей сеть SDK и загрузка картинок не работают.
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
         }

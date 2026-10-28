@@ -13,10 +13,10 @@ data class RegistrationScreenState(
     val password: String = "",
     val isPasswordVisible: Boolean = false,
     val isInstallerConfirmed: Boolean = false,
-    val registrationState: LCEState<Unit> = LCEState.None(),
-    val registrationError: AuthFormError? = null,
+    val registrationState: LCEState<Unit, AuthFormError> = LCEState.None,
     val fieldErrors: Set<RegistrationFieldError> = emptySet()
 ) {
+    val registrationError: AuthFormError? get() = (registrationState as? LCEState.Error)?.error
     val isLoading: Boolean get() = registrationState is LCEState.Loading
     val isSuccess: Boolean get() = registrationState is LCEState.Content
     val canSubmit: Boolean

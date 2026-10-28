@@ -13,6 +13,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.authstate_root_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.authstate_root_msg_error
+import ru.alarmtrade.specmp.core.localization.resources.authstate_root_title_error
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -20,10 +24,6 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import specmp.feature.auth_state.generated.resources.Res
-import specmp.feature.auth_state.generated.resources.authstate_root_btn_retry
-import specmp.feature.auth_state.generated.resources.authstate_root_msg_error
-import specmp.feature.auth_state.generated.resources.authstate_root_title_error
 
 @Composable
 fun SessionCheckErrorScreen(onRetry: () -> Unit, modifier: Modifier = Modifier) {
@@ -47,14 +47,14 @@ fun SessionCheckErrorScreen(onRetry: () -> Unit, modifier: Modifier = Modifier) 
                 tint = colors.error
             )
             CmpText(
-                text = stringResource(Res.string.authstate_root_title_error),
+                text = stringResource(Strings.string.authstate_root_title_error),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Medium,
                 color = colors.onBackground,
                 textAlign = TextAlign.Center
             )
             CmpText(
-                text = stringResource(Res.string.authstate_root_msg_error),
+                text = stringResource(Strings.string.authstate_root_msg_error),
                 fontSize = 14.sp,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -69,7 +69,7 @@ fun SessionCheckErrorScreen(onRetry: () -> Unit, modifier: Modifier = Modifier) 
                     modifier = Modifier.size(18.dp)
                 )
                 CmpText(
-                    text = stringResource(Res.string.authstate_root_btn_retry),
+                    text = stringResource(Strings.string.authstate_root_btn_retry),
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }

@@ -23,6 +23,18 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_nc
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_no
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_minus_sign
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_plus_sign
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_collapse_description
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_expand_description
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_label_only_selected
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_label_selected
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_msg_nothing_found
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_placeholder_search
+import ru.alarmtrade.specmp.core.localization.resources.settings_search_a11y_clear
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -45,18 +57,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_collapse_description
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_expand_description
-import specmp.feature.device.settings_ui.generated.resources.settings_io_label_only_selected
-import specmp.feature.device.settings_ui.generated.resources.settings_io_label_selected
-import specmp.feature.device.settings_ui.generated.resources.settings_io_msg_nothing_found
-import specmp.feature.device.settings_ui.generated.resources.settings_io_placeholder_search
-import specmp.feature.device.settings_ui.generated.resources.settings_search_a11y_clear
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_nc
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_no
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_minus_sign
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_plus_sign
 
 private val SegmentsWidth = 132.dp
 private val FunctionsMaxHeight = 360.dp
@@ -106,8 +106,8 @@ private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, 
         is SettingValue.Input -> if (draft.value.type != InputContactType.UNDEFINED) {
             CmpSegmentedButton(
                 options = listOf(
-                    stringResource(Res.string.settings_value_contact_no),
-                    stringResource(Res.string.settings_value_contact_nc)
+                    stringResource(Strings.string.settings_common_value_contact_no),
+                    stringResource(Strings.string.settings_common_value_contact_nc)
                 ),
                 selectedIndex = when (draft.value.type) {
                     InputContactType.NORMALLY_OPEN -> 0
@@ -126,8 +126,8 @@ private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, 
         is SettingValue.Output -> if (editablePolarity) {
             CmpSegmentedButton(
                 options = listOf(
-                    stringResource(Res.string.settings_value_polarity_plus_sign),
-                    stringResource(Res.string.settings_value_polarity_minus_sign)
+                    stringResource(Strings.string.settings_common_value_polarity_plus_sign),
+                    stringResource(Strings.string.settings_common_value_polarity_minus_sign)
                 ),
                 selectedIndex = when (draft.value.polarity) {
                     Polarity.PLUS -> 0
@@ -181,7 +181,7 @@ internal fun ChannelFunctionsEditor(
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpRow(verticalAlignment = Alignment.CenterVertically) {
             CmpText(
-                text = stringResource(Res.string.settings_io_label_selected, selected, logics.size),
+                text = stringResource(Strings.string.settings_io_label_selected, selected, logics.size),
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f)
@@ -194,14 +194,17 @@ internal fun ChannelFunctionsEditor(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CmpCheckbox(checked = onlySelected, onCheckedChange = null)
-                CmpText(text = stringResource(Res.string.settings_io_label_only_selected), style = CmpTextStyle.Body)
+                CmpText(
+                    text = stringResource(Strings.string.settings_io_label_only_selected),
+                    style = CmpTextStyle.Body
+                )
             }
         }
         // На телефоне поиска нет: список функций короткий для прокрутки, а клавиатура закрывает пол-экрана.
         if (searchable) FunctionSearchField(query) { query = it }
         if (visible.isEmpty()) {
             CmpText(
-                text = stringResource(Res.string.settings_io_msg_nothing_found),
+                text = stringResource(Strings.string.settings_io_msg_nothing_found),
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
@@ -229,7 +232,7 @@ private fun FunctionSearchField(query: String, onQueryChange: (String) -> Unit) 
     CmpTextField(
         value = query,
         onValueChange = onQueryChange,
-        placeholder = stringResource(Res.string.settings_io_placeholder_search),
+        placeholder = stringResource(Strings.string.settings_io_placeholder_search),
         singleLine = true,
         leadingIcon = { CmpIcon(icon = CmpIcons.Search, contentDescription = null) },
         trailingIcon = if (query.isNotEmpty()) {
@@ -237,7 +240,7 @@ private fun FunctionSearchField(query: String, onQueryChange: (String) -> Unit) 
                 CmpIconButton(
                     onClick = { onQueryChange("") },
                     icon = CmpIcons.Close,
-                    contentDescription = stringResource(Res.string.settings_search_a11y_clear)
+                    contentDescription = stringResource(Strings.string.settings_search_a11y_clear)
                 )
             }
         } else {
@@ -291,9 +294,9 @@ private fun FunctionRow(
                 icon = if (descriptionOpen) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                 contentDescription = stringResource(
                     if (descriptionOpen) {
-                        Res.string.settings_edit_a11y_collapse_description
+                        Strings.string.settings_edit_a11y_collapse_description
                     } else {
-                        Res.string.settings_edit_a11y_expand_description
+                        Strings.string.settings_edit_a11y_expand_description
                     }
                 ),
                 tint = colors.onSurfaceVariant

@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -8,6 +9,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsDiff
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchHit
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
@@ -15,7 +17,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 @Immutable
 internal data class DeviceSettingsState(
     val header: SettingsHeader? = null,
-    val menu: SettingsMenu = SettingsMenu.Loading,
+    val menu: LCEState<SettingsSection, SettingsError> = LCEState.Loading,
     /** Изменённые и не записанные настройки (id) — подсветка строк и панель «Изменено: N». */
     val changedIds: Set<Int> = emptySet(),
     /** Сколько настроек изменено внутри раздела (id раздела → число) — счётчики в строках, дереве, крошках. */
@@ -101,7 +103,8 @@ internal sealed interface DiffState {
     /** [pendingChanges] — незаписанные правки в редакторе (загрузка их заменит). */
     data class Ready(override val title: String, val diff: SettingsDiff, val pendingChanges: Int) : DiffState
 
-    data class Error(override val title: String) : DiffState
+    /** «Повторить» — то же сравнение: [from] с тем же [closeAfter] (сессию чужого редактора не закрываем). */
+    data class Error(override val title: String, val from: SettingsSource, val closeAfter: Boolean) : DiffState
 }
 
 /**
@@ -119,31 +122,14 @@ internal data class SaveForm(
 /** Шапка: модель и номер блока; [singleCanCode] — код единой CAN-прошивки, если она есть. */
 internal data class SettingsHeader(val deviceName: String, val deviceId: Long, val singleCanCode: String?)
 
-internal sealed interface SettingsMenu {
-    data object Loading : SettingsMenu
-    data object Error : SettingsMenu
-    data class Ready(val root: SettingsSection) : SettingsMenu
-}
-
 /** Открытое окно редактирования: [original] — значение «как было» (до правок), [draft] — набираемое. */
 internal data class EditingSetting(
     val setting: Setting,
     val original: SettingValue,
     val draft: SettingValue,
-    /** Поиск автомобиля по CAN-коду в окне CAN-кода. */
-    val carSearch: CarSearch = CarSearch.Idle
+    // Поиск автомобиля по CAN-коду в окне CAN-кода; пустой Content — для кода автомобиля нет.
+    val carSearch: LCEState<List<CarSummary>, SettingsError> = LCEState.None
 )
-
-internal sealed interface CarSearch {
-    data object Idle : CarSearch
-    data object Loading : CarSearch
-
-    /** Найдено (пусто — для кода автомобиля нет, код всё равно можно применить). */
-    data class Found(val cars: List<CarSummary>) : CarSearch
-
-    /** Нет связи с сервером — код можно применить без автомобиля. */
-    data object Failed : CarSearch
-}
 
 internal sealed interface SettingsDialog {
     data class Description(val node: SettingNode) : SettingsDialog
@@ -171,7 +157,9 @@ internal sealed interface SettingsDialog {
         val source: SettingsSource,
         val sourceDeviceName: String,
         val deviceName: String,
-        val forWrite: Boolean
+        val forWrite: Boolean,
+        /** Для загрузки: закрыть ли сессию источника после сравнения (см. [DiffState.Error.closeAfter]). */
+        val closeAfter: Boolean = true
     ) : SettingsDialog
 
     data class LoadError(val kind: LoadErrorKind) : SettingsDialog
@@ -233,3 +221,20 @@ internal sealed interface DeviceSettingsEffect {
 
 /** Куда уходим из настроек: назад (корень монтажа) или в «Проверку прошивок» (единая CAN-прошивка). */
 internal enum class ExitTarget { BACK, FIRMWARE_UPDATE }
+
+/** Где пользователь в меню: путь разделов от корня (пусто — корень) или поиск. */
+@Immutable
+internal data class SettingsLocation(val sectionPath: List<Int>, val isSearch: Boolean) {
+    val sectionId: Int? get() = sectionPath.lastOrNull()
+}
+
+/**
+ * Пометки строк: изменённые настройки, счётчики разделов, автомобили CAN-кодов. Отдельно от state экрана — строки
+ * не перерисовываются от ввода, диалогов и прочих полей, которые их не касаются.
+ */
+@Immutable
+internal data class RowMarks(
+    val changedIds: Set<Int>,
+    val sectionChanges: Map<Int, Int>,
+    val cars: Map<Int, CarSummary>
+)

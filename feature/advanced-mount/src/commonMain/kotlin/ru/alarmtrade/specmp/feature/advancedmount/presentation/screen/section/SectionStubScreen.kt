@@ -16,6 +16,33 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_title_product_info
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_title_remote_sync
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_msg_stub
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_bypass_learning
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_clone
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_community_maps
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_configurator
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_dynamic_devices
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_firmware_update
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_settings
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_support_chat
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_tech_requests
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_vehicles
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_voice_firmware
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_bypass_learning
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_clone
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_community_maps
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_configurator
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_dynamic_devices
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_firmware_update
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_settings
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_support_chat
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_tech_requests
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_vehicles
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_voice_firmware
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -29,34 +56,11 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import specmp.feature.advanced_mount.generated.resources.Res
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_a11y_back
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_bypass_learning
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_bypass_learning_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_clone
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_clone_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_community_maps
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_community_maps_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_dynamic_devices
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_dynamic_devices_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_firmware_update
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_firmware_update_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_settings
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_settings_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_stub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_support_chat
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_support_chat_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_tech_requests
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_tech_requests_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_vehicles
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_vehicles_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_voice_firmware
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_voice_firmware_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_stub_product_info
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_stub_remote_sync
 import specmp.feature.advanced_mount.generated.resources.mount_remote_sync
 import specmp.feature.advanced_mount.generated.resources.mount_section_bypass_learning
 import specmp.feature.advanced_mount.generated.resources.mount_section_clone
 import specmp.feature.advanced_mount.generated.resources.mount_section_community_maps
+import specmp.feature.advanced_mount.generated.resources.mount_section_configurator
 import specmp.feature.advanced_mount.generated.resources.mount_section_dynamic_devices
 import specmp.feature.advanced_mount.generated.resources.mount_section_firmware_update
 import specmp.feature.advanced_mount.generated.resources.mount_section_settings
@@ -70,62 +74,68 @@ private class SectionRes(val title: StringResource, val subtitle: StringResource
 private val MountSection.res: SectionRes
     get() = when (this) {
         MountSection.FIRMWARE_UPDATE -> SectionRes(
-            Res.string.advanced_mount_section_firmware_update,
-            Res.string.advanced_mount_section_firmware_update_sub,
+            Strings.string.advancedmount_sections_title_firmware_update,
+            Strings.string.advancedmount_sections_subtitle_firmware_update,
             Res.drawable.mount_section_firmware_update
         )
 
         MountSection.SETTINGS -> SectionRes(
-            Res.string.advanced_mount_section_settings,
-            Res.string.advanced_mount_section_settings_sub,
+            Strings.string.advancedmount_sections_title_settings,
+            Strings.string.advancedmount_sections_subtitle_settings,
             Res.drawable.mount_section_settings
         )
 
+        MountSection.CONFIGURATOR -> SectionRes(
+            Strings.string.advancedmount_sections_title_configurator,
+            Strings.string.advancedmount_sections_subtitle_configurator,
+            Res.drawable.mount_section_configurator
+        )
+
         MountSection.BYPASS_LEARNING -> SectionRes(
-            Res.string.advanced_mount_section_bypass_learning,
-            Res.string.advanced_mount_section_bypass_learning_sub,
+            Strings.string.advancedmount_sections_title_bypass_learning,
+            Strings.string.advancedmount_sections_subtitle_bypass_learning,
             Res.drawable.mount_section_bypass_learning
         )
 
         MountSection.CLONE -> SectionRes(
-            Res.string.advanced_mount_section_clone,
-            Res.string.advanced_mount_section_clone_sub,
+            Strings.string.advancedmount_sections_title_clone,
+            Strings.string.advancedmount_sections_subtitle_clone,
             Res.drawable.mount_section_clone
         )
 
         MountSection.DYNAMIC_DEVICES -> SectionRes(
-            Res.string.advanced_mount_section_dynamic_devices,
-            Res.string.advanced_mount_section_dynamic_devices_sub,
+            Strings.string.advancedmount_sections_title_dynamic_devices,
+            Strings.string.advancedmount_sections_subtitle_dynamic_devices,
             Res.drawable.mount_section_dynamic_devices
         )
 
         MountSection.TECH_REQUESTS -> SectionRes(
-            Res.string.advanced_mount_section_tech_requests,
-            Res.string.advanced_mount_section_tech_requests_sub,
+            Strings.string.advancedmount_sections_title_tech_requests,
+            Strings.string.advancedmount_sections_subtitle_tech_requests,
             Res.drawable.mount_section_tech_requests
         )
 
         MountSection.SUPPORT_CHAT -> SectionRes(
-            Res.string.advanced_mount_section_support_chat,
-            Res.string.advanced_mount_section_support_chat_sub,
+            Strings.string.advancedmount_sections_title_support_chat,
+            Strings.string.advancedmount_sections_subtitle_support_chat,
             Res.drawable.mount_section_support_chat
         )
 
         MountSection.VOICE_FIRMWARE -> SectionRes(
-            Res.string.advanced_mount_section_voice_firmware,
-            Res.string.advanced_mount_section_voice_firmware_sub,
+            Strings.string.advancedmount_sections_title_voice_firmware,
+            Strings.string.advancedmount_sections_subtitle_voice_firmware,
             Res.drawable.mount_section_voice_firmware
         )
 
         MountSection.COMMUNITY_MAPS -> SectionRes(
-            Res.string.advanced_mount_section_community_maps,
-            Res.string.advanced_mount_section_community_maps_sub,
+            Strings.string.advancedmount_sections_title_community_maps,
+            Strings.string.advancedmount_sections_subtitle_community_maps,
             Res.drawable.mount_section_community_maps
         )
 
         MountSection.VEHICLES -> SectionRes(
-            Res.string.advanced_mount_section_vehicles,
-            Res.string.advanced_mount_section_vehicles_sub,
+            Strings.string.advancedmount_sections_title_vehicles,
+            Strings.string.advancedmount_sections_subtitle_vehicles,
             Res.drawable.mount_section_vehicles
         )
     }
@@ -142,8 +152,8 @@ internal fun sectionPainter(section: MountSection): Painter = painterResource(se
 @Composable
 private fun extraTitle(extra: MountExtra): String = stringResource(
     when (extra) {
-        MountExtra.PRODUCT_INFO -> Res.string.advanced_mount_stub_product_info
-        MountExtra.REMOTE_SYNC -> Res.string.advanced_mount_stub_remote_sync
+        MountExtra.PRODUCT_INFO -> Strings.string.advancedmount_extras_title_product_info
+        MountExtra.REMOTE_SYNC -> Strings.string.advancedmount_extras_title_remote_sync
     }
 )
 
@@ -182,7 +192,7 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
                     CmpIconButton(
                         onClick = onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.advanced_mount_a11y_back)
+                        contentDescription = stringResource(Strings.string.advancedmount_common_a11y_back)
                     )
                 }
             )
@@ -208,7 +218,7 @@ private fun StubScreen(title: String, deviceTitle: String, icon: Painter?, onBac
                 }
             }
             CmpText(
-                text = stringResource(Res.string.advanced_mount_section_stub),
+                text = stringResource(Strings.string.advancedmount_sections_msg_stub),
                 fontSize = 16.sp,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center

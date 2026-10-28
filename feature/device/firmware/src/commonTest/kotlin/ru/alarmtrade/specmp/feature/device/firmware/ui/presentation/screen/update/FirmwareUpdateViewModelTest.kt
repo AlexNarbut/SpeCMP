@@ -28,16 +28,16 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateTarget
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -255,13 +255,13 @@ class FirmwareUpdateViewModelTest {
         vm.onDownloadClick()
         runCurrent()
         assertEquals(UpdatePhase.Source, vm.state.value.phase)
-        assertEquals(true, vm.state.value.sourceError)
+        assertEquals(FirmwareError.LoadFailed, vm.state.value.sourceError)
 
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
         vm.onDownloadClick()
         runCurrent()
         assertEquals(UpdatePhase.Confirm, vm.state.value.phase)
-        assertEquals(false, vm.state.value.sourceError)
+        assertEquals(null, vm.state.value.sourceError)
 
         vm.onCancelConfirm()
         runCurrent()
@@ -273,7 +273,7 @@ class FirmwareUpdateViewModelTest {
     fun `update runs through the stages and a finished update leaves the block in the bootloader`() = test {
         val vm = startedUpdate()
         assertEquals(UpdatePhase.Prepare, vm.state.value.phase)
-        assertEquals(listOf(FirmwareUpdateTarget.MainProgram), updateRepository.calls.map { it.first })
+        assertEquals(listOf(BootModeTarget.MainProgram), updateRepository.calls.map { it.first })
         assertEquals("3.61", updateRepository.calls.single().second.version)
 
         updateRepository.progress.emit(FirmwareUpdateProgress.Preparing)
@@ -414,7 +414,7 @@ class FirmwareUpdateViewModelTest {
     @Test
     fun `bluetooth transfer survives a link drop and continues after the module returns`() = test {
         val vm = startedBluetoothTransfer()
-        assertEquals(listOf(FirmwareUpdateTarget.BluetoothModule), updateRepository.calls.map { it.first })
+        assertEquals(listOf(BootModeTarget.BluetoothModule), updateRepository.calls.map { it.first })
 
         linkDrop()
         runCurrent()
@@ -441,7 +441,7 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
         updateRepository.progress.emit(FirmwareUpdateProgress.Sending(30))
         runCurrent()
-        assertEquals(listOf(FirmwareUpdateTarget.MainProgram), updateRepository.calls.map { it.first })
+        assertEquals(listOf(BootModeTarget.MainProgram), updateRepository.calls.map { it.first })
         val reads = sessionRepository.bluetoothReads
 
         linkDrop()
@@ -618,7 +618,7 @@ class FirmwareUpdateViewModelTest {
 
         vm.onConfirmUpdate()
         runCurrent()
-        assertEquals(listOf(FirmwareUpdateTarget.MainProgram to "/tmp/fw_3_70.bin"), updateRepository.fileCalls)
+        assertEquals(listOf(BootModeTarget.MainProgram to "/tmp/fw_3_70.bin"), updateRepository.fileCalls)
         assertEquals(emptyList(), updateRepository.calls)
     }
 

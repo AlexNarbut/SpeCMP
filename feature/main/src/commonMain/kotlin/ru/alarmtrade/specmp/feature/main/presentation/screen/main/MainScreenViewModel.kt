@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
@@ -35,8 +33,8 @@ import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSupported
@@ -58,59 +56,21 @@ class MainScreenViewModel(
     private val _effect = sideEffectFlow<MainScreenEffect>()
     val effect: SharedFlow<MainScreenEffect> = _effect.asSharedFlow()
 
-    // Первичная загрузка — холодный flow, расшаренный Lazily: стартует при первой
-    // подписке на state и выполняется ровно один раз за жизнь VM. Guard-флаг не нужен —
-    // «однократность» гарантирует SharingStarted.Lazily (никогда не перезапускается).
-    private val initialLoadingState: StateFlow<Boolean> = flow {
-        logger.d { "Starting initial home data refresh" }
-        safeLaunch { refreshDatabaseVersion() } // параллельно, скелетон не гейтит
-        coroutineScope {
-            awaitAll(
-                async { loadUserProfile() },
-                async { loadUserAppFeatures() },
-                async { loadUserCommercial() },
-                async { checkAppUpdate() }
-            )
-        }
-        logger.d { "Initial home data refresh completed" }
-        emit(false)
-    }
-        .catch { e ->
-            logger.e(e) { "Initial home data refresh failed" }
-            emit(false)
-        }
-        .stateIn(viewModelScope, SharingStarted.Lazily, true)
-
-    private val chatAvailabilityState: Flow<LCEState<Boolean>> = mainRepository
+    private val chatAvailabilityState: Flow<LCEState<Boolean, MainError>> = mainRepository
         .observeChatAvailability()
         .map { response ->
-            response.asLCEState { e -> e.message ?: "Error" }
+            response.asLCEState(MainError::from)
         }
         .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None()) }
-
-    private val chatUnreadState: Flow<LCEState<Int>> = mainRepository
-        .observeUnreadMessagesCount()
-        .map { response ->
-            response.asLCEState { e -> e.message ?: "Error" }
-        }
-        .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None()) }
+        .onStart { emit(LCEState.None) }
 
     // Поллинг чата живёт только пока экран подписан: WhileSubscribed останавливает
     // источники при уходе с экрана и перезапускает при возврате.
-    val state: StateFlow<MainScreenState> = combine(
-        _state,
-        initialLoadingState,
-        chatAvailabilityState,
-        chatUnreadState
-    ) { state, isInitialLoading, chatAvailability, chatUnread ->
-        state.copy(
-            isInitialLoading = isInitialLoading,
-            chatAvailabilityState = chatAvailability,
-            chatUnreadState = chatUnread
-        )
+    val state: StateFlow<MainScreenState> = combine(_state, chatAvailabilityState) { state, chatAvailability ->
+        state.copy(chatAvailabilityState = chatAvailability)
     }
+        // Первичная загрузка — один раз за жизнь VM, при первой подписке на state; скелетон — пока она идёт.
+        .launchOnFirstStart { initialRefresh() }
         .onStart { resetLogoutTransientState() }
         .flowOn(dispatchers.default)
         .stateIn(
@@ -171,33 +131,20 @@ class MainScreenViewModel(
         safeLaunch {
             _state.update {
                 it.copy(
-                    logoutState = LCEState.Loading(),
-                    logoutError = null
+                    logoutState = LCEState.Loading
                 )
             }
 
-            when (withContext(dispatchers.io) { logoutUseCase.execute() }) {
-                is Response.Success -> {
-                    logger.d { "Logout succeeded" }
-                    _state.update {
-                        it.copy(
-                            logoutState = LCEState.None(),
-                            profileState = LCEState.None(),
-                            databaseSyncState = LCEState.None(),
-                            databaseVersion = null,
-                            appFeaturesState = LCEState.None(),
-                            userCommercialState = LCEState.None(),
-                            appUpdateState = LCEState.None()
-                        )
-                    }
-                }
+            when (val response = withContext(dispatchers.io) { logoutUseCase.execute() }) {
+                // Остаёмся в Loading: кнопка заблокирована, пока auth-state не сменит зону; эта VM уйдёт вместе с
+                // авторизованной зоной (ViewModelScope по сессии) — state сбрасывать не нужно.
+                is Response.Success -> logger.d { "Logout succeeded" }
 
                 is Response.Error -> {
                     logger.d { "Logout failed" }
                     _state.update {
                         it.copy(
-                            logoutState = LCEState.None(),
-                            logoutError = MainLogoutError.RequestFailed
+                            logoutState = LCEState.Error(MainError.from(response.exception))
                         )
                     }
                 }
@@ -205,13 +152,32 @@ class MainScreenViewModel(
         }
     }
 
+    private suspend fun initialRefresh() {
+        logger.d { "Starting initial home data refresh" }
+        safeLaunch { refreshDatabaseVersion() } // параллельно, скелетон не гейтит
+        try {
+            coroutineScope {
+                awaitAll(
+                    async { loadUserProfile() },
+                    async { loadUserAppFeatures() },
+                    async { loadUserCommercial() },
+                    async { checkAppUpdate() }
+                )
+            }
+            logger.d { "Initial home data refresh completed" }
+        } finally {
+            // Сбой (необработанное исключение логирует safeLaunch) скелетон тоже убирает.
+            _state.update { it.copy(isInitialLoading = false) }
+        }
+    }
+
     private suspend fun loadUserProfile() {
-        _state.update { it.copy(profileState = LCEState.Loading()) }
+        _state.update { it.copy(profileState = LCEState.Loading) }
 
         val response = loadWithTimeout { mainRepository.currentUserProfile() }
         _state.update {
             it.copy(
-                profileState = response.asLCEState { e -> e.message ?: "Error" }
+                profileState = response.asLCEState(MainError::from)
                     .mapContent { profile ->
                         MainProfile(name = profile.name, email = profile.email)
                     }
@@ -220,23 +186,23 @@ class MainScreenViewModel(
     }
 
     private suspend fun loadUserAppFeatures() {
-        _state.update { it.copy(appFeaturesState = LCEState.Loading()) }
+        _state.update { it.copy(appFeaturesState = LCEState.Loading) }
 
         val response = loadWithTimeout { mainRepository.currentUserAppFeatures() }
         _state.update {
             it.copy(
-                appFeaturesState = response.asLCEState { e -> e.message ?: "Error" }
+                appFeaturesState = response.asLCEState(MainError::from)
             )
         }
     }
 
     private suspend fun loadUserCommercial() {
-        _state.update { it.copy(userCommercialState = LCEState.Loading()) }
+        _state.update { it.copy(userCommercialState = LCEState.Loading) }
 
         val response = loadWithTimeout { mainRepository.currentUserCommercial() }
         _state.update {
             it.copy(
-                userCommercialState = response.asLCEState { e -> e.message ?: "Error" }
+                userCommercialState = response.asLCEState(MainError::from)
             )
         }
     }
@@ -244,13 +210,13 @@ class MainScreenViewModel(
     // Синхронизация — процесс: стадии зеркалятся в state по мере эмита,
     // поток всегда завершается одним из MainDatabaseSyncStatus.Finished.
     private suspend fun refreshDatabaseVersion() {
-        _state.update { it.copy(databaseSyncState = LCEState.Loading()) }
+        _state.update { it.copy(databaseSyncState = LCEState.Loading) }
 
         val lastStatus = mainRepository.synchronizeSettingsVersion()
             .flowOn(dispatchers.io)
             .onEach { response ->
                 _state.update {
-                    it.copy(databaseSyncState = response.asLCEState { e -> e.message ?: "Error" })
+                    it.copy(databaseSyncState = response.asLCEState(MainError::from))
                 }
             }
             .lastOrNull()
@@ -274,28 +240,20 @@ class MainScreenViewModel(
     private suspend fun checkAppUpdate() {
         if (!_state.value.isAppUpdateSupported) return
 
-        _state.update { it.copy(appUpdateState = LCEState.Loading()) }
+        _state.update { it.copy(appUpdateState = LCEState.Loading) }
         logger.d { "Checking for app update" }
 
         val response = loadWithTimeout { mainRepository.checkAppUpdate() }
         _state.update {
             it.copy(
-                appUpdateState = response.asLCEState { e -> e.message ?: "Error" }
+                appUpdateState = response.asLCEState(MainError::from)
             )
         }
     }
 
+    /** Ошибка выхода — разовая: при возврате на экран не показываем. Loading (выход идёт или удался) не трогаем. */
     private fun resetLogoutTransientState() {
-        _state.update {
-            if (it.logoutState is LCEState.None && it.logoutError == null) {
-                it
-            } else {
-                it.copy(
-                    logoutState = LCEState.None(),
-                    logoutError = null
-                )
-            }
-        }
+        _state.update { if (it.logoutState is LCEState.Error) it.copy(logoutState = LCEState.None) else it }
     }
 
     private suspend fun <T> loadWithTimeout(block: suspend () -> Response<T>): Response<T> =

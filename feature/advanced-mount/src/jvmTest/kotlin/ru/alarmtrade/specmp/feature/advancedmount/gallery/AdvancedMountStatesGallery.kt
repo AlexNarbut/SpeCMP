@@ -2,13 +2,16 @@ package ru.alarmtrade.specmp.feature.advancedmount.gallery
 
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.UnsupportedSections
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.AdvancedMountRootActions
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.AdvancedMountRootContent
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.AdvancedMountRootState
-import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.MountContent
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.MountAccess
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.MountDialog
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.title
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.SectionStubScreen
@@ -44,7 +47,7 @@ class AdvancedMountStatesGallery {
         device = alarm,
         transport = ConnectionTransport.BLE,
         imei = "351756051523999",
-        content = MountContent.Ready(MountSection.entries.toList(), unsupported = false),
+        content = LCEState.Content(MountAccess.Ready(MountSection.entries.toList(), unsupported = false)),
         unreadCount = 3,
         remoteAvailable = true,
         productInfo = true
@@ -58,12 +61,17 @@ class AdvancedMountStatesGallery {
     fun loading() = render("01_loading", moduleBase)
 
     @Test
-    fun verifyError() = render("02_verify_error", moduleBase.copy(content = MountContent.VerifyError))
+    fun verifyError() = render(
+        "02_verify_error",
+        moduleBase.copy(content = LCEState.Error(MountError.Common(ApiError.NoConnection)))
+    )
 
     @Test
     fun denied() = render(
         "03_denied",
-        moduleBase.copy(content = MountContent.Denied("Блок заблокирован для данной учётной записи монтажника."))
+        moduleBase.copy(
+            content = LCEState.Content(MountAccess.Denied("Блок заблокирован для данной учётной записи монтажника."))
+        )
     )
 
     @Test
@@ -71,7 +79,7 @@ class AdvancedMountStatesGallery {
         "04_unsupported",
         moduleBase.copy(
             device = module.copy(features = null),
-            content = MountContent.Ready(UnsupportedSections, unsupported = true)
+            content = LCEState.Content(MountAccess.Ready(UnsupportedSections, unsupported = true))
         )
     )
 
@@ -80,7 +88,9 @@ class AdvancedMountStatesGallery {
         "04b_model_not_in_database",
         moduleBase.copy(
             device = module.copy(features = null, modelInDatabase = false),
-            content = MountContent.Ready(UnsupportedSections, unsupported = true, modelNotInDatabase = true)
+            content = LCEState.Content(
+                MountAccess.Ready(UnsupportedSections, unsupported = true, modelNotInDatabase = true)
+            )
         )
     )
 
@@ -89,7 +99,7 @@ class AdvancedMountStatesGallery {
         "05_usb_module_ready",
         moduleBase.copy(
             imei = "351756051523999",
-            content = MountContent.Ready(module.features.toSections(), unsupported = false)
+            content = LCEState.Content(MountAccess.Ready(module.features.toSections(), unsupported = false))
         )
     )
 
@@ -115,7 +125,7 @@ class AdvancedMountStatesGallery {
     @Test
     fun bootMode() = render(
         "10_header_boot_mode",
-        moduleBase.copy(device = module.copy(mode = DeviceOperationMode.BOOT), content = MountContent.Loading)
+        moduleBase.copy(device = module.copy(mode = DeviceOperationMode.BOOT), content = LCEState.Loading)
     )
 
     @Test

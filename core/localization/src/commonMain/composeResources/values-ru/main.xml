@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="main_main_title_app">Pandora Спец</string>
+    <string name="main_common_a11y_open_menu">Открыть меню</string>
+    <string name="main_common_status_database_updated">База обновлена</string>
+    <string name="main_common_loading_database_checking">Проверка базы...</string>
+    <string name="main_common_loading_database_downloading">Загрузка базы...</string>
+    <string name="main_common_loading_database_applying">Установка обновления...</string>
+    <string name="main_common_status_database_update_failed">Ошибка обновления базы</string>
+    <string name="main_common_status_database_app_update_required">Требуется обновление приложения</string>
+
+    <string name="main_main_title_quick_mount">Быстрый монтаж</string>
+    <string name="main_main_msg_quick_mount">Пошаговая установка по готовым настройкам</string>
+    <string name="main_main_title_advanced_mount">Расширенный монтаж</string>
+    <string name="main_main_msg_advanced_mount">Детальная настройка и проверка системы</string>
+
+    <string name="main_main_title_configurator">Конфигуратор настроек</string>
+    <string name="main_main_msg_configurator">Создание и изменение настроек системы</string>
+    <string name="main_main_title_firmware_archive">Архив прошивок</string>
+    <string name="main_main_msg_firmware_archive">Поиск и загрузка прошивок</string>
+    <string name="main_main_title_cars">Автомобили</string>
+    <string name="main_main_msg_cars">Поддерживаемые автомобили и функции</string>
+    <string name="main_main_title_can_scanner">CAN сканер</string>
+    <string name="main_main_msg_can_scanner">Чтение CAN шины</string>
+    <string name="main_main_title_requests">Заявки народных карт</string>
+    <string name="main_main_msg_requests">Делитесь своим опытом монтажа</string>
+    <string name="main_main_title_feedback">Обратная связь</string>
+    <string name="main_main_msg_feedback">Отзыв о монтаже и улучшениях</string>
+    <string name="main_main_title_product_info">Информация о товаре</string>
+    <string name="main_main_msg_product_info">Найти информацию о товаре и комплектации</string>
+    <string name="main_main_title_tech_support_chat">Чат тех. поддержки</string>
+    <string name="main_main_msg_tech_support_chat">Напишите в чат нашему специалисту о вашей проблеме</string>
+    <string name="main_main_title_warehouse_1c">Склад 1С</string>
+    <string name="main_main_msg_warehouse_1c">Открыть интеграцию со складом</string>
+
+    <string name="main_drawer_label_profile">Профиль</string>
+    <string name="main_drawer_label_name_missing">Имя не указано</string>
+    <string name="main_drawer_label_email_missing">Email не указан</string>
+    <string name="main_drawer_label_theme">Тёмная тема</string>
+    <string name="main_drawer_label_database_update">Обновить базу</string>
+    <string name="main_drawer_label_database_updating">Обновление базы...</string>
+    <string name="main_drawer_label_app_update_check">Проверить обновления</string>
+    <string name="main_drawer_label_app_update_checking">Проверка обновлений...</string>
+    <string name="main_drawer_title_app_update_available">Доступна новая версия</string>
+    <string name="main_drawer_subtitle_app_update_available">%1$s · нажмите, чтобы обновить</string>
+    <string name="main_drawer_label_settings">Настройки</string>
+    <string name="main_drawer_btn_logout">Выход</string>
+    <string name="main_drawer_label_version">Pandora Спец · версия %1$s</string>
+    <string name="main_drawer_label_database_version">Версия базы %1$s</string>
+    <string name="main_drawer_error_logout_failed">Не удалось выйти. Попробуйте снова.</string>
+</resources>

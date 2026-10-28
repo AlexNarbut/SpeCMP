@@ -18,6 +18,9 @@ data class FirmwareModule(
     val isBootSupported: Boolean get() = bootTarget != null
 }
 
+/** Подпись модуля «Основная программа (DX-9X)». */
+val FirmwareModule.displayTitle: String get() = "$title ($systemName)"
+
 /** Тип модуля — по нему UI подбирает название типа и иллюстрацию. */
 enum class FirmwareModuleKind {
     AlarmMain,

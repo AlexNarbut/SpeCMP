@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="deviceselect_common_title_screen">Select device</string>
+    <string name="deviceselect_common_a11y_back">Back</string>
+    <string name="deviceselect_common_a11y_device_photo">device photo</string>
+
+    <!-- Permission rationale -->
+
+    <!-- Denied -->
+    <string name="deviceselect_denied_title">No access</string>
+    <string name="deviceselect_denied_subtitle">Without permission the app can't find devices. Enable access in settings.</string>
+    <string-array name="deviceselect_fix_item_android">
+        <item>Settings → Apps → Pandora Spec → Permissions</item>
+        <item>Enable “Nearby devices” and “Bluetooth”</item>
+    </string-array>
+    <string-array name="deviceselect_fix_item_ios">
+        <item>Settings → Pandora Spec → Bluetooth → enable</item>
+    </string-array>
+    <string name="deviceselect_common_btn_open_settings">Open settings</string>
+    <string name="deviceselect_common_btn_cancel">Cancel</string>
+    <string name="deviceselect_common_btn_retry">Retry</string>
+
+    <!-- Adapter off -->
+    <string name="deviceselect_adapter_title">Bluetooth is off</string>
+    <string name="deviceselect_adapter_subtitle">Turn on Bluetooth to find the alarm unit.</string>
+    <string name="deviceselect_common_btn_open_bluetooth">Open Bluetooth settings</string>
+
+    <!-- Location services off (BLE scan on Android < 12) -->
+    <string name="deviceselect_location_title">Location is off</string>
+    <string name="deviceselect_location_subtitle">On this Android version, Bluetooth scanning requires location services to be on.</string>
+    <string name="deviceselect_common_btn_open_location">Open location settings</string>
+
+    <!-- Scanning -->
+    <string name="deviceselect_scanning_title">Searching for devices…</string>
+    <string name="deviceselect_scanning_subtitle_ble">Keep your Pandora device nearby. Bluetooth devices will appear in the list automatically.</string>
+    <string name="deviceselect_scanning_subtitle_usb">Connect your Pandora device with a cable. USB devices will appear in the list automatically.</string>
+    <string name="deviceselect_scanning_subtitle_both">Keep your Pandora device nearby. Bluetooth and USB devices will appear in the list automatically.</string>
+
+    <!-- Empty -->
+    <string name="deviceselect_empty_title">No devices found</string>
+    <string name="deviceselect_empty_subtitle">The search continues. Make sure the device is ready to connect.</string>
+    <!-- Подсказки «пусто» — по поддерживаемым транспортам -->
+    <string-array name="deviceselect_empty_item_ble">
+        <item>Make sure the device is powered on</item>
+        <item>Bring the unit closer — within 1–2 meters</item>
+        <item>Check that Bluetooth is on</item>
+    </string-array>
+    <string-array name="deviceselect_empty_item_usb">
+        <item>Check that the cable is connected to the device and the computer</item>
+        <item>Try another USB port or cable</item>
+        <item>Make sure the module is detected by the system</item>
+    </string-array>
+    <string-array name="deviceselect_empty_item_both">
+        <item>Make sure the device is powered on and the cable is connected</item>
+        <item>For Bluetooth, bring the unit closer — within 1–2 meters</item>
+        <item>Check that Bluetooth is on or the USB module is detected</item>
+    </string-array>
+    <string name="deviceselect_scan_loading_searching">Searching…</string>
+
+    <!-- List -->
+    <string name="deviceselect_list_label_count">Devices found: %1$d</string>
+    <string name="deviceselect_list_loading_searching_short">searching…</string>
+
+    <!-- Connecting -->
+    <string name="deviceselect_connecting_title">Connecting…</string>
+
+    <!-- Detail (master-detail) -->
+    <string name="deviceselect_detail_msg_empty">Select a device from the list</string>
+    <string name="deviceselect_detail_label_mac">MAC address</string>
+    <string name="deviceselect_common_btn_connect">Connect</string>
+    <string name="deviceselect_detail_label_type">Device type</string>
+    <string name="deviceselect_detail_label_mode">Mode</string>
+    <string name="deviceselect_detail_label_signal">Signal strength</string>
+    <string name="deviceselect_detail_label_manufacturer">Manufacturer</string>
+    <string name="deviceselect_detail_label_vid_pid">VID:PID</string>
+    <string name="deviceselect_detail_label_system_id">Unit ID (systemId)</string>
+    <string name="deviceselect_detail_label_firmware">Firmware version</string>
+    <string name="deviceselect_detail_label_uuid">ID (UUID)</string>
+    <string name="deviceselect_detail_label_phone_bond">Paired with phone</string>
+    <string name="deviceselect_detail_label_device_bond">Device has a bond</string>
+    <string name="deviceselect_detail_msg_note_ble">Firmware version and unit ID are not broadcast — they appear after connecting.</string>
+    <string name="deviceselect_common_value_yes">yes</string>
+    <string name="deviceselect_common_value_no">no</string>
+    <string name="deviceselect_common_value_unknown">unknown</string>
+    <string name="deviceselect_common_btn_close">Close</string>
+    <string name="deviceselect_common_a11y_device_info">Device information</string>
+    <string name="deviceselect_common_value_mode_normal">Normal</string>
+    <string name="deviceselect_common_format_rssi">%1$d dBm</string>
+    <string name="deviceselect_common_value_mode_main">Operating</string>
+    <string name="deviceselect_common_value_mode_pairing">Pairing</string>
+    <string name="deviceselect_common_value_mode_boot">Bootloader</string>
+    <string name="deviceselect_common_value_kind_alarm">Alarm</string>
+    <string name="deviceselect_common_value_kind_tag">Tag</string>
+    <string name="deviceselect_common_value_kind_relay">Relay</string>
+    <string name="deviceselect_common_value_kind_immobilizer">Immobilizer</string>
+    <string name="deviceselect_common_value_kind_remote_control">Remote</string>
+    <string name="deviceselect_common_value_kind_navigation">Navigation</string>
+    <string name="deviceselect_common_value_kind_module">Module</string>
+    <string name="deviceselect_common_value_kind_sensor">Sensor</string>
+    <string name="deviceselect_common_value_kind_other">Device</string>
+
+    <!-- Transport -->
+    <string name="deviceselect_common_value_transport_ble">Bluetooth</string>
+    <string name="deviceselect_common_value_transport_ble_short">BLE</string>
+    <string name="deviceselect_common_value_transport_usb">USB</string>
+
+    <!-- Errors / effects -->
+    <string name="deviceselect_common_error_connection_failed">Failed to connect to the device</string>
+    <string name="deviceselect_common_error_pairing_required">Put the unit into pairing mode and connect again.</string>
+    <string name="deviceselect_common_error_bond_remove_device">The device is paired with another phone. Reset the pairing on the unit and try again.</string>
+</resources>

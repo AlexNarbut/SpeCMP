@@ -36,6 +36,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperat
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
@@ -245,7 +246,7 @@ class DeviceSession(
      */
     fun beginFirmwareTransfer() {
         // Уже держим — не трогаем: прогресс может прийти, когда сессия уже увидела обрыв.
-        transferMode.update { it ?: state.value.takeIf { current -> current.isBoot() } }
+        transferMode.update { it ?: state.value.takeIf { current -> current.isBoot } }
     }
 
     fun endFirmwareTransfer() {
@@ -274,7 +275,7 @@ class DeviceSession(
             when {
                 current == null -> null
 
-                current.kind == DeviceReboot.ToBoot && mode.isBoot() -> null
+                current.kind == DeviceReboot.ToBoot && mode.isBoot -> null
 
                 current.kind == DeviceReboot.ToMain && mode is DeviceSessionState.Ready ->
                     if (current.acknowledged) null else current.copy(reached = true)
@@ -283,9 +284,6 @@ class DeviceSession(
             }
         }
     }
-
-    private fun DeviceSessionState.isBoot(): Boolean =
-        this is DeviceSessionState.BluetoothBoot || this is DeviceSessionState.FirmwareBoot
 
     /**
      * BLE: SDK после обрыва (блок выключен или далеко, выключили Bluetooth) сам не переподключается — повторяем

@@ -12,6 +12,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_hint_firmware
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_hint_prompt
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_label_code
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_label_crumb_brands
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_label_crumb_can
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_catalog_label_crumb_model
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_a11y_clear
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_filter_a11y_clear
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_filter_label_chip
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_btn_mode_can
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_btn_mode_name
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_placeholder_brand
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_placeholder_brand_can
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_placeholder_model
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_search_placeholder_trim
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.chip.CmpChip
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -27,31 +45,14 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumb
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumbs
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.yearsText
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CrumbTarget
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Load
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.valueOrNull
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_hint_firmware
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_hint_prompt
-import specmp.feature.vehicle_ui.generated.resources.vehicle_can_label_code
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_label_crumb_brands
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_label_crumb_can
-import specmp.feature.vehicle_ui.generated.resources.vehicle_catalog_label_crumb_model
-import specmp.feature.vehicle_ui.generated.resources.vehicle_common_a11y_clear
-import specmp.feature.vehicle_ui.generated.resources.vehicle_filter_a11y_clear
-import specmp.feature.vehicle_ui.generated.resources.vehicle_filter_label_chip
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_btn_mode_can
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_btn_mode_name
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_placeholder_brand
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_placeholder_brand_can
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_placeholder_model
-import specmp.feature.vehicle_ui.generated.resources.vehicle_search_placeholder_trim
 
 private const val CAN_CODE_LENGTH = 4
 private val FIELD_HEIGHT = 56.dp
@@ -71,8 +72,8 @@ internal fun SearchArea(
     val segments: @Composable (Modifier) -> Unit = { segmentsModifier ->
         CmpSegmentedButton(
             options = listOf(
-                stringResource(Res.string.vehicle_search_btn_mode_name),
-                stringResource(Res.string.vehicle_search_btn_mode_can)
+                stringResource(Strings.string.vehicle_search_btn_mode_name),
+                stringResource(Strings.string.vehicle_search_btn_mode_can)
             ),
             selectedIndex = state.searchMode.ordinal,
             onSelect = { actions.onSearchModeChange(SearchMode.entries[it]) },
@@ -113,20 +114,20 @@ private fun NameField(state: VehicleSelectState, actions: VehicleSelectActions, 
     val selection = state.selection
     val placeholder = when {
         selection.model != null && selection.carId == null ->
-            stringResource(Res.string.vehicle_search_placeholder_trim, selection.model.name)
+            stringResource(Strings.string.vehicle_search_placeholder_trim, selection.model.name)
 
-        selection.brand != null -> stringResource(Res.string.vehicle_search_placeholder_model, selection.brand.name)
+        selection.brand != null -> stringResource(Strings.string.vehicle_search_placeholder_model, selection.brand.name)
 
-        state.mode.canSearchAvailable -> stringResource(Res.string.vehicle_search_placeholder_brand_can)
+        state.mode.canSearchAvailable -> stringResource(Strings.string.vehicle_search_placeholder_brand_can)
 
-        else -> stringResource(Res.string.vehicle_search_placeholder_brand)
+        else -> stringResource(Strings.string.vehicle_search_placeholder_brand)
     }
     InputSlot(modifier = modifier, hint = {}) {
         CmpSearchField(
             value = state.query,
             onValueChange = actions.onQueryChange,
             placeholder = placeholder,
-            clearContentDescription = stringResource(Res.string.vehicle_common_a11y_clear),
+            clearContentDescription = stringResource(Strings.string.vehicle_common_a11y_clear),
             modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.SEARCH)
         )
     }
@@ -155,8 +156,8 @@ private fun CanField(state: VehicleSelectState, actions: VehicleSelectActions, m
         CmpCodeField(
             value = state.canCode,
             onValueChange = actions.onCanCodeChange,
-            label = stringResource(Res.string.vehicle_can_label_code),
-            clearContentDescription = stringResource(Res.string.vehicle_common_a11y_clear),
+            label = stringResource(Strings.string.vehicle_can_label_code),
+            clearContentDescription = stringResource(Strings.string.vehicle_common_a11y_clear),
             length = CAN_CODE_LENGTH,
             modifier = Modifier.testTag(VehicleTestTags.CAN_INPUT)
         )
@@ -178,14 +179,14 @@ private fun CanHint(state: VehicleSelectState, fromFirmware: Boolean) {
                 modifier = Modifier.size(16.dp)
             )
             CmpText(
-                text = stringResource(Res.string.vehicle_can_hint_firmware),
+                text = stringResource(Strings.string.vehicle_can_hint_firmware),
                 style = CmpTextStyle.Body,
                 color = colors.primary
             )
         }
 
         state.canCode.length < CAN_CODE_LENGTH -> CmpText(
-            text = stringResource(Res.string.vehicle_can_hint_prompt),
+            text = stringResource(Strings.string.vehicle_can_hint_prompt),
             style = CmpTextStyle.Body,
             color = colors.onSurfaceVariant
         )
@@ -227,12 +228,12 @@ internal fun CrumbsBar(
 @Composable
 internal fun FilterChip(count: Int, actions: VehicleSelectActions) {
     CmpChip(
-        text = stringResource(Res.string.vehicle_filter_label_chip, count),
+        text = stringResource(Strings.string.vehicle_filter_label_chip, count),
         onClick = actions.onFilterOpen,
         icon = CmpIcons.FilterAlt,
         selected = true,
         onClear = actions.onFilterClear,
-        clearContentDescription = stringResource(Res.string.vehicle_filter_a11y_clear),
+        clearContentDescription = stringResource(Strings.string.vehicle_filter_a11y_clear),
         modifier = Modifier.testTag(VehicleTestTags.FILTER_CLEAR)
     )
 }
@@ -241,22 +242,22 @@ internal fun FilterChip(count: Int, actions: VehicleSelectActions) {
 @Composable
 private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> {
     val selection = state.selection
-    val card = state.card.valueOrNull()?.summary?.takeIf { it.id == selection.carId }
+    val card = state.card.content?.summary?.takeIf { it.id == selection.carId }
     val items = mutableListOf<Pair<String, CrumbTarget?>>()
     if (state.searchMode == SearchMode.CAN) {
-        items += stringResource(Res.string.vehicle_catalog_label_crumb_can, state.canCode) to CrumbTarget.TOP
+        items += stringResource(Strings.string.vehicle_catalog_label_crumb_can, state.canCode) to CrumbTarget.TOP
         if (selection.carId != null && card != null) items += card.fullName() to null
         return items
     }
-    items += stringResource(Res.string.vehicle_catalog_label_crumb_brands) to CrumbTarget.TOP
+    items += stringResource(Strings.string.vehicle_catalog_label_crumb_brands) to CrumbTarget.TOP
     selection.brand?.let { items += it.name to CrumbTarget.BRAND }
     selection.model?.let {
         items +=
-            stringResource(Res.string.vehicle_catalog_label_crumb_model, it.name, yearsText(it.years)) to
+            stringResource(Strings.string.vehicle_catalog_label_crumb_model, it.name, yearsText(it.years)) to
             CrumbTarget.MODEL
     }
     if (selection.carId != null) {
-        val trimName = state.trims.valueOrNull()?.firstOrNull { it.id == selection.carId }?.name
+        val trimName = state.trims.content?.firstOrNull { it.id == selection.carId }?.name
         val label = when {
             selection.brand == null && card != null -> card.fullName()
             trimName != null -> trimName
@@ -269,4 +270,4 @@ private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> 
 }
 
 /** Уровень, ещё не загруженный, — для подсказок «пусто». */
-internal fun <T> Load<List<T>>.isEmptyReady(): Boolean = (this as? Load.Ready)?.value?.isEmpty() == true
+internal fun <T> LCEState<List<T>, CatalogError>.isEmptyReady(): Boolean = content?.isEmpty() == true

@@ -2,8 +2,10 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.arch
 
 import androidx.compose.runtime.Immutable
 import kotlinx.datetime.LocalDate
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 
 /** Отношение версии в архиве к установленной на блоке: по нему метка и предупреждения. */
@@ -20,21 +22,6 @@ data class ArchiveRowUi(
     val canCode: String? = null,
     val canVersion: String? = null
 )
-
-sealed interface ArchiveContent {
-    data object Loading : ArchiveContent
-
-    /** Первая страница не загрузилась (нет связи с сервером). */
-    data object Error : ArchiveContent
-
-    /** Сервер вернул пустой список. */
-    data object Empty : ArchiveContent
-
-    /** [moreError] — догрузка не удалась: список остаётся, внизу баннер с повтором. */
-    @Immutable
-    data class Ready(val rows: List<ArchiveRowUi>, val loadingMore: Boolean = false, val moreError: Boolean = false) :
-        ArchiveContent
-}
 
 /**
  * CAN-фильтр над списком: [input] — текст поля, [applied] — код, по которому загружен список (`null` — все версии),
@@ -54,7 +41,8 @@ data class RollbackUi(val version: String, val installedVersion: String)
 
 @Immutable
 data class FirmwareArchiveState(
-    val content: ArchiveContent = ArchiveContent.Loading,
+    /** Пустой `Content` — сервер вернул пустой список; `isUpdating`/`updateError` — догрузка следующей страницы. */
+    val content: LCEState<List<ArchiveRowUi>, FirmwareError> = LCEState.Loading,
     /** Выбранная строка (master-detail на широком окне). */
     val selected: String? = null,
     val rollback: RollbackUi? = null,

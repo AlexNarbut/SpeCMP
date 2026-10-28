@@ -20,7 +20,6 @@ kotlin {
         namespace = "ru.alarmtrade.specmp"
         compileSdk = libs.versions.android.targetSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
-        androidResources.enable = true
         compilerOptions { jvmTargetVersion }
     }
 
@@ -35,6 +34,7 @@ kotlin {
             implementation(project(":core:permissions"))
             implementation(project(":core:lifecycle"))
             implementation(project(":core:specialist"))
+            implementation(project(":feature:account"))
             implementation(project(":core:ui"))
 
             // Feature modules

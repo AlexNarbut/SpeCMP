@@ -1,24 +1,27 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
 import androidx.lifecycle.viewModelScope
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,18 +29,19 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchHit
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
@@ -50,6 +54,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
@@ -62,6 +67,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 
 private const val SEARCH_DEBOUNCE_MILLIS = 150L
+private val STATE_STOP_TIMEOUT = 5.seconds
 
 /**
  * Сессия редактора настроек для [source] (одна на граф настроек).
@@ -89,9 +95,8 @@ internal class DeviceSettingsViewModel(
     deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
     private val dispatchers: AppDispatchers
-) : BaseViewModel() {
+) : BaseDeviceViewModel(deviceSession) {
 
-    private val deviceScope = DeviceScope(viewModelScope, deviceSession)
     private val followsDevice = source.capabilities.followsDeviceConnection
 
     private val _state = MutableStateFlow(
@@ -102,8 +107,6 @@ internal class DeviceSettingsViewModel(
             canWriteToDevice = options.canWriteToDevice
         )
     )
-    val state: StateFlow<DeviceSettingsState> = _state.asStateFlow()
-
     private val _effect = sideEffectFlow<DeviceSettingsEffect>()
     val effect: SharedFlow<DeviceSettingsEffect> = _effect.asSharedFlow()
 
@@ -135,33 +138,30 @@ internal class DeviceSettingsViewModel(
     /** Снимок, отданный системному сохранению файла; [Export.commit] — правки считаются сохранёнными («как…»). */
     private val export = MutableStateFlow<Export?>(null)
 
-    /** Откуда было последнее сравнение — «Повторить» после ошибки. */
-    private val lastPreviewSource = MutableStateFlow<SettingsSource?>(null)
-
-    /**
-     * Закрыть ли сессию источника после сравнения: её открыло копирование SDK; источник, открытый другим редактором
-     * («Записать в блок» из конфигурации), не закрывается.
-     */
-    private val pendingPreviewClose = MutableStateFlow(true)
-
-    init {
-        if (followsDevice) {
-            deviceScope.onReady(::onDeviceReady)
-        } else {
-            safeLaunch { load() }
-            deviceSession.state
-                .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
-                .distinctUntilChanged()
-                .onEach { name -> _state.update { it.copy(connectedDeviceName = name) } }
-                .launchIn(viewModelScope)
+    /** Поиск: запрос в state попадает вместе с результатом (после debounce), а не на каждый символ. */
+    private val search: Flow<Pair<String, List<SettingsSearchHit>>> =
+        combine(searchQuery, _state.map { it.menu.content }.distinctUntilChanged { a, b -> a === b }) { query, root ->
+            query to root
         }
-        val menuRoot = _state.map { (it.menu as? SettingsMenu.Ready)?.root }.distinctUntilChanged { a, b -> a === b }
-        combine(searchQuery, menuRoot) { query, root -> query to root }
             .debounce(SEARCH_DEBOUNCE_MILLIS)
             .mapLatest { (query, root) -> query to root?.search(query).orEmpty() }
-            .flowOn(dispatchers.default)
-            .onEach { (query, hits) -> _state.update { it.copy(searchQuery = query, searchHits = hits) } }
-            .launchIn(viewModelScope)
+            .onStart { emit("" to emptyList()) }
+
+    // Источник не блока (файл, мои, облако, заводские) читается при первой подписке на state, один раз за жизнь VM.
+    // Блок перечитывается на каждое (пере)подключение — это реакция init, живущая всю жизнь VM.
+    val state: StateFlow<DeviceSettingsState> = combine(_state, connectedDeviceName, search) {
+            state,
+            connected,
+            (query, hits)
+        ->
+        state.copy(connectedDeviceName = connected, searchQuery = query, searchHits = hits)
+    }
+        .launchOnFirstStart { if (!followsDevice) load() }
+        .flowOn(dispatchers.default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_STOP_TIMEOUT), _state.value)
+
+    init {
+        if (followsDevice) onEachDeviceReady(::onDeviceReady)
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
@@ -174,7 +174,7 @@ internal class DeviceSettingsViewModel(
     private suspend fun load() {
         readMenu()
         // «Записать в блок» из конфигуратора: после первого чтения блока — сравнение с конфигурацией.
-        if (_state.value.menu is SettingsMenu.Ready) {
+        if (_state.value.menu is LCEState.Content) {
             pendingLoad.getAndUpdate { null }?.let { requestLoad(it, closeAfter = false) }
         }
     }
@@ -182,13 +182,16 @@ internal class DeviceSettingsViewModel(
     private suspend fun readMenu() = executeWithProceedLock(needSkipAnother = false) {
         requestedCarIds.update { emptySet() }
         loadedIds.update { emptySet() }
+        // Сравнение с прежним меню устарело (а прерванное обрывом связи осталось бы в Busy) — сбрасываем.
+        discardPreview()
         _state.update {
             it.copy(
-                menu = SettingsMenu.Loading,
+                menu = LCEState.Loading,
                 changedIds = emptySet(),
                 sectionChanges = emptyMap(),
                 editing = null,
                 dialog = null,
+                diff = null,
                 isWriting = false,
                 isResetting = false
             )
@@ -196,12 +199,14 @@ internal class DeviceSettingsViewModel(
         when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
             is Response.Error -> {
                 logger.w(response.exception) { "Settings menu read failed: ${response.message}" }
-                _state.update { it.copy(menu = SettingsMenu.Error) }
+                _state.update { it.copy(menu = LCEState.Error(SettingsError.from(response.exception))) }
             }
 
             is Response.Success -> {
                 val root = response.value
-                baseline.update { root.valuesById() }
+                // Обход всего дерева — на default, как и в showMenu.
+                val values = withContext(dispatchers.default) { root.valuesById() }
+                baseline.update { values }
                 showMenu(root)
             }
         }
@@ -259,7 +264,7 @@ internal class DeviceSettingsViewModel(
             state.copy(
                 editing = editing.copy(
                     draft = draft,
-                    carSearch = if (codeChanged) CarSearch.Idle else editing.carSearch
+                    carSearch = if (codeChanged) LCEState.None else editing.carSearch
                 )
             )
         }
@@ -270,20 +275,22 @@ internal class DeviceSettingsViewModel(
         val editing = _state.value.editing ?: return
         val code = (editing.draft as? SettingValue.Can)?.value?.code ?: return
         if (!editing.setting.accepts(editing.draft)) return
-        _state.update { it.copy(editing = it.editing?.copy(carSearch = CarSearch.Loading)) }
+        _state.update { it.copy(editing = it.editing?.copy(carSearch = LCEState.Loading)) }
         safeLaunch {
             val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code, vehicleDevice()) }
             _state.update { state ->
                 val current = state.editing ?: return@update state
                 if ((current.draft as? SettingValue.Can)?.value?.code != code) return@update state
                 when (response) {
-                    is Response.Error -> state.copy(editing = current.copy(carSearch = CarSearch.Failed))
+                    is Response.Error -> state.copy(
+                        editing = current.copy(carSearch = LCEState.Error(SettingsError.from(response.exception)))
+                    )
 
                     is Response.Success -> {
                         val cars = response.value
                         val draft = cars.singleOrNull()?.let { SettingValue.Can(CanCode(code, it.id)) } ?: current.draft
                         state.copy(
-                            editing = current.copy(draft = draft, carSearch = CarSearch.Found(cars)),
+                            editing = current.copy(draft = draft, carSearch = LCEState.Content(cars)),
                             cars = state.cars + cars.associateBy { it.id }
                         )
                     }
@@ -317,7 +324,7 @@ internal class DeviceSettingsViewModel(
                 vehiclePicker = false,
                 editing = editing.copy(
                     draft = SettingValue.Can(CanCode(car.canCode, car.id)),
-                    carSearch = CarSearch.Idle
+                    carSearch = LCEState.None
                 ),
                 cars = state.cars + (car.id to car)
             )
@@ -423,7 +430,10 @@ internal class DeviceSettingsViewModel(
 
     /** Правки записаны/сохранены: снимок «как было» = текущее меню, подсветка снимается. */
     private suspend fun commit() {
-        currentRoot()?.let { root -> baseline.update { root.valuesById() } }
+        currentRoot()?.let { root ->
+            val values = withContext(dispatchers.default) { root.valuesById() }
+            baseline.update { values }
+        }
         loadedIds.update { emptySet() }
         refreshChanged()
     }
@@ -493,9 +503,16 @@ internal class DeviceSettingsViewModel(
         val sourceDeviceName = from.deviceNameOrNull
         if (sourceDeviceName != null && !sourceDeviceName.equals(deviceName, ignoreCase = true)) {
             _state.update {
-                it.copy(dialog = SettingsDialog.ModelMismatch(from, sourceDeviceName, deviceName, forWrite = false))
+                it.copy(
+                    dialog = SettingsDialog.ModelMismatch(
+                        from,
+                        sourceDeviceName,
+                        deviceName,
+                        forWrite = false,
+                        closeAfter = closeAfter
+                    )
+                )
             }
-            pendingPreviewClose.update { closeAfter }
             return
         }
         work { preview(from, closeAfter) }
@@ -508,22 +525,20 @@ internal class DeviceSettingsViewModel(
         if (dialog.forWrite) {
             _effect.tryEmit(DeviceSettingsEffect.WriteToDevice(source))
         } else {
-            val closeAfter = pendingPreviewClose.value
-            work { preview(dialog.source, closeAfter) }
+            work { preview(dialog.source, dialog.closeAfter) }
         }
     }
 
     /** «Повторить» в ошибке сравнения. */
     fun onDiffRetry() {
-        val from = preview.value?.from ?: lastPreviewSource.value ?: return
-        work { preview(from, closeAfter = true) }
+        val error = _state.value.diff as? DiffState.Error ?: return
+        work { preview(error.from, error.closeAfter) }
     }
 
     private suspend fun preview(from: SettingsSource, closeAfter: Boolean) = executeWithProceedLock {
         val deviceName = deviceModel() ?: return@executeWithProceedLock
         val current = currentRoot() ?: return@executeWithProceedLock
         val title = from.title()
-        lastPreviewSource.update { from }
         discardPreview()
         _state.update { it.copy(diff = DiffState.Busy(title), dialog = null) }
         val snapshot = withContext(dispatchers.io) { repository.snapshot(from, deviceName) }
@@ -541,7 +556,7 @@ internal class DeviceSettingsViewModel(
                 if (from is SettingsSource.File) {
                     it.copy(diff = null, dialog = SettingsDialog.LoadError(LoadErrorKind.FILE))
                 } else {
-                    it.copy(diff = DiffState.Error(title))
+                    it.copy(diff = DiffState.Error(title, from, closeAfter))
                 }
             }
             return@executeWithProceedLock
@@ -554,18 +569,27 @@ internal class DeviceSettingsViewModel(
     /** «Загрузить» в «Что изменится»: значения конфигурации — в сессию блока (в блок — только по «Записать»). */
     fun onDiffConfirm() {
         val ready = _state.value.diff as? DiffState.Ready ?: return
-        val snapshot = preview.getAndUpdate { null }?.snapshot ?: return
-        _state.update { it.copy(diff = null, isApplying = true) }
-        work { apply(snapshot, ready.diff.total) }
+        // Снимок забирается и флаг ставится уже в запущенной работе: без связи work не стартует — сравнение остаётся.
+        work {
+            val snapshot = preview.getAndUpdate { null }?.snapshot ?: return@work
+            apply(snapshot, ready.diff.total)
+        }
     }
 
-    private suspend fun apply(snapshot: SettingsSource.File, total: Int) = executeWithProceedLock(
-        needSkipAnother = false
-    ) {
-        val response = try {
-            withContext(dispatchers.io) { repository.copy(from = snapshot, to = source, saveChanges = false) }
+    /** Флаг и снимок снимаются в finally: работу с блоком отменяет обрыв связи (в т.ч. пока ждёт lock). */
+    private suspend fun apply(snapshot: SettingsSource.File, total: Int) {
+        _state.update { it.copy(diff = null, isApplying = true) }
+        try {
+            executeWithProceedLock(needSkipAnother = false) { copyIntoSource(snapshot, total) }
         } finally {
             discard(snapshot)
+            _state.update { it.copy(isApplying = false) }
+        }
+    }
+
+    private suspend fun copyIntoSource(snapshot: SettingsSource.File, total: Int) {
+        val response = withContext(dispatchers.io) {
+            repository.copy(from = snapshot, to = source, saveChanges = false)
         }
         when (response) {
             is Response.Error -> {
@@ -575,7 +599,7 @@ internal class DeviceSettingsViewModel(
                 } else {
                     LoadErrorKind.OTHER
                 }
-                _state.update { it.copy(isApplying = false, dialog = SettingsDialog.LoadError(kind)) }
+                _state.update { it.copy(dialog = SettingsDialog.LoadError(kind)) }
             }
 
             is Response.Success -> {
@@ -589,7 +613,6 @@ internal class DeviceSettingsViewModel(
                     }
                 }
                 showMenu(current?.let { root.reusing(it) } ?: root)
-                _state.update { it.copy(isApplying = false) }
                 _effect.tryEmit(DeviceSettingsEffect.Loaded(total))
             }
         }
@@ -696,18 +719,26 @@ internal class DeviceSettingsViewModel(
     private suspend fun exportFile(exitAfter: Boolean) = executeWithProceedLock(needSkipAnother = false) {
         val deviceName = deviceModel() ?: return@executeWithProceedLock
         _state.update { it.copy(isSaving = true, dialog = null) }
-        when (val response = withContext(dispatchers.io) { repository.snapshot(source, deviceName) }) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Settings export failed: ${response.message}" }
-                _state.update { it.copy(isSaving = false, dialog = SettingsDialog.SaveError(SaveRetry.File)) }
-            }
+        try {
+            when (val response = withContext(dispatchers.io) { repository.snapshot(source, deviceName) }) {
+                is Response.Error -> {
+                    logger.w(response.exception) { "Settings export failed: ${response.message}" }
+                    _state.update { it.copy(dialog = SettingsDialog.SaveError(SaveRetry.File)) }
+                }
 
-            is Response.Success -> {
-                export.update { Export(response.value, exitAfter) }
-                _effect.tryEmit(
-                    DeviceSettingsEffect.ExportFile(response.value.path, settingsFileName(deviceName, exportTitle()))
-                )
+                is Response.Success -> {
+                    export.update { Export(response.value, exitAfter) }
+                    _effect.tryEmit(
+                        DeviceSettingsEffect.ExportFile(
+                            response.value.path,
+                            settingsFileName(deviceName, exportTitle())
+                        )
+                    )
+                }
             }
+        } finally {
+            // Снимок отдан системному сохранению — флаг снимет onFileExported; иначе (ошибка, отмена) — здесь.
+            if (export.value == null) _state.update { it.copy(isSaving = false) }
         }
     }
 
@@ -795,7 +826,7 @@ internal class DeviceSettingsViewModel(
 
     /** «Записать в блок» из конфигурации: другая модель — предупреждение. */
     fun onWriteToDeviceRequest() {
-        val connected = _state.value.connectedDeviceName ?: return
+        val connected = currentDevice?.systemName ?: return
         val model = source.deviceNameOrNull
         if (model != null && !model.equals(connected, ignoreCase = true)) {
             _state.update {
@@ -867,7 +898,7 @@ internal class DeviceSettingsViewModel(
         val settings = withContext(dispatchers.default) { root.settings() }
         val (changedIds, sectionChanges) = changesOf(root, settings)
         _state.update {
-            it.copy(menu = SettingsMenu.Ready(root), changedIds = changedIds, sectionChanges = sectionChanges)
+            it.copy(menu = LCEState.Content(root), changedIds = changedIds, sectionChanges = sectionChanges)
         }
         loadCarNames(settings)
     }
@@ -912,11 +943,11 @@ internal class DeviceSettingsViewModel(
     private fun vehicleDevice(): VehicleDeviceFilter? =
         _state.value.header?.let { VehicleDeviceFilter.Device(it.deviceName) }
 
-    private fun currentRoot(): SettingsSection? = (_state.value.menu as? SettingsMenu.Ready)?.root
+    private fun currentRoot(): SettingsSection? = _state.value.menu.content
 
     /** Работа с источником: для блока — только при связи (отменяется при обрыве), иначе — в скоупе VM. */
     private fun work(block: suspend CoroutineScope.() -> Unit): Job? =
-        if (followsDevice) deviceScope.launch(block) else safeLaunch(block = block)
+        if (followsDevice) launchOnDevice(block) else safeLaunch(block = block)
 
     override fun onCleared() {
         val leftovers = listOfNotNull(preview.value?.snapshot, export.value?.snapshot)
@@ -932,24 +963,33 @@ internal class DeviceSettingsViewModel(
     private data class Export(val snapshot: SettingsSource.File, val exitAfter: Boolean)
 }
 
-/** Параметры редактора от хоста: что загрузить сразу после чтения блока, умеет ли хост «Записать в блок». */
-internal data class SettingsEditorOptions(val loadOnOpen: SettingsSource? = null, val canWriteToDevice: Boolean = false)
-
 /** Шапка источника; название заводских настроек и подписи — в UI. */
 private fun SettingsSource.header(): SourceHeader {
     val capabilities = capabilities
     return when (this) {
         SettingsSource.Device -> SourceHeader.Device
 
-        is SettingsSource.File -> SourceHeader(SourceKind.FILE, name, deviceName, false, capabilities.canSave)
+        is SettingsSource.File -> SourceHeader(
+            SourceKind.FILE,
+            name,
+            deviceName,
+            capabilities.isReadOnly,
+            capabilities.canSave
+        )
 
         is SettingsSource.LocalConfiguration ->
-            SourceHeader(SourceKind.MINE, title, deviceName, false, capabilities.canSave)
+            SourceHeader(SourceKind.MINE, title, deviceName, capabilities.isReadOnly, capabilities.canSave)
 
         is SettingsSource.RemoteConfiguration ->
-            SourceHeader(SourceKind.CLOUD, title, deviceName, true, capabilities.canSave)
+            SourceHeader(SourceKind.CLOUD, title, deviceName, capabilities.isReadOnly, capabilities.canSave)
 
-        is SettingsSource.Defaults -> SourceHeader(SourceKind.DEFAULTS, "", deviceName, true, capabilities.canSave)
+        is SettingsSource.Defaults -> SourceHeader(
+            SourceKind.DEFAULTS,
+            "",
+            deviceName,
+            capabilities.isReadOnly,
+            capabilities.canSave
+        )
     }
 }
 

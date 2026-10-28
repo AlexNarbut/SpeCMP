@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -26,11 +25,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_adapter_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_adapter_title
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_connect
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_open_bluetooth
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_open_location
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_open_settings
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_error_bond_remove_device
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_error_connection_failed
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_error_pairing_required
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_connecting_title
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_denied_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_denied_title
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_msg_empty
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_ble
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_both
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_item_usb
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_empty_title
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_fix_item_android
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_fix_item_ios
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_list_label_count
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_list_loading_searching_short
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_location_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_location_title
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_scan_loading_searching
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_scanning_subtitle_ble
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_scanning_subtitle_both
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_scanning_subtitle_usb
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_scanning_title
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -49,50 +84,8 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
-import specmp.feature.device.selection.generated.resources.Res
-import specmp.feature.device.selection.generated.resources.device_select_a11y_back
-import specmp.feature.device.selection.generated.resources.device_select_adapter_subtitle
-import specmp.feature.device.selection.generated.resources.device_select_adapter_title
-import specmp.feature.device.selection.generated.resources.device_select_btn_cancel
-import specmp.feature.device.selection.generated.resources.device_select_btn_connect
-import specmp.feature.device.selection.generated.resources.device_select_btn_open_bluetooth
-import specmp.feature.device.selection.generated.resources.device_select_btn_open_location
-import specmp.feature.device.selection.generated.resources.device_select_btn_open_settings
-import specmp.feature.device.selection.generated.resources.device_select_btn_retry
-import specmp.feature.device.selection.generated.resources.device_select_connecting_title
-import specmp.feature.device.selection.generated.resources.device_select_denied_subtitle
-import specmp.feature.device.selection.generated.resources.device_select_denied_title
-import specmp.feature.device.selection.generated.resources.device_select_detail_empty
-import specmp.feature.device.selection.generated.resources.device_select_empty_ble_1
-import specmp.feature.device.selection.generated.resources.device_select_empty_ble_2
-import specmp.feature.device.selection.generated.resources.device_select_empty_ble_3
-import specmp.feature.device.selection.generated.resources.device_select_empty_both_1
-import specmp.feature.device.selection.generated.resources.device_select_empty_both_2
-import specmp.feature.device.selection.generated.resources.device_select_empty_both_3
-import specmp.feature.device.selection.generated.resources.device_select_empty_subtitle
-import specmp.feature.device.selection.generated.resources.device_select_empty_title
-import specmp.feature.device.selection.generated.resources.device_select_empty_usb_1
-import specmp.feature.device.selection.generated.resources.device_select_empty_usb_2
-import specmp.feature.device.selection.generated.resources.device_select_empty_usb_3
-import specmp.feature.device.selection.generated.resources.device_select_error_bond_remove_device
-import specmp.feature.device.selection.generated.resources.device_select_error_connection_failed
-import specmp.feature.device.selection.generated.resources.device_select_error_pairing_required
-import specmp.feature.device.selection.generated.resources.device_select_fix_android_1
-import specmp.feature.device.selection.generated.resources.device_select_fix_android_2
-import specmp.feature.device.selection.generated.resources.device_select_fix_ios_1
-import specmp.feature.device.selection.generated.resources.device_select_list_count
-import specmp.feature.device.selection.generated.resources.device_select_list_searching_short
-import specmp.feature.device.selection.generated.resources.device_select_location_subtitle
-import specmp.feature.device.selection.generated.resources.device_select_location_title
-import specmp.feature.device.selection.generated.resources.device_select_scanning_subtitle_ble
-import specmp.feature.device.selection.generated.resources.device_select_scanning_subtitle_both
-import specmp.feature.device.selection.generated.resources.device_select_scanning_subtitle_usb
-import specmp.feature.device.selection.generated.resources.device_select_scanning_title
-import specmp.feature.device.selection.generated.resources.device_select_searching
-import specmp.feature.device.selection.generated.resources.device_select_title_screen
 
 private enum class DeviceSelectLayout { Compact, Stacked, Split }
 
@@ -101,18 +94,18 @@ private enum class DeviceSelectLayout { Compact, Stacked, Split }
  * one-shot эффекты и адаптивную раскладку (compact / stacked / split).
  */
 @Composable
-internal fun DeviceSelectionScreen(onSessionCreate: (ConnectedDevice) -> Unit, onClose: () -> Unit) {
+internal fun DeviceSelectionScreen(onSessionCreate: () -> Unit, onClose: () -> Unit) {
     val viewModel = koinViewModel<ScanDeviceViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
 
-    val connectionFailedText = stringResource(Res.string.device_select_error_connection_failed)
-    val boundToAnotherPhoneText = stringResource(Res.string.device_select_error_bond_remove_device)
-    val pairingRequiredText = stringResource(Res.string.device_select_error_pairing_required)
+    val connectionFailedText = stringResource(Strings.string.deviceselect_common_error_connection_failed)
+    val boundToAnotherPhoneText = stringResource(Strings.string.deviceselect_common_error_bond_remove_device)
+    val pairingRequiredText = stringResource(Strings.string.deviceselect_common_error_pairing_required)
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
-            is ScanDeviceEffect.SessionCreated -> onSessionCreate(effect.device)
+            ScanDeviceEffect.SessionCreated -> onSessionCreate()
             ScanDeviceEffect.Close -> onClose()
             ScanDeviceEffect.ConnectionFailed -> snackbarHostState.showSnackbar(connectionFailedText)
             ScanDeviceEffect.BoundToAnotherPhone -> snackbarHostState.showSnackbar(boundToAnotherPhoneText)
@@ -169,12 +162,12 @@ internal fun DeviceSelectionContent(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.device_select_title_screen)) },
+                title = { CmpText(text = stringResource(Strings.string.deviceselect_common_title_screen)) },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.device_select_a11y_back)
+                        contentDescription = stringResource(Strings.string.deviceselect_common_a11y_back)
                     )
                 }
             )
@@ -223,9 +216,9 @@ private fun StepBody(
 
         ScanStep.AdapterOff -> OffStateBody(
             icon = CmpIcons.BluetoothDisabled,
-            title = stringResource(Res.string.device_select_adapter_title),
-            subtitle = stringResource(Res.string.device_select_adapter_subtitle),
-            primaryText = stringResource(Res.string.device_select_btn_open_bluetooth),
+            title = stringResource(Strings.string.deviceselect_adapter_title),
+            subtitle = stringResource(Strings.string.deviceselect_adapter_subtitle),
+            primaryText = stringResource(Strings.string.deviceselect_common_btn_open_bluetooth),
             primaryIcon = CmpIcons.Bluetooth,
             onPrimary = onOpenBluetoothSettings,
             onRetry = onRetry
@@ -233,9 +226,9 @@ private fun StepBody(
 
         ScanStep.LocationOff -> OffStateBody(
             icon = CmpIcons.LocationOn,
-            title = stringResource(Res.string.device_select_location_title),
-            subtitle = stringResource(Res.string.device_select_location_subtitle),
-            primaryText = stringResource(Res.string.device_select_btn_open_location),
+            title = stringResource(Strings.string.deviceselect_location_title),
+            subtitle = stringResource(Strings.string.deviceselect_location_subtitle),
+            primaryText = stringResource(Strings.string.deviceselect_common_btn_open_location),
             primaryIcon = CmpIcons.LocationOn,
             onPrimary = onOpenLocationSettings,
             onRetry = onRetry
@@ -255,30 +248,27 @@ private fun DeniedBody(
     onRetry: () -> Unit
 ) {
     val fixItems = if (requirements.contains(DeviceAccessRequirement.USB)) {
-        listOf(
-            stringResource(Res.string.device_select_fix_android_1),
-            stringResource(Res.string.device_select_fix_android_2)
-        )
+        stringArrayResource(Strings.array.deviceselect_fix_item_android)
     } else {
-        listOf(stringResource(Res.string.device_select_fix_ios_1))
+        stringArrayResource(Strings.array.deviceselect_fix_item_ios)
     }
     CenterState {
         Hero(icon = CmpIcons.Lock, tone = HeroTone.Error)
         StateHeadline(
-            stringResource(Res.string.device_select_denied_title),
-            stringResource(Res.string.device_select_denied_subtitle)
+            stringResource(Strings.string.deviceselect_denied_title),
+            stringResource(Strings.string.deviceselect_denied_subtitle)
         )
         FixSteps(items = fixItems, done = false)
         if (canOpenSettings) {
             IconedButton(
-                text = stringResource(Res.string.device_select_btn_open_settings),
+                text = stringResource(Strings.string.deviceselect_common_btn_open_settings),
                 icon = CmpIcons.Settings,
                 onClick = onOpenSettings,
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
             IconedButton(
-                text = stringResource(Res.string.device_select_btn_retry),
+                text = stringResource(Strings.string.deviceselect_common_btn_retry),
                 icon = CmpIcons.Refresh,
                 onClick = onRetry,
                 modifier = Modifier.fillMaxWidth()
@@ -308,7 +298,7 @@ private fun OffStateBody(
             modifier = Modifier.fillMaxWidth()
         )
         CmpOutlinedButton(
-            text = stringResource(Res.string.device_select_btn_retry),
+            text = stringResource(Strings.string.deviceselect_common_btn_retry),
             onClick = onRetry,
             modifier = Modifier.fillMaxWidth()
         )
@@ -320,13 +310,13 @@ private fun ScanningBody(supportedTransports: Set<DeviceTransport>) {
     val hasBle = supportedTransports.contains(DeviceTransport.BLE)
     val hasUsb = supportedTransports.contains(DeviceTransport.USB)
     val (icon, subtitle) = when {
-        hasBle && !hasUsb -> CmpIcons.BluetoothSearching to Res.string.device_select_scanning_subtitle_ble
-        hasUsb && !hasBle -> CmpIcons.Usb to Res.string.device_select_scanning_subtitle_usb
-        else -> CmpIcons.Sensors to Res.string.device_select_scanning_subtitle_both
+        hasBle && !hasUsb -> CmpIcons.BluetoothSearching to Strings.string.deviceselect_scanning_subtitle_ble
+        hasUsb && !hasBle -> CmpIcons.Usb to Strings.string.deviceselect_scanning_subtitle_usb
+        else -> CmpIcons.Sensors to Strings.string.deviceselect_scanning_subtitle_both
     }
     CenterState {
         Hero(icon = icon)
-        StateHeadline(stringResource(Res.string.device_select_scanning_title), stringResource(subtitle))
+        StateHeadline(stringResource(Strings.string.deviceselect_scanning_title), stringResource(subtitle))
         CmpCircularProgressIndicator()
     }
 }
@@ -337,35 +327,21 @@ private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
     val hasBle = supportedTransports.contains(DeviceTransport.BLE)
     val hasUsb = supportedTransports.contains(DeviceTransport.USB)
     val hints = when {
-        hasBle && hasUsb -> listOf(
-            stringResource(Res.string.device_select_empty_both_1),
-            stringResource(Res.string.device_select_empty_both_2),
-            stringResource(Res.string.device_select_empty_both_3)
-        )
-
-        hasUsb -> listOf(
-            stringResource(Res.string.device_select_empty_usb_1),
-            stringResource(Res.string.device_select_empty_usb_2),
-            stringResource(Res.string.device_select_empty_usb_3)
-        )
-
-        else -> listOf(
-            stringResource(Res.string.device_select_empty_ble_1),
-            stringResource(Res.string.device_select_empty_ble_2),
-            stringResource(Res.string.device_select_empty_ble_3)
-        )
+        hasBle && hasUsb -> stringArrayResource(Strings.array.deviceselect_empty_item_both)
+        hasUsb -> stringArrayResource(Strings.array.deviceselect_empty_item_usb)
+        else -> stringArrayResource(Strings.array.deviceselect_empty_item_ble)
     }
     CenterState {
         Hero(icon = CmpIcons.SearchOff, tone = HeroTone.Neutral)
         StateHeadline(
-            stringResource(Res.string.device_select_empty_title),
-            stringResource(Res.string.device_select_empty_subtitle)
+            stringResource(Strings.string.deviceselect_empty_title),
+            stringResource(Strings.string.deviceselect_empty_subtitle)
         )
         FixSteps(items = hints, done = true)
         CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
             CmpText(
-                text = stringResource(Res.string.device_select_searching),
+                text = stringResource(Strings.string.deviceselect_scan_loading_searching),
                 fontSize = DsType.LabelLarge,
                 color = colors.onSurfaceVariant
             )
@@ -383,7 +359,7 @@ private fun ConnectingBody(device: DeviceUiItem, onCancel: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             CmpText(
-                text = stringResource(Res.string.device_select_connecting_title),
+                text = stringResource(Strings.string.deviceselect_connecting_title),
                 fontSize = DsType.HeadlineSmall,
                 fontWeight = FontWeight.Medium
             )
@@ -391,7 +367,7 @@ private fun ConnectingBody(device: DeviceUiItem, onCancel: () -> Unit) {
             CmpText(text = device.address, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
         }
         CmpCircularProgressIndicator()
-        CmpOutlinedButton(text = stringResource(Res.string.device_select_btn_cancel), onClick = onCancel)
+        CmpOutlinedButton(text = stringResource(Strings.string.deviceselect_common_btn_cancel), onClick = onCancel)
     }
 }
 
@@ -517,14 +493,14 @@ private fun ListHeader(count: Int) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         CmpText(
-            text = stringResource(Res.string.device_select_list_count, count),
+            text = stringResource(Strings.string.deviceselect_list_label_count, count),
             fontSize = DsType.TitleMedium,
             fontWeight = FontWeight.Medium
         )
         CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpCircularProgressIndicator(modifier = Modifier.size(16.dp))
             CmpText(
-                text = stringResource(Res.string.device_select_list_searching_short),
+                text = stringResource(Strings.string.deviceselect_list_loading_searching_short),
                 fontSize = DsType.LabelLarge,
                 color = colors.onSurfaceVariant
             )
@@ -552,7 +528,7 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
                 }
             }
             CmpText(
-                text = stringResource(Res.string.device_select_detail_empty),
+                text = stringResource(Strings.string.deviceselect_detail_msg_empty),
                 fontSize = DsType.TitleMedium,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -595,7 +571,7 @@ private fun DetailPanel(device: DeviceUiItem?, onConnect: () -> Unit) {
                 )
             }
             IconedButton(
-                text = stringResource(Res.string.device_select_btn_connect),
+                text = stringResource(Strings.string.deviceselect_common_btn_connect),
                 icon = CmpIcons.Link,
                 onClick = onConnect,
                 modifier = Modifier.fillMaxWidth()

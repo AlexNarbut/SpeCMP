@@ -13,13 +13,10 @@ import ru.alarmtrade.common.logger.PlatformLogger
 
 // Имя — точка входа для Swift (MainViewControllerKt.MainViewController), PascalCase сохраняется
 @Suppress("ktlint:standard:function-naming", "FunctionNaming")
-fun MainViewController(appVersionName: String = "2.0.40", appVersionCode: Int = 240) = ComposeUIViewController(
+fun MainViewController(appVersionName: String, appVersionCode: Int) = ComposeUIViewController(
     configure = { enableDebugConsoleLogs() }
 ) {
-    App(
-        appVersionName = appVersionName,
-        appVersionCode = appVersionCode
-    )
+    App(appVersionName = appVersionName, appVersionCode = appVersionCode)
 }
 
 /**

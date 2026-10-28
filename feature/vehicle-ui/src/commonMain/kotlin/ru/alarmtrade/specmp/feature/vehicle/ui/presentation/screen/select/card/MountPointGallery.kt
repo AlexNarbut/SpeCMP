@@ -28,6 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_btn_close
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_photo_a11y_full
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_photo_a11y_next
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_photo_a11y_prev
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_photo_label_counter
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_points_btn_back
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -44,13 +51,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.MountPoint
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.CarPhoto
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PHOTO_RATIO
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_common_btn_close
-import specmp.feature.vehicle_ui.generated.resources.vehicle_photo_a11y_full
-import specmp.feature.vehicle_ui.generated.resources.vehicle_photo_a11y_next
-import specmp.feature.vehicle_ui.generated.resources.vehicle_photo_a11y_prev
-import specmp.feature.vehicle_ui.generated.resources.vehicle_photo_label_counter
-import specmp.feature.vehicle_ui.generated.resources.vehicle_points_btn_back
 
 /** Точка подключения: «← Все точки подключения», тип и название, галерея фото, описание. */
 @Composable
@@ -66,7 +66,7 @@ internal fun MountPointDetail(
         CmpTextButton(onClick = onBack, modifier = Modifier.heightIn(min = 48.dp)) {
             CmpIcon(icon = CmpIcons.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp))
             CmpText(
-                text = stringResource(Res.string.vehicle_points_btn_back),
+                text = stringResource(Strings.string.vehicle_points_btn_back),
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -110,7 +110,7 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                     modifier = Modifier
                         .fillMaxSize()
                         .clickable(
-                            onClickLabel = stringResource(Res.string.vehicle_photo_a11y_full),
+                            onClickLabel = stringResource(Strings.string.vehicle_photo_a11y_full),
                             onClick = onFullScreen
                         )
                         .testTag(VehicleTestTags.PHOTO_FULL)
@@ -127,7 +127,7 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                 CmpIconButton(
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     icon = CmpIcons.ChevronLeft,
-                    contentDescription = stringResource(Res.string.vehicle_photo_a11y_prev),
+                    contentDescription = stringResource(Strings.string.vehicle_photo_a11y_prev),
                     enabled = pager.currentPage > 0
                 )
                 // Лениво: у точки бывают десятки фото — миниатюры за краем не композируются и не грузятся.
@@ -154,7 +154,7 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                 CmpIconButton(
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                     icon = CmpIcons.ChevronRight,
-                    contentDescription = stringResource(Res.string.vehicle_photo_a11y_next),
+                    contentDescription = stringResource(Strings.string.vehicle_photo_a11y_next),
                     enabled = pager.currentPage < count - 1
                 )
             }
@@ -165,7 +165,7 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
 @Composable
 private fun Counter(index: Int, count: Int, modifier: Modifier = Modifier) {
     CmpText(
-        text = stringResource(Res.string.vehicle_photo_label_counter, index + 1, count),
+        text = stringResource(Strings.string.vehicle_photo_label_counter, index + 1, count),
         style = CmpTextStyle.Body,
         fontWeight = FontWeight.SemiBold,
         color = Color.White,
@@ -205,7 +205,7 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
                 CmpIconButton(
                     onClick = onClose,
                     icon = CmpIcons.Close,
-                    contentDescription = stringResource(Res.string.vehicle_common_btn_close),
+                    contentDescription = stringResource(Strings.string.vehicle_common_btn_close),
                     tint = Color.White
                 )
             }
@@ -217,7 +217,7 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
                 CmpIconButton(
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     icon = CmpIcons.ChevronLeft,
-                    contentDescription = stringResource(Res.string.vehicle_photo_a11y_prev),
+                    contentDescription = stringResource(Strings.string.vehicle_photo_a11y_prev),
                     enabled = pager.currentPage > 0,
                     tint = Color.White
                 )
@@ -225,7 +225,7 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
                 CmpIconButton(
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                     icon = CmpIcons.ChevronRight,
-                    contentDescription = stringResource(Res.string.vehicle_photo_a11y_next),
+                    contentDescription = stringResource(Strings.string.vehicle_photo_a11y_next),
                     enabled = pager.currentPage < count - 1,
                     tint = Color.White
                 )

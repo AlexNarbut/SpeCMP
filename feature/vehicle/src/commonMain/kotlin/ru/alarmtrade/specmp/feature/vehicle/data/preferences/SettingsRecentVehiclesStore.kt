@@ -1,37 +1,49 @@
 package ru.alarmtrade.specmp.feature.vehicle.data.preferences
 
 import com.russhwolf.settings.Settings
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import ru.alarmtrade.specmp.core.common.RecentList
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
 
 /** [RecentVehiclesStore] в именованном хранилище приложения: JSON-список на каталог. Битые данные — пустой список. */
-class SettingsRecentVehiclesStore(private val settings: Settings) : RecentVehiclesStore {
+class SettingsRecentVehiclesStore(settings: Settings) : RecentVehiclesStore {
 
-    override fun recent(catalog: VehicleCatalog): List<CarSummary> {
-        val raw = settings.getStringOrNull(catalog.key()) ?: return emptyList()
-        return runCatching { json.decodeFromString(serializer, raw) }.getOrDefault(emptyList()).map { it.toDomain() }
+    // Отдельный список (и замок) на каталог.
+    private val lists = VehicleCatalog.entries.associateWith { catalog ->
+        RecentList<CarSummary, Int>(
+            max = RecentVehiclesStore.MAX_RECENT,
+            key = { it.id },
+            read = {
+                settings.getStringOrNull(catalog.key())
+                    ?.let { raw -> safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess() }
+                    .orEmpty()
+                    .map { it.toDomain() }
+            },
+            write = { cars ->
+                settings.putString(catalog.key(), json.encodeToString(serializer, cars.map { it.toStored() }))
+            }
+        )
     }
 
-    override fun push(catalog: VehicleCatalog, car: CarSummary) {
-        val updated = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
-        store(catalog, updated)
-    }
+    override fun recent(catalog: VehicleCatalog): List<CarSummary> = lists.getValue(catalog).all()
 
-    override fun remove(catalog: VehicleCatalog, carId: Int) {
-        store(catalog, recent(catalog).filter { it.id != carId })
-    }
+    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): List<CarSummary> =
+        lists.getValue(catalog).push(car)
 
-    private fun store(catalog: VehicleCatalog, cars: List<CarSummary>) {
-        settings.putString(catalog.key(), json.encodeToString(serializer, cars.map { it.toStored() }))
-    }
+    override suspend fun remove(catalog: VehicleCatalog, carId: Int): List<CarSummary> =
+        lists.getValue(catalog).remove(carId)
 
     private fun VehicleCatalog.key() = "recent_${name.lowercase()}"
 
     @Serializable
+    @SerialName("vehicle.SettingsRecentVehiclesStore.StoredCar")
     private data class StoredCar(
         val id: Int,
         val brand: String,

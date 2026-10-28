@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -32,17 +33,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcom
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.canItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.modelItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.trimItems
-
-/** Шаг узкой раскладки — выводится из state. */
-internal enum class CompactStep { BRANDS, MODELS, TRIMS, CAN, CARD }
-
-internal fun VehicleSelectState.compactStep(): CompactStep = when {
-    selection.carId != null -> CompactStep.CARD
-    searchMode == SearchMode.CAN -> CompactStep.CAN
-    selection.model != null -> CompactStep.TRIMS
-    selection.brand != null -> CompactStep.MODELS
-    else -> CompactStep.BRANDS
-}
 
 /** Экран выбора автомобиля без ViewModel: каркас, тело по раскладке, фильтр, диалоги, просмотр фото. */
 @Composable
@@ -69,7 +59,7 @@ internal fun VehicleSelectContent(
     }
     state.filterDraft?.let { FilterPanel(draft = it, wide = layout.isWide, actions = actions) }
     state.dialog?.let { VehicleDialogs(dialog = it, wide = layout.isWide, actions = actions.card) }
-    val point = state.cardUi.point?.let { index -> state.card.valueOrNull()?.mountPoints?.getOrNull(index) }
+    val point = state.cardUi.point?.let { index -> state.card.content?.mountPoints?.getOrNull(index) }
     if (state.cardUi.viewerOpen && point != null) {
         PhotoViewer(
             point = point,

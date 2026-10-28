@@ -29,6 +29,8 @@
 
 ```
 git commit ──► pre-commit ──► ./gradlew spotlessCheck        (стиль, только файлы изменённые с HEAD)
+                          ├─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
+                          └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck          (смысл, весь проект, с type resolution)
 Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotlessCheck (отчёт по правленому файлу)
 ```
@@ -39,7 +41,9 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`; плагины `detekt`, `spotless` |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt |
-| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `spotless-check` (pre-commit) и `detekt-check` (pre-push) |
+| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `spotless-check`, `serial-name-check` (pre-commit) и `detekt-check` (pre-push) |
+| [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
+| [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
 | [`.claude/settings.json`](../.claude/settings.json), [`.claude/hooks/kotlin-quality.sh`](../.claude/hooks/kotlin-quality.sh) | хук для агентов: после правки `.kt`/`.kts` возвращает нарушения этого файла |
 
 Почему так устроено:
@@ -95,6 +99,8 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | Проверить стиль относительно ветки | `./gradlew spotlessCheck -PspotlessRatchetFrom=origin/develop` |
 | Смысловая проверка всего проекта | `./gradlew detektCheck` |
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
+| `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
+| Строки и ключи локализации | `config/hooks/check-strings.py` |
 
 Порядок перед коммитом:
 
@@ -160,6 +166,7 @@ ViewModel через несколько composable, эффекты читают 
 | `println` / `print` | логгер Kermit |
 | `MutableStateFlow.value = …` (запись) | `flow.update { … }` ([`patterns.md`](patterns.md#корутины-и-flow)); чтение `.value` разрешено |
 | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита (обычные `TODO` разрешены) |
+| импорт `androidx.lifecycle.ViewModel` вне `core/ui` (`ForbiddenImport`) | наследоваться от `BaseViewModel` ([`patterns.md`](patterns.md), «BaseViewModel») |
 
 `ForbiddenMethodCall` не проверяет тестовые source set'ы: тестовые фейки по [`patterns.md`](patterns.md#корутины-и-flow)
 могут писать `MutableStateFlow.value` напрямую.
@@ -169,7 +176,7 @@ ViewModel через несколько composable, эффекты читают 
 
 `TooGenericExceptionCaught` не проверяется на границах, где по нашим правилам ловится всё и нормализуется в
 `Response.Error`: `core/network` и safe*-хелперы `core/common/.../ResponseExt.kt` (`safeRun`, `safeResponseRun`,
-`safeFlowRun`, `safeFlowResponseRun`). Остальной код ловит конкретный тип либо идёт через `safeRun`. Если исключение
+`safeFlowRun`). Остальной код ловит конкретный тип либо идёт через `safeRun`. Если исключение
 сознательно игнорируется (например, SDK бросает на недоступном транспорте и это означает «нет зависимости»), переменная
 называется `ignored`: так её пропускают и `TooGenericExceptionCaught`, и `SwallowedException`
 (`allowedExceptionNameRegex` по умолчанию — `_|(ignore|expected).*`).

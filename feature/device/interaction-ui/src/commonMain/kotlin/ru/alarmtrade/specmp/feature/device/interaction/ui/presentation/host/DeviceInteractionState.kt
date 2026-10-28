@@ -5,6 +5,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
 
 @Immutable
 data class DeviceInteractionState(
@@ -25,7 +26,7 @@ data class DeviceInteractionState(
      */
     val showBootContent: Boolean
         get() = when {
-            session is DeviceSessionState.BluetoothBoot || session is DeviceSessionState.FirmwareBoot -> true
+            session.isBoot -> true
             reboot == DeviceReboot.ToMain -> true
             reboot == DeviceReboot.ToBoot -> true
             session is DeviceSessionState.Ready -> false

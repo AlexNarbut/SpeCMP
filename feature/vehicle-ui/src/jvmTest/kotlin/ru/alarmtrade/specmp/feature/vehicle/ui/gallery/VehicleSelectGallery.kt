@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBus
@@ -21,6 +23,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.MountPoint
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.UserManualRef
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.vehicleLayoutOf
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CapabilityKind
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardSource
@@ -28,7 +31,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardTa
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardUi
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CatalogSelection
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.ComboSearch
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Load
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.SearchMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleDialog
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
@@ -126,8 +128,7 @@ class VehicleSelectGallery {
             firmwareCanCode = if (typeSelectable) null else "2154"
         ),
         deviceType = VehicleDeviceType.ALARM,
-        needsType = typeSelectable,
-        brands = Load.Ready(brands),
+        brands = LCEState.Content(brands),
         recent = recent
     )
 
@@ -150,13 +151,16 @@ class VehicleSelectGallery {
     fun `01 brands with recent`() = render("01-brands", state())
 
     @Test
-    fun `02 brands loading`() = render("02-brands-loading", state().copy(brands = Load.Loading))
+    fun `02 brands loading`() = render("02-brands-loading", state().copy(brands = LCEState.Loading))
 
     @Test
-    fun `03 brands error`() = render("03-brands-error", state().copy(brands = Load.Failed(offline = false)))
+    fun `03 brands error`() = render("03-brands-error", state().copy(brands = LCEState.Error(CatalogError.LoadFailed)))
 
     @Test
-    fun `04 brands offline`() = render("04-brands-offline", state().copy(brands = Load.Failed(offline = true)))
+    fun `04 brands offline`() = render(
+        "04-brands-offline",
+        state().copy(brands = LCEState.Error(CatalogError.Common(ApiError.NoConnection)))
+    )
 
     @Test
     fun `05 search brands`() = render("05-search", state().copy(query = "la"))
@@ -164,7 +168,7 @@ class VehicleSelectGallery {
     @Test
     fun `06 search combo`() = render(
         "06-combo",
-        state().copy(query = "toyota cam", combo = ComboSearch(toyota, "cam"), comboModels = Load.Ready(models))
+        state().copy(query = "toyota cam", combo = ComboSearch(toyota, "cam"), comboModels = LCEState.Content(models))
     )
 
     @Test
@@ -176,13 +180,13 @@ class VehicleSelectGallery {
     @Test
     fun `09 filter emptied brands`() = render(
         "09-filter-empty",
-        state().copy(brands = Load.Ready(emptyList()), groups = setOf(CarFeatureGroup.TRAILER))
+        state().copy(brands = LCEState.Content(emptyList()), groups = setOf(CarFeatureGroup.TRAILER))
     )
 
     @Test
     fun `10 models`() = render(
         "10-models",
-        state().copy(selection = CatalogSelection(brand = toyota), models = Load.Ready(models))
+        state().copy(selection = CatalogSelection(brand = toyota), models = LCEState.Content(models))
     )
 
     @Test
@@ -190,8 +194,8 @@ class VehicleSelectGallery {
         "11-trims-pick",
         state(pick = true).copy(
             selection = CatalogSelection(brand = toyota, model = camry),
-            models = Load.Ready(models),
-            trims = Load.Ready(trims)
+            models = LCEState.Content(models),
+            trims = LCEState.Content(trims)
         )
     )
 
@@ -201,19 +205,19 @@ class VehicleSelectGallery {
     @Test
     fun `13 can results pick`() = render(
         "13-can-results",
-        state(pick = true).copy(searchMode = SearchMode.CAN, canCode = "2154", canResults = Load.Ready(recent))
+        state(pick = true).copy(searchMode = SearchMode.CAN, canCode = "2154", canResults = LCEState.Content(recent))
     )
 
     @Test
     fun `14 can none`() = render(
         "14-can-none",
-        state().copy(searchMode = SearchMode.CAN, canCode = "9999", canResults = Load.Ready(emptyList()))
+        state().copy(searchMode = SearchMode.CAN, canCode = "9999", canResults = LCEState.Content(emptyList()))
     )
 
     @Test
     fun `15 can prefilled from device`() = render(
         "15-can-device",
-        state(typeSelectable = false).copy(searchMode = SearchMode.CAN, canCode = "2154", canResults = Load.Loading)
+        state(typeSelectable = false).copy(searchMode = SearchMode.CAN, canCode = "2154", canResults = LCEState.Loading)
     )
 
     private fun cardState(ui: CardUi = CardUi(tab = CardTab.FEATURES), pick: Boolean = false) = state(pick = pick).copy(
@@ -223,9 +227,9 @@ class VehicleSelectGallery {
             carId = summary.id,
             cardSource = CardSource.CATALOG
         ),
-        models = Load.Ready(models),
-        trims = Load.Ready(trims),
-        card = Load.Ready(card),
+        models = LCEState.Content(models),
+        trims = LCEState.Content(trims),
+        card = LCEState.Content(card),
         cardUi = ui
     )
 
@@ -255,16 +259,16 @@ class VehicleSelectGallery {
     fun `26 card filtered`() = render("26-card-filtered", cardState().copy(groups = setOf(CarFeatureGroup.EXTENDED)))
 
     @Test
-    fun `27 card loading`() = render("27-card-loading", cardState().copy(card = Load.Loading))
+    fun `27 card loading`() = render("27-card-loading", cardState().copy(card = LCEState.Loading))
 
     @Test
-    fun `28 card error`() = render("28-card-error", cardState().copy(card = Load.Failed(offline = false)))
+    fun `28 card error`() = render("28-card-error", cardState().copy(card = LCEState.Error(CatalogError.LoadFailed)))
 
     @Test
     fun `29 card without tabs`() = render(
         "29-card-no-tabs",
         cardState().copy(
-            card = Load.Ready(
+            card = LCEState.Content(
                 card.copy(
                     notes = emptyList(),
                     features = emptyList(),

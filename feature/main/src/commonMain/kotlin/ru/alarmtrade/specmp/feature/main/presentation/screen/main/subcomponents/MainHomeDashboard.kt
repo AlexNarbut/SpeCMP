@@ -33,14 +33,12 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 
 @Composable
 internal fun MainHomeDashboard(
     mode: MainHomeMode,
-    cardVariant: MainCardVariant,
     onHomeActionClick: (MainHomeAction) -> Unit,
     modifier: Modifier = Modifier,
     startContentPadding: Dp = 0.dp,
@@ -84,7 +82,6 @@ internal fun MainHomeDashboard(
             ) { item, itemModifier ->
                 MainActionCard(
                     item = item,
-                    variant = cardVariant,
                     colors = colors,
                     onClick = { onHomeActionClick(item) },
                     modifier = itemModifier
@@ -112,13 +109,10 @@ internal fun MainHomeDashboard(
 @Composable
 private fun MainActionCard(
     item: MainHomeAction,
-    variant: MainCardVariant,
     colors: CmpThemeColors,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isCentered = variant == MainCardVariant.Centered
-
     CmpClickableSurface(
         onClick = onClick,
         modifier = modifier.fillMaxSize(),
@@ -127,49 +121,25 @@ private fun MainActionCard(
         contentColor = colors.onSurface,
         border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
-        if (isCentered) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
-            ) {
-                MainHomeIconTile(
-                    painter = painterResource(item.icon),
-                    size = 64.dp,
-                    isPrimary = true,
-                    colors = colors
-                )
-                MainActionText(
-                    item = item,
-                    colors = colors,
-                    textAlign = TextAlign.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                )
-            }
-        } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MainHomeIconTile(
-                    painter = painterResource(item.icon),
-                    size = 64.dp,
-                    isPrimary = true,
-                    colors = colors
-                )
-                MainActionText(
-                    item = item,
-                    colors = colors,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Start,
-                    horizontalAlignment = Alignment.Start
-                )
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+        ) {
+            MainHomeIconTile(
+                painter = painterResource(item.icon),
+                size = 64.dp,
+                isPrimary = true,
+                colors = colors
+            )
+            MainActionText(
+                item = item,
+                colors = colors,
+                textAlign = TextAlign.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            )
         }
     }
 }

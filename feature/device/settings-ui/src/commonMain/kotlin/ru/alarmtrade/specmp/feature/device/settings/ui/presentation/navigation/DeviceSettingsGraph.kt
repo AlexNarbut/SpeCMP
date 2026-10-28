@@ -4,11 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -18,13 +18,25 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_loaded_same
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_saved
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_saved_file
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_msg_saved_mine
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_error_set_value
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_written
+import ru.alarmtrade.specmp.core.localization.resources.settings_loaded_msg
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_msg_done
+import ru.alarmtrade.specmp.core.localization.resources.settings_saved_btn_open
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -47,33 +59,24 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsViewModel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.ExitTarget
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsEditorOptions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsMenu
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.firstSectionId
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_error_set_value
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_msg_written
-import specmp.feature.device.settings_ui.generated.resources.settings_loaded_msg
-import specmp.feature.device.settings_ui.generated.resources.settings_loaded_same
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_done
-import specmp.feature.device.settings_ui.generated.resources.settings_saved
-import specmp.feature.device.settings_ui.generated.resources.settings_saved_btn_open
-import specmp.feature.device.settings_ui.generated.resources.settings_saved_file
-import specmp.feature.device.settings_ui.generated.resources.settings_saved_mine
 
 /** Раздел меню; `null` — корень. */
 @Serializable
+@SerialName("device.settings-ui.SettingsSectionRoute")
 internal data class SettingsSectionRoute(val sectionId: Int?) : NavKey
 
 @Serializable
+@SerialName("device.settings-ui.SettingsSearchRoute")
 internal data object SettingsSearchRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {
@@ -188,7 +191,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
         key = "settings:$source",
         parameters = { parametersOf(source, options) }
     )
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(navConfig, SettingsSectionRoute(null))
     val snackbarHostState = remember { CmpSnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -205,7 +208,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
     val rowActions = remember(viewModel, backStack) {
         SettingRowActions(
             onOpenSection = { id ->
-                (viewModel.state.value.menu as? SettingsMenu.Ready)?.root?.let { root ->
+                viewModel.state.value.menu.content?.let { root ->
                     backStack.navigateTo(root.pathTo(id).orEmpty().map { it.id } + id)
                 }
             },
@@ -304,14 +307,16 @@ private suspend fun handleEffect(
 ) {
     when (effect) {
         is DeviceSettingsEffect.Written -> snackbarHostState.showSnackbar(
-            getString(Res.string.settings_editor_msg_written, effect.count)
+            getString(Strings.string.settings_editor_msg_written, effect.count)
         )
 
         DeviceSettingsEffect.SetValueFailed -> snackbarHostState.showSnackbar(
-            getString(Res.string.settings_editor_error_set_value)
+            getString(Strings.string.settings_editor_error_set_value)
         )
 
-        DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(getString(Res.string.settings_reset_msg_done))
+        DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(
+            getString(Strings.string.settings_reset_msg_done)
+        )
 
         is DeviceSettingsEffect.Exit -> when (effect.target) {
             ExitTarget.BACK -> slots.onExit()
@@ -320,9 +325,9 @@ private suspend fun handleEffect(
 
         is DeviceSettingsEffect.Loaded -> snackbarHostState.showSnackbar(
             if (effect.count > 0) {
-                getString(Res.string.settings_loaded_msg, effect.count)
+                getString(Strings.string.settings_loaded_msg, effect.count)
             } else {
-                getString(Res.string.settings_loaded_same)
+                getString(Strings.string.settings_common_msg_loaded_same)
             },
             duration = CmpSnackbarDuration.Long
         )
@@ -333,20 +338,22 @@ private suspend fun handleEffect(
             viewModel.onFileExported(slots.fileSaver.save(effect.path, effect.fileName))
 
         is DeviceSettingsEffect.FileSaved -> snackbarHostState.showSnackbar(
-            getString(Res.string.settings_saved_file, effect.name)
+            getString(Strings.string.settings_common_msg_saved_file, effect.name)
         )
 
         is DeviceSettingsEffect.SavedToMine -> {
             val open = slots.onOpenConfiguration
             val result = snackbarHostState.showSnackbar(
-                getString(Res.string.settings_saved_mine),
-                actionLabel = open?.let { getString(Res.string.settings_saved_btn_open) },
+                getString(Strings.string.settings_common_msg_saved_mine),
+                actionLabel = open?.let { getString(Strings.string.settings_saved_btn_open) },
                 duration = CmpSnackbarDuration.Long
             )
             if (result == CmpSnackbarResult.ActionPerformed) open?.invoke(effect.configuration)
         }
 
-        DeviceSettingsEffect.Saved -> snackbarHostState.showSnackbar(getString(Res.string.settings_saved))
+        DeviceSettingsEffect.Saved -> snackbarHostState.showSnackbar(
+            getString(Strings.string.settings_common_msg_saved)
+        )
 
         is DeviceSettingsEffect.WriteToDevice -> slots.onWriteToDevice?.invoke(effect.source)
     }
@@ -367,7 +374,7 @@ private fun SettingsWithNav(
     val marks = remember(state.changedIds, state.sectionChanges, state.cars) {
         RowMarks(state.changedIds, state.sectionChanges, state.cars)
     }
-    val root = (state.menu as? SettingsMenu.Ready)?.root
+    val root = state.menu.content
     DeviceSettingsContent(
         state = state,
         location = backStack.location(),

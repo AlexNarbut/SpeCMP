@@ -32,6 +32,22 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_a11y_pin_input
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_dialog_confirm
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_pin_submit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_update
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_pin_wrong
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_dialog_full_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_dialog_confirm
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_dialog_no_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_pin
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_pin_locked
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_dialog_confirm
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_dialog_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_pin
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_label_version
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -49,22 +65,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_check_btn_update
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_btn_confirm
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_label_full_description
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_msg_confirm
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_msg_no_description
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_title_confirm
-import specmp.feature.device.firmware.generated.resources.firmware_check_dialog_title_description
-import specmp.feature.device.firmware.generated.resources.firmware_check_pin_a11y_input
-import specmp.feature.device.firmware.generated.resources.firmware_check_pin_btn_submit
-import specmp.feature.device.firmware.generated.resources.firmware_check_pin_error_wrong
-import specmp.feature.device.firmware.generated.resources.firmware_check_pin_msg
-import specmp.feature.device.firmware.generated.resources.firmware_check_pin_msg_locked
-import specmp.feature.device.firmware.generated.resources.firmware_check_pin_title
-import specmp.feature.device.firmware.generated.resources.firmware_common_btn_cancel
-import specmp.feature.device.firmware.generated.resources.firmware_common_label_version
 
 private val ButtonHeight = 48.dp
 private val DialogMaxWidth = 440.dp
@@ -83,7 +83,7 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
     CmpDialog(
         onDismissRequest = onDismiss,
         width = CmpDialogWidth.Wide,
-        title = { CmpText(text = stringResource(Res.string.firmware_check_dialog_title_description)) },
+        title = { CmpText(text = stringResource(Strings.string.firmware_check_title_dialog_description)) },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpRow(
@@ -91,18 +91,18 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     CmpText(
-                        text = stringResource(Res.string.firmware_common_label_version),
+                        text = stringResource(Strings.string.firmware_common_label_version),
                         color = colors.onSurfaceVariant
                     )
                     VersionText(dialog.version)
                 }
                 CmpText(
-                    text = stringResource(Res.string.firmware_check_dialog_label_full_description),
+                    text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
                     fontWeight = FontWeight.Medium
                 )
                 CmpText(
                     text = dialog.description.ifBlank {
-                        stringResource(Res.string.firmware_check_dialog_msg_no_description)
+                        stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
                     color = colors.onSurfaceVariant,
                     style = CmpTextStyle.Body
@@ -111,14 +111,14 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
         },
         dismissButton = {
             CmpTextButton(
-                text = stringResource(Res.string.firmware_common_btn_cancel),
+                text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
                 modifier = Modifier.height(ButtonHeight)
             )
         },
         confirmButton = {
             CmpTextButton(
-                text = stringResource(Res.string.firmware_check_btn_update),
+                text = stringResource(Strings.string.firmware_check_btn_update),
                 onClick = onUpdate,
                 modifier = Modifier.height(ButtonHeight)
             )
@@ -133,13 +133,13 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
         onDismissRequest = onDismiss,
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.PowerSettingsNew.imageVector(),
-        title = { CmpText(text = stringResource(Res.string.firmware_check_dialog_title_confirm)) },
+        title = { CmpText(text = stringResource(Strings.string.firmware_check_title_dialog_confirm)) },
         text = {
-            CmpText(text = stringResource(Res.string.firmware_check_dialog_msg_confirm), style = CmpTextStyle.Body)
+            CmpText(text = stringResource(Strings.string.firmware_check_msg_dialog_confirm), style = CmpTextStyle.Body)
         },
         dismissButton = {
             CmpTextButton(
-                text = stringResource(Res.string.firmware_common_btn_cancel),
+                text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
                 enabled = !dialog.sending,
                 modifier = Modifier.height(ButtonHeight)
@@ -147,7 +147,7 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
         },
         confirmButton = {
             ProgressButton(
-                text = stringResource(Res.string.firmware_check_dialog_btn_confirm),
+                text = stringResource(Strings.string.firmware_check_btn_dialog_confirm),
                 sending = dialog.sending,
                 enabled = !dialog.sending,
                 onClick = onConfirm,
@@ -172,13 +172,13 @@ internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit:
         onDismissRequest = onDismiss,
         modifier = Modifier.widthIn(max = DialogMaxWidth),
         icon = CmpIcons.Lock.imageVector(),
-        title = { CmpText(text = stringResource(Res.string.firmware_check_pin_title)) },
+        title = { CmpText(text = stringResource(Strings.string.firmware_check_title_pin)) },
         text = {
             CmpColumn(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                CmpText(text = stringResource(Res.string.firmware_check_pin_msg), style = CmpTextStyle.Body)
+                CmpText(text = stringResource(Strings.string.firmware_check_msg_pin), style = CmpTextStyle.Body)
                 PinCells(
                     pin = pin,
                     onPinChange = { pin = it },
@@ -191,7 +191,7 @@ internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit:
         },
         dismissButton = {
             CmpTextButton(
-                text = stringResource(Res.string.firmware_common_btn_cancel),
+                text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
                 enabled = !dialog.sending,
                 modifier = Modifier.height(ButtonHeight).testTag(PIN_CANCEL_TAG)
@@ -199,7 +199,7 @@ internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit:
         },
         confirmButton = {
             ProgressButton(
-                text = stringResource(Res.string.firmware_check_pin_btn_submit),
+                text = stringResource(Strings.string.firmware_check_btn_pin_submit),
                 sending = dialog.sending,
                 enabled = canType && pin.length == PIN_LENGTH,
                 onClick = { onSubmit(pin) },
@@ -220,14 +220,14 @@ private fun PinStatus(dialog: CheckDialog.Pin) {
     ) {
         if (dialog.wrong) {
             CmpText(
-                text = stringResource(Res.string.firmware_check_pin_error_wrong),
+                text = stringResource(Strings.string.firmware_check_error_pin_wrong),
                 fontWeight = FontWeight.SemiBold,
                 color = colors.error
             )
         }
         if (seconds != null) {
             CmpText(
-                text = stringResource(Res.string.firmware_check_pin_msg_locked, seconds.toInt()),
+                text = stringResource(Strings.string.firmware_check_msg_pin_locked, seconds.toInt()),
                 color = colors.onSurfaceVariant,
                 style = CmpTextStyle.Body,
                 modifier = Modifier.testTag(PIN_LOCKED_TAG)
@@ -248,7 +248,7 @@ private fun PinCells(
     val focus = remember { FocusRequester() }
     // Клавиатура открывается сразу и возвращается, когда блок снова принимает ввод.
     LaunchedEffect(enabled) { if (enabled) focus.requestFocus() }
-    val a11y = stringResource(Res.string.firmware_check_pin_a11y_input)
+    val a11y = stringResource(Strings.string.firmware_check_a11y_pin_input)
     CmpBox(contentAlignment = Alignment.Center) {
         CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             repeat(PIN_LENGTH) { index ->

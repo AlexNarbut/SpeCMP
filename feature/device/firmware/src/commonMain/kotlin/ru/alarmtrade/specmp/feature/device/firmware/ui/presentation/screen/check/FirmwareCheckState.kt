@@ -2,29 +2,21 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.chec
 
 import androidx.compose.runtime.Immutable
 import kotlin.time.Duration
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 
 @Immutable
 data class FirmwareCheckState(
     val deviceName: String = "",
     val deviceId: Long? = null,
-    val content: CheckContent = CheckContent.Loading,
+    val content: LCEState<List<ModuleCardUi>, FirmwareError> = LCEState.Loading,
     val channel: FirmwareChannel = FirmwareChannel.RELEASE,
     val dialog: CheckDialog? = null,
     /** Команда входа в загрузчик не удалась (нет связи, блок не ответил) — баннер над списком. */
     val bootFailed: Boolean = false
 )
-
-sealed interface CheckContent {
-    data object Loading : CheckContent
-
-    /** Список модулей блока не получен. */
-    data object Error : CheckContent
-
-    @Immutable
-    data class Ready(val modules: List<ModuleCardUi>) : CheckContent
-}
 
 /** Карточка модуля: только примитивы и enum — устойчива для Compose. */
 @Immutable
@@ -56,8 +48,8 @@ sealed interface CardStatusUi {
     /** Установленная версия актуальна. */
     data class Actual(val version: String) : CardStatusUi
 
-    /** Версию с сервера получить не удалось. */
-    data object Failed : CardStatusUi
+    /** Версию с сервера получить не удалось: сбой связи или отказ сервера. */
+    data class Failed(val error: FirmwareError) : CardStatusUi
 
     /** Режим обновления модуля приложение не поддерживает. */
     data object NotSupported : CardStatusUi

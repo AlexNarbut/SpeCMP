@@ -1,5 +1,10 @@
 [versions]
 
+# Версия приложения — единый источник для Android (versionName/versionCode) и desktop (packageVersion,
+# version.properties). iOS берёт свою из iosApp/iosApp/Info.plist — при смене версии обновлять и его.
+app-versionName = "2.0.40"
+app-versionCode = "240"
+
 kotlin = "2.4.0"
 compose-multiplatform = "1.11.1"
 material3 = "1.9.0"
@@ -30,9 +35,9 @@ android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 
-alarmtrade-common-specialist = "1.2.0"
-alarmtrade-common = "2.0.42"
-alarmtrade-permissions = "2.0.97"
+alarmtrade-common-specialist = "1.2.2"
+alarmtrade-common = "2.0.114"
+alarmtrade-permissions = "2.0.114"
 
 [libraries]
 

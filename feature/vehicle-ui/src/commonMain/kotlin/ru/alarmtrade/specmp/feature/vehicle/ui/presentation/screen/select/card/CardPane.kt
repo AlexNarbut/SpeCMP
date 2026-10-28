@@ -21,6 +21,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_card_btn_pick
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_card_msg_no_tabs
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_features
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_manuals
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_maps
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_points
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_tab_label_schemes
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -35,25 +44,17 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.FadeContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.LoadFailed
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PHOTO_RATIO
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.fullName
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardTab
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardUi
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CatalogLevel
-import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Load
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.tabs
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_card_btn_pick
-import specmp.feature.vehicle_ui.generated.resources.vehicle_card_msg_no_tabs
-import specmp.feature.vehicle_ui.generated.resources.vehicle_tab_label_features
-import specmp.feature.vehicle_ui.generated.resources.vehicle_tab_label_manuals
-import specmp.feature.vehicle_ui.generated.resources.vehicle_tab_label_maps
-import specmp.feature.vehicle_ui.generated.resources.vehicle_tab_label_points
-import specmp.feature.vehicle_ui.generated.resources.vehicle_tab_label_schemes
 
 /**
  * Карточка автомобиля с загрузкой: скелетон, ошибка с «Повторить», готовая карточка. [wide] — раскладка
@@ -61,7 +62,7 @@ import specmp.feature.vehicle_ui.generated.resources.vehicle_tab_label_schemes
  */
 @Composable
 internal fun CardPane(
-    card: Load<CarCard>,
+    card: LCEState<CarCard, CatalogError>,
     ui: CardUi,
     groups: Set<CarFeatureGroup>,
     wide: Boolean,
@@ -81,7 +82,7 @@ internal fun CardPane(
 @Suppress("LongParameterList") // проброс параметров CardPane в одну фазу загрузки
 @Composable
 private fun CardPaneState(
-    card: Load<CarCard>,
+    card: LCEState<CarCard, CatalogError>,
     ui: CardUi,
     groups: Set<CarFeatureGroup>,
     wide: Boolean,
@@ -93,15 +94,15 @@ private fun CardPaneState(
     modifier: Modifier = Modifier
 ) {
     when (card) {
-        Load.Idle, Load.Loading -> CardSkeleton(wide = wide, modifier = modifier.padding(padding))
+        LCEState.None, LCEState.Loading -> CardSkeleton(wide = wide, modifier = modifier.padding(padding))
 
-        is Load.Failed -> LoadFailed(offline = card.offline, onRetry = {
+        is LCEState.Error -> LoadFailed(error = card.error, onRetry = {
             onRetry(CatalogLevel.CARD)
         }, modifier = modifier)
 
-        is Load.Ready -> CmpColumn(modifier = modifier.fillMaxSize().testTag(VehicleTestTags.CARD)) {
+        is LCEState.Content -> CmpColumn(modifier = modifier.fillMaxSize().testTag(VehicleTestTags.CARD)) {
             CardContent(
-                card = card.value,
+                card = card.content,
                 ui = ui,
                 groups = groups,
                 wide = wide,
@@ -109,7 +110,7 @@ private fun CardPaneState(
                 padding = padding,
                 modifier = Modifier.weight(1f)
             )
-            if (pick) PickBar(card = card.value, padding = padding, onPick = onPick)
+            if (pick) PickBar(card = card.content, padding = padding, onPick = onPick)
         }
     }
 }
@@ -213,11 +214,11 @@ private fun TabBody(card: CarCard, tab: CardTab, ui: CardUi, actions: CardAction
 @Composable
 private fun tabTitle(tab: CardTab): String = stringResource(
     when (tab) {
-        CardTab.FEATURES -> Res.string.vehicle_tab_label_features
-        CardTab.MOUNT_POINTS -> Res.string.vehicle_tab_label_points
-        CardTab.SCHEMES -> Res.string.vehicle_tab_label_schemes
-        CardTab.MAPS -> Res.string.vehicle_tab_label_maps
-        CardTab.USER_MANUALS -> Res.string.vehicle_tab_label_manuals
+        CardTab.FEATURES -> Strings.string.vehicle_tab_label_features
+        CardTab.MOUNT_POINTS -> Strings.string.vehicle_tab_label_points
+        CardTab.SCHEMES -> Strings.string.vehicle_tab_label_schemes
+        CardTab.MAPS -> Strings.string.vehicle_tab_label_maps
+        CardTab.USER_MANUALS -> Strings.string.vehicle_tab_label_manuals
     }
 )
 
@@ -232,7 +233,7 @@ private fun NoTabs(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.onSurfaceVariant)
-        CmpText(text = stringResource(Res.string.vehicle_card_msg_no_tabs), style = CmpTextStyle.BodyLarge)
+        CmpText(text = stringResource(Strings.string.vehicle_card_msg_no_tabs), style = CmpTextStyle.BodyLarge)
     }
 }
 
@@ -251,7 +252,7 @@ private fun PickBar(card: CarCard, padding: Dp, onPick: (Int) -> Unit) {
         ) {
             CmpIcon(icon = CmpIcons.Check, contentDescription = null)
             CmpText(
-                text = stringResource(Res.string.vehicle_card_btn_pick, card.summary.fullName()),
+                text = stringResource(Strings.string.vehicle_card_btn_pick, card.summary.fullName()),
                 modifier = Modifier.padding(start = 8.dp),
                 maxLines = 1
             )

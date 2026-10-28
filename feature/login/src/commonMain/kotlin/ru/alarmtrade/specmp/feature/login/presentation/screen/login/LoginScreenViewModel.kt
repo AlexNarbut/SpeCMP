@@ -8,6 +8,8 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
+import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
@@ -24,9 +26,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         _state.update {
             it.copy(
                 login = value,
-                authError = null,
-                activationResendState = LCEState.None(),
-                activationResendError = null
+                authState = it.authState.dismissError(),
+                activationResendState = LCEState.None
             )
         }
     }
@@ -35,9 +36,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         _state.update {
             it.copy(
                 password = value,
-                authError = null,
-                activationResendState = LCEState.None(),
-                activationResendError = null
+                authState = it.authState.dismissError(),
+                activationResendState = LCEState.None
             )
         }
     }
@@ -52,30 +52,26 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
 
     fun submit() {
         val credentials = _state.value.toCredentials()
+        // Пустые поля — ошибка формы до запроса, а не «сервер отклонил».
+        if (!credentials.isValid()) {
+            _state.update { it.copy(authState = LCEState.Error(AuthFormError.RequiredFields)) }
+            return
+        }
 
         safeLaunch {
             _state.update {
                 it.copy(
-                    authState = LCEState.Loading(),
-                    authError = null,
-                    activationResendState = LCEState.None(),
-                    activationResendError = null
+                    authState = LCEState.Loading,
+                    activationResendState = LCEState.None
                 )
             }
 
-            val response = if (credentials.isValid()) {
-                withContext(dispatchers.io) { repository.login(credentials) }
-            } else {
-                Response.Error(IllegalArgumentException("Invalid credentials"))
-            }
-
-            when (response) {
+            when (val response = withContext(dispatchers.io) { repository.login(credentials) }) {
                 is Response.Success -> handleLoginResult(response.value)
 
                 is Response.Error -> _state.update {
                     it.copy(
-                        authState = LCEState.None(),
-                        authError = AuthFormError.RequestFailed
+                        authState = LCEState.Error(AuthFormError.from(response.exception))
                     )
                 }
             }
@@ -84,43 +80,23 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
 
     fun resendActivationEmail() {
         val credentials = _state.value.toCredentials()
+        if (!credentials.isValid()) {
+            _state.update { it.copy(activationResendState = LCEState.Error(AuthFormError.RequiredFields)) }
+            return
+        }
 
         safeLaunch {
-            _state.update {
-                it.copy(
-                    activationResendState = LCEState.Loading(),
-                    activationResendError = null
-                )
-            }
-
-            val response = if (credentials.isValid()) {
-                withContext(dispatchers.io) { repository.resendActivationEmail(credentials) }
-            } else {
-                Response.Error(IllegalArgumentException("Invalid credentials"))
-            }
-
-            when (response) {
-                is Response.Success -> _state.update {
-                    it.copy(activationResendState = LCEState.Content(Unit))
-                }
-
-                is Response.Error -> _state.update {
-                    it.copy(
-                        activationResendState = LCEState.None(),
-                        activationResendError = AuthFormError.RequestFailed
-                    )
-                }
-            }
+            _state.update { it.copy(activationResendState = LCEState.Loading) }
+            val response = withContext(dispatchers.io) { repository.resendActivationEmail(credentials) }
+            _state.update { it.copy(activationResendState = response.asLCEState(AuthFormError::from)) }
         }
     }
 
     fun dismissActivationRequest() {
         _state.update {
             it.copy(
-                authState = LCEState.None(),
-                authError = null,
-                activationResendState = LCEState.None(),
-                activationResendError = null
+                authState = LCEState.None,
+                activationResendState = LCEState.None
             )
         }
     }

@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
 import androidx.compose.runtime.Immutable
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -9,18 +10,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarTrim
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
-
-/** Загрузка уровня каталога с сервера. */
-internal sealed interface Load<out T> {
-    data object Idle : Load<Nothing>
-    data object Loading : Load<Nothing>
-    data class Ready<T>(val value: T) : Load<T>
-
-    /** [offline] — сети нет (по монитору), иначе — сервер не ответил. */
-    data class Failed(val offline: Boolean) : Load<Nothing>
-}
-
-internal fun <T> Load<T>.valueOrNull(): T? = (this as? Load.Ready)?.value
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 
 internal enum class SearchMode { NAME, CAN }
 
@@ -80,18 +70,17 @@ internal data class VehicleSelectState(
     val mode: VehicleSelectModeUi,
     /** Тип устройства не задан запросом и ещё не выбран — экран выбора типа. */
     val deviceType: VehicleDeviceType? = null,
-    val needsType: Boolean = false,
     val searchMode: SearchMode = SearchMode.NAME,
     val query: String = "",
     val canCode: String = "",
     val selection: CatalogSelection = CatalogSelection(),
-    val brands: Load<List<CarBrand>> = Load.Idle,
-    val models: Load<List<CarModel>> = Load.Idle,
-    val trims: Load<List<CarTrim>> = Load.Idle,
+    val brands: LCEState<List<CarBrand>, CatalogError> = LCEState.None,
+    val models: LCEState<List<CarModel>, CatalogError> = LCEState.None,
+    val trims: LCEState<List<CarTrim>, CatalogError> = LCEState.None,
     val combo: ComboSearch? = null,
-    val comboModels: Load<List<CarModel>> = Load.Idle,
-    val canResults: Load<List<CarSummary>> = Load.Idle,
-    val card: Load<CarCard> = Load.Idle,
+    val comboModels: LCEState<List<CarModel>, CatalogError> = LCEState.None,
+    val canResults: LCEState<List<CarSummary>, CatalogError> = LCEState.None,
+    val card: LCEState<CarCard, CatalogError> = LCEState.None,
     val cardUi: CardUi = CardUi(),
     val recent: List<CarSummary> = emptyList(),
     /** Применённый фильтр групп функций; [filterDraft] не `null` — открыт фильтр. */
@@ -101,7 +90,7 @@ internal data class VehicleSelectState(
     /** Идёт получение данных автомобиля для «Выбрать» из строки. */
     val picking: Boolean = false
 ) {
-    val showTypeChoice: Boolean get() = needsType && deviceType == null
+    val showTypeChoice: Boolean get() = mode.typeSelectable && deviceType == null
 }
 
 /** Постоянные параметры экрана из запроса. */
@@ -122,4 +111,18 @@ internal sealed interface VehicleSelectEffect {
     data class Picked(val car: CarSummary) : VehicleSelectEffect
     data object Exit : VehicleSelectEffect
     data class CanCopied(val code: String) : VehicleSelectEffect
+
+    /** «Выбрать» не удалось (данные автомобиля не получены). */
+    data class PickFailed(val error: CatalogError) : VehicleSelectEffect
+}
+
+/** Шаг узкой раскладки — выводится из state. */
+internal enum class CompactStep { BRANDS, MODELS, TRIMS, CAN, CARD }
+
+internal fun VehicleSelectState.compactStep(): CompactStep = when {
+    selection.carId != null -> CompactStep.CARD
+    searchMode == SearchMode.CAN -> CompactStep.CAN
+    selection.model != null -> CompactStep.TRIMS
+    selection.brand != null -> CompactStep.MODELS
+    else -> CompactStep.BRANDS
 }

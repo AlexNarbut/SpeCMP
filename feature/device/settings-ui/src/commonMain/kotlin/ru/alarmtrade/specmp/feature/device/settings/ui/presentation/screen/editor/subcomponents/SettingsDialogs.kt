@@ -8,6 +8,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_btn_single_update
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_msg_single
+import ru.alarmtrade.specmp.core.localization.resources.settings_can_title_single
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_close
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_ok
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.settings_exit_btn_discard
+import ru.alarmtrade.specmp.core.localization.resources.settings_exit_btn_write
+import ru.alarmtrade.specmp.core.localization.resources.settings_exit_msg
+import ru.alarmtrade.specmp.core.localization.resources.settings_exit_title
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_btn_confirm
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_msg_confirm
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_msg_confirm_changes
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_msg_error
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_msg_progress
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_title_confirm
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_title_error
+import ru.alarmtrade.specmp.core.localization.resources.settings_reset_title_progress
+import ru.alarmtrade.specmp.core.localization.resources.settings_write_msg_error
+import ru.alarmtrade.specmp.core.localization.resources.settings_write_msg_progress
+import ru.alarmtrade.specmp.core.localization.resources.settings_write_title_error
+import ru.alarmtrade.specmp.core.localization.resources.settings_write_title_progress
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -17,30 +41,6 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_can_single_btn_update
-import specmp.feature.device.settings_ui.generated.resources.settings_can_single_msg
-import specmp.feature.device.settings_ui.generated.resources.settings_can_single_title
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_cancel
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_close
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_ok
-import specmp.feature.device.settings_ui.generated.resources.settings_common_btn_retry
-import specmp.feature.device.settings_ui.generated.resources.settings_exit_btn_discard
-import specmp.feature.device.settings_ui.generated.resources.settings_exit_btn_write
-import specmp.feature.device.settings_ui.generated.resources.settings_exit_msg
-import specmp.feature.device.settings_ui.generated.resources.settings_exit_title
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_btn_confirm
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_confirm
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_confirm_changes
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_error
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_msg_progress
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_title_confirm
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_title_error
-import specmp.feature.device.settings_ui.generated.resources.settings_reset_title_progress
-import specmp.feature.device.settings_ui.generated.resources.settings_write_msg_error
-import specmp.feature.device.settings_ui.generated.resources.settings_write_msg_progress
-import specmp.feature.device.settings_ui.generated.resources.settings_write_title_error
-import specmp.feature.device.settings_ui.generated.resources.settings_write_title_progress
 
 /** Описание настройки или раздела (по ⓘ). */
 @Composable
@@ -54,7 +54,9 @@ internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
             )
         },
         text = { CmpText(text = node.description.orEmpty()) },
-        confirmButton = { CmpTextButton(text = stringResource(Res.string.settings_common_btn_ok), onClick = onDismiss) }
+        confirmButton = {
+            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_ok), onClick = onDismiss)
+        }
     )
 }
 
@@ -63,8 +65,10 @@ internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
 internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { DialogTitle(text = stringResource(Res.string.settings_exit_title, changed), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(Res.string.settings_exit_msg)) },
+        title = {
+            DialogTitle(text = stringResource(Strings.string.settings_exit_title, changed), onClose = onDismiss)
+        },
+        text = { CmpText(text = stringResource(Strings.string.settings_exit_msg)) },
         confirmButton = {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth(),
@@ -72,16 +76,16 @@ internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 CmpButton(
-                    text = stringResource(Res.string.settings_exit_btn_write),
+                    text = stringResource(Strings.string.settings_exit_btn_write),
                     onClick = onWrite,
                     modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_WRITE)
                 )
                 CmpOutlinedButton(
-                    text = stringResource(Res.string.settings_exit_btn_discard),
+                    text = stringResource(Strings.string.settings_exit_btn_discard),
                     onClick = onDiscard,
                     modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD)
                 )
-                CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+                CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
             }
         }
     )
@@ -92,11 +96,11 @@ internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit
 internal fun WriteProgressDialog() {
     CmpDialog(
         onDismissRequest = {},
-        title = { CmpText(text = stringResource(Res.string.settings_write_title_progress)) },
+        title = { CmpText(text = stringResource(Strings.string.settings_write_title_progress)) },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                CmpText(text = stringResource(Res.string.settings_write_msg_progress))
+                CmpText(text = stringResource(Strings.string.settings_write_msg_progress))
             }
         },
         confirmButton = {}
@@ -107,11 +111,13 @@ internal fun WriteProgressDialog() {
 internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { DialogTitle(text = stringResource(Res.string.settings_write_title_error), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(Res.string.settings_write_msg_error, changed)) },
-        confirmButton = { CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = onRetry) },
+        title = { DialogTitle(text = stringResource(Strings.string.settings_write_title_error), onClose = onDismiss) },
+        text = { CmpText(text = stringResource(Strings.string.settings_write_msg_error, changed)) },
+        confirmButton = {
+            CmpButton(text = stringResource(Strings.string.settings_common_btn_retry), onClick = onRetry)
+        },
         dismissButton = {
-            CmpTextButton(text = stringResource(Res.string.settings_common_btn_close), onClick = onDismiss)
+            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
         }
     )
 }
@@ -121,25 +127,27 @@ internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -
 internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { DialogTitle(text = stringResource(Res.string.settings_reset_title_confirm), onClose = onDismiss) },
+        title = {
+            DialogTitle(text = stringResource(Strings.string.settings_reset_title_confirm), onClose = onDismiss)
+        },
         text = {
             CmpText(
                 text = if (changed > 0) {
-                    stringResource(Res.string.settings_reset_msg_confirm_changes, changed)
+                    stringResource(Strings.string.settings_reset_msg_confirm_changes, changed)
                 } else {
-                    stringResource(Res.string.settings_reset_msg_confirm)
+                    stringResource(Strings.string.settings_reset_msg_confirm)
                 }
             )
         },
         confirmButton = {
             CmpButton(
-                text = stringResource(Res.string.settings_reset_btn_confirm),
+                text = stringResource(Strings.string.settings_reset_btn_confirm),
                 onClick = onConfirm,
                 modifier = Modifier.testTag(SettingsTestTags.RESET_CONFIRM)
             )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
         }
     )
 }
@@ -149,11 +157,11 @@ internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: 
 internal fun ResetProgressDialog() {
     CmpDialog(
         onDismissRequest = {},
-        title = { CmpText(text = stringResource(Res.string.settings_reset_title_progress)) },
+        title = { CmpText(text = stringResource(Strings.string.settings_reset_title_progress)) },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 CmpLinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                CmpText(text = stringResource(Res.string.settings_reset_msg_progress))
+                CmpText(text = stringResource(Strings.string.settings_reset_msg_progress))
             }
         },
         confirmButton = {}
@@ -164,11 +172,13 @@ internal fun ResetProgressDialog() {
 internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { DialogTitle(text = stringResource(Res.string.settings_reset_title_error), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(Res.string.settings_reset_msg_error)) },
-        confirmButton = { CmpButton(text = stringResource(Res.string.settings_common_btn_retry), onClick = onRetry) },
+        title = { DialogTitle(text = stringResource(Strings.string.settings_reset_title_error), onClose = onDismiss) },
+        text = { CmpText(text = stringResource(Strings.string.settings_reset_msg_error)) },
+        confirmButton = {
+            CmpButton(text = stringResource(Strings.string.settings_common_btn_retry), onClick = onRetry)
+        },
         dismissButton = {
-            CmpTextButton(text = stringResource(Res.string.settings_common_btn_close), onClick = onDismiss)
+            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
         }
     )
 }
@@ -178,17 +188,17 @@ internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
 internal fun SingleCanFirmwareDialog(canCode: String, onUpdate: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
         onDismissRequest = onDismiss,
-        title = { DialogTitle(text = stringResource(Res.string.settings_can_single_title), onClose = onDismiss) },
-        text = { CmpText(text = stringResource(Res.string.settings_can_single_msg, canCode)) },
+        title = { DialogTitle(text = stringResource(Strings.string.settings_can_title_single), onClose = onDismiss) },
+        text = { CmpText(text = stringResource(Strings.string.settings_can_msg_single, canCode)) },
         confirmButton = {
             CmpButton(
-                text = stringResource(Res.string.settings_can_single_btn_update),
+                text = stringResource(Strings.string.settings_can_btn_single_update),
                 onClick = onUpdate,
                 modifier = Modifier.testTag(SettingsTestTags.CAN_SINGLE_UPDATE)
             )
         },
         dismissButton = {
-            CmpTextButton(text = stringResource(Res.string.settings_common_btn_cancel), onClick = onDismiss)
+            CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
         }
     )
 }

@@ -31,6 +31,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
             // Логический модуль устройства: сессия, состояние связи, блок
@@ -62,7 +63,7 @@ kotlin {
     }
 }
 
-// Строковые ресурсы фичи (см. docs/localization.md)
+// Ресурсы фичи — только картинки (drawable); строки — в core/localization (docs/localization.md)
 compose.resources {
     publicResClass = false
     generateResClass = always

@@ -22,6 +22,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_attach_file
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_attach_photo
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_send
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_label_message_hint
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -33,11 +38,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_attach_file
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_attach_photo
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_send
-import specmp.feature.support_chat.generated.resources.supportchat_chat_label_message_hint
 
 @Composable
 internal fun SupportChatComposer(
@@ -78,14 +78,14 @@ internal fun SupportChatComposer(
             CmpIconButton(
                 onClick = onAttachFile,
                 icon = CmpIcons.AttachFile,
-                contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_file),
+                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_attach_file),
                 enabled = enabled
             )
 
             CmpIconButton(
                 onClick = onAttachPhoto,
                 icon = CmpIcons.Image,
-                contentDescription = stringResource(Res.string.supportchat_chat_a11y_attach_photo),
+                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_attach_photo),
                 enabled = enabled
             )
 
@@ -106,7 +106,7 @@ internal fun SupportChatComposer(
                             false
                         }
                     },
-                placeholder = stringResource(Res.string.supportchat_chat_label_message_hint),
+                placeholder = stringResource(Strings.string.supportchat_chat_label_message_hint),
                 enabled = enabled,
                 singleLine = false,
                 maxLines = 4,
@@ -170,7 +170,7 @@ private fun SendButton(onClick: () -> Unit, enabled: Boolean, colors: CmpThemeCo
         CmpBox(contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = CmpIcons.Send,
-                contentDescription = stringResource(Res.string.supportchat_chat_a11y_send)
+                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_send)
             )
         }
     }

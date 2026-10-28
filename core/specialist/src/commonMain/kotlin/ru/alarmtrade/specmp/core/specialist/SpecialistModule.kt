@@ -1,7 +1,5 @@
 package ru.alarmtrade.specmp.core.specialist
 
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.common.core.configuration.CommonConfigurator
 import ru.alarmtrade.common.core.configuration.NetworkMonitor as SdkNetworkMonitor
@@ -12,14 +10,9 @@ import ru.alarmtrade.specialist.network.NetworkLogLevel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
-import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
-import ru.alarmtrade.specmp.core.specialist.account.SpecialistAccountRepository
 
+/** [SpecialistAppVersionProvider] регистрирует composition root (`App(appVersion)`): версию знает платформа. */
 val specialistModule = module {
-    single<SpecialistAppVersionProvider> {
-        SpecialistAppVersionProvider { CurrentSpecialistAppVersion }
-    }
-
     single {
         val dispatchers: AppDispatchers = get()
         val appVersionProvider: SpecialistAppVersionProvider = get()
@@ -73,7 +66,6 @@ val specialistModule = module {
     single { get<SpecialistApp>().configurationInteractor }
     // «Мои конфигурации» настроек в хранилище приложения (feature/configurator).
     single { get<SpecialistApp>().localConfigurationInteractor }
-    singleOf(::SpecialistAccountRepository) bind AccountRepository::class
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }

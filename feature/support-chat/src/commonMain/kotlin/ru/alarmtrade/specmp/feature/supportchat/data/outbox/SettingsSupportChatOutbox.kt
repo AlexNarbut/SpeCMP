@@ -4,6 +4,7 @@ import com.russhwolf.settings.Settings
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
@@ -88,6 +89,7 @@ class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOut
 }
 
 @Serializable
+@SerialName("support-chat.SupportChatOutboxEntry")
 internal data class SupportChatOutboxEntry(
     val clientId: String,
     val timeMillis: Long,
@@ -97,6 +99,7 @@ internal data class SupportChatOutboxEntry(
 ) {
 
     @Serializable
+    @SerialName("support-chat.SupportChatOutboxEntry.Attachment")
     data class Attachment(
         val id: String,
         val name: String,
@@ -107,10 +110,12 @@ internal data class SupportChatOutboxEntry(
     )
 
     @Serializable
+    @SerialName("support-chat.SupportChatOutboxEntry.Kind")
     enum class Kind { Image, Document }
 
     // Sent — ушло в сокет, эха нет; восстанавливается как Pending.
     @Serializable
+    @SerialName("support-chat.SupportChatOutboxEntry.Status")
     enum class Status { Pending, Failed, Sent }
 }
 

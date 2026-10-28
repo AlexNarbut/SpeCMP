@@ -16,6 +16,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_bean
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can1
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can1_fd
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can2
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can2_fd
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can3
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can3_fd
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can4
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can4_fd
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can_fd1_or_fd3
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_can_fd2_or_fd4
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_imo_key1
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_imo_key1_key2
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_imo_key2
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_lin
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_lin_in_out
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_bus_label_unknown
 import ru.alarmtrade.specmp.core.ui.theme.CmpDomainColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -24,24 +42,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.BusFamily
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBus
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_bean
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can1
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can1_fd
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can2
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can2_fd
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can3
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can3_fd
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can4
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can4_fd
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can_fd1_or_fd3
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_can_fd2_or_fd4
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_imo_key1
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_imo_key1_key2
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_imo_key2
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_lin
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_lin_in_out
-import specmp.feature.vehicle_ui.generated.resources.vehicle_bus_label_unknown
 
 private const val TINT_ALPHA = 0.14f
 
@@ -91,21 +91,21 @@ internal fun busColor(family: BusFamily, colors: CmpDomainColors): Color = when 
 
 @Suppress("CyclomaticComplexMethod") // плоская таблица подписей
 internal fun busLabel(bus: CarBus): StringResource = when (bus) {
-    CarBus.CAN1 -> Res.string.vehicle_bus_label_can1
-    CarBus.CAN2 -> Res.string.vehicle_bus_label_can2
-    CarBus.CAN3 -> Res.string.vehicle_bus_label_can3
-    CarBus.CAN4 -> Res.string.vehicle_bus_label_can4
-    CarBus.CAN1_FD -> Res.string.vehicle_bus_label_can1_fd
-    CarBus.CAN2_FD -> Res.string.vehicle_bus_label_can2_fd
-    CarBus.CAN3_FD -> Res.string.vehicle_bus_label_can3_fd
-    CarBus.CAN4_FD -> Res.string.vehicle_bus_label_can4_fd
-    CarBus.CAN_FD1_OR_CAN_FD3 -> Res.string.vehicle_bus_label_can_fd1_or_fd3
-    CarBus.CAN_FD2_OR_CAN_FD4 -> Res.string.vehicle_bus_label_can_fd2_or_fd4
-    CarBus.LIN -> Res.string.vehicle_bus_label_lin
-    CarBus.LIN_IN_OUT -> Res.string.vehicle_bus_label_lin_in_out
-    CarBus.BEAN -> Res.string.vehicle_bus_label_bean
-    CarBus.IMO_KEY1 -> Res.string.vehicle_bus_label_imo_key1
-    CarBus.IMO_KEY2 -> Res.string.vehicle_bus_label_imo_key2
-    CarBus.IMO_KEY1_PLUS_IMO_KEY2 -> Res.string.vehicle_bus_label_imo_key1_key2
-    CarBus.UNKNOWN -> Res.string.vehicle_bus_label_unknown
+    CarBus.CAN1 -> Strings.string.vehicle_bus_label_can1
+    CarBus.CAN2 -> Strings.string.vehicle_bus_label_can2
+    CarBus.CAN3 -> Strings.string.vehicle_bus_label_can3
+    CarBus.CAN4 -> Strings.string.vehicle_bus_label_can4
+    CarBus.CAN1_FD -> Strings.string.vehicle_bus_label_can1_fd
+    CarBus.CAN2_FD -> Strings.string.vehicle_bus_label_can2_fd
+    CarBus.CAN3_FD -> Strings.string.vehicle_bus_label_can3_fd
+    CarBus.CAN4_FD -> Strings.string.vehicle_bus_label_can4_fd
+    CarBus.CAN_FD1_OR_CAN_FD3 -> Strings.string.vehicle_bus_label_can_fd1_or_fd3
+    CarBus.CAN_FD2_OR_CAN_FD4 -> Strings.string.vehicle_bus_label_can_fd2_or_fd4
+    CarBus.LIN -> Strings.string.vehicle_bus_label_lin
+    CarBus.LIN_IN_OUT -> Strings.string.vehicle_bus_label_lin_in_out
+    CarBus.BEAN -> Strings.string.vehicle_bus_label_bean
+    CarBus.IMO_KEY1 -> Strings.string.vehicle_bus_label_imo_key1
+    CarBus.IMO_KEY2 -> Strings.string.vehicle_bus_label_imo_key2
+    CarBus.IMO_KEY1_PLUS_IMO_KEY2 -> Strings.string.vehicle_bus_label_imo_key1_key2
+    CarBus.UNKNOWN -> Strings.string.vehicle_bus_label_unknown
 }

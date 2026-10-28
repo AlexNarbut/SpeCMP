@@ -6,8 +6,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
+import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpValidationError
@@ -42,11 +43,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
     }
 
     fun onInstallerConfirmedChanged(value: Boolean) {
-        _state.update { it.copy(isInstallerConfirmed = value, registrationError = null) }
-    }
-
-    fun reset() {
-        _state.update { RegistrationScreenState() }
+        _state.update { it.copy(isInstallerConfirmed = value, registrationState = it.registrationState.dismissError()) }
     }
 
     fun submit() {
@@ -57,7 +54,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
             _state.update {
                 it.copy(
                     fieldErrors = fieldErrors.mapTo(mutableSetOf()) { error -> error.toFieldError() },
-                    registrationError = null
+                    registrationState = it.registrationState.dismissError()
                 )
             }
             return
@@ -66,27 +63,12 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         safeLaunch {
             _state.update {
                 it.copy(
-                    registrationState = LCEState.Loading(),
-                    registrationError = null
+                    registrationState = LCEState.Loading
                 )
             }
 
-            val response = withContext(dispatchers.io) {
-                repository.signUp(credentials)
-            }
-
-            when (response) {
-                is Response.Success -> _state.update {
-                    it.copy(registrationState = LCEState.Content(Unit))
-                }
-
-                is Response.Error -> _state.update {
-                    it.copy(
-                        registrationState = LCEState.None(),
-                        registrationError = AuthFormError.RequestFailed
-                    )
-                }
-            }
+            val response = withContext(dispatchers.io) { repository.signUp(credentials) }
+            _state.update { it.copy(registrationState = response.asLCEState(AuthFormError::from)) }
         }
     }
 
@@ -94,7 +76,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         field: RegistrationFieldError,
         edit: RegistrationScreenState.() -> RegistrationScreenState
     ): RegistrationScreenState = edit().copy(
-        registrationError = null,
+        registrationState = registrationState.dismissError(),
         fieldErrors = fieldErrors - field
     )
 

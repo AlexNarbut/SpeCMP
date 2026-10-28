@@ -22,6 +22,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_schedule_label_evening
+import ru.alarmtrade.specmp.core.localization.resources.settings_schedule_label_morning
+import ru.alarmtrade.specmp.core.localization.resources.settings_siren_label_melody
+import ru.alarmtrade.specmp.core.localization.resources.settings_siren_label_number
+import ru.alarmtrade.specmp.core.localization.resources.settings_siren_label_tone
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSegmentedButton
@@ -38,12 +44,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenTone
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenToneType
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_schedule_label_evening
-import specmp.feature.device.settings_ui.generated.resources.settings_schedule_label_morning
-import specmp.feature.device.settings_ui.generated.resources.settings_siren_label_melody
-import specmp.feature.device.settings_ui.generated.resources.settings_siren_label_number
-import specmp.feature.device.settings_ui.generated.resources.settings_siren_label_tone
 
 private const val DISABLED_ALPHA = 0.38f
 private val TimeChipFontSize = 20.sp
@@ -57,7 +57,7 @@ internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedu
     var openSlot by rememberSaveable { mutableStateOf<Int?>(null) }
     CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         ScheduleSlot(
-            label = stringResource(Res.string.settings_schedule_label_morning),
+            label = stringResource(Strings.string.settings_schedule_label_morning),
             enabled = value.isMorningStartEnabled,
             time = value.morningStartTime,
             open = openSlot == MORNING,
@@ -66,7 +66,7 @@ internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedu
             onTimeChange = { onChange(value.copy(morningStartTime = it)) }
         )
         ScheduleSlot(
-            label = stringResource(Res.string.settings_schedule_label_evening),
+            label = stringResource(Strings.string.settings_schedule_label_evening),
             enabled = value.isEveningStartEnabled,
             time = value.eveningStartTime,
             open = openSlot == EVENING,
@@ -142,8 +142,8 @@ internal fun SirenEditor(setting: SirenSetting, value: SirenTone, onChange: (Sir
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CmpSegmentedButton(
             options = listOf(
-                stringResource(Res.string.settings_siren_label_tone),
-                stringResource(Res.string.settings_siren_label_melody)
+                stringResource(Strings.string.settings_siren_label_tone),
+                stringResource(Strings.string.settings_siren_label_melody)
             ),
             selectedIndex = if (value.type == SirenToneType.TONE) 0 else 1,
             onSelect = { index ->
@@ -153,7 +153,7 @@ internal fun SirenEditor(setting: SirenSetting, value: SirenTone, onChange: (Sir
             modifier = Modifier.fillMaxWidth()
         )
         CmpText(
-            text = stringResource(Res.string.settings_siren_label_number),
+            text = stringResource(Strings.string.settings_siren_label_number),
             style = CmpTextStyle.Body,
             color = cmpThemeColors().onSurfaceVariant
         )

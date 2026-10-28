@@ -8,8 +8,10 @@ import ru.alarmtrade.specialist.interactors.auth.requests.ResendActivationEmailR
 import ru.alarmtrade.specialist.interactors.auth.requests.ResetPasswordRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.SignUpRequest
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
@@ -30,37 +32,23 @@ class SpecialistLoginRepository(
                     if (response.exception is UserIsNotConfirmed) {
                         Response.Success(LoginResult.ActivationRequired)
                     } else {
-                        response.toProjectError()
+                        response.toResponse()
                     }
                 }
             }
         }
 
     override suspend fun signUp(credentials: SignUpCredentials): Response<Unit> =
-        when (val response = authInteractor.signUpUseCase.execute(credentials.toSignUpRequest())) {
-            is SpecialistResponse.Success -> Response.Success(Unit)
-            is SpecialistResponse.Error -> response.toProjectError()
-        }
+        authInteractor.signUpUseCase.execute(credentials.toSignUpRequest()).toResponse().map { }
 
-    override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> = when (
-        val response = authInteractor.resetPasswordUseCase.execute(
-            credentials.toResetPasswordRequest()
-        )
-    ) {
-        is SpecialistResponse.Success -> Response.Success(Unit)
-        is SpecialistResponse.Error -> response.toProjectError()
-    }
+    override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> =
+        authInteractor.resetPasswordUseCase.execute(credentials.toResetPasswordRequest()).toResponse().map { }
 
     override suspend fun resendActivationEmail(credentials: LoginCredentials): Response<Unit> =
         saveDeviceInformation().mapIfSuccess {
-            when (
-                val response = authInteractor.resendActivationEmailUseCase.execute(
-                    credentials.toResendActivationEmailRequest()
-                )
-            ) {
-                is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> response.toProjectError()
-            }
+            authInteractor.resendActivationEmailUseCase.execute(credentials.toResendActivationEmailRequest())
+                .toResponse()
+                .map { }
         }
 
     private fun LoginCredentials.toLoginRequest(): LoginRequest = LoginRequest(
@@ -86,9 +74,4 @@ class SpecialistLoginRepository(
         )
 
     private suspend fun saveDeviceInformation(): Response<Unit> = specialistInitializer.syncClientInfo()
-
-    private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> = Response.Error(
-        exception = exception,
-        message = message ?: exception.message
-    )
 }

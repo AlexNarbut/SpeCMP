@@ -11,20 +11,21 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -39,15 +40,16 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 
 class VehicleSelectViewModelTest {
 
-    private val dispatcher = StandardTestDispatcher()
+    // Unconfined: state — stateIn поверх _state, значение доходит сразу после интента (без runCurrent в каждом шаге).
+    private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeCatalog()
     private val recent = FakeRecent()
-    private val network = FakeNetwork()
     private val viewModels = mutableListOf<VehicleSelectViewModel>()
 
     @BeforeTest
@@ -75,11 +77,12 @@ class VehicleSelectViewModelTest {
             request = VehicleSelectRequest(mode, catalog, device, firmwareCanCode, warnOnCanMismatch),
             repository = repository,
             recentStore = recent,
-            networkMonitor = network,
             dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        // Как экран: state стартует работу по подписке (stateIn).
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         advanceUntilIdle()
         return vm to effects
     }
@@ -96,7 +99,7 @@ class VehicleSelectViewModelTest {
         advanceUntilIdle()
 
         assertEquals(VehicleDeviceFilter.Type(VehicleDeviceType.MICROBOT), repository.brandQueries.last().device)
-        assertEquals(FakeCatalog.brands, vm.s.brands.valueOrNull())
+        assertEquals(FakeCatalog.brands, vm.s.brands.content)
     }
 
     @Test
@@ -104,13 +107,13 @@ class VehicleSelectViewModelTest {
         val (vm, _) = viewModel()
         vm.onBrandPick(FakeCatalog.toyota)
         advanceUntilIdle()
-        assertEquals(FakeCatalog.models, vm.s.models.valueOrNull())
+        assertEquals(FakeCatalog.models, vm.s.models.content)
 
         vm.onModelPick(FakeCatalog.corolla, wide = false)
         advanceUntilIdle()
 
         assertEquals(FakeCatalog.corollaTrim.id, vm.s.selection.carId)
-        assertIs<Load.Ready<CarCard>>(vm.s.card)
+        assertIs<LCEState.Content<CarCard, CatalogError>>(vm.s.card)
         assertEquals(CardTab.FEATURES, vm.s.cardUi.tab)
     }
 
@@ -121,7 +124,7 @@ class VehicleSelectViewModelTest {
         advanceUntilIdle()
         vm.onModelPick(FakeCatalog.camry, wide = false)
         advanceUntilIdle()
-        assertEquals(FakeCatalog.camryTrims, vm.s.trims.valueOrNull())
+        assertEquals(FakeCatalog.camryTrims, vm.s.trims.content)
         assertNull(vm.s.selection.carId)
 
         vm.onTrimOpen(32)
@@ -171,7 +174,7 @@ class VehicleSelectViewModelTest {
         val (vm, _) = viewModel()
         vm.onBrandPick(FakeCatalog.toyota)
         advanceUntilIdle()
-        assertEquals(Load.Failed(offline = false), vm.s.models)
+        assertEquals(LCEState.Error(CatalogError.LoadFailed), vm.s.models)
         assertEquals(FakeCatalog.toyota, vm.s.selection.brand)
 
         repository.failModels = false
@@ -179,16 +182,16 @@ class VehicleSelectViewModelTest {
         vm.onRetry(CatalogLevel.MODELS)
         advanceUntilIdle()
 
-        assertEquals(FakeCatalog.models, vm.s.models.valueOrNull())
+        assertEquals(FakeCatalog.models, vm.s.models.content)
         assertEquals(brandLoads, repository.brandQueries.size)
     }
 
     @Test
-    fun `failure without network is offline`() = test {
+    fun `connection failure is kept as a network error`() = test {
+        repository.failure = AppException(ApiError.NoConnection, IllegalStateException("offline"))
         repository.failBrands = true
-        network.available.value = false
         val (vm, _) = viewModel()
-        assertEquals(Load.Failed(offline = true), vm.s.brands)
+        assertEquals(LCEState.Error(CatalogError.Common(ApiError.NoConnection)), vm.s.brands)
     }
 
     @Test
@@ -220,7 +223,7 @@ class VehicleSelectViewModelTest {
         advanceUntilIdle()
 
         assertEquals(ComboSearch(FakeCatalog.toyota, "cam"), vm.s.combo)
-        assertEquals(FakeCatalog.models, vm.s.comboModels.valueOrNull())
+        assertEquals(FakeCatalog.models, vm.s.comboModels.content)
 
         vm.onModelPick(FakeCatalog.camry, wide = false)
         advanceUntilIdle()
@@ -254,12 +257,12 @@ class VehicleSelectViewModelTest {
 
         vm.onBack(VehicleLayout.COMPACT)
         assertNull(vm.s.selection.carId)
-        assertEquals(listOf(FakeCatalog.camrySummary), vm.s.canResults.valueOrNull())
+        assertEquals(listOf(FakeCatalog.camrySummary), vm.s.canResults.content)
 
         vm.onCanCodeChange("1032")
         advanceUntilIdle()
         assertNull(vm.s.selection.carId)
-        assertEquals(2, vm.s.canResults.valueOrNull()?.size)
+        assertEquals(2, vm.s.canResults.content?.size)
     }
 
     @Test
@@ -372,6 +375,7 @@ private class FakeCatalog : VehicleCatalogRepository {
     val canQueries = mutableListOf<String>()
     var failBrands = false
     var failModels = false
+    var failure: Throwable = IllegalStateException("server")
 
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> {
         brandQueries += query
@@ -406,7 +410,7 @@ private class FakeCatalog : VehicleCatalogRepository {
 
     private fun summaryOf(carId: Int) = camrySummary.copy(id = carId)
 
-    private fun error() = Response.Error(IllegalStateException("server"))
+    private fun error() = Response.Error(failure)
 
     companion object {
         val toyota = CarBrand(1, "Toyota", null)
@@ -440,16 +444,13 @@ private class FakeRecent : RecentVehiclesStore {
 
     override fun recent(catalog: VehicleCatalog): List<CarSummary> = items[catalog].orEmpty()
 
-    override fun push(catalog: VehicleCatalog, car: CarSummary) {
+    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): List<CarSummary> {
         items[catalog] = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
+        return recent(catalog)
     }
 
-    override fun remove(catalog: VehicleCatalog, carId: Int) {
+    override suspend fun remove(catalog: VehicleCatalog, carId: Int): List<CarSummary> {
         items[catalog] = recent(catalog).filter { it.id != carId }
+        return recent(catalog)
     }
-}
-
-private class FakeNetwork : NetworkMonitor {
-    val available = MutableStateFlow(true)
-    override val isAvailable: StateFlow<Boolean> = available
 }

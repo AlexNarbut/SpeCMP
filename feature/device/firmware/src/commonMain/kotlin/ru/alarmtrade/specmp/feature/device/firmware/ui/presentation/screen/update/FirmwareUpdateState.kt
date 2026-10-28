@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.upda
 
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 
 /** Фазы экрана «Обновление прошивки» (блок в загрузчике). Часть выводится из связи, а не из действий пользователя. */
@@ -71,7 +72,7 @@ data class FirmwareUpdateState(
     val channel: FirmwareChannel = FirmwareChannel.RELEASE,
     val confirm: ConfirmUi? = null,
     /** Последняя версия с сервера не получена (баннер на выборе источника). */
-    val sourceError: Boolean = false,
+    val sourceError: FirmwareError? = null,
     val exitDialog: Boolean = false,
     /** Блок сейчас в загрузчике (на экране успеха это значит «после прошивки блок остался в загрузчике»). */
     val inBoot: Boolean = false,

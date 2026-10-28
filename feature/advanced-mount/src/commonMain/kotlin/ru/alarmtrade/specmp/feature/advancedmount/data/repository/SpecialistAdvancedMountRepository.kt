@@ -20,6 +20,7 @@ import ru.alarmtrade.specialist.interactors.user.UserInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.onError
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 
@@ -62,11 +63,6 @@ class SpecialistAdvancedMountRepository(
 
     override suspend fun isProductInfoEnabled(): Response<Boolean> =
         userInteractor.getUserAppFeaturesUseCase.execute().toResponse().map { UserAppFeature.PRODUCT_SEARCH in it }
-
-    private fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
-        is SpecialistResponse.Success -> Response.Success(value)
-        is SpecialistResponse.Error -> Response.Error(exception, message)
-    }
 
     private companion object {
         const val UNREAD_POLL_INTERVAL_MILLIS = 60_000L

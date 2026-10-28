@@ -69,11 +69,13 @@ Nav3 back stack используется **внутри каждой зоны**:
 
 ## Объявление маршрутов
 
-Каждый маршрут — это `@Serializable data object` или `data class`, реализующий `NavKey`.
-Для multiplatform требуется `SavedStateConfiguration` с явной регистрацией типов.
+Каждый маршрут — это `@Serializable data object` или `data class`, реализующий `NavKey`, с явным
+`@SerialName("<модуль>.<Маршрут>")` (дискриминатор в сохранённом back stack; правило — `docs/patterns.md`,
+«Сериализация»). Для multiplatform требуется `SavedStateConfiguration` с явной регистрацией типов.
 
 ```kotlin
 @Serializable
+@SerialName("main.MainRoute")
 data object MainRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {
@@ -152,6 +154,13 @@ NavDisplay(
 - При навигации **вперёд** (push нового ключа поверх) entry остаётся в стеке и его VM живёт
   по семантике Nav3 (при возврате состояние восстанавливается); сканирование/подписки при этом
   приостанавливаются сами, если state собран через `stateIn(WhileSubscribed)`.
+- **Граф, уходящий из композиции без pop, свои VM не очищает.** Декоратор держит хранилища записей в ближайшем
+  `LocalViewModelStoreOwner` (Activity): авторизованная зона после выхода из аккаунта просто покидает композицию, и
+  без отдельной границы следующий вход получил бы VM прежнего аккаунта. Граница — `ViewModelScope(name, scopeKey)`
+  (`core/ui/navigation`): VM поддерева живут, пока не сменится ключ; поворот экрана их сохраняет. `name` — отдельное
+  хранилище на зону (во время перехода видны обе, и общее хранилище очищало бы VM соседа). `AuthStateNavGraph`
+  оборачивает обе зоны — `ViewModelScope("auth.authed", session)` и `ViewModelScope("auth.no-auth", session)`, где
+  `session` растёт при каждой смене состояния авторизации: после выхода формы входа/регистрации снова пустые.
 
 ## Навигационные действия
 
@@ -169,8 +178,8 @@ onBack = { backStack.popSafe() }          // pop только если в сте
 onBack = { if (!backStack.popSafe()) onClose() } // на корне графа — выйти из графа
 ```
 
-Полный набор: `navigateSafe`, `navigateClearingTop`, `replaceCurrent`, `resetTo`,
-`popSafe()`, `popSafe(route, inclusive)`, `popSafe<R>(inclusive)`, свойство `currentRoute`.
+Полный набор: `navigateSafe`, `replaceCurrent`, `popSafe()`, свойство `currentRoute`. Новый хелпер
+добавляется под реальный вызов, «про запас» не держим.
 
 ## Настройка Gradle
 
@@ -193,7 +202,7 @@ commonMain.dependencies {
 
 ```kotlin
 // 1. Объявить маршрут
-@Serializable data object NewFeatureRoute : NavKey
+@Serializable @SerialName("new-feature.NewFeatureRoute") data object NewFeatureRoute : NavKey
 
 // 2. Зарегистрировать в navConfig
 subclass(NewFeatureRoute::class, NewFeatureRoute.serializer())

@@ -5,6 +5,19 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_format_decimal_separator
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_nc
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_no
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_empty
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_functions
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_off
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_on
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_minus
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_plus
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_schedule
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_siren_melody
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_siren_tone
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartScheduleSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
@@ -23,19 +36,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_common_decimal_separator
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_nc
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_no
-import specmp.feature.device.settings_ui.generated.resources.settings_value_empty
-import specmp.feature.device.settings_ui.generated.resources.settings_value_functions
-import specmp.feature.device.settings_ui.generated.resources.settings_value_off
-import specmp.feature.device.settings_ui.generated.resources.settings_value_on
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_minus
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_plus
-import specmp.feature.device.settings_ui.generated.resources.settings_value_schedule
-import specmp.feature.device.settings_ui.generated.resources.settings_value_siren_melody
-import specmp.feature.device.settings_ui.generated.resources.settings_value_siren_tone
 
 private const val MAX_DECIMALS = 3
 private const val TEN = 10.0
@@ -52,28 +52,28 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
     setting is SwitchSetting && value is SettingValue.Switch -> switchText(setting, value.enabled)
 
     setting is SwitchOutputSetting && value is SettingValue.SwitchOutput ->
-        stringResource(if (value.enabled) Res.string.settings_value_on else Res.string.settings_value_off)
+        stringResource(
+            if (value.enabled) Strings.string.settings_common_value_on else Strings.string.settings_common_value_off
+        )
 
     setting is OptionSetting && value is SettingValue.Option -> setting.options.getOrElse(value.index) { "" }
 
-    setting is IntegerSetting && value is SettingValue.Integer -> when (value.value) {
-        setting.range.first -> setting.minValueText ?: withUnits(value.value.toString(), setting.units)
-        setting.range.last -> setting.maxValueText ?: withUnits(value.value.toString(), setting.units)
-        else -> withUnits(value.value.toString(), setting.units)
-    }
+    setting is IntegerSetting && value is SettingValue.Integer ->
+        edgeText(value.value, setting.range.first, setting.range.last, setting.minValueText, setting.maxValueText)
+            ?: withUnits(value.value.toString(), setting.units)
 
     setting is DecimalSetting && value is SettingValue.Decimal -> decimalText(setting, value.value)
 
     setting is TextSetting && value is SettingValue.Text ->
-        value.value.ifEmpty { stringResource(Res.string.settings_value_empty) }
+        value.value.ifEmpty { stringResource(Strings.string.settings_common_value_empty) }
 
     setting is TimeSetting && value is SettingValue.Time -> value.value.text()
 
     setting is AutoStartScheduleSetting && value is SettingValue.AutoStart -> {
-        val empty = stringResource(Res.string.settings_value_empty)
+        val empty = stringResource(Strings.string.settings_common_value_empty)
         val schedule = value.value
         stringResource(
-            Res.string.settings_value_schedule,
+            Strings.string.settings_common_value_schedule,
             if (schedule.isMorningStartEnabled) schedule.morningStartTime.text() else empty,
             if (schedule.isEveningStartEnabled) schedule.eveningStartTime.text() else empty
         )
@@ -81,9 +81,9 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
 
     setting is SirenSetting && value is SettingValue.Siren -> stringResource(
         if (value.value.type == SirenToneType.TONE) {
-            Res.string.settings_value_siren_tone
+            Strings.string.settings_common_value_siren_tone
         } else {
-            Res.string.settings_value_siren_melody
+            Strings.string.settings_common_value_siren_melody
         },
         value.value.number
     )
@@ -92,16 +92,16 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
 
     setting is InputSetting && value is SettingValue.Input -> listOfNotNull(
         when (value.value.type) {
-            InputContactType.NORMALLY_OPEN -> stringResource(Res.string.settings_value_contact_no)
-            InputContactType.NORMALLY_CLOSED -> stringResource(Res.string.settings_value_contact_nc)
+            InputContactType.NORMALLY_OPEN -> stringResource(Strings.string.settings_common_value_contact_no)
+            InputContactType.NORMALLY_CLOSED -> stringResource(Strings.string.settings_common_value_contact_nc)
             InputContactType.UNDEFINED -> null
         },
-        stringResource(Res.string.settings_value_functions, value.value.logicsState.count { it })
+        stringResource(Strings.string.settings_common_value_functions, value.value.logicsState.count { it })
     ).joinToString(" · ")
 
     setting is OutputSetting && value is SettingValue.Output -> listOfNotNull(
         polarityText(value.value.polarity),
-        stringResource(Res.string.settings_value_functions, value.value.logicsState.count { it })
+        stringResource(Strings.string.settings_common_value_functions, value.value.logicsState.count { it })
     ).joinToString(" · ")
 
     else -> ""
@@ -109,31 +109,30 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
 
 @Composable
 private fun switchText(setting: SwitchSetting, enabled: Boolean): String = if (enabled) {
-    setting.onTitle ?: stringResource(Res.string.settings_value_on)
+    setting.onTitle ?: stringResource(Strings.string.settings_common_value_on)
 } else {
-    setting.offTitle ?: stringResource(Res.string.settings_value_off)
+    setting.offTitle ?: stringResource(Strings.string.settings_common_value_off)
 }
 
 @Composable
 private fun polarityText(polarity: Polarity): String? = when (polarity) {
-    Polarity.PLUS -> stringResource(Res.string.settings_value_polarity_plus)
-    Polarity.MINUS -> stringResource(Res.string.settings_value_polarity_minus)
+    Polarity.PLUS -> stringResource(Strings.string.settings_common_value_polarity_plus)
+    Polarity.MINUS -> stringResource(Strings.string.settings_common_value_polarity_minus)
     Polarity.UNDEFINED -> null
 }
 
 @Composable
-internal fun decimalText(setting: DecimalSetting, value: Float): String = when (value) {
-    setting.minValue -> setting.minValueText
-    setting.maxValue -> setting.maxValueText
-    else -> null
-} ?: withUnits(decimalNumber(setting, value), setting.units)
+internal fun decimalText(setting: DecimalSetting, value: Float): String =
+    edgeText(value, setting.minValue, setting.maxValue, setting.minValueText, setting.maxValueText)
+        ?: withUnits(decimalNumber(setting, value), setting.units)
 
 /** Число дробной настройки с количеством знаков по шагу и разделителем языка (без единиц). */
 @Composable
-internal fun decimalNumber(setting: DecimalSetting, value: Float): String =
-    formatDecimal(value, decimalsOf(setting.step), stringResource(Res.string.settings_common_decimal_separator))
-
-private fun withUnits(number: String, units: String?): String = if (units.isNullOrBlank()) number else "$number $units"
+internal fun decimalNumber(setting: DecimalSetting, value: Float): String = formatDecimal(
+    value,
+    decimalsOf(setting.step),
+    stringResource(Strings.string.settings_common_format_decimal_separator)
+)
 
 internal fun TimeOfDay.text(): String =
     "${hours.toString().padStart(TIME_DIGITS, '0')}:${minutes.toString().padStart(TIME_DIGITS, '0')}"

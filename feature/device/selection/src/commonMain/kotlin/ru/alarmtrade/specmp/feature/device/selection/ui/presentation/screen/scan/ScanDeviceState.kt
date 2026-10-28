@@ -5,6 +5,7 @@ import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.ScanError
 
 /** Шаг экрана поиска устройства (state machine). */
 sealed interface ScanStep {
@@ -34,9 +35,13 @@ data class ScanDeviceState(
     val requirements: List<DeviceAccessRequirement> = emptyList(),
     /** Транспорты, поддерживаемые платформой (для подсказок «как найти»). */
     val supportedTransports: Set<DeviceTransport> = emptySet(),
-    val devices: LCEState<List<DeviceUiItem>> = LCEState.None(),
+    val devices: LCEState<List<DeviceUiItem>, ScanError> = LCEState.None,
     /** Выбранное устройство в split-раскладке (master-detail). */
     val selectedId: String? = null,
     /** На стадии Scanning без найденных устройств прошло достаточно времени → показать «пусто». */
     val searchedLongEnough: Boolean = false
 )
+
+/** Строка деталей «подпись — значение»; [strong] — выделенное значение (режим сопряжения / загрузчика). */
+@Immutable
+internal data class DeviceInfoRow(val label: String, val value: String, val strong: Boolean = false)

@@ -12,9 +12,6 @@ interface FirmwareRepository {
     /** Модули блока с именем [deviceName]; [transport] определяет, какие из них приложение умеет обновлять. */
     suspend fun modules(deviceName: String, transport: ConnectionTransport): Response<List<FirmwareModule>>
 
-    /** Модуль по id (для Bluetooth-модуля в загрузчике, когда список блока недоступен). */
-    suspend fun moduleById(id: Long, transport: ConnectionTransport): Response<FirmwareModule>
-
     /** Последняя версия модуля в канале. */
     suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion>
 

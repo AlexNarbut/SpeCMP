@@ -15,8 +15,8 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
 
         applicationId = "ru.alarmtrade.specmp.androidApp"
-        versionCode = 240
-        versionName = "2.0.40"
+        versionCode = libs.versions.app.versionCode.get().toInt()
+        versionName = libs.versions.app.versionName.get()
     }
 
     compileOptions {

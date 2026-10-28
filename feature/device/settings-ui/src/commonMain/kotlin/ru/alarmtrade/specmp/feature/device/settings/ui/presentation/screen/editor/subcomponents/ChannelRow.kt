@@ -16,6 +16,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_not_assigned
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_locked
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_toggle_contact
+import ru.alarmtrade.specmp.core.localization.resources.settings_io_a11y_toggle_polarity
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -27,7 +32,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputValue
@@ -37,17 +41,14 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.channelOrNull
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.isEnabled
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ChangedChip
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ContactBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.PolarityBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_io_a11y_locked
-import specmp.feature.device.settings_ui.generated.resources.settings_io_a11y_toggle_contact
-import specmp.feature.device.settings_ui.generated.resources.settings_io_a11y_toggle_polarity
-import specmp.feature.device.settings_ui.generated.resources.settings_value_not_assigned
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitle
 
 private const val CHANGED_TINT_ALPHA = 0.5f
 private const val FUNCTIONS_MAX_LINES = 2
@@ -71,7 +72,7 @@ internal fun ChannelRow(
     modifier: Modifier = Modifier
 ) {
     val colors = cmpThemeColors()
-    val channel = channelOf(setting) ?: return
+    val channel = setting.channelOrNull ?: return
     val toggle = (setting as? SwitchOutputSetting)?.let { SettingValue.SwitchOutput(!it.value.enabled) }
     // Переключаемый выход — переключается всей строкой; вход/выход — открывает окно функций.
     val onClick: () -> Unit = if (toggle != null) {
@@ -100,7 +101,7 @@ internal fun ChannelRow(
                     CmpText(text = setting.number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
                 }
                 CmpText(
-                    text = titleOf(setting.name, channel),
+                    text = settingTitle(setting.name, channel),
                     style = CmpTextStyle.BodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.onSurface
@@ -111,7 +112,7 @@ internal fun ChannelRow(
             }
             functionsOf(setting)?.let { functions ->
                 CmpText(
-                    text = functions.ifEmpty { stringResource(Res.string.settings_value_not_assigned) },
+                    text = functions.ifEmpty { stringResource(Strings.string.settings_common_value_not_assigned) },
                     style = CmpTextStyle.BodyLarge,
                     color = if (functions.isEmpty()) colors.onSurfaceVariant else colors.primary,
                     maxLines = FUNCTIONS_MAX_LINES,
@@ -158,7 +159,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             CmpIconButton(
                 onClick = { actions.onValueChange(setting.id, SettingValue.Input(setting.value.value.toggled())) },
                 icon = CmpIcons.SwapHoriz,
-                contentDescription = stringResource(Res.string.settings_io_a11y_toggle_contact),
+                contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_contact),
                 tint = colors.primary,
                 modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
             )
@@ -168,7 +169,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             CmpIconButton(
                 onClick = { actions.onValueChange(setting.id, SettingValue.Output(setting.value.value.toggled())) },
                 icon = CmpIcons.SwapHoriz,
-                contentDescription = stringResource(Res.string.settings_io_a11y_toggle_polarity),
+                contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_polarity),
                 tint = colors.primary,
                 modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
             )
@@ -176,7 +177,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
             CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                 CmpIcon(
                     icon = CmpIcons.Lock,
-                    contentDescription = stringResource(Res.string.settings_io_a11y_locked),
+                    contentDescription = stringResource(Strings.string.settings_io_a11y_locked),
                     tint = colors.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
@@ -197,20 +198,6 @@ internal val OutputSetting.shownPolarity: Polarity
         value.value.polarity == Polarity.UNDEFINED -> defaultPolarity
         else -> value.value.polarity
     }
-
-private fun channelOf(setting: Setting): Channel? = when (setting) {
-    is InputSetting -> setting.channel
-    is OutputSetting -> setting.channel
-    is SwitchOutputSetting -> setting.channel
-    else -> null
-}
-
-/** Имя настройки и имя канала, если они различаются («CH1 · Центральный замок»). */
-private fun titleOf(name: String, channel: Channel): String = when {
-    channel.name.isBlank() || channel.name == name -> name
-    name.isBlank() -> channel.name
-    else -> "${channel.name} · $name"
-}
 
 /**
  * Назначенные функции через запятую; `""` — не назначено. У входа/выхода — по текущему значению (меняется в окне

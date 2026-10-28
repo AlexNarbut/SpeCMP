@@ -9,13 +9,14 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import ru.alarmtrade.specmp.core.common.ApiError
+import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatNotConnectedException
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
@@ -133,8 +134,6 @@ class FakeSupportChatRepository : SupportChatRepository {
         return markMessagesAsReadResult
     }
 
-    override suspend fun release() = Unit
-
     /** Событие внутри активной сессии. */
     fun emitEvent(event: SupportChatEvent) {
         val emitted = events.tryEmit(event)
@@ -153,7 +152,7 @@ class FakeSupportChatRepository : SupportChatRepository {
         disconnectDuringNextSend = false
         disconnect()
         yield()
-        return Response.Error(SupportChatNotConnectedException())
+        return Response.Error(AppException(ApiError.NoConnection, IllegalStateException("disconnected")))
     }
 
     private suspend fun trackOutgoingCall(block: () -> Response<Unit>): Response<Unit> {

@@ -24,6 +24,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_channel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_label_channel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_alpha
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_alpha_short
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_beta
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_beta_short
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_release
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_channel_release_short
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -34,15 +43,6 @@ import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_check_chip_channel
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_alpha
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_alpha_short
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_beta
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_beta_short
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_release
-import specmp.feature.device.firmware.generated.resources.firmware_common_channel_release_short
-import specmp.feature.device.firmware.generated.resources.firmware_common_label_channel
 
 internal const val CHANNEL_CHIP_TAG = "firmware_channel_chip"
 
@@ -50,15 +50,15 @@ internal const val CHANNEL_CHIP_TAG = "firmware_channel_chip"
 internal fun channelTag(channel: FirmwareChannel): String = "firmware_channel_${channel.name.lowercase()}"
 
 private fun FirmwareChannel.shortLabel(): StringResource = when (this) {
-    FirmwareChannel.RELEASE -> Res.string.firmware_common_channel_release_short
-    FirmwareChannel.BETA -> Res.string.firmware_common_channel_beta_short
-    FirmwareChannel.ALPHA -> Res.string.firmware_common_channel_alpha_short
+    FirmwareChannel.RELEASE -> Strings.string.firmware_common_value_channel_release_short
+    FirmwareChannel.BETA -> Strings.string.firmware_common_value_channel_beta_short
+    FirmwareChannel.ALPHA -> Strings.string.firmware_common_value_channel_alpha_short
 }
 
 private fun FirmwareChannel.longLabel(): StringResource = when (this) {
-    FirmwareChannel.RELEASE -> Res.string.firmware_common_channel_release
-    FirmwareChannel.BETA -> Res.string.firmware_common_channel_beta
-    FirmwareChannel.ALPHA -> Res.string.firmware_common_channel_alpha
+    FirmwareChannel.RELEASE -> Strings.string.firmware_common_value_channel_release
+    FirmwareChannel.BETA -> Strings.string.firmware_common_value_channel_beta
+    FirmwareChannel.ALPHA -> Strings.string.firmware_common_value_channel_alpha
 }
 
 /**
@@ -74,7 +74,7 @@ internal fun ChannelChip(
     val colors = cmpThemeColors()
     var open by remember { mutableStateOf(false) }
     val test = selected.isTest
-    val a11y = stringResource(Res.string.firmware_common_label_channel)
+    val a11y = stringResource(Strings.string.firmware_common_label_channel)
     CmpBox(modifier = modifier) {
         CmpClickableSurface(
             onClick = { open = true },
@@ -99,7 +99,7 @@ internal fun ChannelChip(
                 if (test) CmpIcon(icon = CmpIcons.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
                 CmpText(
                     text = stringResource(
-                        Res.string.firmware_check_chip_channel,
+                        Strings.string.firmware_check_label_channel,
                         stringResource(selected.shortLabel())
                     ),
                     fontSize = 14.sp,

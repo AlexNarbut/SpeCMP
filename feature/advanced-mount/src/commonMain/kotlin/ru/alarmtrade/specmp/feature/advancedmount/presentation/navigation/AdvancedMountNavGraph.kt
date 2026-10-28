@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -24,16 +25,20 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.Se
 
 /** App-level ключ расширенного монтажа (регистрируется в графе `composeApp`). */
 @Serializable
+@SerialName("advanced-mount.AdvancedMountRoute")
 data object AdvancedMountRoute : NavKey
 
 @Serializable
+@SerialName("advanced-mount.AdvancedMountRootRoute")
 internal data object AdvancedMountRootRoute : NavKey
 
 /** Раздел; [deviceTitle] — «Название  ID» блока для подзаголовка. */
 @Serializable
+@SerialName("advanced-mount.AdvancedMountSectionRoute")
 internal data class AdvancedMountSectionRoute(val section: MountSection, val deviceTitle: String) : NavKey
 
 @Serializable
+@SerialName("advanced-mount.AdvancedMountExtraRoute")
 internal data class AdvancedMountExtraRoute(val extra: MountExtra, val deviceTitle: String) : NavKey
 
 private val navConfig = SavedStateConfiguration {
@@ -58,6 +63,9 @@ private val navConfig = SavedStateConfiguration {
  * @param settingsEditor раздел «Настройки» (фича `device/settings-ui`, подключается в `composeApp`); получает выход на
  *   корень монтажа и переход в «Проверку прошивок» (заменяет раздел настроек: CAN-код блока с единой CAN-прошивкой
  *   меняется прошивкой).
+ * @param configurator раздел «Конфигуратор» (фича `configurator-ui`, подключается в `composeApp`): тот же конфигуратор,
+ *   что с главной, но при активной сессии — с «Записать в блок»; получает выход на корень монтажа и переход
+ *   в «Проверку прошивок» (из редактора блока, единая CAN-прошивка).
  * @param vehicles раздел «Автомобили» (фича `vehicle-ui`, подключается в `composeApp` с моделью и CAN-кодом блока);
  *   получает выход на корень монтажа.
  */
@@ -67,6 +75,7 @@ fun AdvancedMountNavGraph(
     onOpenSupportChat: () -> Unit,
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
     settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
+    configurator: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
@@ -96,14 +105,17 @@ fun AdvancedMountNavGraph(
                 when (key.section) {
                     MountSection.FIRMWARE_UPDATE -> firmwareCheck { backStack.popSafe() }
 
-                    MountSection.SETTINGS -> settingsEditor(
-                        { backStack.popSafe() },
-                        {
-                            backStack.replaceCurrent(
-                                AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
-                            )
-                        }
-                    )
+                    MountSection.SETTINGS -> settingsEditor({ backStack.popSafe() }) {
+                        backStack.replaceCurrent(
+                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
+                        )
+                    }
+
+                    MountSection.CONFIGURATOR -> configurator({ backStack.popSafe() }) {
+                        backStack.replaceCurrent(
+                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
+                        )
+                    }
 
                     MountSection.VEHICLES -> vehicles { backStack.popSafe() }
 

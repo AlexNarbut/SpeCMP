@@ -22,7 +22,7 @@ core/common ──┬── core/network
 
 **Ключевые принципы:**
 - `core/*` — атомарная, широко переиспользуемая инфраструктура без бизнес-логики фич. Модули в `core/` минимально зависят от других модулей проекта и не содержат доменных моделей конкретных фич (аккаунты, дети, дневник и т.д.). Если модуль завязан на доменную логику или зависит от нескольких других модулей — он принадлежит `feature/*`.
-- `feature/*` — доменная и UI-логика фич, включая модели, репозитории и экраны. Сюда же относятся «сервисные» модули с доменными моделями (например, `feature/account` для Parent/Child).
+- `feature/*` — доменная и UI-логика фич, включая модели, репозитории и экраны. Сюда же относятся «сервисные» модули с доменными моделями (например, `feature/account` — профиль текущего аккаунта, общий для нескольких фич).
 - `composeApp` — общая Compose UI библиотека (зависит от всех core и feature модулей), точка входа: `App()`
 - Платформенные приложения (`androidApp`, `desktopApp`, `iosApp`) — только тонкие обёртки
 
@@ -103,7 +103,7 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 
 ### core/network
 - Пакет: `ru.alarmtrade.specmp.core.network`
-- `HttpClientFactory` — Ktor HttpClient (OkHttp на Android, Darwin на iOS)
+- HTTP-движки Ktor для SDK и Coil (OkHttp на Android/JVM, Darwin на iOS); `NetworkMonitor` — доступность сети
 
 ### core/localization
 - Пакет: `ru.alarmtrade.specmp.core.localization`
@@ -120,7 +120,8 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 
 ### core/ui
 - Пакет: `ru.alarmtrade.specmp.core.ui`
-- `LCEState<T>` — UI-состояние: `None` | `Loading` | `Content<T>` | `Error`
+- `LCEState<T, E>` — UI-состояние: `None` | `Loading` | `Content<T>` (+ `isUpdating`/`updateError`) | `Error<E>`, `E` — ошибка фичи с подтипом `Common(AppError)` (`docs/patterns.md`, «Ошибки фичи»)
+- `AppError` (`core/common`) — общие ошибки `ApiError` / `PlatformError`; текст — `AppError.message()` в `core/ui`
 - `AppTheme` — Material3 тема, светлая/тёмная
 - **UI Kit** — все Cmp* компоненты дизайн-системы (см. `docs/ui-kit.md`)
 
@@ -214,8 +215,8 @@ Feature-модули:
 |-------------|----------|-------------|
 | `:core:common` | `Response<T>`, `ResponseExt`, `AppDispatchers` | **Всегда** — каждый feature-модуль обязан зависеть от `core:common` |
 | `:core:localization` | `AppLocale`, чтение/применение локали приложения | Если фича показывает переключение языка или зависит от текущей локали |
-| `:core:ui` | `LCEState<T>`, `LCEStateExt`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
-| `:core:network` | `HttpClientFactory`, Ktor-клиент | Только если фича работает с сетью |
+| `:core:ui` | `LCEState<T, E>`, `LCEStateExt`, `AppError.message()`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
+| `:core:network` | `NetworkMonitor`, HTTP-движки Ktor процесса | Фичам обычно не нужен — сеть идёт через Specialist SDK |
 
 Примеры `build.gradle.kts`:
 

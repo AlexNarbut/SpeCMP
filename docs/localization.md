@@ -2,89 +2,121 @@
 
 ## Принцип
 
-Все строки пользовательского интерфейса хранятся в compose resources **внутри feature-модуля** и загружаются через `stringResource(Res.string.*)`. Захардкоженные строки в Kotlin-коде **запрещены**.
+**Все строки UI всех модулей живут в одном модуле — `core/localization`** — и читаются через публичный класс
+`Strings`: `stringResource(Strings.string.<ключ>)`. Один каталог строк — одна выгрузка локализаторам и одно место
+для будущего брендирования. Захардкоженные строки в Kotlin-коде **запрещены**; своих `strings.xml` в фичах нет.
 
 ---
 
 ## Структура файлов
 
-Каждый feature-модуль с UI содержит собственные строки:
-
 ```
-feature/<name>/src/commonMain/composeResources/
-├── values/strings.xml          ← английский (default / fallback)
-└── values-ru/strings.xml       ← русский
+core/localization/src/commonMain/composeResources/
+├── values/                ← английский (default / fallback)
+│   ├── common.xml         ← общие строки приложения (бывший core/ui)
+│   ├── app.xml            ← composeApp
+│   ├── login.xml          ← одна фича — один файл, имя = префикс фичи
+│   └── …
+└── values-ru/             ← русский: те же файлы и те же ключи
 ```
 
-Языки добавляются по мере необходимости: `values-uk`, `values-de`, и т.д.
+- **Файл фичи = префикс её ключей** (`login.xml` → только `login_*`). Языки добавляются папками
+  `values-<lang>/` с тем же набором файлов и ключей.
+- В фиче — **только картинки** (`composeResources/drawable/`, свой `Res`). Блок `compose.resources` и
+  `androidResources.enable = true` в `build.gradle.kts` фичи нужны **только если у неё есть свои картинки**;
+  ради строк модуль ничего не настраивает — достаточно зависимости `implementation(project(":core:localization"))`.
+
+### Реестр префиксов
+
+| Префикс (= файл) | Модуль |
+|---|---|
+| `common` | общие строки (`core/ui`: даты, общие ошибки `AppError`) |
+| `app` | `composeApp` |
+| `login`, `authstate`, `main`, `supportchat` | `feature/login`, `feature/auth-state`, `feature/main`, `feature/support-chat` |
+| `advancedmount` | `feature/advanced-mount` |
+| `vehicle`, `configurator` | `feature/vehicle-ui`, `feature/configurator-ui` |
+| `firmware`, `settings` | `feature/device/firmware`, `feature/device/settings-ui` |
+| `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui` |
+
+Префикс — **одно слово без `_`** (иначе его не отличить от экрана). Новая фича — новая строка таблицы и новый файл
+в `values/` и `values-ru/`.
 
 ---
 
 ## Конвенция именования ключей
 
-Формат: **`{feature}_{screen}_{type}_{name}`**
+Формат: **`{feature}_{screen}_{type}[_{name}]`**
 
 ```
-feature   — имя feature-модуля (login, ...)
-screen    — экран или секция (main, settings, common)
-type      — тип элемента (см. таблицу ниже)
-name      — краткое описание содержимого
+feature   — префикс фичи из реестра (login, firmware, …)
+screen    — экран, секция или общий блок фичи (login, update, archive, common, dialog…)
+type      — тип элемента (таблица ниже) — всегда третьим сегментом
+name      — что именно; можно опустить, когда тип однозначен (один заголовок экрана: `advancedmount_denied_title`)
 ```
 
 ### Типы элементов
 
 | Тип | Что это | Пример |
 |-----|---------|--------|
-| `title` | Заголовок экрана/секции | `login_login_title_screen` |
-| `subtitle` | Подзаголовок | `login_authroot_subtitle_specialist` |
+| `title` | Заголовок экрана/секции/диалога | `login_login_title_screen` |
+| `subtitle` | Подзаголовок, подпись под заголовком/пунктом | `configurator_create_subtitle_cloud` |
 | `btn` | Текст кнопки | `login_login_btn_submit` |
-| `label` | Label поля ввода | `login_common_label_email` |
-| `placeholder` | Placeholder поля | `login_common_placeholder_email` |
-| `hint` | Подсказка под полем | `login_common_hint_email` |
+| `label` | Подпись поля/строки/колонки, метка | `firmware_update_label_confirm_current` |
+| `placeholder` | Placeholder поля | `configurator_models_placeholder_search` |
+| `hint` | Подсказка под полем / к элементу | `firmware_archive_hint_can` |
 | `link` | Кликабельная ссылка/текст | `login_login_link_forgot_password` |
-| `error` | Текст ошибки | `login_common_error_auth_failed` |
-| `msg` | Информационное сообщение | `login_forgot_msg_success` |
-| `loading` | Текст при загрузке | `login_common_loading_auth` |
+| `error` | Текст ошибки | `firmware_update_error_failure_crc` |
+| `msg` | Информационное сообщение, пустое состояние, тост | `settings_common_msg_saved` |
+| `loading` | Текст при загрузке | `settings_diff_loading_busy` |
+| `status` | Статус, бейдж | `firmware_archive_status_installed` |
+| `value` | Значение или вариант (режим, вид, канал, вкл/выкл) | `settings_common_value_on` |
+| `item` | Пункт меню, шага, списка | `settings_menu_item_reset` |
+| `format` | Шаблон без собственного смысла (`%1$d–%2$d`, `ID %1$s`) | `vehicle_common_format_years_range` |
 | `a11y` | Accessibility (contentDescription) | `login_common_a11y_back` |
+| `plurals` / `array` | Ключи `<plurals>` / `<string-array>` — тот же формат, тип по смыслу (`label`, `item`…) | `deviceselect_list_label_count` |
 
-### Общие строки внутри feature
+### Общие строки
 
-Если строка одинакова на нескольких экранах модуля — используйте `common` как screen:
+- Одна строка на нескольких экранах **фичи** — `screen = common`: `login_common_btn_retry`.
+- Строка, нужная **нескольким фичам**, — в `common.xml` (`common_*`), а не копией в каждой фиче.
+  В `common.xml` сегмент экрана необязателен: общие строки без раздела — `common_{type}_{name}`
+  (`common_error_no_connection`), с разделом — как обычно (`common_date_label_today`).
 
-```xml
-<string name="login_common_a11y_back">Back</string>
-<string name="login_common_btn_retry">Retry</string>
-```
+### Строки без перевода
 
-### Примеры
+Одинаковый на всех языках текст (обозначения шин `CAN1`, `LIN`, контакты `NO`/`NC`) — только в `values/` с
+`translatable="false"`; в `values-*/` его нет, берётся fallback. Локализатор такие строки не получает.
 
-```xml
-<!-- Main screen -->
-<string name="login_login_title_screen">Sign in</string>
-<string name="login_login_btn_submit">Sign in</string>
-<string name="login_common_label_email">Email</string>
-<string name="login_common_error_auth_failed">Unable to sign in.</string>
-<string name="login_common_loading_auth">Signing in...</string>
-```
+### Автопроверка
+
+`config/hooks/check-strings.py` (pre-commit хук `strings-check`, без аргументов — весь репозиторий): строки только в
+`core/localization`, префикс = имя файла, формат и тип ключа, одинаковый набор ключей (`string`/`plurals`/`string-array`)
+во всех языках, без `\'` и `\"`.
+
+### Как завести строки новой фичи
+
+1. Префикс — в реестр выше (одно слово, совпадает с именем файла).
+2. Файлы `values/<префикс>.xml` (en) и `values-ru/<префикс>.xml` (ru) в `core/localization` — **оба сразу**, с одинаковыми ключами.
+3. Модулю фичи — `implementation(project(":core:localization"))`; `compose.resources` не нужен (только для картинок).
+4. В коде: `import ru.alarmtrade.specmp.core.localization.resources.Strings` + аксессор ключа из того же пакета.
 
 ---
 
 ## Правила
 
-1. **Default locale = English.** Файл `values/strings.xml` содержит английские строки — это fallback.
+1. **Default locale = English.** `values/*.xml` — английский fallback; в `values-ru/` — тот же набор ключей.
 
-2. **Не дублировать строки между модулями.** Если строка нужна в нескольких feature-модулях — вынести в `core/ui/src/commonMain/composeResources/values/strings.xml`.
+2. **Не дублировать строки между фичами.** Общая строка — в `common.xml`.
 
 3. **Использование в коде:**
    ```kotlin
-   // Пакет ресурсов формируется из rootProject.name + путь модуля.
-   // Для feature/login: specmp.feature.login.generated.resources
-   import specmp.feature.login.generated.resources.Res
-   import specmp.feature.login.generated.resources.login_login_title_screen
    import org.jetbrains.compose.resources.stringResource
+   import ru.alarmtrade.specmp.core.localization.resources.Strings
+   import ru.alarmtrade.specmp.core.localization.resources.login_login_title_screen
 
-   Text(text = stringResource(Res.string.login_login_title_screen))
+   CmpText(text = stringResource(Strings.string.login_login_title_screen))
    ```
+   Вне composable — `getString(Strings.string.…)` (suspend). Картинки фичи — по-прежнему её `Res.drawable.…`.
 
 4. **Не передавать строки через ViewModel.** Строки — ответственность UI-слоя. ViewModel возвращает enum/sealed class, UI маппит в `stringResource`.
 
@@ -93,7 +125,7 @@ name      — краткое описание содержимого
    <string name="login_common_msg_email_sent">Email sent to %s</string>
    ```
    ```kotlin
-   stringResource(Res.string.login_common_msg_email_sent, email)
+   stringResource(Strings.string.login_common_msg_email_sent, email)
    ```
 
 6. **Не склеивать UI-текст в коде.** Один видимый пользователю текст — **один ключ**
@@ -103,10 +135,10 @@ name      — краткое описание содержимого
 
    ```kotlin
    // ❌ Плохо — разделитель и порядок слов зашиты в коде
-   CmpText(text = "$author · ${stringResource(Res.string.supportchat_chat_msg_typing)}")
+   CmpText(text = "$author · ${stringResource(Strings.string.supportchat_chat_msg_typing)}")
 
    // ✅ Хорошо — целая фраза в ресурсе
-   CmpText(text = stringResource(Res.string.supportchat_chat_msg_typing_author, author))
+   CmpText(text = stringResource(Strings.string.supportchat_chat_msg_typing_author, author))
    ```
    ```xml
    <string name="supportchat_chat_msg_typing_author">%s is typing…</string>
@@ -124,7 +156,7 @@ name      — краткое описание содержимого
      `rememberCmpDateLabeler()` из `core/ui` («Сегодня»/«Вчера»/«14 марта»). Нужен новый формат —
      расширяй хелпер в `core/ui`, а не заводи свои 12 ключей месяцев в фиче.
 
-7. **Технические строки — не в ресурсах, но и не inline.** В `strings.xml` попадает только то,
+7. **Технические строки — не в ресурсах, но и не inline.** В файлы строк попадает только то,
    что видит пользователь. URI-схемы и пути (`file://`), префиксы ключей `LazyColumn`,
    log-теги, `label` у Compose-анимаций, ключи хранилищ — не переводятся и в ресурсы
    **не выносятся**; они объявляются `private const val` рядом с использованием, а не пишутся
@@ -140,11 +172,25 @@ name      — краткое описание содержимого
    private const val TYPING_KEY_PREFIX = "typing_"
    ```
 
-8. **Plurals** не поддерживаются CMP напрямую. Используйте несколько ключей или `when` в коде:
-   ```xml
-   <string name="login_common_one_attempt">%d attempt</string>
-   <string name="login_common_other_attempts">%d attempts</string>
-   ```
+8. **Числа и списки — `<plurals>` и `<string-array>`, а не ветки в коде.**
+   - Текст с количеством, где форма слова зависит от числа (`1 устройство` / `2 устройства` / `5 устройств`), —
+     `<plurals>` с формами языка (`one`/`few`/`many`/`other` для русского, `one`/`other` для английского):
+     ```xml
+     <plurals name="deviceselect_list_label_count">
+         <item quantity="one">Найдено %1$d устройство</item>
+         <item quantity="few">Найдено %1$d устройства</item>
+         <item quantity="many">Найдено %1$d устройств</item>
+         <item quantity="other">Найдено %1$d устройства</item>
+     </plurals>
+     ```
+     ```kotlin
+     pluralStringResource(Strings.plurals.deviceselect_list_label_count, count, count)
+     ```
+     Подписи вида «Найдено: %1$d» plurals не требуют — там число не склоняет слово.
+   - Упорядоченный набор однотипных строк, который код перебирает (месяцы, шаги подсказки «1, 2, 3»), —
+     `<string-array>` и `stringArrayResource(Strings.array.…)`, а не ключи `_1`, `_2`, `_3` и `when` по индексу.
+   - Набор вариантов, выбираемых по enum (режим, тип устройства), — отдельные ключи `…_value_<вариант>` и
+     исчерпывающий `when` по enum: массив по индексу ломается при перестановке enum.
 
 9. **App-level локаль живёт в `core/localization` и `composeApp`.**
    Feature-модули не читают системный язык и не сохраняют выбранный язык самостоятельно.
@@ -256,8 +302,8 @@ CMP-парсер обрабатывает **только** эти последо
 
 ### Прочие отличия
 
-- **`%`-аргументы.** Поддерживаются `%s` / `%d` (и позиционные `%1$s`); plurals — нет
-  (см. п. 8 выше).
+- **`%`-аргументы.** Поддерживаются `%s` / `%d` (и позиционные `%1$s`); `<plurals>` и `<string-array>` —
+  тоже (см. п. 8 выше).
 - **HTML/разметка не интерпретируется.** `<b>`, `<i>`, `&lt;` и т.п. в текст не
   превращаются в стили — для форматирования используйте `AnnotatedString` в коде.
 
@@ -266,9 +312,11 @@ CMP-парсер обрабатывает **только** эти последо
 
 ## Чеклист при добавлении нового экрана
 
-1. Создать `values/strings.xml` и `values-ru/strings.xml` в `composeResources/` модуля (если ещё нет)
-2. Добавить все видимые строки с ключами по конвенции
-3. Убедиться что в Kotlin-коде нет захардкоженных строк (кроме технических: log tags, debug);
-   технические строки — в `private const val`, UI-текст не собирается конкатенацией (п. 6, 7)
-4. Проверить что `compose.resources` доступен (транзитивно через `core/ui` или явно)
-5. Убедиться что в `build.gradle.kts` модуля указано `androidResources.enable = true` (см. `docs/build.md`)
+1. Строки — в `core/localization/src/commonMain/composeResources/values/<префикс>.xml` **и** `values-ru/<префикс>.xml`
+   (новая фича — новый префикс в реестре и новые файлы), одинаковые ключи в обоих языках.
+2. Ключи по конвенции `{feature}_{screen}_{type}[_{name}]`, тип — из таблицы; числа — `<plurals>`, перебираемые
+   наборы — `<string-array>` (п. 8).
+3. В Kotlin-коде нет захардкоженных строк (кроме технических: log tags, debug); технические строки — в
+   `private const val`, UI-текст не собирается конкатенацией (п. 6, 7).
+4. Модуль зависит от `:core:localization`; `compose.resources` и `androidResources.enable = true` — только если у
+   фичи есть свои картинки (`docs/build.md`, «Ресурсы»).

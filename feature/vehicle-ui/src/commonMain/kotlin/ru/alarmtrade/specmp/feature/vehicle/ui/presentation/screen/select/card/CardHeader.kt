@@ -20,6 +20,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_engine_block
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_cap_label_keyless
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_card_a11y_copy
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_card_btn_archive
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_card_label_can
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_card_label_years_trim
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_notes_btn_collapse
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_notes_btn_expand
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_notes_btn_expand_count
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_notes_title_important
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -39,17 +50,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PHOTO_RAT
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.yearsText
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CapabilityKind
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_cap_label_engine_block
-import specmp.feature.vehicle_ui.generated.resources.vehicle_cap_label_keyless
-import specmp.feature.vehicle_ui.generated.resources.vehicle_card_a11y_copy
-import specmp.feature.vehicle_ui.generated.resources.vehicle_card_btn_archive
-import specmp.feature.vehicle_ui.generated.resources.vehicle_card_label_can
-import specmp.feature.vehicle_ui.generated.resources.vehicle_card_label_years_trim
-import specmp.feature.vehicle_ui.generated.resources.vehicle_notes_btn_collapse
-import specmp.feature.vehicle_ui.generated.resources.vehicle_notes_btn_expand
-import specmp.feature.vehicle_ui.generated.resources.vehicle_notes_btn_expand_count
-import specmp.feature.vehicle_ui.generated.resources.vehicle_notes_title_important
 
 private const val NOTE_COLLAPSE_CHARS = 140
 private const val NOTE_COLLAPSED_LINES = 3
@@ -84,7 +84,7 @@ internal fun CardHeader(
                 )
                 CmpText(
                     text = stringResource(
-                        Res.string.vehicle_card_label_years_trim,
+                        Strings.string.vehicle_card_label_years_trim,
                         yearsText(summary.years),
                         summary.name
                     ),
@@ -93,8 +93,8 @@ internal fun CardHeader(
                 )
             }
         }
-        val engine = stringResource(Res.string.vehicle_cap_label_engine_block)
-        val keyless = stringResource(Res.string.vehicle_cap_label_keyless)
+        val engine = stringResource(Strings.string.vehicle_cap_label_engine_block)
+        val keyless = stringResource(Strings.string.vehicle_cap_label_keyless)
         if (wide) {
             CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CanCode(
@@ -144,7 +144,7 @@ internal fun CardHeader(
             CmpTextButton(onClick = { open(summary.canCode) }, modifier = Modifier.heightIn(min = 48.dp)) {
                 CmpIcon(icon = CmpIcons.History, contentDescription = null, modifier = Modifier.size(20.dp))
                 CmpText(
-                    text = stringResource(Res.string.vehicle_card_btn_archive, summary.canCode),
+                    text = stringResource(Strings.string.vehicle_card_btn_archive, summary.canCode),
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
@@ -163,14 +163,14 @@ internal fun CardHeader(
 @Composable
 private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
-    val label = stringResource(Res.string.vehicle_card_label_can).uppercase()
+    val label = stringResource(Strings.string.vehicle_card_label_can).uppercase()
     val codeText =
         AnnotatedString(code, SpanStyle(fontFamily = FontFamily.Monospace, fontSize = if (tile) 34.sp else 30.sp))
     val copy: @Composable () -> Unit = {
         CmpIconButton(
             onClick = onCopy,
             icon = CmpIcons.ContentCopy,
-            contentDescription = stringResource(Res.string.vehicle_card_a11y_copy, code),
+            contentDescription = stringResource(Strings.string.vehicle_card_a11y_copy, code),
             tint = colors.onPrimaryContainer,
             modifier = Modifier.testTag(VehicleTestTags.CAN_COPY)
         )
@@ -232,7 +232,7 @@ private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) 
         CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpIcon(icon = CmpIcons.PriorityHigh, contentDescription = null, tint = colors.onTertiaryContainer)
             CmpText(
-                text = stringResource(Res.string.vehicle_notes_title_important),
+                text = stringResource(Strings.string.vehicle_notes_title_important),
                 style = CmpTextStyle.BodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.onTertiaryContainer
@@ -246,9 +246,9 @@ private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) 
         if (collapsible) {
             CmpTextButton(
                 text = when {
-                    expanded -> stringResource(Res.string.vehicle_notes_btn_collapse)
-                    notes.size > 1 -> stringResource(Res.string.vehicle_notes_btn_expand_count, notes.size)
-                    else -> stringResource(Res.string.vehicle_notes_btn_expand)
+                    expanded -> stringResource(Strings.string.vehicle_notes_btn_collapse)
+                    notes.size > 1 -> stringResource(Strings.string.vehicle_notes_btn_expand_count, notes.size)
+                    else -> stringResource(Strings.string.vehicle_notes_btn_expand)
                 },
                 onClick = onToggle,
                 modifier = Modifier.heightIn(min = 48.dp).testTag(VehicleTestTags.NOTES_TOGGLE)

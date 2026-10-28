@@ -11,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -19,11 +18,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_a11y_locked
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_exit_exit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_exit_stay
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_exit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_exit
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_screen
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -60,14 +68,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.ProgressBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SourceBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.subcomponents.SuccessBody
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware.generated.resources.firmware_update_a11y_locked
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_btn_exit
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_btn_stay
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_msg
-import specmp.feature.device.firmware.generated.resources.firmware_update_exit_title
-import specmp.feature.device.firmware.generated.resources.firmware_update_title_screen
 
 private val BodyMaxWidth = 480.dp
 private val CompactHero = 128.dp
@@ -87,7 +87,7 @@ fun FirmwareUpdateScreen(
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker
 ) {
     val viewModel = koinViewModel<FirmwareUpdateViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
@@ -136,7 +136,7 @@ internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: Firmware
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.firmware_update_title_screen)) },
+                title = { CmpText(text = stringResource(Strings.string.firmware_update_title_screen)) },
                 subtitle = state.deviceTitle.takeIf { it.isNotBlank() }?.let { title ->
                     { CmpText(text = subtitleOf(state, title), style = CmpTextStyle.Caption) }
                 },
@@ -147,7 +147,7 @@ internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: Firmware
                         CmpIconButton(
                             onClick = actions.onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Res.string.firmware_common_a11y_back)
+                            contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
                         )
                     }
                 }
@@ -197,7 +197,7 @@ private fun LockedBackIcon() {
     CmpBox(modifier = Modifier.padding(12.dp)) {
         CmpIcon(
             icon = CmpIcons.Lock,
-            contentDescription = stringResource(Res.string.firmware_update_a11y_locked),
+            contentDescription = stringResource(Strings.string.firmware_update_a11y_locked),
             tint = cmpThemeColors().onSurfaceVariant
         )
     }
@@ -269,18 +269,18 @@ private fun ExitDialog(actions: FirmwareUpdateActions) {
         onDismissRequest = actions.onExitDialogDismiss,
         width = CmpDialogWidth.Wide,
         icon = CmpIcons.Warning.imageVector(),
-        title = { CmpText(text = stringResource(Res.string.firmware_update_exit_title)) },
-        text = { CmpText(text = stringResource(Res.string.firmware_update_exit_msg), style = CmpTextStyle.Body) },
+        title = { CmpText(text = stringResource(Strings.string.firmware_update_title_exit)) },
+        text = { CmpText(text = stringResource(Strings.string.firmware_update_msg_exit), style = CmpTextStyle.Body) },
         dismissButton = {
             CmpTextButton(
-                text = stringResource(Res.string.firmware_update_exit_btn_stay),
+                text = stringResource(Strings.string.firmware_update_btn_exit_stay),
                 onClick = actions.onExitDialogDismiss,
                 modifier = Modifier.height(48.dp)
             )
         },
         confirmButton = {
             CmpButton(
-                text = stringResource(Res.string.firmware_update_exit_btn_exit),
+                text = stringResource(Strings.string.firmware_update_btn_exit_exit),
                 onClick = actions.onExitConfirm,
                 modifier = Modifier.height(48.dp).testTag(EXIT_DIALOG_CONFIRM_TAG)
             )

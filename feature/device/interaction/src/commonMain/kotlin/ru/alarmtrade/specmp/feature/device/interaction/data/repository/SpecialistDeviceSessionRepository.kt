@@ -23,6 +23,9 @@ import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.common.safeResponseRun
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -130,11 +133,8 @@ class SpecialistDeviceSessionRepository(
         val interactor = appUpdatesInteractor.resolveOrNull() ?: return interactorUnavailable()
         // Поток SDK может бросить мимо Response (ошибка встроенной базы) — safeResponseRun превращает это в ошибку.
         return safeResponseRun {
-            when (val last = interactor.synchronizeSettingsVersionUseCase.execute().lastOrNull()) {
-                is SpecialistResponse.Success -> Response.Success(Unit)
-                is SpecialistResponse.Error -> Response.Error(last.exception, last.message)
-                null -> Response.Error(IllegalStateException("Device database sync produced no result"))
-            }
+            interactor.synchronizeSettingsVersionUseCase.execute().lastOrNull()?.toResponse()?.map { }
+                ?: Response.Error(IllegalStateException("Device database sync produced no result"))
         }
     }
 
@@ -191,14 +191,6 @@ class SpecialistDeviceSessionRepository(
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
             ?: return interactorUnavailable()
         return interactor.setPcBasePinUseCase.execute(SetPcBasePinRequest(pin.value)).toResponse().map { }
-    }
-
-    private fun interactorUnavailable(): Response.Error =
-        Response.Error(IllegalStateException("Alarm device interactor is not available on this platform"))
-
-    private fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
-        is SpecialistResponse.Success -> Response.Success(value)
-        is SpecialistResponse.Error -> Response.Error(exception, message)
     }
 
     private fun BluetoothManufacturerData.toDomain(): BluetoothManufacturer = BluetoothManufacturer(

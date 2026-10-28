@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -16,12 +16,18 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.AppLocale
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.login_common_error_auth_failed
+import ru.alarmtrade.specmp.core.localization.resources.login_forgot_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.login_registration_title_screen
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
@@ -33,23 +39,23 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLanguageSegment
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthScreenChrome
+import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenViewModel
 import ru.alarmtrade.specmp.feature.login.presentation.screen.registration.RegistrationScreen
-import specmp.feature.login.generated.resources.Res
-import specmp.feature.login.generated.resources.login_common_a11y_back
-import specmp.feature.login.generated.resources.login_forgot_title_screen
-import specmp.feature.login.generated.resources.login_registration_title_screen
 
 @Serializable
+@SerialName("login.LoginRoute")
 data object LoginRoute : NavKey
 
 @Serializable
+@SerialName("login.RegistrationRoute")
 data object RegistrationRoute : NavKey
 
 @Serializable
+@SerialName("login.ForgotPasswordRoute")
 data object ForgotPasswordRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {
@@ -65,7 +71,7 @@ private val navConfig = SavedStateConfiguration {
 @Composable
 fun LoginNavGraph(onLocaleChange: (AppLocale) -> Unit) {
     val viewModel = koinViewModel<LoginScreenViewModel>()
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
     val colors = cmpThemeColors()
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
     val currentRoute = backStack.lastOrNull() ?: LoginRoute
@@ -87,7 +93,7 @@ fun LoginNavGraph(onLocaleChange: (AppLocale) -> Unit) {
                 CmpIconButton(
                     onClick = { backStack.popSafe() },
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Res.string.login_common_a11y_back)
+                    contentDescription = stringResource(Strings.string.login_common_a11y_back)
                 )
             }
         },
@@ -131,7 +137,8 @@ private fun LoginNavDisplay(
                 AuthBody(
                     layoutMode = layoutMode,
                     modifier = Modifier.fillMaxSize(),
-                    colors = colors
+                    colors = colors,
+                    error = state.value.authError?.text(Strings.string.login_common_error_auth_failed)
                 ) {
                     LoginScreen(
                         state = state.value,
@@ -156,30 +163,20 @@ private fun LoginNavDisplay(
                 }
             }
             entry<RegistrationRoute> { _ ->
-                AuthBody(
+                RegistrationScreen(
                     layoutMode = layoutMode,
-                    modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    showCompactBrand = false
-                ) {
-                    RegistrationScreen(
-                        colors = colors,
-                        onBackToLogin = { backStack.popSafe() }
-                    )
-                }
+                    onBackToLogin = { backStack.popSafe() },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
             entry<ForgotPasswordRoute> { _ ->
-                AuthBody(
+                ForgotPasswordScreen(
                     layoutMode = layoutMode,
-                    modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    showCompactBrand = false
-                ) {
-                    ForgotPasswordScreen(
-                        colors = colors,
-                        onBackToLogin = { backStack.popSafe() }
-                    )
-                }
+                    onBackToLogin = { backStack.popSafe() },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     )
@@ -187,7 +184,7 @@ private fun LoginNavDisplay(
 
 @Composable
 private fun routeTitle(route: NavKey): String = when (route) {
-    RegistrationRoute -> stringResource(Res.string.login_registration_title_screen)
-    ForgotPasswordRoute -> stringResource(Res.string.login_forgot_title_screen)
+    RegistrationRoute -> stringResource(Strings.string.login_registration_title_screen)
+    ForgotPasswordRoute -> stringResource(Strings.string.login_forgot_title_screen)
     else -> ""
 }

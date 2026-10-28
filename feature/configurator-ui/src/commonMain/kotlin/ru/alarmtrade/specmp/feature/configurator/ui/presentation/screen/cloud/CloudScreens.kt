@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +27,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_firmware
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_less
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_load
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_more
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_open
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_save_mine
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_write
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_error
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_label_can
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_msg_can_mismatch
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_title_attachments
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_title_manual
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_error
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_error_msg
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_msg_empty
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_msg_empty_all
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_title_empty
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_value_order_best
+import ru.alarmtrade.specmp.core.localization.resources.configurator_cloud_value_order_new
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_attachment
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_close
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_retry
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -36,7 +62,6 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
-import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImage
@@ -59,37 +84,16 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationSummary
 import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationAttachment
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.BusyOverlay
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.CloudItemCard
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.CloudMeta
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.ListDetailPane
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.ListDetailWideFrom
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.RatingLabel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.rememberDateTimeText
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.ModelFilterChip
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationInfoDialog
-import specmp.feature.configurator_ui.generated.resources.Res
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_attachment
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_back
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_close
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_retry
-import specmp.feature.configurator_ui.generated.resources.configurator_card_attachments
-import specmp.feature.configurator_ui.generated.resources.configurator_card_btn_firmware
-import specmp.feature.configurator_ui.generated.resources.configurator_card_btn_load
-import specmp.feature.configurator_ui.generated.resources.configurator_card_btn_open
-import specmp.feature.configurator_ui.generated.resources.configurator_card_btn_save_mine
-import specmp.feature.configurator_ui.generated.resources.configurator_card_btn_write
-import specmp.feature.configurator_ui.generated.resources.configurator_card_can
-import specmp.feature.configurator_ui.generated.resources.configurator_card_can_mismatch
-import specmp.feature.configurator_ui.generated.resources.configurator_card_error
-import specmp.feature.configurator_ui.generated.resources.configurator_card_less
-import specmp.feature.configurator_ui.generated.resources.configurator_card_manual
-import specmp.feature.configurator_ui.generated.resources.configurator_card_more
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_empty_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_empty_msg_all
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_empty_title
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_error
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_error_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_order_best
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_order_new
-import specmp.feature.configurator_ui.generated.resources.configurator_cloud_title
 
 /**
  * K4 список облачных конфигураций автомобиля: «Лучшие / Новые», фильтр по модели блока, карточки с оценкой.
@@ -109,35 +113,30 @@ internal fun CloudListScreen(
     detail: @Composable (id: Int) -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val wide = maxWidth >= WideFrom
+        val wide = maxWidth >= ListDetailWideFrom
         CmpScaffold(
             topBar = {
                 CmpTopAppBar(
-                    title = { CmpText(text = stringResource(Res.string.configurator_cloud_title)) },
+                    title = { CmpText(text = stringResource(Strings.string.configurator_cloud_title)) },
                     subtitle = { CmpText(text = carTitle, style = CmpTextStyle.Caption, maxLines = 1) },
                     navigationIcon = {
                         CmpIconButton(
                             onClick = onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Res.string.configurator_a11y_back)
+                            contentDescription = stringResource(Strings.string.configurator_common_a11y_back)
                         )
                     }
                 )
             },
             snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) }
         ) { padding ->
-            CmpRow(modifier = Modifier.fillMaxSize().padding(padding)) {
-                val listModifier = if (wide) Modifier.weight(LIST_WEIGHT).fillMaxHeight() else Modifier.fillMaxSize()
-                CmpColumn(modifier = listModifier) {
-                    CloudToolbar(state, onOrder, onModelFilter)
-                    CloudListContent(state, wide, onRetry, onOpen, onSelect)
-                }
-                if (wide) {
-                    CmpVerticalDivider()
-                    CmpBox(modifier = Modifier.weight(1f - LIST_WEIGHT).fillMaxHeight()) {
-                        state.selectedId?.let { detail(it) }
-                    }
-                }
+            ListDetailPane(
+                wide,
+                detail = { state.selectedId?.let { detail(it) } },
+                modifier = Modifier.padding(padding)
+            ) {
+                CloudToolbar(state, onOrder, onModelFilter)
+                CloudListContent(state, wide, onRetry, onOpen, onSelect)
             }
         }
     }
@@ -156,8 +155,8 @@ private fun CloudToolbar(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         val options = listOf(
-            stringResource(Res.string.configurator_cloud_order_best),
-            stringResource(Res.string.configurator_cloud_order_new)
+            stringResource(Strings.string.configurator_cloud_value_order_best),
+            stringResource(Strings.string.configurator_cloud_value_order_new)
         )
         CmpSegmentedButton(
             options = options,
@@ -182,33 +181,36 @@ private fun CloudListContent(
     onOpen: (CloudConfigurationSummary) -> Unit,
     onSelect: (Int) -> Unit
 ) {
-    when (state.list) {
-        CloudList.Loading -> CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    when (val list = state.list) {
+        LCEState.None, LCEState.Loading -> CmpBox(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             CmpCircularProgressIndicator()
         }
 
-        CloudList.Error -> CmpStateBox(
+        is LCEState.Error -> CmpStateBox(
             icon = CmpIcons.CloudOff,
-            title = stringResource(Res.string.configurator_cloud_error),
-            text = stringResource(Res.string.configurator_cloud_error_msg),
+            title = list.error.text(Strings.string.configurator_cloud_error),
+            text = stringResource(Strings.string.configurator_cloud_error_msg),
             tone = CmpStateTone.Error,
             modifier = Modifier.fillMaxSize()
         ) {
             CmpButton(
-                text = stringResource(Res.string.configurator_btn_retry),
+                text = stringResource(Strings.string.configurator_common_btn_retry),
                 onClick = onRetry,
                 modifier = Modifier.testTag(ConfiguratorTestTags.RETRY)
             )
         }
 
-        is CloudList.Ready -> {
+        is LCEState.Content -> {
             val items = state.shown
             if (items.isEmpty()) {
                 CmpStateBox(
                     icon = CmpIcons.Inventory2,
-                    title = stringResource(Res.string.configurator_cloud_empty_title),
-                    text = state.modelFilter?.let { stringResource(Res.string.configurator_cloud_empty_msg, it) }
-                        ?: stringResource(Res.string.configurator_cloud_empty_msg_all),
+                    title = stringResource(Strings.string.configurator_cloud_title_empty),
+                    text = state.modelFilter?.let { stringResource(Strings.string.configurator_cloud_msg_empty, it) }
+                        ?: stringResource(Strings.string.configurator_cloud_msg_empty_all),
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
@@ -270,7 +272,7 @@ internal fun CloudCardScreen(
                     CmpIconButton(
                         onClick = onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.configurator_a11y_back)
+                        contentDescription = stringResource(Strings.string.configurator_common_a11y_back)
                     )
                 }
             )
@@ -289,39 +291,41 @@ internal fun CloudCardScreen(
 internal fun CloudCardContent(state: CloudCardState, actions: CloudCardActions) {
     CmpBox(modifier = Modifier.fillMaxSize()) {
         when (val card = state.card) {
-            CloudCard.Loading -> CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            LCEState.None, LCEState.Loading -> CmpBox(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 CmpCircularProgressIndicator()
             }
 
-            CloudCard.Error -> CmpStateBox(
+            is LCEState.Error -> CmpStateBox(
                 icon = CmpIcons.CloudOff,
-                title = stringResource(Res.string.configurator_card_error),
-                text = stringResource(Res.string.configurator_cloud_error_msg),
+                title = card.error.text(Strings.string.configurator_card_error),
+                text = stringResource(Strings.string.configurator_cloud_error_msg),
                 tone = CmpStateTone.Error,
                 modifier = Modifier.fillMaxSize()
             ) {
-                CmpButton(text = stringResource(Res.string.configurator_btn_retry), onClick = actions.onRetry)
+                CmpButton(
+                    text = stringResource(Strings.string.configurator_common_btn_retry),
+                    onClick = actions.onRetry
+                )
             }
 
-            is CloudCard.Ready -> CardBody(state, card.card, actions)
+            is LCEState.Content -> CardBody(state, card.content, actions)
         }
         state.viewer?.let { AttachmentViewer(it, actions.onViewerClose) }
         state.saveForm?.let { form ->
             ConfigurationInfoDialog(
-                title = stringResource(Res.string.configurator_card_btn_save_mine),
+                title = stringResource(Strings.string.configurator_card_btn_save_mine),
                 name = form.name,
                 description = form.description,
-                deviceName = (state.card as? CloudCard.Ready)?.card?.summary?.deviceName,
+                deviceName = state.card.content?.summary?.deviceName,
                 onChange = actions.onSaveChange,
                 onConfirm = actions.onSaveSubmit,
                 onDismiss = actions.onSaveDismiss
             )
         }
-        if (state.busy) {
-            CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CmpCircularProgressIndicator()
-            }
-        }
+        if (state.busy) BusyOverlay()
     }
 }
 
@@ -350,9 +354,9 @@ private fun CardBody(state: CloudCardState, card: CloudConfiguration, actions: C
             CmpTextButton(
                 text = stringResource(
                     if (state.descriptionExpanded) {
-                        Res.string.configurator_card_less
+                        Strings.string.configurator_card_btn_less
                     } else {
-                        Res.string.configurator_card_more
+                        Strings.string.configurator_card_btn_more
                     }
                 ),
                 onClick = actions.onDescriptionToggle
@@ -361,14 +365,14 @@ private fun CardBody(state: CloudCardState, card: CloudConfiguration, actions: C
         CanBlock(state, actions)
         card.mountingManual?.let { manual ->
             CmpOutlinedButton(
-                text = stringResource(Res.string.configurator_card_manual),
+                text = stringResource(Strings.string.configurator_card_title_manual),
                 onClick = { actions.onAttachmentOpen(manual) },
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_MANUAL)
             )
         }
         if (card.attachments.isNotEmpty()) {
             CmpText(
-                text = stringResource(Res.string.configurator_card_attachments),
+                text = stringResource(Strings.string.configurator_card_title_attachments),
                 style = CmpTextStyle.BodyLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -389,7 +393,7 @@ private fun CardBody(state: CloudCardState, card: CloudConfiguration, actions: C
 private fun CanBlock(state: CloudCardState, actions: CloudCardActions) {
     val code = state.canCode ?: return
     CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CmpText(text = stringResource(Res.string.configurator_card_can, code), style = CmpTextStyle.BodyLarge)
+        CmpText(text = stringResource(Strings.string.configurator_card_label_can, code), style = CmpTextStyle.BodyLarge)
         if (state.canMismatch) CanMismatch(state, code, actions)
     }
 }
@@ -405,7 +409,7 @@ private fun CanMismatch(state: CloudCardState, code: String, actions: CloudCardA
             CmpIcon(icon = CmpIcons.Memory, contentDescription = null, tint = colors.onErrorContainer)
             CmpText(
                 text = stringResource(
-                    Res.string.configurator_card_can_mismatch,
+                    Strings.string.configurator_card_msg_can_mismatch,
                     state.firmwareCanCode.orEmpty(),
                     code
                 ),
@@ -414,7 +418,7 @@ private fun CanMismatch(state: CloudCardState, code: String, actions: CloudCardA
         }
         actions.onOpenFirmwareUpdate?.let { open ->
             CmpButton(
-                text = stringResource(Res.string.configurator_card_btn_firmware),
+                text = stringResource(Strings.string.configurator_card_btn_firmware),
                 onClick = open,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_FIRMWARE)
             )
@@ -427,7 +431,7 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
     CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         actions.onLoad?.let { load ->
             CmpButton(
-                text = stringResource(Res.string.configurator_card_btn_load),
+                text = stringResource(Strings.string.configurator_card_btn_load),
                 onClick = { load(card) },
                 enabled = !state.canMismatch,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_LOAD)
@@ -435,7 +439,7 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
         }
         actions.onWrite?.takeIf { state.connectedDeviceName != null }?.let { write ->
             CmpButton(
-                text = stringResource(Res.string.configurator_card_btn_write),
+                text = stringResource(Strings.string.configurator_card_btn_write),
                 onClick = { write(card) },
                 enabled = !state.canMismatch,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_WRITE)
@@ -443,13 +447,13 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
         }
         actions.onOpenSettings?.let { open ->
             CmpOutlinedButton(
-                text = stringResource(Res.string.configurator_card_btn_open),
+                text = stringResource(Strings.string.configurator_card_btn_open),
                 onClick = { open(card) },
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_OPEN)
             )
         }
         CmpOutlinedButton(
-            text = stringResource(Res.string.configurator_card_btn_save_mine),
+            text = stringResource(Strings.string.configurator_card_btn_save_mine),
             onClick = actions.onSaveRequest,
             modifier = Modifier.testTag(ConfiguratorTestTags.CARD_SAVE_MINE)
         )
@@ -461,7 +465,7 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
 private fun AttachmentTile(attachment: ConfigurationAttachment, index: Int, onClick: () -> Unit) {
     val colors = cmpThemeColors()
     val label = attachment.title.ifBlank { attachment.url.substringAfterLast('/') }
-    val description = stringResource(Res.string.configurator_a11y_attachment, label)
+    val description = stringResource(Strings.string.configurator_common_a11y_attachment, label)
     CmpColumn(
         modifier = Modifier
             .width(TileWidth)
@@ -508,15 +512,13 @@ private fun AttachmentViewer(attachment: ConfigurationAttachment, onClose: () ->
             CmpIconButton(
                 onClick = onClose,
                 icon = CmpIcons.Close,
-                contentDescription = stringResource(Res.string.configurator_btn_close),
+                contentDescription = stringResource(Strings.string.configurator_common_btn_close),
                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
             )
         }
     }
 }
 
-private val WideFrom = 600.dp
-private const val LIST_WEIGHT = 0.45f
 private const val DESCRIPTION_COLLAPSED_LINES = 4
 private val CardShape = RoundedCornerShape(12.dp)
 private val TileWidth = 120.dp

@@ -26,15 +26,16 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateTarget
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
@@ -42,6 +43,9 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 /**
@@ -72,6 +76,8 @@ class FirmwareUpdateViewModel(
 
     private class Profile(
         val kind: UpdateProfile,
+        /** Что обновляем и чем выходим из загрузчика — основная программа или Bluetooth-модуль. */
+        val target: BootModeTarget,
         /** Модель блока (основная программа) или прошивка Bluetooth-модуля — для базы устройств. */
         val deviceName: String,
         val deviceTitle: String,
@@ -92,7 +98,7 @@ class FirmwareUpdateViewModel(
         /** Прошивка из файла пользователя (вместо [candidate]). */
         val localFile: FirmwareFilePickResult.Picked? = null,
         val fileError: FileError? = null,
-        val sourceError: Boolean = false,
+        val sourceError: FirmwareError? = null,
         val exitDialog: Boolean = false,
         val exitError: Boolean = false,
         /** Пользователь подтвердил результат («OK»). */
@@ -164,7 +170,7 @@ class FirmwareUpdateViewModel(
         val selected = modules.indexOfFirst { it.id == core.selectedModuleId }.coerceAtLeast(0)
         val current = profile?.currentVersion
         val title = when (profile?.kind) {
-            UpdateProfile.Bluetooth -> modules.getOrNull(selected)?.let { "${it.title} (${it.systemName})" }
+            UpdateProfile.Bluetooth -> modules.getOrNull(selected)?.displayTitle
                 ?: profile.deviceTitle
 
             UpdateProfile.Main, null -> profile?.deviceTitle.orEmpty()
@@ -173,14 +179,14 @@ class FirmwareUpdateViewModel(
             phase = phaseOf(core, session, reboot),
             profile = profile?.kind ?: UpdateProfile.Main,
             deviceTitle = title,
-            moduleTitles = modules.map { "${it.title} (${it.systemName})" },
+            moduleTitles = modules.map { it.displayTitle },
             selectedModule = selected,
             currentVersion = current,
             channel = core.channel,
             confirm = confirmOf(core, current),
             sourceError = core.sourceError,
             exitDialog = core.exitDialog,
-            inBoot = session is DeviceSessionState.FirmwareBoot || session is DeviceSessionState.BluetoothBoot,
+            inBoot = session.isBoot,
             canExitBoot = profile?.canExit == true,
             exitError = core.exitError,
             fileError = core.fileError
@@ -202,8 +208,8 @@ class FirmwareUpdateViewModel(
     }
 
     private fun phaseOf(core: Core, session: DeviceSessionState, reboot: DeviceReboot?): UpdatePhase {
-        val inBoot = session is DeviceSessionState.FirmwareBoot || session is DeviceSessionState.BluetoothBoot
-        val linkDown = session is DeviceSessionState.Disconnected || session is DeviceSessionState.Connecting
+        val inBoot = session.isBoot
+        val linkDown = session.isLinkDown
         return when {
             reboot == DeviceReboot.ToBoot && !inBoot -> UpdatePhase.Entering
 
@@ -279,7 +285,7 @@ class FirmwareUpdateViewModel(
                     UpdateProfile.Main,
                     BootModeTarget.MainProgram,
                     device.systemName,
-                    "${device.systemName}  ${device.systemId}",
+                    device.title,
                     device.displayFirmwareVersion
                 )
             }
@@ -303,6 +309,7 @@ class FirmwareUpdateViewModel(
             state.copy(
                 profile = Profile(
                     source.kind,
+                    source.target,
                     source.deviceName,
                     source.title,
                     source.current,
@@ -339,7 +346,7 @@ class FirmwareUpdateViewModel(
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        core.update { it.copy(channel = channel, sourceError = false, exitError = false, fileError = null) }
+        core.update { it.copy(channel = channel, sourceError = null, exitError = false, fileError = null) }
     }
 
     /** «Скачать прошивку»: запросить последнюю версию выбранного канала и перейти к подтверждению. */
@@ -349,7 +356,7 @@ class FirmwareUpdateViewModel(
                 val start = core.value
                 val moduleId = start.selectedModuleId ?: return@executeWithProceedLock
                 if (!transition({ it.stage == UpdatePhase.Source }) {
-                        it.copy(stage = UpdatePhase.Download, sourceError = false, fileError = null)
+                        it.copy(stage = UpdatePhase.Download, sourceError = null, fileError = null)
                     }
                 ) {
                     return@executeWithProceedLock
@@ -363,7 +370,10 @@ class FirmwareUpdateViewModel(
                             localFile = null
                         )
 
-                        is Response.Error -> state.copy(stage = UpdatePhase.Source, sourceError = true)
+                        is Response.Error -> state.copy(
+                            stage = UpdatePhase.Source,
+                            sourceError = FirmwareError.from(response.exception)
+                        )
                     }
                 }
             }
@@ -400,7 +410,7 @@ class FirmwareUpdateViewModel(
                     stage = UpdatePhase.Confirm,
                     candidate = null,
                     localFile = result,
-                    sourceError = false,
+                    sourceError = null,
                     fileError = null
                 )
 
@@ -414,7 +424,7 @@ class FirmwareUpdateViewModel(
     // Версия выбрана в архиве: сразу на подтверждение (версия, описание и ссылка уже известны — запрашивать нечего).
     private fun onArchivePicked(version: FirmwareVersion) {
         transition({ it.stage == UpdatePhase.Source }) {
-            it.copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = false)
+            it.copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = null)
         }
     }
 
@@ -452,7 +462,7 @@ class FirmwareUpdateViewModel(
                     stage = UpdatePhase.Source,
                     candidate = null,
                     localFile = null,
-                    sourceError = false,
+                    sourceError = null,
                     exitError = false
                 )
             }
@@ -471,19 +481,14 @@ class FirmwareUpdateViewModel(
         val current = core.value
         val profile = current.profile ?: return
         if (current.stage != UpdatePhase.Source || !profile.canExit) return
-        val target = when (profile.kind) {
-            UpdateProfile.Main -> BootModeTarget.MainProgram
-            UpdateProfile.Bluetooth -> BootModeTarget.BluetoothModule
-        }
+        val target = profile.target
         safeLaunch {
             executeWithProceedLock {
                 deviceSession.expectReboot(DeviceReboot.ToMain)
                 deviceSession.acknowledgeReboot()
                 core.update { it.copy(acknowledged = true, exitError = false) }
                 val response = withContext(dispatchers.io) { deviceSession.exitBootMode(target) }
-                val stillInBoot = deviceSession.state.value.let {
-                    it is DeviceSessionState.FirmwareBoot || it is DeviceSessionState.BluetoothBoot
-                }
+                val stillInBoot = deviceSession.state.value.isBoot
                 if (response is Response.Error && stillInBoot) {
                     logger.d { "Exit boot mode failed: ${response.exception::class.simpleName}" }
                     deviceSession.cancelReboot()
@@ -498,7 +503,7 @@ class FirmwareUpdateViewModel(
         val stage = core.value.stage
         when {
             stage is UpdatePhase.Error -> core.update {
-                it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = false)
+                it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = null)
             }
 
             stage == UpdatePhase.DataError -> {
@@ -513,7 +518,7 @@ class FirmwareUpdateViewModel(
     }
 
     fun onReconnect() {
-        safeLaunch { deviceSession.reconnectNow() }
+        safeLaunch { withContext(dispatchers.io) { deviceSession.reconnectNow() } }
     }
 
     fun onDisconnect() {
@@ -545,11 +550,7 @@ class FirmwareUpdateViewModel(
     // ───── процесс обновления ─────
 
     private suspend fun runUpdate(source: UpdateSource) {
-        val kind = core.value.profile?.kind ?: return
-        val target = when (kind) {
-            UpdateProfile.Main -> FirmwareUpdateTarget.MainProgram
-            UpdateProfile.Bluetooth -> FirmwareUpdateTarget.BluetoothModule
-        }
+        val target = core.value.profile?.target ?: return
         val progress = when (source) {
             is UpdateSource.Server -> updateRepository.update(target, source.version)
             is UpdateSource.File -> updateRepository.updateFromFile(target, source.path)
@@ -608,9 +609,7 @@ class FirmwareUpdateViewModel(
     }
 
     private suspend fun linkWentDown(): Boolean = withTimeoutOrNull(LINK_GRACE) {
-        deviceSession.state.first {
-            it is DeviceSessionState.Disconnected || it is DeviceSessionState.Connecting
-        }
+        deviceSession.state.first { it.isLinkDown }
     } != null
 
     // Стадия меняется, только пока процесс идёт: запоздавшее событие отменённого процесса экран не трогает.

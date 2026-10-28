@@ -3,13 +3,16 @@ package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.timeline.SupportChatTimeline
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
 
 /**
  * Состояние экрана чата.
@@ -25,7 +28,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUi
 @Immutable
 data class SupportChatScreenState(
     // None/Loading → скелетон, Content → лента, Error → полный экран.
-    val history: LCEState<SupportChatTimeline> = LCEState.None(),
+    val history: LCEState<SupportChatTimeline, SupportChatError> = LCEState.None,
     // Первая страница истории получена: пока false, подгрузка — это первичная загрузка.
     val isInitialHistoryLoaded: Boolean = false,
     // Курсор следующей (более старой) страницы истории.
@@ -73,3 +76,19 @@ data class SupportChatScreenState(
     val isInputEnabled: Boolean
         get() = connection == SupportChatConnection.Online
 }
+
+internal sealed interface SupportChatListItem {
+    val key: String
+
+    data class DateDivider(val date: LocalDate, val label: String) : SupportChatListItem {
+        override val key: String get() = "$DATE_KEY_PREFIX$date"
+    }
+
+    data class Message(val message: SupportChatUiMessage) : SupportChatListItem {
+        override val key: String get() = "$MESSAGE_KEY_PREFIX${message.id}"
+    }
+}
+
+// Префиксы ключей элементов ленты (LazyColumn key); MESSAGE_KEY_PREFIX разбирает и экран — id из ключа.
+private const val DATE_KEY_PREFIX = "date_"
+internal const val MESSAGE_KEY_PREFIX = "msg_"

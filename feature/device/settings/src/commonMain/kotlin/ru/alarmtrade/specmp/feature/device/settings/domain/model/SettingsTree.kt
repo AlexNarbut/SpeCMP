@@ -34,9 +34,6 @@ fun SettingsSection.settings(): List<Setting> = children.flatMap { child ->
     }
 }
 
-/** Сколько настроек раздела (на любой глубине) входит в [ids] — счётчик изменений раздела. */
-fun SettingsSection.countIn(ids: Set<Int>): Int = settings().count { it.id in ids }
-
 /** Дерево, в котором настройка с тем же id заменена на [setting]; без совпадения — то же дерево. */
 fun SettingsSection.replace(setting: Setting): SettingsSection = copy(
     children = children.map { child ->
@@ -88,12 +85,4 @@ fun SettingsSection.search(query: String): List<SettingsSearchHit> {
 
 private fun SettingNode.matches(query: String): Boolean = name.contains(query, ignoreCase = true) ||
     (number.isNotEmpty() && number.startsWith(query)) ||
-    channelName?.contains(query, ignoreCase = true) == true
-
-private val SettingNode.channelName: String?
-    get() = when (this) {
-        is InputSetting -> channel.name
-        is OutputSetting -> channel.name
-        is SwitchOutputSetting -> channel.name
-        else -> null
-    }
+    channelOrNull?.name?.contains(query, ignoreCase = true) == true

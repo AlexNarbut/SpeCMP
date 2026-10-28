@@ -22,8 +22,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
-        // обязательно для модулей с compose resources (см. docs/build.md)
-        androidResources.enable = true
     }
 
     iosArm64()
@@ -31,12 +29,15 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
             // Логика настроек (источники, сессия SDK) и сессия устройства (переподключение, шапка)
             implementation(project(":feature:device:settings"))
             implementation(project(":feature:vehicle"))
             implementation(project(":feature:device:interaction"))
+            // BaseDeviceViewModel
+            implementation(project(":feature:device:interaction-ui"))
             // «Мои конфигурации»: «Сохранить в…» из редактора
             implementation(project(":feature:configurator"))
 
@@ -66,10 +67,4 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
     }
-}
-
-// Строковые ресурсы фичи (см. docs/localization.md)
-compose.resources {
-    publicResClass = false
-    generateResClass = always
 }

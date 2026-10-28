@@ -50,12 +50,12 @@ CmpText(text = "Hello")
 CmpScaffold(
     topBar = {
         CmpTopAppBar(
-            title = { CmpText(text = stringResource(Res.string.login_login_title_screen)) },
+            title = { CmpText(text = stringResource(Strings.string.login_login_title_screen)) },
             navigationIcon = {
                 CmpIconButton(
                     onClick = onBack,
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Res.string.login_common_a11y_back),
+                    contentDescription = stringResource(Strings.string.login_common_a11y_back),
                 )
             },
         )
@@ -187,6 +187,21 @@ commonMain.dependencies {
 
 Галерея новых компонентов (PNG, светлая/тёмная тема, без окна): `./gradlew :core:ui:jvmTest --tests '*KitGallery*'` →
 `core/ui/build/kit-gallery/`. Добавляя компонент, дополняй `KitGalleryTest` и смотри результат глазами.
+
+## Ошибки запроса и форм
+
+- **Текст ошибки** — ошибка фичи (sealed, с подтипом `Common(AppError)`) в `LCEState.Error` / поле state;
+  экран разбирает её исчерпывающим `when`: `Common` → `AppError.message()` (общий текст `core/ui`: «Нет подключения
+  к интернету», «Bluetooth выключен», «Связь с блоком прервана»…), свои подтипы → фразы экрана. Своих строк
+  для общих ошибок фичи не заводят (подробнее — `docs/patterns.md`, «Ошибки фичи»).
+- **Ошибка отправки формы не сдвигает форму.** Баннер не вставляется в поток формы над полями или под кнопкой:
+  форма обычно центрирована, и появление баннера двигает поля и кнопку под пальцем. Показывай его поверх контента
+  внизу экрана (с отступом от клавиатуры и навигационной панели, анимацией появления) или в заранее
+  зарезервированном месте фиксированной высоты. Образец — `AuthBody(error = …)` в `feature/login`.
+- **Поля подсвечиваются (`isError`) только когда виноват ввод** (сервер отклонил логин/пароль, не заполнено поле).
+  При общей ошибке (`Common(AppError)` — нет связи и т.п.) поля не красятся.
+- Блоки состояния вместо содержимого (ошибка загрузки списка, карточки) — `CmpStateBox` с заголовком
+  `error.text(…)` и кнопкой «Повторить»; они заменяют содержимое целиком, поэтому прыжка формы нет.
 
 ## Исключения из «только Cmp*»
 

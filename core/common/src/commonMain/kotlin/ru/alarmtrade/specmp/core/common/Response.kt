@@ -12,19 +12,12 @@ package ru.alarmtrade.specmp.core.common
  *   - No Loading state (loading is UI concern)
  * - **LCEState**: Used in UI layer (ViewModels, Compose)
  *   - Has Loading, Content, Error, None states
- *   - Convert Response to LCEState using `.asLCEState()`
+ *   - Convert Response to LCEState using `.asLCEState(XxxError::from)` (feature error, see AppError)
  *
  * ## Usage
  * ```kotlin
  * // Repository layer
- * suspend fun getUser(id: String): Response<User> {
- *     return try {
- *         val user = apiClient.fetchUser(id)
- *         Response.Success(user)
- *     } catch (e: Exception) {
- *         Response.Error(e, "Failed to fetch user")
- *     }
- * }
+ * suspend fun getUser(id: String): Response<User> = safeRun { apiClient.fetchUser(id) }
  *
  * // Use case layer
  * suspend fun invoke(id: String): Response<User> {
@@ -32,9 +25,9 @@ package ru.alarmtrade.specmp.core.common
  * }
  *
  * // UI layer - convert to LCEState
- * val uiState: StateFlow<LCEState<User>> = flow {
- *     emit(useCase().asLCEState { it.message ?: "Error" })
- * }.stateIn(viewModelScope, SharingStarted.Lazily, LCEState.Loading())
+ * val uiState: StateFlow<LCEState<User, ProfileError>> = flow {
+ *     emit(useCase().asLCEState(ProfileError::from))
+ * }.stateIn(viewModelScope, SharingStarted.Lazily, LCEState.Loading)
  * ```
  *
  * @see ResponseExt for extension functions

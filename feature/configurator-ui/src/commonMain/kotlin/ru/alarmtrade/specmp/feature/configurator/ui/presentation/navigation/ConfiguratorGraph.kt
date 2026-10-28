@@ -4,12 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -26,6 +26,15 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.common.safeRun
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_open
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_copied
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_deleted
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_failed
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_file_failed
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_file_saved
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_renamed
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_msg_saved_mine
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
@@ -64,15 +73,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.Set
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
-import specmp.feature.configurator_ui.generated.resources.Res
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_open
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_copied
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_deleted
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_failed
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_file_failed
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_file_saved
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_renamed
-import specmp.feature.configurator_ui.generated.resources.configurator_msg_saved_mine
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 
 /**
  * Выбор автомобиля из каталога (фича `vehicle-ui`, подключается в `composeApp`): [VehicleCatalog.WITH_CONFIGURATIONS] —
@@ -201,7 +202,7 @@ private fun ConfiguratorGraph(
                     vehiclePicker(
                         VehicleCatalog.WITH_CONFIGURATIONS,
                         (mode as? GraphMode.Pick)?.request?.deviceName,
-                        { car -> backStack.navigateSafe(CloudListRoute(car.id, car.title())) },
+                        { car -> backStack.navigateSafe(CloudListRoute(car.id, car.fullName())) },
                         back
                     )
                 }
@@ -234,11 +235,11 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
     val pick = mode as? GraphMode.Pick
     val full = mode as? GraphMode.Full
     val viewModel = koinViewModel<MineViewModel>(parameters = { parametersOf(pick?.request?.deviceName) })
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { CmpSnackbarHostState() }
     val scope = rememberCoroutineScope()
     val filePicker = full?.filePicker ?: NoSettingsFilePicker
-    val fileFailed = stringResource(Res.string.configurator_msg_file_failed)
+    val fileFailed = stringResource(Strings.string.configurator_common_msg_file_failed)
 
     LaunchedEffect(filePicker) {
         filePicker.results.collect { result ->
@@ -259,8 +260,8 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
 
             is MineEffect.Copied -> {
                 val result = snackbarHostState.showSnackbar(
-                    getString(Res.string.configurator_msg_copied),
-                    actionLabel = getString(Res.string.configurator_btn_open),
+                    getString(Strings.string.configurator_common_msg_copied),
+                    actionLabel = getString(Strings.string.configurator_common_btn_open),
                     duration = CmpSnackbarDuration.Long
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
@@ -273,7 +274,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
             }
 
             is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
-                getString(Res.string.configurator_msg_file_saved, effect.name)
+                getString(Strings.string.configurator_common_msg_file_saved, effect.name)
             )
         }
     }
@@ -343,7 +344,7 @@ private fun mineActions(
 @Composable
 private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBack: () -> Unit) {
     val viewModel = koinViewModel<ModelsViewModel>(parameters = { parametersOf(key.file) })
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
             // Модель выбрана — вместо выбора модели открывается редактор: «назад» из него ведёт к списку.
@@ -365,7 +366,7 @@ private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBac
 private fun CloudListEntry(key: CloudListRoute, backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: () -> Unit) {
     val deviceName = (mode as? GraphMode.Pick)?.request?.deviceName.orEmpty()
     val viewModel = koinViewModel<CloudListViewModel>(parameters = { parametersOf(key.carId, deviceName) })
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { CmpSnackbarHostState() }
     CloudListScreen(
         state = state,
@@ -397,7 +398,7 @@ private fun cloudCard(
         key = "cloud_card_$id",
         parameters = { parametersOf(id, pick?.request?.firmwareCanCode) }
     )
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
@@ -405,8 +406,8 @@ private fun cloudCard(
 
             is CloudCardEffect.SavedToMine -> {
                 val result = snackbarHostState.showSnackbar(
-                    getString(Res.string.configurator_msg_saved_mine),
-                    actionLabel = if (full != null) getString(Res.string.configurator_btn_open) else null,
+                    getString(Strings.string.configurator_common_msg_saved_mine),
+                    actionLabel = if (full != null) getString(Strings.string.configurator_common_btn_open) else null,
                     duration = CmpSnackbarDuration.Long
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
@@ -414,7 +415,9 @@ private fun cloudCard(
                 }
             }
 
-            CloudCardEffect.SaveFailed -> snackbarHostState.showSnackbar(getString(Res.string.configurator_msg_failed))
+            CloudCardEffect.SaveFailed -> snackbarHostState.showSnackbar(
+                getString(Strings.string.configurator_common_msg_failed)
+            )
         }
     }
     val actions = remember(viewModel, backStack) {
@@ -441,13 +444,11 @@ private fun cloudCard(
 }
 
 private fun MineMessage.text() = when (this) {
-    MineMessage.COPIED -> Res.string.configurator_msg_copied
-    MineMessage.DELETED -> Res.string.configurator_msg_deleted
-    MineMessage.RENAMED -> Res.string.configurator_msg_renamed
-    MineMessage.FAILED -> Res.string.configurator_msg_failed
+    MineMessage.COPIED -> Strings.string.configurator_common_msg_copied
+    MineMessage.DELETED -> Strings.string.configurator_common_msg_deleted
+    MineMessage.RENAMED -> Strings.string.configurator_common_msg_renamed
+    MineMessage.FAILED -> Strings.string.configurator_common_msg_failed
 }
-
-private fun CarSummary.title(): String = listOf(brand, model, name).filter { it.isNotBlank() }.joinToString(" ")
 
 /** Сохранение файла недоступно (режим выбора). */
 private object NoSaver : SettingsFileSaver {

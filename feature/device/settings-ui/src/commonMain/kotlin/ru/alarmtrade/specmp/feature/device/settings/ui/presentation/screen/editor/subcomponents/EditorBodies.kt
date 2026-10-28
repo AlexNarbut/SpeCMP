@@ -29,6 +29,18 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_hours_down
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_hours_up
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_less
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_minutes_down
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_minutes_up
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_more
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_a11y_type_value
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_error_invalid
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_error_range
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_label_counter
+import ru.alarmtrade.specmp.core.localization.resources.settings_edit_label_value
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpStepButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -47,19 +59,9 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.decimalNumber
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.decimalText
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.edgeText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.matchesPattern
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_hours_down
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_hours_up
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_less
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_minutes_down
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_minutes_up
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_more
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_a11y_type_value
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_error_invalid
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_error_range
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_label_counter
-import specmp.feature.device.settings_ui.generated.resources.settings_edit_label_value
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.withUnits
 
 /** Больше делений — ползунок без отметок (значение всё равно округляется к шагу). */
 private const val MAX_SLIDER_STEPS = 20
@@ -93,18 +95,14 @@ internal fun IntRangeEditor(
     minValueText: String? = null,
     maxValueText: String? = null
 ) {
-    val edgeLabel = when (value) {
-        range.first -> minValueText
-        range.last -> maxValueText
-        else -> null
-    }
+    val edgeLabel = edgeText(value, range.first, range.last, minValueText, maxValueText)
     NumberEditor(
         bigText = edgeLabel ?: value.toString(),
         units = units.takeIf { edgeLabel == null },
         typedInitial = value.toString(),
         parse = { text -> text.trim().toIntOrNull()?.takeIf { it in range } },
         onType = onChange,
-        rangeError = stringResource(Res.string.settings_edit_error_range, range.first, range.last),
+        rangeError = stringResource(Strings.string.settings_edit_error_range, range.first, range.last),
         onStep = { delta -> onChange((value + delta).coerceIn(range)) },
         slider = SliderSpec(
             value = value.toFloat(),
@@ -112,8 +110,8 @@ internal fun IntRangeEditor(
             steps = (range.last - range.first - 1).takeIf { it in 0..MAX_SLIDER_STEPS } ?: 0,
             onChange = { onChange(it.roundToInt().coerceIn(range)) }
         ),
-        minLabel = minValueText ?: unitsOf(range.first.toString(), units),
-        maxLabel = maxValueText ?: unitsOf(range.last.toString(), units)
+        minLabel = minValueText ?: withUnits(range.first.toString(), units),
+        maxLabel = maxValueText ?: withUnits(range.last.toString(), units)
     )
 }
 
@@ -125,11 +123,7 @@ internal fun DecimalEditor(setting: DecimalSetting, value: Float, onChange: (Flo
             setting.maxValue
         )
     }
-    val edgeLabel = when (value) {
-        setting.minValue -> setting.minValueText
-        setting.maxValue -> setting.maxValueText
-        else -> null
-    }
+    val edgeLabel = edgeText(value, setting.minValue, setting.maxValue, setting.minValueText, setting.maxValueText)
     val stepsCount = ((setting.maxValue - setting.minValue) / setting.step).roundToInt() - 1
     NumberEditor(
         bigText = edgeLabel ?: decimalNumber(setting, value),
@@ -141,7 +135,7 @@ internal fun DecimalEditor(setting: DecimalSetting, value: Float, onChange: (Flo
         },
         onType = onChange,
         rangeError = stringResource(
-            Res.string.settings_edit_error_range,
+            Strings.string.settings_edit_error_range,
             decimalNumber(setting, setting.minValue),
             decimalNumber(setting, setting.maxValue)
         ),
@@ -192,7 +186,7 @@ private fun <T> NumberEditor(
         ) {
             CmpStepButton(
                 icon = CmpIcons.Remove,
-                contentDescription = stringResource(Res.string.settings_edit_a11y_less),
+                contentDescription = stringResource(Strings.string.settings_edit_a11y_less),
                 onStep = {
                     typing = false
                     onStep(-1)
@@ -214,7 +208,7 @@ private fun <T> NumberEditor(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
                 } else {
-                    val typeLabel = stringResource(Res.string.settings_edit_a11y_type_value)
+                    val typeLabel = stringResource(Strings.string.settings_edit_a11y_type_value)
                     CmpRow(
                         modifier = Modifier
                             .heightIn(min = 64.dp)
@@ -244,7 +238,7 @@ private fun <T> NumberEditor(
             }
             CmpStepButton(
                 icon = CmpIcons.Add,
-                contentDescription = stringResource(Res.string.settings_edit_a11y_more),
+                contentDescription = stringResource(Strings.string.settings_edit_a11y_more),
                 onStep = {
                     typing = false
                     onStep(1)
@@ -266,8 +260,6 @@ private fun <T> NumberEditor(
         }
     }
 }
-
-private fun unitsOf(number: String, units: String?): String = if (units.isNullOrBlank()) number else "$number $units"
 
 /** Список вариантов с радиокнопками; длинные названия переносятся, текущий вариант виден сразу. */
 @Composable
@@ -311,15 +303,15 @@ internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) 
     CmpTextField(
         value = value,
         onValueChange = { onChange(it.take(setting.maxLength)) },
-        label = stringResource(Res.string.settings_edit_label_value),
+        label = stringResource(Strings.string.settings_edit_label_value),
         singleLine = true,
         isError = !valid,
         supportingText = {
             CmpText(
                 text = if (valid) {
-                    stringResource(Res.string.settings_edit_label_counter, value.length, setting.maxLength)
+                    stringResource(Strings.string.settings_edit_label_counter, value.length, setting.maxLength)
                 } else {
-                    setting.validationErrorText ?: stringResource(Res.string.settings_edit_error_invalid)
+                    setting.validationErrorText ?: stringResource(Strings.string.settings_edit_error_invalid)
                 }
             )
         },
@@ -344,8 +336,8 @@ internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
     ) {
         TimeUnit(
             value = value.hours,
-            upLabel = stringResource(Res.string.settings_edit_a11y_hours_up),
-            downLabel = stringResource(Res.string.settings_edit_a11y_hours_down),
+            upLabel = stringResource(Strings.string.settings_edit_a11y_hours_up),
+            downLabel = stringResource(Strings.string.settings_edit_a11y_hours_down),
             onStep = { delta -> onChange(value.copy(hours = (value.hours + delta).mod(HOURS_IN_DAY))) }
         )
         CmpText(
@@ -356,8 +348,8 @@ internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
         )
         TimeUnit(
             value = value.minutes,
-            upLabel = stringResource(Res.string.settings_edit_a11y_minutes_up),
-            downLabel = stringResource(Res.string.settings_edit_a11y_minutes_down),
+            upLabel = stringResource(Strings.string.settings_edit_a11y_minutes_up),
+            downLabel = stringResource(Strings.string.settings_edit_a11y_minutes_down),
             onStep = { delta -> onChange(value.copy(minutes = (value.minutes + delta).mod(MINUTES_IN_HOUR))) }
         )
     }

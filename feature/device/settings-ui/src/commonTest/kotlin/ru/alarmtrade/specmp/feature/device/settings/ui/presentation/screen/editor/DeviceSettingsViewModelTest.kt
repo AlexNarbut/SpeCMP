@@ -10,6 +10,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -17,9 +18,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -27,6 +28,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -64,6 +67,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -77,7 +81,8 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepo
 
 class DeviceSettingsViewModelTest {
 
-    private val dispatcher = StandardTestDispatcher()
+    // Unconfined: state — stateIn поверх _state, значение доходит сразу после интента.
+    private val dispatcher = UnconfinedTestDispatcher()
     private val viewModels = mutableListOf<DeviceSettingsViewModel>()
 
     private val device = AlarmDevice(
@@ -178,7 +183,7 @@ class DeviceSettingsViewModelTest {
         }
     }
 
-    private fun DeviceSettingsViewModel.root() = (state.value.menu as SettingsMenu.Ready).root
+    private fun DeviceSettingsViewModel.root() = (state.value.menu as LCEState.Content).content
 
     @Test
     fun `menu is read from the device with reload and the header shows the unit`() = test {
@@ -252,6 +257,42 @@ class DeviceSettingsViewModelTest {
     }
 
     @Test
+    fun `retry after a failed compare keeps the session of the editor that owns the source`() = test {
+        // «Записать в блок» из конфигурации: её сессию держит редактор конфигурации — не закрываем.
+        val owned = SettingsSource.LocalConfiguration(5, "DX-9X", "Нива")
+        repository.snapshotResult = Response.Error(IllegalStateException("snapshot"))
+        val vm = viewModel(options = SettingsEditorOptions(loadOnOpen = owned))
+        assertIs<DiffState.Error>(vm.state.value.diff)
+
+        repository.snapshotResult = null
+        vm.onDiffRetry()
+        settle()
+
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+        assertEquals(listOf<SettingsSource>(owned, owned), repository.snapshotSources)
+        assertTrue(repository.closed.none { it == owned })
+    }
+
+    @Test
+    fun `lost link while applying a configuration releases the progress and the snapshot`() = test {
+        repository.snapshotTree = tree.replace(shock.copy(value = SettingValue.Switch(true)))
+        repository.copyGate = CompletableDeferred<Unit>()
+        val vm = viewModel()
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+
+        vm.onDiffConfirm()
+        settle()
+        assertTrue(vm.state.value.isApplying)
+
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        settle()
+
+        assertFalse(vm.state.value.isApplying)
+        assertEquals(1, repository.discarded.size)
+    }
+
+    @Test
     fun `save to my configurations copies the current session`() = test {
         val vm = viewModel()
 
@@ -295,7 +336,7 @@ class DeviceSettingsViewModelTest {
     fun `read error shows error and retry reads again`() = test {
         repository.openResult = Response.Error(IllegalStateException("timeout"))
         val vm = viewModel()
-        assertIs<SettingsMenu.Error>(vm.state.value.menu)
+        assertIs<LCEState.Error<*>>(vm.state.value.menu)
 
         repository.openResult = null
         vm.onRetry()
@@ -497,7 +538,7 @@ class DeviceSettingsViewModelTest {
 
         val editing = assertNotNull(vm.state.value.editing)
         assertEquals(SettingValue.Can(CanCode("7001", 21)), editing.draft)
-        assertEquals(CarSearch.Found(listOf(cars.rio)), editing.carSearch)
+        assertEquals(LCEState.Content(listOf(cars.rio)), editing.carSearch)
     }
 
     @Test
@@ -512,11 +553,11 @@ class DeviceSettingsViewModelTest {
         assertEquals(SettingValue.Can(CanCode("7002", 22)), vm.state.value.editing?.draft)
 
         vm.onDraftChange(SettingValue.Can(CanCode("9999", null)))
-        assertEquals(CarSearch.Idle, vm.state.value.editing?.carSearch)
+        assertEquals(LCEState.None, vm.state.value.editing?.carSearch)
         cars.fail = true
         vm.onCarSearch()
         settle()
-        assertEquals(CarSearch.Failed, vm.state.value.editing?.carSearch)
+        assertEquals(LCEState.Error(SettingsError.LoadFailed), vm.state.value.editing?.carSearch)
     }
 
     @Test
@@ -645,10 +686,19 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     /** Меню снимка конфигурации (что загрузится). */
     var snapshotTree: SettingsSection = initial
     var copyResult: Response<SettingsSection>? = null
+
+    /** Копирование «висит», пока не завершён (обрыв связи посреди загрузки). */
+    var copyGate: CompletableDeferred<Unit>? = null
+    var snapshotResult: Response<SettingsSource.File>? = null
     val snapshotSources = mutableListOf<SettingsSource>()
     val discarded = mutableListOf<SettingsSource.File>()
 
-    override suspend fun close(source: SettingsSource): Response<Unit> = Response.Success(Unit)
+    val closed = mutableListOf<SettingsSource>()
+
+    override suspend fun close(source: SettingsSource): Response<Unit> {
+        closed += source
+        return Response.Success(Unit)
+    }
 
     override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> {
         setCalls += settingId to value
@@ -690,6 +740,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
         to: SettingsSource,
         saveChanges: Boolean
     ): Response<SettingsSection> {
+        copyGate?.await()
         copyResult?.let { return it }
         if (from is SettingsSource.File) current = snapshotTree
         return Response.Success(current)
@@ -697,6 +748,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
 
     override suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File> {
         snapshotSources += from
+        snapshotResult?.let { return it }
         return Response.Success(SettingsSource.File("snapshot.dxs", deviceName))
     }
 

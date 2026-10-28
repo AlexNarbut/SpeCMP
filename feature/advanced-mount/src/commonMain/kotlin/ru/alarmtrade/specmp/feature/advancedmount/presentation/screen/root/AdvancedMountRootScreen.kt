@@ -28,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -42,10 +41,49 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_a11y_can_hint
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_a11y_remote_sync
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_fix
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_go_update
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_ok
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_product_info
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_error_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_error_title
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_loading
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_title
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_denied_title
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_dialog_msg_can_hint
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_dialog_msg_can_update
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_dialog_title_attention
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_dialog_title_can_hint
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_label_can_code
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_label_can_firmware
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_label_firmware
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_label_id
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_label_imei
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_label_mode
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_value_mode_boot
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_value_mode_main
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_value_transport_ble
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_header_value_transport_usb
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_root_subtitle_no_model
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_root_title_no_model
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_msg_locked
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_support_chat_unread
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_support_chat_unread
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_unsupported_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_unsupported_title
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
+import ru.alarmtrade.specmp.core.ui.error.message
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -63,6 +101,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.sectionPainter
@@ -73,41 +112,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import specmp.feature.advanced_mount.generated.resources.Res
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_a11y_back
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_a11y_can_hint
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_a11y_remote_sync
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_btn_cancel
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_btn_fix
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_btn_go_update
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_btn_ok
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_btn_product_info
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_btn_retry
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_denied_title
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_dialog_attention
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_dialog_can_hint
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_dialog_can_hint_title
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_dialog_can_update
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_error_subtitle
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_error_title
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_header_id
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_header_mode
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_loading
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_mode_boot
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_mode_main
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_no_model_subtitle
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_no_model_title
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_row_can_code
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_row_can_firmware
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_row_firmware
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_row_imei
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_locked
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_support_chat_unread
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_section_support_chat_unread_sub
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_title
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_transport_ble
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_transport_usb
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_unsupported_subtitle
-import specmp.feature.advanced_mount.generated.resources.advanced_mount_unsupported_title
 import specmp.feature.advanced_mount.generated.resources.mount_dialog_warning
 import specmp.feature.advanced_mount.generated.resources.mount_remote_sync
 
@@ -138,7 +142,7 @@ internal fun AdvancedMountRootScreen(
     onBack: () -> Unit
 ) {
     val viewModel = koinViewModel<AdvancedMountRootViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     viewModel.effect.collectSideEffect { effect ->
         val deviceTitle = viewModel.state.value.device?.title().orEmpty()
@@ -171,12 +175,12 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.advanced_mount_title)) },
+                title = { CmpText(text = stringResource(Strings.string.advancedmount_common_title)) },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.advanced_mount_a11y_back)
+                        contentDescription = stringResource(Strings.string.advancedmount_common_a11y_back)
                     )
                 },
                 actions = { if (state.remoteAvailable) RemoteSyncAction(actions.onRemoteSyncClick) }
@@ -224,18 +228,18 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
 
     when (state.dialog) {
         MountDialog.CAN_UPDATE -> WarningDialog(
-            title = stringResource(Res.string.advanced_mount_dialog_attention),
-            text = stringResource(Res.string.advanced_mount_dialog_can_update),
-            confirmText = stringResource(Res.string.advanced_mount_btn_go_update),
+            title = stringResource(Strings.string.advancedmount_dialog_title_attention),
+            text = stringResource(Strings.string.advancedmount_dialog_msg_can_update),
+            confirmText = stringResource(Strings.string.advancedmount_common_btn_go_update),
             onConfirm = actions.onCanUpdateConfirm,
-            dismissText = stringResource(Res.string.advanced_mount_btn_cancel),
+            dismissText = stringResource(Strings.string.advancedmount_common_btn_cancel),
             onDismiss = actions.onDialogDismiss
         )
 
         MountDialog.CAN_HINT -> WarningDialog(
-            title = stringResource(Res.string.advanced_mount_dialog_can_hint_title),
-            text = stringResource(Res.string.advanced_mount_dialog_can_hint),
-            confirmText = stringResource(Res.string.advanced_mount_btn_ok),
+            title = stringResource(Strings.string.advancedmount_dialog_title_can_hint),
+            text = stringResource(Strings.string.advancedmount_dialog_msg_can_hint),
+            confirmText = stringResource(Strings.string.advancedmount_common_btn_ok),
             onConfirm = actions.onDialogDismiss,
             dismissText = null,
             onDismiss = actions.onDialogDismiss
@@ -266,7 +270,7 @@ private fun RemoteSyncAction(onClick: () -> Unit) {
     ) {
         CmpIcon(
             painter = painterResource(Res.drawable.mount_remote_sync),
-            contentDescription = stringResource(Res.string.advanced_mount_a11y_remote_sync),
+            contentDescription = stringResource(Strings.string.advancedmount_common_a11y_remote_sync),
             modifier = Modifier.size(30.dp).alpha(pulseAlpha(periodMillis = 1_800)),
             tint = colors.primary
         )
@@ -330,7 +334,7 @@ private fun DeviceHeaderCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     CmpText(
-                        text = stringResource(Res.string.advanced_mount_header_id, device.systemId.toString()),
+                        text = stringResource(Strings.string.advancedmount_header_label_id, device.systemId.toString()),
                         fontSize = 14.sp,
                         color = colors.onSurfaceVariant
                     )
@@ -344,9 +348,9 @@ private fun DeviceHeaderCard(
                             if (transport ==
                                 ConnectionTransport.BLE
                             ) {
-                                Res.string.advanced_mount_transport_ble
+                                Strings.string.advancedmount_header_value_transport_ble
                             } else {
-                                Res.string.advanced_mount_transport_usb
+                                Strings.string.advancedmount_header_value_transport_usb
                             }
                         ),
                         bg = colors.secondaryContainer,
@@ -357,9 +361,13 @@ private fun DeviceHeaderCard(
                 HeaderChip(
                     icon = if (boot) CmpIcons.Download else CmpIcons.CheckCircle,
                     text = stringResource(
-                        Res.string.advanced_mount_header_mode,
+                        Strings.string.advancedmount_header_label_mode,
                         stringResource(
-                            if (boot) Res.string.advanced_mount_mode_boot else Res.string.advanced_mount_mode_main
+                            if (boot) {
+                                Strings.string.advancedmount_header_value_mode_boot
+                            } else {
+                                Strings.string.advancedmount_header_value_mode_main
+                            }
                         )
                     ),
                     bg = if (boot) colors.tertiaryContainer else colors.primaryContainer,
@@ -368,12 +376,18 @@ private fun DeviceHeaderCard(
             }
             CmpColumn {
                 CmpDivider()
-                HeaderRow(stringResource(Res.string.advanced_mount_row_firmware), device.displayFirmwareVersion)
+                HeaderRow(
+                    stringResource(Strings.string.advancedmount_header_label_firmware),
+                    device.displayFirmwareVersion
+                )
                 device.can?.let { can ->
                     CmpDivider()
-                    HeaderRow(stringResource(Res.string.advanced_mount_row_can_firmware), can.firmwareVersion)
+                    HeaderRow(
+                        stringResource(Strings.string.advancedmount_header_label_can_firmware),
+                        can.firmwareVersion
+                    )
                     CmpDivider()
-                    HeaderRow(stringResource(Res.string.advanced_mount_row_can_code), can.code) {
+                    HeaderRow(stringResource(Strings.string.advancedmount_header_label_can_code), can.code) {
                         CmpBox(
                             modifier = Modifier.size(
                                 40.dp
@@ -382,7 +396,7 @@ private fun DeviceHeaderCard(
                         ) {
                             CmpIcon(
                                 icon = CmpIcons.Warning,
-                                contentDescription = stringResource(Res.string.advanced_mount_a11y_can_hint),
+                                contentDescription = stringResource(Strings.string.advancedmount_common_a11y_can_hint),
                                 modifier = Modifier.size(22.dp).alpha(pulseAlpha(periodMillis = 1_600)),
                                 tint = colors.error
                             )
@@ -391,7 +405,7 @@ private fun DeviceHeaderCard(
                 }
                 state.imei?.let {
                     CmpDivider()
-                    HeaderRow(stringResource(Res.string.advanced_mount_row_imei), it)
+                    HeaderRow(stringResource(Strings.string.advancedmount_header_label_imei), it)
                 }
             }
             if (state.productInfo) {
@@ -403,7 +417,7 @@ private fun DeviceHeaderCard(
                         tint = colors.primary
                     )
                     CmpText(
-                        text = stringResource(Res.string.advanced_mount_btn_product_info),
+                        text = stringResource(Strings.string.advancedmount_common_btn_product_info),
                         modifier = Modifier.padding(start = 8.dp),
                         fontWeight = FontWeight.Medium,
                         color = colors.primary
@@ -458,53 +472,68 @@ private fun HeaderRow(label: String, value: String, trailing: (@Composable () ->
 @Composable
 private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, actions: AdvancedMountRootActions) {
     when (val content = state.content) {
-        MountContent.Loading -> CenterBlock {
+        LCEState.None, LCEState.Loading -> CenterBlock {
             CmpCircularProgressIndicator()
             CmpText(
-                text = stringResource(Res.string.advanced_mount_loading),
+                text = stringResource(Strings.string.advancedmount_common_loading),
                 fontSize = 16.sp,
                 color = cmpThemeColors().onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
 
-        MountContent.VerifyError -> CenterBlock {
+        is LCEState.Error -> CenterBlock {
             Hero(CmpIcons.WifiOff, error = false)
             CmpText(
-                text = stringResource(Res.string.advanced_mount_error_title),
+                text = when (val error = content.error) {
+                    is MountError.Common -> error.error.message()
+                    MountError.VerifyFailed -> stringResource(Strings.string.advancedmount_common_error_title)
+                },
                 fontSize = 22.sp,
                 textAlign = TextAlign.Center
             )
             CmpText(
-                text = stringResource(Res.string.advanced_mount_error_subtitle),
+                text = stringResource(Strings.string.advancedmount_common_error_subtitle),
                 fontSize = 16.sp,
                 color = cmpThemeColors().onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
-            RefreshButton(stringResource(Res.string.advanced_mount_btn_fix), actions.onRetry)
+            RefreshButton(stringResource(Strings.string.advancedmount_common_btn_fix), actions.onRetry)
         }
 
-        is MountContent.Denied -> CenterBlock {
+        is LCEState.Content -> AccessArea(content.content, state, layout, actions)
+    }
+}
+
+@Composable
+private fun AccessArea(
+    access: MountAccess,
+    state: AdvancedMountRootState,
+    layout: MountLayout,
+    actions: AdvancedMountRootActions
+) {
+    when (access) {
+        is MountAccess.Denied -> CenterBlock {
             Hero(CmpIcons.Lock, error = true)
             CmpText(
-                text = stringResource(Res.string.advanced_mount_denied_title),
+                text = stringResource(Strings.string.advancedmount_denied_title),
                 fontSize = 22.sp,
                 textAlign = TextAlign.Center
             )
-            if (content.message.isNotBlank()) {
+            if (access.message.isNotBlank()) {
                 CmpText(
-                    text = content.message,
+                    text = access.message,
                     fontSize = 16.sp,
                     color = cmpThemeColors().onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
-            RefreshButton(stringResource(Res.string.advanced_mount_btn_retry), actions.onRetry)
+            RefreshButton(stringResource(Strings.string.advancedmount_common_btn_retry), actions.onRetry)
         }
 
-        is MountContent.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (content.unsupported) UnsupportedBanner(modelNotInDatabase = content.modelNotInDatabase)
-            SectionsGrid(content.sections, layout, state.canLocked, state.unreadCount, actions.onSectionClick)
+        is MountAccess.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (access.unsupported) UnsupportedBanner(modelNotInDatabase = access.modelNotInDatabase)
+            SectionsGrid(access.sections, layout, state.canLocked, state.unreadCount, actions.onSectionClick)
         }
     }
 }
@@ -573,9 +602,9 @@ private fun UnsupportedBanner(modelNotInDatabase: Boolean) {
                 CmpText(
                     text = stringResource(
                         if (modelNotInDatabase) {
-                            Res.string.advanced_mount_no_model_title
+                            Strings.string.advancedmount_root_title_no_model
                         } else {
-                            Res.string.advanced_mount_unsupported_title
+                            Strings.string.advancedmount_unsupported_title
                         }
                     ),
                     fontSize = 16.sp,
@@ -585,9 +614,9 @@ private fun UnsupportedBanner(modelNotInDatabase: Boolean) {
                 CmpText(
                     text = stringResource(
                         if (modelNotInDatabase) {
-                            Res.string.advanced_mount_no_model_subtitle
+                            Strings.string.advancedmount_root_subtitle_no_model
                         } else {
-                            Res.string.advanced_mount_unsupported_subtitle
+                            Strings.string.advancedmount_unsupported_subtitle
                         }
                     ),
                     fontSize = 14.sp,
@@ -673,7 +702,7 @@ private fun SectionTile(
                 CmpText(
                     text = if (unread) {
                         stringResource(
-                            Res.string.advanced_mount_section_support_chat_unread
+                            Strings.string.advancedmount_sections_title_support_chat_unread
                         )
                     } else {
                         sectionTitle(section)
@@ -685,7 +714,7 @@ private fun SectionTile(
                 )
                 if (locked) {
                     CmpText(
-                        text = stringResource(Res.string.advanced_mount_section_locked),
+                        text = stringResource(Strings.string.advancedmount_sections_msg_locked),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = colors.onTertiaryContainer,
@@ -696,7 +725,7 @@ private fun SectionTile(
                     CmpText(
                         text = if (unread) {
                             stringResource(
-                                Res.string.advanced_mount_section_support_chat_unread_sub
+                                Strings.string.advancedmount_sections_subtitle_support_chat_unread
                             )
                         } else {
                             sectionSubtitle(section)

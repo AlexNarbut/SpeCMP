@@ -11,14 +11,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.login_authroot_subtitle_specialist
+import ru.alarmtrade.specmp.core.localization.resources.login_authroot_title_brand
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.image.CmpImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import specmp.feature.login.generated.resources.Res
 import specmp.feature.login.generated.resources.app_icon
-import specmp.feature.login.generated.resources.login_authroot_subtitle_specialist
-import specmp.feature.login.generated.resources.login_authroot_title_brand
 
 @Composable
 fun AuthBrandHeader(colors: CmpThemeColors, modifier: Modifier = Modifier) {
@@ -34,7 +35,7 @@ fun AuthBrandHeader(colors: CmpThemeColors, modifier: Modifier = Modifier) {
         )
 
         CmpText(
-            text = stringResource(Res.string.login_authroot_title_brand),
+            text = stringResource(Strings.string.login_authroot_title_brand),
             fontSize = 34.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.onBackground,
@@ -42,7 +43,7 @@ fun AuthBrandHeader(colors: CmpThemeColors, modifier: Modifier = Modifier) {
         )
 
         CmpText(
-            text = stringResource(Res.string.login_authroot_subtitle_specialist),
+            text = stringResource(Strings.string.login_authroot_subtitle_specialist),
             fontSize = 16.sp,
             color = colors.onBackground.copy(alpha = 0.72f),
             textAlign = TextAlign.Center

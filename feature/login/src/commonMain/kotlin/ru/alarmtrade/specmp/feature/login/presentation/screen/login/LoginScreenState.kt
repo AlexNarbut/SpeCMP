@@ -10,13 +10,15 @@ data class LoginScreenState(
     val login: String = "",
     val password: String = "",
     val isPasswordVisible: Boolean = false,
-    val authState: LCEState<LoginResult> = LCEState.None(),
-    val authError: AuthFormError? = null,
-    val activationResendState: LCEState<Unit> = LCEState.None(),
-    val activationResendError: AuthFormError? = null
+    val authState: LCEState<LoginResult, AuthFormError> = LCEState.None,
+    val activationResendState: LCEState<Unit, AuthFormError> = LCEState.None
 ) {
+    val authError: AuthFormError? get() = (authState as? LCEState.Error)?.error
+    val activationResendError: AuthFormError? get() = (activationResendState as? LCEState.Error)?.error
     val isAuthLoading: Boolean get() = authState is LCEState.Loading
-    val isAuthError: Boolean get() = authError != null
+
+    /** Сервер отклонил логин/пароль — подсвечиваем поля; при сбое связи поля не виноваты. */
+    val isAuthError: Boolean get() = authError == AuthFormError.Rejected
     val isActivationResendLoading: Boolean get() = activationResendState is LCEState.Loading
     val isActivationRequired: Boolean
         get() = authState is LCEState.Content && authState.content is LoginResult.ActivationRequired

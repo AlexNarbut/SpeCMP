@@ -22,8 +22,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
-        // обязательно для модулей с compose resources (см. docs/build.md)
-        androidResources.enable = true
     }
 
     iosArm64()
@@ -37,10 +35,14 @@ kotlin {
             implementation(libs.kermit)
 
             implementation(project(":core:common"))
+
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
             // Сессия устройства: подключение, переход в загрузчик
             implementation(project(":feature:device:interaction"))
+            // BaseDeviceViewModel
+            implementation(project(":feature:device:interaction-ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 
@@ -68,10 +70,4 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
     }
-}
-
-// Строковые ресурсы фичи (см. docs/localization.md)
-compose.resources {
-    publicResClass = false
-    generateResClass = always
 }

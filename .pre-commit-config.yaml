@@ -11,6 +11,19 @@ repos:
         files: \.(kt|kts)$
         pass_filenames: false
         stages: [pre-commit]
+      - id: serial-name-check
+        name: "@SerialName on every @Serializable (docs/patterns.md)"
+        entry: config/hooks/check-serial-name.sh
+        language: script
+        files: \.kt$
+        stages: [pre-commit]
+      - id: strings-check
+        name: "strings in core/localization, key format, same keys in every language (docs/localization.md)"
+        entry: config/hooks/check-strings.py
+        language: script
+        files: (composeResources/.*\.xml|check-strings\.py)$
+        pass_filenames: false
+        stages: [pre-commit]
       - id: detekt-check
         name: detekt
         entry: ./gradlew detektCheck

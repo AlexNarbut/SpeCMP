@@ -20,8 +20,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
@@ -31,13 +33,13 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
-import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatNotConnectedException
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 import ru.alarmtrade.specmp.feature.supportchat.domain.timeline.SupportChatTimeline
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.isResendable
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toDomain
@@ -210,7 +212,7 @@ class SupportChatScreenViewModel(
 
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to send message" }
-                if (response.exception is SupportChatNotConnectedException || !_state.value.isInputEnabled) {
+                if (response.exception.appError == ApiError.NoConnection || !_state.value.isInputEnabled) {
                     // Отправку оборвала потеря связи — это не ошибка пользователя:
                     // сообщение ждёт переподключения в очереди.
                     park(message)
@@ -352,7 +354,13 @@ class SupportChatScreenViewModel(
                         connection = SupportChatConnection.Offline,
                         hasConnectionIssue = true,
                         // Показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии).
-                        history = if (it.history is LCEState.Content) it.history else LCEState.Error(HISTORY_ERROR)
+                        history = if (it.history is LCEState.Content) {
+                            it.history
+                        } else {
+                            LCEState.Error(
+                                SupportChatError.HistoryUnavailable
+                            )
+                        }
                     )
                 }
             }
@@ -426,7 +434,7 @@ class SupportChatScreenViewModel(
         when {
             // Сессию не удалось начать — начать заново.
             sessionJob?.isActive != true -> {
-                _state.update { it.copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading()) }
+                _state.update { it.copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading) }
                 sessionJob = safeLaunch { collectSession() }
             }
 
@@ -451,7 +459,7 @@ class SupportChatScreenViewModel(
                 isLoadingMore = false,
                 // Лента (восстановленный outbox, live-сообщение) остаётся на экране.
                 history = if (!current.isInitialHistoryLoaded && current.history !is LCEState.Content) {
-                    LCEState.Loading()
+                    LCEState.Loading
                 } else {
                     current.history
                 }
@@ -492,7 +500,13 @@ class SupportChatScreenViewModel(
                         isLoadingMore = false,
                         isHistoryPagingFailed = true,
                         // Показывать нечего — полноэкранная ошибка с «Повторить».
-                        history = if (hadContent) current.history else LCEState.Error(HISTORY_ERROR)
+                        history = if (hadContent) {
+                            current.history
+                        } else {
+                            LCEState.Error(
+                                SupportChatError.from(response.exception)
+                            )
+                        }
                     )
                 }
                 if (hadContent) _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
@@ -697,6 +711,5 @@ class SupportChatScreenViewModel(
         val PENDING = setOf(SupportChatMessageStatus.Pending)
         val SENT = setOf(SupportChatMessageStatus.Sent)
         const val LOCAL_ID_PREFIX = "local-"
-        const val HISTORY_ERROR = "History load failed"
     }
 }

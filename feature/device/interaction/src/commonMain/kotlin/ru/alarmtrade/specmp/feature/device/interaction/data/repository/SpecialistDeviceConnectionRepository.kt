@@ -10,7 +10,6 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.ConnectingStatus
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.ConnectionParameters
 import ru.alarmtrade.bluetoothControl.interactors.bluetoothConnector.requests.ConnectToBluetoothDeviceRequest
-import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.usb.UsbConnectingState
 import ru.alarmtrade.specialist.interactors.bluetoothConnector.BluetoothConnectorInteractor
 import ru.alarmtrade.specialist.interactors.usbConnector.UsbConnectorInteractor
@@ -18,6 +17,9 @@ import ru.alarmtrade.specialist.interactors.usbConnector.requests.ConnectToUsbDe
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 
@@ -34,7 +36,7 @@ class SpecialistDeviceConnectionRepository(
     override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = flow {
         val interactor = bluetoothConnectorInteractor.resolveOrNull()
             ?: run {
-                emit(transportUnavailable())
+                emit(interactorUnavailable())
                 return@flow
             }
         emitAll(
@@ -58,7 +60,7 @@ class SpecialistDeviceConnectionRepository(
     override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = flow {
         val interactor = usbConnectorInteractor.resolveOrNull()
             ?: run {
-                emit(transportUnavailable())
+                emit(interactorUnavailable())
                 return@flow
             }
         emitAll(
@@ -78,14 +80,6 @@ class SpecialistDeviceConnectionRepository(
             ?.toResponse()
         val usb = usbConnectorInteractor.resolveOrNull()?.closeUsbDeviceSessionUseCase?.execute()?.toResponse()
         return listOfNotNull(ble, usb).firstOrNull { it is Response.Error } ?: Response.Success(Unit)
-    }
-
-    private fun transportUnavailable(): Response<DeviceConnectionState> =
-        Response.Error(IllegalStateException("Transport is not available on this platform"))
-
-    private fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
-        is SpecialistResponse.Success -> Response.Success(value)
-        is SpecialistResponse.Error -> Response.Error(exception, message)
     }
 
     private fun ConnectingStatus.toDomain(): DeviceConnectionState = when (this) {

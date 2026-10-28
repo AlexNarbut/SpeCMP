@@ -2,13 +2,15 @@ package ru.alarmtrade.specmp.feature.device.firmware.data.repository
 
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
-import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationByIdRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
 import ru.alarmtrade.specialist.interactors.firmwareFiles.FirmwareFilesInteractor
 import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwareRequest
 import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwaresRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
@@ -26,12 +28,6 @@ class SpecialistFirmwareRepository(
         val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
         return interactor.getDeviceInformation.execute(GetDeviceInformationRequest(deviceName)).toResponse()
             .map { information -> information.subsystems.map { it.toModule(transport) } }
-    }
-
-    override suspend fun moduleById(id: Long, transport: ConnectionTransport): Response<FirmwareModule> {
-        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getSubsystemInformationById.execute(GetDeviceInformationByIdRequest(id)).toResponse()
-            .map { it.toModule(transport) }
     }
 
     override suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion> {

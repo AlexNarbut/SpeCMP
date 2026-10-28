@@ -18,9 +18,11 @@ interface DeviceModelsRepository {
 
     fun recent(): List<String>
 
-    fun pushRecent(deviceName: String)
+    /** Поднять модель наверх недавних; атомарно (чтение-изменение-запись под замком). Ответ — новый список. */
+    suspend fun pushRecent(deviceName: String): List<String>
 
-    fun removeRecent(deviceName: String)
+    /** Убрать модель из недавних; атомарно. Ответ — новый список. */
+    suspend fun removeRecent(deviceName: String): List<String>
 
     companion object {
         const val MAX_RECENT = 5

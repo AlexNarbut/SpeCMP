@@ -6,8 +6,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.asLCEState
+import ru.alarmtrade.specmp.core.ui.lce.dismissError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
@@ -20,50 +21,21 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
     val state: StateFlow<ForgotPasswordScreenState> = _state.asStateFlow()
 
     fun onEmailChanged(value: String) {
-        _state.update { it.copy(email = value, resetError = null) }
-    }
-
-    fun reset() {
-        _state.update { ForgotPasswordScreenState() }
+        _state.update { it.copy(email = value, resetState = it.resetState.dismissError()) }
     }
 
     fun submit() {
         val credentials = ResetPasswordCredentials(email = _state.value.email)
+        // Валидация — до запроса (как в регистрации): без мигания Loading перед ошибкой формы.
+        if (credentials.validationError() != null) {
+            _state.update { it.copy(resetState = LCEState.Error(AuthFormError.RequiredFields)) }
+            return
+        }
 
         safeLaunch {
-            _state.update {
-                it.copy(
-                    resetState = LCEState.Loading(),
-                    resetError = null
-                )
-            }
-
-            if (credentials.validationError() != null) {
-                _state.update {
-                    it.copy(
-                        resetState = LCEState.None(),
-                        resetError = AuthFormError.RequiredFields
-                    )
-                }
-                return@safeLaunch
-            }
-
-            val response = withContext(dispatchers.io) {
-                repository.resetPassword(credentials)
-            }
-
-            when (response) {
-                is Response.Success -> _state.update {
-                    it.copy(resetState = LCEState.Content(Unit))
-                }
-
-                is Response.Error -> _state.update {
-                    it.copy(
-                        resetState = LCEState.None(),
-                        resetError = AuthFormError.RequestFailed
-                    )
-                }
-            }
+            _state.update { it.copy(resetState = LCEState.Loading) }
+            val response = withContext(dispatchers.io) { repository.resetPassword(credentials) }
+            _state.update { it.copy(resetState = response.asLCEState(AuthFormError::from)) }
         }
     }
 }

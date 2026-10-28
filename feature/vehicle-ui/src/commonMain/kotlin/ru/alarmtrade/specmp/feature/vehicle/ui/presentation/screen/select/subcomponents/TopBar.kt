@@ -13,6 +13,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_filter_a11y_open
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_filter_a11y_open_active
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_subtitle_device
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_title_pick
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_title_view
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -28,13 +35,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeChipLabel
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeLabel
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_common_a11y_back
-import specmp.feature.vehicle_ui.generated.resources.vehicle_filter_a11y_open
-import specmp.feature.vehicle_ui.generated.resources.vehicle_filter_a11y_open_active
-import specmp.feature.vehicle_ui.generated.resources.vehicle_select_subtitle_device
-import specmp.feature.vehicle_ui.generated.resources.vehicle_select_title_pick
-import specmp.feature.vehicle_ui.generated.resources.vehicle_select_title_view
 
 /**
  * Шапка: «назад», заголовок по режиму («Выберите автомобиль» / «Автомобили»), подзаголовок — модель блока и
@@ -48,7 +48,11 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
         title = {
             CmpText(
                 text = stringResource(
-                    if (mode.pick) Res.string.vehicle_select_title_pick else Res.string.vehicle_select_title_view
+                    if (mode.pick) {
+                        Strings.string.vehicle_select_title_pick
+                    } else {
+                        Strings.string.vehicle_select_title_view
+                    }
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -59,7 +63,7 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
             CmpIconButton(
                 onClick = actions.onBack,
                 icon = CmpIcons.ArrowBack,
-                contentDescription = stringResource(Res.string.vehicle_common_a11y_back)
+                contentDescription = stringResource(Strings.string.vehicle_common_a11y_back)
             )
         },
         actions = {
@@ -78,7 +82,7 @@ private fun subtitle(state: VehicleSelectState, wide: Boolean): String? {
     val mode = state.mode
     return when {
         mode.deviceName != null && mode.firmwareCanCode != null ->
-            stringResource(Res.string.vehicle_select_subtitle_device, mode.deviceName, mode.firmwareCanCode)
+            stringResource(Strings.string.vehicle_select_subtitle_device, mode.deviceName, mode.firmwareCanCode)
 
         mode.deviceName != null -> mode.deviceName
 
@@ -121,9 +125,9 @@ private fun FilterButton(active: Int, onClick: () -> Unit) {
             onClick = onClick,
             icon = CmpIcons.FilterList,
             contentDescription = if (active > 0) {
-                stringResource(Res.string.vehicle_filter_a11y_open_active, active)
+                stringResource(Strings.string.vehicle_filter_a11y_open_active, active)
             } else {
-                stringResource(Res.string.vehicle_filter_a11y_open)
+                stringResource(Strings.string.vehicle_filter_a11y_open)
             },
             modifier = Modifier.testTag(VehicleTestTags.FILTER)
         )

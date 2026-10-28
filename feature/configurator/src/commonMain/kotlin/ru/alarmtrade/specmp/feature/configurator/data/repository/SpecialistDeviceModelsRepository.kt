@@ -6,20 +6,33 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import ru.alarmtrade.common.core.usecase.EmptyRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
+import ru.alarmtrade.specmp.core.common.RecentList
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeRun
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
 
 /**
  * [DeviceModelsRepository]: модели с заводскими настройками — `deviceInformationInteractor` (с сервера), недавние —
  * JSON-список в именованном хранилище приложения (битые данные — пустой список).
  */
-class SpecialistDeviceModelsRepository(
-    private val interactor: () -> DeviceInformationInteractor,
-    private val settings: Settings
-) : DeviceModelsRepository {
+class SpecialistDeviceModelsRepository(private val interactor: () -> DeviceInformationInteractor, settings: Settings) :
+    DeviceModelsRepository {
+
+    private val recent = RecentList<String, String>(
+        max = DeviceModelsRepository.MAX_RECENT,
+        key = { it },
+        read = {
+            settings.getStringOrNull(RECENT_KEY)
+                ?.let { raw -> safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess() }
+                .orEmpty()
+        },
+        write = { settings.putString(RECENT_KEY, json.encodeToString(serializer, it)) }
+    )
 
     override suspend fun models(): Response<List<String>> {
         val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
@@ -27,23 +40,11 @@ class SpecialistDeviceModelsRepository(
             .map { names -> names.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() } }
     }
 
-    override fun recent(): List<String> {
-        val raw = settings.getStringOrNull(RECENT_KEY) ?: return emptyList()
-        return safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess().orEmpty()
-    }
+    override fun recent(): List<String> = recent.all()
 
-    override fun pushRecent(deviceName: String) {
-        val updated = (
-            listOf(deviceName) + recent().filter {
-                it != deviceName
-            }
-            ).take(DeviceModelsRepository.MAX_RECENT)
-        settings.putString(RECENT_KEY, json.encodeToString(serializer, updated))
-    }
+    override suspend fun pushRecent(deviceName: String): List<String> = recent.push(deviceName)
 
-    override fun removeRecent(deviceName: String) {
-        settings.putString(RECENT_KEY, json.encodeToString(serializer, recent().filter { it != deviceName }))
-    }
+    override suspend fun removeRecent(deviceName: String): List<String> = recent.remove(deviceName)
 
     private companion object {
         const val RECENT_KEY = "recent_models"

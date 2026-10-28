@@ -9,6 +9,9 @@ import ru.alarmtrade.specialist.interactors.localConfigurations.requests.CreateL
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationRequest
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationsPageRequest
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource
@@ -80,12 +83,18 @@ class SpecialistLocalConfigurationsRepository(
     ): Response<SettingsSource.LocalConfiguration> {
         val old = configuration.toSource()
         val created = create(name, description, configuration.deviceName, from = old)
-        if (created is Response.Success) {
-            // Сессию старой записи открыло копирование — закрыть до удаления.
-            settings.close(old)
-            delete(configuration.id)
+        if (created !is Response.Success) return created
+        // Сессию старой записи открыло копирование — закрыть до удаления.
+        settings.close(old)
+        return when (val deleted = delete(configuration.id)) {
+            // Старая не удалилась — убираем копию, иначе в списке окажутся обе (старое и новое название).
+            is Response.Error -> {
+                delete(created.value.id)
+                deleted
+            }
+
+            is Response.Success -> created
         }
-        return created
     }
 
     override suspend fun delete(id: Long): Response<Unit> {

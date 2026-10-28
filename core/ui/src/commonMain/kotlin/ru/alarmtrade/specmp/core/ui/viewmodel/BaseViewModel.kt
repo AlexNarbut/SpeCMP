@@ -6,7 +6,10 @@ import co.touchlab.kermit.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -64,6 +67,21 @@ abstract class BaseViewModel : ViewModel() {
 
     protected fun safeLaunch(coroutineContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit): Job =
         viewModelScope.launch(coroutineContext + exceptionHandler, block = block)
+
+    /**
+     * Стартовая работа экрана: [block] запускается отдельной корутиной VM при первом старте этого flow — первой
+     * подписке UI на state, — и ровно один раз за жизнь VM. Ставится на цепочку state перед `stateIn`:
+     * `combine(...).launchOnFirstStart { load() }.flowOn(...).stateIn(WhileSubscribed(...))`.
+     *
+     * Почему не голый `onStart { load() }`: он (а) блокирует цепочку до конца загрузки — `combine` ещё не собирает,
+     * и `Loading`, записанный в state, экран не увидит; (б) повторяется на каждый перезапуск `WhileSubscribed`
+     * (возврат на экран после stopTimeout). Здесь работа — в своей корутине (`Job` с `LAZY`, `start()` идемпотентен),
+     * а повторы и перезагрузки — интенты или потоки внутри [block] (`retries.collectLatest { load() }`).
+     */
+    protected fun <T> Flow<T>.launchOnFirstStart(block: suspend CoroutineScope.() -> Unit): Flow<T> {
+        val job = viewModelScope.launch(exceptionHandler, start = CoroutineStart.LAZY, block = block)
+        return onStart { job.start() }
+    }
 
     /**
      * Выполняет [block] под общим для этой ViewModel mutex'ом (один lock на все вызовы

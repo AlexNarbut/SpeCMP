@@ -24,5 +24,4 @@ interface MainRepository {
     suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures>
     suspend fun currentUserCommercial(): Response<MainUserCommercial>
     fun observeChatAvailability(): Flow<Response<Boolean>>
-    fun observeUnreadMessagesCount(): Flow<Response<Int>>
 }

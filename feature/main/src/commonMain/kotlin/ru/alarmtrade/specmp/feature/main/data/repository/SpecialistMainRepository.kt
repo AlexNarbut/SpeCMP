@@ -20,10 +20,13 @@ import ru.alarmtrade.specialist.interactors.appUpdates.requests.AppUpdateRequest
 import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.interactors.user.UserInteractor
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
 import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
-import ru.alarmtrade.specmp.core.specialist.account.AccountRepository
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppVersion
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
@@ -45,43 +48,24 @@ class SpecialistMainRepository(
     override val appVersion: MainAppVersion
         get() = appVersionProvider.current().toMainAppVersion()
 
+    // Ожидаемые ошибки SDK не логируются здесь: это Response.Error, их показывает VM (docs/patterns.md, «Логирование»).
     override suspend fun currentUserProfile(): Response<MainUserProfile> =
-        when (val response = accountRepository.currentProfile()) {
-            is Response.Success -> {
-                logger.d { "Current user profile fetched" }
-                Response.Success(
-                    MainUserProfile(
-                        name = response.value.name,
-                        email = response.value.email
-                    )
-                )
-            }
-
-            is Response.Error -> {
-                logger.e(response.exception) { "Failed to fetch current user profile" }
-                response
-            }
-        }
+        accountRepository.currentProfile().map { MainUserProfile(name = it.name, email = it.email) }
 
     override suspend fun currentSettingsVersion(): Response<Long?> =
         when (val response = appUpdatesInteractor.getCurrentSettingsVersionUseCase.execute()) {
-            is SpecialistResponse.Success -> {
-                logger.d { "Current settings version fetched: ${response.value.long}" }
-                Response.Success(response.value.long)
-            }
+            is SpecialistResponse.Success -> Response.Success(response.value.long)
 
-            is SpecialistResponse.Error -> {
-                // SDK не даёт типизированной ошибки: пустая БД (свежая установка)
-                // приходит как Exception("settingsVersion not found"). Это валидное
-                // состояние «версии ещё нет», а не сбой — отдаём Success(null).
-                if (response.exception.message == "settingsVersion not found") {
+            is SpecialistResponse.Error ->
+                // SDK не даёт типизированной ошибки: пустая БД (свежая установка) приходит как
+                // Exception(NO_SETTINGS_VERSION) — валидное «версии ещё нет», а не сбой. Сменит SDK текст —
+                // свежая установка станет ошибкой синхронизации: проверять при обновлении SDK.
+                if (response.exception.message == NO_SETTINGS_VERSION) {
                     logger.d { "Settings version not stored yet (fresh install)" }
                     Response.Success(null)
                 } else {
-                    logger.e(response.exception) { "Failed to fetch current settings version" }
-                    response.toProjectError()
+                    response.toResponse()
                 }
-            }
         }
 
     override fun synchronizeSettingsVersion(): Flow<Response<MainDatabaseSyncStatus>> = flow {
@@ -97,51 +81,19 @@ class SpecialistMainRepository(
 
     override suspend fun checkAppUpdate(): Response<MainAppUpdateCheckResult> {
         val request = AppUpdateRequest(currentVersion = appVersion.code)
-        return when (val response = appUpdatesInteractor.checkForAppUpdatesUseCase.execute(request)) {
-            is SpecialistResponse.Success -> when (val value = response.value) {
-                is AppUpdatesResponse.UpdateAvailable -> {
-                    logger.d { "App update available: ${value.updateVersionInformation.version}" }
-                    value.updateVersionInformation.toUpdateCheckResult()
-                }
-
-                is AppUpdatesResponse.NoUpdates -> {
-                    logger.d { "No app updates available" }
-                    Response.Success(MainAppUpdateCheckResult.UpToDate)
-                }
-            }
-
-            is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to check app update" }
-                response.toProjectError()
+        return appUpdatesInteractor.checkForAppUpdatesUseCase.execute(request).toResponse().mapIfSuccess { value ->
+            when (value) {
+                is AppUpdatesResponse.UpdateAvailable -> value.updateVersionInformation.toUpdateCheckResult()
+                is AppUpdatesResponse.NoUpdates -> Response.Success(MainAppUpdateCheckResult.UpToDate)
             }
         }
     }
 
     override suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures> =
-        when (val response = userInteractor.getUserAppFeaturesUseCase.execute()) {
-            is SpecialistResponse.Success -> {
-                logger.d { "User app features fetched: ${response.value}" }
-                Response.Success(response.value.toMainUserAppFeatures())
-            }
-
-            is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to fetch user app features" }
-                response.toProjectError()
-            }
-        }
+        userInteractor.getUserAppFeaturesUseCase.execute().toResponse().map { it.toMainUserAppFeatures() }
 
     override suspend fun currentUserCommercial(): Response<MainUserCommercial> =
-        when (val response = userInteractor.getUserCommercialUseCase.execute()) {
-            is SpecialistResponse.Success -> {
-                logger.d { "User commercial fetched" }
-                Response.Success(response.value.toMainUserCommercial())
-            }
-
-            is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to fetch user commercial" }
-                response.toProjectError()
-            }
-        }
+        userInteractor.getUserCommercialUseCase.execute().toResponse().map { it.toMainUserCommercial() }
 
     // Specialist SDK не отдаёт Flow по чату, поэтому наблюдение эмулируется
     // периодическим опросом one-shot use case'ов (как observeIsLoggedIn в feature/auth-state).
@@ -152,52 +104,12 @@ class SpecialistMainRepository(
         }
     }
 
-    override fun observeUnreadMessagesCount(): Flow<Response<Int>> = flow {
-        while (currentCoroutineContext().isActive) {
-            emit(unreadMessagesCount())
-            delay(CHAT_UNREAD_POLL_INTERVAL)
-        }
-    }
-
     private suspend fun chatAvailability(): Response<Boolean> =
-        when (val response = chatInteractor.isAvailableUseCase.execute()) {
-            is SpecialistResponse.Success -> {
-                logger.d { "Chat availability fetched: ${response.value.isAvailable()}" }
-                Response.Success(response.value.isAvailable())
-            }
-
-            is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to fetch chat availability" }
-                response.toProjectError()
-            }
-        }
-
-    private suspend fun unreadMessagesCount(): Response<Int> =
-        when (val response = chatInteractor.getUnreadMessagesCountUseCase.execute()) {
-            is SpecialistResponse.Success -> {
-                logger.d { "Unread messages count fetched: ${response.value.int}" }
-                Response.Success(response.value.int)
-            }
-
-            is SpecialistResponse.Error -> {
-                logger.e(response.exception) { "Failed to fetch unread messages count" }
-                response.toProjectError()
-            }
-        }
+        chatInteractor.isAvailableUseCase.execute().toResponse().map { it.isAvailable() }
 
     private fun SpecialistResponse<SettingsUpdatingStatus>.toDatabaseSyncStatusResponse():
         Response<MainDatabaseSyncStatus> =
-        when (this) {
-            is SpecialistResponse.Success -> {
-                logger.d { "Settings sync status: $value" }
-                Response.Success(value.toMainDatabaseSyncStatus())
-            }
-
-            is SpecialistResponse.Error -> {
-                logger.e(exception) { "Failed to synchronize settings version" }
-                toProjectError()
-            }
-        }
+        toResponse().map { it.toMainDatabaseSyncStatus() }
 
     private fun SettingsUpdatingStatus.toMainDatabaseSyncStatus(): MainDatabaseSyncStatus = when (this) {
         is SettingsUpdatingStatus.CheckLocalVersion,
@@ -219,11 +131,6 @@ class SpecialistMainRepository(
         is SettingsUpdatingStatus.FinishedVersionNotCompatible ->
             MainDatabaseSyncStatus.Finished.NotCompatible(minRequiredAppVersion = minRequiredAppVersion)
     }
-
-    private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> = Response.Error(
-        exception = exception,
-        message = message ?: exception.message
-    )
 
     private fun UpdateVersionInformation.toUpdateCheckResult(): Response<MainAppUpdateCheckResult> {
         val versionName = version.trim()
@@ -251,6 +158,8 @@ class SpecialistMainRepository(
 
     private companion object {
         val CHAT_AVAILABILITY_POLL_INTERVAL = 10.seconds
-        val CHAT_UNREAD_POLL_INTERVAL = 60.seconds
+
+        /** Текст ошибки SDK «версии базы ещё нет» (свежая установка) — типа у неё нет. */
+        const val NO_SETTINGS_VERSION = "settingsVersion not found"
     }
 }

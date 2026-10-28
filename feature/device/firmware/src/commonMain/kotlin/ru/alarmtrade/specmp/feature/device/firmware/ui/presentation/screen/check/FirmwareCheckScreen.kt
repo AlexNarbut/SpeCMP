@@ -12,14 +12,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_boot_failed
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_modules
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_label_device_id
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -43,13 +51,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.ModulesLoading
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents.PinDialog
-import specmp.feature.device.firmware.generated.resources.Res
-import specmp.feature.device.firmware.generated.resources.firmware_check_msg_boot_failed
-import specmp.feature.device.firmware.generated.resources.firmware_check_title_modules
-import specmp.feature.device.firmware.generated.resources.firmware_check_title_screen
-import specmp.feature.device.firmware.generated.resources.firmware_common_a11y_back
-import specmp.feature.device.firmware.generated.resources.firmware_common_label_device_id
-import specmp.feature.device.firmware.generated.resources.firmware_common_msg_test_channel
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 
 private val ContentMaxWidth = 1040.dp
 
@@ -60,7 +62,7 @@ private val ContentMaxWidth = 1040.dp
 @Composable
 fun FirmwareCheckScreen(onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareCheckViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     // Один экземпляр на экран: дочерние composable пропускают рекомпозицию по равенству действий.
     val actions = remember(viewModel, onBack) {
         FirmwareCheckActions(
@@ -87,15 +89,15 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.firmware_check_title_screen)) },
+                title = { CmpText(text = stringResource(Strings.string.firmware_check_title_screen)) },
                 subtitle = state.deviceId?.let { id ->
-                    { CmpText(text = "${state.deviceName}  $id", style = CmpTextStyle.Caption) }
+                    { CmpText(text = deviceTitle(state.deviceName, id), style = CmpTextStyle.Caption) }
                 },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.firmware_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
                     )
                 }
             )
@@ -104,9 +106,9 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = firmwareLayoutOf(maxWidth)
             when (val content = state.content) {
-                CheckContent.Loading -> ModulesLoading()
-                CheckContent.Error -> ModulesError(onRetry = actions.onRetry)
-                is CheckContent.Ready -> ReadyBody(state, content, layout, actions)
+                LCEState.None, LCEState.Loading -> ModulesLoading()
+                is LCEState.Error -> ModulesError(error = content.error, onRetry = actions.onRetry)
+                is LCEState.Content -> ReadyBody(state, content.content, layout, actions)
             }
         }
     }
@@ -116,7 +118,7 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
 @Composable
 private fun ReadyBody(
     state: FirmwareCheckState,
-    content: CheckContent.Ready,
+    modules: List<ModuleCardUi>,
     layout: FirmwareLayout,
     actions: FirmwareCheckActions
 ) {
@@ -134,15 +136,15 @@ private fun ReadyBody(
         ) {
             if (state.bootFailed) {
                 InfoBanner(
-                    text = stringResource(Res.string.firmware_check_msg_boot_failed),
+                    text = stringResource(Strings.string.firmware_check_msg_boot_failed),
                     tone = BannerTone.Error,
                     icon = CmpIcons.CloudOff
                 )
             }
             state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
-            if (state.channel.isTest) InfoBanner(text = stringResource(Res.string.firmware_common_msg_test_channel))
-            CmpText(text = stringResource(Res.string.firmware_check_title_modules), style = CmpTextStyle.Title)
-            content.modules.chunked(columns).forEach { rowCards ->
+            if (state.channel.isTest) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+            CmpText(text = stringResource(Strings.string.firmware_check_title_modules), style = CmpTextStyle.Title)
+            modules.chunked(columns).forEach { rowCards ->
                 CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
                     rowCards.forEach { card ->
                         ModuleCard(
@@ -178,7 +180,7 @@ private fun DeviceRow(
     onChannelSelect: (FirmwareChannel) -> Unit
 ) {
     val colors = cmpThemeColors()
-    val idText = stringResource(Res.string.firmware_common_label_device_id, id.toString())
+    val idText = stringResource(Strings.string.firmware_common_label_device_id, id.toString())
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),

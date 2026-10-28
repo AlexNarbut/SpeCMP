@@ -8,9 +8,8 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.presentation.model.MAIN_UNKNOWN_APP_VERSION
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainLogoutError
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 
 @Immutable
@@ -19,18 +18,17 @@ data class MainScreenState(
     val isMenuOpen: Boolean = false,
     val isAppUpdateSupported: Boolean = false,
     val appVersionName: String = MAIN_UNKNOWN_APP_VERSION,
-    val profileState: LCEState<MainProfile> = LCEState.None(),
-    val databaseSyncState: LCEState<MainDatabaseSyncStatus> = LCEState.None(),
+    val profileState: LCEState<MainProfile, MainError> = LCEState.None,
+    val databaseSyncState: LCEState<MainDatabaseSyncStatus, MainError> = LCEState.None,
     val databaseVersion: Long? = null,
-    val appFeaturesState: LCEState<MainUserAppFeatures> = LCEState.None(),
-    val userCommercialState: LCEState<MainUserCommercial> = LCEState.None(),
-    val appUpdateState: LCEState<MainAppUpdateCheckResult> = LCEState.None(),
-    val chatAvailabilityState: LCEState<Boolean> = LCEState.None(),
-    val chatUnreadState: LCEState<Int> = LCEState.None(),
-    val cardVariant: MainCardVariant = MainCardVariant.Centered,
-    val logoutState: LCEState<Unit> = LCEState.None(),
-    val logoutError: MainLogoutError? = null
+    val appFeaturesState: LCEState<MainUserAppFeatures, MainError> = LCEState.None,
+    val userCommercialState: LCEState<MainUserCommercial, MainError> = LCEState.None,
+    val appUpdateState: LCEState<MainAppUpdateCheckResult, MainError> = LCEState.None,
+    val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
+    val logoutState: LCEState<Unit, MainError> = LCEState.None
 ) {
+    val logoutError: MainError? get() = (logoutState as? LCEState.Error)?.error
+
     val profile: MainProfile
         get() = profileState.content ?: MainProfile()
 
@@ -40,7 +38,9 @@ data class MainScreenState(
 
     val databaseSyncBadge: MainDatabaseSyncBadge
         get() {
-            if (databaseSyncState is LCEState.Error) return MainDatabaseSyncBadge.UpdateFailed
+            if (databaseSyncState is LCEState.Error) {
+                return MainDatabaseSyncBadge.UpdateFailed((databaseSyncState.error as? MainError.Common)?.error)
+            }
 
             return when (databaseSyncState.content) {
                 MainDatabaseSyncStatus.InProgress.CheckingVersion -> MainDatabaseSyncBadge.CheckingVersion
@@ -71,9 +71,6 @@ data class MainScreenState(
 
     val chatAvailability: Boolean
         get() = chatAvailabilityState.content ?: false
-
-    val chatUnreadCount: Int
-        get() = chatUnreadState.content ?: 0
 
     val isAppUpdateChecking: Boolean
         get() = appUpdateState is LCEState.Loading

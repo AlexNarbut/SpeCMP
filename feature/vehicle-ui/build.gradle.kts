@@ -22,8 +22,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
-        // обязательно для модулей с compose resources (см. docs/build.md)
-        androidResources.enable = true
     }
 
     iosArm64()
@@ -31,9 +29,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             implementation(project(":core:ui"))
-            // Монитор сети: «нет интернета» отдельно от ошибки сервера
-            implementation(project(":core:network"))
 
             // Логика каталога автомобилей (feature/vehicle)
             implementation(project(":feature:vehicle"))
@@ -62,10 +59,4 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
     }
-}
-
-// Строковые ресурсы фичи (см. docs/localization.md)
-compose.resources {
-    publicResClass = false
-    generateResClass = always
 }

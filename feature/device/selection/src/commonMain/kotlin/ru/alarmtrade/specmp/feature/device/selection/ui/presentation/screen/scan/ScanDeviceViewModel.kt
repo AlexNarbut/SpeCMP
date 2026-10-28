@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
 import androidx.lifecycle.viewModelScope
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -22,20 +21,14 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withTimeoutOrNull
-import ru.alarmtrade.permissions.common.DeniedAlwaysException
-import ru.alarmtrade.permissions.common.DeniedException
-import ru.alarmtrade.permissions.common.PermissionState
-import ru.alarmtrade.permissions.common.RequestCanceledException
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.permissions.BlePermissionResult
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
-import ru.alarmtrade.specmp.core.permissions.deviceAccessRequirements
-import ru.alarmtrade.specmp.core.permissions.isBluetoothEnabled
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectedDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
@@ -45,6 +38,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.ScanError
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiItem
 
 /**
@@ -53,7 +47,8 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiI
  * Разрешения запрашиваются **самой VM** через инжектированный [PermissionsProvider]
  * (контроллер app-scoped, забинжен в корне приложения) — без промежуточного
  * rationale-экрана. Проверка запускается один раз при первой подписке на state
- * (init-источник `stateIn(Lazily)`, см. docs/patterns.md — не через `LaunchedEffect`).
+ * (`launchOnFirstStart`, см. docs/patterns.md — не через `LaunchedEffect`), при возврате в приложение
+ * ([onAppForeground]) — заново.
  * Сканирование — реактивный источник (BLE + USB `Flow`), активный только на шаге
  * [ScanStep.Scanning].
  */
@@ -63,10 +58,10 @@ class ScanDeviceViewModel(
     private val connectionRepository: DeviceConnectionRepository,
     private val deviceSession: DeviceSession,
     private val permissionsProvider: PermissionsProvider,
-    dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
-    private val requirements = deviceAccessRequirements()
+    private val requirements = permissionsProvider.deviceAccessRequirements()
     private val supportedTransports = scanRepository.supportedTransports()
 
     private val stepFlow = MutableStateFlow<ScanStep>(ScanStep.PermissionCheck)
@@ -82,26 +77,21 @@ class ScanDeviceViewModel(
     // Только подключение (не отмена): по нему «Отмена» прерывает попытку. Пишется и читается на main.
     private var connectJob: Job? = null
 
-    // Init-источник: один раз за жизнь VM (Lazily) запрашивает разрешения при первой
-    // подписке на state и переводит на скан/adapterOff/denied. Не «работа из UI».
-    private val permissionGate: StateFlow<Boolean> = flow {
-        // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
-        // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
-        deviceSession.close().join()
-        checkPermissionsExclusively()
-        emit(true)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
-
-    private val devicesState: Flow<LCEState<List<DeviceUiItem>>> = combine(stepFlow, scanRestartsFlow) { step, _ ->
+    private val devicesState: Flow<LCEState<List<DeviceUiItem>, ScanError>> = combine(stepFlow, scanRestartsFlow) {
+            step,
+            _
+        ->
         step
     }
         .flatMapLatest { step ->
             if (step !is ScanStep.Scanning) {
-                flowOf(LCEState.None())
+                flowOf(LCEState.None)
             } else {
                 combine(
-                    scanRepository.scanBluetooth().onStart { emit(Response.Success(emptyList())) },
-                    scanRepository.scanUsb().onStart { emit(Response.Success(emptyList())) }
+                    scanRepository.scanBluetooth().flowOn(dispatchers.io).onStart {
+                        emit(Response.Success(emptyList()))
+                    },
+                    scanRepository.scanUsb().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) }
                 ) { bleResponse, usbResponse -> mergeDevices(bleResponse, usbResponse) }
             }
         }
@@ -122,9 +112,8 @@ class ScanDeviceViewModel(
         stepFlow,
         devicesState,
         selectedIdFlow,
-        searchedLongEnough,
-        permissionGate
-    ) { step, devices, selectedId, searchedLong, _ ->
+        searchedLongEnough
+    ) { step, devices, selectedId, searchedLong ->
         ScanDeviceState(
             step = step,
             requirements = requirements,
@@ -134,6 +123,13 @@ class ScanDeviceViewModel(
             searchedLongEnough = searchedLong
         )
     }
+        // Старт: при первой подписке на state запросить разрешения и перейти на скан/adapterOff/denied.
+        .launchOnFirstStart {
+            // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
+            // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
+            deviceSession.close().join()
+            checkPermissionsExclusively()
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ScanDeviceState())
 
@@ -172,7 +168,7 @@ class ScanDeviceViewModel(
 
     /** Открыть системные настройки приложения (случай «отклонено навсегда»). */
     fun openAppSettings() {
-        permissionsProvider.getController().openAppSettings()
+        permissionsProvider.openAppSettings()
     }
 
     /**
@@ -189,26 +185,14 @@ class ScanDeviceViewModel(
 
     private suspend fun checkPermission(): Boolean {
         stepFlow.update { ScanStep.PermissionCheck }
-        val controller = permissionsProvider.getController()
-        permissionsProvider.getBlePermission().forEach { permission ->
-            try {
-                if (controller.getPermissionState(permission) != PermissionState.Granted) {
-                    controller.providePermission(permission)
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (ignored: DeniedAlwaysException) {
-                stepFlow.update { ScanStep.Denied(canOpenSettings = true) }
-                return false
-            } catch (ignored: DeniedException) {
-                stepFlow.update { ScanStep.Denied(canOpenSettings = false) }
-                return false
-            } catch (ignored: RequestCanceledException) {
-                stepFlow.update { ScanStep.Denied(canOpenSettings = false) }
-                return false
+        return when (val result = permissionsProvider.requestBlePermissions()) {
+            BlePermissionResult.Granted -> true
+
+            is BlePermissionResult.Denied -> {
+                stepFlow.update { ScanStep.Denied(canOpenSettings = result.canOpenSettings) }
+                false
             }
         }
-        return true
     }
 
     // Preflight после выдачи разрешений: BLE требует включённого адаптера, а на Android < 12 —
@@ -217,7 +201,7 @@ class ScanDeviceViewModel(
         val bluetoothNeeded = requirements.contains(DeviceAccessRequirement.BLUETOOTH)
         stepFlow.update {
             when {
-                bluetoothNeeded && !isBluetoothEnabled() -> ScanStep.AdapterOff
+                bluetoothNeeded && !permissionsProvider.isBluetoothEnabled() -> ScanStep.AdapterOff
                 bluetoothNeeded && !permissionsProvider.isLocationEnabled() -> ScanStep.LocationOff
                 else -> ScanStep.Scanning
             }
@@ -277,9 +261,8 @@ class ScanDeviceViewModel(
                 }
                 if (connected) {
                     // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
-                    val device = item.toConnectedDevice()
-                    deviceSession.attach(device.transport)
-                    _effect.tryEmit(ScanDeviceEffect.SessionCreated(device))
+                    deviceSession.attach(item.transport.toConnection())
+                    _effect.tryEmit(ScanDeviceEffect.SessionCreated)
                 } else {
                     deviceSession.close().join()
                     stepFlow.update { ScanStep.Scanning }
@@ -301,7 +284,10 @@ class ScanDeviceViewModel(
         val startedAt = TimeSource.Monotonic.markNow()
         repeat(BLE_CONNECT_ATTEMPTS) { attempt ->
             logger.i { "connectBle id=${item.id} attempt=${attempt + 1} start" }
-            val result = connectionRepository.connectBle(item.id, CONNECT_TIMEOUT_MILLIS).awaitTerminal()
+            val result = connectionRepository.connectBle(
+                item.id,
+                CONNECT_TIMEOUT_MILLIS
+            ).flowOn(dispatchers.io).awaitTerminal()
             logger.i {
                 "connectBle id=${item.id} attempt=${attempt + 1} result=$result " +
                     "total=${startedAt.elapsedNow().inWholeMilliseconds}ms"
@@ -326,7 +312,7 @@ class ScanDeviceViewModel(
         ((state.value.devices as? LCEState.Content)?.content?.firstOrNull { it.id == id } as? DeviceUiItem.Ble)?.mode
 
     private suspend fun connectUsb(item: DeviceUiItem.Usb): Boolean =
-        connectionRepository.connectUsb(item.id).awaitTerminal().isConnected()
+        connectionRepository.connectUsb(item.id).flowOn(dispatchers.io).awaitTerminal().isConnected()
 
     private fun Response<DeviceConnectionState>?.isConnected(): Boolean {
         val connected = this is Response.Success && value == DeviceConnectionState.CONNECTED
@@ -334,14 +320,10 @@ class ScanDeviceViewModel(
         return connected
     }
 
-    private fun DeviceUiItem.toConnectedDevice() = ConnectedDevice(
-        id = id,
-        name = name,
-        transport = when (transport) {
-            DeviceTransport.BLE -> ConnectionTransport.BLE
-            DeviceTransport.USB -> ConnectionTransport.USB
-        }
-    )
+    private fun DeviceTransport.toConnection() = when (this) {
+        DeviceTransport.BLE -> ConnectionTransport.BLE
+        DeviceTransport.USB -> ConnectionTransport.USB
+    }
 
     // Общий предел ожидания: SDK переподключается по кругу, а USB может не дать финального статуса.
     // null (таймаут или поток завершился без финала) — неудача.
@@ -357,15 +339,15 @@ class ScanDeviceViewModel(
     private fun mergeDevices(
         bleResponse: Response<List<ScannedDevice.Ble>>,
         usbResponse: Response<List<ScannedDevice.Usb>>
-    ): LCEState<List<DeviceUiItem>> {
+    ): LCEState<List<DeviceUiItem>, ScanError> {
         // Ошибка одного транспорта не прячет устройства, найденные другим.
         val ble = (bleResponse as? Response.Success)?.value.orEmpty()
         val usb = (usbResponse as? Response.Success)?.value.orEmpty()
         val items = ble.map(ScannedDevice::toUiItem) + usb.map(ScannedDevice::toUiItem)
         if (items.isNotEmpty()) return LCEState.Content(items)
         val error = (bleResponse as? Response.Error) ?: (usbResponse as? Response.Error)
-        // Текст ошибки экран не показывает: Error рисуется как продолжающийся поиск.
-        return if (error != null) LCEState.Error(error.message.orEmpty()) else LCEState.Loading()
+        // Экран рисует Error как продолжающийся поиск.
+        return if (error != null) LCEState.Error(ScanError.from(error.exception)) else LCEState.Loading
     }
 
     private companion object {

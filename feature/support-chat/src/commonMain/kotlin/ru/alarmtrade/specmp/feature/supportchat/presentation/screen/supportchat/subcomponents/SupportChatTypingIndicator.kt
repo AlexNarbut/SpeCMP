@@ -21,14 +21,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_msg_typing_author
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_typing_author
 
 private const val TYPING_DOT_COUNT = 3
 
@@ -42,7 +42,7 @@ internal fun SupportChatTypingIndicator(author: String, colors: CmpThemeColors, 
         CmpText(
             // Одна фраза целиком в ресурсе (правило 6 localization.md):
             // порядок слов и разделитель — часть перевода.
-            text = stringResource(Res.string.supportchat_chat_msg_typing_author, author),
+            text = stringResource(Strings.string.supportchat_chat_msg_typing_author, author),
             modifier = Modifier.padding(horizontal = 6.dp),
             color = colors.primary
         )

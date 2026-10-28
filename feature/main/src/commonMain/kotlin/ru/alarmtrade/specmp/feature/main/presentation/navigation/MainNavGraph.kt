@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -21,10 +22,12 @@ import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
 
 /** App-level ключ авторизованной зоны (стартовый маршрут). */
 @Serializable
+@SerialName("main.MainRoute")
 data object MainRoute : NavKey
 
 /** Внутренний маршрут графа — главный экран. */
 @Serializable
+@SerialName("main.HomeRoute")
 internal data object HomeRoute : NavKey
 
 private val navConfig = SavedStateConfiguration {

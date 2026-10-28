@@ -23,6 +23,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_changed
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_nc
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_contact_no
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_minus_sign
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_polarity_plus_sign
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_wire
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_wire_pin
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -32,14 +40,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Wire
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_value_changed
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_nc
-import specmp.feature.device.settings_ui.generated.resources.settings_value_contact_no
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_minus_sign
-import specmp.feature.device.settings_ui.generated.resources.settings_value_polarity_plus_sign
-import specmp.feature.device.settings_ui.generated.resources.settings_value_wire
-import specmp.feature.device.settings_ui.generated.resources.settings_value_wire_pin
 
 private const val OPAQUE = 0xFF000000.toInt()
 private const val TWO_COLOR_STRIPE_FROM = 1f / 3
@@ -67,9 +67,9 @@ internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
             WireSwatch(wire.colors)
             CmpText(
                 text = if (wire.name.isBlank()) {
-                    stringResource(Res.string.settings_value_wire_pin, wire.pin)
+                    stringResource(Strings.string.settings_common_value_wire_pin, wire.pin)
                 } else {
-                    stringResource(Res.string.settings_value_wire, wire.name, wire.pin)
+                    stringResource(Strings.string.settings_common_value_wire, wire.name, wire.pin)
                 },
                 style = CmpTextStyle.Caption,
                 fontWeight = FontWeight.SemiBold,
@@ -127,7 +127,11 @@ internal fun PolarityBadge(polarity: Polarity) {
     val plus = polarity == Polarity.PLUS
     val sign = if (plus) colors.onPrimary else colors.onSurface
     val label = stringResource(
-        if (plus) Res.string.settings_value_polarity_plus_sign else Res.string.settings_value_polarity_minus_sign
+        if (plus) {
+            Strings.string.settings_common_value_polarity_plus_sign
+        } else {
+            Strings.string.settings_common_value_polarity_minus_sign
+        }
     )
     // Знак рисуется линиями, а не глифом шрифта: текст в маленьком круге смещается из-за отступов шрифта.
     Canvas(
@@ -170,7 +174,7 @@ internal fun ChangedChip() {
     ) {
         CmpDot(size = 8.dp)
         CmpText(
-            text = stringResource(Res.string.settings_value_changed),
+            text = stringResource(Strings.string.settings_common_value_changed),
             style = CmpTextStyle.Caption,
             fontWeight = FontWeight.SemiBold,
             color = colors.onTertiaryContainer
@@ -182,8 +186,8 @@ internal fun ChangedChip() {
 @Composable
 internal fun ContactBadge(type: InputContactType) {
     val text = when (type) {
-        InputContactType.NORMALLY_OPEN -> stringResource(Res.string.settings_value_contact_no)
-        InputContactType.NORMALLY_CLOSED -> stringResource(Res.string.settings_value_contact_nc)
+        InputContactType.NORMALLY_OPEN -> stringResource(Strings.string.settings_common_value_contact_no)
+        InputContactType.NORMALLY_CLOSED -> stringResource(Strings.string.settings_common_value_contact_nc)
         InputContactType.UNDEFINED -> return
     }
     val colors = cmpThemeColors()

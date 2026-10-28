@@ -1,5 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.firmware.di
 
+import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AuthCloseable
@@ -7,13 +9,17 @@ import ru.alarmtrade.specmp.feature.device.firmware.data.repository.SpecialistFi
 import ru.alarmtrade.specmp.feature.device.firmware.data.repository.SpecialistFirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveViewModel
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckViewModel
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateViewModel
 
 /**
- * Koin-модуль логической фичи `feature/device/firmware`: версии прошивок, обновление, состояние перехода в загрузчик.
- * SDK-интеракторы берутся из `core/specialist`.
+ * Koin-модуль фичи `feature/device/firmware`: версии прошивок, обновление, состояние перехода в загрузчик и ViewModel
+ * экранов. SDK-интеракторы берутся из `core/specialist`.
  */
 val deviceFirmwareModule = module {
     single<FirmwareRepository> {
@@ -25,4 +31,8 @@ val deviceFirmwareModule = module {
     single { FirmwareBootRequester() } bind AuthCloseable::class
     single { ServicePinCooldown() } bind AuthCloseable::class
     single { FirmwareArchivePicker() }
+
+    viewModelOf(::FirmwareCheckViewModel)
+    viewModelOf(::FirmwareUpdateViewModel)
+    viewModel { (args: FirmwareArchiveRequest) -> FirmwareArchiveViewModel(args, get(), get()) }
 }

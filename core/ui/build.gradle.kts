@@ -21,8 +21,6 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
-        // обязательно для модулей с compose resources (см. docs/build.md)
-        androidResources.enable = true
     }
 
     listOf(
@@ -37,6 +35,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))
+            implementation(project(":core:localization"))
             // Жизненный цикл приложения для BaseViewModel (onAppForeground / onAppBackground)
             implementation(project(":core:lifecycle"))
 
@@ -60,7 +59,8 @@ kotlin {
 
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime)
+            // api: collectAsStateWithLifecycle — сбор state экранов во всех фичах (docs/compose-best-prac.md §4)
+            api(libs.androidx.lifecycle.runtime)
 
             // Kotlinx
             implementation(libs.kotlinx.coroutines.core)
@@ -92,10 +92,4 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
     }
-}
-
-// Общие строковые ресурсы (см. docs/localization.md, правило 2)
-compose.resources {
-    publicResClass = false
-    generateResClass = always
 }

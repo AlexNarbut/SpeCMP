@@ -13,8 +13,10 @@ struct SpeCMPApp: App {
 
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.40"
-        let build = Int(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "240") ?? 240
+        // Версия — из Info.plist (источник для iOS); без неё сборка некорректна.
+        let info = Bundle.main.infoDictionary!
+        let version = info["CFBundleShortVersionString"] as! String
+        let build = Int(info["CFBundleVersion"] as! String)!
         return MainViewControllerKt.MainViewController(
             appVersionName: version,
             appVersionCode: Int32(build)

@@ -1,8 +1,8 @@
 package ru.alarmtrade.specmp.feature.main.presentation.screen.main
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
@@ -16,7 +16,7 @@ internal fun MainScreen(
     modifier: Modifier = Modifier
 ) {
     val viewModel = koinViewModel<MainScreenViewModel>()
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
 
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {

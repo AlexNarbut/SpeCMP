@@ -10,14 +10,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_a11y_close_viewer
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_a11y_close_viewer
 
 @Composable
 internal fun SupportChatImageViewer(imageSource: String, onDismiss: () -> Unit) {
@@ -40,7 +40,7 @@ internal fun SupportChatImageViewer(imageSource: String, onDismiss: () -> Unit) 
             CmpIconButton(
                 onClick = onDismiss,
                 icon = CmpIcons.Close,
-                contentDescription = stringResource(Res.string.supportchat_chat_a11y_close_viewer),
+                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_close_viewer),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(16.dp)

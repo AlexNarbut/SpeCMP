@@ -18,6 +18,11 @@ data class AlarmDevice(
     val modelInDatabase: Boolean = true
 )
 
+/** Подпись блока «DX-9X  1234567» (модель и номер) — шапки экранов и маршрутов. */
+fun deviceTitle(systemName: String, systemId: Long): String = "$systemName  $systemId"
+
+val AlarmDevice.title: String get() = deviceTitle(systemName, systemId)
+
 /** Версия ПО для показа: без префикса `VER` (`3.57`). */
 val AlarmDevice.displayFirmwareVersion: String
     get() = firmwareVersion.removePrefix("VER").trim()
@@ -74,3 +79,11 @@ sealed interface DeviceSessionState {
     /** Основная программа блока в загрузчике (обновление основной прошивки). */
     data class FirmwareBoot(val device: AlarmDevice) : DeviceSessionState
 }
+
+/** Блок (основная программа или Bluetooth-модуль) в загрузчике. */
+val DeviceSessionState.isBoot: Boolean
+    get() = this is DeviceSessionState.BluetoothBoot || this is DeviceSessionState.FirmwareBoot
+
+/** Связи нет: обрыв или переподключение. */
+val DeviceSessionState.isLinkDown: Boolean
+    get() = this is DeviceSessionState.Disconnected || this is DeviceSessionState.Connecting

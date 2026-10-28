@@ -10,25 +10,29 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 
 /**
  * Корень расширенного монтажа: шапка блока и разделы.
@@ -36,37 +40,51 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  * На каждом подключении блока: IMEI; для нового блока — проверка на сервере → разделы по возможностям
  * и подписка на удалённый монтаж. После переподключения того же блока разделы не перезагружаются
  * (пользователь возвращается туда, где был). Непрочитанные в чате опрашивает репозиторий, пока экран на виду.
- * Работа с блоком — через [DeviceScope] (отменяется при потере связи).
+ * Работа с блоком — через [BaseDeviceViewModel] (отменяется при потере связи).
  */
 class AdvancedMountRootViewModel(
-    private val deviceSession: DeviceSession,
+    deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
-    dispatchers: AppDispatchers
-) : BaseViewModel() {
-
-    private val deviceScope = DeviceScope(viewModelScope, deviceSession)
+    private val dispatchers: AppDispatchers
+) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(AdvancedMountRootState())
 
     // Поллинг непрочитанных живёт в репозитории; WhileSubscribed общего state останавливает его, пока корень
     // перекрыт дочерним экраном. Ошибка опроса не сбрасывает последнее известное значение.
     private val unreadCount: Flow<Int> = repository.observeUnreadChatCount()
+        .flowOn(dispatchers.io)
         .mapNotNull { it.getValueIfSuccess() }
         .onStart { emit(0) }
 
     // Удалённый монтаж приходит по каналу чата (сессия): подписываемся один раз после первой успешной проверки
     // блока и держим подписку всю жизнь VM (Lazily), без WhileSubscribed.
     private val remoteAvailable: StateFlow<Boolean> = flow {
-        _state.first { it.content is MountContent.Ready }
+        _state.first { it.content.content is MountAccess.Ready }
         emitAll(repository.remoteMountAvailable())
-    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
+    }
+        .flowOn(dispatchers.io)
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    val state: StateFlow<AdvancedMountRootState> = combine(_state, unreadCount, remoteAvailable) {
-            state,
-            unread,
-            remote
-        ->
-        state.copy(unreadCount = unread, remoteAvailable = remote)
+    // Транспорт последнего подключения: на время переподключения (null) показываем прежний.
+    private val transport: Flow<ConnectionTransport?> = deviceSession.transport
+        .runningFold(null as ConnectionTransport?) { last, current -> current ?: last }
+
+    // Кнопка «Информация о товаре» — один раз за жизнь VM, при первой подписке на state.
+    private val productInfo: StateFlow<Boolean> = flow {
+        emit((repository.isProductInfoEnabled() as? Response.Success)?.value ?: false)
+    }
+        .flowOn(dispatchers.io)
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+    val state: StateFlow<AdvancedMountRootState> = combine(
+        _state,
+        unreadCount,
+        remoteAvailable,
+        transport,
+        productInfo
+    ) { state, unread, remote, transport, productInfo ->
+        state.copy(unreadCount = unread, remoteAvailable = remote, transport = transport, productInfo = productInfo)
     }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
@@ -78,49 +96,42 @@ class AdvancedMountRootViewModel(
     private var loadJob: Job? = null
 
     init {
-        safeLaunch {
-            deviceSession.transport.filterNotNull().collect { transport ->
-                _state.update { it.copy(transport = transport) }
-            }
-        }
-        deviceScope.onReady(::onDeviceReady)
-        safeLaunch {
-            val enabled = (repository.isProductInfoEnabled() as? Response.Success)?.value ?: false
-            _state.update { it.copy(productInfo = enabled) }
-        }
+        // Реакция на каждое (пере)подключение блока живёт всю жизнь VM: проверка нового блока и IMEI.
+        onEachDeviceReady(::onDeviceReady)
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         val previous = _state.value
         _state.update { it.copy(device = device) }
         val sameDevice = previous.device?.systemId == device.systemId
-        if (!sameDevice || previous.content == MountContent.VerifyError) load(device)
+        if (!sameDevice || previous.content is LCEState.Error) load(device)
 
-        val imei = (deviceSession.readImei() as? Response.Success)?.value?.takeIf { it.isNotBlank() }
+        val imei = (withContext(dispatchers.io) { deviceSession.readImei() } as? Response.Success)?.value
+            ?.takeIf { it.isNotBlank() }
         _state.update { it.copy(imei = imei ?: it.imei) }
     }
 
     private fun load(device: AlarmDevice) {
         loadJob?.cancel()
         loadJob = safeLaunch {
-            _state.update { it.copy(content = MountContent.Loading, dialog = null) }
+            _state.update { it.copy(content = LCEState.Loading, dialog = null) }
             val content = when (
-                val access = repository.verify(
-                    device.systemId,
-                    device.systemName,
-                    device.firmwareVersion
-                )
+                val access = withContext(dispatchers.io) {
+                    repository.verify(device.systemId, device.systemName, device.firmwareVersion)
+                }
             ) {
-                is Response.Error -> MountContent.VerifyError
+                is Response.Error -> LCEState.Error(MountError.from(access.exception))
 
                 is Response.Success -> if (access.value.hasAccess) {
-                    MountContent.Ready(
-                        sections = device.features.toSections(),
-                        unsupported = device.features == null,
-                        modelNotInDatabase = device.features == null && !device.modelInDatabase
+                    LCEState.Content(
+                        MountAccess.Ready(
+                            sections = device.features.toSections(),
+                            unsupported = device.features == null,
+                            modelNotInDatabase = device.features == null && !device.modelInDatabase
+                        )
                     )
                 } else {
-                    MountContent.Denied(access.value.message)
+                    LCEState.Content(MountAccess.Denied(access.value.message))
                 }
             }
             _state.update { it.copy(content = content) }
@@ -166,14 +177,4 @@ class AdvancedMountRootViewModel(
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
-}
-
-sealed interface AdvancedMountRootEffect {
-    data class OpenSection(val section: MountSection) : AdvancedMountRootEffect
-
-    data object OpenSupportChat : AdvancedMountRootEffect
-
-    data object OpenRemoteSync : AdvancedMountRootEffect
-
-    data object OpenProductInfo : AdvancedMountRootEffect
 }

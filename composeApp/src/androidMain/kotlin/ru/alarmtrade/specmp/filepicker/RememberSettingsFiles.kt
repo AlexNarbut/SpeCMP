@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.filepicker
 
 import android.content.Context
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import co.touchlab.kermit.Logger
 import java.io.File
-import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -93,7 +91,7 @@ actual fun rememberSettingsFileSaver(): SettingsFileSaver {
                         resolver.openOutputStream(uri, "wt")?.use { output ->
                             File(sourcePath).inputStream().use { it.copyTo(output) }
                         } ?: error("No output stream")
-                        SettingsFileSaveResult.Saved(resolver.displayName(uri) ?: fileName)
+                        SettingsFileSaveResult.Saved(resolver.queryNameAndSize(uri).name ?: fileName)
                     } catch (e: Exception) {
                         logger.w(e) { "Settings file save failed" }
                         SettingsFileSaveResult.Failed
@@ -129,34 +127,16 @@ private object SettingsSaveRequester {
 // Граница платформенного I/O: любой сбой копирования логируется и превращается в Failed
 @Suppress("TooGenericExceptionCaught")
 private fun Uri.copyToCache(context: Context): SettingsFilePickResult {
-    val resolver = context.contentResolver
-    val fileName = safeFileName(resolver.displayName(this) ?: DEFAULT_NAME)
-    val root = File(context.cacheDir, PICKED_DIR)
-    val directory = File(root, UUID.randomUUID().toString())
+    val fileName = safeFileName(context.contentResolver.queryNameAndSize(this).name ?: DEFAULT_NAME)
     return try {
-        root.deleteRecursively()
-        directory.mkdirs()
-        val target = File(directory, fileName)
-        val copied = resolver.openInputStream(this)?.use { input ->
-            target.outputStream().use { output -> input.copyTo(output) }
-        }
-        if (copied == null) {
-            directory.deleteRecursively()
-            SettingsFilePickResult.Failed
-        } else {
-            SettingsFilePickResult.Picked(fileName, target.absolutePath, inPlace = false)
-        }
+        context.copyToCache(this, PICKED_DIR, fileName)
+            ?.let { SettingsFilePickResult.Picked(fileName, it.file.absolutePath, inPlace = false) }
+            ?: SettingsFilePickResult.Failed
     } catch (e: Exception) {
         logger.w(e) { "Failed to copy picked settings file '$fileName'" }
-        directory.deleteRecursively()
         SettingsFilePickResult.Failed
     }
 }
-
-private fun android.content.ContentResolver.displayName(uri: Uri): String? =
-    query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
-        if (cursor.moveToFirst()) cursor.getString(0) else null
-    }
 
 private const val ANY_MIME = "*/*"
 private const val DXS_MIME = "application/octet-stream"

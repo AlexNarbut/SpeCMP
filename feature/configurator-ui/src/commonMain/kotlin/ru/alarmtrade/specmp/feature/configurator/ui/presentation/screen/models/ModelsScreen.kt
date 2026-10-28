@@ -17,6 +17,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_a11y_clear
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_cancel
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_other_model
+import ru.alarmtrade.specmp.core.localization.resources.configurator_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.configurator_file_error_msg
+import ru.alarmtrade.specmp.core.localization.resources.configurator_file_error_title
+import ru.alarmtrade.specmp.core.localization.resources.configurator_file_loading_checking
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_a11y_recent_remove
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_error
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_error_msg
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_label_all
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_label_connected
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_label_recent
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_msg_nothing
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_placeholder_search
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_subtitle_file
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_subtitle_new
+import ru.alarmtrade.specmp.core.localization.resources.configurator_models_title
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -37,26 +58,7 @@ import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
-import specmp.feature.configurator_ui.generated.resources.Res
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_back
-import specmp.feature.configurator_ui.generated.resources.configurator_a11y_clear
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_cancel
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_other_model
-import specmp.feature.configurator_ui.generated.resources.configurator_btn_retry
-import specmp.feature.configurator_ui.generated.resources.configurator_file_checking
-import specmp.feature.configurator_ui.generated.resources.configurator_file_error_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_file_error_title
-import specmp.feature.configurator_ui.generated.resources.configurator_models_a11y_recent_remove
-import specmp.feature.configurator_ui.generated.resources.configurator_models_all
-import specmp.feature.configurator_ui.generated.resources.configurator_models_connected
-import specmp.feature.configurator_ui.generated.resources.configurator_models_error
-import specmp.feature.configurator_ui.generated.resources.configurator_models_error_msg
-import specmp.feature.configurator_ui.generated.resources.configurator_models_nothing
-import specmp.feature.configurator_ui.generated.resources.configurator_models_recent
-import specmp.feature.configurator_ui.generated.resources.configurator_models_search
-import specmp.feature.configurator_ui.generated.resources.configurator_models_sub_file
-import specmp.feature.configurator_ui.generated.resources.configurator_models_sub_new
-import specmp.feature.configurator_ui.generated.resources.configurator_models_title
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 
 /** K2 выбор модели блока: подключённый блок и недавние сверху, поиск, все модели. */
 @Composable
@@ -72,11 +74,12 @@ internal fun ModelsScreen(
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
-                title = { CmpText(text = stringResource(Res.string.configurator_models_title)) },
+                title = { CmpText(text = stringResource(Strings.string.configurator_models_title)) },
                 subtitle = {
                     CmpText(
-                        text = state.fileName?.let { stringResource(Res.string.configurator_models_sub_file, it) }
-                            ?: stringResource(Res.string.configurator_models_sub_new),
+                        text =
+                            state.fileName?.let { stringResource(Strings.string.configurator_models_subtitle_file, it) }
+                                ?: stringResource(Strings.string.configurator_models_subtitle_new),
                         style = CmpTextStyle.Caption,
                         maxLines = 1
                     )
@@ -85,7 +88,7 @@ internal fun ModelsScreen(
                     CmpIconButton(
                         onClick = onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.configurator_a11y_back)
+                        contentDescription = stringResource(Strings.string.configurator_common_a11y_back)
                     )
                 }
             )
@@ -95,51 +98,57 @@ internal fun ModelsScreen(
             CmpSearchField(
                 value = state.query,
                 onValueChange = onQueryChange,
-                placeholder = stringResource(Res.string.configurator_models_search),
-                clearContentDescription = stringResource(Res.string.configurator_a11y_clear),
+                placeholder = stringResource(Strings.string.configurator_models_placeholder_search),
+                clearContentDescription = stringResource(Strings.string.configurator_common_a11y_clear),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
                     .testTag(ConfiguratorTestTags.MODELS_SEARCH)
             )
             when (val list = state.list) {
-                ModelsList.Loading -> CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                LCEState.None, LCEState.Loading -> CmpBox(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     CmpCircularProgressIndicator()
                 }
 
-                ModelsList.Error -> CmpStateBox(
+                is LCEState.Error -> CmpStateBox(
                     icon = CmpIcons.CloudOff,
-                    title = stringResource(Res.string.configurator_models_error),
-                    text = stringResource(Res.string.configurator_models_error_msg),
+                    title = list.error.text(Strings.string.configurator_models_error),
+                    text = stringResource(Strings.string.configurator_models_error_msg),
                     tone = CmpStateTone.Error,
                     modifier = Modifier.fillMaxSize()
                 ) {
                     CmpButton(
-                        text = stringResource(Res.string.configurator_btn_retry),
+                        text = stringResource(Strings.string.configurator_common_btn_retry),
                         onClick = onRetry,
                         modifier = Modifier.testTag(ConfiguratorTestTags.RETRY)
                     )
                 }
 
-                is ModelsList.Ready -> ModelsList(state, list.models, onPick, onRecentRemove)
+                is LCEState.Content -> ModelsList(state, list.content, onPick, onRecentRemove)
             }
         }
     }
     state.fileError?.let { model ->
         CmpDialog(
             onDismissRequest = onDialogDismiss,
-            title = { CmpText(text = stringResource(Res.string.configurator_file_error_title, model)) },
-            text = { CmpText(text = stringResource(Res.string.configurator_file_error_msg)) },
+            title = { CmpText(text = stringResource(Strings.string.configurator_file_error_title, model)) },
+            text = { CmpText(text = stringResource(Strings.string.configurator_file_error_msg)) },
             confirmButton = {
-                CmpButton(text = stringResource(Res.string.configurator_btn_other_model), onClick = onDialogDismiss)
+                CmpButton(
+                    text = stringResource(Strings.string.configurator_common_btn_other_model),
+                    onClick = onDialogDismiss
+                )
             },
             dismissButton = {
-                CmpTextButton(text = stringResource(Res.string.configurator_btn_cancel), onClick = onBack)
+                CmpTextButton(text = stringResource(Strings.string.configurator_common_btn_cancel), onClick = onBack)
             }
         )
     }
     if (state.checking) {
         CmpDialog(
             onDismissRequest = {},
-            title = { CmpText(text = stringResource(Res.string.configurator_file_checking)) },
+            title = { CmpText(text = stringResource(Strings.string.configurator_file_loading_checking)) },
             text = {
                 CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CmpCircularProgressIndicator()
@@ -163,21 +172,27 @@ private fun ModelsList(
     val connected = state.connected?.takeIf { q.isEmpty() || it.contains(q, ignoreCase = true) }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         connected?.let { name ->
-            group(Res.string.configurator_models_connected, listOf(name), CmpIcons.Bluetooth, onPick)
+            group(Strings.string.configurator_models_label_connected, listOf(name), CmpIcons.Bluetooth, onPick)
         }
         if (recent.isNotEmpty()) {
-            group(Res.string.configurator_models_recent, recent, CmpIcons.History, onPick, onRemove = onRecentRemove)
+            group(
+                Strings.string.configurator_models_label_recent,
+                recent,
+                CmpIcons.History,
+                onPick,
+                onRemove = onRecentRemove
+            )
         }
         if (filtered.isEmpty()) {
             item(key = "nothing") {
                 CmpText(
-                    text = stringResource(Res.string.configurator_models_nothing, q),
+                    text = stringResource(Strings.string.configurator_models_msg_nothing, q),
                     color = cmpThemeColors().onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth().padding(24.dp)
                 )
             }
         } else {
-            group(Res.string.configurator_models_all, filtered, null, onPick)
+            group(Strings.string.configurator_models_label_all, filtered, null, onPick)
         }
     }
 }
@@ -219,7 +234,7 @@ private fun LazyListScope.group(
                 CmpIconButton(
                     onClick = { remove(name) },
                     icon = CmpIcons.Close,
-                    contentDescription = stringResource(Res.string.configurator_models_a11y_recent_remove),
+                    contentDescription = stringResource(Strings.string.configurator_models_a11y_recent_remove),
                     tint = cmpThemeColors().onSurfaceVariant
                 )
             }

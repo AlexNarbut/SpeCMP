@@ -38,6 +38,11 @@ allprojects {
         mavenLocal()
         mavenCentral()
         google()
+        // usb-serial-for-android (JitPack) — транзитивно из serialport-android Specialist SDK (common 2.0.114+)
+        maven {
+            url = uri("https://jitpack.io")
+            content { includeGroup("com.github.mik3y") }
+        }
         maven {
             url = uri("http://git.pandora.pri/api/packages/mobile_guild/maven")
             isAllowInsecureProtocol = true
@@ -117,6 +122,9 @@ subprojects {
     // Compose Resources, BuildConfig и прочий генерируемый код лежат в build/ и попадают в type-resolution задачи.
     tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
         exclude("**/build/**", "**/generated/**")
+        // Шаблоны выше — относительно корня source set; у сгенерированных source set'ов (аксессоры Strings) сам корень
+        // лежит в build/, поэтому отсекаем по абсолютному пути.
+        exclude { it.file.absolutePath.contains("${File.separator}build${File.separator}") }
     }
 
     // Агрегатор `detekt` в KMP ничего не запускает. detektCheck собирает задачи с type resolution по production- и
@@ -145,5 +153,15 @@ subprojects {
                 it.name in names
             }
         )
+    }
+}
+
+// Один конфиг стабильности на все модули с Compose-компилятором: доменные модели собираются без него и иначе
+// считаются нестабильными (docs/compose-best-prac.md, §3.5 «Конфиг стабильности»).
+subprojects {
+    plugins.withId("org.jetbrains.kotlin.plugin.compose") {
+        extensions.configure<org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension> {
+            stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("config/compose/stability.conf"))
+        }
     }
 }

@@ -6,9 +6,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
-import ru.alarmtrade.specmp.feature.authstate.domain.model.AuthState
+import ru.alarmtrade.specmp.core.ui.navigation.ViewModelScope
+import ru.alarmtrade.specmp.feature.authstate.presentation.logic.AuthState
 import ru.alarmtrade.specmp.feature.authstate.presentation.logic.AuthStateViewModel
 
 @Composable
@@ -19,7 +20,7 @@ fun AuthStateNavGraph(
     errorState: @Composable (onRetry: () -> Unit) -> Unit
 ) {
     val viewModel = koinViewModel<AuthStateViewModel>()
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
 
     AnimatedContent(
         targetState = state.value,
@@ -28,11 +29,16 @@ fun AuthStateNavGraph(
                 .togetherWith(fadeOut(animationSpec = tween(TRANSITION_DURATION_MILLIS)))
         },
         label = ANIMATION_LABEL
-    ) { currentState ->
-        when (currentState) {
+    ) { current ->
+        when (current.state) {
             AuthState.WAITING -> waitingState()
-            AuthState.NO_AUTH -> noAuthState()
-            AuthState.AUTHED -> authedState()
+
+            // Зона входа — тоже на сессию: формы прошлого входа (регистрация, сброс пароля) не достаются следующему.
+            AuthState.NO_AUTH -> ViewModelScope(name = NO_AUTH_SCOPE, scopeKey = current.session) { noAuthState() }
+
+            // Сессия — из target анимации: уходящая при выходе зона дорисовывается со своим хранилищем VM.
+            AuthState.AUTHED -> ViewModelScope(name = AUTHED_SCOPE, scopeKey = current.session) { authedState() }
+
             AuthState.CHECK_FAILED -> errorState(viewModel::retry)
         }
     }
@@ -40,3 +46,5 @@ fun AuthStateNavGraph(
 
 private const val TRANSITION_DURATION_MILLIS = 220
 private const val ANIMATION_LABEL = "AuthStateNavGraph"
+private const val NO_AUTH_SCOPE = "auth.no-auth"
+private const val AUTHED_SCOPE = "auth.authed"

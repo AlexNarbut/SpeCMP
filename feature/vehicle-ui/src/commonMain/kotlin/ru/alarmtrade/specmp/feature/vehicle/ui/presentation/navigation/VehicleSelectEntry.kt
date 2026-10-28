@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -11,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
@@ -18,17 +18,18 @@ import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.common.safeRun
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.vehicle_select_msg_can_copied
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.vehicleLayoutOf
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.messageText
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectContent
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectEffect
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectViewModel
-import specmp.feature.vehicle_ui.generated.resources.Res
-import specmp.feature.vehicle_ui.generated.resources.vehicle_select_msg_can_copied
 
 /**
  * Точка входа «Выбор автомобиля» (каталог и карточка автомобиля). Подключается через слоты навигации в
@@ -51,7 +52,7 @@ fun VehicleSelectEntry(
         key = "VehicleSelect:$request",
         parameters = { parametersOf(request) }
     )
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
     val uriHandler = LocalUriHandler.current
 
@@ -68,8 +69,10 @@ fun VehicleSelectEntry(
 
             is VehicleSelectEffect.CanCopied -> {
                 clipboard.setText(AnnotatedString(effect.code))
-                snackbarHostState.showSnackbar(getString(Res.string.vehicle_select_msg_can_copied, effect.code))
+                snackbarHostState.showSnackbar(getString(Strings.string.vehicle_select_msg_can_copied, effect.code))
             }
+
+            is VehicleSelectEffect.PickFailed -> snackbarHostState.showSnackbar(effect.error.messageText())
         }
     }
 

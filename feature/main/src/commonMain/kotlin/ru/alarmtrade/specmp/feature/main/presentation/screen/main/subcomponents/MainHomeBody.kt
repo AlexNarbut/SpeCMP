@@ -37,7 +37,6 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
-import ru.alarmtrade.specmp.feature.main.presentation.model.MainCardVariant
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreenState
 
@@ -139,7 +138,6 @@ fun MainHomeBody(
                     if (value.isInitialLoading) {
                         MainHomeSkeleton(
                             mode = mode,
-                            cardVariant = value.cardVariant,
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
@@ -149,7 +147,6 @@ fun MainHomeBody(
                         MainHomeContent(
                             state = value,
                             mode = mode,
-                            cardVariant = value.cardVariant,
                             onHomeActionClick = onHomeActionClick,
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
@@ -221,7 +218,6 @@ private fun sidePanelExitTransition() = drawerExitTransition() + shrinkHorizonta
 private fun MainHomeContent(
     state: MainScreenState,
     mode: MainHomeMode,
-    cardVariant: MainCardVariant,
     onHomeActionClick: (MainHomeAction) -> Unit,
     startContentPadding: Dp,
     endContentPadding: Dp,
@@ -236,7 +232,6 @@ private fun MainHomeContent(
 
     MainHomeDashboard(
         mode = mode,
-        cardVariant = cardVariant,
         onHomeActionClick = onHomeActionClick,
         startContentPadding = startContentPadding,
         endContentPadding = endContentPadding,

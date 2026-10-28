@@ -63,6 +63,13 @@ style:
   WildcardImport:
     active: true
     excludeImports: ['java.util.*', '*.generated.resources.*', 'androidx.compose.*']
+  # ViewModel фич — только наследники BaseViewModel (core/ui; docs/patterns.md, «BaseViewModel»)
+  ForbiddenImport:
+    active: true
+    excludes: ['**/core/ui/**']
+    forbiddenImports:
+      - reason: 'ViewModel фичи наследуется от BaseViewModel (core/ui), а не от androidx ViewModel'
+        value: 'androidx.lifecycle.ViewModel'
   ForbiddenComment:
     active: true
     comments:

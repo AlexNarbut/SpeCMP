@@ -1,9 +1,7 @@
 package ru.alarmtrade.specmp.filepicker
 
-import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -97,7 +95,7 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
 @Suppress("TooGenericExceptionCaught")
 private fun Uri.copyToAttachments(context: Context, kind: SupportChatPickKind): SupportChatPickedFileResult {
     val resolver = context.contentResolver
-    val metadata = resolver.queryMetadata(this)
+    val metadata = resolver.queryNameAndSize(this)
     if ((metadata.sizeBytes ?: 0L) > SupportChatAttachmentLimits.MAX_BYTES) {
         return SupportChatPickedFileResult.TooLarge
     }
@@ -149,26 +147,6 @@ internal fun File.deleteWithDirectory() {
 private val logger = Logger.withTag("SupportChatFilePicker")
 
 internal fun supportChatAttachmentsDir(context: Context): File = File(context.filesDir, ATTACHMENTS_DIR)
-
-private fun ContentResolver.queryMetadata(uri: Uri): PickedFileMetadata {
-    val cursor = query(uri, null, null, null, null) ?: return PickedFileMetadata()
-    return cursor.use {
-        if (it.moveToFirst()) {
-            val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
-            PickedFileMetadata(
-                name = nameIndex.takeIf { index -> index != -1 }?.let(it::getString),
-                sizeBytes = sizeIndex
-                    .takeIf { index -> index != -1 && !it.isNull(index) }
-                    ?.let(it::getLong)
-            )
-        } else {
-            PickedFileMetadata()
-        }
-    }
-}
-
-private data class PickedFileMetadata(val name: String? = null, val sizeBytes: Long? = null)
 
 private const val ANY_MIME = "*/*"
 private const val DEFAULT_NAME = "attachment"

@@ -10,6 +10,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_history_title
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_common_btn_retry
+import ru.alarmtrade.specmp.core.ui.error.message
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -17,9 +21,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_history_title
-import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 
 /**
  * Полноэкранная ошибка первой загрузки истории: показывается ровно тогда,
@@ -27,7 +29,12 @@ import specmp.feature.support_chat.generated.resources.supportchat_common_btn_re
  * сюда не попадают — они уходят тостом, лента остаётся на экране.
  */
 @Composable
-internal fun SupportChatErrorState(onRetry: () -> Unit, colors: CmpThemeColors, modifier: Modifier = Modifier) {
+internal fun SupportChatErrorState(
+    error: SupportChatError,
+    onRetry: () -> Unit,
+    colors: CmpThemeColors,
+    modifier: Modifier = Modifier
+) {
     CmpBox(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -45,14 +52,20 @@ internal fun SupportChatErrorState(onRetry: () -> Unit, colors: CmpThemeColors, 
             )
 
             CmpText(
-                text = stringResource(Res.string.supportchat_chat_error_history_title),
+                text = when (error) {
+                    is SupportChatError.Common -> error.error.message()
+
+                    SupportChatError.HistoryUnavailable -> stringResource(
+                        Strings.string.supportchat_chat_error_history_title
+                    )
+                },
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
                 color = colors.onSurface
             )
 
             CmpButton(
-                text = stringResource(Res.string.supportchat_common_btn_retry),
+                text = stringResource(Strings.string.supportchat_common_btn_retry),
                 onClick = onRetry
             )
         }

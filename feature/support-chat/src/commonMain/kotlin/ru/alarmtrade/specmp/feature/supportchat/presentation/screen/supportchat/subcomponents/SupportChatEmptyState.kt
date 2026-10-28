@@ -20,6 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_hint_documents
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_hint_installation_photos
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_msg_empty_subtitle
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_msg_empty_title
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -29,11 +34,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_hint_documents
-import specmp.feature.support_chat.generated.resources.supportchat_chat_hint_installation_photos
-import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empty_subtitle
-import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_empty_title
 
 @Composable
 internal fun SupportChatEmptyState(colors: CmpThemeColors, modifier: Modifier = Modifier) {
@@ -49,13 +49,13 @@ internal fun SupportChatEmptyState(colors: CmpThemeColors, modifier: Modifier = 
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CmpText(
-                text = stringResource(Res.string.supportchat_chat_msg_empty_title),
+                text = stringResource(Strings.string.supportchat_chat_msg_empty_title),
                 style = CmpTextStyle.Title,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
             CmpText(
-                text = stringResource(Res.string.supportchat_chat_msg_empty_subtitle),
+                text = stringResource(Strings.string.supportchat_chat_msg_empty_subtitle),
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(max = 340.dp)
@@ -68,12 +68,12 @@ internal fun SupportChatEmptyState(colors: CmpThemeColors, modifier: Modifier = 
         ) {
             EmptyHintChip(
                 icon = CmpIcons.Description,
-                label = stringResource(Res.string.supportchat_chat_hint_documents),
+                label = stringResource(Strings.string.supportchat_chat_hint_documents),
                 colors = colors
             )
             EmptyHintChip(
                 icon = CmpIcons.Image,
-                label = stringResource(Res.string.supportchat_chat_hint_installation_photos),
+                label = stringResource(Strings.string.supportchat_chat_hint_installation_photos),
                 colors = colors
             )
         }

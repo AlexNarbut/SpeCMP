@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +35,34 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_a11y_more
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_a11y_search
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_format_copy_name
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_source_cloud
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_source_defaults
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_source_file
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_value_source_mine
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_btn_save
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_btn_save_as
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_btn_write
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_label_changed
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_label_crumb_all
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_label_device
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_label_single_can
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_copy
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_load_from
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_reset
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_save_file
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_save_file_as
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_save_mine
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_save_to
+import ru.alarmtrade.specmp.core.localization.resources.settings_menu_item_write_device
+import ru.alarmtrade.specmp.core.localization.resources.settings_source_title_defaults
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
@@ -66,7 +93,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.S
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.settingsLayoutOf
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DescriptionDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DiffPanel
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ExitDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.ExitSaveDialog
@@ -84,66 +110,9 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SaveTargetsPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SectionTree
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SingleCanFirmwareDialog
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferProgressDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteProgressDialog
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_back
-import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_more
-import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_search
-import specmp.feature.device.settings_ui.generated.resources.settings_copy_name
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_btn_save
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_btn_save_as
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_btn_write
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_crumb_all
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_changed
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_device
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_label_single_can
-import specmp.feature.device.settings_ui.generated.resources.settings_editor_title_screen
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_copy
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_load_from
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_reset
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_file
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_file_as
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_mine
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_save_to
-import specmp.feature.device.settings_ui.generated.resources.settings_menu_write_device
-import specmp.feature.device.settings_ui.generated.resources.settings_source_cloud
-import specmp.feature.device.settings_ui.generated.resources.settings_source_defaults
-import specmp.feature.device.settings_ui.generated.resources.settings_source_defaults_title
-import specmp.feature.device.settings_ui.generated.resources.settings_source_file
-import specmp.feature.device.settings_ui.generated.resources.settings_source_mine
-
-/** Где пользователь в меню: путь разделов от корня (пусто — корень) или поиск. */
-@Immutable
-internal data class SettingsLocation(val sectionPath: List<Int>, val isSearch: Boolean) {
-    val sectionId: Int? get() = sectionPath.lastOrNull()
-}
-
-/** Действия экрана, кроме строк меню (они — в панелях). */
-@Immutable
-internal class DeviceSettingsActions(
-    val onBack: () -> Unit,
-    val onSearch: () -> Unit,
-    /** Перейти к разделу по пути от корня (крошки, дерево). */
-    val onNavigateTo: (sectionPath: List<Int>) -> Unit,
-    val onRetry: () -> Unit,
-    /** Ширина колонки дерева изменена перетаскиванием (dp, по окончании). */
-    val onTreeWidthChange: (Int) -> Unit,
-    val onWrite: () -> Unit,
-    val onExitWrite: () -> Unit,
-    val onExitDiscard: () -> Unit,
-    val onDialogDismiss: () -> Unit,
-    val onResetRequest: () -> Unit,
-    val onResetConfirm: () -> Unit,
-    val onSingleCanUpdate: () -> Unit,
-    val editor: EditorActions,
-    /** Загрузка и сохранение конфигураций. */
-    val transfer: TransferActions,
-    /** Открыть окно настройки корневого уровня из дерева (например «Код модели»). */
-    val onEditSetting: (settingId: Int) -> Unit = {}
-)
 
 /**
  * Каркас редактора: шапка (устройство, бейдж единой CAN), крошки (compact), дерево разделов (medium/expanded),
@@ -168,9 +137,9 @@ internal fun DeviceSettingsContent(
         ) { padding ->
             CmpColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
                 when (val menu = state.menu) {
-                    SettingsMenu.Loading -> MenuLoading()
-                    SettingsMenu.Error -> MenuError(onRetry = actions.onRetry)
-                    is SettingsMenu.Ready -> ReadyBody(menu.root, state, location, layout, windowWidth, actions, pane)
+                    LCEState.None, LCEState.Loading -> MenuLoading()
+                    is LCEState.Error -> MenuError(error = menu.error, onRetry = actions.onRetry)
+                    is LCEState.Content -> ReadyBody(menu.content, state, location, layout, windowWidth, actions, pane)
                 }
             }
         }
@@ -258,7 +227,7 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
         return
     }
     CmpTopAppBar(
-        title = { CmpText(text = stringResource(Res.string.settings_editor_title_screen)) },
+        title = { CmpText(text = stringResource(Strings.string.settings_editor_title_screen)) },
         subtitle = header?.let { device ->
             {
                 // С переносом: на узкой шапке бейдж единой CAN уходит на вторую строку, а не обрезается.
@@ -269,7 +238,7 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
                 ) {
                     CmpText(
                         text = stringResource(
-                            Res.string.settings_editor_label_device,
+                            Strings.string.settings_editor_label_device,
                             device.deviceName,
                             device.deviceId.toString()
                         ),
@@ -283,16 +252,16 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
             CmpIconButton(
                 onClick = actions.onBack,
                 icon = CmpIcons.ArrowBack,
-                contentDescription = stringResource(Res.string.settings_common_a11y_back)
+                contentDescription = stringResource(Strings.string.settings_common_a11y_back)
             )
         },
         actions = {
-            if (!location.isSearch && state.menu is SettingsMenu.Ready) {
+            if (!location.isSearch && state.menu is LCEState.Content) {
                 CmpIconButton(
                     onClick = actions.onSearch,
                     modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
                     icon = CmpIcons.Search,
-                    contentDescription = stringResource(Res.string.settings_common_a11y_search)
+                    contentDescription = stringResource(Strings.string.settings_common_a11y_search)
                 )
                 MoreMenu(state, actions)
             }
@@ -311,7 +280,7 @@ private fun ConfigurationTopBar(
     CmpTopAppBar(
         title = {
             CmpText(
-                text = source.title.ifEmpty { stringResource(Res.string.settings_source_defaults_title) },
+                text = source.title.ifEmpty { stringResource(Strings.string.settings_source_title_defaults) },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -323,10 +292,15 @@ private fun ConfigurationTopBar(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 val (icon, label) = when (source.kind) {
-                    SourceKind.MINE -> CmpIcons.Inventory2 to Res.string.settings_source_mine
-                    SourceKind.FILE -> CmpIcons.Description to Res.string.settings_source_file
-                    SourceKind.CLOUD -> CmpIcons.Cloud to Res.string.settings_source_cloud
-                    SourceKind.DEFAULTS, SourceKind.DEVICE -> CmpIcons.Factory to Res.string.settings_source_defaults
+                    SourceKind.MINE -> CmpIcons.Inventory2 to Strings.string.settings_common_value_source_mine
+
+                    SourceKind.FILE -> CmpIcons.Description to Strings.string.settings_common_value_source_file
+
+                    SourceKind.CLOUD -> CmpIcons.Cloud to Strings.string.settings_common_value_source_cloud
+
+                    SourceKind.DEFAULTS, SourceKind.DEVICE ->
+                        CmpIcons.Factory to
+                            Strings.string.settings_common_value_source_defaults
                 }
                 SourceTag(icon = icon, text = stringResource(label))
                 CmpText(text = source.deviceName, style = CmpTextStyle.Caption, maxLines = 1)
@@ -337,16 +311,16 @@ private fun ConfigurationTopBar(
             CmpIconButton(
                 onClick = actions.onBack,
                 icon = CmpIcons.ArrowBack,
-                contentDescription = stringResource(Res.string.settings_common_a11y_back)
+                contentDescription = stringResource(Strings.string.settings_common_a11y_back)
             )
         },
         actions = {
-            if (!location.isSearch && state.menu is SettingsMenu.Ready) {
+            if (!location.isSearch && state.menu is LCEState.Content) {
                 CmpIconButton(
                     onClick = actions.onSearch,
                     modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
                     icon = CmpIcons.Search,
-                    contentDescription = stringResource(Res.string.settings_common_a11y_search)
+                    contentDescription = stringResource(Strings.string.settings_common_a11y_search)
                 )
                 MoreMenu(state, actions)
             }
@@ -362,7 +336,7 @@ private fun ConfigurationTopBar(
 private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions) {
     var expanded by remember { mutableStateOf(false) }
     val transfer = actions.transfer
-    val copyName = stringResource(Res.string.settings_copy_name, state.source.title)
+    val copyName = stringResource(Strings.string.settings_common_format_copy_name, state.source.title)
     val item: @Composable (StringResource, CmpIcons, String, () -> Unit) -> Unit = { text, icon, tag, onClick ->
         CmpDropdownMenuItem(
             text = stringResource(text),
@@ -378,55 +352,79 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
         CmpIconButton(
             onClick = { expanded = true },
             icon = CmpIcons.MoreVert,
-            contentDescription = stringResource(Res.string.settings_common_a11y_more),
+            contentDescription = stringResource(Strings.string.settings_common_a11y_more),
             modifier = Modifier.testTag(SettingsTestTags.MENU)
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             when (state.source.kind) {
                 SourceKind.DEVICE -> {
-                    item(Res.string.settings_menu_load_from, CmpIcons.Download, SettingsTestTags.MENU_LOAD) {
+                    item(Strings.string.settings_menu_item_load_from, CmpIcons.Download, SettingsTestTags.MENU_LOAD) {
                         transfer.onLoadRequest()
                     }
-                    item(Res.string.settings_menu_save_to, CmpIcons.Save, SettingsTestTags.MENU_SAVE_TO) {
+                    item(Strings.string.settings_menu_item_save_to, CmpIcons.Save, SettingsTestTags.MENU_SAVE_TO) {
                         transfer.onSaveToRequest()
                     }
                     if (state.canResetToFactory) {
                         CmpDivider(color = cmpThemeColors().outlineVariant)
-                        item(Res.string.settings_menu_reset, CmpIcons.Refresh, SettingsTestTags.MENU_RESET) {
+                        item(Strings.string.settings_menu_item_reset, CmpIcons.Refresh, SettingsTestTags.MENU_RESET) {
                             actions.onResetRequest()
                         }
                     }
                 }
 
                 SourceKind.MINE -> {
-                    item(Res.string.settings_menu_save_file, CmpIcons.Description, SettingsTestTags.MENU_SAVE_FILE) {
+                    item(
+                        Strings.string.settings_menu_item_save_file,
+                        CmpIcons.Description,
+                        SettingsTestTags.MENU_SAVE_FILE
+                    ) {
                         transfer.onExport()
                     }
-                    item(Res.string.settings_menu_copy, CmpIcons.ContentCopy, SettingsTestTags.MENU_COPY) {
+                    item(Strings.string.settings_menu_item_copy, CmpIcons.ContentCopy, SettingsTestTags.MENU_COPY) {
                         transfer.onCopy(copyName)
                     }
                 }
 
                 SourceKind.FILE -> {
-                    item(Res.string.settings_menu_save_mine, CmpIcons.Inventory2, SettingsTestTags.MENU_SAVE_MINE) {
+                    item(
+                        Strings.string.settings_menu_item_save_mine,
+                        CmpIcons.Inventory2,
+                        SettingsTestTags.MENU_SAVE_MINE
+                    ) {
                         transfer.onSaveToMine()
                     }
-                    item(Res.string.settings_menu_save_file_as, CmpIcons.SaveAs, SettingsTestTags.MENU_SAVE_FILE) {
+                    item(
+                        Strings.string.settings_menu_item_save_file_as,
+                        CmpIcons.SaveAs,
+                        SettingsTestTags.MENU_SAVE_FILE
+                    ) {
                         transfer.onExport()
                     }
                 }
 
                 SourceKind.CLOUD, SourceKind.DEFAULTS -> {
-                    item(Res.string.settings_menu_save_mine, CmpIcons.Inventory2, SettingsTestTags.MENU_SAVE_MINE) {
+                    item(
+                        Strings.string.settings_menu_item_save_mine,
+                        CmpIcons.Inventory2,
+                        SettingsTestTags.MENU_SAVE_MINE
+                    ) {
                         transfer.onSaveToMine()
                     }
-                    item(Res.string.settings_menu_save_file, CmpIcons.Description, SettingsTestTags.MENU_SAVE_FILE) {
+                    item(
+                        Strings.string.settings_menu_item_save_file,
+                        CmpIcons.Description,
+                        SettingsTestTags.MENU_SAVE_FILE
+                    ) {
                         transfer.onExport()
                     }
                 }
             }
             if (state.showWriteToDevice) {
-                item(Res.string.settings_menu_write_device, CmpIcons.Upload, SettingsTestTags.MENU_WRITE_DEVICE) {
+                item(
+                    Strings.string.settings_menu_item_write_device,
+                    CmpIcons.Upload,
+                    SettingsTestTags.MENU_WRITE_DEVICE
+                ) {
                     transfer.onWriteToDevice()
                 }
             }
@@ -438,7 +436,7 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
 private fun CanBadge(code: String) {
     val colors = cmpThemeColors()
     CmpText(
-        text = stringResource(Res.string.settings_editor_label_single_can, code),
+        text = stringResource(Strings.string.settings_editor_label_single_can, code),
         style = CmpTextStyle.Caption,
         fontWeight = FontWeight.SemiBold,
         color = colors.onSecondaryContainer,
@@ -458,13 +456,14 @@ private fun Crumbs(
     actions: DeviceSettingsActions
 ) {
     val sections = location.sectionPath.mapNotNull { id -> root.findNode(id) as? SettingsSection }
-    val items = listOf(CmpBreadcrumb(stringResource(Res.string.settings_editor_crumb_all), state.changedCount > 0)) +
-        sections.map { section ->
-            CmpBreadcrumb(
-                label = if (section.number.isEmpty()) section.name else "${section.number} ${section.name}",
-                marked = (state.sectionChanges[section.id] ?: 0) > 0
-            )
-        }
+    val items =
+        listOf(CmpBreadcrumb(stringResource(Strings.string.settings_editor_label_crumb_all), state.changedCount > 0)) +
+            sections.map { section ->
+                CmpBreadcrumb(
+                    label = if (section.number.isEmpty()) section.name else "${section.number} ${section.name}",
+                    marked = (state.sectionChanges[section.id] ?: 0) > 0
+                )
+            }
     CmpBreadcrumbs(
         items = items,
         onItemClick = { index -> actions.onNavigateTo(location.sectionPath.take(index)) },
@@ -475,7 +474,7 @@ private fun Crumbs(
 
 @Composable
 private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions) {
-    if (state.changedCount == 0 || state.menu !is SettingsMenu.Ready) return
+    if (state.changedCount == 0 || state.menu !is LCEState.Content) return
     val colors = cmpThemeColors()
     CmpColumn(modifier = Modifier.fillMaxWidth().background(colors.surfaceContainer)) {
         CmpDivider(color = colors.outlineVariant)
@@ -486,16 +485,16 @@ private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions)
         ) {
             CmpDot()
             CmpText(
-                text = stringResource(Res.string.settings_editor_label_changed, state.changedCount),
+                text = stringResource(Strings.string.settings_editor_label_changed, state.changedCount),
                 style = CmpTextStyle.Title,
                 modifier = Modifier.weight(1f)
             )
             CmpButton(
                 text = stringResource(
                     when (state.barAction) {
-                        BarAction.WRITE -> Res.string.settings_editor_btn_write
-                        BarAction.SAVE -> Res.string.settings_editor_btn_save
-                        BarAction.SAVE_AS -> Res.string.settings_editor_btn_save_as
+                        BarAction.WRITE -> Strings.string.settings_editor_btn_write
+                        BarAction.SAVE -> Strings.string.settings_editor_btn_save
+                        BarAction.SAVE_AS -> Strings.string.settings_editor_btn_save_as
                     }
                 ),
                 onClick = actions.transfer.onBarAction,

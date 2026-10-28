@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.selection.data.repository
 
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -8,7 +7,6 @@ import kotlinx.coroutines.flow.map
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.scan.ScannedDeviceState
 import ru.alarmtrade.common.core.PlatformType
 import ru.alarmtrade.common.core.platformType
-import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.bluetooth.scan.BleDeviceScanResult
 import ru.alarmtrade.specialist.domain.usb.AttachedUsbDeviceInformation
 import ru.alarmtrade.specialist.interactors.bluetoothConnector.BluetoothConnectorInteractor
@@ -17,6 +15,8 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.DeviceConnectionType
+import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.core.specialist.supportedConnectionTypes
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
@@ -83,11 +83,6 @@ class SpecialistDeviceScanRepository(
         )
     }
 
-    private fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
-        is SpecialistResponse.Success -> Response.Success(value)
-        is SpecialistResponse.Error -> Response.Error(exception, message)
-    }
-
     private fun BleDeviceScanResult.toDomain(): ScannedDevice.Ble = ScannedDevice.Ble(
         id = uuid,
         name = name,
@@ -139,16 +134,4 @@ class SpecialistDeviceScanRepository(
         ScannedDeviceState.PAIRING -> ScannedDeviceMode.PAIRING
         else -> ScannedDeviceMode.BASE
     }
-}
-
-/**
- * Резолвит зависимость провайдера, возвращая null, если она недоступна на платформе
- * (SDK бросает при обращении к неподдерживаемому транспорту). Отмена пробрасывается.
- */
-private fun <T> (() -> T).resolveOrNull(): T? = try {
-    invoke()
-} catch (e: CancellationException) {
-    throw e
-} catch (ignored: Throwable) {
-    null
 }

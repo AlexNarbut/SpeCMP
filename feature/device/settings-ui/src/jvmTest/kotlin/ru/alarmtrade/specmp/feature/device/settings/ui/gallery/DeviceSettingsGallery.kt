@@ -3,6 +3,8 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.gallery
 import androidx.compose.runtime.remember
 import java.io.File
 import kotlin.test.Test
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartSchedule
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.AutoStartScheduleSetting
@@ -40,8 +42,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.diffTo
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.SectionEntry
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.CarSearch
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsContent
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsState
@@ -49,15 +51,14 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.ExitTarget
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.LoadErrorKind
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SaveForm
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsMenu
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SettingRowActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
@@ -258,7 +259,7 @@ class DeviceSettingsGallery {
 
     private val base = DeviceSettingsState(
         header = SettingsHeader("DX-9X", 1234567, singleCanCode = "2154"),
-        menu = SettingsMenu.Ready(root),
+        menu = LCEState.Content(root),
         changedIds = setOf(322, 3251),
         sectionChanges = mapOf(300 to 2, 320 to 2, 325 to 1)
     )
@@ -288,7 +289,7 @@ class DeviceSettingsGallery {
                     SearchPane(state.searchQuery, state.searchHits, marks, layout.isWide, {}, noRowActions)
                 } else {
                     SectionEntry(
-                        (state.menu as? SettingsMenu.Ready)?.root,
+                        state.menu.content,
                         marks,
                         path.lastOrNull(),
                         layout,
@@ -304,10 +305,14 @@ class DeviceSettingsGallery {
     }
 
     @Test
-    fun loading() = render("01_loading", base.copy(menu = SettingsMenu.Loading, changedIds = emptySet()), emptyList())
+    fun loading() = render("01_loading", base.copy(menu = LCEState.Loading, changedIds = emptySet()), emptyList())
 
     @Test
-    fun error() = render("02_error", base.copy(menu = SettingsMenu.Error, changedIds = emptySet()), emptyList())
+    fun error() = render(
+        "02_error",
+        base.copy(menu = LCEState.Error(SettingsError.LoadFailed), changedIds = emptySet()),
+        emptyList()
+    )
 
     @Test
     fun root() = render("03_root", base, emptyList())
@@ -346,14 +351,14 @@ class DeviceSettingsGallery {
     @Test
     fun editCanMany() = render(
         "25_edit_can_many",
-        base.copy(editing = editing(803).copy(carSearch = CarSearch.Found(cars))),
+        base.copy(editing = editing(803).copy(carSearch = LCEState.Content(cars))),
         listOf(800)
     )
 
     @Test
     fun editCanNone() = render(
         "26_edit_can_none",
-        base.copy(editing = editing(803).copy(carSearch = CarSearch.Found(emptyList()))),
+        base.copy(editing = editing(803).copy(carSearch = LCEState.Content(emptyList()))),
         listOf(800)
     )
 
@@ -446,7 +451,17 @@ class DeviceSettingsGallery {
     fun diffBusy() = render("43_diff_busy", base.copy(diff = DiffState.Busy("Нива.dxs")), listOf(300, 320))
 
     @Test
-    fun diffError() = render("44_diff_error", base.copy(diff = DiffState.Error("Облачная")), listOf(300, 320))
+    fun diffError() = render(
+        "44_diff_error",
+        base.copy(
+            diff = DiffState.Error(
+                "Облачная",
+                SettingsSource.LocalConfiguration(1, "DX-4GS", "Нива"),
+                closeAfter = true
+            )
+        ),
+        listOf(300, 320)
+    )
 
     @Test
     fun applying() = render("45_applying", base.copy(isApplying = true), listOf(300, 320))

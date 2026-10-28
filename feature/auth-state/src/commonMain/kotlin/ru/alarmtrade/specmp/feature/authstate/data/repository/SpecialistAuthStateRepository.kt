@@ -8,6 +8,8 @@ import ru.alarmtrade.common.auth.domain.AuthState as SdkAuthState
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.interactors.auth.AuthInteractor
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 
 class SpecialistAuthStateRepository(private val authInteractor: AuthInteractor) : AuthStateRepository {
@@ -23,19 +25,11 @@ class SpecialistAuthStateRepository(private val authInteractor: AuthInteractor) 
                         SdkAuthState.Waiting -> null
                     }
 
-                    is SpecialistResponse.Error -> response.toProjectError()
+                    is SpecialistResponse.Error -> response.toResponse()
                 }
             }
         )
     }
 
-    override suspend fun logout(): Response<Unit> = when (val response = authInteractor.logoutUseCase.execute()) {
-        is SpecialistResponse.Success -> Response.Success(Unit)
-        is SpecialistResponse.Error -> response.toProjectError()
-    }
-
-    private fun <T> SpecialistResponse.Error.toProjectError(): Response<T> = Response.Error(
-        exception = exception,
-        message = message ?: exception.message
-    )
+    override suspend fun logout(): Response<Unit> = authInteractor.logoutUseCase.execute().toResponse().map { }
 }

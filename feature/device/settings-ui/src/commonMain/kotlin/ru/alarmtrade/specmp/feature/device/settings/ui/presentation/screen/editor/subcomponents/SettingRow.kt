@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.settings_common_a11y_description
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
@@ -45,8 +47,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTest
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.isSegmented
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
-import specmp.feature.device.settings_ui.generated.resources.Res
-import specmp.feature.device.settings_ui.generated.resources.settings_common_a11y_description
 
 /** Длиннее — значение выводится под названием с переносом, а не справа. */
 private const val TEXT_STACK_FROM = 12
@@ -259,7 +259,7 @@ private fun InfoButton(enabled: Boolean, onClick: () -> Unit) {
     CmpIconButton(
         onClick = onClick,
         icon = CmpIcons.Info,
-        contentDescription = stringResource(Res.string.settings_common_a11y_description),
+        contentDescription = stringResource(Strings.string.settings_common_a11y_description),
         enabled = enabled,
         tint = if (enabled) colors.primary else colors.outline.copy(alpha = DISABLED_ALPHA),
         modifier = Modifier.size(48.dp)

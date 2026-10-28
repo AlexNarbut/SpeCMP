@@ -36,6 +36,20 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_attach
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_attachment_too_large
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_download
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_load_history
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_open
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_open_no_app
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_save_permission
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_send
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_error_send_no_file
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_msg_download_success
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_chat_title_screen
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_common_a11y_back
+import ru.alarmtrade.specmp.core.localization.resources.supportchat_common_btn_retry
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.format.rememberCmpDateLabeler
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -58,7 +72,6 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatActions
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiMessage
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatComposer
@@ -72,20 +85,6 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatMessageBubble
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatTypingIndicator
 import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.subcomponents.SupportChatWallpaper
-import specmp.feature.support_chat.generated.resources.Res
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_attach
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_attachment_too_large
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_download
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_load_history
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_open
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_open_no_app
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_save_permission
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_send
-import specmp.feature.support_chat.generated.resources.supportchat_chat_error_send_no_file
-import specmp.feature.support_chat.generated.resources.supportchat_chat_msg_download_success
-import specmp.feature.support_chat.generated.resources.supportchat_chat_title_screen
-import specmp.feature.support_chat.generated.resources.supportchat_common_a11y_back
-import specmp.feature.support_chat.generated.resources.supportchat_common_btn_retry
 
 @Suppress("CyclomaticComplexMethod")
 @Composable
@@ -97,20 +96,20 @@ fun SupportChatScreen(
 ) {
     val colors = cmpThemeColors()
     val snackbarHostState = rememberCmpSnackbarHostState()
-    val sendFailedText = stringResource(Res.string.supportchat_chat_error_send)
-    val sendNoFileText = stringResource(Res.string.supportchat_chat_error_send_no_file)
-    val historyLoadFailedText = stringResource(Res.string.supportchat_chat_error_load_history)
-    val downloadSuccessText = stringResource(Res.string.supportchat_chat_msg_download_success)
-    val downloadFailedText = stringResource(Res.string.supportchat_chat_error_download)
-    val retryLabel = stringResource(Res.string.supportchat_common_btn_retry)
+    val sendFailedText = stringResource(Strings.string.supportchat_chat_error_send)
+    val sendNoFileText = stringResource(Strings.string.supportchat_chat_error_send_no_file)
+    val historyLoadFailedText = stringResource(Strings.string.supportchat_chat_error_load_history)
+    val downloadSuccessText = stringResource(Strings.string.supportchat_chat_msg_download_success)
+    val downloadFailedText = stringResource(Strings.string.supportchat_chat_error_download)
+    val retryLabel = stringResource(Strings.string.supportchat_common_btn_retry)
     val attachmentTooLargeText = stringResource(
-        Res.string.supportchat_chat_error_attachment_too_large,
+        Strings.string.supportchat_chat_error_attachment_too_large,
         SupportChatAttachmentLimits.MAX_MEGABYTES
     )
-    val attachFailedText = stringResource(Res.string.supportchat_chat_error_attach)
-    val openFailedText = stringResource(Res.string.supportchat_chat_error_open)
-    val openNoAppText = stringResource(Res.string.supportchat_chat_error_open_no_app)
-    val savePermissionText = stringResource(Res.string.supportchat_chat_error_save_permission)
+    val attachFailedText = stringResource(Strings.string.supportchat_chat_error_attach)
+    val openFailedText = stringResource(Strings.string.supportchat_chat_error_open)
+    val openNoAppText = stringResource(Strings.string.supportchat_chat_error_open_no_app)
+    val savePermissionText = stringResource(Strings.string.supportchat_chat_error_save_permission)
 
     effect.collectSideEffect { event ->
         when (event) {
@@ -205,13 +204,13 @@ private fun SupportChatScaffold(
         topBar = {
             CmpTopAppBar(
                 title = {
-                    CmpText(text = stringResource(Res.string.supportchat_chat_title_screen))
+                    CmpText(text = stringResource(Strings.string.supportchat_chat_title_screen))
                 },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Res.string.supportchat_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.supportchat_common_a11y_back)
                     )
                 },
                 // Выравнивание заголовка — свойство раскладки, а не платформы.
@@ -374,7 +373,7 @@ private fun SupportChatHistory(
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
     scrollToNewestRequests: MutableIntState
 ) {
-    when (state.value.history) {
+    when (val history = state.value.history) {
         is LCEState.None, is LCEState.Loading -> {
             CmpBox(
                 modifier = Modifier.fillMaxSize(),
@@ -392,6 +391,7 @@ private fun SupportChatHistory(
 
         is LCEState.Error -> {
             SupportChatErrorState(
+                error = history.error,
                 onRetry = actions.onHistoryRetry,
                 colors = colors,
                 modifier = Modifier
@@ -625,18 +625,6 @@ private fun SupportChatVisibilityEffect(listState: LazyListState, onMessagesVisi
     }
 }
 
-internal sealed interface SupportChatListItem {
-    val key: String
-
-    data class DateDivider(val date: LocalDate, val label: String) : SupportChatListItem {
-        override val key: String get() = "$DATE_KEY_PREFIX$date"
-    }
-
-    data class Message(val message: SupportChatUiMessage) : SupportChatListItem {
-        override val key: String get() = "$MESSAGE_KEY_PREFIX${message.id}"
-    }
-}
-
 /**
  * Элементы списка в отображаемом порядке (newest-first; экран использует
  * `reverseLayout = true`, поэтому index 0 — внизу, индикатор набора — первым).
@@ -678,6 +666,4 @@ private enum class SupportChatLayoutMode {
 
 private const val FOLLOW_NEWEST_THRESHOLD = 2
 private const val SMOOTH_SCROLL_DISTANCE = 6
-private const val DATE_KEY_PREFIX = "date_"
-private const val MESSAGE_KEY_PREFIX = "msg_"
 private const val TYPING_KEY_PREFIX = "typing_"

@@ -21,10 +21,12 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 
 class FirmwareArchiveViewModelTest {
@@ -73,7 +75,7 @@ class FirmwareArchiveViewModelTest {
     private fun List<FirmwareArchiveEffect>.picked(): List<String> =
         filterIsInstance<FirmwareArchiveEffect.Picked>().map { it.version.version }
 
-    private fun FirmwareArchiveViewModel.rows(): List<ArchiveRowUi> = (state.value.content as ArchiveContent.Ready).rows
+    private fun FirmwareArchiveViewModel.rows(): List<ArchiveRowUi> = (state.value.content as LCEState.Content).content
 
     @Test
     fun `first page is shown newest first with marks relative to the installed version`() = test {
@@ -133,10 +135,10 @@ class FirmwareArchiveViewModelTest {
         assertEquals(listOf(1, 2), repository.archiveCalls)
 
         // Страница 2 — ошибка: список остаётся, баннер с повтором, новые запросы не идут сами.
-        val ready = vm.state.value.content as ArchiveContent.Ready
-        assertEquals(true, ready.moreError)
-        assertEquals(false, ready.loadingMore)
-        assertEquals(listOf("3.61"), ready.rows.map { it.version })
+        val ready = vm.state.value.content as LCEState.Content
+        assertEquals(FirmwareError.LoadFailed, ready.updateError)
+        assertEquals(false, ready.isUpdating)
+        assertEquals(listOf("3.61"), ready.content.map { it.version })
         vm.onEndReached()
         runCurrent()
         assertEquals(listOf(1, 2), repository.archiveCalls)
@@ -145,19 +147,19 @@ class FirmwareArchiveViewModelTest {
         vm.onRetryMore()
         runCurrent()
         assertEquals(listOf("3.61", "3.60"), vm.rows().map { it.version })
-        assertEquals(false, (vm.state.value.content as ArchiveContent.Ready).moreError)
+        assertEquals(null, (vm.state.value.content as LCEState.Content).updateError)
     }
 
     @Test
     fun `first page failure is a full screen error and refresh loads again`() = test {
         val (vm, _) = viewModel()
-        assertEquals(ArchiveContent.Error, vm.state.value.content)
+        assertEquals(LCEState.Error(FirmwareError.LoadFailed), vm.state.value.content)
 
         repository.archivePages[1] = page(1, "3.61")
         vm.onRefresh()
         runCurrent()
 
-        assertIs<ArchiveContent.Ready>(vm.state.value.content)
+        assertIs<LCEState.Content<*, *>>(vm.state.value.content)
     }
 
     @Test
@@ -165,7 +167,7 @@ class FirmwareArchiveViewModelTest {
         repository.archivePages[1] = page(1)
         val (vm, _) = viewModel()
 
-        assertEquals(ArchiveContent.Empty, vm.state.value.content)
+        assertEquals(LCEState.Content(emptyList<ArchiveRowUi>()), vm.state.value.content)
     }
 
     @Test
@@ -305,11 +307,11 @@ class FirmwareArchiveViewModelTest {
         val request = FirmwareArchiveRequest(null, FirmwareChannel.RELEASE, null, "X", UpdateProfile.Main, "X")
         repository.mainModule = Response.Success(null)
         val (empty, _) = viewModel(request = request)
-        assertIs<ArchiveContent.Empty>(empty.state.value.content)
+        assertEquals(LCEState.Content(emptyList<ArchiveRowUi>()), empty.state.value.content)
 
         repository.mainModule = Response.Error(IllegalStateException("offline"))
         val (failed, _) = viewModel(request = request)
-        assertIs<ArchiveContent.Error>(failed.state.value.content)
+        assertIs<LCEState.Error<*>>(failed.state.value.content)
         assertEquals(emptyList<Triple<Long, Int, String?>>(), repository.archiveRequests)
     }
 

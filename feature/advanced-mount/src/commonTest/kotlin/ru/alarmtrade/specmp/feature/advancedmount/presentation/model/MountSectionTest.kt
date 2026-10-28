@@ -12,11 +12,12 @@ class MountSectionTest {
     }
 
     @Test
-    fun `settings feature brings tech requests and community maps`() {
+    fun `settings feature brings configurator, tech requests and community maps`() {
         assertEquals(
             listOf(
                 MountSection.FIRMWARE_UPDATE,
                 MountSection.SETTINGS,
+                MountSection.CONFIGURATOR,
                 MountSection.TECH_REQUESTS,
                 MountSection.SUPPORT_CHAT,
                 MountSection.COMMUNITY_MAPS,
