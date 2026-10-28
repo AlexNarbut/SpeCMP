@@ -46,7 +46,8 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
-import ru.alarmtrade.specmp.core.ui.error.text
+import ru.alarmtrade.specmp.core.ui.error.message
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -64,6 +65,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.section.sectionPainter
@@ -459,7 +461,7 @@ private fun HeaderRow(label: String, value: String, trailing: (@Composable () ->
 @Composable
 private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, actions: AdvancedMountRootActions) {
     when (val content = state.content) {
-        MountContent.Loading -> CenterBlock {
+        LCEState.None, LCEState.Loading -> CenterBlock {
             CmpCircularProgressIndicator()
             CmpText(
                 text = stringResource(Res.string.advanced_mount_loading),
@@ -469,10 +471,13 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
             )
         }
 
-        is MountContent.VerifyError -> CenterBlock {
+        is LCEState.Error -> CenterBlock {
             Hero(CmpIcons.WifiOff, error = false)
             CmpText(
-                text = content.error.text(Res.string.advanced_mount_error_title),
+                text = when (val error = content.error) {
+                    is MountError.Common -> error.error.message()
+                    MountError.VerifyFailed -> stringResource(Res.string.advanced_mount_error_title)
+                },
                 fontSize = 22.sp,
                 textAlign = TextAlign.Center
             )
@@ -485,16 +490,28 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
             RefreshButton(stringResource(Res.string.advanced_mount_btn_fix), actions.onRetry)
         }
 
-        is MountContent.Denied -> CenterBlock {
+        is LCEState.Content -> AccessArea(content.content, state, layout, actions)
+    }
+}
+
+@Composable
+private fun AccessArea(
+    access: MountAccess,
+    state: AdvancedMountRootState,
+    layout: MountLayout,
+    actions: AdvancedMountRootActions
+) {
+    when (access) {
+        is MountAccess.Denied -> CenterBlock {
             Hero(CmpIcons.Lock, error = true)
             CmpText(
                 text = stringResource(Res.string.advanced_mount_denied_title),
                 fontSize = 22.sp,
                 textAlign = TextAlign.Center
             )
-            if (content.message.isNotBlank()) {
+            if (access.message.isNotBlank()) {
                 CmpText(
-                    text = content.message,
+                    text = access.message,
                     fontSize = 16.sp,
                     color = cmpThemeColors().onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -503,9 +520,9 @@ private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, act
             RefreshButton(stringResource(Res.string.advanced_mount_btn_retry), actions.onRetry)
         }
 
-        is MountContent.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (content.unsupported) UnsupportedBanner(modelNotInDatabase = content.modelNotInDatabase)
-            SectionsGrid(content.sections, layout, state.canLocked, state.unreadCount, actions.onSectionClick)
+        is MountAccess.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (access.unsupported) UnsupportedBanner(modelNotInDatabase = access.modelNotInDatabase)
+            SectionsGrid(access.sections, layout, state.canLocked, state.unreadCount, actions.onSectionClick)
         }
     }
 }

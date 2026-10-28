@@ -22,9 +22,11 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -58,7 +60,7 @@ class AdvancedMountRootViewModel(
     // Удалённый монтаж приходит по каналу чата (сессия): подписываемся один раз после первой успешной проверки
     // блока и держим подписку всю жизнь VM (Lazily), без WhileSubscribed.
     private val remoteAvailable: StateFlow<Boolean> = flow {
-        _state.first { it.content is MountContent.Ready }
+        _state.first { it.content.content is MountAccess.Ready }
         emitAll(repository.remoteMountAvailable())
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
@@ -95,7 +97,7 @@ class AdvancedMountRootViewModel(
         val previous = _state.value
         _state.update { it.copy(device = device) }
         val sameDevice = previous.device?.systemId == device.systemId
-        if (!sameDevice || previous.content is MountContent.VerifyError) load(device)
+        if (!sameDevice || previous.content is LCEState.Error) load(device)
 
         val imei = (deviceSession.readImei() as? Response.Success)?.value?.takeIf { it.isNotBlank() }
         _state.update { it.copy(imei = imei ?: it.imei) }
@@ -104,7 +106,7 @@ class AdvancedMountRootViewModel(
     private fun load(device: AlarmDevice) {
         loadJob?.cancel()
         loadJob = safeLaunch {
-            _state.update { it.copy(content = MountContent.Loading, dialog = null) }
+            _state.update { it.copy(content = LCEState.Loading, dialog = null) }
             val content = when (
                 val access = repository.verify(
                     device.systemId,
@@ -112,16 +114,18 @@ class AdvancedMountRootViewModel(
                     device.firmwareVersion
                 )
             ) {
-                is Response.Error -> MountContent.VerifyError(RequestError.from(access.exception))
+                is Response.Error -> LCEState.Error(MountError.from(access.exception))
 
                 is Response.Success -> if (access.value.hasAccess) {
-                    MountContent.Ready(
-                        sections = device.features.toSections(),
-                        unsupported = device.features == null,
-                        modelNotInDatabase = device.features == null && !device.modelInDatabase
+                    LCEState.Content(
+                        MountAccess.Ready(
+                            sections = device.features.toSections(),
+                            unsupported = device.features == null,
+                            modelNotInDatabase = device.features == null && !device.modelInDatabase
+                        )
                     )
                 } else {
-                    MountContent.Denied(access.value.message)
+                    LCEState.Content(MountAccess.Denied(access.value.message))
                 }
             }
             _state.update { it.copy(content = content) }

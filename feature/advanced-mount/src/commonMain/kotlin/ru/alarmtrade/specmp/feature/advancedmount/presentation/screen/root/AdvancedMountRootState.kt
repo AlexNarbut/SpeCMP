@@ -1,7 +1,9 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
@@ -13,7 +15,8 @@ data class AdvancedMountRootState(
     val transport: ConnectionTransport? = null,
     /** IMEI GSM-модема; `null` — не прочитан (строка не показывается). */
     val imei: String? = null,
-    val content: MountContent = MountContent.Loading,
+    /** Читаем возможности и проверяем блок на сервере → доступ к разделам; ошибка — проверка не удалась. */
+    val content: LCEState<MountAccess, MountError> = LCEState.Loading,
     val unreadCount: Int = 0,
     /** Доступен удалённый монтаж — иконка синхронизации в верхней панели. */
     val remoteAvailable: Boolean = false,
@@ -23,20 +26,14 @@ data class AdvancedMountRootState(
 ) {
     /** Заводские CAN-настройки: разделы с [MountSection.needsCan] заблокированы до CAN-прошивки. */
     val canLocked: Boolean
-        get() = device?.can?.isFactory == true && content is MountContent.Ready
+        get() = device?.can?.isFactory == true && content.content is MountAccess.Ready
 }
 
-/** Содержимое области разделов (шапка блока видна всегда). */
+/** Результат проверки блока на сервере (шапка блока видна всегда). */
 @Immutable
-sealed interface MountContent {
-    /** Читаем возможности и проверяем блок на сервере. */
-    data object Loading : MountContent
-
-    /** Проверка на сервере не удалась (сеть / сервер) — «Исправить». */
-    data class VerifyError(val error: RequestError) : MountContent
-
+sealed interface MountAccess {
     /** Сервер ограничил доступ к блоку; [message] — причина от сервера. */
-    data class Denied(val message: String) : MountContent
+    data class Denied(val message: String) : MountAccess
 
     /**
      * Разделы; [unsupported] — возможности блока не прочитаны, показаны только базовые разделы. [modelNotInDatabase] —
@@ -46,7 +43,7 @@ sealed interface MountContent {
         val sections: List<MountSection>,
         val unsupported: Boolean,
         val modelNotInDatabase: Boolean = false
-    ) : MountContent
+    ) : MountAccess
 }
 
 enum class MountDialog {

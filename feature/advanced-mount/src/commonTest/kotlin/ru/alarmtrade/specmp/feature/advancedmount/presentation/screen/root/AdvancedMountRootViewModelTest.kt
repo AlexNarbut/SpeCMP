@@ -28,9 +28,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
+import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -152,7 +154,7 @@ class AdvancedMountRootViewModelTest {
         assertEquals("351756051523999", state.imei)
         assertTrue(state.remoteAvailable)
         assertTrue(state.productInfo)
-        val content = assertIs<MountContent.Ready>(state.content)
+        val content = assertIs<MountAccess.Ready>(state.content.content)
         assertEquals(false, content.unsupported)
         assertTrue(MountSection.CLONE in content.sections)
     }
@@ -161,12 +163,12 @@ class AdvancedMountRootViewModelTest {
     fun `verify error then retry`(): TestResult = test {
         mountRepository.access = Response.Error(IllegalStateException("offline"))
         val (vm, _) = viewModel()
-        assertEquals(MountContent.VerifyError(RequestError.Failed), vm.state.value.content)
+        assertEquals(LCEState.Error(MountError.VerifyFailed), vm.state.value.content)
 
         mountRepository.access = Response.Success(DeviceAccess(true, ""))
         vm.onRetry()
         runCurrent()
-        assertIs<MountContent.Ready>(vm.state.value.content)
+        assertIs<MountAccess.Ready>(vm.state.value.content.content)
     }
 
     @Test
@@ -174,7 +176,7 @@ class AdvancedMountRootViewModelTest {
         mountRepository.access = Response.Success(DeviceAccess(hasAccess = false, message = "Блок заблокирован"))
         val (vm, _) = viewModel()
 
-        assertEquals(MountContent.Denied("Блок заблокирован"), vm.state.value.content)
+        assertEquals(LCEState.Content(MountAccess.Denied("Блок заблокирован")), vm.state.value.content)
     }
 
     @Test
@@ -182,7 +184,7 @@ class AdvancedMountRootViewModelTest {
         sessionRepository.device = device.copy(features = null)
         val (vm, _) = viewModel()
 
-        val content = assertIs<MountContent.Ready>(vm.state.value.content)
+        val content = assertIs<MountAccess.Ready>(vm.state.value.content.content)
         assertTrue(content.unsupported)
         assertEquals(
             listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
@@ -244,6 +246,6 @@ class AdvancedMountRootViewModelTest {
         runCurrent()
 
         assertEquals(1, mountRepository.verifyCount)
-        assertIs<MountContent.Ready>(vm.state.value.content)
+        assertIs<MountAccess.Ready>(vm.state.value.content.content)
     }
 }
