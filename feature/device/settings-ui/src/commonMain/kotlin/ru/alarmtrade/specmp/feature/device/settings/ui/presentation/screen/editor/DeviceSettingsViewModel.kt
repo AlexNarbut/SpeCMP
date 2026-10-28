@@ -32,13 +32,11 @@ import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
@@ -72,8 +70,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepo
 private const val SEARCH_DEBOUNCE_MILLIS = 150L
 private val STATE_STOP_TIMEOUT = 5.seconds
 
-private fun DeviceSessionState.connectedName(): String? = (this as? DeviceSessionState.Ready)?.device?.systemName
-
 /**
  * Сессия редактора настроек для [source] (одна на граф настроек).
  *
@@ -97,12 +93,11 @@ internal class DeviceSettingsViewModel(
     private val localConfigurations: LocalConfigurationsRepository,
     private val preferences: DeviceSettingsPreferences,
     private val carsRepository: VehicleCatalogRepository,
-    private val deviceSession: DeviceSession,
+    deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
     private val dispatchers: AppDispatchers
-) : BaseViewModel() {
+) : BaseDeviceViewModel(deviceSession) {
 
-    private val deviceScope = DeviceScope(viewModelScope, deviceSession)
     private val followsDevice = source.capabilities.followsDeviceConnection
 
     private val _state = MutableStateFlow(
@@ -160,11 +155,6 @@ internal class DeviceSettingsViewModel(
         emit(Unit)
     }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    /** Модель подключённого блока (для «Записать в блок»). */
-    private val connectedDeviceName: Flow<String?> = deviceSession.state
-        .map { it.connectedName() }
-        .distinctUntilChanged()
-
     /** Поиск: запрос в state попадает вместе с результатом (после debounce), а не на каждый символ. */
     private val search: Flow<Pair<String, List<SettingsSearchHit>>> =
         combine(searchQuery, _state.map { it.menu.content }.distinctUntilChanged { a, b -> a === b }) { query, root ->
@@ -186,7 +176,7 @@ internal class DeviceSettingsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_STOP_TIMEOUT), _state.value)
 
     init {
-        if (followsDevice) deviceScope.onReady(::onDeviceReady)
+        if (followsDevice) onEachDeviceReady(::onDeviceReady)
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
@@ -827,7 +817,7 @@ internal class DeviceSettingsViewModel(
 
     /** «Записать в блок» из конфигурации: другая модель — предупреждение. */
     fun onWriteToDeviceRequest() {
-        val connected = deviceSession.state.value.connectedName() ?: return
+        val connected = currentDevice?.systemName ?: return
         val model = source.deviceNameOrNull
         if (model != null && !model.equals(connected, ignoreCase = true)) {
             _state.update {
@@ -948,7 +938,7 @@ internal class DeviceSettingsViewModel(
 
     /** Работа с источником: для блока — только при связи (отменяется при обрыве), иначе — в скоупе VM. */
     private fun work(block: suspend CoroutineScope.() -> Unit): Job? =
-        if (followsDevice) deviceScope.launch(block) else safeLaunch(block = block)
+        if (followsDevice) launchOnDevice(block) else safeLaunch(block = block)
 
     override fun onCleared() {
         val leftovers = listOfNotNull(preview.value?.snapshot, export.value?.snapshot)

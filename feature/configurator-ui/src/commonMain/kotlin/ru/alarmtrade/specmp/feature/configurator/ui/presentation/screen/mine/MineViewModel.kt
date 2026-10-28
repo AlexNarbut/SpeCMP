@@ -13,10 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
@@ -30,13 +28,12 @@ import ru.alarmtrade.specmp.core.common.reusing
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
@@ -57,7 +54,7 @@ internal class MineViewModel(
     deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
     private val dispatchers: AppDispatchers
-) : BaseViewModel() {
+) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(MineState(modelFilter = pickDeviceName, pickMode = pickDeviceName != null))
 
@@ -70,10 +67,6 @@ internal class MineViewModel(
         .onStart { emit(Unit) }
         .mapLatest { load() }
         .onStart { emit(Unit) }
-
-    private val connectedDeviceName: Flow<String?> = deviceSession.state
-        .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
-        .distinctUntilChanged()
 
     val state: StateFlow<MineState> = combine(_state, listLoads, connectedDeviceName) { state, _, connected ->
         state.copy(connectedDeviceName = connected).withLists()

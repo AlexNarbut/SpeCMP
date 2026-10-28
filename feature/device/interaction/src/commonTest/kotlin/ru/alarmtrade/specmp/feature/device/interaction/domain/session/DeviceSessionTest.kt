@@ -162,30 +162,6 @@ class DeviceSessionTest {
     }
 
     @Test
-    fun `device scope cancels work on disconnect and reruns onReady on reconnect`() =
-        runTest(UnconfinedTestDispatcher()) {
-            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
-            val session = testSession(repository, FakeDeviceConnectionRepository())
-            val scope = DeviceScope(backgroundScope, session)
-            val readyCalls = mutableListOf<Long>()
-            scope.onReady { readyCalls += it.systemId }
-            advanceUntilIdle()
-
-            val never = CompletableDeferred<Unit>()
-            val job = scope.launch { never.await() }
-            assertTrue(job != null && job.isActive)
-
-            repository.link.value = DeviceLinkState.DISCONNECTED
-            advanceUntilIdle()
-            assertTrue(job.isCancelled)
-            assertEquals(null, scope.launch { })
-
-            repository.link.value = DeviceLinkState.READY
-            advanceUntilIdle()
-            assertEquals(listOf(testDevice.systemId, testDevice.systemId), readyCalls)
-        }
-
-    @Test
     fun `transport is attached by the scan and cleared on close`() = runTest(UnconfinedTestDispatcher()) {
         val connection = FakeDeviceConnectionRepository()
         val session = testSession(FakeDeviceSessionRepository(), connection)

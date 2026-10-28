@@ -25,15 +25,14 @@ import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 
 /**
  * Корень расширенного монтажа: шапка блока и разделы.
@@ -41,15 +40,13 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  * На каждом подключении блока: IMEI; для нового блока — проверка на сервере → разделы по возможностям
  * и подписка на удалённый монтаж. После переподключения того же блока разделы не перезагружаются
  * (пользователь возвращается туда, где был). Непрочитанные в чате опрашивает репозиторий, пока экран на виду.
- * Работа с блоком — через [DeviceScope] (отменяется при потере связи).
+ * Работа с блоком — через [BaseDeviceViewModel] (отменяется при потере связи).
  */
 class AdvancedMountRootViewModel(
-    private val deviceSession: DeviceSession,
+    deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
     private val dispatchers: AppDispatchers
-) : BaseViewModel() {
-
-    private val deviceScope = DeviceScope(viewModelScope, deviceSession)
+) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(AdvancedMountRootState())
 
@@ -100,7 +97,7 @@ class AdvancedMountRootViewModel(
 
     init {
         // Реакция на каждое (пере)подключение блока живёт всю жизнь VM: проверка нового блока и IMEI.
-        deviceScope.onReady(::onDeviceReady)
+        onEachDeviceReady(::onDeviceReady)
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {

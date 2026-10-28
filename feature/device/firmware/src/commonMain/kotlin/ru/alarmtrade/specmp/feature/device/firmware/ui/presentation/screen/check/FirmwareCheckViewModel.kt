@@ -21,7 +21,6 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
@@ -37,11 +36,10 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 
 /**
  * «Проверка прошивки»: модули блока, их версии и версии на сервере, переход в режим обновления.
@@ -57,14 +55,12 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  * экран загрузчика.
  */
 class FirmwareCheckViewModel(
-    private val deviceSession: DeviceSession,
+    deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
     private val bootRequester: FirmwareBootRequester,
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers
-) : BaseViewModel() {
-
-    private val deviceScope = DeviceScope(viewModelScope, deviceSession)
+) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(FirmwareCheckState())
 
@@ -96,7 +92,7 @@ class FirmwareCheckViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
     init {
-        deviceScope.onReady(::onDeviceReady)
+        onEachDeviceReady(::onDeviceReady)
     }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
@@ -119,9 +115,9 @@ class FirmwareCheckViewModel(
                 val list = response.value
                 modules.update { list.associateBy { module -> module.id } }
                 _state.update { it.copy(content = LCEState.Content(list.map(::initialCard))) }
-                // Через deviceScope: чтение модулей и запросы версий отменяются при потере связи
+                // Через launchOnDevice: чтение модулей и запросы версий отменяются при потере связи
                 // и не пишут в карточки нового блока.
-                list.forEach { module -> deviceScope.launch { resolveModule(device, module) } }
+                list.forEach { module -> launchOnDevice { resolveModule(device, module) } }
             }
         }
     }
@@ -197,8 +193,8 @@ class FirmwareCheckViewModel(
         }
 
     fun onRetry() {
-        val device = deviceSession.state.value.let { (it as? DeviceSessionState.Ready)?.device } ?: return
-        deviceScope.launch { load(device) }
+        val device = currentDevice ?: return
+        launchOnDevice { load(device) }
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
@@ -206,14 +202,14 @@ class FirmwareCheckViewModel(
         _state.update { it.copy(channel = channel, bootFailed = false) }
         // Модули, у которых версия ещё читается, сами запросят сервер уже по новому каналу.
         cards().filter { it.status !is CardStatusUi.NotSupported && it.currentVersion !is CurrentVersionUi.Reading }
-            .forEach { card -> deviceScope.launch { lookup(card.id) } }
+            .forEach { card -> launchOnDevice { lookup(card.id) } }
     }
 
     fun onRefreshModule(moduleId: Long) {
         val card = cards().firstOrNull { it.id == moduleId } ?: return
         if (card.status is CardStatusUi.NotSupported || card.status is CardStatusUi.Searching) return
         if (card.currentVersion is CurrentVersionUi.Reading) return
-        deviceScope.launch { lookup(moduleId) }
+        launchOnDevice { lookup(moduleId) }
     }
 
     fun onDescriptionClick(moduleId: Long) {
@@ -287,7 +283,7 @@ class FirmwareCheckViewModel(
     // Запрос и ожидание перезагрузки больше не нужны; ожидание снимаем, только если блок остался на связи.
     private fun abandonBootAttempt() {
         bootRequester.take()
-        if (deviceSession.state.value is DeviceSessionState.Ready) deviceSession.cancelReboot()
+        if (currentDevice != null) deviceSession.cancelReboot()
     }
 
     private fun showPin(moduleId: Long, wrongPin: Boolean = false) {

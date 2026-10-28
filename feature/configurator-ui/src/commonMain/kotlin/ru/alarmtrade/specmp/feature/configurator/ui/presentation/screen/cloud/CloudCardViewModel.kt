@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,9 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -26,15 +23,14 @@ import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationAttachment
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
@@ -52,7 +48,7 @@ internal class CloudCardViewModel(
     private val configurations: LocalConfigurationsRepository,
     deviceSession: DeviceSession,
     private val dispatchers: AppDispatchers
-) : BaseViewModel() {
+) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(CloudCardState(firmwareCanCode = firmwareCanCode))
 
@@ -64,11 +60,6 @@ internal class CloudCardViewModel(
         .onStart { emit(Unit) }
         .mapLatest { load() }
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
-
-    // Модель подключённого блока — из сессии, а не снимком на старте.
-    private val connectedDeviceName: Flow<String?> = deviceSession.state
-        .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
-        .distinctUntilChanged()
 
     val state: StateFlow<CloudCardState> = combine(_state, loads, connectedDeviceName) { state, _, connected ->
         state.copy(connectedDeviceName = connected)

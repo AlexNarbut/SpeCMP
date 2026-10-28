@@ -36,6 +36,8 @@ kotlin {
             implementation(project(":feature:device:settings"))
             implementation(project(":feature:vehicle"))
             implementation(project(":feature:device:interaction"))
+            // BaseDeviceViewModel
+            implementation(project(":feature:device:interaction-ui"))
             // «Мои конфигурации»: «Сохранить в…» из редактора
             implementation(project(":feature:configurator"))
 

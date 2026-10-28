@@ -13,6 +13,7 @@
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
 - **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
 - **ViewModel — только через `BaseViewModel`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`), корутины — через `safeLaunch` — см. «BaseViewModel».
+- **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel`** (`feature/device/interaction-ui`): работа с блоком через `launchOnDevice` / `onEachDeviceReady`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».

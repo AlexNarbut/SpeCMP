@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models
 
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -10,10 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
@@ -21,13 +18,12 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.toSource
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
 /**
@@ -41,7 +37,7 @@ internal class ModelsViewModel(
     private val settings: DeviceSettingsRepository,
     deviceSession: DeviceSession,
     private val dispatchers: AppDispatchers
-) : BaseViewModel() {
+) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(ModelsState(fileName = file?.name))
 
@@ -53,12 +49,7 @@ internal class ModelsViewModel(
         emit(Unit)
     }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    // Модель подключённого блока — из сессии, а не снимком на старте: блок подключают и отключают при открытом экране.
-    private val connected: Flow<String?> = deviceSession.state
-        .map { (it as? DeviceSessionState.Ready)?.device?.systemName }
-        .distinctUntilChanged()
-
-    val state: StateFlow<ModelsState> = combine(_state, initialLoad, connected) { state, _, connected ->
+    val state: StateFlow<ModelsState> = combine(_state, initialLoad, connectedDeviceName) { state, _, connected ->
         state.copy(connected = connected)
     }
         .flowOn(dispatchers.default)
