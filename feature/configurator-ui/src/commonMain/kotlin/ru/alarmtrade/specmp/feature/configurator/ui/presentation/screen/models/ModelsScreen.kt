@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.error.text
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 import specmp.feature.configurator_ui.generated.resources.Res
 import specmp.feature.configurator_ui.generated.resources.configurator_a11y_back
 import specmp.feature.configurator_ui.generated.resources.configurator_a11y_clear
@@ -102,11 +103,14 @@ internal fun ModelsScreen(
                     .testTag(ConfiguratorTestTags.MODELS_SEARCH)
             )
             when (val list = state.list) {
-                ModelsList.Loading -> CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                LCEState.None, LCEState.Loading -> CmpBox(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     CmpCircularProgressIndicator()
                 }
 
-                is ModelsList.Error -> CmpStateBox(
+                is LCEState.Error -> CmpStateBox(
                     icon = CmpIcons.CloudOff,
                     title = list.error.text(Res.string.configurator_models_error),
                     text = stringResource(Res.string.configurator_models_error_msg),
@@ -120,7 +124,7 @@ internal fun ModelsScreen(
                     )
                 }
 
-                is ModelsList.Ready -> ModelsList(state, list.models, onPick, onRecentRemove)
+                is LCEState.Content -> ModelsList(state, list.content, onPick, onRecentRemove)
             }
         }
     }

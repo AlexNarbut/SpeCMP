@@ -12,7 +12,8 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationOrder
@@ -22,6 +23,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.sortedBy
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
@@ -48,17 +50,17 @@ internal class CloudListViewModel(
     }
 
     private suspend fun load() {
-        _state.update { it.copy(list = CloudList.Loading) }
+        _state.update { it.copy(list = LCEState.Loading) }
         val response = withContext(dispatchers.io) { cloud.byCar(carId, deviceName) }
         _state.update {
             it.copy(
                 list = when (response) {
                     is Response.Error -> {
                         logger.w(response.exception) { "Cloud configurations read failed: ${response.message}" }
-                        CloudList.Error(RequestError.from(response.exception))
+                        LCEState.Error(ConfiguratorError.from(response.exception))
                     }
 
-                    is Response.Success -> CloudList.Ready(response.value)
+                    is Response.Success -> LCEState.Content(response.value)
                 }
             )
         }
@@ -77,25 +79,19 @@ internal class CloudListViewModel(
 
 @Immutable
 internal data class CloudListState(
-    val list: CloudList = CloudList.Loading,
+    val list: LCEState<List<CloudConfigurationSummary>, ConfiguratorError> = LCEState.Loading,
     val order: CloudConfigurationOrder = CloudConfigurationOrder.BEST,
     val modelFilter: String? = null,
     /** Выбранная (широкое окно — карточка справа). */
     val selectedId: Int? = null
 ) {
-    private val all: List<CloudConfigurationSummary> get() = (list as? CloudList.Ready)?.items.orEmpty()
+    private val all: List<CloudConfigurationSummary> get() = list.content.orEmpty()
 
     val models: List<String> get() = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() }
 
     val shown: List<CloudConfigurationSummary>
         get() = all.filter { modelFilter == null || it.deviceName.equals(modelFilter, ignoreCase = true) }
             .sortedBy(order)
-}
-
-internal sealed interface CloudList {
-    data object Loading : CloudList
-    data class Error(val error: RequestError) : CloudList
-    data class Ready(val items: List<CloudConfigurationSummary>) : CloudList
 }
 
 /**
@@ -128,15 +124,15 @@ internal class CloudCardViewModel(
     }
 
     private suspend fun load() {
-        _state.update { it.copy(card = CloudCard.Loading) }
+        _state.update { it.copy(card = LCEState.Loading) }
         when (val response = withContext(dispatchers.io) { cloud.card(id) }) {
             is Response.Error -> {
                 logger.w(response.exception) { "Cloud configuration read failed: ${response.message}" }
-                _state.update { it.copy(card = CloudCard.Error(RequestError.from(response.exception))) }
+                _state.update { it.copy(card = LCEState.Error(ConfiguratorError.from(response.exception))) }
             }
 
             is Response.Success -> {
-                _state.update { it.copy(card = CloudCard.Ready(response.value)) }
+                _state.update { it.copy(card = LCEState.Content(response.value)) }
                 loadCanCode(response.value)
             }
         }
@@ -170,7 +166,7 @@ internal class CloudCardViewModel(
     fun onViewerClose() = _state.update { it.copy(viewer = null) }
 
     fun onSaveRequest() {
-        val card = (_state.value.card as? CloudCard.Ready)?.card ?: return
+        val card = _state.value.card.content ?: return
         _state.update {
             it.copy(
                 saveForm = CloudSaveForm(
@@ -188,7 +184,7 @@ internal class CloudCardViewModel(
     fun onSaveDismiss() = _state.update { it.copy(saveForm = null) }
 
     fun onSaveSubmit() {
-        val card = (_state.value.card as? CloudCard.Ready)?.card ?: return
+        val card = _state.value.card.content ?: return
         val form = _state.value.saveForm ?: return
         if (form.name.isBlank()) return
         _state.update { it.copy(saveForm = null, busy = true) }
@@ -223,7 +219,7 @@ internal fun CloudConfiguration.toSource(): SettingsSource.RemoteConfiguration =
 
 @Immutable
 internal data class CloudCardState(
-    val card: CloudCard = CloudCard.Loading,
+    val card: LCEState<CloudConfiguration, ConfiguratorError> = LCEState.Loading,
     val canCode: String? = null,
     val firmwareCanCode: String? = null,
     val descriptionExpanded: Boolean = false,
@@ -240,12 +236,6 @@ internal data class CloudCardState(
 
 @Immutable
 internal data class CloudSaveForm(val name: String, val description: String)
-
-internal sealed interface CloudCard {
-    data object Loading : CloudCard
-    data class Error(val error: RequestError) : CloudCard
-    data class Ready(val card: CloudConfiguration) : CloudCard
-}
 
 internal sealed interface CloudCardEffect {
     data class OpenUrl(val url: String) : CloudCardEffect

@@ -19,10 +19,13 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
@@ -66,17 +69,17 @@ internal class MineViewModel(
     }
 
     private suspend fun load() {
-        if (_state.value.list !is MineList.Ready) _state.update { it.copy(list = MineList.Loading) }
+        if (_state.value.list !is LCEState.Content) _state.update { it.copy(list = LCEState.Loading) }
         when (val response = withContext(dispatchers.io) { configurations.all() }) {
             is Response.Error -> {
                 logger.w(response.exception) { "Configurations read failed: ${response.message}" }
-                _state.update { it.copy(list = MineList.Error) }
+                _state.update { it.copy(list = LCEState.Error(ConfiguratorError.LoadFailed)) }
             }
 
             is Response.Success -> _state.update { state ->
                 val items = response.value
                 state.copy(
-                    list = MineList.Ready(items),
+                    list = LCEState.Content(items),
                     selectedId = state.selectedId?.takeIf { id -> items.any { it.id == id } }
                 )
             }
@@ -220,7 +223,7 @@ internal class MineViewModel(
 
 @Immutable
 internal data class MineState(
-    val list: MineList = MineList.Loading,
+    val list: LCEState<List<LocalConfiguration>, ConfiguratorError> = LCEState.Loading,
     val query: String = "",
     /** Фильтр по модели блока; `null` — все модели. */
     val modelFilter: String? = null,
@@ -234,7 +237,7 @@ internal data class MineState(
     val connectedDeviceName: String? = null,
     val pickMode: Boolean = false
 ) {
-    val all: List<LocalConfiguration> get() = (list as? MineList.Ready)?.items.orEmpty()
+    val all: List<LocalConfiguration> get() = list.content.orEmpty()
 
     /** Модели, которые есть в списке, — варианты фильтра. */
     val models: List<String> get() = all.map { it.deviceName }.distinct().sortedBy { it.lowercase() }
@@ -253,12 +256,6 @@ internal data class MineState(
         }
 
     val selected: LocalConfiguration? get() = selectedId?.let { id -> all.firstOrNull { it.id == id } }
-}
-
-internal sealed interface MineList {
-    data object Loading : MineList
-    data object Error : MineList
-    data class Ready(val items: List<LocalConfiguration>) : MineList
 }
 
 internal sealed interface MineDialog {

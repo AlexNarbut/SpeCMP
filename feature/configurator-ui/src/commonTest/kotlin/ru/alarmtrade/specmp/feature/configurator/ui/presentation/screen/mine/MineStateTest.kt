@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.datetime.LocalDateTime
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 
 class MineStateTest {
@@ -19,7 +20,7 @@ class MineStateTest {
 
     @Test
     fun `search covers name and description, model filter ignores case`() {
-        val state = MineState(list = MineList.Ready(items))
+        val state = MineState(list = LCEState.Content(items))
 
         assertEquals(listOf(2L), state.copy(query = "автозапуск по").filtered.map { it.id })
         assertEquals(listOf(1L, 2L), state.copy(query = "АВТОЗАПУСК").filtered.map { it.id })

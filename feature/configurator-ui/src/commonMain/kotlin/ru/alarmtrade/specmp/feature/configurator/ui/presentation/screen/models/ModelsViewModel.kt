@@ -11,9 +11,10 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.error.RequestError
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.toSource
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
@@ -50,17 +51,17 @@ internal class ModelsViewModel(
     }
 
     private suspend fun load() {
-        _state.update { it.copy(list = ModelsList.Loading) }
+        _state.update { it.copy(list = LCEState.Loading) }
         val response = withContext(dispatchers.io) { models.models() }
         _state.update {
             it.copy(
                 list = when (response) {
                     is Response.Error -> {
                         logger.w(response.exception) { "Device models read failed: ${response.message}" }
-                        ModelsList.Error(RequestError.from(response.exception))
+                        LCEState.Error(ConfiguratorError.from(response.exception))
                     }
 
-                    is Response.Success -> ModelsList.Ready(response.value)
+                    is Response.Success -> LCEState.Content(response.value)
                 }
             )
         }
@@ -112,7 +113,7 @@ internal class ModelsViewModel(
 
 @Immutable
 internal data class ModelsState(
-    val list: ModelsList = ModelsList.Loading,
+    val list: LCEState<List<String>, ConfiguratorError> = LCEState.Loading,
     /** Имя файла (K3) — подзаголовок; `null` — «С нуля». */
     val fileName: String? = null,
     val recent: List<String> = emptyList(),
@@ -123,12 +124,6 @@ internal data class ModelsState(
     /** Файл не открылся для этой модели. */
     val fileError: String? = null
 )
-
-internal sealed interface ModelsList {
-    data object Loading : ModelsList
-    data class Error(val error: RequestError) : ModelsList
-    data class Ready(val models: List<String>) : ModelsList
-}
 
 internal sealed interface ModelsEffect {
     data class Open(val source: SourceKey) : ModelsEffect

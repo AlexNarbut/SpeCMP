@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpFloatingActionButton
@@ -235,14 +236,14 @@ internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: 
 @Composable
 private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
     when (state.list) {
-        MineList.Loading -> CmpColumn(
+        LCEState.None, LCEState.Loading -> CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             repeat(SKELETON_ROWS) { CmpSkeleton(modifier = Modifier.fillMaxWidth().height(96.dp)) }
         }
 
-        MineList.Error -> CmpStateBox(
+        is LCEState.Error -> CmpStateBox(
             icon = CmpIcons.ErrorOutline,
             title = stringResource(Res.string.configurator_error_title),
             tone = CmpStateTone.Error,
@@ -255,7 +256,7 @@ private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
             )
         }
 
-        is MineList.Ready -> {
+        is LCEState.Content -> {
             val items = state.filtered
             when {
                 state.all.isEmpty() || (state.pickMode && items.isEmpty() && state.query.isBlank()) -> EmptyState(

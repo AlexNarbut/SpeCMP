@@ -28,7 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
-import ru.alarmtrade.specmp.core.ui.error.text
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -64,6 +65,7 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.Clou
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.CloudMeta
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.RatingLabel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.rememberDateTimeText
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.ModelFilterChip
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationInfoDialog
 import specmp.feature.configurator_ui.generated.resources.Res
@@ -184,11 +186,14 @@ private fun CloudListContent(
     onSelect: (Int) -> Unit
 ) {
     when (val list = state.list) {
-        CloudList.Loading -> CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        LCEState.None, LCEState.Loading -> CmpBox(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             CmpCircularProgressIndicator()
         }
 
-        is CloudList.Error -> CmpStateBox(
+        is LCEState.Error -> CmpStateBox(
             icon = CmpIcons.CloudOff,
             title = list.error.text(Res.string.configurator_cloud_error),
             text = stringResource(Res.string.configurator_cloud_error_msg),
@@ -202,7 +207,7 @@ private fun CloudListContent(
             )
         }
 
-        is CloudList.Ready -> {
+        is LCEState.Content -> {
             val items = state.shown
             if (items.isEmpty()) {
                 CmpStateBox(
@@ -290,11 +295,14 @@ internal fun CloudCardScreen(
 internal fun CloudCardContent(state: CloudCardState, actions: CloudCardActions) {
     CmpBox(modifier = Modifier.fillMaxSize()) {
         when (val card = state.card) {
-            CloudCard.Loading -> CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            LCEState.None, LCEState.Loading -> CmpBox(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 CmpCircularProgressIndicator()
             }
 
-            is CloudCard.Error -> CmpStateBox(
+            is LCEState.Error -> CmpStateBox(
                 icon = CmpIcons.CloudOff,
                 title = card.error.text(Res.string.configurator_card_error),
                 text = stringResource(Res.string.configurator_cloud_error_msg),
@@ -304,7 +312,7 @@ internal fun CloudCardContent(state: CloudCardState, actions: CloudCardActions) 
                 CmpButton(text = stringResource(Res.string.configurator_btn_retry), onClick = actions.onRetry)
             }
 
-            is CloudCard.Ready -> CardBody(state, card.card, actions)
+            is LCEState.Content -> CardBody(state, card.content, actions)
         }
         state.viewer?.let { AttachmentViewer(it, actions.onViewerClose) }
         state.saveForm?.let { form ->
@@ -312,7 +320,7 @@ internal fun CloudCardContent(state: CloudCardState, actions: CloudCardActions) 
                 title = stringResource(Res.string.configurator_card_btn_save_mine),
                 name = form.name,
                 description = form.description,
-                deviceName = (state.card as? CloudCard.Ready)?.card?.summary?.deviceName,
+                deviceName = state.card.content?.summary?.deviceName,
                 onChange = actions.onSaveChange,
                 onConfirm = actions.onSaveSubmit,
                 onDismiss = actions.onSaveDismiss
