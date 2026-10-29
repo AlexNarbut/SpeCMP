@@ -52,6 +52,8 @@ val specialistModule = module {
     // операции с подключённым alarm-устройством.
     single { get<SpecialistApp>().bluetoothConnectorInteractor }
     single { get<SpecialistApp>().usbConnectorInteractor }
+    // COM-порт (приложение прошивки): скан портов и serial-сессия блока. На iOS в SDK — TODO(), резолвить лениво.
+    single { get<SpecialistApp>().serialConnectorInteractor }
     single { get<SpecialistApp>().bluetoothAlarmDeviceInteractor }
     // Проверка подключённого блока на сервере (feature/advanced-mount).
     single { get<SpecialistApp>().verificationInteractor }

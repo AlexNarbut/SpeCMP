@@ -1,0 +1,7 @@
+# flasherApp
+
+- Область: composition root мини-приложения прошивки (ветка `feature/flasher-app`). Обёртки — `flasherAndroidApp`, `flasherDesktopApp`. Только Android и desktop: COM-порта на iOS в SDK нет.
+- Пакет `ru.alarmtrade.specmp.flasher`. `FlasherApp(appVersionName, appVersionCode)` — тот же старт, что у `App()` (`composeApp`): язык, `SpecialistInitializer`, `BindEffect` разрешений; Koin-модули — только авторизация (`authStateModule`, `loginModule`) и устройство/прошивка (`deviceSelectionModule`, `deviceInteractionModule`, `deviceInteractionUiModule`, `deviceFirmwareModule`).
+- Навигация (`navigation/FlasherNavigation.kt`): `AuthStateNavGraph` → логин (первая версия; финальная — без авторизации: убрать `AuthStateNavGraph`/`LoginNavGraph` и модули `auth-state`/`login`, корнем станет поиск) → `ScanRoute` (поиск — корень, без «Назад», с COM-портами) → `DeviceRoute` — `DeviceInteractionHost` для любого транспорта; контент выбирается по `DeviceSession.transport` (читается один раз при входе): BLE/USB — `FirmwareFileScreen`, загрузчик — `FirmwareBootGraph(sources = FileOnly)`; COM — `SerialFirmwareScreen` в обоих слотах. Описание экранов — `feature/device/AGENTS.md`, «COM-порт и приложение прошивки».
+- `filepicker/` и `di/PlatformKoinModules` повторяют реализацию `composeApp` (Android — SAF + копия в `cacheDir`, desktop — `JFileChooser`): корни приложений друг от друга не зависят. Правка пикера прошивки в `composeApp` — синхронизировать здесь.
+- Строки — в `core/localization` (`firmware_*`, `deviceselect_*`), своего префикса у модуля нет.

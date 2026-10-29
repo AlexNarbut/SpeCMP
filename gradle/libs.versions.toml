@@ -4,6 +4,9 @@
 # version.properties). iOS берёт свою из iosApp/iosApp/Info.plist — при смене версии обновлять и его.
 app-versionName = "2.0.40"
 app-versionCode = "240"
+# Приложение прошивки (flasherAndroidApp / flasherDesktopApp) — своя версия.
+flasher-versionName = "0.1.0"
+flasher-versionCode = "1"
 
 kotlin = "2.4.0"
 compose-multiplatform = "1.11.1"
@@ -35,9 +38,9 @@ android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 
-alarmtrade-common-specialist = "1.2.2"
-alarmtrade-common = "2.0.114"
-alarmtrade-permissions = "2.0.114"
+alarmtrade-common-specialist = "1.2.4"
+alarmtrade-common = "2.0.116"
+alarmtrade-permissions = "2.0.116"
 
 [libraries]
 

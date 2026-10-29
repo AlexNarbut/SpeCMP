@@ -10,12 +10,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
@@ -48,6 +50,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceS
  * Горячий, пока есть подписчики; после ухода всех подписчиков значение сбрасывается.
  * Ожидаемая перезагрузка блока ([expectReboot]) — отдельное состояние [reboot]: по нему экраны отличают
  * намеренный обрыв связи (вход в загрузчик, возврат после прошивки) от потери связи.
+ * COM-порт ([ConnectionTransport.SERIAL]) обслуживается как USB; перезагрузка блока связь по нему не рвёт,
+ * поэтому после прошивки режим перечитывают явно ([refreshMode]).
  *
  * Владеет собственным скоупом (фоновая логика: переподключение, закрытие сессии), он переживает экраны.
  * Закрытие сессии и переподключение BLE сериализованы [sessionMutex]: закрытие не переплетается с
@@ -92,6 +96,11 @@ class DeviceSession(
 
     private val expectation = MutableStateFlow<RebootExpectation?>(null)
 
+    // Последнее состояние связи — запрос [refreshMode] обслуживается только на готовой связи.
+    private val lastLink = MutableStateFlow<DeviceLinkState?>(null)
+
+    private val modeRefreshes = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     /** Перезагрузка блока, которую приложение вызвало и ждёт; `null` — не ждём (раздел «ожидаемая перезагрузка»). */
     val reboot: StateFlow<DeviceReboot?> = expectation
         .map { it?.kind }
@@ -100,9 +109,25 @@ class DeviceSession(
     /** Транспорт текущей сессии (для текстов «связь потеряна»); `null` — сессии нет. */
     val transport: StateFlow<ConnectionTransport?> = _transport.asStateFlow()
 
-    val state: StateFlow<DeviceSessionState> = sessionRepository.linkState()
-        .distinctUntilChanged()
-        .transformLatest { link ->
+    val state: StateFlow<DeviceSessionState> = merge(
+        sessionRepository.linkState().distinctUntilChanged().map { SessionEvent.Link(it) },
+        modeRefreshes.map { SessionEvent.RefreshMode }
+    )
+        .transformLatest { event ->
+            if (event == SessionEvent.RefreshMode) {
+                if (lastLink.value != DeviceLinkState.READY) return@transformLatest
+                // Тихо: экран остаётся на месте; блок не ответил — прежнее состояние (связь при этом не трогаем).
+                logStage { "refreshMode start" }
+                val mode = detectMode()
+                logStage { "refreshMode result=${mode?.let { it::class.simpleName }}" }
+                if (mode != null) {
+                    emit(mode)
+                    onModeReached(mode)
+                }
+                return@transformLatest
+            }
+            val link = (event as SessionEvent.Link).state
+            lastLink.update { link }
             logStage { "link=$link" }
             when (link) {
                 DeviceLinkState.CONNECTING -> if (!isBleReconnect()) emit(DeviceSessionState.Connecting)
@@ -172,6 +197,14 @@ class DeviceSession(
                 logStage { "close done" }
             }
         }
+    }
+
+    /**
+     * Перечитать режим блока на текущей связи, не показывая «Подключение…». Нужен COM-порту: после прошивки блок
+     * перезагрузился (загрузчик → рабочий режим), а порт не отключался — сам режим не перечитается.
+     */
+    fun refreshMode() {
+        modeRefreshes.tryEmit(Unit)
     }
 
     /** IMEI GSM-модема подключённого блока. */
@@ -320,7 +353,9 @@ class DeviceSession(
             if (module.mode == BluetoothModuleMode.BOOT) return DeviceSessionState.BluetoothBoot(module.manufacturer)
         }
         var device = readWithRetry { sessionRepository.readDevice() } ?: return null
-        if (!device.modelInDatabase && !databaseSynced.value) {
+        // COM (приложение прошивки): возможности из базы не нужны — прошивка `.frm` идёт без них, а синхронизация
+        // держала бы «Подключение…» десятки секунд (брелока в базе может не быть вовсе).
+        if (!device.modelInDatabase && !databaseSynced.value && _transport.value != ConnectionTransport.SERIAL) {
             // Модели нет в базе устройств телефона (свежая установка, база не скачана или устарела): один раз
             // синхронизируем базу и перечитываем блок — иначе он показался бы «не поддерживается».
             databaseSynced.update { true }
@@ -357,6 +392,12 @@ class DeviceSession(
     private inline fun logStage(message: () -> String) {
         val elapsed = stageClock.value.elapsedNow().inWholeMilliseconds
         logger.i { "+${elapsed}ms ${message()}" }
+    }
+
+    private sealed interface SessionEvent {
+        data class Link(val state: DeviceLinkState) : SessionEvent
+
+        data object RefreshMode : SessionEvent
     }
 
     private data class RebootExpectation(

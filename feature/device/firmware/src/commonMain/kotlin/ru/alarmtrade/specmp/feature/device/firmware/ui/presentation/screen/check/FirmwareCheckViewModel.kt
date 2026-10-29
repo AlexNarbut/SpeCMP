@@ -29,14 +29,13 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.BootEntryResult
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
@@ -58,10 +57,12 @@ import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel
 class FirmwareCheckViewModel(
     deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
-    private val bootRequester: FirmwareBootRequester,
-    private val pinCooldown: ServicePinCooldown,
+    bootRequester: FirmwareBootRequester,
+    pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers
 ) : BaseDeviceViewModel(deviceSession) {
+
+    private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
 
     private val _state = MutableStateFlow(FirmwareCheckState())
 
@@ -247,44 +248,19 @@ class FirmwareCheckViewModel(
     private suspend fun enterBootMode(moduleId: Long, pin: ServicePin?) {
         val target = modules.value[moduleId]?.bootTarget ?: return
         val systemId = _state.value.deviceId ?: return
-        val needsPin = deviceSession.transport.value == ConnectionTransport.BLE
         // Пока блок не принимает ввод, ничего не шлём: иначе он продлит блокировку.
-        if (needsPin && pinCooldown.remainingNow(systemId) > Duration.ZERO) {
+        if (bootEntry.isPinLocked(systemId)) {
             showPin(moduleId)
             return
         }
         _state.update { it.copy(dialog = it.dialog.sending(moduleId, pin != null), bootFailed = false) }
-        bootRequester.request(FirmwareBootRequest(moduleId, _state.value.channel))
-        deviceSession.expectReboot(DeviceReboot.ToBoot)
-
-        val saved = if (pin != null) withContext(dispatchers.io) { deviceSession.setServicePin(pin) } else null
-        val result = when (saved) {
-            is Response.Error -> saved
-            else -> withContext(dispatchers.io) { deviceSession.setBootMode(target) }
+        val request = FirmwareBootRequest(moduleId, _state.value.channel)
+        when (bootEntry.enter(request, target, systemId, pin)) {
+            BootEntryResult.Entered -> _state.update { it.copy(dialog = null) }
+            BootEntryResult.Failed -> _state.update { it.copy(dialog = null, bootFailed = true) }
+            BootEntryResult.PinLocked -> showPin(moduleId)
+            BootEntryResult.WrongPin -> showPin(moduleId, wrongPin = pin != null)
         }
-        when (result) {
-            is Response.Error -> {
-                logger.d { "Enter boot mode failed: ${result.exception::class.simpleName}" }
-                abandonBootAttempt()
-                _state.update { it.copy(dialog = null, bootFailed = true) }
-            }
-
-            is Response.Success -> when (result.value) {
-                BootModeResult.Entered -> _state.update { it.copy(dialog = null) }
-
-                BootModeResult.WrongPin -> {
-                    abandonBootAttempt()
-                    pinCooldown.start(systemId)
-                    showPin(moduleId, wrongPin = pin != null)
-                }
-            }
-        }
-    }
-
-    // Запрос и ожидание перезагрузки больше не нужны; ожидание снимаем, только если блок остался на связи.
-    private fun abandonBootAttempt() {
-        bootRequester.take()
-        if (currentDevice != null) deviceSession.cancelReboot()
     }
 
     private fun showPin(moduleId: Long, wrongPin: Boolean = false) {

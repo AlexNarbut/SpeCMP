@@ -40,9 +40,23 @@ sealed interface ScannedDevice {
     ) : ScannedDevice {
         override val transport: DeviceTransport get() = DeviceTransport.USB
     }
+
+    /**
+     * COM-порт (USB-UART адаптер или порт ПК). Блок за портом до подключения не опрашивается — известны только порт
+     * и VID:PID адаптера (если платформа их сообщает). Ищется, только если поиск запущен с COM-портами.
+     */
+    data class Serial(
+        /** Идентификатор порта SDK (desktop — системный путь `/dev/tty…` / `COM3`, Android — путь USB-устройства). */
+        override val id: String,
+        override val name: String,
+        val vendorId: Int?,
+        val productId: Int?
+    ) : ScannedDevice {
+        override val transport: DeviceTransport get() = DeviceTransport.SERIAL
+    }
 }
 
-enum class DeviceTransport { BLE, USB }
+enum class DeviceTransport { BLE, USB, SERIAL }
 
 /**
  * Режим найденного BLE-устройства. Определяет ветку подключения:

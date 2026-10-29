@@ -24,6 +24,7 @@
 - `feature/*` — feature-модули.
 - `composeApp` — composition root, навигация и интеграция фич.
 - `androidApp`, `desktopApp`, `iosApp` — платформенные обёртки.
+- `flasherApp` (+ обёртки `flasherAndroidApp`, `flasherDesktopApp`) — отдельное мини-приложение прошивки (ветка `feature/flasher-app`): свой composition root поверх тех же `core/*` и `feature/device/*`.
 - `docs/` — тематические правила и справка по архитектуре, UI, навигации и сборке.
 
 ## Read Before Editing

@@ -24,6 +24,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoF
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveVehiclePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareSources
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateScreen
 
 @Serializable
@@ -53,13 +54,15 @@ private val navConfig = SavedStateConfiguration {
  * @param filePicker выбор файла прошивки в файловом менеджере (платформа, `composeApp`).
  * @param vehiclePicker выбор автомобиля для CAN-фильтра архива (фича `vehicle-ui`, `composeApp`);
  *   `null` — без каталога.
+ * @param sources источники прошивки на экране обновления; [FirmwareSources.FileOnly] — только файл.
  */
 @Composable
 fun FirmwareBootGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
-    vehiclePicker: ArchiveVehiclePicker? = null
+    vehiclePicker: ArchiveVehiclePicker? = null,
+    sources: FirmwareSources = FirmwareSources.All
 ) {
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
     val archivePicker = koinInject<FirmwareArchivePicker>()
@@ -78,7 +81,8 @@ fun FirmwareBootGraph(
                     onExit = onExit,
                     onOpenSupportChat = onOpenSupportChat,
                     filePicker = filePicker,
-                    onOpenArchive = { request -> backStack.navigateSafe(FirmwareArchiveRoute(request)) }
+                    onOpenArchive = { request -> backStack.navigateSafe(FirmwareArchiveRoute(request)) },
+                    sources = sources
                 )
             }
             entry<FirmwareArchiveRoute> { key ->

@@ -73,12 +73,14 @@
     <string name="deviceselect_detail_label_signal">Уровень сигнала</string>
     <string name="deviceselect_detail_label_manufacturer">Производитель</string>
     <string name="deviceselect_detail_label_vid_pid">VID:PID</string>
+    <string name="deviceselect_detail_label_port">Порт</string>
     <string name="deviceselect_detail_label_system_id">ID блока (systemId)</string>
     <string name="deviceselect_detail_label_firmware">Версия прошивки</string>
     <string name="deviceselect_detail_label_uuid">ID (UUID)</string>
     <string name="deviceselect_detail_label_phone_bond">Связь с телефоном</string>
     <string name="deviceselect_detail_label_device_bond">Связь у самого устройства</string>
     <string name="deviceselect_detail_msg_note_ble">Версия прошивки и ID блока в эфире не передаются — они появятся после подключения.</string>
+    <string name="deviceselect_detail_msg_note_serial">Блок за COM-портом при поиске не опрашивается — модель и версия видны после подключения.</string>
     <string name="deviceselect_common_value_yes">есть</string>
     <string name="deviceselect_common_value_no">нет</string>
     <string name="deviceselect_common_value_unknown">не определён</string>
@@ -103,6 +105,7 @@
     <string name="deviceselect_common_value_transport_ble">Bluetooth</string>
     <string name="deviceselect_common_value_transport_ble_short">BLE</string>
     <string name="deviceselect_common_value_transport_usb">USB</string>
+    <string name="deviceselect_common_value_transport_com" translatable="false">COM</string>
 
     <!-- Ошибки / эффекты -->
     <string name="deviceselect_common_error_connection_failed">Не удалось подключиться к устройству</string>

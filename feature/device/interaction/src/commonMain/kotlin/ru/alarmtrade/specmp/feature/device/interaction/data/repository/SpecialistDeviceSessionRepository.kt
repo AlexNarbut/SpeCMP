@@ -207,9 +207,12 @@ class SpecialistDeviceSessionRepository(
         ConnectionState.DISCONNECTED, ConnectionState.UNKNOWN -> DeviceLinkState.DISCONNECTED
     }
 
+    // FRM-загрузчики (`BOOT_FRM`, `BOOT_FRM_SIMPLE`) отвечают только по COM-порту.
     private fun AlarmDeviceOperationMode.isBoot(): Boolean = this == AlarmDeviceOperationMode.BOOT_OLD ||
         this == AlarmDeviceOperationMode.BOOT_MLD ||
-        this == AlarmDeviceOperationMode.BOOT_FLD
+        this == AlarmDeviceOperationMode.BOOT_FLD ||
+        this == AlarmDeviceOperationMode.BOOT_FRM ||
+        this == AlarmDeviceOperationMode.BOOT_FRM_SIMPLE
 
     private fun SubsystemFeature.toDomain(): DeviceFeature? = when (this) {
         SubsystemFeature.FIRMWARE_UPDATE -> DeviceFeature.FIRMWARE_UPDATE

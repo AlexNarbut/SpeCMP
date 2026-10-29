@@ -1,8 +1,8 @@
 package ru.alarmtrade.specmp.feature.device.interaction.domain.model
 
 /**
- * Доменное состояние процесса подключения к устройству (BLE/USB),
- * скрывает SDK-типы `ConnectingStatus` / `UsbConnectingState`.
+ * Доменное состояние процесса подключения к устройству (BLE/USB/COM),
+ * скрывает SDK-типы `ConnectingStatus` / `UsbConnectingState` / `SerialPortConnectingStatus`.
  */
 enum class DeviceConnectionState {
     /** Идёт подключение/сопряжение (промежуточные статусы). */
@@ -24,5 +24,5 @@ enum class DeviceConnectionState {
     PAIRING_REQUIRED
 }
 
-/** Транспорт, по которому создана сессия. */
-enum class ConnectionTransport { BLE, USB }
+/** Транспорт, по которому создана сессия. [SERIAL] — COM-порт (приложение прошивки): блок обслуживается как по USB. */
+enum class ConnectionTransport { BLE, USB, SERIAL }

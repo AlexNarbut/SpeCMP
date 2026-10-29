@@ -80,6 +80,16 @@ sealed interface DeviceSessionState {
     data class FirmwareBoot(val device: AlarmDevice) : DeviceSessionState
 }
 
+/**
+ * Блок на связи — в рабочем режиме или основная программа в загрузчике; `null` — связи нет или BLE-модуль в загрузчике.
+ */
+val DeviceSessionState.deviceOrNull: AlarmDevice?
+    get() = when (this) {
+        is DeviceSessionState.Ready -> device
+        is DeviceSessionState.FirmwareBoot -> device
+        DeviceSessionState.Connecting, DeviceSessionState.Disconnected, is DeviceSessionState.BluetoothBoot -> null
+    }
+
 /** Блок (основная программа или Bluetooth-модуль) в загрузчике. */
 val DeviceSessionState.isBoot: Boolean
     get() = this is DeviceSessionState.BluetoothBoot || this is DeviceSessionState.FirmwareBoot

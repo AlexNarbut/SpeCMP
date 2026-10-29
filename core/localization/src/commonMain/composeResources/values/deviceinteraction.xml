@@ -6,6 +6,7 @@
     <string name="deviceinteraction_disconnected_subtitle">Check the unit power and the cable or Bluetooth. You will return to the same screen once the connection is restored.</string>
     <string name="deviceinteraction_common_btn_exit">Exit</string>
     <string name="deviceinteraction_disconnected_msg_usb">Check the USB connection to the device.</string>
+    <string name="deviceinteraction_disconnected_msg_serial">Check the COM adapter cable and the unit power.</string>
     <string name="deviceinteraction_disconnected_msg_ble">The unit is off or too far away. Move the phone closer and check the unit power.</string>
     <string name="deviceinteraction_common_msg_waiting">Waiting for the unit to return…</string>
     <string name="deviceinteraction_common_btn_disconnect">Disconnect</string>

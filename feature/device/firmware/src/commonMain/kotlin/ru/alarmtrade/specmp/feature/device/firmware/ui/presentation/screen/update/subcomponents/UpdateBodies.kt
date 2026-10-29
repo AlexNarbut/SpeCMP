@@ -122,7 +122,7 @@ private val ProgressSteps = listOf(
     Strings.string.firmware_update_item_step_apply
 )
 
-private val BigButtonHeight = 52.dp
+internal val BigButtonHeight = 52.dp
 
 /** Предел высоты блока «Что нового»: длинный текст прокручивается внутри, кнопки остаются на экране. */
 private val WhatsNewMaxHeight = 220.dp
@@ -170,9 +170,12 @@ internal fun EnteringBody() {
     InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
 }
 
-/** Выбор источника: подсистема, версия блока, канал, «Скачать прошивку», «Архив прошивок». */
+/**
+ * Выбор источника: подсистема, версия блока, канал, «Скачать прошивку», «Архив прошивок», «Выбрать файл…».
+ * [fileOnly] — только «Выбрать файл…» (без канала и сервера).
+ */
 @Composable
-internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions) {
+internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions, fileOnly: Boolean = false) {
     CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         LabeledField(stringResource(Strings.string.firmware_update_label_subsystem)) {
             if (state.moduleTitles.size <= 1) {
@@ -196,16 +199,20 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
                 VersionText(version, fontSize = 20.sp)
             }
         }
-        LabeledField(stringResource(Strings.string.firmware_update_label_channel)) {
-            val options = FirmwareChannel.entries.map { stringResource(it.longLabel()) }
-            CmpDropdown(
-                selectedValue = options[state.channel.ordinal],
-                placeholder = "",
-                options = options,
-                onOptionSelect = { index, _ -> actions.onChannelSelected(FirmwareChannel.entries[index]) }
-            )
+        if (!fileOnly) {
+            LabeledField(stringResource(Strings.string.firmware_update_label_channel)) {
+                val options = FirmwareChannel.entries.map { stringResource(it.longLabel()) }
+                CmpDropdown(
+                    selectedValue = options[state.channel.ordinal],
+                    placeholder = "",
+                    options = options,
+                    onOptionSelect = { index, _ -> actions.onChannelSelected(FirmwareChannel.entries[index]) }
+                )
+            }
         }
-        if (state.channel.isTest) InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+        if (!fileOnly && state.channel.isTest) {
+            InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
+        }
         if (state.exitError) {
             InfoBanner(
                 text = stringResource(Strings.string.firmware_update_error_exit),
@@ -232,21 +239,29 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
                 icon = CmpIcons.ErrorOutline
             )
         }
-        CmpButton(
-            text = stringResource(Strings.string.firmware_update_btn_download),
-            onClick = actions.onDownloadClick,
-            modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_DOWNLOAD_TAG)
-        )
-        CmpOutlinedButton(
-            text = stringResource(Strings.string.firmware_update_btn_archive),
-            onClick = actions.onArchiveClick,
-            modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG)
-        )
-        CmpOutlinedButton(
-            text = stringResource(Strings.string.firmware_update_btn_file),
-            onClick = actions.onFileClick,
-            modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_FILE_TAG)
-        )
+        if (fileOnly) {
+            CmpButton(
+                text = stringResource(Strings.string.firmware_update_btn_file),
+                onClick = actions.onFileClick,
+                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_FILE_TAG)
+            )
+        } else {
+            CmpButton(
+                text = stringResource(Strings.string.firmware_update_btn_download),
+                onClick = actions.onDownloadClick,
+                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_DOWNLOAD_TAG)
+            )
+            CmpOutlinedButton(
+                text = stringResource(Strings.string.firmware_update_btn_archive),
+                onClick = actions.onArchiveClick,
+                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_ARCHIVE_TAG)
+            )
+            CmpOutlinedButton(
+                text = stringResource(Strings.string.firmware_update_btn_file),
+                onClick = actions.onFileClick,
+                modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(SOURCE_FILE_TAG)
+            )
+        }
         if (state.canExitBoot) {
             CmpOutlinedButton(
                 text = stringResource(Strings.string.firmware_update_btn_exit_boot),
@@ -460,7 +475,7 @@ internal fun FinishingBody() {
 }
 
 @Composable
-internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: () -> Unit) {
+internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: (() -> Unit)?) {
     Headline(stringResource(Strings.string.firmware_update_error_title))
     InfoBanner(text = stringResource(failure.messageRes()), tone = BannerTone.Error, icon = CmpIcons.AlertCircle)
     CmpText(
@@ -474,11 +489,13 @@ internal fun ErrorBody(failure: FailureKind, onRetry: () -> Unit, onSupport: () 
         onClick = onRetry,
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_RETRY_TAG)
     )
-    CmpOutlinedButton(
-        text = stringResource(Strings.string.firmware_update_btn_support),
-        onClick = onSupport,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_SUPPORT_TAG)
-    )
+    if (onSupport != null) {
+        CmpOutlinedButton(
+            text = stringResource(Strings.string.firmware_update_btn_support),
+            onClick = onSupport,
+            modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(ERROR_SUPPORT_TAG)
+        )
+    }
 }
 
 private fun FailureKind.messageRes(): StringResource = when (this) {

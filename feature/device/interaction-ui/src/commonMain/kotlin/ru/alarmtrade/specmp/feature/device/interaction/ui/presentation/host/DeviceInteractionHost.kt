@@ -35,6 +35,7 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_common
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_common_msg_waiting
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_connecting_title
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_msg_ble
+import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_msg_serial
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_msg_usb
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.deviceinteraction_disconnected_title
@@ -208,6 +209,7 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
         subtitle = stringResource(
             when (transport) {
                 ConnectionTransport.USB -> Strings.string.deviceinteraction_disconnected_msg_usb
+                ConnectionTransport.SERIAL -> Strings.string.deviceinteraction_disconnected_msg_serial
                 ConnectionTransport.BLE -> Strings.string.deviceinteraction_disconnected_msg_ble
                 null -> Strings.string.deviceinteraction_disconnected_subtitle
             }

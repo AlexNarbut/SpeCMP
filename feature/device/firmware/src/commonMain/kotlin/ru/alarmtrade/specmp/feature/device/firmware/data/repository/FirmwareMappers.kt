@@ -41,7 +41,11 @@ internal fun SubsystemInformation.toModule(transport: ConnectionTransport): Firm
 internal fun SubsystemType.bootTarget(transport: ConnectionTransport): BootModeTarget? {
     val connectionType = when (transport) {
         ConnectionTransport.BLE -> ConnectionType.BLUETOOTH
+
         ConnectionTransport.USB -> ConnectionType.USB
+
+        // COM: загрузчик .frm SDK входит сам внутри обновления по COM (`SerialFirmwareRepository`), не через этот путь.
+        ConnectionTransport.SERIAL -> return null
     }
     if (!isBootSupported(connectionType)) return null
     return when (this) {

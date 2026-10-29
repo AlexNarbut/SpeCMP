@@ -73,12 +73,14 @@
     <string name="deviceselect_detail_label_signal">Signal strength</string>
     <string name="deviceselect_detail_label_manufacturer">Manufacturer</string>
     <string name="deviceselect_detail_label_vid_pid">VID:PID</string>
+    <string name="deviceselect_detail_label_port">Port</string>
     <string name="deviceselect_detail_label_system_id">Unit ID (systemId)</string>
     <string name="deviceselect_detail_label_firmware">Firmware version</string>
     <string name="deviceselect_detail_label_uuid">ID (UUID)</string>
     <string name="deviceselect_detail_label_phone_bond">Paired with phone</string>
     <string name="deviceselect_detail_label_device_bond">Device has a bond</string>
     <string name="deviceselect_detail_msg_note_ble">Firmware version and unit ID are not broadcast — they appear after connecting.</string>
+    <string name="deviceselect_detail_msg_note_serial">The unit behind a COM port is not polled during the search — its model and version are shown after connecting.</string>
     <string name="deviceselect_common_value_yes">yes</string>
     <string name="deviceselect_common_value_no">no</string>
     <string name="deviceselect_common_value_unknown">unknown</string>
@@ -103,6 +105,7 @@
     <string name="deviceselect_common_value_transport_ble">Bluetooth</string>
     <string name="deviceselect_common_value_transport_ble_short">BLE</string>
     <string name="deviceselect_common_value_transport_usb">USB</string>
+    <string name="deviceselect_common_value_transport_com" translatable="false">COM</string>
 
     <!-- Errors / effects -->
     <string name="deviceselect_common_error_connection_failed">Failed to connect to the device</string>

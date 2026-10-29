@@ -15,6 +15,12 @@ interface DeviceConnectionRepository {
     /** Открыть USB-сессию с устройством; поток статусов до терминального. */
     fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>>
 
-    /** Закрыть текущую сессию (в SDK она одна на BLE и USB). */
+    /**
+     * Открыть сессию с блоком на COM-порту [portId] (PcBase, 115200); на Android — с системным запросом разрешения USB.
+     * Поток статусов до терминального.
+     */
+    fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>>
+
+    /** Закрыть текущую сессию (в SDK она одна на BLE, USB и COM). */
     suspend fun closeSessions(): Response<Unit>
 }

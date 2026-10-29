@@ -10,8 +10,12 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.ConnectingStatus
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.ConnectionParameters
 import ru.alarmtrade.bluetoothControl.interactors.bluetoothConnector.requests.ConnectToBluetoothDeviceRequest
+import ru.alarmtrade.specialist.domain.serial.SerialPortConnectingStatus
 import ru.alarmtrade.specialist.domain.usb.UsbConnectingState
 import ru.alarmtrade.specialist.interactors.bluetoothConnector.BluetoothConnectorInteractor
+import ru.alarmtrade.specialist.interactors.serialConnector.SerialConnectorInteractor
+import ru.alarmtrade.specialist.interactors.serialConnector.requests.ConnectToSerialPortRequest
+import ru.alarmtrade.specialist.interactors.serialConnector.requests.SerialDeviceType
 import ru.alarmtrade.specialist.interactors.usbConnector.UsbConnectorInteractor
 import ru.alarmtrade.specialist.interactors.usbConnector.requests.ConnectToUsbDeviceRequest
 import ru.alarmtrade.specmp.core.common.Response
@@ -30,7 +34,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceC
  */
 class SpecialistDeviceConnectionRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
-    private val usbConnectorInteractor: () -> UsbConnectorInteractor
+    private val usbConnectorInteractor: () -> UsbConnectorInteractor,
+    private val serialConnectorInteractor: () -> SerialConnectorInteractor
 ) : DeviceConnectionRepository {
 
     override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = flow {
@@ -72,14 +77,30 @@ class SpecialistDeviceConnectionRepository(
         )
     }
 
+    override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = flow {
+        val interactor = serialConnectorInteractor.resolveOrNull()
+            ?: run {
+                emit(interactorUnavailable())
+                return@flow
+            }
+        emitAll(
+            safeFlowRun {
+                interactor.openSerialPortSessionFlowableUseCase
+                    .execute(ConnectToSerialPortRequest(portId, SERIAL_BAUD_RATE, SerialDeviceType.Alarm))
+                    .map { response -> response.toResponse().map { it.toDomain() } }
+            }
+        )
+    }
+
     override suspend fun closeSessions(): Response<Unit> {
-        // Сессия в SDK одна на оба транспорта: закрываем через каждый доступный интерактор.
+        // Сессия в SDK одна на все транспорты: закрываем через каждый доступный интерактор.
         val ble = bluetoothConnectorInteractor.resolveOrNull()
             ?.closeBluetoothDeviceSessionUseCase
             ?.execute()
             ?.toResponse()
         val usb = usbConnectorInteractor.resolveOrNull()?.closeUsbDeviceSessionUseCase?.execute()?.toResponse()
-        return listOfNotNull(ble, usb).firstOrNull { it is Response.Error } ?: Response.Success(Unit)
+        val serial = serialConnectorInteractor.resolveOrNull()?.closeSerialDeviceSessionUseCase?.execute()?.toResponse()
+        return listOfNotNull(ble, usb, serial).firstOrNull { it is Response.Error } ?: Response.Success(Unit)
     }
 
     private fun ConnectingStatus.toDomain(): DeviceConnectionState = when (this) {
@@ -102,5 +123,20 @@ class SpecialistDeviceConnectionRepository(
         UsbConnectingState.ASKING_PERMISSIONS,
         UsbConnectingState.INITIALIZING
         -> DeviceConnectionState.CONNECTING
+    }
+
+    private fun SerialPortConnectingStatus.toDomain(): DeviceConnectionState = when (this) {
+        SerialPortConnectingStatus.READY -> DeviceConnectionState.CONNECTED
+
+        SerialPortConnectingStatus.FAILED -> DeviceConnectionState.FAILED
+
+        SerialPortConnectingStatus.ASKING_PERMISSIONS,
+        SerialPortConnectingStatus.INITIALIZING
+        -> DeviceConnectionState.CONNECTING
+    }
+
+    private companion object {
+        /** Скорость PcBase по COM-порту (`DEFAULT_PCBASE_BAUD_RATE` SDK). */
+        const val SERIAL_BAUD_RATE = 115_200
     }
 }

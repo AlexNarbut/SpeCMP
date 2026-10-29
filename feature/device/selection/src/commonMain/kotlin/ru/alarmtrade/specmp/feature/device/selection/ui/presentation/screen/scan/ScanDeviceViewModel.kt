@@ -49,8 +49,9 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiI
  * rationale-экрана. Проверка запускается один раз при первой подписке на state
  * (`launchOnFirstStart`, см. docs/patterns.md — не через `LaunchedEffect`), при возврате в приложение
  * ([onAppForeground]) — заново.
- * Сканирование — реактивный источник (BLE + USB `Flow`), активный только на шаге
- * [ScanStep.Scanning].
+ * Сканирование — реактивный источник (BLE + USB `Flow`, при [serialEnabled] — и COM-порты), активный только на шаге
+ * [ScanStep.Scanning]. COM-порт подключается как USB: сессия SDK по порту, дальше —
+ * `DeviceSession` ([ConnectionTransport.SERIAL]).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScanDeviceViewModel(
@@ -58,11 +59,13 @@ class ScanDeviceViewModel(
     private val connectionRepository: DeviceConnectionRepository,
     private val deviceSession: DeviceSession,
     private val permissionsProvider: PermissionsProvider,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
+    serialEnabled: Boolean = false
 ) : BaseViewModel() {
 
     private val requirements = permissionsProvider.deviceAccessRequirements()
     private val supportedTransports = scanRepository.supportedTransports()
+        .filterTo(mutableSetOf()) { it != DeviceTransport.SERIAL || serialEnabled }
 
     private val stepFlow = MutableStateFlow<ScanStep>(ScanStep.PermissionCheck)
     private val selectedIdFlow = MutableStateFlow<String?>(null)
@@ -87,12 +90,18 @@ class ScanDeviceViewModel(
             if (step !is ScanStep.Scanning) {
                 flowOf(LCEState.None)
             } else {
+                val serial = if (DeviceTransport.SERIAL in supportedTransports) {
+                    scanRepository.scanSerial().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) }
+                } else {
+                    flowOf(Response.Success(emptyList()))
+                }
                 combine(
                     scanRepository.scanBluetooth().flowOn(dispatchers.io).onStart {
                         emit(Response.Success(emptyList()))
                     },
-                    scanRepository.scanUsb().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) }
-                ) { bleResponse, usbResponse -> mergeDevices(bleResponse, usbResponse) }
+                    scanRepository.scanUsb().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) },
+                    serial
+                ) { bleResponse, usbResponse, serialResponse -> mergeDevices(bleResponse, usbResponse, serialResponse) }
             }
         }
 
@@ -255,13 +264,14 @@ class ScanDeviceViewModel(
         connectJob = safeLaunch {
             executeWithProceedLock {
                 stepFlow.update { ScanStep.Connecting(item) }
-                val connected = when (item) {
-                    is DeviceUiItem.Ble -> connectBle(item)
-                    is DeviceUiItem.Usb -> connectUsb(item)
+                val connection = when (item) {
+                    is DeviceUiItem.Ble -> ConnectionTransport.BLE.takeIf { connectBle(item) }
+                    is DeviceUiItem.Usb -> ConnectionTransport.USB.takeIf { connectUsb(item) }
+                    is DeviceUiItem.Serial -> ConnectionTransport.SERIAL.takeIf { connectSerial(item) }
                 }
-                if (connected) {
+                if (connection != null) {
                     // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
-                    deviceSession.attach(item.transport.toConnection())
+                    deviceSession.attach(connection)
                     _effect.tryEmit(ScanDeviceEffect.SessionCreated)
                 } else {
                     deviceSession.close().join()
@@ -314,15 +324,14 @@ class ScanDeviceViewModel(
     private suspend fun connectUsb(item: DeviceUiItem.Usb): Boolean =
         connectionRepository.connectUsb(item.id).flowOn(dispatchers.io).awaitTerminal().isConnected()
 
+    // На Android в подключение входит системный запрос разрешения USB — его покрывает общий тайм-аут ожидания.
+    private suspend fun connectSerial(item: DeviceUiItem.Serial): Boolean =
+        connectionRepository.connectSerial(item.id).flowOn(dispatchers.io).awaitTerminal().isConnected()
+
     private fun Response<DeviceConnectionState>?.isConnected(): Boolean {
         val connected = this is Response.Success && value == DeviceConnectionState.CONNECTED
         if (!connected) _effect.tryEmit(ScanDeviceEffect.ConnectionFailed)
         return connected
-    }
-
-    private fun DeviceTransport.toConnection() = when (this) {
-        DeviceTransport.BLE -> ConnectionTransport.BLE
-        DeviceTransport.USB -> ConnectionTransport.USB
     }
 
     // Общий предел ожидания: SDK переподключается по кругу, а USB может не дать финального статуса.
@@ -338,14 +347,17 @@ class ScanDeviceViewModel(
 
     private fun mergeDevices(
         bleResponse: Response<List<ScannedDevice.Ble>>,
-        usbResponse: Response<List<ScannedDevice.Usb>>
+        usbResponse: Response<List<ScannedDevice.Usb>>,
+        serialResponse: Response<List<ScannedDevice.Serial>>
     ): LCEState<List<DeviceUiItem>, ScanError> {
         // Ошибка одного транспорта не прячет устройства, найденные другим.
         val ble = (bleResponse as? Response.Success)?.value.orEmpty()
         val usb = (usbResponse as? Response.Success)?.value.orEmpty()
-        val items = ble.map(ScannedDevice::toUiItem) + usb.map(ScannedDevice::toUiItem)
+        val serial = (serialResponse as? Response.Success)?.value.orEmpty()
+        val items = ble.map(ScannedDevice::toUiItem) + usb.map(ScannedDevice::toUiItem) + serial.map { it.toUiItem() }
         if (items.isNotEmpty()) return LCEState.Content(items)
         val error = (bleResponse as? Response.Error) ?: (usbResponse as? Response.Error)
+            ?: (serialResponse as? Response.Error)
         // Экран рисует Error как продолжающийся поиск.
         return if (error != null) LCEState.Error(ScanError.from(error.exception)) else LCEState.Loading
     }

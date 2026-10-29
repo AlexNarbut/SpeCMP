@@ -151,4 +151,30 @@
     <string name="firmware_archive_label_can_version">CAN %1$s · %2$s</string>
     <string name="firmware_archive_title_empty_can">Для CAN %1$s прошивок не найдено</string>
     <string name="firmware_archive_btn_all_versions">Показать все версии</string>
+
+    <!-- Обновление из файла (приложение прошивки): экран блока -->
+    <string name="firmware_common_btn_update_file">Обновить из файла</string>
+    <string name="firmware_file_title_screen">Прошивка блока</string>
+    <string name="firmware_file_msg_hint">Блок перейдёт в режим обновления, затем выберите файл прошивки.</string>
+    <string name="firmware_file_msg_not_supported">Обновление этого блока из файла не поддерживается.</string>
+
+    <!-- Прошивка по COM-порту (приложение прошивки) -->
+    <string name="firmware_serial_title_screen">Прошивка по COM-порту</string>
+    <string name="firmware_serial_title_ready">Готово к прошивке</string>
+    <string name="firmware_serial_msg_ready">Выберите файл прошивки .frm. После запуска перезагрузите блок по питанию.</string>
+    <string name="firmware_serial_title_boot">Перезагрузите блок</string>
+    <string name="firmware_serial_msg_boot">Отключите и снова подключите питание блока — обновление начнётся, как только он перейдёт в загрузчик.</string>
+    <string name="firmware_serial_msg_success">Прошивка записана в блок.</string>
+    <string name="firmware_serial_label_device_version">Блок работает на версии %1$s</string>
+    <string name="firmware_serial_label_written_version">Записана версия %1$s</string>
+    <string name="firmware_serial_msg_still_in_boot">Блок остался в загрузчике. Перезагрузите его по питанию, чтобы запустить прошивку, и подключитесь снова — версия будет видна в заголовке.</string>
+    <string name="firmware_serial_error_other_device">Это прошивка для %1$s, а подключён %2$s. Выберите файл для этого блока.</string>
+    <string name="firmware_serial_error_file">Файл не является прошивкой .frm.</string>
+    <string name="firmware_serial_error_boot_timeout">Блок не перешёл в загрузчик. Перезагрузите его по питанию сразу после запуска обновления и проверьте порт.</string>
+    <string name="firmware_serial_error_not_in_boot">Блок ответил, но он не в загрузчике .frm.</string>
+    <string name="firmware_serial_error_transfer">Сбой передачи данных.</string>
+    <string name="firmware_serial_error_crc">Контрольная сумма не совпала — прошивка не применена.</string>
+    <string name="firmware_serial_error_applying">Блок не смог применить прошивку.</string>
+    <string name="firmware_serial_error_connection">COM-порт пропал. Подключите кабель и начните заново.</string>
+    <string name="firmware_serial_error_unknown">Обновление не удалось.</string>
 </resources>

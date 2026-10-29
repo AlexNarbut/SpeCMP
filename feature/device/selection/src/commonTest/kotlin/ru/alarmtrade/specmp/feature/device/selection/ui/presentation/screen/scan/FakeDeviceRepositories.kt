@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceSca
 class FakeDeviceScanRepository(
     ble: List<ScannedDevice.Ble> = emptyList(),
     usb: List<ScannedDevice.Usb> = emptyList(),
+    private val serial: List<ScannedDevice.Serial> = emptyList(),
     private val transports: Set<DeviceTransport> = setOf(DeviceTransport.BLE, DeviceTransport.USB),
     private val bleResponse: Response<List<ScannedDevice.Ble>> = Response.Success(ble),
     private val usbResponse: Response<List<ScannedDevice.Usb>> = Response.Success(usb)
@@ -42,6 +43,7 @@ class FakeDeviceScanRepository(
         emit(bleResponse)
     }
     override fun scanUsb(): Flow<Response<List<ScannedDevice.Usb>>> = flowOf(usbResponse)
+    override fun scanSerial(): Flow<Response<List<ScannedDevice.Serial>>> = flowOf(Response.Success(serial))
 }
 
 class FakeDeviceConnectionRepository(
@@ -66,6 +68,14 @@ class FakeDeviceConnectionRepository(
     }
 
     override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = connectFlow(states)
+
+    var serialConnectCount: Int = 0
+        private set
+
+    override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> {
+        serialConnectCount++
+        return connectFlow(states)
+    }
 
     override suspend fun closeSessions(): Response<Unit> {
         closeCount++
