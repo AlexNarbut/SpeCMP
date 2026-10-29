@@ -55,6 +55,7 @@
   `_flag.update { true }`): одно правило без исключений не даёт «простой» записи со временем
   превратиться в read-modify-write. Атомарный «проверил и записал» — `compareAndSet(expect, update)`.
   Чтение `_state.value` допустимо. Правило — для production-кода; тестовые фейки могут писать `.value`.
+  Проверяется автоматически: `config/hooks/check-stateflow-value.py` (pre-commit и хук агентов после правки `.kt`).
 - **Персистентный read-modify-write не атомарен.** Key-value-хранилища
   (Settings / DataStore / SharedPreferences) не дают атомарного «прочитал → изменил → записал»:
   при конкурентных писателях одно из изменений теряется — например,

@@ -11,6 +11,12 @@ case "$file" in
 esac
 rel=${file#"$PWD"/}
 
+# MutableStateFlow — только через update { } (docs/patterns.md): проверка без Gradle, сразу по файлу.
+if [ -f "$rel" ] && ! flow_report=$(python3 config/hooks/check-stateflow-value.py "$rel" 2>&1); then
+    printf '%s\n' "$flow_report" >&2
+    exit 2
+fi
+
 out=$(./gradlew -q spotlessCheck --continue 2>&1)
 status=$?
 
