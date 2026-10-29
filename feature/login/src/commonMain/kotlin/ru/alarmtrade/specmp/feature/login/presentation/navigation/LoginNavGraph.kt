@@ -22,7 +22,6 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.login_common_a11y_back
 import ru.alarmtrade.specmp.core.localization.resources.login_common_error_auth_failed
@@ -36,7 +35,6 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
-import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLanguageSegment
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthScreenChrome
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
@@ -69,7 +67,7 @@ private val navConfig = SavedStateConfiguration {
 }
 
 @Composable
-fun LoginNavGraph(onLocaleChange: (AppLocale) -> Unit) {
+fun LoginNavGraph() {
     val viewModel = koinViewModel<LoginScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
     val colors = cmpThemeColors()
@@ -96,12 +94,6 @@ fun LoginNavGraph(onLocaleChange: (AppLocale) -> Unit) {
                     contentDescription = stringResource(Strings.string.login_common_a11y_back)
                 )
             }
-        },
-        actions = {
-            AuthLanguageSegment(
-                onLocaleChange = onLocaleChange,
-                colors = colors
-            )
         }
     ) { layoutMode ->
         LoginNavDisplay(

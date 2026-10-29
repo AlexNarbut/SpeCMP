@@ -15,12 +15,10 @@
 
 ```kotlin
 @Composable
-fun AppNavigation(
-    onLocaleChange: (AppLocale) -> Unit,
-) {
+fun AppNavigation() {
     AuthStateNavGraph(
         waitingState = { AppStartLoading() },
-        noAuthState = { LoginNavGraph(onLocaleChange = onLocaleChange) },
+        noAuthState = { LoginNavGraph() },
         authedState = { AuthedNavGraph() },
         errorState = { onRetry -> SessionCheckErrorScreen(onRetry = onRetry) },
     )

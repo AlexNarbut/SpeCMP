@@ -1,7 +1,9 @@
 package ru.alarmtrade.specmp.androidApp
 
 import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -17,10 +19,24 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import ru.alarmtrade.specmp.App
+import ru.alarmtrade.specmp.core.localization.reapplyAppLocale
+import ru.alarmtrade.specmp.core.localization.withAppLocale
 
 // FragmentActivity (наследник ComponentActivity) нужен для привязки
 // PermissionsController из core/permissions (bind → supportFragmentManager).
 class AppActivity : FragmentActivity() {
+    // Язык приложения — в конфигурации Activity и процессной локали до первой композиции; переживает смену
+    // конфигурации (поворот при configChanges). Смена языка — сохранение + перезапуск (docs/localization.md).
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase.withAppLocale())
+    }
+
+    // Смена конфигурации без пересоздания (configChanges) возвращает процессную локаль к системной — вернуть свою.
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        reapplyAppLocale()
+        super.onConfigurationChanged(newConfig)
+    }
+
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

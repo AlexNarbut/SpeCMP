@@ -145,8 +145,8 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 | `modifier-missing-check`, `modifier-without-default-check` | относятся к переиспользуемым компонентам, у нас много Screen-функций |
 | `state-param-check` | `State<T>` передаётся сознательно: значение читается в дочернем scope без рекомпозиции родителя ([`compose-best-prac.md`](compose-best-prac.md) §5) |
 
-Разрешены собственные `CompositionLocal` (`compose_allowed_composition_locals`): `LocalAppLocale`
-(`core/localization`), `LocalCmpImageLoader` и `LocalThemeIsDark` (`core/ui`). Новый `CompositionLocal` добавляется
+Разрешены собственные `CompositionLocal` (`compose_allowed_composition_locals`): `LocalCmpImageLoader` и
+`LocalThemeIsDark` (`core/ui`). Новый `CompositionLocal` добавляется
 в этот список.
 
 Остальные правила включены. Частые требования: имена лямбд событий в настоящем времени (`onClick`, не

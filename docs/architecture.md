@@ -108,7 +108,7 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 ### core/localization
 - Пакет: `ru.alarmtrade.specmp.core.localization`
 - `AppLocale` — поддерживаемые языки приложения
-- `currentAppLocale()` / `applyAppLocale()` — platform-specific чтение и применение локали приложения
+- `currentAppLocale()` / `saveAppLocale()` / `AppLocaleStore` — язык приложения (применяется на старте: `prepareAppLocale()`, Android — `Context.withAppLocale()` в `attachBaseContext`); см. `docs/localization.md`
 
 ### core/specialist
 - Пакет: `ru.alarmtrade.specmp.core.specialist`
@@ -214,7 +214,7 @@ Feature-модули:
 | Зависимость | Что даёт | Когда нужна |
 |-------------|----------|-------------|
 | `:core:common` | `Response<T>`, `ResponseExt`, `AppDispatchers` | **Всегда** — каждый feature-модуль обязан зависеть от `core:common` |
-| `:core:localization` | `AppLocale`, чтение/применение локали приложения | Если фича показывает переключение языка или зависит от текущей локали |
+| `:core:localization` | Строки `Strings`, `AppLocale` / `AppLocaleStore` | Всем фичам с UI (строки); выбор языка — только `feature/app-settings` |
 | `:core:ui` | `LCEState<T, E>`, `LCEStateExt`, `AppError.message()`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
 | `:core:network` | `NetworkMonitor`, HTTP-движки Ktor процесса | Фичам обычно не нужен — сеть идёт через Specialist SDK |
 

@@ -21,7 +21,6 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
@@ -30,6 +29,8 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountNavGraph
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.navigation.AdvancedMountRoute
+import ru.alarmtrade.specmp.feature.appsettings.presentation.navigation.AppSettingsEntry
+import ru.alarmtrade.specmp.feature.appsettings.presentation.navigation.AppSettingsRoute
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfigurationPickerEntry
@@ -81,16 +82,17 @@ private val navConfig = SavedStateConfiguration {
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
             subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
             subclass(ConfiguratorRoute::class, ConfiguratorRoute.serializer())
+            subclass(AppSettingsRoute::class, AppSettingsRoute.serializer())
         }
     }
 }
 
 @Composable
-fun AppNavigation(onLocaleChange: (AppLocale) -> Unit) {
+fun AppNavigation() {
     AuthStateNavGraph(
         waitingState = { AppStartLoading() },
         noAuthState = {
-            LoginNavGraph(onLocaleChange = onLocaleChange)
+            LoginNavGraph()
         },
         authedState = { AuthedNavGraph() },
         errorState = { onRetry ->
@@ -144,6 +146,7 @@ private fun AuthedNavGraph() {
                 // С главной сессии блока нет — без «Записать в блок» (он — в разделе «Конфигуратор» монтажа).
                 AppConfigurator(onExit = { backStack.popSafe() })
             }
+            entry<AppSettingsRoute> { _ -> AppSettingsEntry(onBack = { backStack.popSafe() }) }
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(
                     request = key.request,
@@ -364,7 +367,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.Warehouse1C -> Unit
 
-        MainNavigationTarget.Settings -> Unit
+        MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 
         MainNavigationTarget.AppUpdate -> Unit
     }
