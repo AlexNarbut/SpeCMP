@@ -82,6 +82,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingChange
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsDiff
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.channelOrNull
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.filter
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.logicsChange
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitle
@@ -210,9 +211,11 @@ private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
     var expanded by rememberSaveable(diff) { mutableStateOf(diff.initiallyExpanded()) }
     var openRow by remember(diff) { mutableStateOf<Int?>(null) }
     var query by rememberSaveable(diff) { mutableStateOf("") }
+    // Фильтр — доменное правило поиска; пересчёт только при смене диффа или запроса, а не на каждую рекомпозицию.
     val q = query.trim()
-    val sections = diff.sections.matching(q)
-    val canCode = diff.canCode?.takeIf { q.isEmpty() || it.matches(q) }
+    val shown = remember(diff, q) { diff.filter(q) }
+    val sections = shown.sections
+    val canCode = shown.canCode
     val sidePadding = if (wide) 0.dp else 16.dp
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
         item(key = "summary") {
@@ -325,13 +328,6 @@ private fun SettingsDiff.initiallyExpanded(): List<Int> =
     if (total > COLLAPSE_FROM) sections.take(1).map { it.key } else sections.map { it.key }
 
 /** Разделы с изменениями, подходящими под запрос (пустой — все). */
-private fun List<SectionChanges>.matching(query: String): List<SectionChanges> = if (query.isEmpty()) {
-    this
-} else {
-    map { section -> section.copy(changes = section.changes.filter { it.matches(query) }) }
-        .filter { it.changes.isNotEmpty() }
-}
-
 private fun LazyListScope.sectionItems(
     section: SectionChanges,
     expanded: Boolean,
@@ -566,9 +562,6 @@ private fun polarityText(polarity: Polarity): String = when (polarity) {
 
 /** Название строки: у каналов — «IN1 · Концевик дверей». */
 private fun SettingChange.title(): String = settingTitle(after.name, after.channelOrNull)
-
-private fun SettingChange.matches(query: String): Boolean =
-    after.name.contains(query, ignoreCase = true) || (after.number.isNotEmpty() && after.number.startsWith(query))
 
 /** Ключ раздела в списке: id раздела, корневые настройки — 0. */
 private val SectionChanges.key: Int get() = section?.id ?: 0

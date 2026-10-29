@@ -67,7 +67,7 @@ class MainScreenViewModel(
     // Поллинг чата живёт только пока экран подписан: WhileSubscribed останавливает
     // источники при уходе с экрана и перезапускает при возврате.
     val state: StateFlow<MainScreenState> = combine(_state, chatAvailabilityState) { state, chatAvailability ->
-        state.copy(chatAvailabilityState = chatAvailability)
+        state.copy(chatAvailabilityState = chatAvailability).withActions()
     }
         // Первичная загрузка — один раз за жизнь VM, при первой подписке на state; скелетон — пока она идёт.
         .launchOnFirstStart { initialRefresh() }

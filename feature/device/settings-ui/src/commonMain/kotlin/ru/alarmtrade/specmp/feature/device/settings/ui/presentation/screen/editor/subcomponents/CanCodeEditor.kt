@@ -41,9 +41,9 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.CAN_CODE_LENGTH
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.CAN_CODE_LENGTH
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary

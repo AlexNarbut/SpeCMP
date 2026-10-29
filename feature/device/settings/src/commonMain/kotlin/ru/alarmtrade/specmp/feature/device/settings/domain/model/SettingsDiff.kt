@@ -18,6 +18,17 @@ data class SettingsDiff(val canCode: SettingChange?, val sections: List<SectionC
     val isEmpty: Boolean get() = total == 0
 }
 
+/** Изменения, подходящие под запрос (по настройке «после», правило — [SettingNode.matches]); пустой — все. */
+fun SettingsDiff.filter(query: String): SettingsDiff {
+    val q = query.trim()
+    if (q.isEmpty()) return this
+    return copy(
+        canCode = canCode?.takeIf { it.after.matches(q) },
+        sections = sections.map { section -> section.copy(changes = section.changes.filter { it.after.matches(q) }) }
+            .filter { it.changes.isNotEmpty() }
+    )
+}
+
 /**
  * Что изменится, если заменить значения этого меню значениями [next]. Сравниваются настройки с одинаковым id;
  * настройки, которых нет в одном из меню, не учитываются. Порядок — порядок этого меню, корневые настройки — первыми.

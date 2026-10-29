@@ -9,6 +9,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsDiff
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchHit
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -129,7 +130,10 @@ internal data class EditingSetting(
     val draft: SettingValue,
     // Поиск автомобиля по CAN-коду в окне CAN-кода; пустой Content — для кода автомобиля нет.
     val carSearch: LCEState<List<CarSummary>, SettingsError> = LCEState.None
-)
+) {
+    /** Черновик можно применить — считается один раз на изменение черновика, не на каждую рекомпозицию. */
+    val canApply: Boolean = setting.accepts(draft)
+}
 
 internal sealed interface SettingsDialog {
     data class Description(val node: SettingNode) : SettingsDialog

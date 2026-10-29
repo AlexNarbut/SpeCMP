@@ -10,6 +10,7 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.presentation.model.MAIN_UNKNOWN_APP_VERSION
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainDatabaseSyncBadge
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
+import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainProfile
 
 @Immutable
@@ -25,6 +26,8 @@ data class MainScreenState(
     val userCommercialState: LCEState<MainUserCommercial, MainError> = LCEState.None,
     val appUpdateState: LCEState<MainAppUpdateCheckResult, MainError> = LCEState.None,
     val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
+    /** Карточки главной по фичам пользователя, коммерции и доступности чата — считаются во VM (`withActions`). */
+    val visibleActions: List<MainHomeAction> = MainHomeAction.visibleActions(),
     val logoutState: LCEState<Unit, MainError> = LCEState.None
 ) {
     val logoutError: MainError? get() = (logoutState as? LCEState.Error)?.error
@@ -81,3 +84,12 @@ data class MainScreenState(
     val isLogoutInProgress: Boolean
         get() = logoutState is LCEState.Loading
 }
+
+/** Производное: видимые карточки — во VM в `combine` на `default`, а не в теле composable. */
+internal fun MainScreenState.withActions(): MainScreenState = copy(
+    visibleActions = MainHomeAction.visibleActions(
+        features = appFeatures,
+        commercial = userCommercial,
+        showChat = chatAvailability
+    )
+)

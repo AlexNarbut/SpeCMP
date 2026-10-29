@@ -55,7 +55,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
@@ -274,7 +273,7 @@ internal class DeviceSettingsViewModel(
     fun onCarSearch() {
         val editing = _state.value.editing ?: return
         val code = (editing.draft as? SettingValue.Can)?.value?.code ?: return
-        if (!editing.setting.accepts(editing.draft)) return
+        if (!editing.canApply) return
         _state.update { it.copy(editing = it.editing?.copy(carSearch = LCEState.Loading)) }
         safeLaunch {
             val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code, vehicleDevice()) }
@@ -337,7 +336,7 @@ internal class DeviceSettingsViewModel(
 
     fun onEditApply() {
         val editing = _state.value.editing ?: return
-        if (!editing.setting.accepts(editing.draft)) return
+        if (!editing.canApply) return
         _state.update { it.copy(editing = null) }
         if (editing.draft != editing.setting.value) onValueChange(editing.setting.id, editing.draft)
     }

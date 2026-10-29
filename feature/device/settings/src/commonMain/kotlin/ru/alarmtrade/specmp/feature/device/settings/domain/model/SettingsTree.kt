@@ -83,6 +83,7 @@ fun SettingsSection.search(query: String): List<SettingsSearchHit> {
     return hits
 }
 
-private fun SettingNode.matches(query: String): Boolean = name.contains(query, ignoreCase = true) ||
+/** Подходит ли настройка под запрос поиска: имя, префикс номера или имя канала. Одно правило для поиска и диффа. */
+fun SettingNode.matches(query: String): Boolean = name.contains(query, ignoreCase = true) ||
     (number.isNotEmpty() && number.startsWith(query)) ||
     channelOrNull?.name?.contains(query, ignoreCase = true) == true
