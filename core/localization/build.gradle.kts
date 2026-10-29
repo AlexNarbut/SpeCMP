@@ -38,7 +38,6 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.multiplatformSettings)
 
-            // api: LocalAppLocale — публичный CompositionLocal этого модуля
             api(libs.compose.runtime)
             // api: Strings — публичный класс строк всех фич (docs/localization.md)
             api(libs.compose.resources)

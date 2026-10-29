@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -237,7 +236,6 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
     val viewModel = koinViewModel<MineViewModel>(parameters = { parametersOf(pick?.request?.deviceName) })
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { CmpSnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val filePicker = full?.filePicker ?: NoSettingsFilePicker
     val fileFailed = stringResource(Strings.string.configurator_common_msg_file_failed)
 
@@ -269,9 +267,10 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
                 }
             }
 
-            is MineEffect.ExportFile -> scope.launch {
+            // Системное «Сохранить как» живёт в композиции (launcher), поэтому сохраняет UI, а результат уходит во VM —
+            // как в редакторе настроек. Обработчик эффектов — уже корутина: отдельный scope.launch не нужен.
+            is MineEffect.ExportFile ->
                 viewModel.onFileExported((full?.fileSaver ?: NoSaver).save(effect.path, effect.fileName))
-            }
 
             is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
                 getString(Strings.string.configurator_common_msg_file_saved, effect.name)

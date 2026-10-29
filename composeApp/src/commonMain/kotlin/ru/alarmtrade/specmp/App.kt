@@ -2,10 +2,8 @@ package ru.alarmtrade.specmp
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -15,8 +13,8 @@ import org.koin.compose.koinInject
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.lifecycle.appLifecycleModule
-import ru.alarmtrade.specmp.core.localization.LocalAppLocale
-import ru.alarmtrade.specmp.core.localization.applyAppLocale
+import ru.alarmtrade.specmp.core.localization.AppLocaleStore
+import ru.alarmtrade.specmp.core.localization.DefaultAppLocaleStore
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
@@ -32,6 +30,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.feature.account.di.accountModule
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
+import ru.alarmtrade.specmp.feature.appsettings.di.appSettingsModule
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.configurator.di.configuratorModule
 import ru.alarmtrade.specmp.feature.configurator.ui.di.configuratorUiModule
@@ -54,7 +53,8 @@ import ru.alarmtrade.specmp.navigation.AppNavigation
  */
 @Composable
 fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable (isDark: Boolean) -> Unit = {}) {
-    var appLocale by remember { mutableStateOf(prepareAppLocale()) }
+    // Язык применяется на старте процесса (docs/localization.md, «Язык приложения»); смена — через перезапуск.
+    val appLocale = remember { prepareAppLocale() }
 
     val appVersionModule = remember(appVersionName, appVersionCode) {
         val version = SpecialistAppVersion(name = appVersionName, code = appVersionCode)
@@ -70,6 +70,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
                 add(commonModule)
                 add(specialistModule)
                 add(appVersionModule)
+                add(module { single<AppLocaleStore> { DefaultAppLocaleStore } })
                 add(permissionsModule())
                 add(appLifecycleModule)
                 add(authStateModule)
@@ -88,6 +89,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
                 add(deviceSettingsUiModule)
                 add(deviceInteractionUiModule)
                 add(advancedMountModule)
+                add(appSettingsModule)
             }
         )
     }) {
@@ -101,22 +103,13 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
         LaunchedEffect(Unit) { specialistInitializer.start(appLocale.languageTag) }
         val specialistReady by specialistInitializer.ready.collectAsStateWithLifecycle()
 
-        CompositionLocalProvider(LocalAppLocale provides appLocale) {
-            // Единый ImageLoader приложения: memory/disk-кэш Coil общий для
-            // всех экранов (U-1).
-            ProvideCmpImageLoader(rememberCmpImageLoader()) {
-                AppTheme(onThemeChange) {
-                    if (specialistReady) {
-                        AppNavigation(
-                            onLocaleChange = { locale ->
-                                applyAppLocale(locale)
-                                appLocale = locale
-                                specialistInitializer.onLanguageChanged(locale.languageTag)
-                            }
-                        )
-                    } else {
-                        CmpSurface(modifier = Modifier.fillMaxSize()) {}
-                    }
+        // Единый ImageLoader приложения: memory/disk-кэш Coil общий для всех экранов (U-1).
+        ProvideCmpImageLoader(rememberCmpImageLoader()) {
+            AppTheme(onThemeChange) {
+                if (specialistReady) {
+                    AppNavigation()
+                } else {
+                    CmpSurface(modifier = Modifier.fillMaxSize()) {}
                 }
             }
         }

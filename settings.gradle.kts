@@ -45,6 +45,7 @@ include(":desktopApp")
 // Feature modules
 include(":feature:auth-state")
 include(":feature:login")
+include(":feature:app-settings")
 include(":feature:main")
 include(":feature:support-chat")
 include(":feature:advanced-mount")

@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="login_common_a11y_back">Назад</string>
-    <string name="login_common_a11y_language_en">Переключить язык на английский</string>
-    <string name="login_common_a11y_language_ru">Переключить язык на русский</string>
     <string name="login_common_a11y_show_password">Показать пароль</string>
     <string name="login_common_a11y_hide_password">Скрыть пароль</string>
-    <string name="login_common_btn_language_en">EN</string>
-    <string name="login_common_btn_language_ru">RU</string>
     <string name="login_common_btn_close">Закрыть</string>
     <string name="login_common_btn_go_to_login">Перейти ко входу</string>
     <string name="login_common_label_email">Email</string>

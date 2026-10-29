@@ -39,12 +39,12 @@ import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeActionGroup
 @Composable
 internal fun MainHomeDashboard(
     mode: MainHomeMode,
+    actions: List<MainHomeAction>,
     onHomeActionClick: (MainHomeAction) -> Unit,
     modifier: Modifier = Modifier,
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
-    actions: List<MainHomeAction> = MainHomeAction.visibleActions(),
     colors: CmpThemeColors = cmpThemeColors()
 ) {
     val contentPadding = mode.contentPadding

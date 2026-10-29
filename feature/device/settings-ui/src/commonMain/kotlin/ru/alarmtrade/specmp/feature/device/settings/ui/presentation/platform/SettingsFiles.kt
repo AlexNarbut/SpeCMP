@@ -57,6 +57,10 @@ object NoSettingsFileSaver : SettingsFileSaver {
         SettingsFileSaveResult.Cancelled
 }
 
+/** Имя файла настроек без расширения `.dxs` (в любом регистре). */
+fun String.withoutSettingsExtension(): String =
+    if (endsWith(DXS_EXTENSION, ignoreCase = true)) dropLast(DXS_EXTENSION.length) else this
+
 /** Имя файла по умолчанию: `<модель> <название>.dxs` без символов, запрещённых в именах файлов. */
 fun settingsFileName(deviceName: String, title: String?): String {
     val base = listOf(deviceName, title.orEmpty()).filter { it.isNotBlank() }.joinToString(" ")

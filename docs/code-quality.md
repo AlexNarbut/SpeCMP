@@ -30,9 +30,10 @@
 ```
 git commit ──► pre-commit ──► ./gradlew spotlessCheck        (стиль, только файлы изменённые с HEAD)
                           ├─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
+                          ├─► config/hooks/check-stateflow-value.py (MutableStateFlow только через update, .kt)
                           └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck          (смысл, весь проект, с type resolution)
-Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotlessCheck (отчёт по правленому файлу)
+Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check-stateflow-value.py + spotlessCheck (по файлу)
 ```
 
 | Файл | Роль |
@@ -41,7 +42,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`; плагины `detekt`, `spotless` |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt |
-| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `spotless-check`, `serial-name-check` (pre-commit) и `detekt-check` (pre-push) |
+| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `spotless-check`, `serial-name-check`, `stateflow-value-check`, `strings-check` (pre-commit) и `detekt-check` (pre-push) |
 | [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
 | [`.claude/settings.json`](../.claude/settings.json), [`.claude/hooks/kotlin-quality.sh`](../.claude/hooks/kotlin-quality.sh) | хук для агентов: после правки `.kt`/`.kts` возвращает нарушения этого файла |
@@ -101,6 +102,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
 | Строки и ключи локализации | `config/hooks/check-strings.py` |
+| `MutableStateFlow` без `.value =` | `config/hooks/check-stateflow-value.py` (без аргументов — весь репозиторий) |
 
 Порядок перед коммитом:
 
@@ -143,8 +145,8 @@ pre-commit install --hook-type pre-commit --hook-type pre-push
 | `modifier-missing-check`, `modifier-without-default-check` | относятся к переиспользуемым компонентам, у нас много Screen-функций |
 | `state-param-check` | `State<T>` передаётся сознательно: значение читается в дочернем scope без рекомпозиции родителя ([`compose-best-prac.md`](compose-best-prac.md) §5) |
 
-Разрешены собственные `CompositionLocal` (`compose_allowed_composition_locals`): `LocalAppLocale`
-(`core/localization`), `LocalCmpImageLoader` и `LocalThemeIsDark` (`core/ui`). Новый `CompositionLocal` добавляется
+Разрешены собственные `CompositionLocal` (`compose_allowed_composition_locals`): `LocalCmpImageLoader` и
+`LocalThemeIsDark` (`core/ui`). Новый `CompositionLocal` добавляется
 в этот список.
 
 Остальные правила включены. Частые требования: имена лямбд событий в настоящем времени (`onClick`, не

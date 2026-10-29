@@ -20,17 +20,13 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
@@ -74,52 +70,6 @@ class FirmwareUpdateViewModel(
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
-    private class Profile(
-        val kind: UpdateProfile,
-        /** Что обновляем и чем выходим из загрузчика — основная программа или Bluetooth-модуль. */
-        val target: BootModeTarget,
-        /** Модель блока (основная программа) или прошивка Bluetooth-модуля — для базы устройств. */
-        val deviceName: String,
-        val deviceTitle: String,
-        val currentVersion: String,
-        val modules: List<FirmwareModule>,
-        /** Выход из загрузчика командой доступен (BLE). */
-        val canExit: Boolean,
-        /** Связь по BLE: передача прошивки переживает обрыв (SDK переподключается и продолжает). */
-        val overBle: Boolean
-    )
-
-    private data class Core(
-        val stage: UpdatePhase = UpdatePhase.Loading,
-        val profile: Profile? = null,
-        val selectedModuleId: Long? = null,
-        val channel: FirmwareChannel = FirmwareChannel.RELEASE,
-        val candidate: FirmwareVersion? = null,
-        /** Прошивка из файла пользователя (вместо [candidate]). */
-        val localFile: FirmwareFilePickResult.Picked? = null,
-        val fileError: FileError? = null,
-        val sourceError: FirmwareError? = null,
-        val exitDialog: Boolean = false,
-        val exitError: Boolean = false,
-        /** Пользователь подтвердил результат («OK»). */
-        val acknowledged: Boolean = false,
-        /** Связь пропадала, пока шёл процесс обновления. */
-        val linkDropped: Boolean = false,
-        /** Поток обновления SDK ещё идёт (не закончился и не сдался). */
-        val running: Boolean = false
-    ) {
-        /** Передача по BLE, которую SDK продолжит после переподключения. */
-        val resumable: Boolean
-            get() = running && stage is UpdatePhase.Transfer && profile?.overBle == true
-    }
-
-    /** Откуда берём файл прошивки: версия с сервера или файл пользователя. */
-    private sealed interface UpdateSource {
-        data class Server(val version: FirmwareVersion) : UpdateSource
-
-        data class File(val path: String) : UpdateSource
-    }
-
     private val core: MutableStateFlow<Core>
 
     init {
@@ -161,83 +111,6 @@ class FirmwareUpdateViewModel(
         // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
         safeLaunch { archivePicker.picks.collect(::onArchivePicked) }
     }
-
-    // ───── состояние ─────
-
-    private fun toState(core: Core, session: DeviceSessionState, reboot: DeviceReboot?): FirmwareUpdateState {
-        val profile = core.profile
-        val modules = profile?.modules.orEmpty()
-        val selected = modules.indexOfFirst { it.id == core.selectedModuleId }.coerceAtLeast(0)
-        val current = profile?.currentVersion
-        val title = when (profile?.kind) {
-            UpdateProfile.Bluetooth -> modules.getOrNull(selected)?.displayTitle
-                ?: profile.deviceTitle
-
-            UpdateProfile.Main, null -> profile?.deviceTitle.orEmpty()
-        }
-        return FirmwareUpdateState(
-            phase = phaseOf(core, session, reboot),
-            profile = profile?.kind ?: UpdateProfile.Main,
-            deviceTitle = title,
-            moduleTitles = modules.map { it.displayTitle },
-            selectedModule = selected,
-            currentVersion = current,
-            channel = core.channel,
-            confirm = confirmOf(core, current),
-            sourceError = core.sourceError,
-            exitDialog = core.exitDialog,
-            inBoot = session.isBoot,
-            canExitBoot = profile?.canExit == true,
-            exitError = core.exitError,
-            fileError = core.fileError
-        )
-    }
-
-    private fun confirmOf(core: Core, current: String?): ConfirmUi? {
-        core.localFile?.let { file ->
-            return ConfirmUi(current, file.name, description = "", older = false, localFile = true)
-        }
-        return core.candidate?.let { version ->
-            ConfirmUi(
-                currentVersion = current,
-                newVersion = version.version,
-                description = version.description,
-                older = current != null && version.version.relationTo(current) == VersionRelation.Older
-            )
-        }
-    }
-
-    private fun phaseOf(core: Core, session: DeviceSessionState, reboot: DeviceReboot?): UpdatePhase {
-        val inBoot = session.isBoot
-        val linkDown = session.isLinkDown
-        return when {
-            reboot == DeviceReboot.ToBoot && !inBoot -> UpdatePhase.Entering
-
-            reboot == DeviceReboot.ToMain && core.acknowledged -> UpdatePhase.Finishing
-
-            // Блок перезагрузился после применения и вернулся в рабочий режим, а результата SDK не было — успех.
-            core.stage == UpdatePhase.Apply && session is DeviceSessionState.Ready -> UpdatePhase.Success
-
-            linkDown && reboot == null -> linkDownPhase(core)
-
-            else -> core.stage
-        }
-    }
-
-    // Передачу Bluetooth-модуля SDK продолжит после переподключения — это не потеря связи.
-    private fun linkDownPhase(core: Core): UpdatePhase {
-        val stage = core.stage
-        return if (core.resumable && stage is UpdatePhase.Transfer) {
-            stage.copy(reconnecting = true)
-        } else {
-            UpdatePhase.Lost(updating = stage.isUpdating())
-        }
-    }
-
-    private fun UpdatePhase.isUpdating(): Boolean = this == UpdatePhase.Prepare ||
-        this is UpdatePhase.Transfer ||
-        this == UpdatePhase.Verify ||
-        this == UpdatePhase.Apply
 
     // ───── связь ─────
 
@@ -355,14 +228,14 @@ class FirmwareUpdateViewModel(
             executeWithProceedLock {
                 val start = core.value
                 val moduleId = start.selectedModuleId ?: return@executeWithProceedLock
-                if (!transition({ it.stage == UpdatePhase.Source }) {
+                if (!core.updateIf({ it.stage == UpdatePhase.Source }) {
                         it.copy(stage = UpdatePhase.Download, sourceError = null, fileError = null)
                     }
                 ) {
                     return@executeWithProceedLock
                 }
                 val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel) }
-                transition({ it.stage == UpdatePhase.Download }) { state ->
+                core.updateIf({ it.stage == UpdatePhase.Download }) { state ->
                     when (response) {
                         is Response.Success -> state.copy(
                             stage = UpdatePhase.Confirm,
@@ -402,7 +275,7 @@ class FirmwareUpdateViewModel(
 
     /** Результат выбора файла прошивки в файловом менеджере: годный файл — сразу на подтверждение. */
     fun onFilePicked(result: FirmwareFilePickResult) {
-        transition({ it.stage == UpdatePhase.Source }) { state ->
+        core.updateIf({ it.stage == UpdatePhase.Source }) { state ->
             when (result) {
                 FirmwareFilePickResult.Cancelled -> state
 
@@ -423,13 +296,13 @@ class FirmwareUpdateViewModel(
 
     // Версия выбрана в архиве: сразу на подтверждение (версия, описание и ссылка уже известны — запрашивать нечего).
     private fun onArchivePicked(version: FirmwareVersion) {
-        transition({ it.stage == UpdatePhase.Source }) {
+        core.updateIf({ it.stage == UpdatePhase.Source }) {
             it.copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = null)
         }
     }
 
     fun onCancelConfirm() {
-        transition({
+        core.updateIf({
             it.stage == UpdatePhase.Confirm
         }) { it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null) }
     }
@@ -440,7 +313,7 @@ class FirmwareUpdateViewModel(
         val source = current.localFile?.let { UpdateSource.File(it.path) }
             ?: current.candidate?.let { UpdateSource.Server(it) }
             ?: return
-        if (transition({
+        if (core.updateIf({
                 it.stage == UpdatePhase.Confirm
             }) { it.copy(stage = UpdatePhase.Prepare, linkDropped = false) }
         ) {
@@ -614,32 +487,7 @@ class FirmwareUpdateViewModel(
 
     // Стадия меняется, только пока процесс идёт: запоздавшее событие отменённого процесса экран не трогает.
     private fun setStage(stage: UpdatePhase) {
-        transition({ it.stage.isUpdating() || it.stage == UpdatePhase.Success }) { it.copy(stage = stage) }
-    }
-
-    /** Атомарный переход: [change] применяется, только если [from] истинно для текущего состояния. */
-    private inline fun transition(from: (Core) -> Boolean, change: (Core) -> Core): Boolean {
-        while (true) {
-            val current = core.value
-            if (!from(current)) return false
-            if (core.compareAndSet(current, change(current))) return true
-        }
-    }
-
-    private fun FirmwareFailure.toKind(): FailureKind = when (this) {
-        is FirmwareFailure.Write -> when (reason) {
-            WriteFailureReason.Crc -> FailureKind.Crc
-            WriteFailureReason.Timeout -> FailureKind.Timeout
-            WriteFailureReason.LostPacket -> FailureKind.LostPacket
-            WriteFailureReason.WrongPacketLength -> FailureKind.WrongPacketLength
-            WriteFailureReason.DeviceNotReady -> FailureKind.DeviceNotReady
-            WriteFailureReason.ApplyingError -> FailureKind.ApplyingError
-            WriteFailureReason.Unknown -> FailureKind.Unknown
-        }
-
-        FirmwareFailure.Preparation -> FailureKind.Preparation
-
-        FirmwareFailure.Unknown -> FailureKind.Unknown
+        core.updateIf({ it.stage.isUpdating() || it.stage == UpdatePhase.Success }) { it.copy(stage = stage) }
     }
 
     private companion object {

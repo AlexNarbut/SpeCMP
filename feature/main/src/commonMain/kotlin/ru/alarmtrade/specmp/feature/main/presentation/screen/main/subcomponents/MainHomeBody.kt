@@ -224,19 +224,13 @@ private fun MainHomeContent(
     bottomContentPadding: Dp,
     modifier: Modifier = Modifier
 ) {
-    val actions = MainHomeAction.visibleActions(
-        features = state.appFeatures,
-        commercial = state.userCommercial,
-        showChat = state.chatAvailability
-    )
-
     MainHomeDashboard(
         mode = mode,
         onHomeActionClick = onHomeActionClick,
         startContentPadding = startContentPadding,
         endContentPadding = endContentPadding,
         bottomContentPadding = bottomContentPadding,
-        actions = actions,
+        actions = state.visibleActions,
         modifier = modifier
     )
 }

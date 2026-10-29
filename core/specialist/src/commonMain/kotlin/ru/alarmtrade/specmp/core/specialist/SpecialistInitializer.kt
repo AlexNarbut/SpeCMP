@@ -47,7 +47,10 @@ class SpecialistInitializer(
 
     private val started = MutableStateFlow(false)
 
-    /** Запустить начальную настройку с языком [languageTag] (`ru` / `en`); повторный вызов ничего не делает. */
+    /**
+     * Запустить начальную настройку с языком [languageTag] (`ru` / `en`); повторный вызов ничего не делает. Язык
+     * меняется только перезапуском приложения — отдельной синхронизации смены языка нет.
+     */
     fun start(languageTag: String) {
         if (!started.compareAndSet(expect = false, update = true)) return
         scope.launch {
@@ -60,11 +63,6 @@ class SpecialistInitializer(
                 _ready.update { true }
             }
         }
-    }
-
-    /** Язык приложения сменили: сообщить SDK (в своём скоупе, не дожидаясь). */
-    fun onLanguageChanged(languageTag: String) {
-        scope.launch { applyLanguage(languageTag) }
     }
 
     /**

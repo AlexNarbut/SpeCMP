@@ -51,7 +51,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SirenSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitle
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
@@ -253,7 +252,7 @@ private fun EditorButtons(editing: EditingSetting, actions: EditorActions) {
         CmpButton(
             text = stringResource(Strings.string.settings_edit_btn_done),
             onClick = actions.onApply,
-            enabled = editing.setting.accepts(editing.draft),
+            enabled = editing.canApply,
             modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_DONE)
         )
     }

@@ -57,10 +57,10 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.OptionSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextInputType
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeOfDay
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.matchesPattern
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.decimalNumber
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.decimalText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.edgeText
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.matchesPattern
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.withUnits
 
 /** Больше делений — ползунок без отметок (значение всё равно округляется к шагу). */

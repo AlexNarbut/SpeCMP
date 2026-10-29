@@ -92,7 +92,20 @@ data class TextSetting(
     /** Регулярное выражение для проверки ввода и текст ошибки от устройства. */
     val validationPattern: String?,
     val validationErrorText: String?
-) : Setting
+) : Setting {
+    /**
+     * Скомпилированный [validationPattern] — один раз на настройку; некорректный шаблон — `null` (ввод не блокирует).
+     */
+    val validationRegex: Regex? by lazy {
+        validationPattern?.let { pattern ->
+            try {
+                Regex(pattern)
+            } catch (ignored: IllegalArgumentException) {
+                null
+            }
+        }
+    }
+}
 
 data class TimeSetting(
     override val id: Int,

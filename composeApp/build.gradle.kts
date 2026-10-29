@@ -40,6 +40,7 @@ kotlin {
             // Feature modules
             implementation(project(":feature:auth-state"))
             implementation(project(":feature:login"))
+            implementation(project(":feature:app-settings"))
             implementation(project(":feature:main"))
             implementation(project(":feature:support-chat"))
             implementation(project(":feature:device:selection"))
