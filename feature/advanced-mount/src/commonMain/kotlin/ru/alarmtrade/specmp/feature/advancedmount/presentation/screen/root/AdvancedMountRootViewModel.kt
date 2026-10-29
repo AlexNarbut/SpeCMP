@@ -1,13 +1,15 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
@@ -92,10 +94,12 @@ class AdvancedMountRootViewModel(
     private val _effect = sideEffectFlow<AdvancedMountRootEffect>()
     val effect: SharedFlow<AdvancedMountRootEffect> = _effect.asSharedFlow()
 
-    // Отменяет предыдущую проверку при повторе или новом блоке. Пишется и читается только на main.
-    private var loadJob: Job? = null
+    // Проверка блока: новый запрос (повтор или другой блок) отменяет незаконченную прежнюю —
+    // collectLatest, без поля-Job.
+    private val loadRequests = MutableSharedFlow<AlarmDevice>(extraBufferCapacity = 1, onBufferOverflow = DROP_OLDEST)
 
     init {
+        safeLaunch { loadRequests.collectLatest(::verify) }
         // Реакция на каждое (пере)подключение блока живёт всю жизнь VM: проверка нового блока и IMEI.
         onEachDeviceReady(::onDeviceReady)
     }
@@ -112,30 +116,31 @@ class AdvancedMountRootViewModel(
     }
 
     private fun load(device: AlarmDevice) {
-        loadJob?.cancel()
-        loadJob = safeLaunch {
-            _state.update { it.copy(content = LCEState.Loading, dialog = null) }
-            val content = when (
-                val access = withContext(dispatchers.io) {
-                    repository.verify(device.systemId, device.systemName, device.firmwareVersion)
-                }
-            ) {
-                is Response.Error -> LCEState.Error(MountError.from(access.exception))
+        loadRequests.tryEmit(device)
+    }
 
-                is Response.Success -> if (access.value.hasAccess) {
-                    LCEState.Content(
-                        MountAccess.Ready(
-                            sections = device.features.toSections(),
-                            unsupported = device.features == null,
-                            modelNotInDatabase = device.features == null && !device.modelInDatabase
-                        )
-                    )
-                } else {
-                    LCEState.Content(MountAccess.Denied(access.value.message))
-                }
+    private suspend fun verify(device: AlarmDevice) {
+        _state.update { it.copy(content = LCEState.Loading, dialog = null) }
+        val content = when (
+            val access = withContext(dispatchers.io) {
+                repository.verify(device.systemId, device.systemName, device.firmwareVersion)
             }
-            _state.update { it.copy(content = content) }
+        ) {
+            is Response.Error -> LCEState.Error(MountError.from(access.exception))
+
+            is Response.Success -> if (access.value.hasAccess) {
+                LCEState.Content(
+                    MountAccess.Ready(
+                        sections = device.features.toSections(),
+                        unsupported = device.features == null,
+                        modelNotInDatabase = device.features == null && !device.modelInDatabase
+                    )
+                )
+            } else {
+                LCEState.Content(MountAccess.Denied(access.value.message))
+            }
         }
+        _state.update { it.copy(content = content) }
     }
 
     /** «Исправить» / «Повторить»: заново проверить блок и собрать разделы. */

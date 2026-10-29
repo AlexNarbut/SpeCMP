@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -45,9 +46,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.model.isResendable
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toDomain
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
-import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 
 /**
@@ -68,9 +67,9 @@ class SupportChatScreenViewModel(
     private val dispatchers: AppDispatchers,
     // Платформенные порты из composeApp: зависимости конструктора, передаются
     // через parametersOf при создании VM.
-    private val fileSaver: SupportChatFileSaver,
+    fileSaver: SupportChatFileSaver,
     private val attachmentFiles: SupportChatAttachmentFiles,
-    private val fileOpener: SupportChatFileOpener,
+    fileOpener: SupportChatFileOpener,
     private val outbox: SupportChatOutbox
 ) : BaseViewModel() {
 
@@ -81,6 +80,8 @@ class SupportChatScreenViewModel(
     val effect: SharedFlow<SupportChatEffect> = _effect.asSharedFlow()
 
     private val sendMutex = Mutex()
+
+    private val transfers = SupportChatAttachmentTransfers(repository, fileSaver, fileOpener, dispatchers)
 
     // Пишется только из коллектора событий (единственный последовательный контекст).
     private var typingTimeoutJob: Job? = null
@@ -567,93 +568,31 @@ class SupportChatScreenViewModel(
     // region Скачивание
 
     fun onDownloadAttachment(attachment: SupportChatUiAttachment) {
-        val url = attachment.url ?: return
-        if (!acquireFileSlot(attachment.id)) return
+        if (attachment.url == null) return
+        withFileSlot(attachment.id) { transfers.download(attachment) }
+    }
 
-        safeLaunch {
-            try {
-                when (val response = withContext(dispatchers.io) { repository.downloadFile(url) }) {
-                    is Response.Success -> saveDownloaded(attachment.name, response.value)
-
-                    is Response.Error -> {
-                        logger.d(response.exception) { "Failed to download attachment" }
-                        _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
-                    }
-                }
-            } finally {
-                _state.update { it.copy(downloadingAttachmentId = null) }
-            }
-        }
+    /** Открыть вложение во внешнем приложении (индикатор — тот же слот, что у скачивания). */
+    fun onOpenAttachment(attachment: SupportChatUiAttachment) {
+        if (attachment.localPath == null && attachment.url == null) return
+        withFileSlot(attachment.id) { transfers.open(attachment) }
     }
 
     /**
-     * Открыть вложение во внешнем приложении: своё неподтверждённое — из локальной
-     * копии, остальные — скачать и открыть. Индикатор — тот же слот, что у скачивания.
+     * Одна файловая операция за раз: слот захватывается атомарно в том же update, что и запись (повторный тап по
+     * тому же или другому вложению не пройдёт), освобождается в finally.
      */
-    fun onOpenAttachment(attachment: SupportChatUiAttachment) {
-        val localPath = attachment.localPath
-        val url = attachment.url
-        if (localPath == null && url == null) return
-        if (!acquireFileSlot(attachment.id)) return
-
+    private fun withFileSlot(attachmentId: String, block: suspend () -> SupportChatEffect?) {
+        val previous = _state.getAndUpdate {
+            if (it.downloadingAttachmentId == null) it.copy(downloadingAttachmentId = attachmentId) else it
+        }
+        if (previous.downloadingAttachmentId != null) return
         safeLaunch {
             try {
-                val result = withContext(dispatchers.io) {
-                    when {
-                        localPath != null -> fileOpener.openLocal(localPath, attachment.name)
-
-                        url != null -> when (val response = repository.downloadFile(url)) {
-                            is Response.Success -> fileOpener.openBytes(attachment.name, response.value)
-                            is Response.Error -> SupportChatFileOpenResult.Failed
-                        }
-
-                        else -> SupportChatFileOpenResult.Failed
-                    }
-                }
-                when (result) {
-                    SupportChatFileOpenResult.Opened -> Unit
-
-                    SupportChatFileOpenResult.NoApp ->
-                        _effect.tryEmit(SupportChatEffect.AttachmentOpenFailed(noApp = true))
-
-                    SupportChatFileOpenResult.Failed ->
-                        _effect.tryEmit(SupportChatEffect.AttachmentOpenFailed(noApp = false))
-                }
+                block()?.let(_effect::tryEmit)
             } finally {
                 _state.update { it.copy(downloadingAttachmentId = null) }
             }
-        }
-    }
-
-    // Слот захватывает ровно один вызов: флаг вычисляется внутри того же update,
-    // что и запись (повторный тап по тому же или другому вложению не пройдёт).
-    private fun acquireFileSlot(attachmentId: String): Boolean {
-        var acquired = false
-        _state.update { current ->
-            if (current.downloadingAttachmentId != null) {
-                acquired = false
-                current
-            } else {
-                acquired = true
-                current.copy(downloadingAttachmentId = attachmentId)
-            }
-        }
-        return acquired
-    }
-
-    private suspend fun saveDownloaded(fileName: String, bytes: ByteArray) {
-        when (val result = withContext(dispatchers.io) { fileSaver.saveToDownloads(fileName, bytes) }) {
-            is SupportChatFileSaveResult.Saved ->
-                _effect.tryEmit(SupportChatEffect.AttachmentDownloaded(result.path))
-
-            // Пользователь сам отменил системный диалог — не ошибка.
-            SupportChatFileSaveResult.Cancelled -> Unit
-
-            SupportChatFileSaveResult.PermissionDenied ->
-                _effect.tryEmit(SupportChatEffect.AttachmentSavePermissionDenied)
-
-            SupportChatFileSaveResult.Failed ->
-                _effect.tryEmit(SupportChatEffect.AttachmentDownloadFailed)
         }
     }
 

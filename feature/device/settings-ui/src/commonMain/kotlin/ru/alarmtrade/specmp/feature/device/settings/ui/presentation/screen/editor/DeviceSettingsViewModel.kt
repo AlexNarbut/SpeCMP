@@ -36,7 +36,6 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigur
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
-import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -61,6 +60,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.C
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.settingsFileName
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.withoutSettingsExtension
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
@@ -74,14 +74,14 @@ private val STATE_STOP_TIMEOUT = 5.seconds
  * - Меню читается при открытии; для блока — на каждое (пере)подключение, с `reload`: незаписанные правки при обрыве
  *   связи теряются, после переподключения настройки перечитываются из блока.
  * - Правка ([onValueChange]) меняет значение в сессии SDK, после неё меню перечитывается из кэша сессии (правка может
- *   поменять соседние настройки); изменённые — пересечение `unsavedIds` SDK с настройками,
- *   чьё значение отличается от снимка «как было» ([baseline]): возврат исходного значения снимает подсветку.
+ *   поменять соседние настройки); изменённые — пересечение `unsavedIds` SDK с настройками, чьё значение отличается от
+ *   снимка «как было» ([SettingsChangeTracker]): возврат исходного значения снимает подсветку.
  * - Запись ([onWrite]) — `save`; после успеха снимок «как было» = текущее меню.
  * - Сессия SDK закрывается в [onCleared] (в app-скоупе: `viewModelScope` к этому моменту отменён).
  * - Конфигурации: «Загрузить из…» (блок) — снимок источника в модели блока → «Что изменится» → копирование в сессию
- *   блока (без записи; SDK не отмечает скопированное как изменённое — изменённые после загрузки считаются здесь,
- *   [loadedIds]); «Сохранить в…» — «Мои конфигурации» или файл (снимок → системное сохранение). Для конфигураций
- *   «Сохранить» пишет в источник, у источников без записи — только «как…».
+ *   блока (без записи; SDK не отмечает скопированное как изменённое — изменённые после загрузки считает
+ *   [SettingsChangeTracker.markLoaded]); «Сохранить в…» — «Мои конфигурации» или файл (снимок → системное
+ *   сохранение). Для конфигураций «Сохранить» пишет в источник, у источников без записи — только «как…».
  */
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 internal class DeviceSettingsViewModel(
@@ -109,8 +109,8 @@ internal class DeviceSettingsViewModel(
     private val _effect = sideEffectFlow<DeviceSettingsEffect>()
     val effect: SharedFlow<DeviceSettingsEffect> = _effect.asSharedFlow()
 
-    /** Значения «как было» (после чтения или записи) по id настройки. */
-    private val baseline = MutableStateFlow<Map<Int, SettingValue>>(emptyMap())
+    /** «Как было», «загружено» и правило «изменено» — см. [SettingsChangeTracker]. */
+    private val changes = SettingsChangeTracker()
 
     /**
      * `carId`, подпись к которым уже запрашивалась в этом чтении меню (в том числе неудачно — без сети запрос не
@@ -121,12 +121,6 @@ internal class DeviceSettingsViewModel(
 
     /** Набираемый запрос: в state попадает вместе с результатом (после debounce), а не на каждый символ. */
     private val searchQuery = MutableStateFlow("")
-
-    /**
-     * Настройки, изменённые последней загрузкой конфигурации (SDK их в `unsavedIds` не отмечает). Сбрасываются при
-     * записи/сохранении и перечитывании меню.
-     */
-    private val loadedIds = MutableStateFlow<Set<Int>>(emptySet())
 
     /** Конфигурация, которую загрузить сразу после первого чтения меню блока («Записать в блок» из конфигуратора). */
     private val pendingLoad = MutableStateFlow(options.loadOnOpen)
@@ -180,7 +174,7 @@ internal class DeviceSettingsViewModel(
 
     private suspend fun readMenu() = executeWithProceedLock(needSkipAnother = false) {
         requestedCarIds.update { emptySet() }
-        loadedIds.update { emptySet() }
+        changes.clearLoaded()
         // Сравнение с прежним меню устарело (а прерванное обрывом связи осталось бы в Busy) — сбрасываем.
         discardPreview()
         _state.update {
@@ -204,8 +198,7 @@ internal class DeviceSettingsViewModel(
             is Response.Success -> {
                 val root = response.value
                 // Обход всего дерева — на default, как и в showMenu.
-                val values = withContext(dispatchers.default) { root.valuesById() }
-                baseline.update { values }
+                withContext(dispatchers.default) { changes.resetBaseline(root) }
                 showMenu(root)
             }
         }
@@ -250,7 +243,7 @@ internal class DeviceSettingsViewModel(
             _state.update { it.copy(dialog = SettingsDialog.SingleCanFirmware) }
             return
         }
-        val original = baseline.value[settingId] ?: setting.value
+        val original = changes.original(settingId) ?: setting.value
         _state.update { it.copy(editing = EditingSetting(setting, original = original, draft = setting.value)) }
     }
 
@@ -277,35 +270,12 @@ internal class DeviceSettingsViewModel(
         _state.update { it.copy(editing = it.editing?.copy(carSearch = LCEState.Loading)) }
         safeLaunch {
             val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code, vehicleDevice()) }
-            _state.update { state ->
-                val current = state.editing ?: return@update state
-                if ((current.draft as? SettingValue.Can)?.value?.code != code) return@update state
-                when (response) {
-                    is Response.Error -> state.copy(
-                        editing = current.copy(carSearch = LCEState.Error(SettingsError.from(response.exception)))
-                    )
-
-                    is Response.Success -> {
-                        val cars = response.value
-                        val draft = cars.singleOrNull()?.let { SettingValue.Can(CanCode(code, it.id)) } ?: current.draft
-                        state.copy(
-                            editing = current.copy(draft = draft, carSearch = LCEState.Content(cars)),
-                            cars = state.cars + cars.associateBy { it.id }
-                        )
-                    }
-                }
-            }
+            _state.update { it.withCarSearch(code, response) }
         }
     }
 
     /** Выбран автомобиль из нескольких подходящих к коду. */
-    fun onCarPick(carId: Int) {
-        _state.update { state ->
-            val editing = state.editing ?: return@update state
-            val draft = editing.draft as? SettingValue.Can ?: return@update state
-            state.copy(editing = editing.copy(draft = SettingValue.Can(draft.value.copy(carId = carId))))
-        }
-    }
+    fun onCarPick(carId: Int) = _state.update { it.withCarPicked(carId) }
 
     /** «Выбрать из каталога» в окне CAN-кода. */
     fun onVehiclePickerOpen() {
@@ -315,20 +285,7 @@ internal class DeviceSettingsViewModel(
     fun onVehiclePickerClose() = _state.update { it.copy(vehiclePicker = false) }
 
     /** Автомобиль выбран в каталоге: его CAN-код и `carId` — в черновик окна CAN-кода (применяется по «Готово»). */
-    fun onCarPicked(car: CarSummary) {
-        _state.update { state ->
-            val editing = state.editing
-            if (editing == null || editing.draft !is SettingValue.Can) return@update state.copy(vehiclePicker = false)
-            state.copy(
-                vehiclePicker = false,
-                editing = editing.copy(
-                    draft = SettingValue.Can(CanCode(car.canCode, car.id)),
-                    carSearch = LCEState.None
-                ),
-                cars = state.cars + (car.id to car)
-            )
-        }
-    }
+    fun onCarPicked(car: CarSummary) = _state.update { it.withCatalogCar(car) }
 
     fun onEditReset() {
         _state.update { state -> state.copy(editing = state.editing?.let { it.copy(draft = it.original) }) }
@@ -407,33 +364,35 @@ internal class DeviceSettingsViewModel(
     private suspend fun write(exitTo: ExitTarget?) = executeWithProceedLock(needSkipAnother = false) {
         val count = _state.value.changedCount
         if (count == 0 && exitTo == null) return@executeWithProceedLock
-        _state.update { it.copy(isWriting = true, dialog = null) }
+        val error = saveToSource { state, inProgress -> state.copy(isWriting = inProgress) }
+        if (error != null) {
+            logger.w(error.exception) { "Settings write failed: ${error.message}" }
+            _state.update { it.copy(dialog = SettingsDialog.WriteError) }
+            return@executeWithProceedLock
+        }
+        _effect.tryEmit(DeviceSettingsEffect.Written(count))
+        exitTo?.let { _effect.tryEmit(DeviceSettingsEffect.Exit(it)) }
+    }
+
+    /**
+     * `save` источника (блок — запись в блок, конфигурация/файл — сохранение) с флагом прогресса [progress]; успех —
+     * снимок «как было» = текущее меню. Ответ — ошибка или `null`.
+     */
+    private suspend fun saveToSource(progress: (DeviceSettingsState, Boolean) -> DeviceSettingsState): Response.Error? {
+        _state.update { progress(it, true).copy(dialog = null) }
         val response = try {
             withContext(dispatchers.io) { repository.save(source) }
         } finally {
-            _state.update { it.copy(isWriting = false) }
+            _state.update { progress(it, false) }
         }
-        when (response) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Settings write failed: ${response.message}" }
-                _state.update { it.copy(dialog = SettingsDialog.WriteError) }
-            }
-
-            is Response.Success -> {
-                commit()
-                _effect.tryEmit(DeviceSettingsEffect.Written(count))
-                exitTo?.let { _effect.tryEmit(DeviceSettingsEffect.Exit(it)) }
-            }
-        }
+        if (response is Response.Success) commit()
+        return response as? Response.Error
     }
 
     /** Правки записаны/сохранены: снимок «как было» = текущее меню, подсветка снимается. */
     private suspend fun commit() {
-        currentRoot()?.let { root ->
-            val values = withContext(dispatchers.default) { root.valuesById() }
-            baseline.update { values }
-        }
-        loadedIds.update { emptySet() }
+        currentRoot()?.let { root -> withContext(dispatchers.default) { changes.resetBaseline(root) } }
+        changes.clearLoaded()
         refreshChanged()
     }
 
@@ -537,7 +496,7 @@ internal class DeviceSettingsViewModel(
     private suspend fun preview(from: SettingsSource, closeAfter: Boolean) = executeWithProceedLock {
         val deviceName = deviceModel() ?: return@executeWithProceedLock
         val current = currentRoot() ?: return@executeWithProceedLock
-        val title = from.title()
+        val title = from.displayTitle
         discardPreview()
         _state.update { it.copy(diff = DiffState.Busy(title), dialog = null) }
         val snapshot = withContext(dispatchers.io) { repository.snapshot(from, deviceName) }
@@ -605,12 +564,7 @@ internal class DeviceSettingsViewModel(
                 val current = currentRoot()
                 val reread = withContext(dispatchers.io) { repository.open(source, reload = false) }.getValueIfSuccess()
                 val root = reread ?: response.value
-                val before = baseline.value
-                loadedIds.update {
-                    withContext(dispatchers.default) {
-                        root.settings().filter { it.value != before[it.id] }.mapTo(mutableSetOf()) { it.id }
-                    }
-                }
+                withContext(dispatchers.default) { changes.markLoaded(root) }
                 showMenu(current?.let { root.reusing(it) } ?: root)
                 _effect.tryEmit(DeviceSettingsEffect.Loaded(total))
             }
@@ -777,24 +731,14 @@ internal class DeviceSettingsViewModel(
     }
 
     private suspend fun saveSource(exitAfter: Boolean) = executeWithProceedLock(needSkipAnother = false) {
-        _state.update { it.copy(isSaving = true, dialog = null) }
-        val response = try {
-            withContext(dispatchers.io) { repository.save(source) }
-        } finally {
-            _state.update { it.copy(isSaving = false) }
+        val error = saveToSource { state, inProgress -> state.copy(isSaving = inProgress) }
+        if (error != null) {
+            logger.w(error.exception) { "Settings save failed: ${error.message}" }
+            _state.update { it.copy(dialog = SettingsDialog.SaveError(SaveRetry.Source(exitAfter))) }
+            return@executeWithProceedLock
         }
-        when (response) {
-            is Response.Error -> {
-                logger.w(response.exception) { "Settings save failed: ${response.message}" }
-                _state.update { it.copy(dialog = SettingsDialog.SaveError(SaveRetry.Source(exitAfter))) }
-            }
-
-            is Response.Success -> {
-                commit()
-                _effect.tryEmit(DeviceSettingsEffect.Saved)
-                if (exitAfter) _effect.tryEmit(DeviceSettingsEffect.Exit(ExitTarget.BACK))
-            }
-        }
+        _effect.tryEmit(DeviceSettingsEffect.Saved)
+        if (exitAfter) _effect.tryEmit(DeviceSettingsEffect.Exit(ExitTarget.BACK))
     }
 
     /** «Повторить» в ошибке сохранения. */
@@ -839,19 +783,16 @@ internal class DeviceSettingsViewModel(
     /** Источник не умеет сохранять себя: после «как…» правки считаются сохранёнными. */
     private fun savesAsNew(): Boolean = _state.value.barAction == BarAction.SAVE_AS
 
+    /** Имя новой конфигурации по умолчанию: имя файла — без расширения и с пробелами вместо `_`. */
     private fun defaultConfigurationName(): String = when (source) {
-        is SettingsSource.File -> source.name.removeSuffix(".dxs").removeSuffix(".DXS").replace('_', ' ')
-        is SettingsSource.LocalConfiguration -> source.title
-        is SettingsSource.RemoteConfiguration -> source.title
-        SettingsSource.Device, is SettingsSource.Defaults -> ""
+        is SettingsSource.File -> source.name.withoutSettingsExtension().replace('_', ' ')
+        else -> source.displayTitle
     }.take(LocalConfiguration.NAME_MAX_LENGTH)
 
+    /** Часть имени экспортируемого файла после модели: у блока — его номер, у прочих — название источника. */
     private fun exportTitle(): String? = when (source) {
-        is SettingsSource.File -> source.name.removeSuffix(".dxs")
-        is SettingsSource.LocalConfiguration -> source.title
-        is SettingsSource.RemoteConfiguration -> source.title
         SettingsSource.Device -> _state.value.header?.deviceId?.toString()
-        is SettingsSource.Defaults -> null
+        else -> source.displayTitle.withoutSettingsExtension().ifEmpty { null }
     }
 
     /** Модель блока для снимков и «Моих»: у блока — из сессии, у конфигураций — из источника. */
@@ -895,9 +836,9 @@ internal class DeviceSettingsViewModel(
     /** Новое меню вместе с изменёнными настройками — одним обновлением state (без кадра со старой подсветкой). */
     private suspend fun showMenu(root: SettingsSection) {
         val settings = withContext(dispatchers.default) { root.settings() }
-        val (changedIds, sectionChanges) = changesOf(root, settings)
+        val changed = changesOf(root, settings)
         _state.update {
-            it.copy(menu = LCEState.Content(root), changedIds = changedIds, sectionChanges = sectionChanges)
+            it.copy(menu = LCEState.Content(root), changedIds = changed.ids, sectionChanges = changed.bySection)
         }
         loadCarNames(settings)
     }
@@ -905,20 +846,14 @@ internal class DeviceSettingsViewModel(
     /** Пересчитать изменённые настройки и счётчики разделов. */
     private suspend fun refreshChanged() {
         val root = currentRoot() ?: return
-        val (changedIds, sectionChanges) = changesOf(root, withContext(dispatchers.default) { root.settings() })
-        _state.update { it.copy(changedIds = changedIds, sectionChanges = sectionChanges) }
+        val changed = changesOf(root, withContext(dispatchers.default) { root.settings() })
+        _state.update { it.copy(changedIds = changed.ids, sectionChanges = changed.bySection) }
     }
 
     /** Изменённые настройки [root] (id) и их число по разделам. */
-    private suspend fun changesOf(root: SettingsSection, settings: List<Setting>): Pair<Set<Int>, Map<Int, Int>> {
+    private suspend fun changesOf(root: SettingsSection, settings: List<Setting>): SettingsChangeTracker.Changes {
         val unsaved = withContext(dispatchers.io) { repository.unsavedIds(source) }.getValueIfSuccess()
-        val loaded = loadedIds.value
-        return withContext(dispatchers.default) {
-            val before = baseline.value
-            val differing = settings.filter { it.value != before[it.id] }.mapTo(mutableSetOf()) { it.id }
-            val changed = if (unsaved == null) differing else differing.intersect(unsaved + loaded)
-            changed to root.sectionChanges(changed)
-        }
+        return withContext(dispatchers.default) { changes.changesOf(root, settings, unsaved) }
     }
 
     /** Подписи автомобилей к CAN-кодам меню (с сервера, без связи — без подписи). */
@@ -964,62 +899,22 @@ internal class DeviceSettingsViewModel(
 
 /** Шапка источника; название заводских настроек и подписи — в UI. */
 private fun SettingsSource.header(): SourceHeader {
+    val kind = when (this) {
+        SettingsSource.Device -> return SourceHeader.Device
+        is SettingsSource.File -> SourceKind.FILE
+        is SettingsSource.LocalConfiguration -> SourceKind.MINE
+        is SettingsSource.RemoteConfiguration -> SourceKind.CLOUD
+        is SettingsSource.Defaults -> SourceKind.DEFAULTS
+    }
     val capabilities = capabilities
-    return when (this) {
-        SettingsSource.Device -> SourceHeader.Device
+    return SourceHeader(kind, displayTitle, deviceNameOrNull.orEmpty(), capabilities.isReadOnly, capabilities.canSave)
+}
 
-        is SettingsSource.File -> SourceHeader(
-            SourceKind.FILE,
-            name,
-            deviceName,
-            capabilities.isReadOnly,
-            capabilities.canSave
-        )
-
-        is SettingsSource.LocalConfiguration ->
-            SourceHeader(SourceKind.MINE, title, deviceName, capabilities.isReadOnly, capabilities.canSave)
-
-        is SettingsSource.RemoteConfiguration ->
-            SourceHeader(SourceKind.CLOUD, title, deviceName, capabilities.isReadOnly, capabilities.canSave)
-
-        is SettingsSource.Defaults -> SourceHeader(
-            SourceKind.DEFAULTS,
-            "",
-            deviceName,
-            capabilities.isReadOnly,
-            capabilities.canSave
-        )
+/** Название источника: файл — имя файла, конфигурации — название; у блока и заводских — пусто (подпись в UI). */
+private val SettingsSource.displayTitle: String
+    get() = when (this) {
+        is SettingsSource.File -> name
+        is SettingsSource.LocalConfiguration -> title
+        is SettingsSource.RemoteConfiguration -> title
+        SettingsSource.Device, is SettingsSource.Defaults -> ""
     }
-}
-
-/** Что загружаем — для заголовка «Что изменится»; у заводских — пусто (подпись в UI). */
-private fun SettingsSource.title(): String = when (this) {
-    is SettingsSource.File -> name
-    is SettingsSource.LocalConfiguration -> title
-    is SettingsSource.RemoteConfiguration -> title
-    SettingsSource.Device, is SettingsSource.Defaults -> ""
-}
-
-/** Число изменённых настроек в каждом разделе дерева (на любой глубине); разделы без изменений не входят. */
-private fun SettingsSection.sectionChanges(changed: Set<Int>): Map<Int, Int> {
-    val result = mutableMapOf<Int, Int>()
-    fun count(section: SettingsSection): Int {
-        var total = 0
-        section.children.forEach { child ->
-            total += when (child) {
-                is SettingsSection -> count(child)
-                is Setting -> if (child.id in changed) 1 else 0
-            }
-        }
-        if (total > 0) result[section.id] = total
-        return total
-    }
-    count(this)
-    return result
-}
-
-/** Значения всех настроек меню по id — снимок «как было». */
-private fun SettingsSection.valuesById(): Map<Int, SettingValue> = settings().associate { setting ->
-    setting.id to
-        setting.value
-}

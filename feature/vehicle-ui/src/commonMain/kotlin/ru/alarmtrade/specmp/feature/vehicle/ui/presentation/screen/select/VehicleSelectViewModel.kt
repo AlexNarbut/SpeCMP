@@ -189,21 +189,7 @@ internal class VehicleSelectViewModel(
     /** Крошки: вернуться к маркам (или к результатам CAN-поиска), к моделям марки, к комплектациям модели. */
     fun onCrumb(target: CrumbTarget) {
         cancel(CatalogLevel.CARD)
-        val s = _state.value
-        val selection = when (target) {
-            CrumbTarget.TOP -> CatalogSelection()
-            CrumbTarget.BRAND -> CatalogSelection(brand = s.selection.brand)
-            CrumbTarget.MODEL -> s.selection.copy(carId = null, cardSource = CardSource.CATALOG)
-        }
-        _state.update {
-            it.copy(
-                selection = selection,
-                query = "",
-                card = LCEState.None,
-                cardUi = CardUi(),
-                trims = if (selection.model == null) LCEState.None else it.trims
-            )
-        }
+        _state.update { it.withCrumb(target) }
     }
 
     fun onTrimOpen(carId: Int) = openCard(carId, CardSource.CATALOG)
@@ -336,18 +322,9 @@ internal class VehicleSelectViewModel(
     /** «Назад» по каталогу: на узком окне — на уровень выше, потом к выбору типа, потом выход. */
     private fun backFromCatalog(layout: VehicleLayout) {
         val s = _state.value
-        val compactName = layout == VehicleLayout.COMPACT && s.searchMode == SearchMode.NAME
         when {
-            compactName && s.selection.model != null ->
-                _state.update {
-                    it.copy(selection = it.selection.copy(model = null), trims = LCEState.None, query = "")
-                }
-
-            compactName && s.selection.brand != null ->
-                _state.update { it.copy(selection = CatalogSelection(), models = LCEState.None, query = "") }
-
+            s.catalogStepBack(layout) != null -> _state.update { it.catalogStepBack(layout) ?: it }
             s.mode.typeSelectable && s.deviceType != null -> resetType()
-
             else -> _effect.tryEmit(VehicleSelectEffect.Exit)
         }
     }
@@ -356,39 +333,12 @@ internal class VehicleSelectViewModel(
 
     private fun closeCard(layout: VehicleLayout) {
         cancel(CatalogLevel.CARD)
-        val s = _state.value
-        val selection = when (s.selection.cardSource) {
-            CardSource.CAN -> CatalogSelection()
-
-            CardSource.RECENT -> CatalogSelection()
-
-            CardSource.CATALOG -> {
-                val singleTrim = s.trims.content?.size == 1
-                s.selection.copy(
-                    carId = null,
-                    model = if (singleTrim && layout == VehicleLayout.COMPACT) null else s.selection.model
-                )
-            }
-        }
-        _state.update { it.copy(selection = selection, card = LCEState.None, cardUi = CardUi()) }
+        _state.update { it.withCardClosed(layout) }
     }
 
     private fun resetType() {
         cancelAll()
-        _state.update {
-            it.copy(
-                deviceType = null,
-                selection = CatalogSelection(),
-                query = "",
-                combo = null,
-                brands = LCEState.None,
-                models = LCEState.None,
-                trims = LCEState.None,
-                comboModels = LCEState.None,
-                card = LCEState.None,
-                canResults = LCEState.None
-            )
-        }
+        _state.update { it.withTypeReset() }
     }
 
     private fun choose(car: CarSummary) {

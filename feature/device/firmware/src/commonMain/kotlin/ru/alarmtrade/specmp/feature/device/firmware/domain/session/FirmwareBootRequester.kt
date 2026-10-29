@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.firmware.domain.session
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
@@ -21,12 +22,7 @@ class FirmwareBootRequester : AuthCloseable {
     }
 
     /** Забрать запрос (атомарно: второй вызов получит `null`). */
-    fun take(): FirmwareBootRequest? {
-        while (true) {
-            val current = pending.value
-            if (pending.compareAndSet(current, null)) return current
-        }
-    }
+    fun take(): FirmwareBootRequest? = pending.getAndUpdate { null }
 
     override suspend fun release() {
         pending.update { null }

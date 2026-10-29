@@ -19,3 +19,4 @@
 - Пузырь обтягивает контент с потолком `maxWidthFraction` (0.82) от колонки чата. Картинка: высота 170dp, ширина по пропорциям (`CmpSubcomposeAsyncImage` + intrinsicSize, ratio 0.75..2, дефолт 4:3). Композер = ширина колонки чата.
 - Строки фичи — `supportchat_chat_*` / `supportchat_common_*` (EN/RU, конвенция `{feature}_{screen}_{type}_{name}`, типы из таблицы `docs/localization.md`). Видимый текст — целиком в ресурсах с плейсхолдерами, технические строки — `private const val`. Даты — `rememberCmpDateLabeler()` из `core/ui`. Формат времени пока всегда 24-часовой `HH:mm`.
 - После изменений кода запускай `:feature:support-chat:jvmTest` и полную `./gradlew build`: платформенные actual компилируются только своими targets.
+- Скачивание и открытие вложений — `SupportChatAttachmentTransfers` (presentation): результат — эффект экрана; VM держит один «слот» файловой операции (`downloadingAttachmentId`, захват атомарным `getAndUpdate`).

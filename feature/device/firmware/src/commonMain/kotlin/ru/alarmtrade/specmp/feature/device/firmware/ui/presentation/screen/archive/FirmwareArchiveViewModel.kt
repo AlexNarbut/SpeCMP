@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
@@ -162,7 +163,7 @@ class FirmwareArchiveViewModel(
 
     /** Список докручен до конца: следующая страница. */
     fun onEndReached() {
-        if (transition({ it.canLoadMore }) { it.copy(loadingMore = true) }) {
+        if (core.updateIf({ it.canLoadMore }) { it.copy(loadingMore = true) }) {
             val next = core.value.page + 1
             safeLaunch { executeWithProceedLock { loadPage(next) } }
         }
@@ -170,7 +171,7 @@ class FirmwareArchiveViewModel(
 
     /** «Повторить» под списком после ошибки догрузки. */
     fun onRetryMore() {
-        if (transition({ it.moreError != null }) { it.copy(moreError = null, loadingMore = true) }) {
+        if (core.updateIf({ it.moreError != null }) { it.copy(moreError = null, loadingMore = true) }) {
             val next = core.value.page + 1
             safeLaunch { executeWithProceedLock { loadPage(next) } }
         }
@@ -298,15 +299,6 @@ class FirmwareArchiveViewModel(
 
     private fun pick(version: FirmwareVersion) {
         _effect.tryEmit(FirmwareArchiveEffect.Picked(version))
-    }
-
-    /** Атомарный переход: [change] применяется, только если [from] истинно для текущего состояния. */
-    private inline fun transition(from: (Core) -> Boolean, change: (Core) -> Core): Boolean {
-        while (true) {
-            val current = core.value
-            if (!from(current)) return false
-            if (core.compareAndSet(current, change(current))) return true
-        }
     }
 
     private companion object {
