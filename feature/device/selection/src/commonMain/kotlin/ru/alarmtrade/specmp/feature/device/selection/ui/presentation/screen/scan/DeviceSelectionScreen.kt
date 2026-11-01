@@ -32,6 +32,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_adapter_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_adapter_title
@@ -94,8 +95,8 @@ private enum class DeviceSelectLayout { Compact, Stacked, Split }
  * one-shot эффекты и адаптивную раскладку (compact / stacked / split).
  */
 @Composable
-internal fun DeviceSelectionScreen(onSessionCreate: () -> Unit, onClose: () -> Unit) {
-    val viewModel = koinViewModel<ScanDeviceViewModel>()
+internal fun DeviceSelectionScreen(onSessionCreate: () -> Unit, onClose: (() -> Unit)?, serialEnabled: Boolean) {
+    val viewModel = koinViewModel<ScanDeviceViewModel>(parameters = { parametersOf(serialEnabled) })
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
 
@@ -106,7 +107,7 @@ internal fun DeviceSelectionScreen(onSessionCreate: () -> Unit, onClose: () -> U
     viewModel.effect.collectSideEffect { effect ->
         when (effect) {
             ScanDeviceEffect.SessionCreated -> onSessionCreate()
-            ScanDeviceEffect.Close -> onClose()
+            ScanDeviceEffect.Close -> onClose?.invoke()
             ScanDeviceEffect.ConnectionFailed -> snackbarHostState.showSnackbar(connectionFailedText)
             ScanDeviceEffect.BoundToAnotherPhone -> snackbarHostState.showSnackbar(boundToAnotherPhoneText)
             ScanDeviceEffect.PairingRequired -> snackbarHostState.showSnackbar(pairingRequiredText)
@@ -131,7 +132,8 @@ internal fun DeviceSelectionScreen(onSessionCreate: () -> Unit, onClose: () -> U
             onConnectSelectedDevice = viewModel::onConnectSelected,
             onCancelConnecting = viewModel::onCancelConnecting
         ),
-        snackbarHost = { CmpSnackbarHost(snackbarHostState) }
+        snackbarHost = { CmpSnackbarHost(snackbarHostState) },
+        showBack = onClose != null
     )
 }
 
@@ -150,25 +152,28 @@ internal class DeviceSelectionActions(
 
 /**
  * Stateless-контент экрана поиска: адаптивная раскладка (compact / stacked / split).
- * [initialInfoId] — открытый диалог «⋮» (для галереи состояний).
+ * [initialInfoId] — открытый диалог «⋮» (для галереи состояний); [showBack] — стрелка «Назад» (поиск — не корень).
  */
 @Composable
 internal fun DeviceSelectionContent(
     state: ScanDeviceState,
     actions: DeviceSelectionActions,
     snackbarHost: @Composable () -> Unit = {},
-    initialInfoId: String? = null
+    initialInfoId: String? = null,
+    showBack: Boolean = true
 ) {
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
                 title = { CmpText(text = stringResource(Strings.string.deviceselect_common_title_screen)) },
                 navigationIcon = {
-                    CmpIconButton(
-                        onClick = actions.onBack,
-                        icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.deviceselect_common_a11y_back)
-                    )
+                    if (showBack) {
+                        CmpIconButton(
+                            onClick = actions.onBack,
+                            icon = CmpIcons.ArrowBack,
+                            contentDescription = stringResource(Strings.string.deviceselect_common_a11y_back)
+                        )
+                    }
                 }
             )
         },
@@ -305,10 +310,13 @@ private fun OffStateBody(
     }
 }
 
+/** Проводное подключение (USB или COM-порт): подсказки поиска у них общие — «подключите кабель». */
+private fun Set<DeviceTransport>.hasCable(): Boolean = DeviceTransport.USB in this || DeviceTransport.SERIAL in this
+
 @Composable
 private fun ScanningBody(supportedTransports: Set<DeviceTransport>) {
     val hasBle = supportedTransports.contains(DeviceTransport.BLE)
-    val hasUsb = supportedTransports.contains(DeviceTransport.USB)
+    val hasUsb = supportedTransports.hasCable()
     val (icon, subtitle) = when {
         hasBle && !hasUsb -> CmpIcons.BluetoothSearching to Strings.string.deviceselect_scanning_subtitle_ble
         hasUsb && !hasBle -> CmpIcons.Usb to Strings.string.deviceselect_scanning_subtitle_usb
@@ -325,7 +333,7 @@ private fun ScanningBody(supportedTransports: Set<DeviceTransport>) {
 private fun EmptyBody(supportedTransports: Set<DeviceTransport>) {
     val colors = cmpThemeColors()
     val hasBle = supportedTransports.contains(DeviceTransport.BLE)
-    val hasUsb = supportedTransports.contains(DeviceTransport.USB)
+    val hasUsb = supportedTransports.hasCable()
     val hints = when {
         hasBle && hasUsb -> stringArrayResource(Strings.array.deviceselect_empty_item_both)
         hasUsb -> stringArrayResource(Strings.array.deviceselect_empty_item_usb)

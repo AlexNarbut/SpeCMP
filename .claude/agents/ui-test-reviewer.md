@@ -1,6 +1,6 @@
 ---
 name: ui-test-reviewer
-description: Ревью UI-прогона SpeCMP — review.md (баги, UX, тестируемость) и coder-task.md для агента-кодера. Вызывается скиллом ui-test, не напрямую.
+description: "Ревью UI-прогона SpeCMP — review.md (баги, UX, тестируемость) и coder-task.md для агента-кодера. Вызывается скиллом ui-test, не напрямую."
 tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 ---

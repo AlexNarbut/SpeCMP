@@ -1,0 +1,94 @@
+{
+  "_doc": [
+    "Сценарии perf-bench для SpeCMP.",
+    "startup.content_tag — признак «контент показан»: testTag (Android: resource-id в uiautomator dump, iOS: accessibility identifier в axe describe-ui) или точный текст элемента; несколько вариантов — через «|». На главной SpeCMP testTag нет, поэтому — тексты en|ru.",
+    "features.<name>: flow — Maestro-флоу относительно папки скила; modules — модули (путь до src/), при изменении которых сценарий выбирается автоматически (run --scope feature:auto), модуль покрывает и вложенные (feature/device → feature/device/firmware); repeats — повторов в одном процессе; reset_each — перед каждым повтором очищать данные и запускать заново (сценарии входа); platforms — где флоу работает (флоу с back — только android).",
+    "Экраны, которым нужно BLE/USB-устройство (прошивки, конфигуратор, расширенный монтаж), на эмуляторе не мерятся — сценариев для них нет.",
+    "stability.monkey — параметры adb shell monkey; stability.offline_tags — тексты/теги, любой из которых считается показанным экраном при старте без сети.",
+    "trace — Perfetto-трейс старта: длительность записи и путь venv с пакетом perfetto (bench.sh doctor печатает команду установки).",
+    "startup.idle_s — окно простоя для метрик idle_frames (старт и сценарии фич).",
+    "startup.ensure_flow — Maestro-флоу-предусловие перед замерами старта и трейса: приложение на главной под QA-аккаунтом (креды — credentials.properties perf-bench или ui-test).",
+    "trace.compose_repeats — повторов композиционного трейса; в SpeCMP шаг пропускается, пока в debug-сборке нет androidx.compose.runtime:runtime-tracing."
+  ],
+  "startup": {
+    "content_tag": "Quick install|Быстрый монтаж",
+    "content_timeout_s": 60,
+    "settle_s": 5,
+    "runs": 5,
+    "warmup": 1,
+    "idle_s": 5,
+    "ensure_flow": "scenarios/ensure-main.yaml"
+  },
+  "features": {
+    "login": {
+      "title": "Вход по email: очистка данных, холодный старт, экран входа → главная",
+      "flow": "scenarios/login.yaml",
+      "modules": [
+        "feature/login",
+        "feature/auth-state",
+        "feature/account",
+        "core/network",
+        "core/specialist"
+      ],
+      "repeats": 2,
+      "reset_each": true,
+      "requires_login": false,
+      "platforms": [
+        "android",
+        "ios"
+      ]
+    },
+    "main-menu": {
+      "title": "Главная: скролл разделов, боковое меню → «Настройки» → назад",
+      "flow": "scenarios/main-menu.yaml",
+      "modules": [
+        "feature/main",
+        "feature/app-settings",
+        "core/ui",
+        "composeApp"
+      ],
+      "repeats": 3,
+      "reset_each": false,
+      "requires_login": true,
+      "platforms": [
+        "android"
+      ]
+    },
+    "vehicles": {
+      "title": "Автомобили: тип «Сигнализация» → скролл марок → модели Audi → назад на главную",
+      "flow": "scenarios/vehicles.yaml",
+      "modules": [
+        "feature/vehicle",
+        "feature/vehicle-ui"
+      ],
+      "repeats": 3,
+      "reset_each": false,
+      "requires_login": true,
+      "platforms": [
+        "android"
+      ]
+    }
+  },
+  "stability": {
+    "monkey": {
+      "seed": 42,
+      "events": 500,
+      "throttle_ms": 150
+    },
+    "offline_tags": [
+      "Quick install",
+      "Быстрый монтаж",
+      "Specialist authorization",
+      "Авторизация специалиста",
+      "No internet connection",
+      "Нет подключения к интернету"
+    ],
+    "offline_timeout_s": 30,
+    "recover_timeout_s": 60
+  },
+  "trace": {
+    "duration_s": 20,
+    "venv": ".ai-perf/bench/.venv",
+    "compose_repeats": 3
+  }
+}

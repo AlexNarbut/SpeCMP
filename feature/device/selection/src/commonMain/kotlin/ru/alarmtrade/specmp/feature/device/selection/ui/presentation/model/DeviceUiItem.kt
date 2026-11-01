@@ -17,7 +17,10 @@ sealed interface DeviceUiItem {
     val id: String
     val name: String
 
-    /** Вторая строка карточки рядом с чипом: MAC для BLE; systemId для USB, без него — `HID · VID:PID`. */
+    /**
+     * Вторая строка карточки рядом с чипом: MAC для BLE; systemId для USB, без него — `HID · VID:PID`; у COM — путь
+     * порта, если имя порта другое, иначе VID:PID адаптера.
+     */
     val address: String
     val transport: DeviceTransport
     val typeIcon: CmpIcons
@@ -57,6 +60,19 @@ sealed interface DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.USB
         override val typeIcon: CmpIcons get() = CmpIcons.Memory
     }
+
+    @Immutable
+    data class Serial(
+        override val id: String,
+        override val name: String,
+        override val address: String,
+        /** VID:PID адаптера, hex; `null` — платформа не сообщает. */
+        val vidPid: String?
+    ) : DeviceUiItem {
+        override val transport: DeviceTransport get() = DeviceTransport.SERIAL
+        override val typeIcon: CmpIcons get() = CmpIcons.Cable
+        override val systemId: Long? get() = null
+    }
 }
 
 /**
@@ -92,6 +108,18 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
             isBootMode = isBootMode
         )
     }
+
+    is ScannedDevice.Serial -> toUiItem()
+}
+
+internal fun ScannedDevice.Serial.toUiItem(): DeviceUiItem.Serial {
+    val vidPid = if (vendorId != null && productId != null) "${vendorId.toHex4()}:${productId.toHex4()}" else null
+    return DeviceUiItem.Serial(
+        id = id,
+        name = name,
+        address = if (name != id) id else vidPid.orEmpty(),
+        vidPid = vidPid
+    )
 }
 
 /** Блок отдаёт версию как `VER3.57` — показываем `3.57`. */

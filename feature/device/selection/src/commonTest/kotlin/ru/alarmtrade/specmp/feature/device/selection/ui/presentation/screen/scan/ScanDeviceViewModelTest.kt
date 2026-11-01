@@ -4,6 +4,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
@@ -61,8 +63,50 @@ class ScanDeviceViewModelTest {
     private fun viewModel(
         scan: FakeDeviceScanRepository = FakeDeviceScanRepository(),
         connection: FakeDeviceConnectionRepository = FakeDeviceConnectionRepository(),
-        permissions: FakePermissionsProvider = FakePermissionsProvider()
-    ) = ScanDeviceViewModel(scan, connection, deviceSession(connection), permissions, dispatchers())
+        permissions: FakePermissionsProvider = FakePermissionsProvider(),
+        serialEnabled: Boolean = false
+    ) = ScanDeviceViewModel(scan, connection, deviceSession(connection), permissions, dispatchers(), serialEnabled)
+
+    private val comPort = ScannedDevice.Serial(
+        id = "/dev/ttyUSB0",
+        name = "CP2102",
+        vendorId = 0x10C4,
+        productId = 0xEA60
+    )
+
+    private fun comScan() = FakeDeviceScanRepository(
+        serial = listOf(comPort),
+        transports = setOf(DeviceTransport.BLE, DeviceTransport.USB, DeviceTransport.SERIAL)
+    )
+
+    @Test
+    fun `com ports are not searched unless enabled`() = runTest(testDispatcher) {
+        val viewModel = viewModel(scan = comScan())
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        assertTrue(DeviceTransport.SERIAL !in viewModel.state.value.supportedTransports)
+        assertTrue(viewModel.state.value.devices !is LCEState.Content)
+    }
+
+    @Test
+    fun `picking com port connects it and attaches serial session`() = runTest(testDispatcher) {
+        val connection = FakeDeviceConnectionRepository()
+        val effects = mutableListOf<ScanDeviceEffect>()
+        val viewModel = viewModel(scan = comScan(), connection = connection, serialEnabled = true)
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        val item = assertIs<DeviceUiItem.Serial>((viewModel.state.value.devices as LCEState.Content).content.single())
+        viewModel.onDeviceSelected(item, isSplit = false)
+        advanceUntilIdle()
+
+        assertEquals(listOf<ScanDeviceEffect>(ScanDeviceEffect.SessionCreated), effects)
+        assertEquals(1, connection.serialConnectCount)
+        assertEquals(0, connection.bleConnectCount)
+        assertEquals(ConnectionTransport.SERIAL, lastSession?.transport?.value)
+    }
 
     @Test
     fun `scanning shows found devices as content`() = runTest(testDispatcher) {

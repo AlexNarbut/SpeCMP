@@ -1,0 +1,10 @@
+# Шаги входа QA-аккаунтом с экрана «Specialist authorization» (подключается из ensure-main.yaml и login.yaml).
+# Тексты — en|ru: язык приложения может быть любым. testTag на экране входа нет.
+appId: ${APP_ID}
+---
+- tapOn: "Email"
+- inputText: ${QA_EMAIL}
+- tapOn: "Password|Пароль|•+"
+- inputText: ${QA_PASSWORD}
+- hideKeyboard
+- tapOn: "Log in|Войти"

@@ -45,6 +45,7 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_valu
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_no
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_transport_ble
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_transport_ble_short
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_transport_com
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_transport_usb
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_unknown
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_yes
@@ -54,12 +55,14 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_labe
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_manufacturer
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_mode
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_phone_bond
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_port
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_signal
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_system_id
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_type
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_uuid
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_label_vid_pid
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_msg_note_ble
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_detail_msg_note_serial
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
@@ -97,6 +100,7 @@ internal enum class HeroTone { Primary, Error, Neutral }
 internal fun transportLabel(transport: DeviceTransport): String = when (transport) {
     DeviceTransport.BLE -> stringResource(Strings.string.deviceselect_common_value_transport_ble)
     DeviceTransport.USB -> stringResource(Strings.string.deviceselect_common_value_transport_usb)
+    DeviceTransport.SERIAL -> stringResource(Strings.string.deviceselect_common_value_transport_com)
 }
 
 @Composable
@@ -114,13 +118,13 @@ internal fun kindLabel(kind: DeviceKind): String = stringResource(
     }
 )
 
-/** Подпись режима. Обычный режим у BLE — «Обычный», у USB — «Рабочий». */
+/** Подпись режима. Обычный режим у BLE — «Обычный», у USB и COM — «Рабочий». */
 @Composable
 internal fun modeLabel(mode: ScannedDeviceMode, transport: DeviceTransport): String = stringResource(
     when (mode) {
         ScannedDeviceMode.BASE -> when (transport) {
             DeviceTransport.BLE -> Strings.string.deviceselect_common_value_mode_normal
-            DeviceTransport.USB -> Strings.string.deviceselect_common_value_mode_main
+            DeviceTransport.USB, DeviceTransport.SERIAL -> Strings.string.deviceselect_common_value_mode_main
         }
 
         ScannedDeviceMode.PAIRING -> Strings.string.deviceselect_common_value_mode_pairing
@@ -129,11 +133,12 @@ internal fun modeLabel(mode: ScannedDeviceMode, transport: DeviceTransport): Str
     }
 )
 
-/** Режим устройства, если известен (у USB — только после опроса блока). */
+/** Режим устройства, если известен (у USB — только после опроса блока, у COM — неизвестен до прошивки). */
 internal val DeviceUiItem.modeOrNull: ScannedDeviceMode?
     get() = when (this) {
         is DeviceUiItem.Ble -> mode
         is DeviceUiItem.Usb -> isBootMode?.let { if (it) ScannedDeviceMode.BOOT else ScannedDeviceMode.BASE }
+        is DeviceUiItem.Serial -> null
     }
 
 /** Режим, который стоит заметить в списке: сопряжение или загрузчик (рабочий — без метки). */
@@ -216,14 +221,20 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
             },
             modeRow
         )
+
+        is DeviceUiItem.Serial -> listOfNotNull(
+            DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_port), item.id),
+            item.vidPid?.let { DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_vid_pid), it) }
+        )
     }
 }
 
-/** Сноска под полями: у BLE прошивка и ID блока появятся только после подключения. */
+/** Сноска под полями: у BLE прошивка и ID блока появятся только после подключения; у COM блок не опрашивается. */
 @Composable
 internal fun deviceInfoNote(item: DeviceUiItem): String? = when (item) {
     is DeviceUiItem.Ble -> stringResource(Strings.string.deviceselect_detail_msg_note_ble)
     is DeviceUiItem.Usb -> null
+    is DeviceUiItem.Serial -> stringResource(Strings.string.deviceselect_detail_msg_note_serial)
 }
 
 /** Поля устройства с разделителями: подпись всегда целиком в одну строку, значение занимает остаток и переносится. */
@@ -284,6 +295,7 @@ internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConne
 internal fun DeviceTransport.icon(): CmpIcons = when (this) {
     DeviceTransport.BLE -> CmpIcons.Bluetooth
     DeviceTransport.USB -> CmpIcons.Usb
+    DeviceTransport.SERIAL -> CmpIcons.Cable
 }
 
 /** Плейсхолдер-слот фото устройства: нейтральный фон + иконка типа (реального фото пока нет). */

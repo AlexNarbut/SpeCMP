@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Generate multi-agent config files from .ai/*.md
-# Usage: .ai/generate.sh
+# Usage: .ai/generate.sh [--check]
+#   --check — для pre-commit: упасть, если сгенерированные файлы не добавлены в git
 
 set -e
 
@@ -40,7 +41,7 @@ concat_files() {
 sync_local_files() {
     local source_dir="$1"
 
-    [ -d "$source_dir" ] || return
+    [ -d "$source_dir" ] || return 0
 
     while IFS= read -r -d '' source; do
         local rel_path="${source#$source_dir/}"
@@ -125,6 +126,7 @@ echo -e "${GREEN}+${NC} GEMINI.md"
 sync_local_files "$AI_DIR/agents"
 
 # --- Скиллы и субагенты: .ai/skills/<skill>/ → Claude Code, Codex, Kimi Code, Gemini CLI ---
+# Grok Build отдельно не генерируется: он сам читает CLAUDE.md, AGENTS.md, .claude/skills и .claude/agents.
 #
 # .ai/skills/<skill>/SKILL.md          → .agents/skills/<skill>/ (полная копия; Codex, Kimi, Gemini)
 #                                      → .claude/skills/<skill>/SKILL.md
@@ -155,6 +157,9 @@ fm_body() { awk 'seen >= 2 { print; next } $0 == "---" { seen++ }' "$1"; }
 
 toml_escape() { sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' <<<"$1"; }
 
+# В кавычках: описание с «: » или «#» сломало бы YAML-frontmatter.
+yaml_quote() { echo "\"$(toml_escape "$1")\""; }
+
 gen_role() {
     local skill="$1" src="$2"
     local name description body header
@@ -170,7 +175,7 @@ gen_role() {
     {
         echo "---"
         echo "name: $name"
-        echo "description: $description"
+        echo "description: $(yaml_quote "$description")"
         [ -n "$(fm_get "$src" claude_tools)" ] && echo "tools: $(fm_get "$src" claude_tools)"
         [ -n "$(fm_get "$src" claude_model)" ] && echo "model: $(fm_get "$src" claude_model)"
         echo "---"
@@ -192,7 +197,7 @@ gen_role() {
     {
         echo "---"
         echo "name: $name"
-        echo "description: $description"
+        echo "description: $(yaml_quote "$description")"
         echo "---"
         echo "$header"
         echo "$body"
@@ -201,7 +206,7 @@ gen_role() {
     {
         echo "---"
         echo "name: $name"
-        echo "description: $description"
+        echo "description: $(yaml_quote "$description")"
         [ -n "$(fm_get "$src" gemini_max_turns)" ] && echo "max_turns: $(fm_get "$src" gemini_max_turns)"
         [ -n "$(fm_get "$src" gemini_timeout_mins)" ] && echo "timeout_mins: $(fm_get "$src" gemini_timeout_mins)"
         echo "---"
@@ -233,13 +238,54 @@ gen_skill() {
 
     local role
     for role in "$src_dir"/roles/*.md; do
-        [ -f "$role" ] && gen_role "$skill" "$role"
+        if [ -f "$role" ]; then gen_role "$skill" "$role"; fi
     done
 }
 
-for skill_dir in "$AI_DIR"/skills/*/; do
-    [ -f "$skill_dir/SKILL.md" ] && gen_skill "${skill_dir%/}"
+# Целевые папки принадлежат генератору: всё, чего нет в .ai/skills, удаляется. Локальные *.properties (креды) остаются.
+GENERATED_DIRS=(.claude/skills .claude/agents .agents/skills .agents/agents .codex/agents .gemini/agents)
+
+list_generated() {
+    local d
+    for d in "${GENERATED_DIRS[@]}"; do
+        if [ -d "$PROJECT_DIR/$d" ]; then
+            (cd "$PROJECT_DIR" && find "$d" -type f ! -name '*.properties' ! -name '.DS_Store')
+        fi
+    done | sort
+}
+
+before_files="$(list_generated)"
+for d in "${GENERATED_DIRS[@]}"; do
+    if [ -d "$PROJECT_DIR/$d" ]; then
+        find "$PROJECT_DIR/$d" -type f ! -name '*.properties' -delete
+        find "$PROJECT_DIR/$d" -mindepth 1 -type d -empty -delete
+    fi
 done
+
+for skill_dir in "$AI_DIR"/skills/*/; do
+    if [ -f "$skill_dir/SKILL.md" ]; then gen_skill "${skill_dir%/}"; fi
+done
+
+while IFS= read -r f; do
+    [ -n "$f" ] && echo -e "${RED}-${NC} removed $f (нет в .ai/skills)"
+done < <(comm -23 <(echo "$before_files") <(list_generated))
+
+for d in .grok/skills .grok/agents; do
+    if [ -d "$PROJECT_DIR/$d" ] && [ -n "$(ls -A "$PROJECT_DIR/$d")" ]; then
+        echo -e "${RED}!${NC} $d не пуст: скилы и субагенты пишутся только в .ai/skills (Grok читает .claude/)"
+    fi
+done
+
+# pre-commit видит только изменения отслеживаемых файлов: новые сгенерированные (новый скил) ловим сами.
+if [ "${1:-}" = "--check" ]; then
+    untracked="$(cd "$PROJECT_DIR" && git status --porcelain --untracked-files=all -- \
+        CLAUDE.md AGENTS.md GEMINI.md "${GENERATED_DIRS[@]}" | sed -n 's/^?? //p')"
+    if [ -n "$untracked" ]; then
+        echo -e "${RED}!${NC} сгенерированные файлы не добавлены в git — git add и повтори коммит:"
+        echo "$untracked"
+        exit 1
+    fi
+fi
 
 echo ""
 echo -e "${BLUE}Done!${NC}"

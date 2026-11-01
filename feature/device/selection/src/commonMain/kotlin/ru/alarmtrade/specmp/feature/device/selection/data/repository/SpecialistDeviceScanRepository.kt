@@ -8,8 +8,10 @@ import ru.alarmtrade.bluetoothControl.domain.bluetooth.scan.ScannedDeviceState
 import ru.alarmtrade.common.core.PlatformType
 import ru.alarmtrade.common.core.platformType
 import ru.alarmtrade.specialist.domain.bluetooth.scan.BleDeviceScanResult
+import ru.alarmtrade.specialist.domain.serial.ConnectedSerialPortInformation
 import ru.alarmtrade.specialist.domain.usb.AttachedUsbDeviceInformation
 import ru.alarmtrade.specialist.interactors.bluetoothConnector.BluetoothConnectorInteractor
+import ru.alarmtrade.specialist.interactors.serialConnector.SerialConnectorInteractor
 import ru.alarmtrade.specialist.interactors.usbConnector.UsbConnectorInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
@@ -28,12 +30,13 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceSca
  * Реализация [DeviceScanRepository] над Specialist SDK.
  *
  * Интеракторы транспортов резолвятся **лениво** (провайдеры) и через [resolveOrNull]:
- * недоступный на платформе транспорт (BLE на desktop, USB на iOS) даёт пустой список,
+ * недоступный на платформе транспорт (BLE на desktop, USB и COM на iOS) даёт пустой список,
  * а не роняет создание графа/репозитория.
  */
 class SpecialistDeviceScanRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
-    private val usbConnectorInteractor: () -> UsbConnectorInteractor
+    private val usbConnectorInteractor: () -> UsbConnectorInteractor,
+    private val serialConnectorInteractor: () -> SerialConnectorInteractor
 ) : DeviceScanRepository {
 
     private val connectionTypes: Set<DeviceConnectionType> = supportedConnectionTypes()
@@ -41,6 +44,7 @@ class SpecialistDeviceScanRepository(
     override fun supportedTransports(): Set<DeviceTransport> = buildSet {
         if (DeviceConnectionType.BLUETOOTH in connectionTypes) add(DeviceTransport.BLE)
         if (DeviceConnectionType.USB in connectionTypes) add(DeviceTransport.USB)
+        if (DeviceConnectionType.SERIAL in connectionTypes) add(DeviceTransport.SERIAL)
     }
 
     override fun scanBluetooth(): Flow<Response<List<ScannedDevice.Ble>>> = flow {
@@ -83,6 +87,24 @@ class SpecialistDeviceScanRepository(
         )
     }
 
+    override fun scanSerial(): Flow<Response<List<ScannedDevice.Serial>>> = flow {
+        if (DeviceConnectionType.SERIAL !in connectionTypes) {
+            emit(Response.Success(emptyList()))
+            return@flow
+        }
+        val interactor = serialConnectorInteractor.resolveOrNull()
+        if (interactor == null) {
+            emit(Response.Success(emptyList()))
+            return@flow
+        }
+        emitAll(
+            safeFlowRun {
+                interactor.scanSerialPortDevicesUseCase.execute()
+                    .map { response -> response.toResponse().map { ports -> ports.map { it.toDomain() } } }
+            }
+        )
+    }
+
     private fun BleDeviceScanResult.toDomain(): ScannedDevice.Ble = ScannedDevice.Ble(
         id = uuid,
         name = name,
@@ -104,6 +126,13 @@ class SpecialistDeviceScanRepository(
         systemId = id.toLongOrNull(),
         firmwareVersion = firmwareVersion?.takeIf { it.isNotBlank() },
         isBootMode = isBootMode
+    )
+
+    private fun ConnectedSerialPortInformation.toDomain(): ScannedDevice.Serial = ScannedDevice.Serial(
+        id = id,
+        name = name.ifBlank { id },
+        vendorId = vid,
+        productId = pid
     )
 
     // По имени, а не по enum SDK: набор типов растёт, неизвестные уходят в OTHER.

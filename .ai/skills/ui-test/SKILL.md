@@ -10,9 +10,9 @@ description: UI-тестирование фичи SpeCMP на Android-эмуля
 
 | Субагент | Роль | Промпт |
 |---|---|---|
-| `ui-test-planner` | `plan.md` + `flows/<ID>.yaml` | `roles/planner.md` |
-| `ui-test-runner` | прогон одного этапа на одной платформе → `run.md` | `roles/runner.md` |
-| `ui-test-reviewer` | `review.md` + `coder-task.md` | `roles/reviewer.md` |
+| `ui-test-planner` | `plan.md` + `flows/<ID>.yaml` | `.agents/skills/ui-test/roles/planner.md` |
+| `ui-test-runner` | прогон одного этапа на одной платформе → `run.md` | `.agents/skills/ui-test/roles/runner.md` |
+| `ui-test-reviewer` | `review.md` + `coder-task.md` | `.agents/skills/ui-test/roles/reviewer.md` |
 
 **Запуск роли.** Запусти субагента с этим именем (Claude Code, Codex, Kimi Code, Gemini CLI — все
 поддерживают субагентов проекта). Если субагенты недоступны — выполни роль сам: прочитай

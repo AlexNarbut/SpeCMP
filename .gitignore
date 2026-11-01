@@ -110,5 +110,12 @@ replay_pid*
 
 # UI-тесты: локальные креды скилла ui-test (шаблон — credentials.properties.example) и результаты прогонов
 /.agents/skills/ui-test/*.properties
+/.ai/skills/ui-test/*.properties
+# perf-bench: креды QA-аккаунта (по умолчанию берутся у ui-test); вывод — .ai-perf/bench/
+/.agents/skills/perf-bench/*.properties
+/.ai/skills/perf-bench/*.properties
 /.ai-qa/
 /.ai-perf/
+
+# Python-кэш скриптов скиллов
+__pycache__/

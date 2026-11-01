@@ -1,0 +1,10 @@
+// perf-bench, scope compose: отчёты Compose-компилятора (стабильность классов, skippable/restartable composable)
+// без правки build-файлов. bench.sh: ./gradlew :androidApp:assembleDebug --init-script <этот файл>
+// Вывод — <модуль>/build/compose-reports/ (perf-audit пишет в compose-audit/, папки не пересекаются).
+allprojects {
+    pluginManager.withPlugin("org.jetbrains.kotlin.plugin.compose") {
+        def ext = extensions.getByName("composeCompiler")
+        ext.reportsDestination.set(layout.buildDirectory.dir("compose-reports"))
+        ext.metricsDestination.set(layout.buildDirectory.dir("compose-reports"))
+    }
+}

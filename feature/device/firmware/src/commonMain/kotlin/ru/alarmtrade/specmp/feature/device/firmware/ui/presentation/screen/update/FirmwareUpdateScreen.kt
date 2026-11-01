@@ -84,7 +84,8 @@ fun FirmwareUpdateScreen(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     onOpenArchive: (FirmwareArchiveRequest) -> Unit,
-    filePicker: FirmwareFilePicker = NoFirmwareFilePicker
+    filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
+    sources: FirmwareSources = FirmwareSources.All
 ) {
     val viewModel = koinViewModel<FirmwareUpdateViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -126,13 +127,18 @@ fun FirmwareUpdateScreen(
     }
     FirmwareUpdateContent(
         state = state,
-        actions = actions
+        actions = actions,
+        sources = sources
     )
 }
 
 /** Stateless-контент экрана обновления: иллюстрация и тело по фазе; на широком окне — две равные части. */
 @Composable
-internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: FirmwareUpdateActions) {
+internal fun FirmwareUpdateContent(
+    state: FirmwareUpdateState,
+    actions: FirmwareUpdateActions,
+    sources: FirmwareSources = FirmwareSources.All
+) {
     CmpScaffold(
         topBar = {
             CmpTopAppBar(
@@ -169,6 +175,7 @@ internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: Firmware
                         PhaseBody(
                             state,
                             actions,
+                            sources,
                             Modifier.padding(start = 8.dp, end = 32.dp, top = 24.dp, bottom = 24.dp)
                         )
                     }
@@ -181,7 +188,7 @@ internal fun FirmwareUpdateContent(state: FirmwareUpdateState, actions: Firmware
                     CmpBox(modifier = Modifier.padding(top = 20.dp, bottom = 4.dp)) {
                         PhaseHero(state.phase, CompactHero)
                     }
-                    PhaseBody(state, actions, Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
+                    PhaseBody(state, actions, sources, Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
                 }
             }
         }
@@ -228,7 +235,13 @@ private fun PhaseHero(phase: UpdatePhase, size: Dp) {
 }
 
 @Composable
-private fun PhaseBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions, modifier: Modifier) {
+private fun PhaseBody(
+    state: FirmwareUpdateState,
+    actions: FirmwareUpdateActions,
+    sources: FirmwareSources,
+    modifier: Modifier
+) {
+    val fileOnly = sources == FirmwareSources.FileOnly
     val source = state.phase == UpdatePhase.Source
     CmpColumn(
         modifier = modifier.widthIn(max = BodyMaxWidth).fillMaxWidth(),
@@ -240,7 +253,7 @@ private fun PhaseBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions
 
             UpdatePhase.Entering -> EnteringBody()
 
-            UpdatePhase.Source -> SourceBody(state, actions)
+            UpdatePhase.Source -> SourceBody(state, actions, fileOnly)
 
             UpdatePhase.DataError -> DataErrorBody(actions.onRetry)
 
@@ -256,7 +269,11 @@ private fun PhaseBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions
 
             UpdatePhase.Finishing -> FinishingBody()
 
-            is UpdatePhase.Error -> ErrorBody(phase.failure, actions.onRetry, actions.onSupportClick)
+            is UpdatePhase.Error -> ErrorBody(
+                phase.failure,
+                actions.onRetry,
+                actions.onSupportClick.takeUnless { fileOnly }
+            )
 
             is UpdatePhase.Lost -> LostBody(phase.updating, actions.onReconnect, actions.onDisconnect)
         }

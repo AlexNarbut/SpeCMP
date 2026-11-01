@@ -26,7 +26,16 @@
 | `.gemini/agents/ui-test-*.md` | субагенты Gemini CLI (`max_turns`, `timeout_mins`) |
 
 Все пути в промптах указывают на `.agents/skills/ui-test/…` — эта копия есть у любого агента.
-Генератор не трогает `*.properties` в `.agents/skills/ui-test/` (локальные креды).
+
+Генератор владеет папками `.claude/skills`, `.claude/agents`, `.agents/skills`, `.agents/agents`, `.codex/agents`,
+`.gemini/agents`: перед генерацией очищает их и печатает `- removed <путь>` для всего, чего нет в `.ai/skills`
+(скилл или субагент в обход `.ai/skills` не переживёт генерацию). Локальные `*.properties` (креды `ui-test`,
+`perf-bench`) не трогает. Непустые `.grok/skills` / `.grok/agents` — предупреждение: Grok читает `.claude/`.
+
+pre-commit-хук `ai-generate` (`.pre-commit-config.yaml`) при изменениях в `.ai/`, сгенерированных папках или
+`CLAUDE.md` / `AGENTS.md` / `GEMINI.md` запускает `.ai/generate.sh --check`: коммит падает, если сгенерированное
+разошлось с `.ai/` (ручная правка, забыли перегенерировать) или новые сгенерированные файлы не добавлены в git.
+Исправление — `.ai/generate.sh`, `git add` результата, повторить коммит.
 
 ## Frontmatter роли
 

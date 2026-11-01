@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.selection.di
 
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.device.selection.data.repository.SpecialistDeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
@@ -16,8 +16,12 @@ val deviceSelectionModule = module {
         // (BLE на desktop, USB на iOS) не должен ронять создание репозитория.
         SpecialistDeviceScanRepository(
             bluetoothConnectorInteractor = { get() },
-            usbConnectorInteractor = { get() }
+            usbConnectorInteractor = { get() },
+            serialConnectorInteractor = { get() }
         )
     }
-    viewModelOf(::ScanDeviceViewModel)
+    // serialEnabled — поиск COM-портов (только приложение прошивки), параметр графа поиска.
+    viewModel { (serialEnabled: Boolean) ->
+        ScanDeviceViewModel(get(), get(), get(), get(), get(), serialEnabled = serialEnabled)
+    }
 }

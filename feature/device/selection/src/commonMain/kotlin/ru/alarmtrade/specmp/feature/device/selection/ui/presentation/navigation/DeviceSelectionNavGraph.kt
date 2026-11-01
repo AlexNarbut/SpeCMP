@@ -39,10 +39,11 @@ private val navConfig = SavedStateConfiguration {
  * без изменений в `composeApp`.
  *
  * @param onSessionCreate сессия с устройством создана — навигация приложения решает, куда вести.
- * @param onClose выход из графа поиска.
+ * @param onClose выход из графа поиска; `null` — поиск — корневой экран (без «Назад»).
+ * @param serialEnabled искать и COM-порты (приложение прошивки); сессия по порту создаётся как по USB.
  */
 @Composable
-fun DeviceSelectionNavGraph(onSessionCreate: () -> Unit, onClose: () -> Unit) {
+fun DeviceSelectionNavGraph(onSessionCreate: () -> Unit, onClose: (() -> Unit)?, serialEnabled: Boolean = false) {
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
 
     NavDisplay(
@@ -53,13 +54,14 @@ fun DeviceSelectionNavGraph(onSessionCreate: () -> Unit, onClose: () -> Unit) {
             rememberViewModelStoreNavEntryDecorator()
         ),
         onBack = {
-            if (!backStack.popSafe()) onClose()
+            if (!backStack.popSafe()) onClose?.invoke()
         },
         entryProvider = entryProvider<NavKey> {
             entry<ScanDeviceRoute> { _ ->
                 DeviceSelectionScreen(
                     onSessionCreate = onSessionCreate,
-                    onClose = onClose
+                    onClose = onClose,
+                    serialEnabled = serialEnabled
                 )
             }
         }

@@ -1,0 +1,60 @@
+# Автомобили: главная → «Автомобили» → тип «Сигнализация» → скролл марок → модели Audi → назад на главную.
+# Нужен вход (requires_login); справочник — из локальной базы, BLE-устройство не нужно.
+# Тексты главной — en|ru (testTag на главной нет), экраны автомобилей — по testTag.
+appId: ${APP_ID}
+---
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "Pandora Spec|Pandora Спец"
+    timeout: 20000
+- scrollUntilVisible:
+    element: "Supported vehicles and functions|Поддерживаемые автомобили и функции"
+    direction: DOWN
+- tapOn: "Supported vehicles and functions|Поддерживаемые автомобили и функции"
+- tapOn:
+    id: "vehicle_type_alarm"
+- extendedWaitUntil:
+    visible:
+      id: "vehicle_brand_8"
+    timeout: 15000
+- swipe:
+    start: "50%,80%"
+    end: "50%,30%"
+    duration: 400
+- swipe:
+    start: "50%,80%"
+    end: "50%,30%"
+    duration: 400
+- scrollUntilVisible:
+    element:
+      id: "vehicle_brand_8"
+    direction: UP
+- tapOn:
+    id: "vehicle_brand_8"
+- extendedWaitUntil:
+    visible:
+      id: "vehicle_model_6"
+    timeout: 15000
+- swipe:
+    start: "50%,80%"
+    end: "50%,30%"
+    duration: 400
+- back
+- extendedWaitUntil:
+    visible:
+      id: "vehicle_brand_8"
+    timeout: 10000
+- back
+- extendedWaitUntil:
+    visible:
+      id: "vehicle_type_alarm"
+    timeout: 10000
+- back
+- extendedWaitUntil:
+    visible: "Supported vehicles and functions|Поддерживаемые автомобили и функции"
+    timeout: 10000
+# Список главной — в начало, чтобы следующий повтор начинался с того же экрана.
+- scrollUntilVisible:
+    element: "Quick install|Быстрый монтаж"
+    direction: UP

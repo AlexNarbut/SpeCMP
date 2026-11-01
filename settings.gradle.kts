@@ -42,6 +42,11 @@ include(":composeApp")
 include(":androidApp")
 include(":desktopApp")
 
+// Приложение прошивки: свой composition root и платформенные обёртки
+include(":flasherApp")
+include(":flasherAndroidApp")
+include(":flasherDesktopApp")
+
 // Feature modules
 include(":feature:auth-state")
 include(":feature:login")

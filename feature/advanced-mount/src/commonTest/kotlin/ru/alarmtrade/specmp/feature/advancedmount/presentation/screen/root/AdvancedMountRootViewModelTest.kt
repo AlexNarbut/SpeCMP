@@ -86,6 +86,7 @@ class AdvancedMountRootViewModelTest {
         override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
             emptyFlow()
         override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
+        override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
         override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
     }
 

@@ -1,7 +1,20 @@
-# Качество кода: docs/code-quality.md. Активация: pre-commit install --hook-type pre-commit --hook-type pre-push
+# Качество кода: docs/code-quality.md. Активация: pre-commit install (типы хуков — default_install_hook_types)
 # Spotless проверяет только файлы, изменённые с HEAD (pre-commit перед хуками прячет неиндексированные правки,
 # так что это ровно коммитимое).
+default_install_hook_types: [pre-commit, pre-push, pre-merge-commit]
 repos:
+  # Агентские конфиги: источник — .ai/; хук падает, если сгенерированное разошлось с .ai/ (ручная правка, скилл
+  # в обход .ai/skills, забыли перегенерировать или добавить новые файлы). Исправление — закоммитить результат .ai/generate.sh.
+  - repo: local
+    hooks:
+      - id: ai-generate
+        name: ai configs (.ai/generate.sh)
+        entry: .ai/generate.sh --check
+        language: system
+        files: ^(\.ai/|\.claude/(skills|agents)/|\.agents/|\.codex/|\.gemini/|\.grok/|CLAUDE\.md$|AGENTS\.md$|GEMINI\.md$|.*/AGENTS\.md$)
+        pass_filenames: false
+        stages: [pre-commit]
+
   - repo: local
     hooks:
       - id: spotless-check
@@ -37,13 +50,18 @@ repos:
         files: \.kt$
         pass_filenames: false
         stages: [pre-push]
-      - id: no-push-main
-        name: no direct push to main/master (merge into develop)
-        entry: >-
-          bash -c 'case "$PRE_COMMIT_REMOTE_BRANCH" in
-          refs/heads/main|refs/heads/master) echo "Push in main/master is forbidden - merge into develop (.ai/rules.md)" >&2; exit 1;;
-          esac'
-        language: system
+      # В main/master — только develop: слияние другой ветки (pre-merge-commit) и пуш коммитов не из develop (pre-push).
+      - id: master-from-develop-merge
+        name: only develop merges into main/master
+        entry: config/hooks/check-master-from-develop.sh merge
+        language: script
+        always_run: true
+        pass_filenames: false
+        stages: [pre-merge-commit]
+      - id: master-from-develop-push
+        name: only develop commits pushed to main/master
+        entry: config/hooks/check-master-from-develop.sh push
+        language: script
         always_run: true
         pass_filenames: false
         stages: [pre-push]
