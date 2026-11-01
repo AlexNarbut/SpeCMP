@@ -1,0 +1,16 @@
+# Предусловие замеров старта и трейса (scenarios.json → startup.ensure_flow): приложение на главной под QA-аккаунтом.
+# Без него первый экран зависел бы от состояния эмулятора (вход или главная) и замеры были бы несравнимы.
+appId: ${APP_ID}
+---
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "Specialist authorization|Авторизация специалиста|Quick install|Быстрый монтаж"
+    timeout: 30000
+- runFlow:
+    when:
+      visible: "Specialist authorization|Авторизация специалиста"
+    file: login-steps.yaml
+- extendedWaitUntil:
+    visible: "Quick install|Быстрый монтаж"
+    timeout: 30000

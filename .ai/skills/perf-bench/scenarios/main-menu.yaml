@@ -1,0 +1,40 @@
+# Главная и меню: скролл списка разделов → боковое меню → «Настройки» → назад → закрыть меню.
+# Нужен вход (requires_login). testTag на главной и в меню нет — тексты en|ru.
+appId: ${APP_ID}
+---
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible: "Quick install|Быстрый монтаж"
+    timeout: 20000
+- swipe:
+    start: "50%,80%"
+    end: "50%,30%"
+    duration: 400
+- swipe:
+    start: "50%,80%"
+    end: "50%,30%"
+    duration: 400
+- scrollUntilVisible:
+    element: "Quick install|Быстрый монтаж"
+    direction: UP
+- tapOn: "Open menu|Открыть меню"
+- extendedWaitUntil:
+    visible: "Settings|Настройки"
+    timeout: 10000
+- tapOn: "Settings|Настройки"
+- waitForAnimationToEnd:
+    timeout: 5000
+- back
+- extendedWaitUntil:
+    visible: "Open menu|Открыть меню"
+    timeout: 10000
+# После «Настроек» меню может остаться открытым — закрываем, не выходя из приложения.
+- runFlow:
+    when:
+      visible: "Log out|Выход"
+    commands:
+      - back
+- extendedWaitUntil:
+    visible: "Quick install|Быстрый монтаж"
+    timeout: 10000

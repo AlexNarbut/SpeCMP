@@ -33,6 +33,8 @@ git commit ──► pre-commit ──► ./gradlew spotlessCheck        (сти
                           ├─► config/hooks/check-stateflow-value.py (MutableStateFlow только через update, .kt)
                           └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck          (смысл, весь проект, с type resolution)
+                          └─► config/hooks/check-master-from-develop.sh push  (в main/master — только коммиты из develop)
+git merge  ──► pre-merge-commit ──► config/hooks/check-master-from-develop.sh merge (в main/master вливается только develop)
 Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check-stateflow-value.py + spotlessCheck (по файлу)
 ```
 
@@ -42,7 +44,8 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`; плагины `detekt`, `spotless` |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt |
-| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `spotless-check`, `serial-name-check`, `stateflow-value-check`, `strings-check` (pre-commit) и `detekt-check` (pre-push) |
+| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `serial-name-check`, `stateflow-value-check`, `strings-check` (pre-commit), `detekt-check`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
+| [`config/hooks/check-master-from-develop.sh`](../config/hooks/check-master-from-develop.sh) | в `main`/`master` — только `develop`: `merge` проверяет вливаемую ветку, `push` — что каждый новый коммит достижим из `develop` (или это merge-коммит `develop` → `master`); fast-forward чужой ветки ловит `push` |
 | [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
 | [`.claude/settings.json`](../.claude/settings.json), [`.claude/hooks/kotlin-quality.sh`](../.claude/hooks/kotlin-quality.sh) | хук для агентов: после правки `.kt`/`.kts` возвращает нарушения этого файла |
@@ -123,7 +126,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check
 Git-хуки активируются один раз на клон (нужен `pre-commit`, например `brew install pre-commit`):
 
 ```bash
-pre-commit install --hook-type pre-commit --hook-type pre-push
+pre-commit install   # типы хуков (pre-commit, pre-push, pre-merge-commit) — default_install_hook_types в конфиге
 ```
 
 ---

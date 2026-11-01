@@ -21,7 +21,8 @@ gemini_timeout_mins: 40
 ## Перед началом
 
 1. Прочитай `.agents/skills/ui-test/templates/RULES.md`, `plan.md` (только свой этап) и `run.md`.
-   Нет `run.md` — создай по `templates/run.md` со всеми кейсами плана в статусе `[ ]`.
+   Нет `run.md` — создай по `templates/run.md` **целиком**: все разделы (`Отклонения`, `Попутно`, `Инструмент`)
+   остаются, даже пустые, кейсы плана — в статусе `[ ]`.
 2. Креды — `.agents/skills/ui-test/credentials.properties`. В документы — только ключи (`<QA_EMAIL>`),
    даже если значение видно на экране.
 

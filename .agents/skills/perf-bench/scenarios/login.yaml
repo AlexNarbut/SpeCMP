@@ -1,0 +1,13 @@
+# Вход по email с нуля: очистка данных, холодный старт, экран входа → главная.
+# Повтор = новый процесс (reset_each), поэтому память между повторами не сравнивается.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Specialist authorization|Авторизация специалиста"
+    timeout: 30000
+- runFlow: login-steps.yaml
+- extendedWaitUntil:
+    visible: "Quick install|Быстрый монтаж"
+    timeout: 30000

@@ -1,0 +1,1527 @@
+{
+  "schema": 1,
+  "_doc": [
+    "Реестр метрик perf-bench. Единственный источник определений: collect.py пишет только эти id,",
+    "report.py по этим правилам выносит вердикт и печатает определение рядом с каждым числом.",
+    "Поля: unit — единица; better — lower | higher | none (none = справочная, вердикт не выносится);",
+    "sampled — true: метрика снимается N раз, value = медиана, разброс = MAD;",
+    "warn / fail — пороги регресса: уровень срабатывает, когда |Δ| ≥ abs И |Δ%| ≥ pct И |Δ| > шум",
+    "(шум = 2 × max(MAD базы, MAD текущего); для несэмплированных метрик шум = 0; pct 0 или abs 0 — условие не проверяется);",
+    "source — команда-источник; formula — как из источника получается число.",
+    "Шаблонные группы android.feature / ios.feature: метрика в результатах — android.feature.<сценарий>.<метрика>, определение — по id без сценария.",
+    "warn_if_above — абсолютный предел: warn без базы и поверх относительного вердикта; fail_if_above / fail_if_below — абсолютные fail."
+  ],
+  "verdict_rule": {
+    "delta": "Δ = current − baseline; Δ% = Δ / baseline × 100 (baseline = 0 → только abs)",
+    "direction": "better=lower: регресс при Δ > 0; better=higher: регресс при Δ < 0; обратное — улучшение",
+    "noise": "шум = 2 × max(MAD_baseline, MAD_current); регресс засчитывается только если |Δ| > шум",
+    "levels": "fail, если |Δ| ≥ fail.abs и |Δ%| ≥ fail.pct; иначе warn, если |Δ| ≥ warn.abs и |Δ%| ≥ warn.pct; иначе ok",
+    "overall": "вердикт прогона = худший уровень по всем метрикам с better ≠ none; без базы вердикта нет"
+  },
+  "groups": {
+    "static": "Статика: APK и код, без устройства, детерминированно",
+    "android.startup": "Android: холодный старт (эмулятор / устройство)",
+    "ios.app": "iOS: сборка",
+    "ios.startup": "iOS-симулятор: холодный старт",
+    "android.feature": "Android: сценарий фичи (Maestro-флоу, K повторов в одном процессе)",
+    "android.stability": "Android: стабильность (monkey, старт без сети)",
+    "ios.feature": "iOS-симулятор: сценарий фичи (Maestro-флоу, K повторов)",
+    "android.trace": "Android: Perfetto-трейс старта (один трейсируемый запуск после замеров)"
+  },
+  "metrics": {
+    "static.build.assemble_s": {
+      "title": "Время сборки APK",
+      "unit": "s",
+      "better": "none",
+      "source": "./gradlew :androidApp:assembleDebug — wall-clock",
+      "formula": "секунды между запуском и завершением gradle; инкрементальная сборка, зависит от кэша — справочно"
+    },
+    "static.apk.size_bytes": {
+      "title": "Размер APK",
+      "unit": "B",
+      "better": "lower",
+      "source": "stat -f %z <apk>",
+      "formula": "размер файла APK в байтах",
+      "warn": {
+        "abs": 1048576,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 5242880,
+        "pct": 5
+      }
+    },
+    "static.apk.download_bytes": {
+      "title": "Размер скачивания APK",
+      "unit": "B",
+      "better": "lower",
+      "source": "apkanalyzer apk download-size <apk>",
+      "formula": "оценка Play Store сжатия при скачивании",
+      "warn": {
+        "abs": 1048576,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 5242880,
+        "pct": 5
+      }
+    },
+    "static.apk.dex_bytes": {
+      "title": "APK: dex (код)",
+      "unit": "B",
+      "better": "lower",
+      "source": "zipfile(<apk>): записи classes*.dex",
+      "formula": "сумма compress_size записей classes*.dex",
+      "warn": {
+        "abs": 262144,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 2097152,
+        "pct": 5
+      }
+    },
+    "static.apk.lib_bytes": {
+      "title": "APK: нативные библиотеки",
+      "unit": "B",
+      "better": "lower",
+      "source": "zipfile(<apk>): записи lib/**",
+      "formula": "сумма compress_size записей lib/",
+      "warn": {
+        "abs": 262144,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 2097152,
+        "pct": 5
+      }
+    },
+    "static.apk.res_bytes": {
+      "title": "APK: android-ресурсы",
+      "unit": "B",
+      "better": "lower",
+      "source": "zipfile(<apk>): res/** и resources.arsc",
+      "formula": "сумма compress_size записей res/ и resources.arsc",
+      "warn": {
+        "abs": 262144,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 2097152,
+        "pct": 5
+      }
+    },
+    "static.apk.assets_bytes": {
+      "title": "APK: assets (Compose-ресурсы)",
+      "unit": "B",
+      "better": "lower",
+      "source": "zipfile(<apk>): assets/** кроме шрифтов",
+      "formula": "сумма compress_size записей assets/, не *.ttf/*.otf",
+      "warn": {
+        "abs": 262144,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 2097152,
+        "pct": 5
+      }
+    },
+    "static.apk.fonts_bytes": {
+      "title": "APK: шрифты",
+      "unit": "B",
+      "better": "lower",
+      "source": "zipfile(<apk>): *.ttf, *.otf в любом месте",
+      "formula": "сумма compress_size записей *.ttf и *.otf",
+      "warn": {
+        "abs": 102400,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 1048576,
+        "pct": 5
+      }
+    },
+    "static.apk.other_bytes": {
+      "title": "APK: прочее",
+      "unit": "B",
+      "better": "lower",
+      "source": "zipfile(<apk>): остальные записи",
+      "formula": "сумма compress_size записей, не попавших в dex/lib/res/assets/fonts (META-INF, kotlin/, манифест)",
+      "warn": {
+        "abs": 262144,
+        "pct": 2
+      },
+      "fail": {
+        "abs": 2097152,
+        "pct": 10
+      }
+    },
+    "static.dex.methods_defined": {
+      "title": "DEX: методов определено (всего)",
+      "unit": "count",
+      "better": "lower",
+      "source": "apkanalyzer dex packages --defined-only <apk>",
+      "formula": "колонка «defined methods» строки <TOTAL>",
+      "warn": {
+        "abs": 500,
+        "pct": 0.5
+      },
+      "fail": {
+        "abs": 5000,
+        "pct": 3
+      }
+    },
+    "static.dex.methods_app": {
+      "title": "DEX: методов в коде приложения",
+      "unit": "count",
+      "better": "lower",
+      "source": "apkanalyzer dex packages --defined-only <apk>",
+      "formula": "«defined methods» строки пакета ru.alarmtrade.specmp; разбивка по модулям ru.alarmtrade.specmp.<слой>.<модуль> (слой — feature / core) — в деталях",
+      "warn": {
+        "abs": 200,
+        "pct": 0.5
+      },
+      "fail": {
+        "abs": 2000,
+        "pct": 3
+      }
+    },
+    "static.code.kt_files": {
+      "title": "Kotlin-файлов в репозитории",
+      "unit": "count",
+      "better": "none",
+      "source": "git ls-files '*.kt'",
+      "formula": "число файлов *.kt под контролем git (без build/)"
+    },
+    "static.code.kt_lines": {
+      "title": "Строк Kotlin в репозитории",
+      "unit": "count",
+      "better": "none",
+      "source": "git ls-files -z '*.kt' | xargs -0 wc -l",
+      "formula": "сумма строк всех *.kt; разбивка по <слой>/<модуль> — в деталях"
+    },
+    "static.detekt.findings": {
+      "title": "detekt: замечаний",
+      "unit": "count",
+      "better": "lower",
+      "source": "**/build/reports/detekt/*.xml (checkstyle) после ./gradlew detektCheck",
+      "formula": "число элементов <error>; возраст отчётов — в деталях (старше сборки → предупреждение)",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 10,
+        "pct": 0
+      }
+    },
+    "static.tests.total": {
+      "title": "Unit-тестов",
+      "unit": "count",
+      "better": "higher",
+      "source": "**/build/test-results/**/TEST-*.xml после ./gradlew test",
+      "formula": "сумма атрибутов tests у <testsuite>",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 10,
+        "pct": 0
+      }
+    },
+    "static.tests.failed": {
+      "title": "Unit-тестов упало",
+      "unit": "count",
+      "better": "lower",
+      "source": "**/build/test-results/**/TEST-*.xml",
+      "formula": "сумма failures + errors у <testsuite>; любое значение > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "static.tests.duration_s": {
+      "title": "Unit-тесты: время",
+      "unit": "s",
+      "better": "none",
+      "source": "**/build/test-results/**/TEST-*.xml",
+      "formula": "сумма атрибутов time у <testsuite>"
+    },
+    "static.compose.composables_total": {
+      "title": "Compose: composable-функций",
+      "unit": "count",
+      "better": "none",
+      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "formula": "сумма totalComposables по модулям"
+    },
+    "static.compose.restartable_total": {
+      "title": "Compose: restartable composable",
+      "unit": "count",
+      "better": "none",
+      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "formula": "число именованных restartable composable по *-composables.csv (без composable-лямбд)"
+    },
+    "static.compose.skippable_pct": {
+      "title": "Compose: доля skippable среди restartable",
+      "unit": "%",
+      "better": "higher",
+      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "formula": "skippable / restartable × 100 по именованным composable из *-composables.csv; при strong skipping (включён в проекте) ожидается ≈ 100 %, падение означает @NonSkippableComposable или нескипаемую сигнатуру",
+      "warn": {
+        "abs": 0.5,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 2,
+        "pct": 0
+      }
+    },
+    "static.compose.unstable_classes": {
+      "title": "Compose: unstable-классов в коде приложения",
+      "unit": "count",
+      "better": "lower",
+      "source": "./gradlew :androidApp:assembleDebug --init-script perf-bench/scripts/compose-reports.init.gradle → **/build/compose-reports/*-module.json, *-classes.txt",
+      "formula": "число строк «unstable class» в *-classes.txt модулей ru.alarmtrade.specmp; разбивка по модулям — в деталях",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 10,
+        "pct": 0
+      }
+    },
+    "android.startup.ttid_ms": {
+      "title": "Холодный старт до первого кадра (TTID)",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell am start -W -S -n <pkg>/ru.alarmtrade.specmp.androidApp.AppActivity",
+      "formula": "TotalTime из вывода am start; учитываются только запуски с LaunchState: COLD; медиана N запусков",
+      "warn": {
+        "abs": 150,
+        "pct": 10
+      },
+      "fail": {
+        "abs": 400,
+        "pct": 25
+      }
+    },
+    "android.startup.ttfc_ms": {
+      "title": "Холодный старт до контента (TTFC)",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "хост-таймер вокруг am start + опрос adb shell uiautomator dump /dev/tty",
+      "formula": "миллисекунды от команды am start до первого дампа, содержащего resource-id=\"<content_tag>\" (scenarios.json → startup.content_tag); квант опроса ≈ 0.5–1 с; таймаут → значение null",
+      "warn": {
+        "abs": 300,
+        "pct": 10
+      },
+      "fail": {
+        "abs": 1000,
+        "pct": 25
+      }
+    },
+    "android.startup.ttfd_ms": {
+      "title": "Холодный старт до контента по системе (TTFD)",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark>: «ActivityTaskManager: Fully drawn <pkg>/.MainActivity: +Nms»",
+      "formula": "значение после «+» (форматы +Nms, +Ns, +NsMms → мс); пишется системой при Activity.reportFullyDrawn(), который приложение вызывает, когда первый экран показал контент (TrackScreenViews); точнее TTFC и без нагрузки опросом",
+      "warn": {
+        "abs": 300,
+        "pct": 10
+      },
+      "fail": {
+        "abs": 1000,
+        "pct": 25
+      }
+    },
+    "android.startup.frames_total": {
+      "title": "Кадров отрисовано за окно старта",
+      "unit": "count",
+      "better": "none",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg> (после gfxinfo reset перед am start)",
+      "formula": "Total frames rendered; окно = от am start до конца паузы settle"
+    },
+    "android.startup.janky_pct": {
+      "title": "Janky-кадров за окно старта",
+      "unit": "%",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "процент в скобках строки Janky frames; при frames_total < 10 значение не оценивается",
+      "warn": {
+        "abs": 5,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 15,
+        "pct": 0
+      }
+    },
+    "android.startup.frame_p50_ms": {
+      "title": "Кадр p50",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "50th percentile",
+      "warn": {
+        "abs": 4,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 8,
+        "pct": 50
+      }
+    },
+    "android.startup.frame_p90_ms": {
+      "title": "Кадр p90",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "90th percentile",
+      "warn": {
+        "abs": 8,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 16,
+        "pct": 50
+      }
+    },
+    "android.startup.frame_p95_ms": {
+      "title": "Кадр p95",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "95th percentile",
+      "warn": {
+        "abs": 8,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 16,
+        "pct": 50
+      }
+    },
+    "android.startup.frame_p99_ms": {
+      "title": "Кадр p99",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "99th percentile",
+      "warn": {
+        "abs": 16,
+        "pct": 25
+      },
+      "fail": {
+        "abs": 50,
+        "pct": 60
+      }
+    },
+    "android.startup.slow_ui_frames": {
+      "title": "Кадров с медленным UI-потоком",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "Number Slow UI thread",
+      "warn": {
+        "abs": 2,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 6,
+        "pct": 50
+      }
+    },
+    "android.startup.idle_frames": {
+      "title": "Кадров за окно простоя после старта",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg> reset → пауза idle_s (scenarios.json → startup.idle_s) → dumpsys gfxinfo",
+      "formula": "Total frames rendered за idle_s секунд без действий после всех дампов; 0 — экран статичен, десятки и сотни — зацикленная анимация, видео или вечный лоадер; абсолютный порог 30 (≈6 fps) — выше означает, что экран не статичен",
+      "warn": {
+        "abs": 30,
+        "pct": 50
+      },
+      "fail": {
+        "abs": 100,
+        "pct": 100
+      },
+      "warn_if_above": 30
+    },
+    "android.startup.skipped_frames": {
+      "title": "Пропущено кадров (Choreographer)",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "сумма N по строкам «Choreographer: Skipped N frames!» за окно старта",
+      "warn": {
+        "abs": 10,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 30,
+        "pct": 50
+      }
+    },
+    "android.startup.pss_kb": {
+      "title": "Память PSS после старта",
+      "unit": "kB",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys meminfo <pkg> через settle секунд после контента",
+      "formula": "TOTAL PSS (колонка Pss Total строки TOTAL)",
+      "warn": {
+        "abs": 5120,
+        "pct": 5
+      },
+      "fail": {
+        "abs": 15360,
+        "pct": 15
+      }
+    },
+    "android.startup.java_heap_kb": {
+      "title": "Java heap после старта",
+      "unit": "kB",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys meminfo <pkg>",
+      "formula": "App Summary → Java Heap (Pss); на одном коде эмулятор даёт разброс до ±4 MB между прогонами — пороги шире, чем у PSS",
+      "warn": {
+        "abs": 6144,
+        "pct": 10
+      },
+      "fail": {
+        "abs": 15360,
+        "pct": 25
+      }
+    },
+    "android.startup.native_heap_kb": {
+      "title": "Native heap после старта",
+      "unit": "kB",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys meminfo <pkg>",
+      "formula": "App Summary → Native Heap (Pss); на одном коде эмулятор даёт разброс до ±4 MB между прогонами — пороги шире, чем у PSS",
+      "warn": {
+        "abs": 6144,
+        "pct": 10
+      },
+      "fail": {
+        "abs": 15360,
+        "pct": 25
+      }
+    },
+    "android.startup.activities": {
+      "title": "Экземпляров Activity после старта",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys meminfo <pkg> → Objects: Activities",
+      "formula": "число живых объектов Activity в процессе; у single-activity приложения норма 1, больше — второй экземпляр MainActivity в задаче или утечка уничтоженной Activity; любое значение > 1 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 1
+    },
+    "android.startup.cpu_ms": {
+      "title": "CPU-время процесса за старт",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell cat /proc/<pid>/stat; getconf CLK_TCK",
+      "formula": "(utime + stime) × 1000 / CLK_TCK на момент снятия (после settle)",
+      "warn": {
+        "abs": 200,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 500,
+        "pct": 40
+      }
+    },
+    "android.startup.main_thread_cpu_ms": {
+      "title": "CPU-время главного потока за старт",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell cat /proc/<pid>/task/<pid>/stat",
+      "formula": "(utime + stime) × 1000 / CLK_TCK главного потока",
+      "warn": {
+        "abs": 150,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 400,
+        "pct": 40
+      }
+    },
+    "android.startup.gc_count": {
+      "title": "Сборок мусора за старт",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "число строк ART «… GC freed …»",
+      "warn": {
+        "abs": 2,
+        "pct": 30
+      },
+      "fail": {
+        "abs": 5,
+        "pct": 100
+      }
+    },
+    "android.startup.gc_pause_ms": {
+      "title": "Паузы GC за старт",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "сумма значений «paused …» (мс или мкс, приводятся к мс) по строкам GC",
+      "warn": {
+        "abs": 20,
+        "pct": 30
+      },
+      "fail": {
+        "abs": 100,
+        "pct": 100
+      }
+    },
+    "android.startup.log_errors": {
+      "title": "Ошибок в логе за старт",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "число строк уровня E процесса приложения; строки — в деталях",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 5,
+        "pct": 0
+      }
+    },
+    "android.startup.crashes": {
+      "title": "Крэшей за старт",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -b crash -T <mark>",
+      "formula": "число блоков «FATAL EXCEPTION» процесса приложения; любое значение > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.startup.anr": {
+      "title": "ANR за старт",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark>",
+      "formula": "число строк «ANR in <pkg>»; любое значение > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "ios.app.size_bytes": {
+      "title": "Размер .app (симулятор)",
+      "unit": "B",
+      "better": "lower",
+      "source": "du -sk <SpeCMP.app>",
+      "formula": "размер каталога .app в байтах (Debug-iphonesimulator, не App Store size)",
+      "warn": {
+        "abs": 1048576,
+        "pct": 1
+      },
+      "fail": {
+        "abs": 5242880,
+        "pct": 5
+      }
+    },
+    "ios.startup.ttfc_ms": {
+      "title": "Холодный старт до контента (TTFC)",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "хост-таймер вокруг xcrun simctl launch + опрос axe describe-ui",
+      "formula": "миллисекунды от simctl launch до первого дерева, содержащего identifier <content_tag>; требует включённого ApplicationAccessibilityEnabled",
+      "warn": {
+        "abs": 300,
+        "pct": 10
+      },
+      "fail": {
+        "abs": 1000,
+        "pct": 25
+      }
+    },
+    "ios.startup.rss_kb": {
+      "title": "Память RSS после старта",
+      "unit": "kB",
+      "better": "lower",
+      "sampled": true,
+      "source": "ps -o rss= -p <pid> через settle секунд после контента",
+      "formula": "resident set size процесса приложения",
+      "warn": {
+        "abs": 5120,
+        "pct": 5
+      },
+      "fail": {
+        "abs": 15360,
+        "pct": 15
+      }
+    },
+    "ios.startup.cpu_ms": {
+      "title": "CPU-время процесса за старт",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "ps -o cputime= -p <pid>",
+      "formula": "cputime (user + system) в миллисекундах на момент снятия",
+      "warn": {
+        "abs": 200,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 500,
+        "pct": 40
+      }
+    },
+    "ios.startup.log_errors": {
+      "title": "Ошибок в логе за старт",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "xcrun simctl spawn <udid> log show --start <mark> --predicate process == SpeCMP",
+      "formula": "число записей messageType error|fault из образа приложения (senderImagePath CONTAINS SpeCMP.app)",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 5,
+        "pct": 0
+      }
+    },
+    "ios.startup.crashes": {
+      "title": "Крэшей за старт",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "~/Library/Logs/DiagnosticReports/SpeCMP*.ips новее <mark>",
+      "formula": "число новых крэш-отчётов; любое значение > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.feature.flow_ms": {
+      "title": "Длительность сценария",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "хост-таймер вокруг maestro test",
+      "formula": "миллисекунды от запуска до завершения флоу; включает ожидания сети и анимаций — порог мягкий",
+      "warn": {
+        "abs": 500,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 2000,
+        "pct": 40
+      }
+    },
+    "android.feature.flow_failed": {
+      "title": "Повторов сценария упало",
+      "unit": "count",
+      "better": "lower",
+      "source": "maestro test — код возврата",
+      "formula": "число повторов с ненулевым кодом возврата; любое значение > 0 — fail: метрики упавшего повтора не сравнимы",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.feature.frames_total": {
+      "title": "Кадров отрисовано за сценарий",
+      "unit": "count",
+      "better": "none",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg> (reset перед повтором)",
+      "formula": "Total frames rendered"
+    },
+    "android.feature.janky_pct": {
+      "title": "Janky-кадров за сценарий",
+      "unit": "%",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "процент строки Janky frames; при frames_total < 10 не оценивается",
+      "warn": {
+        "abs": 5,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 15,
+        "pct": 0
+      }
+    },
+    "android.feature.frame_p50_ms": {
+      "title": "Кадр p50 за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "50th percentile",
+      "warn": {
+        "abs": 4,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 8,
+        "pct": 50
+      }
+    },
+    "android.feature.frame_p90_ms": {
+      "title": "Кадр p90 за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "90th percentile",
+      "warn": {
+        "abs": 8,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 16,
+        "pct": 50
+      }
+    },
+    "android.feature.frame_p95_ms": {
+      "title": "Кадр p95 за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "95th percentile",
+      "warn": {
+        "abs": 8,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 16,
+        "pct": 50
+      }
+    },
+    "android.feature.frame_p99_ms": {
+      "title": "Кадр p99 за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "99th percentile",
+      "warn": {
+        "abs": 16,
+        "pct": 25
+      },
+      "fail": {
+        "abs": 50,
+        "pct": 60
+      }
+    },
+    "android.feature.slow_ui_frames": {
+      "title": "Кадров с медленным UI-потоком за сценарий",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg>",
+      "formula": "Number Slow UI thread",
+      "warn": {
+        "abs": 3,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 10,
+        "pct": 50
+      }
+    },
+    "android.feature.skipped_frames": {
+      "title": "Пропущено кадров за сценарий (Choreographer)",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "сумма N по строкам «Skipped N frames!»",
+      "warn": {
+        "abs": 10,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 30,
+        "pct": 50
+      }
+    },
+    "android.feature.idle_frames": {
+      "title": "Кадров за окно простоя после сценария",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys gfxinfo <pkg> reset → пауза idle_s → dumpsys gfxinfo (после дампов повтора)",
+      "formula": "Total frames rendered за idle_s секунд на экране, где закончился флоу; 0 — статичный экран; абсолютный порог 30 (≈6 fps) — выше означает, что экран не статичен",
+      "warn": {
+        "abs": 30,
+        "pct": 50
+      },
+      "fail": {
+        "abs": 100,
+        "pct": 100
+      },
+      "warn_if_above": 30
+    },
+    "android.feature.pss_after_kb": {
+      "title": "Память PSS после сценария и GC",
+      "unit": "kB",
+      "better": "lower",
+      "sampled": true,
+      "source": "run-as <pkg> kill -10 <pid> (ART: SIGUSR1 forcing GC) → dumpsys meminfo",
+      "formula": "TOTAL PSS после принудительного GC в конце повтора",
+      "warn": {
+        "abs": 5120,
+        "pct": 5
+      },
+      "fail": {
+        "abs": 15360,
+        "pct": 15
+      }
+    },
+    "android.feature.pss_growth_kb": {
+      "title": "Рост PSS за K повторов (утечка)",
+      "unit": "kB",
+      "better": "lower",
+      "source": "dumpsys meminfo после GC в конце 1-го и K-го повтора",
+      "formula": "PSS(K) − PSS(1); устойчивый рост при возврате на тот же экран — признак утечки; на эмуляторе один и тот же код даёт разброс ±10–15 MB, поэтому пороги широкие",
+      "warn": {
+        "abs": 15360,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 40960,
+        "pct": 0
+      }
+    },
+    "android.feature.activities": {
+      "title": "Экземпляров Activity после сценария",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell dumpsys meminfo <pkg> → Objects: Activities (после принудительного GC)",
+      "formula": "число живых объектов Activity после повтора; норма 1; больше — стек экземпляров или утечка; любое значение > 1 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 1
+    },
+    "android.feature.cpu_ms": {
+      "title": "CPU-время процесса за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell cat /proc/<pid>/stat до и после повтора",
+      "formula": "(utime+stime)_после − (utime+stime)_до, × 1000 / CLK_TCK",
+      "warn": {
+        "abs": 300,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 1000,
+        "pct": 40
+      }
+    },
+    "android.feature.main_thread_cpu_ms": {
+      "title": "CPU-время главного потока за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb shell cat /proc/<pid>/task/<pid>/stat до и после",
+      "formula": "дельта (utime+stime) главного потока × 1000 / CLK_TCK",
+      "warn": {
+        "abs": 200,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 600,
+        "pct": 40
+      }
+    },
+    "android.feature.gc_count": {
+      "title": "Сборок мусора за сценарий",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "число строк ART «… GC freed …» без принудительной (Explicit) в конце повтора",
+      "warn": {
+        "abs": 2,
+        "pct": 30
+      },
+      "fail": {
+        "abs": 5,
+        "pct": 100
+      }
+    },
+    "android.feature.gc_pause_ms": {
+      "title": "Паузы GC за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "сумма «paused …» по строкам GC без принудительной",
+      "warn": {
+        "abs": 20,
+        "pct": 30
+      },
+      "fail": {
+        "abs": 100,
+        "pct": 100
+      }
+    },
+    "android.feature.log_errors": {
+      "title": "Ошибок в логе за сценарий",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark> --pid <pid>",
+      "formula": "число строк уровня E процесса приложения",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 5,
+        "pct": 0
+      }
+    },
+    "android.feature.crashes": {
+      "title": "Крэшей за сценарий",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -b crash -T <mark>",
+      "formula": "число «FATAL EXCEPTION»; любое > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.feature.anr": {
+      "title": "ANR за сценарий",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "adb logcat -d -T <mark>",
+      "formula": "число «ANR in <pkg>»; любое > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.stability.monkey_events": {
+      "title": "Monkey: событий",
+      "unit": "count",
+      "better": "none",
+      "source": "adb shell monkey -p <pkg> -s <seed> --throttle <ms> --pct-syskeys 0 <N>",
+      "formula": "N событий с фиксированным seed (scenarios.json → stability.monkey): прогон воспроизводим"
+    },
+    "android.stability.monkey_duration_s": {
+      "title": "Monkey: длительность",
+      "unit": "s",
+      "better": "none",
+      "source": "хост-таймер вокруг monkey",
+      "formula": "секунды до завершения всех событий"
+    },
+    "android.stability.monkey_crashes": {
+      "title": "Monkey: крэшей",
+      "unit": "count",
+      "better": "lower",
+      "source": "вывод monkey + adb logcat -b crash",
+      "formula": "число «// CRASH» в выводе monkey; любое > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.stability.monkey_anr": {
+      "title": "Monkey: ANR",
+      "unit": "count",
+      "better": "lower",
+      "source": "вывод monkey",
+      "formula": "число «// NOT RESPONDING»; любое > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.stability.offline_start_crashes": {
+      "title": "Старт без сети: крэшей",
+      "unit": "count",
+      "better": "lower",
+      "source": "svc wifi disable + svc data disable → am start → adb logcat -b crash",
+      "formula": "число «FATAL EXCEPTION» за старт без сети; любое > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.stability.offline_screen_ms": {
+      "title": "Старт без сети: время до экрана",
+      "unit": "ms",
+      "better": "lower",
+      "source": "хост-таймер + uiautomator dump",
+      "formula": "миллисекунды до появления любого текста экрана ошибки или контента (scenarios.json → stability.offline_tags); null — приложение ничего не показало за таймаут",
+      "warn": {
+        "abs": 1000,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 3000,
+        "pct": 50
+      }
+    },
+    "android.stability.offline_recovered": {
+      "title": "Старт без сети: восстановился после включения сети",
+      "unit": "count",
+      "better": "higher",
+      "source": "svc wifi enable + svc data enable → ожидание <content_tag>",
+      "formula": "1 — контент появился за таймаут после возврата сети, 0 — нет; 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_below": 1
+    },
+    "android.stability.offline_recover_ms": {
+      "title": "Старт без сети: время восстановления",
+      "unit": "ms",
+      "better": "lower",
+      "source": "хост-таймер после включения сети",
+      "formula": "миллисекунды от включения сети до появления <content_tag>",
+      "warn": {
+        "abs": 2000,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 5000,
+        "pct": 50
+      }
+    },
+    "ios.feature.flow_ms": {
+      "title": "Длительность сценария",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "хост-таймер вокруг maestro test",
+      "formula": "миллисекунды от запуска до завершения флоу",
+      "warn": {
+        "abs": 500,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 2000,
+        "pct": 40
+      }
+    },
+    "ios.feature.flow_failed": {
+      "title": "Повторов сценария упало",
+      "unit": "count",
+      "better": "lower",
+      "source": "maestro test — код возврата",
+      "formula": "число повторов с ненулевым кодом; любое > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "ios.feature.rss_after_kb": {
+      "title": "Память RSS после сценария",
+      "unit": "kB",
+      "better": "lower",
+      "sampled": true,
+      "source": "ps -o rss= -p <pid>",
+      "formula": "RSS в конце повтора",
+      "warn": {
+        "abs": 5120,
+        "pct": 5
+      },
+      "fail": {
+        "abs": 15360,
+        "pct": 15
+      }
+    },
+    "ios.feature.rss_growth_kb": {
+      "title": "Рост RSS за K повторов",
+      "unit": "kB",
+      "better": "lower",
+      "source": "ps -o rss= после 1-го и K-го повтора",
+      "formula": "RSS(K) − RSS(1)",
+      "warn": {
+        "abs": 10240,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 40960,
+        "pct": 0
+      }
+    },
+    "ios.feature.cpu_ms": {
+      "title": "CPU-время процесса за сценарий",
+      "unit": "ms",
+      "better": "lower",
+      "sampled": true,
+      "source": "ps -o cputime= до и после повтора",
+      "formula": "дельта cputime в миллисекундах",
+      "warn": {
+        "abs": 300,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 1000,
+        "pct": 40
+      }
+    },
+    "ios.feature.log_errors": {
+      "title": "Ошибок в логе за сценарий",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "log show --start <mark>, образ приложения, error|fault",
+      "formula": "число записей",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 5,
+        "pct": 0
+      }
+    },
+    "ios.feature.crashes": {
+      "title": "Крэшей за сценарий",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "DiagnosticReports новее <mark>",
+      "formula": "число новых .ips; любое > 0 — fail",
+      "warn": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail": {
+        "abs": 1,
+        "pct": 0
+      },
+      "fail_if_above": 0
+    },
+    "android.trace.ttid_ms": {
+      "title": "Старт до первого кадра по трейсу",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "android_startup.to_first_frame.dur; один запуск с включённым трейсом (оверхед трейса ≈ одинаков между прогонами)",
+      "warn": {
+        "abs": 150,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 400,
+        "pct": 40
+      }
+    },
+    "android.trace.bind_application_ms": {
+      "title": "bindApplication (Application.onCreate)",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "time_bind_application.dur: инициализация процесса — Koin, логгер, Crashlytics",
+      "warn": {
+        "abs": 50,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 200,
+        "pct": 40
+      }
+    },
+    "android.trace.activity_start_ms": {
+      "title": "activityStart",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "time_activity_start.dur: onCreate активити и setContent",
+      "warn": {
+        "abs": 50,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 200,
+        "pct": 40
+      }
+    },
+    "android.trace.activity_resume_ms": {
+      "title": "activityResume",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "time_activity_resume.dur",
+      "warn": {
+        "abs": 30,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 100,
+        "pct": 40
+      }
+    },
+    "android.trace.choreographer_ms": {
+      "title": "Первые кадры (Choreographer#doFrame)",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "time_choreographer.dur: композиция, измерение и отрисовка до первого кадра",
+      "warn": {
+        "abs": 50,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 200,
+        "pct": 40
+      }
+    },
+    "android.trace.main_running_ms": {
+      "title": "Главный поток: Running в окне старта",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "main_thread_by_task_state.running: чистая работа главного потока на CPU",
+      "warn": {
+        "abs": 100,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 300,
+        "pct": 40
+      }
+    },
+    "android.trace.main_runnable_ms": {
+      "title": "Главный поток: Runnable (ждал CPU)",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "main_thread_by_task_state.runnable: поток готов, но CPU занят другими — конкуренция за ядра",
+      "warn": {
+        "abs": 50,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 200,
+        "pct": 60
+      }
+    },
+    "android.trace.main_io_ms": {
+      "title": "Главный поток: uninterruptible sleep (I/O)",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "main_thread_by_task_state.uninterruptible_sleep: блокировка на диске/binder",
+      "warn": {
+        "abs": 30,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 100,
+        "pct": 60
+      }
+    },
+    "android.trace.main_sleep_ms": {
+      "title": "Главный поток: sleeping (ждал других)",
+      "unit": "ms",
+      "better": "lower",
+      "source": "adb shell perfetto -c - --txt (perfetto-startup.cfg) → trace_processor, метрика android_startup",
+      "formula": "main_thread_by_task_state.interruptible_sleep: ожидание блокировок, сети, фоновых потоков",
+      "warn": {
+        "abs": 100,
+        "pct": 20
+      },
+      "fail": {
+        "abs": 300,
+        "pct": 60
+      }
+    },
+    "android.trace.home_frame_ms": {
+      "title": "Главная: самый долгий кадр начальной композиции",
+      "unit": "ms",
+      "better": "lower",
+      "source": "bench.sh android_compose_trace: ENABLE_TRACING в живом процессе → perfetto (track_event rendering + view) → am start -n нового экземпляра MainActivity → compose_metrics.py",
+      "formula": "самый долгий Choreographer#doFrame после activityStart нового экземпляра (композиция + measure/layout + запись draw); без загрузки классов и JIT холодного старта; медиана по trace.compose_repeats повторам (кадры одного кода расходятся в 2–5 раз)",
+      "warn": {
+        "abs": 20,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 60,
+        "pct": 40
+      },
+      "sampled": true
+    },
+    "android.trace.home_compose_ms": {
+      "title": "Главная: композиция в этом кадре",
+      "unit": "ms",
+      "better": "lower",
+      "source": "bench.sh android_compose_trace: ENABLE_TRACING в живом процессе → perfetto (track_event rendering + view) → am start -n нового экземпляра MainActivity → compose_metrics.py",
+      "formula": "сумма Compose:recompose внутри кадра (начальная композиция + рекомпозиции от первых состояний); медиана по trace.compose_repeats повторам (кадры одного кода расходятся в 2–5 раз)",
+      "warn": {
+        "abs": 10,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 40,
+        "pct": 40
+      },
+      "sampled": true
+    },
+    "android.trace.home_draw_ms": {
+      "title": "Главная: запись draw в этом кадре",
+      "unit": "ms",
+      "better": "lower",
+      "source": "bench.sh android_compose_trace: ENABLE_TRACING в живом процессе → perfetto (track_event rendering + view) → am start -n нового экземпляра MainActivity → compose_metrics.py",
+      "formula": "слайс view «draw» (Record View#draw) внутри кадра: отрисовка слоёв и текста; медиана по trace.compose_repeats повторам (кадры одного кода расходятся в 2–5 раз)",
+      "warn": {
+        "abs": 10,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 40,
+        "pct": 40
+      },
+      "sampled": true
+    },
+    "android.trace.home_measure_ms": {
+      "title": "Главная: measure + layout в этом кадре",
+      "unit": "ms",
+      "better": "lower",
+      "source": "bench.sh android_compose_trace: ENABLE_TRACING в живом процессе → perfetto (track_event rendering + view) → am start -n нового экземпляра MainActivity → compose_metrics.py",
+      "formula": "сумма слайсов view «measure» и «layout» внутри кадра; медиана по trace.compose_repeats повторам (кадры одного кода расходятся в 2–5 раз)",
+      "warn": {
+        "abs": 10,
+        "pct": 15
+      },
+      "fail": {
+        "abs": 40,
+        "pct": 40
+      },
+      "sampled": true
+    },
+    "android.trace.home_recompose_passes": {
+      "title": "Главная: проходов рекомпозиции в этом кадре",
+      "unit": "count",
+      "better": "lower",
+      "sampled": true,
+      "source": "bench.sh android_compose_trace → compose_metrics.py (слайсы внутри самого долгого кадра)",
+      "formula": "число слайсов Compose:recompose внутри самого долгого кадра начальной композиции; каждый проход сверх первого — раскладка или эффект записали state и вернули кадр в композицию",
+      "warn": {
+        "abs": 2,
+        "pct": 10
+      },
+      "fail": {
+        "abs": 5,
+        "pct": 25
+      }
+    }
+  }
+}
