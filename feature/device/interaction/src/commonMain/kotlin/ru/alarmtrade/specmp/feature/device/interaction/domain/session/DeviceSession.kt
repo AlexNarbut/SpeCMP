@@ -153,6 +153,13 @@ class DeviceSession(
                     if (mode != null) {
                         emit(mode)
                         onModeReached(mode)
+                    } else if (_transport.value == ConnectionTransport.SERIAL) {
+                        // COM: порт открыт, а блок молчит (выключен, ещё не в загрузчике). Порт не рвём — serial-сессия
+                        // SDK после disconnect сама его не откроет; ждём, пока блок ответит (перезагрузили по питанию).
+                        emit(DeviceSessionState.Disconnected)
+                        val answered = awaitSerialBoard()
+                        emit(answered)
+                        onModeReached(answered)
                     } else {
                         // Связь «готова», а блок не отвечает (сессия SDK не поднялась) — рвём соединение:
                         // связь уйдёт в DISCONNECTED, и BLE-цикл переподключения подключится заново.
@@ -371,6 +378,22 @@ class DeviceSession(
         }
     }
 
+    /**
+     * COM: опрашивать блок, пока он не ответит, затем определить режим. Опрос короткий (одно чтение с малым
+     * тайм-аутом), чтобы экран сменился вскоре после перезагрузки блока; цикл отменяется сменой связи
+     * (`transformLatest`) и отпиской.
+     */
+    private suspend fun awaitSerialBoard(): DeviceSessionState {
+        var attempt = 0
+        while (true) {
+            delay(SERIAL_POLL_INTERVAL_MILLIS)
+            attempt++
+            val answer = withTimeoutOrNull(SERIAL_POLL_TIMEOUT_MILLIS) { sessionRepository.readDevice() }
+            logStage { "serial poll #$attempt response=${answer?.let { it::class.simpleName } ?: "timeout"}" }
+            if (answer is Response.Success) detectMode()?.let { return it }
+        }
+    }
+
     private suspend fun <T> readWithRetry(read: suspend () -> Response<T>): T? {
         repeat(READ_ATTEMPTS) { attempt ->
             // Без тайм-аута зависший запрос (блок не ответил) держал бы «Подключение…» бесконечно.
@@ -417,5 +440,7 @@ class DeviceSession(
         const val REBOOT_TIMEOUT_MILLIS = 60_000L
         const val RECONNECT_INTERVAL_MILLIS = 1_000L
         const val RECONNECT_TIMEOUT_MILLIS = 15_000L
+        const val SERIAL_POLL_INTERVAL_MILLIS = 1_000L
+        const val SERIAL_POLL_TIMEOUT_MILLIS = 2_000L
     }
 }

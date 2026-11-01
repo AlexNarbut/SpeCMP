@@ -27,8 +27,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceOrNull
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 /**
- * Прошивка блока по COM-порту: «Обновить из файла» → проверка файла по заголовку `.frm` (прошивка для другого
- * блока не запускается) → подтверждение с версиями блока и файла → GOBOOT (пользователь перезагружает блок по
+ * Прошивка блока по COM-порту: «Обновить из файла» → разбор заголовка `.frm` → подтверждение с версиями блока и
+ * файла (имя блока в файле другое — предупреждение, прошить можно) → GOBOOT (пользователь перезагружает блок по
  * питанию) → передача → CRC → применение → результат.
  *
  * Сессию порта держит [deviceSession] (её открыл поиск), связь и обрыв показывает хост устройства. Экран стоит и в
@@ -80,18 +80,16 @@ class SerialFirmwareViewModel(
                 when {
                     info !is Response.Success -> state.copy(fileError = null, fileProblem = SerialFileProblem.NotFrm)
 
-                    // Блок ещё не прочитан — сверять не с чем: решит загрузчик.
-                    current != null && !info.value.isFor(current.systemName) -> state.copy(
-                        fileError = null,
-                        fileProblem = SerialFileProblem.OtherDevice(info.value.systemName, current.systemName.trim())
-                    )
-
                     else -> {
                         val version = info.value.version
                         val older = version != null && current != null &&
                             version.relationTo(current.firmwareVersion) == VersionRelation.Older
+                        // Блок ещё не прочитан — сверять не с чем.
+                        val mismatch = current?.takeUnless { info.value.isFor(it.systemName) }?.let {
+                            SystemNameMismatch(info.value.systemName, it.systemName.trim())
+                        }
                         state.copy(
-                            phase = SerialPhase.Confirm(fileName, path, version, older),
+                            phase = SerialPhase.Confirm(fileName, path, version, older, mismatch),
                             fileError = null,
                             fileProblem = null
                         )

@@ -12,12 +12,18 @@ sealed interface SerialPhase {
     data object Ready : SerialPhase
 
     /**
-     * Файл выбран и подходит блоку — подтверждение. [path] — копия файла для SDK (на экран не выводится): живёт в фазе,
+     * Файл `.frm` выбран — подтверждение. [path] — копия файла для SDK (на экран не выводится): живёт в фазе,
      * чтобы подтверждение забрало его атомарно вместе с переходом. [fileVersion] — версия из заголовка файла
-     * (`null` — нет); [older] — она старее версии блока.
+     * (`null` — нет); [older] — она старее версии блока; [nameMismatch] — файл для блока с другим именем
+     * (предупреждение, прошить всё равно можно).
      */
-    data class Confirm(val fileName: String, val path: String, val fileVersion: String?, val older: Boolean) :
-        SerialPhase
+    data class Confirm(
+        val fileName: String,
+        val path: String,
+        val fileVersion: String?,
+        val older: Boolean,
+        val nameMismatch: SystemNameMismatch? = null
+    ) : SerialPhase
 
     /** SDK шлёт GOBOOT: пользователь перезагружает блок по питанию. */
     data object WaitingBoot : SerialPhase
@@ -36,13 +42,13 @@ sealed interface SerialPhase {
     data class Error(val failure: SerialFirmwareFailure) : SerialPhase
 }
 
+/** Имя системы в заголовке файла ([fileSystemName]) не совпадает с подключённым блоком ([deviceSystemName]). */
+data class SystemNameMismatch(val fileSystemName: String, val deviceSystemName: String)
+
 /** Выбранный файл не годится (баннер на шаге «Обновить из файла»). */
 sealed interface SerialFileProblem {
     /** Не `.frm`: заголовок не разобран. */
     data object NotFrm : SerialFileProblem
-
-    /** Прошивка для другого блока: [fileSystemName] из файла, [deviceSystemName] — подключённый блок. */
-    data class OtherDevice(val fileSystemName: String, val deviceSystemName: String) : SerialFileProblem
 }
 
 @Immutable

@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -34,13 +35,15 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_co
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_crc
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_file
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_not_in_boot
-import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_other_device
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_transfer
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_error_unknown
+import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_label_boot_mode
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_label_device_version
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_label_written_version
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_boot
+import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_other_device
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_ready
+import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_ready_boot
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_still_in_boot
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_msg_success
 import ru.alarmtrade.specmp.core.localization.resources.firmware_serial_title_boot
@@ -51,6 +54,7 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_update_btn_ok
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_file
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_file_too_large
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_title
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_version
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_success
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -70,6 +74,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.B
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.NoFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
@@ -194,21 +199,9 @@ private fun PhaseHero(phase: SerialPhase) {
 @Composable
 private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions) {
     when (val phase = state.phase) {
-        SerialPhase.Ready -> ReadyBody(state.fileError, state.fileProblem, actions.onFileClick)
+        SerialPhase.Ready -> ReadyBody(state, actions.onFileClick)
 
-        is SerialPhase.Confirm -> ConfirmBody(
-            confirm = ConfirmUi(
-                currentVersion = state.deviceVersion,
-                newVersion = phase.fileVersion ?: phase.fileName,
-                description = "",
-                older = phase.older,
-                // Имя блока в файле уже сверено с подключённым блоком (иначе сюда не попасть).
-                localFile = false
-            ),
-            testChannel = false,
-            onUpdate = actions.onConfirmUpdate,
-            onCancel = actions.onCancelConfirm
-        )
+        is SerialPhase.Confirm -> ConfirmPhaseBody(phase, state.deviceVersion, actions)
 
         SerialPhase.WaitingBoot -> {
             Headline(stringResource(Strings.string.firmware_serial_title_boot))
@@ -239,6 +232,32 @@ private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions
 }
 
 @Composable
+private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, deviceVersion: String?, actions: SerialFirmwareActions) {
+    phase.nameMismatch?.let { mismatch ->
+        InfoBanner(
+            text = stringResource(
+                Strings.string.firmware_serial_msg_other_device,
+                mismatch.fileSystemName,
+                mismatch.deviceSystemName
+            ),
+            tone = BannerTone.Warning
+        )
+    }
+    ConfirmBody(
+        confirm = ConfirmUi(
+            currentVersion = deviceVersion,
+            newVersion = phase.fileVersion ?: phase.fileName,
+            description = "",
+            older = phase.older,
+            localFile = false
+        ),
+        testChannel = false,
+        onUpdate = actions.onConfirmUpdate,
+        onCancel = actions.onCancelConfirm
+    )
+}
+
+@Composable
 private fun SuccessBody(phase: SerialPhase.Success, state: SerialFirmwareState, onOk: () -> Unit) {
     Headline(stringResource(Strings.string.firmware_update_title_success))
     Message(stringResource(Strings.string.firmware_serial_msg_success))
@@ -257,10 +276,23 @@ private fun SuccessBody(phase: SerialPhase.Success, state: SerialFirmwareState, 
 }
 
 @Composable
-private fun ReadyBody(fileError: FileError?, fileProblem: SerialFileProblem?, onFileClick: () -> Unit) {
+private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
     Headline(stringResource(Strings.string.firmware_serial_title_ready))
-    Message(stringResource(Strings.string.firmware_serial_msg_ready))
-    fileError?.let { error ->
+    state.deviceVersion?.let { version ->
+        CmpText(text = stringResource(Strings.string.firmware_update_label_version), style = CmpTextStyle.Body)
+        VersionText(version, fontSize = 20.sp)
+        if (state.deviceInBoot) {
+            CmpText(text = stringResource(Strings.string.firmware_serial_label_boot_mode), style = CmpTextStyle.Caption)
+        }
+    }
+    // Блок уже в загрузчике — GOBOOT не нужен, перезагружать по питанию не придётся.
+    val readyMessage = if (state.deviceInBoot) {
+        Strings.string.firmware_serial_msg_ready_boot
+    } else {
+        Strings.string.firmware_serial_msg_ready
+    }
+    Message(stringResource(readyMessage))
+    state.fileError?.let { error ->
         InfoBanner(
             text = stringResource(
                 when (error) {
@@ -272,16 +304,10 @@ private fun ReadyBody(fileError: FileError?, fileProblem: SerialFileProblem?, on
             icon = CmpIcons.ErrorOutline
         )
     }
-    fileProblem?.let { problem ->
+    state.fileProblem?.let { problem ->
         InfoBanner(
             text = when (problem) {
                 SerialFileProblem.NotFrm -> stringResource(Strings.string.firmware_serial_error_file)
-
-                is SerialFileProblem.OtherDevice -> stringResource(
-                    Strings.string.firmware_serial_error_other_device,
-                    problem.fileSystemName,
-                    problem.deviceSystemName
-                )
             },
             tone = BannerTone.Error,
             icon = CmpIcons.ErrorOutline

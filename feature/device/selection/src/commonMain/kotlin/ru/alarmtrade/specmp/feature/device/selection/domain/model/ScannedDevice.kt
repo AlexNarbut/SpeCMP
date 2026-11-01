@@ -67,3 +67,20 @@ enum class ScannedDeviceMode { BASE, PAIRING, BOOT }
 
 /** Вид BLE-устройства Pandora (группа типов SDK `DeviceType`) — для подписи в списке. */
 enum class DeviceKind { ALARM, TAG, RELAY, IMMOBILIZER, REMOTE_CONTROL, NAVIGATION, MODULE, SENSOR, OTHER }
+
+private const val MAC_DIAL_IN_PREFIX = "/dev/tty."
+private const val MAC_CALL_OUT_PREFIX = "/dev/cu."
+
+/**
+ * COM-порты, к которым может быть подключён блок: только USB-адаптеры (у них есть VID — встроенные порты
+ * `debug-console`, Bluetooth-гарнитуры и т.п. его не имеют). На macOS каждый порт виден дважды — `/dev/cu.*` и
+ * `/dev/tty.*` («Dial-In», ждёт сигнал модема): оставляем `cu`, `tty` — только если пары нет.
+ */
+fun List<ScannedDevice.Serial>.connectableAdapters(): List<ScannedDevice.Serial> {
+    val adapters = filter { it.vendorId != null }
+    val callOut = adapters.mapTo(mutableSetOf()) { it.id }
+    return adapters.filterNot { port ->
+        port.id.startsWith(MAC_DIAL_IN_PREFIX) &&
+            MAC_CALL_OUT_PREFIX + port.id.removePrefix(MAC_DIAL_IN_PREFIX) in callOut
+    }
+}

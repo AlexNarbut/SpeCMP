@@ -6,7 +6,7 @@
     <string name="deviceinteraction_disconnected_subtitle">Проверьте питание блока и кабель или Bluetooth. Когда связь восстановится, вы вернётесь на тот же экран.</string>
     <string name="deviceinteraction_common_btn_exit">Выйти</string>
     <string name="deviceinteraction_disconnected_msg_usb">Проверьте USB соединение с устройством.</string>
-    <string name="deviceinteraction_disconnected_msg_serial">Проверьте кабель COM-адаптера и питание блока.</string>
+    <string name="deviceinteraction_disconnected_msg_serial">Блок не отвечает по COM-порту. Проверьте кабель и питание; чтобы обновить прошивку, переведите блок в загрузчик — экран сменится сам.</string>
     <string name="deviceinteraction_disconnected_msg_ble">Блок выключен или находится далеко. Поднесите телефон ближе и проверьте питание блока.</string>
     <string name="deviceinteraction_common_msg_waiting">Ждём возвращения блока…</string>
     <string name="deviceinteraction_common_btn_disconnect">Отключиться</string>

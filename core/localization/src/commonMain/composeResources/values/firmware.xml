@@ -162,13 +162,15 @@
     <string name="firmware_serial_title_screen">Firmware via COM port</string>
     <string name="firmware_serial_title_ready">Ready to update</string>
     <string name="firmware_serial_msg_ready">Choose a .frm firmware file. After the start, reboot the unit by power.</string>
+    <string name="firmware_serial_msg_ready_boot">Choose a .frm firmware file — the unit is already in the bootloader, the update starts right away.</string>
+    <string name="firmware_serial_label_boot_mode">The unit is in the bootloader</string>
     <string name="firmware_serial_title_boot">Reboot the unit</string>
     <string name="firmware_serial_msg_boot">Turn the unit's power off and on — the update starts as soon as it enters the bootloader.</string>
     <string name="firmware_serial_msg_success">The firmware has been written to the unit.</string>
     <string name="firmware_serial_label_device_version">The unit runs version %1$s</string>
     <string name="firmware_serial_label_written_version">Written version %1$s</string>
     <string name="firmware_serial_msg_still_in_boot">The unit stayed in the bootloader. Power-cycle it to start the firmware and connect again — the version will be shown in the header.</string>
-    <string name="firmware_serial_error_other_device">This firmware is for %1$s, but %2$s is connected. Choose a file for this unit.</string>
+    <string name="firmware_serial_msg_other_device">The name in the file does not match the unit: the firmware is for %1$s, but %2$s is connected. Make sure this is the right file.</string>
     <string name="firmware_serial_error_file">The file is not a valid .frm firmware.</string>
     <string name="firmware_serial_error_boot_timeout">The unit did not enter the bootloader. Reboot it by power right after starting the update and check the port.</string>
     <string name="firmware_serial_error_not_in_boot">The unit answered but is not in the .frm bootloader.</string>

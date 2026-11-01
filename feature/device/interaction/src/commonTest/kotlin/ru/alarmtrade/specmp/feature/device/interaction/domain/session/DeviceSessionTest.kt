@@ -448,6 +448,27 @@ class DeviceSessionTest {
     }
 
     @Test
+    fun `serial - silent board keeps the port and is polled until it answers from the bootloader`() = runTest {
+        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
+        val silent = Response.Error(IllegalStateException("no answer"))
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+            // detectMode: 3 попытки — молчит; опрос: ещё раз молчит, затем загрузчик отвечает
+            readResults = listOf(silent, silent, silent, silent, Response.Success(bootDevice))
+        }
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.SERIAL)
+        backgroundScope.launch { session.state.collect {} }
+        advanceTimeBy(1_500)
+        assertEquals(DeviceSessionState.Disconnected, session.state.value)
+
+        advanceTimeBy(5_000)
+        runCurrent()
+
+        assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+        assertEquals(0, repository.disconnectCount)
+    }
+
+    @Test
     fun `usb reads the main program directly`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
         val session = testSession(repository)

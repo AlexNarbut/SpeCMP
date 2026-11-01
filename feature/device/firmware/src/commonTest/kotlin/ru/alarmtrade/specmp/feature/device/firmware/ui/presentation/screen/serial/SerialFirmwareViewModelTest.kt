@@ -197,19 +197,19 @@ class SerialFirmwareViewModelTest {
     }
 
     @Test
-    fun `firmware for another unit is not offered for update`() = test {
+    fun `firmware for another unit is confirmed with a name warning and can be flashed`() = test {
         val repository = FakeSerialRepository(fileInfo = Response.Success(FrmFileInfo("DX-9X", "VER2.10")))
         val viewModel = viewModel(repository)
         runCurrent()
 
         viewModel.onFilePicked(FirmwareFilePickResult.Picked("dx.frm", "/tmp/dx.frm"))
         runCurrent()
+        val confirm = viewModel.state.value.phase as SerialPhase.Confirm
+        assertEquals(SystemNameMismatch("DX-9X", "grc-key"), confirm.nameMismatch)
+
         viewModel.onConfirmUpdate()
         runCurrent()
-
-        assertEquals(SerialPhase.Ready, viewModel.state.value.phase)
-        assertEquals(SerialFileProblem.OtherDevice("DX-9X", "grc-key"), viewModel.state.value.fileProblem)
-        assertEquals(null, repository.updatedPath)
+        assertEquals("/tmp/dx.frm", repository.updatedPath)
         viewModel.viewModelScope.cancel()
     }
 

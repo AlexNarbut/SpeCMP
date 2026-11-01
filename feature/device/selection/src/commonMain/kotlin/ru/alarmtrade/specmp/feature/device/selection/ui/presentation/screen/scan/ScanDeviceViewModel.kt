@@ -36,6 +36,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.connectableAdapters
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.ScanError
@@ -353,7 +354,7 @@ class ScanDeviceViewModel(
         // Ошибка одного транспорта не прячет устройства, найденные другим.
         val ble = (bleResponse as? Response.Success)?.value.orEmpty()
         val usb = (usbResponse as? Response.Success)?.value.orEmpty()
-        val serial = (serialResponse as? Response.Success)?.value.orEmpty()
+        val serial = (serialResponse as? Response.Success)?.value.orEmpty().connectableAdapters()
         val items = ble.map(ScannedDevice::toUiItem) + usb.map(ScannedDevice::toUiItem) + serial.map { it.toUiItem() }
         if (items.isNotEmpty()) return LCEState.Content(items)
         val error = (bleResponse as? Response.Error) ?: (usbResponse as? Response.Error)

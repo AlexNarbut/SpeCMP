@@ -17,8 +17,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
-import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
+import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
@@ -81,14 +81,15 @@ private fun AuthedNavGraph() {
         ),
         entryProvider = entryProvider<NavKey> {
             entry<ScanRoute> { _ ->
-                // Поиск — корень: без «Назад»; COM-порты ищутся только здесь.
+                // Поиск — корень: без «Назад»; COM-порты ищутся только здесь. Экран блока заменяет поиск, а выход из
+                // блока — новый поиск: VM поиска не переживает сессию (иначе вернулась бы на шаге «Подключение»).
                 DeviceSelectionNavGraph(
-                    onSessionCreate = { backStack.navigateSafe(DeviceRoute) },
+                    onSessionCreate = { backStack.replaceCurrent(DeviceRoute) },
                     onClose = null,
                     serialEnabled = true
                 )
             }
-            entry<DeviceRoute> { _ -> DeviceEntry(onExit = { backStack.popSafe() }) }
+            entry<DeviceRoute> { _ -> DeviceEntry(onExit = { backStack.replaceCurrent(ScanRoute) }) }
         }
     )
 }
