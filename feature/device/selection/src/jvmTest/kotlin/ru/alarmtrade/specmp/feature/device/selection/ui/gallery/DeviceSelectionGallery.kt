@@ -8,6 +8,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiItem
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.DeviceSelectionActions
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.DeviceSelectionContent
@@ -131,6 +132,19 @@ class DeviceSelectionGallery {
 
     @Test
     fun infoDialogUsb() = render("12_info_dialog_usb", list, infoId = "usb-1")
+
+    /** Быстрый монтаж: только сигнализации, остальные — неактивны с плашкой (макет F1). */
+    @Test
+    fun alarmsOnly() = render(
+        "14_alarms_only",
+        list.copy(
+            devices = LCEState.Content(
+                devices.map { item ->
+                    if (item is DeviceUiItem.Ble && item.name == "Pandora D-032") item.copy(restricted = true) else item
+                }
+            )
+        )
+    )
 
     @Test
     fun connecting() = render("13_connecting", list.copy(step = ScanStep.Connecting(devices[2])))

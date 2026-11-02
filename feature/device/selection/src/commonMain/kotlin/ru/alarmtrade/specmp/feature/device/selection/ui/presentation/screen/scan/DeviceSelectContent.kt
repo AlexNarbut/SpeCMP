@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -376,12 +382,17 @@ internal fun DeviceRow(
     val restricted = item.restricted
     CmpSurface(
         modifier = Modifier.fillMaxWidth().testTag(DEVICE_ITEM_TAG_PREFIX + item.id)
-            .alpha(if (restricted) RESTRICTED_ALPHA else 1f)
+            .then(if (restricted) Modifier.dashedBorder(colors.outlineVariant) else Modifier)
             .clip(RoundedCornerShape(16.dp)).clickable(enabled = !restricted, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = if (selected) colors.primaryContainer else colors.surfaceContainerLow,
+        // Недоступно в этом поиске (быстрый монтаж — только сигнализации): без заливки, пунктирная рамка (макет F1).
+        color = when {
+            restricted -> Color.Transparent
+            selected -> colors.primaryContainer
+            else -> colors.surfaceContainerLow
+        },
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
-        border = if (selected) null else BorderStroke(1.dp, colors.outlineVariant)
+        border = if (selected || restricted) null else BorderStroke(1.dp, colors.outlineVariant)
     ) {
         CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(
@@ -399,7 +410,9 @@ internal fun DeviceRow(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DeviceTile(icon = item.typeIcon, sizeDp = tileSize)
+            CmpBox(modifier = Modifier.alpha(if (restricted) RESTRICTED_ALPHA else 1f)) {
+                DeviceTile(icon = item.typeIcon, sizeDp = tileSize)
+            }
             CmpColumn(modifier = Modifier.weight(1f)) {
                 val secondary = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
                 CmpRow(
@@ -433,17 +446,17 @@ internal fun DeviceRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TransportChip(transport = item.transport, short = true)
-                    CmpText(
-                        text = if (restricted) {
-                            stringResource(Strings.string.deviceselect_common_msg_alarms_only)
-                        } else {
-                            item.address
-                        },
-                        fontSize = DsType.LabelSmall,
-                        color = secondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    if (restricted) {
+                        AlarmsOnlyChip()
+                    } else {
+                        CmpText(
+                            text = item.address,
+                            fontSize = DsType.LabelSmall,
+                            color = secondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
             CmpRow(verticalAlignment = Alignment.CenterVertically) {
@@ -455,15 +468,59 @@ internal fun DeviceRow(
                         tint = colors.onSurfaceVariant
                     )
                 }
-                CmpIcon(
-                    icon = CmpIcons.ChevronRight,
-                    contentDescription = null,
-                    tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
-                )
+                if (!restricted) {
+                    CmpIcon(
+                        icon = CmpIcons.ChevronRight,
+                        contentDescription = null,
+                        tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
+                    )
+                }
             }
         }
     }
 }
+
+/** Плашка «Только для сигнализаций» у устройства, недоступного в поиске быстрого монтажа. */
+@Composable
+private fun AlarmsOnlyChip() {
+    val colors = cmpThemeColors()
+    CmpRow(
+        modifier = Modifier
+            .background(colors.surfaceContainerHighest, RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CmpIcon(
+            icon = CmpIcons.Block,
+            contentDescription = null,
+            tint = colors.onSurface,
+            modifier = Modifier.size(16.dp)
+        )
+        CmpText(
+            text = stringResource(Strings.string.deviceselect_common_msg_alarms_only),
+            fontSize = DsType.LabelSmall,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/** Пунктирная рамка карточки (недоступное устройство). */
+private fun Modifier.dashedBorder(color: Color): Modifier = drawBehind {
+    drawRoundRect(
+        color = color,
+        cornerRadius = CornerRadius(16.dp.toPx()),
+        style = Stroke(
+            width = 1.5.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(DASH_ON, DASH_OFF))
+        )
+    )
+}
+
+private const val DASH_ON = 12f
+private const val DASH_OFF = 8f
 
 /** Круглый герой-значок состояний. */
 @Composable

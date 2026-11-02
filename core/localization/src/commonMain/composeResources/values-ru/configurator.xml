@@ -81,6 +81,7 @@
     <string name="configurator_card_btn_firmware">Перейти к обновлению прошивки</string>
     <string name="configurator_card_btn_open">Открыть настройки</string>
     <string name="configurator_card_btn_load">Загрузить в редактор</string>
+    <string name="configurator_card_btn_select">Выбрать</string>
     <string name="configurator_card_btn_save_mine">Сохранить в мои</string>
     <string name="configurator_card_btn_write">Записать в блок</string>
     <string name="configurator_card_error">Не удалось загрузить конфигурацию</string>

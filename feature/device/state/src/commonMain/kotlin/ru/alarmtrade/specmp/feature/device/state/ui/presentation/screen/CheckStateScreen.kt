@@ -25,13 +25,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -52,6 +56,11 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_check_title_
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_cmd_btn_retry
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_cmd_msg_hold_hint
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_commands_title_section
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_engine
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_extra
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_link
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_zones
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_msg_no_extra
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_btn_keep
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_btn_keep_both
@@ -100,7 +109,10 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.state.domain.model.HandsFreeMode
+import ru.alarmtrade.specmp.feature.device.state.domain.model.SirenMode
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
+import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.AllCommandsSheet
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ChecklistPanel
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.CommandsGrid
@@ -109,6 +121,7 @@ import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.Engi
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ExtraGroups
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.LinkCard
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.PultCard
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.PultWideCard
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.SectionCard
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StateBanner
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StatusHero
@@ -120,7 +133,10 @@ import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.CheckStat
 
 internal const val CHECK_STATE_NEXT_TAG = "devicestate_next"
 internal const val CHECK_STATE_TABS_TAG = "devicestate_tabs"
-private val WideFrom = 760.dp
+
+// Две колонки — только когда контенту хватает ширины (макет: ≥ 860 dp контента, в т.ч. справа от колонки
+// шагов мастера).
+private val WideFrom = 860.dp
 private val WideSplitFrom = 1100.dp
 private const val ALARM_BORDER_MIN_ALPHA = 0.25f
 private const val ALARM_BORDER_MILLIS = 500
@@ -183,6 +199,13 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
             onFinishConfirm = viewModel::onFinishConfirm
         )
     }
+    if (fastMount != null) {
+        // Шаг мастера: системный «Назад» — как стрелка в шапке (диалог «Вернуться на предыдущий шаг?»).
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            onBackCompleted = actions.onBack
+        )
+    }
     CheckStateContent(state = state, actions = actions, fastMount = fastMount, snackbar = snackbar)
 }
 
@@ -203,8 +226,9 @@ private suspend fun showResult(
 private enum class Tab { CHECKS, PULT, DETAILS }
 
 /**
- * Stateless-контент. Узко (< 760 dp): сверху статус и плашки, ниже вкладки «Пульт / Подробно» (в быстром монтаже
- * первая — «Проверки N/M»). Широко: слева статус, пульт и чек-лист, справа «Подробно».
+ * Stateless-контент. Узко (< 860 dp): сверху статус и плашки, ниже вкладки «Пульт / Подробно» (в быстром монтаже
+ * первая — «Проверки N/M»). Широко: слева статус, горизонтальный пульт и «Подробно» вкладками, справа — чек-лист
+ * (быстрый монтаж) или все команды. [CheckStateFastMount.chrome] — шапка и панель мастера быстрого монтажа.
  */
 @Composable
 internal fun CheckStateContent(
@@ -218,19 +242,24 @@ internal fun CheckStateContent(
     var allCommands by rememberSaveable { mutableStateOf(false) }
     val onFire: (CommandUi) -> Unit =
         remember(actions) { { actions.onCommand(it.command) } }
+    val chrome = fastMount?.chrome
     CmpScaffold(
         topBar = {
-            CmpTopAppBar(
-                title = { CmpText(text = stringResource(Strings.string.devicestate_check_title_screen)) },
-                subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
-                navigationIcon = {
-                    CmpIconButton(
-                        onClick = actions.onBack,
-                        icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.devicestate_check_a11y_back)
-                    )
-                }
-            )
+            if (chrome != null) {
+                chrome.topBar(actions.onBack)
+            } else {
+                CmpTopAppBar(
+                    title = { CmpText(text = stringResource(Strings.string.devicestate_check_title_screen)) },
+                    subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+                    navigationIcon = {
+                        CmpIconButton(
+                            onClick = actions.onBack,
+                            icon = CmpIcons.ArrowBack,
+                            contentDescription = stringResource(Strings.string.devicestate_check_a11y_back)
+                        )
+                    }
+                )
+            }
         },
         snackbarHost = { CmpSnackbarHost(hostState = snackbar) }
     ) { padding ->
@@ -241,12 +270,13 @@ internal fun CheckStateContent(
             if (wide) {
                 WideLayout(
                     parts,
-                    leftWidth = if (maxWidth >=
+                    rightWidth = wideRightWidth(maxWidth),
+                    carHeight = if (maxWidth >=
                         WideSplitFrom
                     ) {
-                        440
+                        180.dp
                     } else {
-                        400
+                        150.dp
                     }
                 )
             } else {
@@ -325,21 +355,38 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
     }
 }
 
+/** Ширина правой колонки (чек-лист / все команды) в широком окне. */
+private fun wideRightWidth(width: Dp): Dp = when {
+    width >= 1200.dp -> 440.dp
+    width >= 960.dp -> 380.dp
+    else -> 340.dp
+}
+
+/**
+ * Широкое окно (макет): слева — статус, пульт с машиной горизонтально и «Подробно» одной карточкой с вкладками;
+ * справа — чек-лист (быстрый монтаж) или все команды (расширенный). «Далее» — в нижней панели справа.
+ */
 @Composable
-private fun WideLayout(parts: Parts, leftWidth: Int) {
+private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
     val state = parts.state
-    CmpRow(
-        modifier = Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, top = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        CmpColumn(modifier = Modifier.width(leftWidth.dp)) {
+    CmpColumn(modifier = Modifier.fillMaxSize()) {
+        CmpRow(
+            modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             CmpColumn(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 20.dp),
+                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatusArea(state, parts.actions)
                 Banners(state, parts.actions)
-                PultCard(state, carWidth = 220.dp, onFire = parts.onFire, onAllCommands = parts.onAllCommands)
+                PultWideCard(state, carHeight = carHeight, onFire = parts.onFire, onAllCommands = parts.onAllCommands)
+                DetailsTabs(parts)
+            }
+            CmpColumn(
+                modifier = Modifier.width(rightWidth).verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 if (parts.hasChecks) {
                     SectionCard(
                         title = stringResource(Strings.string.devicestate_fast_title_checks),
@@ -347,22 +394,81 @@ private fun WideLayout(parts: Parts, leftWidth: Int) {
                     ) {
                         Checks(parts)
                     }
+                } else {
+                    CommandsSection(parts, columns = if (rightWidth >= 400.dp) 2 else 1)
                 }
             }
-            FastDock(parts)
         }
-        CmpColumn(
-            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            CmpText(
-                text = stringResource(Strings.string.devicestate_check_title_details),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
-            )
-            Details(parts)
+        FastDock(parts, wide = true)
+    }
+}
+
+private enum class DetailsTab { ZONES, ENGINE, LINK, EXTRA }
+
+/** «Подробно» в широком окне — одна карточка с вкладками вместо длинной ленты карточек. */
+@Composable
+private fun DetailsTabs(parts: Parts) {
+    val vehicle = parts.state.vehicle
+    var selected by rememberSaveable { mutableIntStateOf(0) }
+    val tab = DetailsTab.entries[selected.coerceIn(0, DetailsTab.entries.lastIndex)]
+    SectionCard(title = stringResource(Strings.string.devicestate_check_title_details), contentPadding = 0.dp) {
+        CmpTabRow(
+            selectedTabIndex = tab.ordinal,
+            tabs = DetailsTab.entries.map { CmpTabItem(title = stringResource(it.title())) },
+            onTabSelect = { selected = it }
+        )
+        CmpColumn(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            when {
+                vehicle == null -> ZonesSkeleton()
+
+                tab == DetailsTab.ZONES -> ZonesList(
+                    vehicle = vehicle,
+                    changed = parts.state.changedZones,
+                    tick = parts.state.tick
+                )
+
+                tab == DetailsTab.ENGINE -> EngineCard(vehicle)
+
+                tab == DetailsTab.LINK -> LinkCard(vehicle)
+
+                vehicle.hasExtra() -> ExtraGroups(vehicle)
+
+                else -> CmpText(
+                    text = stringResource(Strings.string.devicestate_details_msg_no_extra),
+                    color = cmpThemeColors().onSurfaceVariant
+                )
+            }
         }
+    }
+}
+
+private fun DetailsTab.title() = when (this) {
+    DetailsTab.ZONES -> Strings.string.devicestate_details_item_zones
+    DetailsTab.ENGINE -> Strings.string.devicestate_details_item_engine
+    DetailsTab.LINK -> Strings.string.devicestate_details_item_link
+    DetailsTab.EXTRA -> Strings.string.devicestate_details_item_extra
+}
+
+private fun VehicleState.hasExtra(): Boolean =
+    listOf(can, ev, heater, camera).any { it != null } || siren != SirenMode.OFF || handsFree != HandsFreeMode.OFF
+
+@Composable
+private fun CommandsSection(parts: Parts, columns: Int) {
+    val state = parts.state
+    SectionCard(title = stringResource(Strings.string.devicestate_commands_title_section)) {
+        CmpText(
+            text = stringResource(Strings.string.devicestate_cmd_msg_hold_hint),
+            fontSize = 14.sp,
+            color = cmpThemeColors().onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        )
+        CommandsGrid(
+            commands = state.commands,
+            status = { state.status(it.command) },
+            enabled = !state.loading && state.pending == null,
+            columns = columns,
+            onFire = parts.onFire
+        )
     }
 }
 
@@ -477,21 +583,35 @@ private fun Checks(parts: Parts) {
 }
 
 @Composable
-private fun FastDock(parts: Parts) {
+private fun FastDock(parts: Parts, wide: Boolean = false) {
     val fastMount = parts.fastMount ?: return
     val checklist = fastMount.checklist
+    val button: @Composable ColumnScope.() -> Unit = {
+        CmpButton(
+            text = if (checklist.tasks.isNotEmpty() && !checklist.allClosed) {
+                stringResource(Strings.string.devicestate_fast_format_next, checklist.closed, checklist.tasks.size)
+            } else {
+                stringResource(Strings.string.devicestate_fast_btn_next)
+            },
+            onClick = parts.actions.onNext,
+            enabled = !fastMount.nextBusy,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(CHECK_STATE_NEXT_TAG)
+        )
+    }
+    val chrome = fastMount.chrome
+    if (chrome != null) {
+        chrome.dock(button)
+        return
+    }
     val colors = cmpThemeColors()
     CmpSurface(color = colors.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
-        CmpBox(modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 14.dp)) {
-            CmpButton(
-                text = if (checklist.tasks.isNotEmpty() && !checklist.allClosed) {
-                    stringResource(Strings.string.devicestate_fast_format_next, checklist.closed, checklist.tasks.size)
-                } else {
-                    stringResource(Strings.string.devicestate_fast_btn_next)
-                },
-                onClick = parts.actions.onNext,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(CHECK_STATE_NEXT_TAG)
-            )
+        CmpBox(
+            modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 14.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            CmpColumn(modifier = if (wide) Modifier.widthIn(max = 400.dp).fillMaxWidth() else Modifier.fillMaxWidth()) {
+                button()
+            }
         }
     }
 }

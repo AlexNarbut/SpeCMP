@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_lo
 import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_more
 import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_open
 import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_save_mine
+import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_select
 import ru.alarmtrade.specmp.core.localization.resources.configurator_card_btn_write
 import ru.alarmtrade.specmp.core.localization.resources.configurator_card_error
 import ru.alarmtrade.specmp.core.localization.resources.configurator_card_label_can
@@ -252,7 +253,9 @@ internal class CloudCardActions(
     /** «Записать в блок» (при подключённом блоке). */
     val onWrite: ((CloudConfiguration) -> Unit)?,
     /** Переход к обновлению прошивки при несовпадении CAN-кода. */
-    val onOpenFirmwareUpdate: (() -> Unit)?
+    val onOpenFirmwareUpdate: (() -> Unit)?,
+    /** Выбор для быстрого монтажа: [onLoad] — «Выбрать», без «Сохранить в мои». */
+    val selectForMount: Boolean = false
 )
 
 /** Экран карточки (телефон): шапка с «назад» и [CloudCardContent]. */
@@ -431,7 +434,13 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
     CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         actions.onLoad?.let { load ->
             CmpButton(
-                text = stringResource(Strings.string.configurator_card_btn_load),
+                text = stringResource(
+                    if (actions.selectForMount) {
+                        Strings.string.configurator_card_btn_select
+                    } else {
+                        Strings.string.configurator_card_btn_load
+                    }
+                ),
                 onClick = { load(card) },
                 enabled = !state.canMismatch,
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_LOAD)
@@ -452,11 +461,13 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
                 modifier = Modifier.testTag(ConfiguratorTestTags.CARD_OPEN)
             )
         }
-        CmpOutlinedButton(
-            text = stringResource(Strings.string.configurator_card_btn_save_mine),
-            onClick = actions.onSaveRequest,
-            modifier = Modifier.testTag(ConfiguratorTestTags.CARD_SAVE_MINE)
-        )
+        if (!actions.selectForMount) {
+            CmpOutlinedButton(
+                text = stringResource(Strings.string.configurator_card_btn_save_mine),
+                onClick = actions.onSaveRequest,
+                modifier = Modifier.testTag(ConfiguratorTestTags.CARD_SAVE_MINE)
+            )
+        }
     }
 }
 

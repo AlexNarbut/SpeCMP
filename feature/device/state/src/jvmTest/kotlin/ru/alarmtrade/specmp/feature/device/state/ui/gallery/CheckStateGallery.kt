@@ -169,6 +169,35 @@ class CheckStateGallery {
     @Test
     fun f01Checklist() = render("f01_checklist", state(normal, fastMount = true), tab = 0, fastMount = fast(tasks))
 
+    /** Строгий порядок (курсор SDK): текущее задание выделено, остальные — «Ожидает». */
+    @Test
+    fun f02Sequential() = render(
+        "f02_sequential",
+        state(normal, fastMount = true),
+        tab = 0,
+        fastMount = CheckStateFastMount(
+            CheckStateChecklist(
+                tasks.mapIndexed { index, task ->
+                    task.copy(
+                        status = if (index ==
+                            0
+                        ) {
+                            ChecklistStatus.PASSED
+                        } else {
+                            ChecklistStatus.PENDING
+                        },
+                        active = index == 1
+                    )
+                },
+                sequential = true
+            ),
+            {},
+            {},
+            {},
+            { _, _ -> }
+        )
+    )
+
     @Test
     fun f04AllDone() = render(
         "f04_all_done",

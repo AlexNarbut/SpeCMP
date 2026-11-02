@@ -23,6 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -46,6 +49,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_msg_can
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_msg_interrupted
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_msg_reboot
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_msg_reboot_usb
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_subtitle_clone_next
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_subtitle_clone_required
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_subtitle_not_supported
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_subtitle_start
@@ -103,6 +107,9 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StatusRow
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StepAppear
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StepNextButton
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
 
@@ -112,6 +119,7 @@ private val txt = Strings.string
 internal const val BYPASS_START_TAG = "autostart_bypass_start"
 internal const val BYPASS_OPEN_CLONE_TAG = "autostart_bypass_open_clone"
 internal const val BYPASS_RESULT_TAG = "autostart_bypass_result"
+internal const val BYPASS_STEP_NEXT_TAG = "autostart_bypass_step_next"
 
 /** Действия экрана; один экземпляр на экран. */
 @Immutable
@@ -152,9 +160,55 @@ fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSuppo
     BypassContent(state = state, actions = actions)
 }
 
-/** Stateless-контент: фаза → тело и кнопки; диалоги поверх. */
+/**
+ * Обход как шаг мастера быстрого монтажа: шапка и нижняя панель — мастера ([chrome]), тело, статус, ошибки и диалоги —
+ * этого экрана. Без перехода в Clone (его ведёт мастер): на успехе и «нужен Clone» — «Далее» → [onNext].
+ *
+ * @param key ключ VM: новый ключ — обучение с начала (мастер вернулся к монтажу), тот же — прежний итог.
+ */
 @Composable
-internal fun BypassContent(state: BypassState, actions: BypassActions) {
+fun BypassLearningStep(
+    key: String,
+    chrome: AutostartStepChrome,
+    next: AutostartStepNext,
+    onNext: (cloneRequired: Boolean) -> Unit,
+    onBack: () -> Unit,
+    onOpenSupportChat: () -> Unit
+) {
+    val viewModel = koinViewModel<BypassLearningViewModel>(key = key)
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val actions = remember(viewModel, onBack, onOpenSupportChat) {
+        BypassActions(
+            onBack = { if (viewModel.onBackRequest()) onBack() },
+            onClose = onBack,
+            onStart = viewModel::onStartClick,
+            onDialogDismiss = viewModel::onDialogDismiss,
+            onPinSubmit = viewModel::onPinSubmit,
+            onExitConfirm = viewModel::onExitConfirm,
+            onOpenSupportChat = onOpenSupportChat
+        )
+    }
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        onBackCompleted = actions.onBack
+    )
+    BypassContent(
+        state = state.copy(cloneAvailable = false),
+        actions = actions,
+        stepMode = BypassStepMode(chrome, next, onNext)
+    )
+}
+
+/** Режим шага мастера (см. [BypassLearningStep]). */
+internal class BypassStepMode(
+    val chrome: AutostartStepChrome,
+    val next: AutostartStepNext,
+    val onNext: (cloneRequired: Boolean) -> Unit
+)
+
+/** Stateless-контент: фаза → тело и кнопки; диалоги поверх. [stepMode] — шаг мастера быстрого монтажа. */
+@Composable
+internal fun BypassContent(state: BypassState, actions: BypassActions, stepMode: BypassStepMode? = null) {
     val phase = state.phase
     AutostartScaffold(
         title = stringResource(txt.autostart_bypass_title_screen),
@@ -178,11 +232,12 @@ internal fun BypassContent(state: BypassState, actions: BypassActions) {
                     }
                 }
 
-                is BypassPhase.Finished -> ResultBody(state, phase.result, layout)
+                is BypassPhase.Finished -> ResultBody(state, phase.result, layout, inStep = stepMode != null)
             }
         },
         side = if (phase is BypassPhase.Start) ({ HowItWorks(howItems()) }) else null,
-        footer = footer(state, actions)
+        footer = footer(state, actions, stepMode),
+        chrome = stepMode?.chrome
     )
     when (state.dialog) {
         is BypassDialog.Pin -> ServicePinDialog(
@@ -468,7 +523,7 @@ private fun KeyTag(key: InstructionKey) {
 }
 
 @Composable
-private fun ResultBody(state: BypassState, result: BypassResult, layout: AutostartLayout) {
+private fun ResultBody(state: BypassState, result: BypassResult, layout: AutostartLayout, inStep: Boolean) {
     IllustrationFrame(
         if (result is BypassResult.Success) AutostartIllustration.RESULT_SUCCESS else AutostartIllustration.RESULT_FAIL,
         layout,
@@ -488,7 +543,9 @@ private fun ResultBody(state: BypassState, result: BypassResult, layout: Autosta
 
         BypassResult.CloneRequired -> Headline(
             title = stringResource(txt.autostart_bypass_title_clone_required),
-            subtitle = stringResource(txt.autostart_bypass_subtitle_clone_required)
+            subtitle = stringResource(
+                if (inStep) txt.autostart_bypass_subtitle_clone_next else txt.autostart_bypass_subtitle_clone_required
+            )
         )
 
         BypassResult.NotSupported -> Headline(
@@ -553,22 +610,33 @@ private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: C
 }
 
 /** Кнопки по фазе (макет): старт / итог; во время обучения кнопок нет. */
-private fun footer(state: BypassState, actions: BypassActions): (@Composable ColumnScope.() -> Unit)? =
-    when (val phase = state.phase) {
-        is BypassPhase.Start -> {
-            {
-                AutostartPrimaryButton(
-                    txt.autostart_bypass_btn_start,
-                    actions.onStart,
-                    Modifier.testTag(BYPASS_START_TAG)
-                )
-            }
+private fun footer(
+    state: BypassState,
+    actions: BypassActions,
+    step: BypassStepMode?
+): (@Composable ColumnScope.() -> Unit)? = when (val phase = state.phase) {
+    is BypassPhase.Start -> {
+        {
+            AutostartPrimaryButton(
+                txt.autostart_bypass_btn_start,
+                actions.onStart,
+                Modifier.testTag(BYPASS_START_TAG)
+            )
         }
+    }
 
-        is BypassPhase.Running -> null
+    is BypassPhase.Running -> null
 
-        is BypassPhase.Finished -> {
-            {
+    is BypassPhase.Finished -> {
+        {
+            val stepDone = phase.result == BypassResult.Success || phase.result == BypassResult.CloneRequired
+            if (step != null && stepDone) {
+                StepNextButton(
+                    next = step.next,
+                    onClick = { step.onNext(phase.result == BypassResult.CloneRequired) },
+                    modifier = Modifier.testTag(BYPASS_STEP_NEXT_TAG)
+                )
+            } else {
                 when (phase.result) {
                     BypassResult.Success -> {
                         AutostartPrimaryButton(txt.autostart_common_btn_done, actions.onClose)
@@ -600,6 +668,7 @@ private fun footer(state: BypassState, actions: BypassActions): (@Composable Col
             }
         }
     }
+}
 
 private val KeyRed = Color(0xFFC62828)
 private val KeyBlack = Color(0xFF1F2324)

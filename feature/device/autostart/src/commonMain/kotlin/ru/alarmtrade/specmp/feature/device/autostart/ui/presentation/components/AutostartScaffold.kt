@@ -80,6 +80,7 @@ import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
 
 /** Класс окна (Material 3 Window Size Classes): раскладка экранов обхода и Clone. */
 enum class AutostartLayout { Compact, Medium, Expanded }
@@ -130,38 +131,44 @@ internal fun AutostartScaffold(
     main: @Composable ColumnScope.(AutostartLayout) -> Unit,
     modifier: Modifier = Modifier,
     side: (@Composable ColumnScope.() -> Unit)? = null,
-    footer: (@Composable ColumnScope.() -> Unit)? = null
+    footer: (@Composable ColumnScope.() -> Unit)? = null,
+    chrome: AutostartStepChrome? = null
 ) {
     val colors = cmpThemeColors()
     CmpScaffold(
         modifier = modifier,
         topBar = {
-            CmpTopAppBar(
-                title = { CmpText(text = title) },
-                subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
-                navigationIcon = {
-                    if (locked) {
-                        val a11y = stringResource(Strings.string.autostart_common_a11y_locked)
-                        CmpBox(
-                            modifier = Modifier.size(48.dp).semantics { contentDescription = a11y },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CmpIcon(icon = CmpIcons.Lock, contentDescription = null, tint = colors.onSurfaceVariant)
+            if (chrome != null) {
+                chrome.topBar(locked, onBack)
+            } else {
+                CmpTopAppBar(
+                    title = { CmpText(text = title) },
+                    subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+                    navigationIcon = {
+                        if (locked) {
+                            val a11y = stringResource(Strings.string.autostart_common_a11y_locked)
+                            CmpBox(
+                                modifier = Modifier.size(48.dp).semantics { contentDescription = a11y },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CmpIcon(icon = CmpIcons.Lock, contentDescription = null, tint = colors.onSurfaceVariant)
+                            }
+                        } else {
+                            CmpIconButton(
+                                onClick = onBack,
+                                icon = CmpIcons.ArrowBack,
+                                contentDescription = stringResource(Strings.string.autostart_common_a11y_back)
+                            )
                         }
-                    } else {
-                        CmpIconButton(
-                            onClick = onBack,
-                            icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.autostart_common_a11y_back)
-                        )
                     }
-                }
-            )
+                )
+            }
         }
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = autostartLayoutOf(maxWidth)
-            val compact = layout == AutostartLayout.Compact
+            // Шаг мастера: кнопки всегда в панели мастера внизу (как на остальных его шагах).
+            val compact = layout == AutostartLayout.Compact || chrome != null
             CmpColumn(modifier = Modifier.fillMaxSize()) {
                 StatusStrip(layout = layout, content = status)
                 CmpColumn(
@@ -170,7 +177,9 @@ internal fun AutostartScaffold(
                 ) {
                     Body(layout = layout, main = main, side = side, footer = footer.takeUnless { compact })
                 }
-                if (compact && footer != null) {
+                if (chrome != null && footer != null) {
+                    chrome.dock(footer)
+                } else if (compact && footer != null) {
                     CmpSurface(color = colors.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
                         CmpColumn(
                             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
