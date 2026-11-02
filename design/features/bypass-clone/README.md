@@ -1,0 +1,9 @@
+# Бесключевой обход и процедура Clone
+
+Два экрана раздела «Расширенный монтаж»: старт → процесс → итог. Источник требований: `uploads/autostart-bypass-clone-design-brief.md`.
+
+- `BypassClone.jsx` — `BypassCloneApp` (обход ⇄ Clone), витрина `useBcCtl`.
+- Макеты: `BypassClone.html` (mobile 412×840), `BypassCloneTablet.html` (800×1280 / 1280×800), `BypassCloneDesktop.html` (1280×800). `?view=clone` открывает Clone.
+- Шаг обхода — карточка-команда под иллюстрацией (выбран вариант A). Истории шагов и списка этапов Clone нет.
+- Все состояния ТЗ: B1–B8, C1–C6, X1–X3, PIN, потеря связи. «Начать» запускает живой демо-сценарий.
+- Иллюстрации — `illus/*.svg` (из `uploads/bypass`, `uploads/clone`, очищены от c2pa-метаданных, красятся currentColor). Карта ключей — `BC_ILLUS`; для «Заглушите двигатель» файла нет → плейсхолдер.
