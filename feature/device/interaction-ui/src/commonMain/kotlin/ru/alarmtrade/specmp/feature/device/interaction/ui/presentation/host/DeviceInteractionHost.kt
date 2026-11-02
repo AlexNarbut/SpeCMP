@@ -56,6 +56,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import specmp.feature.device.interaction_ui.generated.resources.Res
 import specmp.feature.device.interaction_ui.generated.resources.device_link_lost
@@ -98,15 +99,21 @@ fun DeviceInteractionHost(
         if (state.showBootContent) {
             bootContent(viewModel::onExit)
         } else {
-            val status = when (state.session) {
-                is DeviceSessionState.Ready -> null
+            // Ожидаемая перезагрузка в рабочем режиме: ожидание рисует сам flow (мастер быстрого монтажа);
+            // не дождались за тайм-аут — ожидание снимается, и обрыв снова показывается как потеря связи.
+            val status = if (state.reboot == DeviceReboot.Restart) {
+                null
+            } else {
+                when (state.session) {
+                    is DeviceSessionState.Ready -> null
 
-                DeviceSessionState.Connecting -> DeviceStatus.Connecting
+                    DeviceSessionState.Connecting -> DeviceStatus.Connecting
 
-                DeviceSessionState.Disconnected -> DeviceStatus.Disconnected
+                    DeviceSessionState.Disconnected -> DeviceStatus.Disconnected
 
-                // Загрузчик всегда обслуживает bootContent (showBootContent); сюда не попадаем.
-                is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> null
+                    // Загрузчик всегда обслуживает bootContent (showBootContent); сюда не попадаем.
+                    is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> null
+                }
             }
             status?.let {
                 NavigationBackHandler(
