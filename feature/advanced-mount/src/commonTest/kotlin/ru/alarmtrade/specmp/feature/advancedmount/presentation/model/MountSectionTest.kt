@@ -8,7 +8,7 @@ class MountSectionTest {
 
     @Test
     fun `all features give all sections in grid order`() {
-        assertEquals(MountSection.entries.toList(), DeviceFeature.entries.toSet().toSections())
+        assertEquals(MountSection.entries.toList(), DeviceFeature.entries.toSet().toSections(bluetooth = true))
     }
 
     @Test
@@ -23,20 +23,30 @@ class MountSectionTest {
                 MountSection.COMMUNITY_MAPS,
                 MountSection.VEHICLES
             ),
-            setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS).toSections()
+            setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS).toSections(bluetooth = false)
         )
     }
 
     @Test
     fun `chat and vehicles are always shown`() {
-        assertEquals(listOf(MountSection.SUPPORT_CHAT, MountSection.VEHICLES), emptySet<DeviceFeature>().toSections())
+        assertEquals(
+            listOf(MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
+            emptySet<DeviceFeature>().toSections(bluetooth = false)
+        )
+    }
+
+    @Test
+    fun `state check is shown only over bluetooth`() {
+        val features = setOf(DeviceFeature.SETTINGS)
+        assertEquals(true, MountSection.CHECK_STATE in features.toSections(bluetooth = true))
+        assertEquals(false, MountSection.CHECK_STATE in features.toSections(bluetooth = false))
     }
 
     @Test
     fun `unread features give the unsupported fallback`() {
         assertEquals(
             listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
-            (null as Set<DeviceFeature>?).toSections()
+            (null as Set<DeviceFeature>?).toSections(bluetooth = true)
         )
     }
 

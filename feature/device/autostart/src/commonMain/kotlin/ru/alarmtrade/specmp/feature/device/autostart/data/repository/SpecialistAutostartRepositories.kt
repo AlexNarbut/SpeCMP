@@ -7,15 +7,12 @@ import ru.alarmtrade.specialist.domain.errors.IncorrectServicePinException
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
-import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
-import ru.alarmtrade.specmp.feature.device.autostart.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
-import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.ProgramModeRepository
 
 /**
  * [BypassLearningRepository] над `learnBypassFlowUseCase` (SDK сам пишет лог событий обучения на сервер).
@@ -75,25 +72,5 @@ class SpecialistCloneRepository(private val bluetoothAlarmDeviceInteractor: () -
                 written = written || event.isWriting
                 emit(event)
             }
-    }
-}
-
-/** [ProgramModeRepository] над `setProgramModeUseCase`: неверный PIN — исход, не ошибка. */
-class SpecialistProgramModeRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
-) : ProgramModeRepository {
-
-    override suspend fun enter(): Response<ProgramModeResult> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return when (val response = interactor.setProgramModeUseCase.execute().toResponse()) {
-            is Response.Success -> Response.Success(ProgramModeResult.ENTERED)
-
-            is Response.Error ->
-                if (response.exception is IncorrectServicePinException) {
-                    Response.Success(ProgramModeResult.WRONG_PIN)
-                } else {
-                    response
-                }
-        }
     }
 }

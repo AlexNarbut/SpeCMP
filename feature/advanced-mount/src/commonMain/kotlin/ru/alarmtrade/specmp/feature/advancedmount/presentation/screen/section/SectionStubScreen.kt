@@ -22,6 +22,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_tit
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_title_remote_sync
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_msg_stub
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_bypass_learning
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_check_state
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_clone
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_community_maps
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_configurator
@@ -33,6 +34,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_s
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_vehicles
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_voice_firmware
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_bypass_learning
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_check_state
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_clone
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_community_maps
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_configurator
@@ -58,6 +60,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSectio
 import specmp.feature.advanced_mount.generated.resources.Res
 import specmp.feature.advanced_mount.generated.resources.mount_remote_sync
 import specmp.feature.advanced_mount.generated.resources.mount_section_bypass_learning
+import specmp.feature.advanced_mount.generated.resources.mount_section_check_state
 import specmp.feature.advanced_mount.generated.resources.mount_section_clone
 import specmp.feature.advanced_mount.generated.resources.mount_section_community_maps
 import specmp.feature.advanced_mount.generated.resources.mount_section_configurator
@@ -107,6 +110,12 @@ private val MountSection.res: SectionRes
             Strings.string.advancedmount_sections_title_dynamic_devices,
             Strings.string.advancedmount_sections_subtitle_dynamic_devices,
             Res.drawable.mount_section_dynamic_devices
+        )
+
+        MountSection.CHECK_STATE -> SectionRes(
+            Strings.string.advancedmount_sections_title_check_state,
+            Strings.string.advancedmount_sections_subtitle_check_state,
+            Res.drawable.mount_section_check_state
         )
 
         MountSection.TECH_REQUESTS -> SectionRes(

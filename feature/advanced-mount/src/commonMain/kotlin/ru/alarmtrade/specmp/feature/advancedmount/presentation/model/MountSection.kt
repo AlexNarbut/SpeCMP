@@ -12,11 +12,15 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeatur
 @SerialName("advanced-mount.MountSection")
 enum class MountSection(val needsCan: Boolean = false) {
     FIRMWARE_UPDATE,
+
+    /** Живое состояние блока и команды — только по Bluetooth (SDK не отдаёт телеметрию по USB). */
+    CHECK_STATE,
     SETTINGS(needsCan = true),
     CONFIGURATOR,
     BYPASS_LEARNING(needsCan = true),
     CLONE(needsCan = true),
     DYNAMIC_DEVICES(needsCan = true),
+
     TECH_REQUESTS,
     SUPPORT_CHAT,
     VOICE_FIRMWARE,
@@ -30,9 +34,9 @@ internal val UnsupportedSections =
 
 /**
  * Меню по возможностям блока (правила старого приложения). `null` — возможности не прочитаны:
- * базовые разделы [UnsupportedSections].
+ * базовые разделы [UnsupportedSections]. [bluetooth] — блок подключён по BLE: «Проверка состояния» только по нему.
  */
-internal fun Set<DeviceFeature>?.toSections(): List<MountSection> {
+internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSection> {
     if (this == null) return UnsupportedSections
     return MountSection.entries.filter { section ->
         when (section) {
@@ -50,6 +54,8 @@ internal fun Set<DeviceFeature>?.toSections(): List<MountSection> {
             MountSection.DYNAMIC_DEVICES -> DeviceFeature.DYNAMIC_DEVICES in this
 
             MountSection.VOICE_FIRMWARE -> DeviceFeature.VOICE_FIRMWARE in this
+
+            MountSection.CHECK_STATE -> bluetooth
 
             MountSection.SUPPORT_CHAT,
             MountSection.VEHICLES -> true

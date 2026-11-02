@@ -1,13 +1,11 @@
-package ru.alarmtrade.specmp.feature.device.autostart.domain.session
+package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
 import kotlin.time.Duration
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.feature.device.autostart.domain.model.ProgramModeResult
-import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 
 /** Исход входа в режим программирования. */
 enum class ProgramModeEntryResult {
@@ -24,7 +22,7 @@ enum class ProgramModeEntryResult {
 }
 
 /**
- * Вход в режим программирования перед обучением бесключевому обходу — по образцу входа в загрузчик у прошивки.
+ * Вход в режим программирования (обучение обходу, проверка состояния) — по образцу входа в загрузчик у прошивки.
  * BLE: без [ServicePin] SDK сам пробует сохранённый или `1111`; пока блок не принимает ввод ([ServicePinCooldown]),
  * в него ничего не шлём — иначе он продлит блокировку. Состояния нет.
  */

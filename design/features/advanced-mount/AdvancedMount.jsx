@@ -18,6 +18,7 @@ const SECTIONS = [
   { key: "bypass",   svg: "sections/03_beskluchevoy_obhod.svg", icon: "",              title: "Бесключевой обход",     sub: "Обучение бесключевому обходу штатного иммобилайзера", needsCan: true },
   { key: "clone",    svg: "sections/04_procedura_clone.svg", icon: "",     title: "Процедура Clone",       sub: "Вычисление ключа средствами нашего сервера", needsCan: true },
   { key: "extra",    svg: "sections/05_dop_ustroystva.svg", icon: "",    title: "Доп. устройства",       sub: "Приживляйте и удаляйте устройства Pandora", needsCan: true },
+  { key: "check",    icon: "", title: "Проверка состояния",    sub: "Датчики, двери, команды — в реальном времени", bleOnly: true },
   { key: "tickets",  svg: "sections/06_zayavki_na_tehpomosch.svg", icon: "",       title: "Заявки на техпомощь",   sub: "Просмотрите историю обращений или оформите заявку" },
   { key: "chat",     svg: "sections/07_chat_tehpodderzhki.svg", icon: "",    title: "Чат техподдержки",      sub: "Напишите о вашей проблеме при монтаже нашим специалистам" },
   { key: "voice",    svg: "sections/08_golosovaya_proshivka.svg", icon: "",title: "Голосовая прошивка",    sub: "Обновите голосовую прошивку" },
@@ -30,7 +31,7 @@ const PROFILES = {
   alarm: {
     label: "Сигнализация (CAN)", name: "Pandora DX-4GS", id: "107131", transport: "ble", address: "AC:23:3F:A1:0C:7D",
     fw: "3.57", can: { fw: "12.05", code: "VWPOLO20", factory: true }, imei: "351756051523999", product: true,
-    sections: ["firmware", "settings", "bypass", "clone", "extra", "tickets", "chat", "voice", "maps", "cars"],
+    sections: ["firmware", "settings", "bypass", "clone", "extra", "check", "tickets", "chat", "voice", "maps", "cars"],
   },
   module: {
     label: "Модуль (USB)", name: "Pandora RMD-5", id: "107131313", transport: "usb", address: "HID · 0483:5750",
@@ -80,6 +81,7 @@ const DUO = {
   clone: <><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1z" /><path opacity=".3" d="M19 5H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z" /><path d="M10 10h7v2h-7zM10 14h7v2h-7z" /></>,
   extra: <><path opacity=".3" d="M15 9H9c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V10c0-.55-.45-1-1-1z" /><circle cx="12" cy="13" r="2" /><path d="M7.05 6.05l1.41 1.41C9.37 6.56 10.62 6 12 6s2.63.56 3.54 1.46l1.41-1.41C15.68 4.78 13.93 4 12 4s-3.68.78-4.95 2.05zM12 0C8.96 0 6.21 1.23 4.22 3.22l1.41 1.41C7.26 3.01 9.51 2 12 2s4.74 1.01 6.36 2.64l1.41-1.41C17.79 1.23 15.04 0 12 0z" /></>,
   chat: <><path opacity=".3" d="M12 6a6 6 0 0 0-6 6v4h12v-4a6 6 0 0 0-6-6z" /><path d={SECTION_PATHS.chat} /></>,
+  check: <><path opacity=".3" d="M12 6a8 8 0 0 0-6.93 12h13.86A8 8 0 0 0 12 6z" /><path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.27-10.44zm-9.79 6.84a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z" /></>,
   voice: <><path opacity=".3" d="M9 13c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zM9 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" /><path d="M16.76 3.36l-1.68 1.69c.84 1.18.84 2.71 0 3.89l1.68 1.69c2.02-2.02 2.02-5.07 0-7.27zM20.07 0l-1.63 1.63c2.77 3.02 2.77 7.56 0 10.74L20.07 14c3.9-3.89 3.91-9.95 0-14z" /></>,
 };
 function SectionIcon({ k, size = 32 }) {
@@ -334,7 +336,9 @@ function AdvancedMountScreen({ profile = "alarm", initialState = "ready", mode =
 
   const items = SECTIONS.filter((s) => p.sections.includes(s.key));
   const canLocked = !!(p.can && p.can.factory) && state === "ready";
-  const open = (s) => (canLocked && s.needsCan) ? setDialog("can") : setSection(s);
+  const open = (s) => (canLocked && s.needsCan) ? setDialog("can")
+    : (s.key === "check" && window.psHas && window.psHas("check-state")) ? window.psGo(layout === "compact" ? "check-state" : "check-state-tablet")
+    : setSection(s);
   const effItems = state === "empty" ? [] : items;
 
   const actions = remote ? (
@@ -390,4 +394,4 @@ function CmpTextButtonSafe(props) {
   return Btn ? <Btn {...props} /> : <CmpOutlinedButton {...props} />;
 }
 
-Object.assign(window, { AdvancedMountScreen, AM_PROFILES: PROFILES });
+Object.assign(window, { AdvancedMountScreen, AM_PROFILES: PROFILES, AM_Tile: Tile, AM_SECTIONS: SECTIONS, AM_SectionIcon: SectionIcon });

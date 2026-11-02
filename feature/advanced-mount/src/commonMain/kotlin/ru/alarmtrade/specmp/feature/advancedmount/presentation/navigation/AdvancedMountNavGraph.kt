@@ -77,6 +77,8 @@ private val navConfig = SavedStateConfiguration {
  *   выход, переход в Clone (отдельный экран поверх обхода) и переход в чат техподдержки.
  * @param clone раздел «Процедура Clone» (фича `device/autostart`, подключается в `composeApp`): отдельный экран;
  *   получает, открыт ли он из бесключевого обхода, выход и переход в чат техподдержки.
+ * @param checkState раздел «Проверка состояния» (фича `device/state`, подключается в `composeApp`): получает выход
+ *   на корень монтажа. Плитка есть только при подключении по Bluetooth.
  * @param vehicles раздел «Автомобили» (фича `vehicle-ui`, подключается в `composeApp` с моделью и CAN-кодом блока);
  *   получает выход на корень монтажа.
  */
@@ -89,6 +91,7 @@ fun AdvancedMountNavGraph(
     configurator: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
     bypassLearning: @Composable (onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
+    checkState: @Composable (onBack: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
@@ -141,6 +144,8 @@ fun AdvancedMountNavGraph(
                     )
 
                     MountSection.CLONE -> clone(key.fromBypass, { backStack.popSafe() }, onOpenSupportChat)
+
+                    MountSection.CHECK_STATE -> checkState { backStack.popSafe() }
 
                     MountSection.VEHICLES -> vehicles { backStack.popSafe() }
 

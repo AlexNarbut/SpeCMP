@@ -1,0 +1,117 @@
+
+<!-- @dsCard group="Проверка состояния" viewport="1000x1200" name="Проверка состояния — компоненты" subtitle="Плитка T1, главный статус, строка зоны, плитка зоны, кнопка команды, задание чек-листа — все состояния, light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Проверка состояния: компоненты</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; padding: 24px; box-sizing: border-box; }
+  h1 { font-size: 22px; margin: 0 0 16px; color: #1d2124; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<h1>Проверка состояния — компоненты</h1>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script src="../../res/icons/main-icons.js"></script>
+<script type="text/babel" src="../advanced-mount/AdvancedMount.jsx"></script>
+<script type="text/babel" src="./CheckState.jsx"></script>
+<script type="text/babel">
+  const { CmpText } = window.PandoraSpecDesignSystem_b8d6e1;
+  const Z = Object.fromEntries(window.CS_ZONES.map((z) => [z.k, z]));
+  function Sec({ title, note, children }) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div><CmpText variant="titleMedium" weight={700}>{title}</CmpText>{note && <div><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{note}</CmpText></div>}</div>
+        {children}
+      </div>
+    );
+  }
+  function Lbl({ t, children }) {
+    return <div style={{ display: "flex", flexDirection: "column", gap: 4 }}><CmpText variant="labelMedium" color="var(--on-surface-variant)">{t}</CmpText>{children}</div>;
+  }
+  const base = window.CS_baseData();
+  const with_ = (f) => { const d = window.CS_baseData(); f(d); return d; };
+  function Column({ dark }) {
+    const cmd = { k: "arm", label: "Поставить на охрану", icon: "lock" };
+    const dng = { k: "start", label: "Запустить двигатель", icon: "power_settings_new", danger: true };
+    const tile = window.AM_SECTIONS.find((s) => s.key === "check");
+    const T = window.CS_TASKS;
+    return (
+      <div data-theme={dark ? "dark" : undefined} style={{ background: "var(--background)", color: "var(--on-background)", borderRadius: 20, padding: 20, display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }}>
+        <CmpText variant="titleLarge">{dark ? "Тёмная тема" : "Светлая тема"}</CmpText>
+        <Sec title="T1 · Плитка в сетке расширенного монтажа" note="Только при подключении по Bluetooth. Иконка — в стиле остальных плиток (duotone, сетка 24).">
+          <window.AM_Tile s={tile} onClick={() => window.psGo("check-state")} />
+        </Sec>
+        <Sec title="Главный статус">
+          <window.CS_Hero d={base} secs={1} tick={1} />
+          <window.CS_Hero d={with_((d) => { d.guard = "armed"; d.event = "Постановка в охрану"; })} secs={2} tick={1} note={{ type: "ok", text: "Поставить на охрану" }} />
+          <window.CS_Hero d={with_((d) => { d.guard = "armed"; d.z.trunk = "alarm"; })} secs={1} tick={1} />
+          <window.CS_Hero d={base} secs={1} tick={1} note={{ type: "sending", text: "Поставить на охрану" }} />
+          <window.CS_Hero d={base} stale secs={14} tick={1} />
+          <window.CS_Hero loading />
+        </Sec>
+        <Sec title="Строка зоны (вариант A)" note="Покой · активно · тревога · отключено · изменилось с прошлого обновления.">
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, background: "var(--surface-container-low)", borderRadius: 20, padding: 6, border: "1px solid var(--outline-variant)" }}>
+            <window.CS_ZoneRow z={Z.door_fl} v="off" />
+            <window.CS_ZoneRow z={Z.trunk} v="on" />
+            <window.CS_ZoneRow z={Z.hood} v="alarm" />
+            <window.CS_ZoneRow z={Z.shock} v="warn_dis" />
+            <window.CS_ZoneRow z={Z.shock} v="main" />
+            <window.CS_ZoneRow z={Z.brake} v="on" changed tick={1} />
+          </div>
+        </Sec>
+        <Sec title="Плитка зоны (вариант B)">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <window.CS_ZoneTile z={Z.ign} v="off" />
+            <window.CS_ZoneTile z={Z.ign} v="on" changed tick={1} />
+            <window.CS_ZoneTile z={Z.extra} v="warn" />
+            <window.CS_ZoneTile z={Z.tilt} v="alarm" />
+          </div>
+        </Sec>
+        <Sec title="Кнопка команды" note="Удержание 1 с: полоса заполняется слева направо. Отпустил раньше — подсказка. Опасные — по нажатию открывают лист подтверждения.">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <Lbl t="Доступна"><window.CS_CmdView c={cmd} /></Lbl>
+            <Lbl t="Удержание 55 %"><window.CS_CmdView c={cmd} p={0.55} /></Lbl>
+            <Lbl t="Отпустил раньше"><window.CS_CmdView c={cmd} hint /></Lbl>
+            <Lbl t="Отправляется"><window.CS_CmdView c={cmd} st={{ st: "sending" }} /></Lbl>
+            <Lbl t="Успех"><window.CS_CmdView c={cmd} st={{ st: "success" }} /></Lbl>
+            <Lbl t="Ошибка"><window.CS_CmdView c={cmd} st={{ st: "error", msg: "Блок не ответил" }} /></Lbl>
+            <Lbl t="Опасная"><window.CS_CmdView c={dng} /></Lbl>
+            <Lbl t="Недоступна (загрузка)"><window.CS_CmdView c={cmd} disabled /></Lbl>
+          </div>
+        </Sec>
+        <Sec title="Задание чек-листа">
+          <div style={{ background: "var(--surface-container-low)", borderRadius: 20, padding: 8, border: "1px solid var(--outline-variant)", display: "flex", flexDirection: "column", gap: 4 }}>
+            <window.CS_TaskRow t={T[0]} st="pending" d={base} changed={{}} n={1} onSkip={() => {}} />
+            <window.CS_TaskRow t={T[2]} st="done" d={base} changed={{}} n={3} />
+            <window.CS_TaskRow t={T[3]} st="skipped" d={base} changed={{}} n={4} />
+            <window.CS_TaskRow t={T[8]} st="pending" d={base} changed={{}} n={9} onAnswer={() => {}} />
+            <window.CS_TaskRow t={T[8]} st="no" d={base} changed={{}} n={9} />
+          </div>
+        </Sec>
+        <Sec title="Дополнительно (максимум данных)">
+          <window.CS_ExtraGroups d={window.CS_maxData(window.CS_baseData())} initialOpen={{ heater: true }} />
+        </Sec>
+      </div>
+    );
+  }
+  function App() {
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: 20, maxWidth: 1100 }}>
+        <Column />
+        <Column dark />
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

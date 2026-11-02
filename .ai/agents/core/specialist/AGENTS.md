@@ -4,7 +4,7 @@
 - `supportedConnectionTypes()` — транспорты платформы: Android — BLE + USB + `SERIAL` (COM через OTG), desktop — USB + `SERIAL`, iOS — только BLE (COM в SDK — `TODO()`, `serialConnectorInteractor` резолвить только лениво). `SERIAL` в поиске включает только приложение прошивки (`DeviceSelectionNavGraph(serialEnabled = true)`); `serialConnectorInteractor` использует `feature/device/interaction` (`connectSerial`, закрытие сессии).
 - Перед созданием `SpecialistApp` модуль передаёт SDK монитор сети: `getOrNull<NetworkMonitor>()` (из `core/network`, кладёт корень приложения) → адаптер → `CommonConfigurator.networkMonitor`. Без него SDK считает сеть всегда доступной и не видит блокировку сети в фоне Android 15. Нет монитора (desktop) — дефолт SDK.
 - Сетевые логи SDK выключены во всех сборках (`SpecialistConfig.Network(logLevel = NONE, logWebSocketFrames = false)`): SDK не маскирует тела ответов (переписка) и query (email).
-- SDK `ru.alarmtrade.common:specialist` 1.2.0 / `core` 2.0.93 пока тянется из `mavenLocal()` (публикация в `git.pandora.pri` — до мержа).
+- SDK `ru.alarmtrade.common:specialist` 1.2.4 / `core` 2.0.116 пока тянется из `mavenLocal()` (публикация в `git.pandora.pri` — до мержа).
 - Фичи НЕ обращаются к SDK-интеракторам напрямую — только через профильные API этого модуля.
 - `sdk/SdkResponse.kt` — общие хелперы границы с SDK, локальные копии в фичах не заводить:
   - `SpecialistResponse<T>.toResponse()` — ответ SDK в проектный `Response` (без `message` SDK берётся `exception.message`); специфичные ошибки фичи — поверх него (`toResponse().mapIfError { … }`), `Unit`-ответ — `toResponse().map { }`;

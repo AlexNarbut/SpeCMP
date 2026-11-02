@@ -39,6 +39,8 @@
     <string name="advancedmount_sections_subtitle_community_maps">Делитесь своим опытом монтажа</string>
     <string name="advancedmount_sections_title_vehicles">Автомобили</string>
     <string name="advancedmount_sections_subtitle_vehicles">Изучение поддерживаемых функций автомобиля</string>
+    <string name="advancedmount_sections_title_check_state">Проверка состояния</string>
+    <string name="advancedmount_sections_subtitle_check_state">Датчики, двери, команды — в реальном времени</string>
     <string name="advancedmount_sections_msg_locked">Сначала обновите CAN-прошивку</string>
     <string name="advancedmount_common_loading">Читаем возможности блока и проверяем его на сервере…</string>
     <string name="advancedmount_common_error_title">Не удалось проверить блок на сервере</string>
