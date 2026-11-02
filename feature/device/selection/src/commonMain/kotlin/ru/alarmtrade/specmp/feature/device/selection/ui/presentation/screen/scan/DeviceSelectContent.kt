@@ -386,11 +386,7 @@ internal fun DeviceRow(
             .clip(RoundedCornerShape(16.dp)).clickable(enabled = !restricted, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         // Недоступно в этом поиске (быстрый монтаж — только сигнализации): без заливки, пунктирная рамка (макет F1).
-        color = when {
-            restricted -> Color.Transparent
-            selected -> colors.primaryContainer
-            else -> colors.surfaceContainerLow
-        },
+        color = rowColor(restricted, selected),
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
         border = if (selected || restricted) null else BorderStroke(1.dp, colors.outlineVariant)
     ) {
@@ -459,23 +455,37 @@ internal fun DeviceRow(
                     }
                 }
             }
-            CmpRow(verticalAlignment = Alignment.CenterVertically) {
-                onInfo?.let {
-                    CmpIconButton(
-                        onClick = it,
-                        icon = CmpIcons.MoreVert,
-                        contentDescription = stringResource(Strings.string.deviceselect_common_a11y_device_info),
-                        tint = colors.onSurfaceVariant
-                    )
-                }
-                if (!restricted) {
-                    CmpIcon(
-                        icon = CmpIcons.ChevronRight,
-                        contentDescription = null,
-                        tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
-                    )
-                }
-            }
+            RowTrail(onInfo = onInfo, restricted = restricted, selected = selected)
+        }
+    }
+}
+
+@Composable
+private fun rowColor(restricted: Boolean, selected: Boolean): Color = when {
+    restricted -> Color.Transparent
+    selected -> cmpThemeColors().primaryContainer
+    else -> cmpThemeColors().surfaceContainerLow
+}
+
+/** Справа в строке: «⋮» (если есть) и шеврон (у недоступного устройства его нет). */
+@Composable
+private fun RowTrail(onInfo: (() -> Unit)?, restricted: Boolean, selected: Boolean) {
+    val colors = cmpThemeColors()
+    CmpRow(verticalAlignment = Alignment.CenterVertically) {
+        onInfo?.let {
+            CmpIconButton(
+                onClick = it,
+                icon = CmpIcons.MoreVert,
+                contentDescription = stringResource(Strings.string.deviceselect_common_a11y_device_info),
+                tint = colors.onSurfaceVariant
+            )
+        }
+        if (!restricted) {
+            CmpIcon(
+                icon = CmpIcons.ChevronRight,
+                contentDescription = null,
+                tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
+            )
         }
     }
 }
