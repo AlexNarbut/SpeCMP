@@ -22,6 +22,8 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+        // обязательно для модулей с compose resources (см. docs/build.md): иллюстрации шагов
+        androidResources.enable = true
     }
 
     iosArm64()
@@ -69,4 +71,10 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
     }
+}
+
+// Иллюстрации шагов (два слоя vector XML на картинку, см. .claude/tasks/autostart-bypass-clone.md, D8).
+compose.resources {
+    publicResClass = false
+    generateResClass = always
 }
