@@ -138,7 +138,9 @@ class SpecialistDeviceScanRepository(
     // По имени, а не по enum SDK: набор типов растёт, неизвестные уходят в OTHER.
     @Suppress("CyclomaticComplexMethod") // таблица-маппер
     private fun String.toDeviceKind(): DeviceKind = when {
-        this == "ALARM" || this == "MICROBOT" -> DeviceKind.ALARM
+        this == "ALARM" -> DeviceKind.ALARM
+
+        this == "MICROBOT" -> DeviceKind.MICROBOT
 
         startsWith("TAG_") || this == "BAND" || this == "WATCH" -> DeviceKind.TAG
 

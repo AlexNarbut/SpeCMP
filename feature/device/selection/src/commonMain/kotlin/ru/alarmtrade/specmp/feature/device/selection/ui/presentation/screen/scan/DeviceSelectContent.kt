@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -29,8 +30,10 @@ import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_a11y
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_close
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_btn_connect
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_format_rssi
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_msg_alarms_only
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_alarm
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_immobilizer
+import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_microbot
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_module
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_navigation
 import ru.alarmtrade.specmp.core.localization.resources.deviceselect_common_value_kind_other
@@ -80,6 +83,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.restricted
 
 private const val LARGE_TILE_MIN_SIZE_DP = 96
 
@@ -107,6 +111,7 @@ internal fun transportLabel(transport: DeviceTransport): String = when (transpor
 internal fun kindLabel(kind: DeviceKind): String = stringResource(
     when (kind) {
         DeviceKind.ALARM -> Strings.string.deviceselect_common_value_kind_alarm
+        DeviceKind.MICROBOT -> Strings.string.deviceselect_common_value_kind_microbot
         DeviceKind.TAG -> Strings.string.deviceselect_common_value_kind_tag
         DeviceKind.RELAY -> Strings.string.deviceselect_common_value_kind_relay
         DeviceKind.IMMOBILIZER -> Strings.string.deviceselect_common_value_kind_immobilizer
@@ -347,6 +352,9 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
     }
 }
 
+/** Прозрачность строки, недоступной для выбора (поиск только сигнализаций). */
+private const val RESTRICTED_ALPHA = 0.5f
+
 /** testTag строки устройства — префикс, дальше id устройства (BLE — MAC). */
 internal const val DEVICE_ITEM_TAG_PREFIX = "device_item_"
 
@@ -365,9 +373,11 @@ internal fun DeviceRow(
     onInfo: (() -> Unit)? = null
 ) {
     val colors = cmpThemeColors()
+    val restricted = item.restricted
     CmpSurface(
         modifier = Modifier.fillMaxWidth().testTag(DEVICE_ITEM_TAG_PREFIX + item.id)
-            .clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick),
+            .alpha(if (restricted) RESTRICTED_ALPHA else 1f)
+            .clip(RoundedCornerShape(16.dp)).clickable(enabled = !restricted, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = if (selected) colors.primaryContainer else colors.surfaceContainerLow,
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
@@ -424,7 +434,11 @@ internal fun DeviceRow(
                 ) {
                     TransportChip(transport = item.transport, short = true)
                     CmpText(
-                        text = item.address,
+                        text = if (restricted) {
+                            stringResource(Strings.string.deviceselect_common_msg_alarms_only)
+                        } else {
+                            item.address
+                        },
                         fontSize = DsType.LabelSmall,
                         color = secondary,
                         maxLines = 1,

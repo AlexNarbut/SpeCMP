@@ -20,8 +20,9 @@ val deviceSelectionModule = module {
             serialConnectorInteractor = { get() }
         )
     }
-    // serialEnabled — поиск COM-портов (только приложение прошивки), параметр графа поиска.
-    viewModel { (serialEnabled: Boolean) ->
-        ScanDeviceViewModel(get(), get(), get(), get(), get(), serialEnabled = serialEnabled)
+    // serialEnabled — поиск COM-портов (только приложение прошивки), alarmsOnly — только сигнализации (быстрый
+    // монтаж); параметры графа поиска.
+    viewModel { (serialEnabled: Boolean, alarmsOnly: Boolean) ->
+        ScanDeviceViewModel(get(), get(), get(), get(), get(), serialEnabled = serialEnabled, alarmsOnly = alarmsOnly)
     }
 }

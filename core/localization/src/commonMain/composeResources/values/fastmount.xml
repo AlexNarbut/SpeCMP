@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fastmount_common_title_screen">Quick installation</string>
+    <string name="fastmount_common_a11y_back">Back</string>
+    <string name="fastmount_common_btn_retry">Retry</string>
+    <string name="fastmount_common_btn_home">Home</string>
+    <string name="fastmount_common_msg_stub">The next wizard steps are in development</string>
+    <string name="fastmount_check_loading_device">Checking the unit…</string>
+    <string name="fastmount_check_title_ready">The unit supports quick installation</string>
+    <string name="fastmount_check_title_unsupported">The unit does not support quick installation</string>
+    <string name="fastmount_check_msg_unsupported_alarms">Quick installation is available for alarm systems only.</string>
+    <string name="fastmount_check_msg_unsupported_microbot">Quick installation for Microbot is coming later. Use advanced installation for now.</string>
+    <string name="fastmount_check_msg_unsupported_database">The unit model is not in the device database. Check the internet connection and reconnect to the unit.</string>
+    <string name="fastmount_check_error_failed">Could not check the unit</string>
+    <string name="fastmount_check_btn_other_device">Choose another unit</string>
+    <string name="fastmount_wrong_title_screen">Another unit is connected</string>
+    <string name="fastmount_wrong_format_msg">Installation is in progress with unit %1$s, but %2$s is connected. Connect the right unit.</string>
+    <string name="fastmount_wrong_btn_disconnect">Disconnect</string>
+</resources>

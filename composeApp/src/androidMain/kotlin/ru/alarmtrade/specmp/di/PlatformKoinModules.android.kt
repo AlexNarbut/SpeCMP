@@ -10,6 +10,8 @@ import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AppRestarter
 import ru.alarmtrade.specmp.core.network.monitor.AndroidNetworkMonitor
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
+import ru.alarmtrade.specmp.core.specialist.AndroidSilentLocationProvider
+import ru.alarmtrade.specmp.core.specialist.SilentLocationProvider
 
 @Composable
 actual fun rememberPlatformKoinModules(): List<Module> {
@@ -21,6 +23,7 @@ actual fun rememberPlatformKoinModules(): List<Module> {
                 single<Context> { appContext }
                 single<NetworkMonitor> { AndroidNetworkMonitor(appContext) }
                 single<AppRestarter> { AppRestarter { appContext.restartApplication() } }
+                single<SilentLocationProvider> { AndroidSilentLocationProvider(appContext) }
             }
         )
     }

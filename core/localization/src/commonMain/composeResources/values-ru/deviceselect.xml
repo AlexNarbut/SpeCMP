@@ -92,6 +92,7 @@
     <string name="deviceselect_common_value_mode_pairing">Сопряжение</string>
     <string name="deviceselect_common_value_mode_boot">Загрузчик</string>
     <string name="deviceselect_common_value_kind_alarm">Сигнализация</string>
+    <string name="deviceselect_common_value_kind_microbot">Микробот</string>
     <string name="deviceselect_common_value_kind_tag">Метка</string>
     <string name="deviceselect_common_value_kind_relay">Реле</string>
     <string name="deviceselect_common_value_kind_immobilizer">Иммобилайзер</string>
@@ -111,4 +112,6 @@
     <string name="deviceselect_common_error_connection_failed">Не удалось подключиться к устройству</string>
     <string name="deviceselect_common_error_pairing_required">Переведите блок в режим сопряжения и повторите подключение.</string>
     <string name="deviceselect_common_error_bond_remove_device">Устройство сопряжено с другим телефоном. Сбросьте сопряжение на приборе и повторите.</string>
+    <!-- Поиск для быстрого монтажа: устройство не сигнализация -->
+    <string name="deviceselect_common_msg_alarms_only">Только для сигнализаций</string>
 </resources>

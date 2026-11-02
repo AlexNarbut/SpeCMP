@@ -33,6 +33,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
@@ -40,6 +41,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.connectableAda
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.DeviceUiItem
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.ScanError
+import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.restricted
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiItem
 
 /**
@@ -61,7 +63,9 @@ class ScanDeviceViewModel(
     private val deviceSession: DeviceSession,
     private val permissionsProvider: PermissionsProvider,
     private val dispatchers: AppDispatchers,
-    serialEnabled: Boolean = false
+    serialEnabled: Boolean = false,
+    /** Поиск для быстрого монтажа: BLE-устройства, которые не сигнализации, видны, но недоступны. */
+    private val alarmsOnly: Boolean = false
 ) : BaseViewModel() {
 
     private val requirements = permissionsProvider.deviceAccessRequirements()
@@ -222,6 +226,7 @@ class ScanDeviceViewModel(
 
     /** Выбор устройства: в split — выделяем (карточка справа), иначе — подключаемся сразу. */
     fun onDeviceSelected(item: DeviceUiItem, isSplit: Boolean) {
+        if (item.restricted) return
         if (isSplit) {
             selectedIdFlow.update { item.id }
         } else {
@@ -355,7 +360,10 @@ class ScanDeviceViewModel(
         val ble = (bleResponse as? Response.Success)?.value.orEmpty()
         val usb = (usbResponse as? Response.Success)?.value.orEmpty()
         val serial = (serialResponse as? Response.Success)?.value.orEmpty().connectableAdapters()
-        val items = ble.map(ScannedDevice::toUiItem) + usb.map(ScannedDevice::toUiItem) + serial.map { it.toUiItem() }
+        val bleItems = ble.map { device ->
+            device.toUiItem(restricted = alarmsOnly && device.kind != DeviceKind.ALARM)
+        }
+        val items = bleItems + usb.map(ScannedDevice::toUiItem) + serial.map { it.toUiItem() }
         if (items.isNotEmpty()) return LCEState.Content(items)
         val error = (bleResponse as? Response.Error) ?: (usbResponse as? Response.Error)
             ?: (serialResponse as? Response.Error)

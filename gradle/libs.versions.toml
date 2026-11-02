@@ -38,7 +38,7 @@ android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 
-alarmtrade-common-specialist = "1.2.4"
+alarmtrade-common-specialist = "1.2.5"
 alarmtrade-common = "2.0.116"
 alarmtrade-permissions = "2.0.116"
 

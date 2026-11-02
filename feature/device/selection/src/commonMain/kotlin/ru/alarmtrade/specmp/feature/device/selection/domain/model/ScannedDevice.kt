@@ -66,7 +66,7 @@ enum class DeviceTransport { BLE, USB, SERIAL }
 enum class ScannedDeviceMode { BASE, PAIRING, BOOT }
 
 /** Вид BLE-устройства Pandora (группа типов SDK `DeviceType`) — для подписи в списке. */
-enum class DeviceKind { ALARM, TAG, RELAY, IMMOBILIZER, REMOTE_CONTROL, NAVIGATION, MODULE, SENSOR, OTHER }
+enum class DeviceKind { ALARM, MICROBOT, TAG, RELAY, IMMOBILIZER, REMOTE_CONTROL, NAVIGATION, MODULE, SENSOR, OTHER }
 
 private const val MAC_DIAL_IN_PREFIX = "/dev/tty."
 private const val MAC_CALL_OUT_PREFIX = "/dev/cu."

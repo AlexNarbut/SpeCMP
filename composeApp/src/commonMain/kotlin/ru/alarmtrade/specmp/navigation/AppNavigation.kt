@@ -53,6 +53,9 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateEntry
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountEntry
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountRoute
+import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountSelectionRoute
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
@@ -83,6 +86,8 @@ private val navConfig = SavedStateConfiguration {
             subclass(SupportChatRoute::class, SupportChatRoute.serializer())
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
+            subclass(FastMountSelectionRoute::class, FastMountSelectionRoute.serializer())
+            subclass(FastMountRoute::class, FastMountRoute.serializer())
             subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
             subclass(ConfiguratorRoute::class, ConfiguratorRoute.serializer())
             subclass(AppSettingsRoute::class, AppSettingsRoute.serializer())
@@ -145,6 +150,15 @@ private fun AuthedNavGraph() {
                     onClose = { backStack.popSafe() }
                 )
             }
+            entry<FastMountSelectionRoute> { _ ->
+                DeviceSelectionNavGraph(
+                    // Как в расширенном монтаже: «Назад» из мастера не возвращает в поиск.
+                    onSessionCreate = { backStack.replaceCurrent(FastMountRoute) },
+                    onClose = { backStack.popSafe() },
+                    alarmsOnly = true
+                )
+            }
+            entry<FastMountRoute> { _ -> FastMountGraph(backStack) }
             entry<ConfiguratorRoute> { _ ->
                 // С главной сессии блока нет — без «Записать в блок» (он — в разделе «Конфигуратор» монтажа).
                 AppConfigurator(onExit = { backStack.popSafe() })
@@ -334,6 +348,38 @@ private fun ConfiguratorVehicles(
     )
 }
 
+/**
+ * Быстрый монтаж внутри обёртки сессии. Блок не подошёл — «Выбрать другой блок»: обёртка закрывает сессию, и вместо
+ * мастера снова открывается поиск.
+ */
+@Composable
+private fun FastMountGraph(backStack: NavBackStack<NavKey>) {
+    var chooseAnother by rememberSaveable { mutableStateOf(false) }
+    DeviceInteractionHost(
+        onExit = {
+            if (chooseAnother) backStack.replaceCurrent(FastMountSelectionRoute) else backStack.popSafe()
+        },
+        bootContent = { onExit ->
+            FirmwareBootGraph(
+                onExit = onExit,
+                onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
+                filePicker = rememberFirmwareFilePicker(),
+                vehiclePicker = { deviceName, onPick, onPickerBack ->
+                    ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
+                }
+            )
+        }
+    ) { _, onExit ->
+        FastMountEntry(
+            onExit = onExit,
+            onChooseAnother = {
+                chooseAnother = true
+                onExit()
+            }
+        )
+    }
+}
+
 /** Выбор автомобиля для CAN-фильтра архива прошивок: каталог под модель блока, результат — CAN-код и название. */
 @Composable
 private fun ArchiveVehiclePicker(
@@ -356,7 +402,7 @@ private fun ArchiveVehiclePicker(
 
 private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackStack<NavKey>) {
     when (target) {
-        MainNavigationTarget.QuickMount -> Unit
+        MainNavigationTarget.QuickMount -> backStack.navigateSafe(FastMountSelectionRoute)
 
         MainNavigationTarget.AdvancedMount -> backStack.navigateSafe(DeviceSelectionRoute)
 

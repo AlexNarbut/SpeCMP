@@ -1,0 +1,26 @@
+# feature/fast-mount
+
+- Мастер «Быстрый монтаж»: пошаговая установка сигнализации по облачной конфигурации. Один обособленный модуль
+  (domain + data + ui, DI — `fastMountModule`): логика мастера другим фичам не нужна. План, решения владельца и
+  этапы — `.claude/tasks/fast-mount.md`; ТЗ дизайнеру — `.claude/tasks/fast-mount-design-brief.md`.
+- **Порядок шагов задаёт SDK** (`FastMountInteractor`, машина состояний `StateTitle`), приложение только вызывает
+  «вперёд/назад» (`FastMountRepository.next/previous`) и слушает `steps()`. Маршрут BLE: запись настроек → монтаж →
+  [перезагрузка] → обход? → Clone? → Slave? → проверка системы → отзыв → финал; USB — без Slave и проверки системы;
+  SERIAL не поддерживается. План для сводки и шапки — `fastMountPlan(configuration, transport)` по байтам
+  конфигурации (`isKeyBypassEnabled` / `isSlaveEnabled`), так же как маршрутизирует SDK.
+- `FastMountRepository` без состояния; предметные ошибки SDK (`FastMountErrors`) — `FastMountException(failure)` в
+  `Response.Error`, в UI — `FastMountError.from`. Поток `questions()` холодный, автоответы SDK считаются в подписчике —
+  **ровно один подписчик**. `start(configurationId)` перечитывает конфигурацию с сервера (SDK нужен `CarConfiguration`).
+- Вход: плитка «Быстрый монтаж» → `FastMountSelectionRoute` (`DeviceSelectionNavGraph(alarmsOnly = true)`: BLE не
+  сигнализации видны, но недоступны) → `FastMountRoute` (`DeviceInteractionHost` + `FastMountEntry` в `composeApp`).
+- **Фиксация блока** (`FastMountViewModel`): блок запоминается на первом подключении; другой `systemId` после
+  переподключения — экран «Подключён другой блок», возврат нужного — продолжение. Класс блока — по основной подсистеме
+  модели в базе устройств (`ALARM_MAIN`); микробот и прочее — «Блок не поддерживает быстрый монтаж» («Выбрать другой
+  блок» закрывает сессию и снова открывает поиск).
+- Геолокация для отчёта о монтаже — молча (`SilentLocationProvider` в `core/specialist`, Android — последнее известное
+  положение при уже выданном разрешении); без неё SDK шлёт `0,0`.
+- SDK (`specialist` 1.2.5): проверки автовопросов 46/47 «поставить/снять любым способом»; неизвестный автовопрос
+  засчитывается сразу (решение владельца); `isCompleted` — только после ответа на последний вопрос.
+- Строки — `fastmount.xml` (префикс `fastmount`). `testTag`: `fastmount_check_ready`, `fastmount_check_unsupported`,
+  `fastmount_wrong_device`.
+- **Не проверено на железе:** старт сессии SDK, запись настроек, маршрут шагов, автоответы.

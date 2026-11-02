@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fastmount_common_title_screen">Быстрый монтаж</string>
+    <string name="fastmount_common_a11y_back">Назад</string>
+    <string name="fastmount_common_btn_retry">Повторить</string>
+    <string name="fastmount_common_btn_home">На главную</string>
+    <string name="fastmount_common_msg_stub">Следующие шаги мастера — в разработке</string>
+    <string name="fastmount_check_loading_device">Проверяем блок…</string>
+    <string name="fastmount_check_title_ready">Блок подходит для быстрого монтажа</string>
+    <string name="fastmount_check_title_unsupported">Блок не поддерживает быстрый монтаж</string>
+    <string name="fastmount_check_msg_unsupported_alarms">Быстрый монтаж доступен только для сигнализаций.</string>
+    <string name="fastmount_check_msg_unsupported_microbot">Быстрый монтаж для микробота появится позже. Пока используйте расширенный монтаж.</string>
+    <string name="fastmount_check_msg_unsupported_database">Модели блока нет в базе устройств. Проверьте интернет и подключитесь к блоку заново.</string>
+    <string name="fastmount_check_error_failed">Не удалось проверить блок</string>
+    <string name="fastmount_check_btn_other_device">Выбрать другой блок</string>
+    <string name="fastmount_wrong_title_screen">Подключён другой блок</string>
+    <string name="fastmount_wrong_format_msg">Монтаж идёт с блоком %1$s, а сейчас подключён %2$s. Подключите нужный блок.</string>
+    <string name="fastmount_wrong_btn_disconnect">Отключиться</string>
+</resources>
