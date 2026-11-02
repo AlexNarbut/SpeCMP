@@ -52,6 +52,7 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateEntry
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
@@ -201,6 +202,7 @@ private fun AuthedNavGraph() {
                         clone = { fromBypass, onBack, onOpenSupportChat ->
                             CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
                         },
+                        checkState = { onBack -> CheckStateEntry(onBack = onBack) },
                         vehicles = { onBack -> DeviceVehicles(device, onBack) }
                     )
                 }

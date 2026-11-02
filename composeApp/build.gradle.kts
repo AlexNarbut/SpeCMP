@@ -47,6 +47,7 @@ kotlin {
             implementation(project(":feature:device:interaction"))
             implementation(project(":feature:device:firmware"))
             implementation(project(":feature:device:autostart"))
+            implementation(project(":feature:device:state"))
             implementation(project(":feature:device:settings"))
             implementation(project(":feature:vehicle"))
             implementation(project(":feature:vehicle-ui"))

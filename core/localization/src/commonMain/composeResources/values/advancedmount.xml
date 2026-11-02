@@ -39,6 +39,8 @@
     <string name="advancedmount_sections_subtitle_community_maps">Share your installation experience</string>
     <string name="advancedmount_sections_title_vehicles">Vehicles</string>
     <string name="advancedmount_sections_subtitle_vehicles">Explore supported vehicle functions</string>
+    <string name="advancedmount_sections_title_check_state">Vehicle state check</string>
+    <string name="advancedmount_sections_subtitle_check_state">Sensors, doors, commands — in real time</string>
     <string name="advancedmount_sections_msg_locked">Update the CAN firmware first</string>
     <string name="advancedmount_common_loading">Reading unit capabilities and verifying it on the server…</string>
     <string name="advancedmount_common_error_title">Could not verify the unit on the server</string>

@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.core.ui.view.icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
@@ -11,12 +12,15 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowCircleUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothDisabled
@@ -37,6 +41,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.DeveloperBoard
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
@@ -45,6 +50,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.EvStation
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.Favorite
@@ -54,29 +60,39 @@ import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.GppGood
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Hearing
+import androidx.compose.material.icons.filled.Highlight
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.LocalParking
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Luggage
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -93,10 +109,12 @@ import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Sell
+import androidx.compose.material.icons.filled.SensorDoor
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SettingsRemote
@@ -107,11 +125,15 @@ import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SyncLock
+import androidx.compose.material.icons.filled.SyncProblem
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Usb
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VpnKey
@@ -373,4 +395,48 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.Cable -> Icons.Filled.Cable
 
     CmpIcons.PhotoLibrary -> Icons.Filled.PhotoLibrary
+
+    CmpIcons.SensorDoor -> Icons.Filled.SensorDoor
+
+    CmpIcons.Luggage -> Icons.Filled.Luggage
+
+    CmpIcons.Key -> Icons.Filled.Key
+
+    CmpIcons.PauseCircle -> Icons.Filled.PauseCircle
+
+    CmpIcons.PanTool -> Icons.Filled.PanTool
+
+    CmpIcons.LocalParking -> Icons.Filled.LocalParking
+
+    CmpIcons.Highlight -> Icons.Filled.Highlight
+
+    CmpIcons.Vibration -> Icons.Filled.Vibration
+
+    CmpIcons.DirectionsWalk -> Icons.AutoMirrored.Filled.DirectionsWalk
+
+    CmpIcons.ScreenRotation -> Icons.Filled.ScreenRotation
+
+    CmpIcons.SyncProblem -> Icons.Filled.SyncProblem
+
+    CmpIcons.LockOpen -> Icons.Filled.LockOpen
+
+    CmpIcons.GppGood -> Icons.Filled.GppGood
+
+    CmpIcons.NotificationsActive -> Icons.Filled.NotificationsActive
+
+    CmpIcons.DeveloperBoard -> Icons.Filled.DeveloperBoard
+
+    CmpIcons.EvStation -> Icons.Filled.EvStation
+
+    CmpIcons.LocalFireDepartment -> Icons.Filled.LocalFireDepartment
+
+    CmpIcons.Videocam -> Icons.Filled.Videocam
+
+    CmpIcons.VolumeUp -> Icons.AutoMirrored.Filled.VolumeUp
+
+    CmpIcons.TaskAlt -> Icons.Filled.TaskAlt
+
+    CmpIcons.Autorenew -> Icons.Filled.Autorenew
+
+    CmpIcons.Redo -> Icons.AutoMirrored.Filled.Redo
 }

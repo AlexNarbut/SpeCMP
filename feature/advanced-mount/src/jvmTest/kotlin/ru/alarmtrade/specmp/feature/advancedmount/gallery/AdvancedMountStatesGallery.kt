@@ -99,7 +99,9 @@ class AdvancedMountStatesGallery {
         "05_usb_module_ready",
         moduleBase.copy(
             imei = "351756051523999",
-            content = LCEState.Content(MountAccess.Ready(module.features.toSections(), unsupported = false))
+            content = LCEState.Content(
+                MountAccess.Ready(module.features.toSections(bluetooth = false), unsupported = false)
+            )
         )
     )
 

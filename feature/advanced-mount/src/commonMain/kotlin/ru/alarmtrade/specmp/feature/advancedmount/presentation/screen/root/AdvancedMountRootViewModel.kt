@@ -131,7 +131,9 @@ class AdvancedMountRootViewModel(
             is Response.Success -> if (access.value.hasAccess) {
                 LCEState.Content(
                     MountAccess.Ready(
-                        sections = device.features.toSections(),
+                        sections = device.features.toSections(
+                            bluetooth = deviceSession.transport.value == ConnectionTransport.BLE
+                        ),
                         unsupported = device.features == null,
                         modelNotInDatabase = device.features == null && !device.modelInDatabase
                     )
