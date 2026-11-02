@@ -19,7 +19,7 @@ class FastMountPlanTest {
         images = emptyList(),
         keyBypass = keyBypass,
         slave = slave,
-        questionCount = 0
+        questions = emptyList()
     )
 
     @Test

@@ -7,7 +7,7 @@ package ru.alarmtrade.specmp.feature.fastmount.domain.model
  * @property mountingMap карта монтажа (PDF); `null` — нет.
  * @property keyBypass в настройках включён бесключевой обход — будет шаг обхода.
  * @property slave в настройках включён Slave-режим — будет шаг обучения Slave (только Bluetooth).
- * @property questionCount число вопросов проверки системы.
+ * @property questions вопросы проверки системы — плоско, в порядке SDK (курсор идёт по ним).
  */
 data class FastMountConfiguration(
     val id: Int,
@@ -21,7 +21,7 @@ data class FastMountConfiguration(
     val images: List<MountImage>,
     val keyBypass: Boolean,
     val slave: Boolean,
-    val questionCount: Int
+    val questions: List<MountQuestion>
 )
 
 data class MountFile(val name: String, val url: String)

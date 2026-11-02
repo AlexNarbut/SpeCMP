@@ -5,14 +5,22 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import ru.alarmtrade.common.core.response.Response as SdkResponse
+import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SubsystemFirmwareType
+import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specialist.interactors.configuration.ConfigurationInteractor
 import ru.alarmtrade.specialist.interactors.configuration.requests.ConfigurationRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
+import ru.alarmtrade.specialist.interactors.deviceVerification.VerificationInteractor
+import ru.alarmtrade.specialist.interactors.deviceVerification.request.VerifyDeviceRequest
 import ru.alarmtrade.specialist.interactors.fastMount.FastMountInteractor
 import ru.alarmtrade.specialist.interactors.fastMount.requests.AddMountFeedbackRequest
 import ru.alarmtrade.specialist.interactors.fastMount.requests.AnswerCurrentQuestionRequest
 import ru.alarmtrade.specialist.interactors.fastMount.requests.StartFastMountRequest
+import ru.alarmtrade.specialist.interactors.files.RemoteFilesInteractor
+import ru.alarmtrade.specialist.interactors.files.requests.DownloadFileRequest
+import ru.alarmtrade.specialist.interactors.firmwareFiles.FirmwareFilesInteractor
+import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwareRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
@@ -25,6 +33,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionAnswer
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
 import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountRepository
 
 /**
@@ -34,8 +43,39 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountReposit
 class SpecialistFastMountRepository(
     private val fastMount: () -> FastMountInteractor,
     private val configurations: () -> ConfigurationInteractor,
-    private val deviceInformation: () -> DeviceInformationInteractor
+    private val deviceInformation: () -> DeviceInformationInteractor,
+    private val verification: () -> VerificationInteractor,
+    private val firmwareFiles: () -> FirmwareFilesInteractor,
+    private val files: () -> RemoteFilesInteractor
 ) : FastMountRepository {
+
+    override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<UnitAccess> {
+        val interactor = verification.resolveOrNull() ?: return interactorUnavailable()
+        val request =
+            VerifyDeviceRequest(systemId = systemId, systemName = systemName, firmwareVersion = firmwareVersion)
+        return interactor.verifyDeviceUseCase.execute(request).toResponse().map { UnitAccess(it.hasAccess, it.message) }
+    }
+
+    override suspend fun latestFirmware(systemName: String): Response<String?> {
+        val information = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
+        val firmware = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
+        val moduleId = when (
+            val response = information.getDeviceInformation.execute(GetDeviceInformationRequest(systemName))
+                .toResponse()
+        ) {
+            is Response.Success -> response.value.subsystems.firstOrNull { it.type == SubsystemType.ALARM_MAIN }?.id
+            is Response.Error -> return response
+        } ?: return Response.Success(null)
+        return firmware.getLatestSubsystemFirmwareUseCase
+            .execute(SubsystemFirmwareRequest(subsystemId = moduleId, type = SubsystemFirmwareType.RELEASE))
+            .toResponse()
+            .map { it.version }
+    }
+
+    override suspend fun download(url: String): Response<ByteArray> {
+        val interactor = files.resolveOrNull() ?: return interactorUnavailable()
+        return interactor.downloadFileUseCase.execute(DownloadFileRequest(url)).toResponse()
+    }
 
     override suspend fun deviceClass(systemName: String): Response<MountDeviceClass> {
         val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()

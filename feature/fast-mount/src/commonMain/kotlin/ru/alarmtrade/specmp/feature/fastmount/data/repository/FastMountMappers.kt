@@ -104,7 +104,7 @@ internal fun CarConfiguration.toDomain(): FastMountConfiguration {
         },
         keyBypass = settings.hasByte { isKeyBypassEnabled() },
         slave = settings.hasByte { isSlaveEnabled() },
-        questionCount = questions.sumOf { it.questions.size }
+        questions = questions.flatMap { group -> group.questions.map { it.toDomain() } }
     )
 }
 

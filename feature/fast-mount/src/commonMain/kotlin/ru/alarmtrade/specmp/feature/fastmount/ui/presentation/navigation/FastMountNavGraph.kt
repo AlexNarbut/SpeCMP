@@ -6,24 +6,35 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FastMountScreen
 
-/** App-level ключ: поиск блока для быстрого монтажа (только сигнализации). Регистрируется в графе `composeApp`. */
+/** Поиск блока для быстрого монтажа (только сигнализации). */
 @Serializable
 @SerialName("fast-mount.FastMountSelectionRoute")
 data object FastMountSelectionRoute : NavKey
 
-/** App-level ключ: мастер быстрого монтажа с подключённым блоком (внутри `DeviceInteractionHost`). */
+/** Мастер быстрого монтажа (внутри обёртки сессии устройства). */
 @Serializable
 @SerialName("fast-mount.FastMountRoute")
 data object FastMountRoute : NavKey
 
 /**
- * Мастер быстрого монтажа — контент `DeviceInteractionHost` в `composeApp` (потеря связи, переподключение и экран
- * загрузчика — у обёртки).
+ * Мастер быстрого монтажа.
  *
- * @param onExit выход из монтажа: обёртка закрывает сессию.
- * @param onChooseAnother блок не подходит — выход с возвратом к поиску.
+ * @param onExit выход из монтажа (сессия закрывается обёрткой).
+ * @param onChooseAnother выход с возвратом к поиску блока.
+ * @param onOpenAdvancedMount выход в расширенный монтаж (блок не поддерживает быстрый).
+ * @param slots экраны других фич на шагах мастера.
  */
 @Composable
-fun FastMountEntry(onExit: () -> Unit, onChooseAnother: () -> Unit) {
-    FastMountScreen(onExit = onExit, onChooseAnother = onChooseAnother)
+fun FastMountEntry(
+    onExit: () -> Unit,
+    onChooseAnother: () -> Unit,
+    onOpenAdvancedMount: () -> Unit,
+    slots: FastMountSlots
+) {
+    FastMountScreen(
+        onExit = onExit,
+        onChooseAnother = onChooseAnother,
+        onOpenAdvancedMount = onOpenAdvancedMount,
+        slots = slots
+    )
 }

@@ -53,7 +53,6 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateEntry
-import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountEntry
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountRoute
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountSelectionRoute
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
@@ -328,7 +327,7 @@ private fun DeviceSettingsEditor(
  * Модель блока не задана — облако для всех моделей (без экрана выбора типа устройства).
  */
 @Composable
-private fun ConfiguratorVehicles(
+internal fun ConfiguratorVehicles(
     catalog: VehicleCatalog,
     deviceName: String?,
     onPick: (CarSummary) -> Unit,
@@ -348,41 +347,9 @@ private fun ConfiguratorVehicles(
     )
 }
 
-/**
- * Быстрый монтаж внутри обёртки сессии. Блок не подошёл — «Выбрать другой блок»: обёртка закрывает сессию, и вместо
- * мастера снова открывается поиск.
- */
-@Composable
-private fun FastMountGraph(backStack: NavBackStack<NavKey>) {
-    var chooseAnother by rememberSaveable { mutableStateOf(false) }
-    DeviceInteractionHost(
-        onExit = {
-            if (chooseAnother) backStack.replaceCurrent(FastMountSelectionRoute) else backStack.popSafe()
-        },
-        bootContent = { onExit ->
-            FirmwareBootGraph(
-                onExit = onExit,
-                onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
-                filePicker = rememberFirmwareFilePicker(),
-                vehiclePicker = { deviceName, onPick, onPickerBack ->
-                    ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-                }
-            )
-        }
-    ) { _, onExit ->
-        FastMountEntry(
-            onExit = onExit,
-            onChooseAnother = {
-                chooseAnother = true
-                onExit()
-            }
-        )
-    }
-}
-
 /** Выбор автомобиля для CAN-фильтра архива прошивок: каталог под модель блока, результат — CAN-код и название. */
 @Composable
-private fun ArchiveVehiclePicker(
+internal fun ArchiveVehiclePicker(
     deviceName: String?,
     onPick: (canCode: String, carTitle: String) -> Unit,
     onBack: () -> Unit

@@ -7,6 +7,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionAnswer
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
 
 /**
  * Мастер быстрого монтажа над `FastMountInteractor` SDK. Состояние мастера держит SDK (сессия в памяти), репозиторий
@@ -16,7 +17,16 @@ interface FastMountRepository {
     /** Класс блока по основной подсистеме модели из базы устройств. */
     suspend fun deviceClass(systemName: String): Response<MountDeviceClass>
 
+    /** Доступ к блоку на сервере (как при входе в расширенный монтаж). */
+    suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<UnitAccess>
+
+    /** Версия последней релизной прошивки основной программы модели; `null` — модуля нет в базе. */
+    suspend fun latestFirmware(systemName: String): Response<String?>
+
     suspend fun configuration(id: Int): Response<FastMountConfiguration>
+
+    /** Файл конфигурации (карта монтажа) целиком в память. */
+    suspend fun download(url: String): Response<ByteArray>
 
     /** Старт: конфигурация перечитывается с сервера и передаётся SDK; сессия монтажа на сервере. */
     suspend fun start(configurationId: Int): Response<Unit>

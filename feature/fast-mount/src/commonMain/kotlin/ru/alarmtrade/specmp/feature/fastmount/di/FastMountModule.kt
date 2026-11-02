@@ -15,7 +15,10 @@ val fastMountModule = module {
         SpecialistFastMountRepository(
             fastMount = { get() },
             configurations = { get() },
-            deviceInformation = { get() }
+            deviceInformation = { get() },
+            verification = { get() },
+            firmwareFiles = { get() },
+            files = { get() }
         )
     }
 
