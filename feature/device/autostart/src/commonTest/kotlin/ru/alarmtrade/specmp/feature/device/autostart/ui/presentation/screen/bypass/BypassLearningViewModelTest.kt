@@ -30,8 +30,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassSubject
-import ru.alarmtrade.specmp.feature.device.autostart.domain.model.ProgramModeResult
-import ru.alarmtrade.specmp.feature.device.autostart.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeBypassRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeProgramModeRepository
@@ -41,7 +39,9 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 
 @OptIn(ExperimentalCoroutinesApi::class)

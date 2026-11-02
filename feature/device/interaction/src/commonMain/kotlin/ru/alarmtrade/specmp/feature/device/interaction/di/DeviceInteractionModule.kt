@@ -5,9 +5,12 @@ import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 
 /**
@@ -31,4 +34,7 @@ val deviceInteractionModule = module {
     // Блокировка ввода PIN программирования (по блоку): общая для прошивки и режима программирования.
     // Состояние аккаунта — чистится при логауте.
     single { ServicePinCooldown() } bind AuthCloseable::class
+    // Режим программирования (PIN по BLE + кулдаун): обход, проверка состояния.
+    single<ProgramModeRepository> { SpecialistProgramModeRepository(bluetoothAlarmDeviceInteractor = { get() }) }
+    factory { ProgramModeEntry(get(), get(), get()) }
 }

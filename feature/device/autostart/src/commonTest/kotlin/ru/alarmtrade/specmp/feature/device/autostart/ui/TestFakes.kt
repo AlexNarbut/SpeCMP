@@ -8,10 +8,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
-import ru.alarmtrade.specmp.feature.device.autostart.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
-import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -21,9 +19,11 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarg
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 
 internal val testDevice = AlarmDevice(
     systemId = 77,
@@ -108,4 +108,6 @@ internal class FakeProgramModeRepository : ProgramModeRepository {
     var calls = 0
 
     override suspend fun enter(): Response<ProgramModeResult> = results[minOf(calls++, results.lastIndex)]
+
+    override suspend fun exit(): Response<Unit> = Response.Success(Unit)
 }

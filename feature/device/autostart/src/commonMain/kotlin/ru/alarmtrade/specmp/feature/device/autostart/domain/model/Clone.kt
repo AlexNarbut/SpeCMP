@@ -71,6 +71,3 @@ sealed interface CloneEvent {
     /** Сбой SDK без статуса; обрыв связи или ошибка — решает ViewModel по состоянию сессии. */
     data object Failure : CloneEvent
 }
-
-/** Вход в режим программирования. */
-enum class ProgramModeResult { ENTERED, WRONG_PIN }
