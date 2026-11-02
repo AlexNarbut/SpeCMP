@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.feature.appsettings.di.appSettingsModule
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.configurator.di.configuratorModule
 import ru.alarmtrade.specmp.feature.configurator.ui.di.configuratorUiModule
+import ru.alarmtrade.specmp.feature.device.autostart.di.deviceAutostartModule
 import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
 import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
 import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
@@ -80,6 +81,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
                 add(deviceSelectionModule)
                 add(deviceInteractionModule)
                 add(deviceFirmwareModule)
+                add(deviceAutostartModule)
                 add(deviceSettingsModule)
                 add(vehicleModule)
                 add(accountModule)

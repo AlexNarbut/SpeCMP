@@ -4,10 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowCircleUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothDisabled
 import androidx.compose.material.icons.filled.BluetoothSearching
@@ -52,8 +55,10 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory2
@@ -84,6 +89,7 @@ import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.Schedule
@@ -100,6 +106,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SyncLock
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.TouchApp
@@ -117,7 +124,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * Резолвит [CmpIcons] enum в [ImageVector] из material-icons (без IO).
  */
-@Suppress("CyclomaticComplexMethod") // таблица-маппер enum → ImageVector
+@Suppress("CyclomaticComplexMethod", "LongMethod") // таблица-маппер enum → ImageVector
 @Composable
 fun CmpIcons.imageVector(): ImageVector = when (this) {
     // Navigation
@@ -239,6 +246,20 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.VisibilityOff -> Icons.Filled.VisibilityOff
 
     CmpIcons.WifiOff -> Icons.Filled.WifiOff
+
+    CmpIcons.HourglassTop -> Icons.Filled.HourglassTop
+
+    CmpIcons.SyncLock -> Icons.Filled.SyncLock
+
+    CmpIcons.Block -> Icons.Filled.Block
+
+    CmpIcons.Hearing -> Icons.Filled.Hearing
+
+    CmpIcons.Replay -> Icons.Filled.Replay
+
+    CmpIcons.FactCheck -> Icons.AutoMirrored.Filled.FactCheck
+
+    CmpIcons.MenuBook -> Icons.AutoMirrored.Filled.MenuBook
 
     // Places
     CmpIcons.LocationOn -> Icons.Filled.LocationOn
