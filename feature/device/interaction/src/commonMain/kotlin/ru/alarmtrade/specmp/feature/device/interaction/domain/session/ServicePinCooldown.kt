@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.firmware.domain.session
+package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds

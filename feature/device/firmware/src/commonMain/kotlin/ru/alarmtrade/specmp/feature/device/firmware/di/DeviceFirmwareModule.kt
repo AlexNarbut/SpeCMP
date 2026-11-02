@@ -12,7 +12,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveViewModel
@@ -37,7 +36,6 @@ val deviceFirmwareModule = module {
     }
     // Состояние, привязанное к аккаунту, — чистится при логауте.
     single { FirmwareBootRequester() } bind AuthCloseable::class
-    single { ServicePinCooldown() } bind AuthCloseable::class
     single { FirmwareArchivePicker() }
 
     viewModelOf(::FirmwareCheckViewModel)

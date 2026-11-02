@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.firmware.domain
+package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
 
 class ServicePinCooldownTest {
 

@@ -10,4 +10,10 @@
     <string name="deviceinteraction_disconnected_msg_ble">The unit is off or too far away. Move the phone closer and check the unit power.</string>
     <string name="deviceinteraction_common_msg_waiting">Waiting for the unit to return…</string>
     <string name="deviceinteraction_common_btn_disconnect">Disconnect</string>
+    <string name="deviceinteraction_pin_title">Enter the programming PIN</string>
+    <string name="deviceinteraction_pin_a11y_input">PIN</string>
+    <string name="deviceinteraction_pin_error_wrong">Wrong PIN</string>
+    <string name="deviceinteraction_pin_msg_locked">Try again in %1$d s</string>
+    <string name="deviceinteraction_pin_btn_submit">Continue</string>
+    <string name="deviceinteraction_pin_btn_cancel">Cancel</string>
 </resources>

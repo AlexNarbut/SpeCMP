@@ -10,4 +10,10 @@
     <string name="deviceinteraction_disconnected_msg_ble">Блок выключен или находится далеко. Поднесите телефон ближе и проверьте питание блока.</string>
     <string name="deviceinteraction_common_msg_waiting">Ждём возвращения блока…</string>
     <string name="deviceinteraction_common_btn_disconnect">Отключиться</string>
+    <string name="deviceinteraction_pin_title">Введите PIN-код программирования</string>
+    <string name="deviceinteraction_pin_a11y_input">PIN-код</string>
+    <string name="deviceinteraction_pin_error_wrong">Неверный PIN-код</string>
+    <string name="deviceinteraction_pin_msg_locked">Повторите через %1$d с</string>
+    <string name="deviceinteraction_pin_btn_submit">Продолжить</string>
+    <string name="deviceinteraction_pin_btn_cancel">Отмена</string>
 </resources>
