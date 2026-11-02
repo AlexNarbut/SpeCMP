@@ -82,7 +82,6 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_common_title_i
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_format_clone
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -94,9 +93,10 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartButtonHeight
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustration
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartPrimaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartScaffold
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartSecondaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.ExitDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.Headline
@@ -369,41 +369,25 @@ private fun Tips(tips: List<String>) {
     }
 }
 
+@Suppress("CyclomaticComplexMethod") // таблица соответствий ошибка → текст
 @Composable
 private fun failureText(failure: CloneFailure): String = when (failure) {
     CloneFailure.DATA -> stringResource(Strings.string.autostart_clone_error_code, ERROR_CODE_DATA)
     CloneFailure.ENCRYPT -> stringResource(Strings.string.autostart_clone_error_code, ERROR_CODE_ENCRYPT)
     CloneFailure.ALGORITHM -> stringResource(Strings.string.autostart_clone_error_code, ERROR_CODE_ALGORITHM)
-    else -> stringResource(failure.text())
-}
-
-private fun CloneFailure.text(): StringResource = when (this) {
-    CloneFailure.READING -> Strings.string.autostart_clone_error_reading
-
-    CloneFailure.WRITING -> Strings.string.autostart_clone_error_writing
-
-    CloneFailure.VERIFYING -> Strings.string.autostart_clone_error_verifying
-
-    CloneFailure.REQUIRED -> Strings.string.autostart_clone_error_required
-
-    CloneFailure.CALC_ERROR -> Strings.string.autostart_clone_error_calc
-
-    CloneFailure.ALGORITHM_ERROR -> Strings.string.autostart_clone_error_algorithm
-
-    CloneFailure.WRONG_REQUEST -> Strings.string.autostart_clone_error_request
-
-    CloneFailure.DEBUG -> Strings.string.autostart_clone_error_debug
-
-    CloneFailure.UNSUPPORTED -> Strings.string.autostart_clone_error_unsupported
-
-    CloneFailure.WRONG_DEVICE_ID -> Strings.string.autostart_clone_error_device_id
-
-    CloneFailure.ATTEMPTS_EXCEEDED -> Strings.string.autostart_clone_error_attempts
-
-    CloneFailure.DEVICE_DENIED -> Strings.string.autostart_clone_error_denied
-
-    CloneFailure.UNKNOWN, CloneFailure.DATA, CloneFailure.ENCRYPT, CloneFailure.ALGORITHM ->
-        Strings.string.autostart_clone_error_unknown
+    CloneFailure.UNKNOWN -> stringResource(Strings.string.autostart_clone_error_unknown)
+    CloneFailure.READING -> stringResource(Strings.string.autostart_clone_error_reading)
+    CloneFailure.WRITING -> stringResource(Strings.string.autostart_clone_error_writing)
+    CloneFailure.VERIFYING -> stringResource(Strings.string.autostart_clone_error_verifying)
+    CloneFailure.REQUIRED -> stringResource(Strings.string.autostart_clone_error_required)
+    CloneFailure.CALC_ERROR -> stringResource(Strings.string.autostart_clone_error_calc)
+    CloneFailure.ALGORITHM_ERROR -> stringResource(Strings.string.autostart_clone_error_algorithm)
+    CloneFailure.WRONG_REQUEST -> stringResource(Strings.string.autostart_clone_error_request)
+    CloneFailure.DEBUG -> stringResource(Strings.string.autostart_clone_error_debug)
+    CloneFailure.UNSUPPORTED -> stringResource(Strings.string.autostart_clone_error_unsupported)
+    CloneFailure.WRONG_DEVICE_ID -> stringResource(Strings.string.autostart_clone_error_device_id)
+    CloneFailure.ATTEMPTS_EXCEEDED -> stringResource(Strings.string.autostart_clone_error_attempts)
+    CloneFailure.DEVICE_DENIED -> stringResource(Strings.string.autostart_clone_error_denied)
 }
 
 /** Кнопки по фазе (макет): старт / итог; во время процесса кнопок нет. */
@@ -415,19 +399,14 @@ private fun footer(
     is ClonePhase.Start -> {
         {
             if (state.canStart) {
-                PrimaryButton(
+                AutostartPrimaryButton(
                     text = Strings.string.autostart_clone_btn_start,
                     onClick = actions.onStart,
                     modifier = Modifier.testTag(CLONE_START_TAG)
                 )
             } else {
-                PrimaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
-                CmpOutlinedButton(
-                    text = stringResource(Strings.string.autostart_clone_btn_start),
-                    onClick = {},
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth().height(AutostartButtonHeight)
-                )
+                AutostartPrimaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
+                AutostartSecondaryButton(Strings.string.autostart_clone_btn_start, onClick = {}, enabled = false)
             }
         }
     }
@@ -443,41 +422,26 @@ private fun footer(
                 Strings.string.autostart_clone_btn_finish
             }
             when {
-                result is CloneResult.Completed -> PrimaryButton(closeText, onClose)
+                result is CloneResult.Completed -> AutostartPrimaryButton(closeText, onClose)
 
-                result is CloneResult.NotSupported -> PrimaryButton(Strings.string.autostart_common_btn_close, onClose)
+                result is CloneResult.NotSupported -> AutostartPrimaryButton(
+                    Strings.string.autostart_common_btn_close,
+                    onClose
+                )
 
                 // D3: повтор — только там, где он может помочь, и пока есть попытки.
                 result is CloneResult.Failed && result.failure.retryable && state.canStart -> {
-                    PrimaryButton(Strings.string.autostart_common_btn_retry, actions.onStart)
-                    SecondaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
+                    AutostartPrimaryButton(Strings.string.autostart_common_btn_retry, actions.onStart)
+                    AutostartSecondaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
                 }
 
                 else -> {
-                    PrimaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
-                    SecondaryButton(Strings.string.autostart_common_btn_close, onClose)
+                    AutostartPrimaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
+                    AutostartSecondaryButton(Strings.string.autostart_common_btn_close, onClose)
                 }
             }
         }
     }
-}
-
-@Composable
-private fun PrimaryButton(text: StringResource, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    CmpButton(
-        text = stringResource(text),
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight)
-    )
-}
-
-@Composable
-private fun SecondaryButton(text: StringResource, onClick: () -> Unit) {
-    CmpOutlinedButton(
-        text = stringResource(text),
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(AutostartButtonHeight)
-    )
 }
 
 @Composable

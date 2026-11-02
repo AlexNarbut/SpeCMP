@@ -78,8 +78,6 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_c
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_instruction
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_wait
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
@@ -91,10 +89,11 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
-import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartButtonHeight
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustration
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartLayout
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartPrimaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartScaffold
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartSecondaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.ExitDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.Headline
@@ -557,7 +556,13 @@ private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: C
 private fun footer(state: BypassState, actions: BypassActions): (@Composable ColumnScope.() -> Unit)? =
     when (val phase = state.phase) {
         is BypassPhase.Start -> {
-            { PrimaryButton(txt.autostart_bypass_btn_start, actions.onStart, Modifier.testTag(BYPASS_START_TAG)) }
+            {
+                AutostartPrimaryButton(
+                    txt.autostart_bypass_btn_start,
+                    actions.onStart,
+                    Modifier.testTag(BYPASS_START_TAG)
+                )
+            }
         }
 
         is BypassPhase.Running -> null
@@ -566,61 +571,35 @@ private fun footer(state: BypassState, actions: BypassActions): (@Composable Col
             {
                 when (phase.result) {
                     BypassResult.Success -> {
-                        PrimaryButton(txt.autostart_common_btn_done, actions.onClose)
+                        AutostartPrimaryButton(txt.autostart_common_btn_done, actions.onClose)
                         if (state.cloneAvailable) {
-                            SecondaryButton(
+                            AutostartSecondaryButton(
                                 txt.autostart_common_btn_open_clone,
                                 actions.onOpenClone,
-                                BYPASS_OPEN_CLONE_TAG
+                                modifier = Modifier.testTag(BYPASS_OPEN_CLONE_TAG)
                             )
                         }
                     }
 
                     BypassResult.CloneRequired -> {
-                        PrimaryButton(
+                        AutostartPrimaryButton(
                             txt.autostart_common_btn_open_clone,
                             actions.onOpenClone,
                             Modifier.testTag(BYPASS_OPEN_CLONE_TAG)
                         )
-                        SecondaryButton(txt.autostart_common_btn_close, actions.onClose)
+                        AutostartSecondaryButton(txt.autostart_common_btn_close, actions.onClose)
                     }
 
-                    BypassResult.NotSupported -> PrimaryButton(txt.autostart_common_btn_close, actions.onClose)
+                    BypassResult.NotSupported -> AutostartPrimaryButton(txt.autostart_common_btn_close, actions.onClose)
 
                     is BypassResult.Error -> {
-                        PrimaryButton(txt.autostart_common_btn_retry, actions.onStart)
-                        SecondaryButton(txt.autostart_common_btn_chat, actions.onOpenSupportChat)
+                        AutostartPrimaryButton(txt.autostart_common_btn_retry, actions.onStart)
+                        AutostartSecondaryButton(txt.autostart_common_btn_chat, actions.onOpenSupportChat)
                     }
                 }
             }
         }
     }
-
-@Composable
-private fun PrimaryButton(text: StringResource, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    CmpButton(
-        text = stringResource(text),
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight)
-    )
-}
-
-@Composable
-private fun SecondaryButton(text: StringResource, onClick: () -> Unit, tag: String? = null) {
-    CmpOutlinedButton(
-        text = stringResource(text),
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(AutostartButtonHeight).then(
-            if (tag !=
-                null
-            ) {
-                Modifier.testTag(tag)
-            } else {
-                Modifier
-            }
-        )
-    )
-}
 
 private val KeyRed = Color(0xFFC62828)
 private val KeyBlack = Color(0xFF1F2324)

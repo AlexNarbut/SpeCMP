@@ -2,9 +2,13 @@ package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -31,6 +35,17 @@ class ServicePinCooldownTest {
 
         time += 9.seconds
         assertEquals(Duration.ZERO, cooldown.remainingNow(SYSTEM))
+    }
+
+    @Test
+    fun `dialog lock is rounded up to whole seconds and absent without a block`() = runTest {
+        cooldown.start(SYSTEM)
+        time += 13.seconds
+        assertEquals(2.seconds, cooldown.lockedFor(flowOf(SYSTEM)).first())
+        time += 400.milliseconds
+        assertEquals(2.seconds, cooldown.lockedFor(flowOf(SYSTEM)).first())
+        assertNull(cooldown.lockedFor(flowOf(null)).first())
+        assertNull(cooldown.lockedFor(flowOf(OTHER_SYSTEM)).first())
     }
 
     @Test

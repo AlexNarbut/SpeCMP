@@ -2,22 +2,16 @@ package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.byp
 
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
@@ -29,7 +23,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.session.ProgramModeE
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
@@ -54,19 +47,8 @@ class BypassLearningViewModel(
     private var learning: Job? = null
 
     // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val pinLock: Flow<Duration?> = _state
-        .map { state -> state.deviceId.takeIf { state.dialog is BypassDialog.Pin } }
-        .distinctUntilChanged()
-        .flatMapLatest { systemId ->
-            if (systemId == null) {
-                flowOf(null)
-            } else {
-                pinCooldown.remaining(systemId)
-                    .map { left -> left.takeIf { it > Duration.ZERO }?.let { it.inWholeSeconds.seconds + 1.seconds } }
-                    .distinctUntilChanged()
-            }
-        }
+    private val pinLock: Flow<Duration?> =
+        pinCooldown.lockedFor(_state.map { state -> state.deviceId.takeIf { state.dialog is BypassDialog.Pin } })
 
     val state: StateFlow<BypassState> = combine(_state, pinLock) { state, lock ->
         val dialog = state.dialog
@@ -81,9 +63,7 @@ class BypassLearningViewModel(
 
     init {
         onEachDeviceReady(::onDeviceReady)
-        viewModelScope.launch {
-            deviceSession.state.collect { session -> if (session !is DeviceSessionState.Ready) onConnectionLost() }
-        }
+        onDeviceLost(::onConnectionLost)
     }
 
     private fun onDeviceReady(device: AlarmDevice) {

@@ -135,10 +135,11 @@ internal fun BypassStepKind.illustrationMode(): IllustrationMode = when (this) {
 }
 
 /**
- * Текст шага. У критичного ожидания это пояснение над крупным «Не прерывайте соединение».
+ * Текст шага. У критичного ожидания это пояснение над крупным «Не прерывайте соединение». У инструкций текста нет
+ * (`null`) — они показываются списком ([instruction]).
  */
 @Suppress("CyclomaticComplexMethod")
-internal fun BypassStep.text(): StringResource {
+internal fun BypassStep.text(): StringResource? {
     val done = kind == BypassStepKind.ACCEPTED
     return when (subject) {
         BypassSubject.PREPARE -> txt.autostart_bypass_item_prepare
@@ -178,8 +179,7 @@ internal fun BypassStep.text(): StringResource {
 
         BypassSubject.LADA_CAN -> txt.autostart_bypass_item_critical_lada
 
-        // Инструкции показываются списком (instruction()), текст шага не нужен.
-        BypassSubject.LADA_APS, BypassSubject.TOYOTA_DAIHATSU -> txt.autostart_bypass_item_learning
+        BypassSubject.LADA_APS, BypassSubject.TOYOTA_DAIHATSU -> null
     }
 }
 

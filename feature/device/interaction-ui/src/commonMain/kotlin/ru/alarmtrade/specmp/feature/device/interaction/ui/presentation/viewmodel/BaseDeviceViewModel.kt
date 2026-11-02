@@ -23,8 +23,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  *   [currentDevice] — его снимок для интентов.
  * - [launchOnDevice] — работа с блоком: отменяется при потере связи, без связи не стартует. Работу с блоком
  *   не запускать через `safeLaunch` — она переживёт отключение и допишет в state данные прежнего блока.
- * - [onEachDeviceReady] — действие на каждое (пере)подключение; вызывается из `init` наследника (не из базового
- *   конструктора: к первому вызову поля наследника должны быть инициализированы).
+ * - [onEachDeviceReady] / [onDeviceLost] — действие на каждое (пере)подключение / потерю связи; вызываются из `init`
+ *   наследника (не из базового конструктора: к первому вызову поля наследника должны быть инициализированы).
  *
  * Необработанные исключения работы с блоком логируются, как у `safeLaunch`, а не роняют приложение.
  */
@@ -54,6 +54,17 @@ abstract class BaseDeviceViewModel(protected val deviceSession: DeviceSession) :
     protected fun launchOnDevice(block: suspend CoroutineScope.() -> Unit): Job? {
         if (currentDevice == null) return null
         return viewModelScope.launch(deviceJob + deviceErrors, block = block)
+    }
+
+    /**
+     * [action] на каждую потерю связи с блоком (сессия вышла из `Ready`); работа [launchOnDevice] к этому моменту уже
+     * отменена. Для экранов, которые на обрыве возвращаются к исходному состоянию процесса.
+     */
+    protected fun onDeviceLost(action: () -> Unit): Job = viewModelScope.launch(deviceErrors) {
+        deviceSession.state
+            .map { it is DeviceSessionState.Ready }
+            .distinctUntilChanged()
+            .collect { ready -> if (!ready) action() }
     }
 
     /** [action] на каждое подключение (в т.ч. повторное); отменяется при потере связи. */

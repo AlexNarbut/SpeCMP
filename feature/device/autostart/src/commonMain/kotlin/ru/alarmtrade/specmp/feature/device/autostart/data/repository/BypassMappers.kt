@@ -14,7 +14,8 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassSubject
  * Статус обучения SDK → событие. Критичные ожидания (решение D1 задачи) — LADA CAN, MED17, GTP: в них приложение
  * передаёт данные, обрыв связи срывает обучение.
  */
-internal fun BypassLearningState.toEvent(): BypassEvent = when (val status = bypassStatus) {
+@Suppress("CyclomaticComplexMethod") // таблица соответствий статус SDK → событие
+internal fun BypassLearningState.toEvent(): BypassEvent = when (bypassStatus) {
     BypassLearningStatus.FINISH_SUCCESS -> BypassEvent.Finished(BypassResult.Success)
 
     BypassLearningStatus.FINISH_CLONE_REQUIRED -> BypassEvent.Finished(BypassResult.CloneRequired)
@@ -28,11 +29,6 @@ internal fun BypassLearningState.toEvent(): BypassEvent = when (val status = byp
         )
     }
 
-    else -> BypassEvent.Step(status.toStep())
-}
-
-@Suppress("CyclomaticComplexMethod")
-private fun BypassLearningStatus.toStep(): BypassStep = when (this) {
     BypassLearningStatus.WAIT -> step(BypassStepKind.WAIT, BypassSubject.PREPARE)
 
     BypassLearningStatus.TURN_ON_IGNITION_REQUEST -> step(BypassStepKind.ACTION, BypassSubject.IGNITION_ON)
@@ -82,15 +78,9 @@ private fun BypassLearningStatus.toStep(): BypassStep = when (this) {
     BypassLearningStatus.LADA_APS_IMMO_BYPASS -> step(BypassStepKind.INSTRUCTION, BypassSubject.LADA_APS)
 
     BypassLearningStatus.LEARN_TOYOTA_DAIHATSU -> step(BypassStepKind.INSTRUCTION, BypassSubject.TOYOTA_DAIHATSU)
-
-    // Итоговые статусы разбирает toEvent — сюда не попадают.
-    BypassLearningStatus.FINISH_SUCCESS,
-    BypassLearningStatus.FINISH_CLONE_REQUIRED,
-    BypassLearningStatus.FINISH_NOT_SUPPORTED,
-    BypassLearningStatus.FINISH_ERROR -> step(BypassStepKind.WAIT, BypassSubject.PREPARE)
 }
 
-private fun step(kind: BypassStepKind, subject: BypassSubject) = BypassStep(kind, subject)
+private fun step(kind: BypassStepKind, subject: BypassSubject) = BypassEvent.Step(BypassStep(kind, subject))
 
 @Suppress("CyclomaticComplexMethod")
 internal fun BypassLearningError?.toDomain(): BypassError = when (this) {
