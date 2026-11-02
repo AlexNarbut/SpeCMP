@@ -73,6 +73,8 @@ private val navConfig = SavedStateConfiguration {
  * @param configurator раздел «Конфигуратор» (фича `configurator-ui`, подключается в `composeApp`): тот же конфигуратор,
  *   что с главной, но при активной сессии — с «Записать в блок»; получает выход на корень монтажа и переход
  *   в «Проверку прошивок» (из редактора блока, единая CAN-прошивка).
+ * @param bypassLearning раздел «Бесключевой обход» (фича `device/autostart`, подключается в `composeApp`): получает
+ *   выход, переход в Clone (отдельный экран поверх обхода) и переход в чат техподдержки.
  * @param clone раздел «Процедура Clone» (фича `device/autostart`, подключается в `composeApp`): отдельный экран;
  *   получает, открыт ли он из бесключевого обхода, выход и переход в чат техподдержки.
  * @param vehicles раздел «Автомобили» (фича `vehicle-ui`, подключается в `composeApp` с моделью и CAN-кодом блока);
@@ -85,6 +87,7 @@ fun AdvancedMountNavGraph(
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
     settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
     configurator: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
+    bypassLearning: @Composable (onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit
 ) {
@@ -126,6 +129,16 @@ fun AdvancedMountNavGraph(
                             AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
                         )
                     }
+
+                    MountSection.BYPASS_LEARNING -> bypassLearning(
+                        { backStack.popSafe() },
+                        {
+                            backStack.navigateSafe(
+                                AdvancedMountSectionRoute(MountSection.CLONE, key.deviceTitle, fromBypass = true)
+                            )
+                        },
+                        onOpenSupportChat
+                    )
 
                     MountSection.CLONE -> clone(key.fromBypass, { backStack.popSafe() }, onOpenSupportChat)
 

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.autostart.di
 
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.device.autostart.data.repository.SpecialistBypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.data.repository.SpecialistCloneRepository
@@ -10,6 +11,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLea
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.session.ProgramModeEntry
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassLearningViewModel
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneViewModel
 
 /**
@@ -23,5 +25,6 @@ val deviceAutostartModule = module {
     single<ProgramModeRepository> { SpecialistProgramModeRepository(bluetoothAlarmDeviceInteractor = { get() }) }
     factoryOf(::ProgramModeEntry)
 
+    viewModelOf(::BypassLearningViewModel)
     viewModel { (fromBypass: Boolean) -> CloneViewModel(get(), get(), get(), get(), fromBypass) }
 }
