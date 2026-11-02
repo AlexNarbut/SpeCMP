@@ -103,6 +103,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.IllustrationMode
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StatusRow
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StepAppear
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
 
@@ -168,8 +169,8 @@ internal fun BypassContent(state: BypassState, actions: BypassActions) {
             when (phase) {
                 is BypassPhase.Start -> StartBody(state, phase, layout)
 
-                is BypassPhase.Running -> {
-                    val step = phase.step
+                // Каждый новый шаг появляется (макет `bcIn`); ключ — сам шаг.
+                is BypassPhase.Running -> StepAppear(phase.step) { step ->
                     val instruction = step?.subject?.instruction()
                     if (step != null && instruction != null) {
                         InstructionBody(step, instruction, layout)

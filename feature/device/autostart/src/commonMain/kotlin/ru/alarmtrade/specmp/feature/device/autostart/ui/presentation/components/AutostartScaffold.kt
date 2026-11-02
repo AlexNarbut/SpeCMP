@@ -1,11 +1,20 @@
 package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,13 +37,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -228,16 +238,34 @@ private fun Body(
 @Composable
 private fun StatusStrip(layout: AutostartLayout, content: (@Composable () -> Unit)?) {
     val colors = cmpThemeColors()
-    val alpha by animateFloatAsState(if (content != null) 1f else 0f, tween(STATUS_FADE_MILLIS), label = "status")
-    CmpBox(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(if (layout == AutostartLayout.Compact) 64.dp else 68.dp)
-            .background(if (content != null) colors.surfaceContainerLow else Color.Transparent)
-            .padding(horizontal = if (layout == AutostartLayout.Compact) 16.dp else 32.dp, vertical = 12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        CmpBox(modifier = Modifier.widthIn(max = 976.dp).fillMaxWidth().alpha(alpha)) { content?.invoke() }
+    val shown = content != null
+    val fade = tween<Float>(STATUS_FADE_MILLIS, easing = EaseInOut)
+    val alpha by animateFloatAsState(if (shown) 1f else 0f, fade, label = "statusAlpha")
+    val background by animateColorAsState(
+        // К прозрачному тому же цвету, а не к Color.Transparent (прозрачный чёрный): иначе полоса темнеет, пока гаснет.
+        if (shown) colors.surfaceContainerLow else colors.surfaceContainerLow.copy(alpha = 0f),
+        tween(STATUS_FADE_MILLIS, easing = EaseInOut),
+        label = "statusBackground"
+    )
+    val divider by animateColorAsState(
+        if (shown) colors.outlineVariant else colors.outlineVariant.copy(alpha = 0f),
+        tween(STATUS_FADE_MILLIS, easing = EaseInOut),
+        label = "statusDivider"
+    )
+    // Пока полоса гаснет, в ней остаётся последнее содержимое (макет: `lastStatus`), а не пустота.
+    var last by remember { mutableStateOf(content) }
+    if (content != null) last = content
+    CmpColumn(modifier = Modifier.fillMaxWidth().background(background)) {
+        CmpBox(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(if (layout == AutostartLayout.Compact) 63.dp else 67.dp)
+                .padding(horizontal = if (layout == AutostartLayout.Compact) 16.dp else 32.dp, vertical = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CmpBox(modifier = Modifier.widthIn(max = 976.dp).fillMaxWidth().alpha(alpha)) { last?.invoke() }
+        }
+        CmpBox(modifier = Modifier.fillMaxWidth().height(1.dp).background(divider))
     }
 }
 
@@ -368,7 +396,8 @@ internal fun IllustrationFrame(
                     PULSE_REQUEST_MILLIS
                 } else {
                     PULSE_WAIT_MILLIS
-                }
+                },
+                easing = EaseOut
             ),
             RepeatMode.Restart
         ),
@@ -377,7 +406,7 @@ internal fun IllustrationFrame(
     val breath by transition.animateFloat(
         initialValue = 1f,
         targetValue = BREATH_MIN_ALPHA,
-        animationSpec = infiniteRepeatable(tween(BREATH_HALF_MILLIS), RepeatMode.Reverse),
+        animationSpec = infiniteRepeatable(tween(BREATH_HALF_MILLIS, easing = EaseInOut), RepeatMode.Reverse),
         label = "breath"
     )
     val request = mode == IllustrationMode.Request
@@ -456,4 +485,37 @@ internal fun ExitDialog(onStay: () -> Unit, onExit: () -> Unit) {
             )
         }
     )
+}
+
+private const val STEP_IN_MILLIS = 250
+private val StepInOffset = 8.dp
+
+/**
+ * Появление нового шага (макет `bcIn`: прозрачность 0 → 1 и подъём на 8dp за 250 мс). Прежний шаг уходит сразу —
+ * как в макете, где карточка пересоздаётся по ключу шага.
+ */
+@Composable
+internal fun <K> StepAppear(stepKey: K, modifier: Modifier = Modifier, content: @Composable ColumnScope.(K) -> Unit) {
+    val density = LocalDensity.current
+    val offset = with(density) { StepInOffset.roundToPx() }
+    AnimatedContent(
+        targetState = stepKey,
+        modifier = modifier.fillMaxWidth(),
+        transitionSpec = {
+            (
+                fadeIn(tween(STEP_IN_MILLIS, easing = EaseInOut)) + slideInVertically(tween(STEP_IN_MILLIS)) {
+                    offset
+                }
+                ) togetherWith
+                ExitTransition.None using SizeTransform(clip = false)
+        },
+        contentAlignment = Alignment.TopCenter,
+        label = "stepAppear"
+    ) { key ->
+        CmpColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) { content(key) }
+    }
 }
