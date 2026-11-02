@@ -91,6 +91,8 @@
         <Sec title="Задание чек-листа">
           <div style={{ background: "var(--surface-container-low)", borderRadius: 20, padding: 8, border: "1px solid var(--outline-variant)", display: "flex", flexDirection: "column", gap: 4 }}>
             <window.CS_TaskRow t={T[0]} st="pending" d={base} changed={{}} n={1} onSkip={() => {}} />
+            <window.CS_TaskRow t={T[1]} st="pending" d={base} changed={{}} n={2} current onSkip={() => {}} />
+            <window.CS_TaskRow t={T[2]} st="pending" d={base} changed={{}} n={3} current={false} />
             <window.CS_TaskRow t={T[2]} st="done" d={base} changed={{}} n={3} />
             <window.CS_TaskRow t={T[3]} st="skipped" d={base} changed={{}} n={4} />
             <window.CS_TaskRow t={T[8]} st="pending" d={base} changed={{}} n={9} onAnswer={() => {}} />

@@ -64,8 +64,13 @@ function HomeApp({
       const target = isDesktop ? "support-chat-desktop" : "support-chat";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
-    if (key === "quick" || key === "extended") {
-      // «Быстрый / Расширенный монтаж» → экран поиска и выбора устройства.
+    if (key === "quick") {
+      // «Быстрый монтаж» → мастер быстрого монтажа (поиск только сигнализаций — его первый шаг).
+      const target = isDesktop ? "fast-mount-desktop" : "fast-mount";
+      if (window.psHas && window.psHas(target)) window.psGo(target);
+    }
+    if (key === "extended") {
+      // «Расширенный монтаж» → экран поиска и выбора устройства.
       const target = isDesktop ? "device-select-desktop" : "device-select";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
