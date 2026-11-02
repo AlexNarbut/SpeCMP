@@ -1,0 +1,72 @@
+
+<!-- @dsCard group="Бесключевой обход и Clone" viewport="1040x760" name="Обход и Clone (desktop)" subtitle="Compose Desktop — окно 1280×800; light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Обход и Clone (desktop)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 1100px; }
+  .seg { flex: 0 0 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: nowrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.wrap { flex-wrap: wrap; justify-content: center; }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .scaler { transform-origin: top left; }
+  .win { width: 1280px; height: 800px; border-radius: 10px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); display: flex; flex-direction: column; }
+  .titlebar { height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); }
+  .title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .title .material-icons { font-size: 18px; color: var(--primary); }
+  .wctl { display: flex; gap: 6px; }
+  .wbtn { width: 28px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--on-surface-variant); }
+  .wbtn .material-icons { font-size: 16px; }
+  .theme-fab { position: fixed; top: 14px; right: 14px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; line-height: 1; background: #fff; color: #1A3E7A; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  body.page-dark { background: #101314; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .theme-fab { background: #272b2d; color: #ffd966; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./BypassClone.jsx"></script>
+<script type="text/babel">
+  function App() {
+    const c = useBcCtl();
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const fit = () => setScale(Math.min(1, (window.innerWidth - 48) / 1280, (window.innerHeight - 200) / 800));
+      fit(); window.addEventListener("resize", fit);
+      return () => window.removeEventListener("resize", fit);
+    }, []);
+    return (
+      <React.Fragment>
+        {c.bar}
+        <div style={{ width: 1280 * scale, height: 800 * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="win" data-theme={c.dark ? "dark" : undefined}>
+              <div className="titlebar">
+                <div className="title"><span className="material-icons">vpn_key</span>Pandora Spec — Обход и Clone</div>
+                <div className="wctl"><div className="wbtn"><span className="material-icons">remove</span></div><div className="wbtn"><span className="material-icons">crop_square</span></div><div className="wbtn"><span className="material-icons">close</span></div></div>
+              </div>
+              <div style={{ flex: 1, minHeight: 0, background: "var(--background)" }}>
+                <window.BypassCloneApp key={c.key} {...c.props} onBack={() => window.psGo("advanced-mount-desktop")} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

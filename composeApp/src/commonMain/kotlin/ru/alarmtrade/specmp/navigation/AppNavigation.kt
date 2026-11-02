@@ -36,6 +36,8 @@ import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckEr
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfigurationPickerEntry
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfiguratorEntry
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.ConfiguratorRoute
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassLearningEntry
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
@@ -188,6 +190,16 @@ private fun AuthedNavGraph() {
                                     )
                                 }
                             )
+                        },
+                        bypassLearning = { onBack, onOpenClone, onOpenSupportChat ->
+                            BypassLearningEntry(
+                                onBack = onBack,
+                                onOpenClone = onOpenClone,
+                                onOpenSupportChat = onOpenSupportChat
+                            )
+                        },
+                        clone = { fromBypass, onBack, onOpenSupportChat ->
+                            CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
                         },
                         vehicles = { onBack -> DeviceVehicles(device, onBack) }
                     )

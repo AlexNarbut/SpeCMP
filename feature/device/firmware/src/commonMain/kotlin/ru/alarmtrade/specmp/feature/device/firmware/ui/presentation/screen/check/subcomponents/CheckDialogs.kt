@@ -1,51 +1,27 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.subcomponents
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
-import ru.alarmtrade.specmp.core.localization.resources.firmware_check_a11y_pin_input
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_dialog_confirm
-import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_pin_submit
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_btn_update
-import ru.alarmtrade.specmp.core.localization.resources.firmware_check_error_pin_wrong
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_dialog_full_description
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_dialog_confirm
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_dialog_no_description
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_pin
-import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_pin_locked
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_dialog_confirm
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_dialog_description
-import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_pin
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_label_version
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -55,26 +31,20 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
-import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
-import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
 
 private val ButtonHeight = 48.dp
-private val DialogMaxWidth = 440.dp
-private const val PIN_LENGTH = 4
 
 internal const val ENTER_CONFIRM_TAG = "firmware_enter_confirm"
-internal const val PIN_INPUT_TAG = "firmware_pin_input"
-internal const val PIN_SUBMIT_TAG = "firmware_pin_submit"
-internal const val PIN_CANCEL_TAG = "firmware_pin_cancel"
-internal const val PIN_LOCKED_TAG = "firmware_pin_locked"
+private const val PIN_TAG_PREFIX = "firmware_pin"
 
 /** Описание версии: номер и полное описание; «Обновить» ведёт к подтверждению перехода в режим обновления. */
 @Composable
@@ -158,134 +128,22 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
 }
 
 /**
- * PIN программирования: четыре ячейки, невидимое поле ввода поверх них держит цифровую клавиатуру.
- * Пока блок не принимает ввод ([CheckDialog.Pin.lockedFor]), поле и «Продолжить» отключены, внизу — отсчёт.
+ * PIN программирования для входа в загрузчик — общий [ServicePinDialog] с текстом прошивки; теги — `firmware_pin_*`.
  */
 @Composable
 internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
-    var pin by remember { mutableStateOf("") }
-    val locked = dialog.lockedFor != null
-    val canType = !locked && !dialog.sending
-    // Неверный ввод — поле очищается (значение PIN нигде, кроме этого поля, не хранится).
-    LaunchedEffect(dialog.wrongCount) { pin = "" }
-    CmpDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.widthIn(max = DialogMaxWidth),
-        icon = CmpIcons.Lock.imageVector(),
-        title = { CmpText(text = stringResource(Strings.string.firmware_check_title_pin)) },
-        text = {
-            CmpColumn(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CmpText(text = stringResource(Strings.string.firmware_check_msg_pin), style = CmpTextStyle.Body)
-                PinCells(
-                    pin = pin,
-                    onPinChange = { pin = it },
-                    isError = dialog.wrong,
-                    enabled = canType,
-                    onDone = { if (pin.length == PIN_LENGTH) onSubmit(pin) }
-                )
-                PinStatus(dialog)
-            }
-        },
-        dismissButton = {
-            CmpTextButton(
-                text = stringResource(Strings.string.firmware_common_btn_cancel),
-                onClick = onDismiss,
-                enabled = !dialog.sending,
-                modifier = Modifier.height(ButtonHeight).testTag(PIN_CANCEL_TAG)
-            )
-        },
-        confirmButton = {
-            ProgressButton(
-                text = stringResource(Strings.string.firmware_check_btn_pin_submit),
-                sending = dialog.sending,
-                enabled = canType && pin.length == PIN_LENGTH,
-                onClick = { onSubmit(pin) },
-                modifier = Modifier.testTag(PIN_SUBMIT_TAG)
-            )
-        }
+    ServicePinDialog(
+        message = stringResource(Strings.string.firmware_check_msg_pin),
+        state = ServicePinDialogState(
+            sending = dialog.sending,
+            wrong = dialog.wrong,
+            wrongCount = dialog.wrongCount,
+            lockedFor = dialog.lockedFor
+        ),
+        onDismiss = onDismiss,
+        onSubmit = onSubmit,
+        testTagPrefix = PIN_TAG_PREFIX
     )
-}
-
-@Composable
-private fun PinStatus(dialog: CheckDialog.Pin) {
-    val colors = cmpThemeColors()
-    val seconds = dialog.lockedFor?.let { left -> (left.inWholeMilliseconds + MILLIS_IN_SECOND - 1) / MILLIS_IN_SECOND }
-    CmpColumn(
-        modifier = Modifier.heightIn(min = 44.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (dialog.wrong) {
-            CmpText(
-                text = stringResource(Strings.string.firmware_check_error_pin_wrong),
-                fontWeight = FontWeight.SemiBold,
-                color = colors.error
-            )
-        }
-        if (seconds != null) {
-            CmpText(
-                text = stringResource(Strings.string.firmware_check_msg_pin_locked, seconds.toInt()),
-                color = colors.onSurfaceVariant,
-                style = CmpTextStyle.Body,
-                modifier = Modifier.testTag(PIN_LOCKED_TAG)
-            )
-        }
-    }
-}
-
-@Composable
-private fun PinCells(
-    pin: String,
-    onPinChange: (String) -> Unit,
-    isError: Boolean,
-    enabled: Boolean,
-    onDone: () -> Unit
-) {
-    val colors = cmpThemeColors()
-    val focus = remember { FocusRequester() }
-    // Клавиатура открывается сразу и возвращается, когда блок снова принимает ввод.
-    LaunchedEffect(enabled) { if (enabled) focus.requestFocus() }
-    val a11y = stringResource(Strings.string.firmware_check_a11y_pin_input)
-    CmpBox(contentAlignment = Alignment.Center) {
-        CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            repeat(PIN_LENGTH) { index ->
-                val active = index == minOf(pin.length, PIN_LENGTH - 1)
-                CmpSurface(
-                    modifier = Modifier.width(56.dp).height(64.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = colors.surface,
-                    border = when {
-                        isError -> BorderStroke(2.dp, colors.error)
-                        active && enabled -> BorderStroke(2.dp, colors.primary)
-                        else -> BorderStroke(1.dp, colors.outline)
-                    }
-                ) {
-                    CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        if (index < pin.length) CmpText(text = "•", fontSize = 30.sp)
-                    }
-                }
-            }
-        }
-        // Невидимое поле на всю ширину ячеек: касание ячеек фокусирует его.
-        CmpTextField(
-            value = pin,
-            onValueChange = { onPinChange(it.filter(Char::isDigit).take(PIN_LENGTH)) },
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0f)
-                .focusRequester(focus)
-                .testTag(PIN_INPUT_TAG)
-                .semantics { contentDescription = a11y },
-            enabled = enabled,
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onDone() })
-        )
-    }
 }
 
 /** Кнопка подтверждения: пока команда уходит — вместо текста индикатор. */
@@ -299,5 +157,3 @@ private fun ProgressButton(text: String, sending: Boolean, enabled: Boolean, onC
         }
     }
 }
-
-private const val MILLIS_IN_SECOND = 1_000L

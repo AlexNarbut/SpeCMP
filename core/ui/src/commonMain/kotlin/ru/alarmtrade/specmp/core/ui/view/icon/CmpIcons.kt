@@ -81,6 +81,13 @@ enum class CmpIcons {
     Visibility,
     VisibilityOff,
     WifiOff,
+    HourglassTop,
+    SyncLock,
+    Block,
+    Hearing,
+    Replay,
+    FactCheck,
+    MenuBook,
 
     // ── Places ──────────────────────────────────────────────
     LocationOn,

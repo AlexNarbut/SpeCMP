@@ -50,12 +50,7 @@
     <string name="firmware_check_title_dialog_confirm">Перейти в режим обновления?</string>
     <string name="firmware_check_msg_dialog_confirm">Блок перезагрузится, связь с ним пропадёт на несколько секунд. Обновление нужно довести до конца: пока блок в режиме обновления, он не работает как сигнализация. Не выключайте питание и не отключайте кабель.</string>
     <string name="firmware_check_btn_dialog_confirm">Перейти</string>
-    <string name="firmware_check_title_pin">Введите PIN-код программирования</string>
     <string name="firmware_check_msg_pin">PIN нужен для перехода блока в режим обновления</string>
-    <string name="firmware_check_a11y_pin_input">PIN-код</string>
-    <string name="firmware_check_error_pin_wrong">Неверный PIN-код</string>
-    <string name="firmware_check_msg_pin_locked">Повторите через %1$d с</string>
-    <string name="firmware_check_btn_pin_submit">Продолжить</string>
     <string name="firmware_update_title_screen">Обновление прошивки</string>
     <string name="firmware_update_subtitle_bluetooth">Bluetooth-модуль · %1$s</string>
     <string name="firmware_update_a11y_locked">Выход заблокирован до завершения</string>

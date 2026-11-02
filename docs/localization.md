@@ -37,6 +37,7 @@ core/localization/src/commonMain/composeResources/
 | `vehicle`, `configurator` | `feature/vehicle-ui`, `feature/configurator-ui` |
 | `firmware`, `settings` | `feature/device/firmware`, `feature/device/settings-ui` |
 | `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui` |
+| `autostart` | `feature/device/autostart` (бесключевой обход, процедура Clone) |
 
 Префикс — **одно слово без `_`** (иначе его не отличить от экрана). Новая фича — новая строка таблицы и новый файл
 в `values/` и `values-ru/`.

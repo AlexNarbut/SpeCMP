@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.firmware.domain.session
+package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -58,16 +58,38 @@ class ServicePinCooldown(private val timeSource: TimeSource = TimeSource.Monoton
             }
         }
 
+    /**
+     * Блокировка для открытого диалога PIN: остаток по блоку из [systemId], округлённый вверх до целых секунд (диалог
+     * показывает секунды — значение меняется раз в секунду, а не на каждый тик); `null` — ввод разрешён или блока нет
+     * ([systemId] выдаёт `null`, например пока диалог закрыт).
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun lockedFor(systemId: Flow<Long?>): Flow<Duration?> = systemId
+        .distinctUntilChanged()
+        .flatMapLatest { id ->
+            if (id == null) {
+                flowOf(null)
+            } else {
+                remaining(id)
+                    .map { left -> left.takeIf { it > Duration.ZERO }?.ceilToSeconds() }
+                    .distinctUntilChanged()
+            }
+        }
+
     override suspend fun release() {
         deadlines.update { emptyMap() }
     }
 
     private fun TimeMark.left(): Duration = (-elapsedNow()).coerceAtLeast(Duration.ZERO)
 
+    private fun Duration.ceilToSeconds(): Duration =
+        ((inWholeMilliseconds + MILLIS_IN_SECOND - 1) / MILLIS_IN_SECOND).seconds
+
     companion object {
         /** Блокировка ввода на блоке после неверного PIN. */
         val PIN_LOCKOUT: Duration = 15.seconds
 
         private val TICK: Duration = 250.milliseconds
+        private const val MILLIS_IN_SECOND = 1_000L
     }
 }

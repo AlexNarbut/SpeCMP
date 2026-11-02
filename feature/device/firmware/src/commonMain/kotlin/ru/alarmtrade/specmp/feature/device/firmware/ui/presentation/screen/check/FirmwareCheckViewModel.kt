@@ -2,16 +2,11 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.chec
 
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -33,12 +28,12 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.session.BootEntryResu
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
-import ru.alarmtrade.specmp.feature.device.firmware.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
 
 /**
@@ -69,22 +64,9 @@ class FirmwareCheckViewModel(
     // Модули блока по id: из них берётся цель входа в загрузчик. Карточки в state — только примитивы.
     private val modules = MutableStateFlow<Map<Long, FirmwareModule>>(emptyMap())
 
-    // Остаток блокировки PIN для открытого диалога PIN (тикает, пока диалог на экране).
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val pinLock: Flow<Duration?> = _state
-        .map { state -> state.deviceId.takeIf { state.dialog is CheckDialog.Pin } }
-        .distinctUntilChanged()
-        .flatMapLatest { systemId ->
-            if (systemId == null) {
-                flowOf(null)
-            } else {
-                // Тик кулдауна — 250 мс, а диалог показывает целые секунды: округляем вверх и отсекаем повторы,
-                // чтобы state экрана менялся раз в секунду, а не 4 раза.
-                pinCooldown.remaining(systemId)
-                    .map { left -> left.takeIf { it > Duration.ZERO }?.ceilToSeconds() }
-                    .distinctUntilChanged()
-            }
-        }
+    // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
+    private val pinLock: Flow<Duration?> =
+        pinCooldown.lockedFor(_state.map { state -> state.deviceId.takeIf { state.dialog is CheckDialog.Pin } })
 
     val state: StateFlow<FirmwareCheckState> = combine(_state, pinLock) { state, lock ->
         val dialog = state.dialog
@@ -311,8 +293,3 @@ class FirmwareCheckViewModel(
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
-
-private fun Duration.ceilToSeconds(): Duration =
-    ((inWholeMilliseconds + MILLIS_IN_SECOND - 1) / MILLIS_IN_SECOND).seconds
-
-private const val MILLIS_IN_SECOND = 1_000L
