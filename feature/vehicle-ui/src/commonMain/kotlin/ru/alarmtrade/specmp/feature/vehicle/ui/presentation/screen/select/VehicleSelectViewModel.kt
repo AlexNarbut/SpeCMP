@@ -2,15 +2,19 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -73,6 +77,12 @@ internal class VehicleSelectViewModel(
     // Старт экрана — при первой подписке на state: недавние (хранилище — на io) и марки, если тип устройства известен.
     val state: StateFlow<VehicleSelectState> = _state
         .launchOnFirstStart {
+            // Загрузки уровней каталога: новая загрузка уровня отменяет прежнюю (collectLatest), без полей-Job.
+            levelLoads.values.forEach { loads ->
+                launch(start = CoroutineStart.UNDISPATCHED) {
+                    loads.collectLatest { it.run?.let { run -> runLoad(run) } }
+                }
+            }
             val recent = withContext(dispatchers.io) { recentStore.recent(request.catalog) }
             _state.update { it.copy(recent = recent) }
             if (!_state.value.showTypeChoice) loadBrands()
@@ -82,10 +92,13 @@ internal class VehicleSelectViewModel(
     private val _effect = sideEffectFlow<VehicleSelectEffect>()
     val effect: SharedFlow<VehicleSelectEffect> = _effect.asSharedFlow()
 
-    private val jobs = mutableMapOf<CatalogLevel, Job>()
+    /** Загрузка уровня каталога ([run]) или её отмена (`null`). */
+    private class LevelLoad(val run: (suspend () -> Unit)?)
 
-    /** CAN-код, по которому единственный результат уже открывался автоматически (не открывать повторно). */
-    private var autoOpenedCode: String? = null
+    // replay = 1: запрос до первой подписки на state не теряется (сборщики стартуют в launchOnFirstStart).
+    private val levelLoads: Map<CatalogLevel, MutableSharedFlow<LevelLoad>> = CatalogLevel.entries.associateWith {
+        MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    }
 
     // ── Тип устройства ─────────────────────────────────────────
 
@@ -111,10 +124,16 @@ internal class VehicleSelectViewModel(
 
     fun onSearchModeChange(mode: SearchMode) {
         if (mode == _state.value.searchMode) return
-        autoOpenedCode = null
         cancel(CatalogLevel.CARD)
         _state.update {
-            it.copy(searchMode = mode, selection = CatalogSelection(), query = "", combo = null, card = LCEState.None)
+            it.copy(
+                autoOpenedCan = null,
+                searchMode = mode,
+                selection = CatalogSelection(),
+                query = "",
+                combo = null,
+                card = LCEState.None
+            )
         }
         if (mode == SearchMode.CAN) searchCan()
     }
@@ -133,9 +152,10 @@ internal class VehicleSelectViewModel(
     fun onCanCodeChange(code: String) {
         val digits = code.filter(Char::isDigit).take(CAN_CODE_LENGTH)
         if (digits == _state.value.canCode && _state.value.canResults != LCEState.None) return
-        autoOpenedCode = null
         cancel(CatalogLevel.CARD)
-        _state.update { it.copy(canCode = digits, selection = CatalogSelection(), card = LCEState.None) }
+        _state.update {
+            it.copy(autoOpenedCan = null, canCode = digits, selection = CatalogSelection(), card = LCEState.None)
+        }
         searchCan()
     }
 
@@ -452,8 +472,9 @@ internal class VehicleSelectViewModel(
             set = { state, load -> state.copy(canResults = load) },
             fetch = { repository.findByCanCode(code, catalogQuery().device, catalogQuery().groups) },
             onReady = { cars ->
-                if (cars.size == 1 && autoOpenedCode != code && _state.value.canCode == code) {
-                    autoOpenedCode = code
+                val current = _state.value
+                if (cars.size == 1 && current.autoOpenedCan != code && current.canCode == code) {
+                    _state.update { it.copy(autoOpenedCan = code) }
                     openCard(cars.single().id, CardSource.CAN)
                 }
             }
@@ -476,22 +497,35 @@ internal class VehicleSelectViewModel(
         fetch: suspend () -> Response<T>,
         onReady: (T) -> Unit = {}
     ) {
-        jobs.remove(level)?.cancel()
         _state.update { set(it, LCEState.Loading) }
-        jobs[level] = safeLaunch {
-            val response = withContext(dispatchers.io) { fetch() }
-            _state.update { set(it, response.asLCEState(CatalogError::from)) }
-            response.getValueIfSuccess()?.let(onReady)
+        levelLoads.getValue(level).tryEmit(
+            LevelLoad {
+                val response = withContext(dispatchers.io) { fetch() }
+                _state.update { set(it, response.asLCEState(CatalogError::from)) }
+                response.getValueIfSuccess()?.let(onReady)
+            }
+        )
+    }
+
+    /**
+     * Загрузка — отдельной работой VM (сбой логируется, как у safeLaunch, и не обрывает сборщик уровня); отмена
+     * сборщика (новый запрос уровня) отменяет и её.
+     */
+    private suspend fun runLoad(run: suspend () -> Unit) {
+        val job = safeLaunch { run() }
+        try {
+            job.join()
+        } finally {
+            job.cancel()
         }
     }
 
     private fun cancel(level: CatalogLevel) {
-        jobs.remove(level)?.cancel()
+        levelLoads.getValue(level).tryEmit(LevelLoad(null))
     }
 
     private fun cancelAll() {
-        jobs.values.forEach { it.cancel() }
-        jobs.clear()
+        CatalogLevel.entries.forEach(::cancel)
     }
 
     private fun updateCardUi(transform: (CardUi) -> CardUi) = _state.update { it.copy(cardUi = transform(it.cardUi)) }
