@@ -1,17 +1,21 @@
 package ru.alarmtrade.specmp.feature.appsettings.presentation.screen.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.common.ConfigurationLanguage
 import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_a11y_back
@@ -19,6 +23,9 @@ import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_app
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_change
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_btn_ok
+import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_error_conf_language
+import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_hint_conf_language
+import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_label_conf_language
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_label_language
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_msg_confirm
 import ru.alarmtrade.specmp.core.localization.resources.appsettings_main_msg_restart
@@ -32,6 +39,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpRadioButton
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -58,7 +66,7 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
         }
     ) { padding ->
         CmpColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             CmpText(
@@ -67,9 +75,11 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
                 color = cmpThemeColors().onSurfaceVariant
             )
             AppLocale.entries.forEach { locale ->
-                LocaleRow(locale = locale, selected = locale == state.selected, onClick = {
-                    actions.onLocaleSelect(locale)
-                })
+                LanguageRow(
+                    name = localeName(locale),
+                    selected = locale == state.selected,
+                    onClick = { actions.onLocaleSelect(locale) }
+                )
             }
             CmpButton(
                 text = stringResource(Strings.string.appsettings_main_btn_apply),
@@ -77,23 +87,55 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
                 enabled = state.canApply,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             )
+            CmpDivider(modifier = Modifier.padding(vertical = 16.dp))
+            ConfigurationLanguageSection(state, actions.onConfigurationLanguageSelect)
         }
     }
     AppSettingsDialogs(state.dialog, actions)
 }
 
 @Composable
-private fun LocaleRow(locale: AppLocale, selected: Boolean, onClick: () -> Unit) {
+private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     CmpRow(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
-            .clickable(role = Role.RadioButton, onClick = onClick),
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         CmpRadioButton(selected = selected, onClick = null)
-        CmpText(text = localeName(locale), style = CmpTextStyle.BodyLarge)
+        CmpText(text = name, style = CmpTextStyle.BodyLarge)
+    }
+}
+
+/** Язык конфигураций: применяется сразу, без кнопки и перезапуска. */
+@Composable
+private fun ConfigurationLanguageSection(state: AppSettingsState, onSelect: (ConfigurationLanguage) -> Unit) {
+    CmpText(
+        text = stringResource(Strings.string.appsettings_main_label_conf_language),
+        style = CmpTextStyle.Title,
+        color = cmpThemeColors().onSurfaceVariant
+    )
+    CmpText(
+        text = stringResource(Strings.string.appsettings_main_hint_conf_language),
+        style = CmpTextStyle.Body,
+        color = cmpThemeColors().onSurfaceVariant
+    )
+    ConfigurationLanguage.entries.forEach { language ->
+        LanguageRow(
+            name = languageName(language),
+            selected = language == state.configurationLanguage,
+            onClick = { onSelect(language) },
+            modifier = Modifier.testTag("appsettings_conf_language_${language.name.lowercase()}")
+        )
+    }
+    if (state.configurationLanguageError) {
+        CmpText(
+            text = stringResource(Strings.string.appsettings_main_error_conf_language),
+            style = CmpTextStyle.Body,
+            color = cmpThemeColors().error
+        )
     }
 }
 
@@ -103,6 +145,14 @@ private fun localeName(locale: AppLocale): String = stringResource(
     when (locale) {
         AppLocale.English -> Strings.string.appsettings_main_value_language_en
         AppLocale.Russian -> Strings.string.appsettings_main_value_language_ru
+    }
+)
+
+@Composable
+private fun languageName(language: ConfigurationLanguage): String = stringResource(
+    when (language) {
+        ConfigurationLanguage.EN -> Strings.string.appsettings_main_value_language_en
+        ConfigurationLanguage.RU -> Strings.string.appsettings_main_value_language_ru
     }
 )
 

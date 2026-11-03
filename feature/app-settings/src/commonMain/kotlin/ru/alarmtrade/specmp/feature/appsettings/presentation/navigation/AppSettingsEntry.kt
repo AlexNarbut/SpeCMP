@@ -9,7 +9,7 @@ import ru.alarmtrade.specmp.feature.appsettings.presentation.screen.settings.App
 import ru.alarmtrade.specmp.feature.appsettings.presentation.screen.settings.AppSettingsScreen
 import ru.alarmtrade.specmp.feature.appsettings.presentation.screen.settings.AppSettingsViewModel
 
-/** Настройки приложения (язык). */
+/** Настройки приложения: язык приложения и язык конфигураций. */
 @Composable
 fun AppSettingsEntry(onBack: () -> Unit) {
     val viewModel = koinViewModel<AppSettingsViewModel>()
@@ -20,7 +20,8 @@ fun AppSettingsEntry(onBack: () -> Unit) {
             onLocaleSelect = viewModel::onLocaleSelect,
             onApply = viewModel::onApply,
             onConfirm = viewModel::onConfirm,
-            onDialogDismiss = viewModel::onDialogDismiss
+            onDialogDismiss = viewModel::onDialogDismiss,
+            onConfigurationLanguageSelect = viewModel::onConfigurationLanguageSelect
         )
     }
     AppSettingsScreen(state, actions)

@@ -9,6 +9,7 @@ import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.SpecialistConfig
 import ru.alarmtrade.specialist.network.NetworkLogLevel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 
@@ -79,6 +80,8 @@ val specialistModule = module {
     // Мастер быстрого монтажа (feature/fast-mount): шаги, вопросы проверки системы, отзыв.
     single { get<SpecialistApp>().fastMountInteractor }
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
+    // Язык конфигураций — настройка приложения (feature/app-settings).
+    single<ConfigurationLanguageStore> { SpecialistConfigurationLanguageStore(get()) }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }
     }
