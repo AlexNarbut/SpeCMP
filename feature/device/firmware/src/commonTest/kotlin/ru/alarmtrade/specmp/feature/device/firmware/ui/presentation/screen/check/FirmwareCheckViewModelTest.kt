@@ -27,6 +27,7 @@ import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
@@ -41,6 +42,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
@@ -431,5 +433,28 @@ class FirmwareCheckViewModelTest {
 
         assertTrue(sessionRepository.pins.isEmpty())
         assertEquals(1, sessionRepository.bootCalls)
+    }
+
+    @Test
+    fun `latest version of the main program is looked up under the block can, other modules without it`() = test {
+        sessionRepository.device = device.copy(can = CanInfo("1.03", "2154", isFactory = false, version = 103))
+        repository.modulesResult = Response.Success(listOf(alarmModule, bluetoothModule))
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
+        repository.latest[2L to FirmwareChannel.RELEASE] = Response.Success(version("2.15"))
+        viewModel()
+
+        val cans = repository.latestCalls.map { it.first }.zip(repository.latestCans).toMap()
+        assertEquals(FirmwareCan("2154", 103, "1.03"), cans[1L])
+        assertNull(cans[2L])
+    }
+
+    @Test
+    fun `factory can settings look up the latest version without a can filter`() = test {
+        sessionRepository.device = device.copy(can = CanInfo("0.00", "0000", isFactory = true))
+        repository.modulesResult = Response.Success(listOf(alarmModule))
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
+        viewModel()
+
+        assertEquals(listOf<FirmwareCan?>(null), repository.latestCans)
     }
 }

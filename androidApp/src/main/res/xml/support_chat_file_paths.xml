@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Пути, которые чат техподдержки отдаёт внешним приложениям через FileProvider. -->
+<!-- Пути, которые приложение отдаёт внешним приложениям через FileProvider (чат техподдержки, архив прошивок). -->
 <paths>
     <!-- Скачанные для открытия вложения (временные). -->
     <cache-path name="support_chat_open" path="support-chat-open/" />
     <!-- Локальные копии своих неподтверждённых вложений. -->
     <files-path name="support_chat_attachments" path="support-chat-attachments/" />
+    <!-- Файл прошивки для «Поделиться» из архива без блока (временный). -->
+    <cache-path name="firmware_share" path="firmware-share/" />
 </paths>

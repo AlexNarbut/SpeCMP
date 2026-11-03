@@ -11,6 +11,7 @@ import kotlinx.datetime.LocalDate
  * @property url ссылка на файл прошивки: SDK скачивает файл сам при обновлении.
  * @property canCode CAN-код, под который собрана версия (единая CAN-прошивка); `null` — без привязки к CAN.
  * @property canVersion версия CAN-профиля в виде сервера; `null`, если сервер её не отдал.
+ * @property canVersionCode та же версия CAN-профиля числом — для сравнения со сборкой блока ([FirmwareCan.version]).
  */
 data class FirmwareVersion(
     val id: Long,
@@ -19,7 +20,8 @@ data class FirmwareVersion(
     val description: String,
     val url: String,
     val canCode: String? = null,
-    val canVersion: String? = null
+    val canVersion: String? = null,
+    val canVersionCode: Int? = null
 )
 
 /**

@@ -127,7 +127,10 @@ class FastMountViewModel(
         if (!access.granted) return UnitCheck.Done(UnitVerdict.NoAccess(access.message))
         if (device.can?.isFactory == true) return UnitCheck.Done(UnitVerdict.FactoryCan)
         // Свежесть прошивки — только рекомендация: не узнали — не мешаем монтажу.
-        val latest = (io { repository.latestFirmware(device.systemName) } as? Response.Success)?.value
+        // Единая CAN-прошивка — последняя версия под CAN-код блока (заводские настройки отсечены выше).
+        val can = device.can?.takeIf { it.code.isNotBlank() }
+        val latest = (io { repository.latestFirmware(device.systemName, can?.code, can?.version) } as? Response.Success)
+            ?.value
         return if (latest != null && latest.isNewerFirmwareThan(device.firmwareVersion)) {
             UnitCheck.Done(UnitVerdict.Outdated(latest))
         } else {

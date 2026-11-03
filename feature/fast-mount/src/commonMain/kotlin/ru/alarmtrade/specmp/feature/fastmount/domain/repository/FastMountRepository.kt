@@ -20,8 +20,11 @@ interface FastMountRepository {
     /** Доступ к блоку на сервере (как при входе в расширенный монтаж). */
     suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<UnitAccess>
 
-    /** Версия последней релизной прошивки основной программы модели; `null` — модуля нет в базе. */
-    suspend fun latestFirmware(systemName: String): Response<String?>
+    /**
+     * Версия последней релизной прошивки основной программы модели; `null` — модуля нет в базе. [canCode] и
+     * [canVersion] — CAN блока с единой CAN-прошивкой: последняя версия под его CAN-код.
+     */
+    suspend fun latestFirmware(systemName: String, canCode: String? = null, canVersion: Int? = null): Response<String?>
 
     suspend fun configuration(id: Int): Response<FastMountConfiguration>
 

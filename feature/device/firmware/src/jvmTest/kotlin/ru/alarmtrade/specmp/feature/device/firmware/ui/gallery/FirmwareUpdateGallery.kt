@@ -5,6 +5,8 @@ import kotlin.test.Test
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.BlockCanUi
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmCanUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FailureKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateActions
@@ -132,4 +134,30 @@ class FirmwareUpdateGallery {
 
     @Test
     fun exitDialog() = render("21_exit_dialog", base.copy(exitDialog = true))
+
+    private val withCan = base.copy(blockCan = BlockCanUi("2154", "1.03"))
+
+    @Test
+    fun sourceCan() = render("22_source_can", withCan)
+
+    @Test
+    fun sourceFactoryCan() = render("23_source_factory_can", base.copy(blockCan = BlockCanUi(null, null)))
+
+    @Test
+    fun confirmSameCan() = render(
+        "24_confirm_can_same",
+        withCan.copy(
+            phase = UpdatePhase.Confirm,
+            confirm = base.confirm?.copy(can = ConfirmCanUi("2154", "2154", "1.03"))
+        )
+    )
+
+    @Test
+    fun confirmOtherCan() = render(
+        "25_confirm_can_other",
+        withCan.copy(
+            phase = UpdatePhase.Confirm,
+            confirm = base.confirm?.copy(can = ConfirmCanUi("2154", "3312", "1.01"))
+        )
+    )
 }

@@ -282,7 +282,7 @@ private fun SystemCard(
     }
 }
 
-/** Подсистема раскрытой системы: название, тип и имя прошивки. */
+/** Подсистема раскрытой системы: крупно `title`, мелко — внутреннее имя `systemName` и тип. */
 @Composable
 private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
     val colors = cmpThemeColors()
@@ -300,10 +300,11 @@ private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             CmpColumn(modifier = Modifier.weight(1f)) {
-                CmpText(text = subsystem.title, fontWeight = FontWeight.Medium)
+                // Крупно — название для показа, мелко — внутреннее (системное) имя прошивки и тип.
+                CmpText(text = subsystem.title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                 CmpText(
-                    text = stringResource(subsystem.kind.titleRes()) + " · " + subsystem.systemName,
-                    fontSize = 13.sp,
+                    text = subsystem.systemName + " · " + stringResource(subsystem.kind.titleRes()),
+                    fontSize = 12.sp,
                     color = colors.onSurfaceVariant
                 )
             }

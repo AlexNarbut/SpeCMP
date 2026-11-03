@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
@@ -45,6 +46,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothMan
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
@@ -717,5 +719,53 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
 
         assertEquals(0, sessionRepository.exitCalls)
+    }
+
+    @Test
+    fun `block can from the bootloader filters download, opens the archive on it and is shown on the source step`() =
+        test {
+            sessionRepository.device = bootDevice.copy(can = CanInfo("1.03", "2154", isFactory = false, version = 103))
+            prepareMain()
+            repository.latest[1L to FirmwareChannel.RELEASE] =
+                Response.Success(version("3.61").copy(canCode = "3312", canVersion = "1.01"))
+            val (vm, effects) = viewModel()
+
+            assertEquals(BlockCanUi("2154", "1.03"), vm.state.value.blockCan)
+
+            vm.onArchiveClick()
+            runCurrent()
+            val request = (effects.single() as FirmwareUpdateEffect.OpenArchive).args
+            assertEquals("2154", request.deviceCanCode)
+            assertEquals(103, request.deviceCanVersion)
+            assertEquals("1.03", request.deviceCanProfile)
+            assertEquals(false, request.deviceCanFactory)
+
+            vm.onDownloadClick()
+            runCurrent()
+            assertEquals(listOf<FirmwareCan?>(FirmwareCan("2154", 103, "1.03")), repository.latestCans)
+            assertEquals(ConfirmCanUi("2154", "3312", "1.01"), vm.state.value.confirm?.can)
+            assertEquals(false, vm.state.value.confirm?.can?.same)
+        }
+
+    @Test
+    fun `factory can settings open the archive without a code and show factory settings`() = test {
+        sessionRepository.device = bootDevice.copy(can = CanInfo("0.00", "0000", isFactory = true))
+        prepareMain()
+        val (vm, effects) = viewModel()
+
+        assertEquals(BlockCanUi(null, null), vm.state.value.blockCan)
+        vm.onArchiveClick()
+        runCurrent()
+        val request = (effects.single() as FirmwareUpdateEffect.OpenArchive).args
+        assertNull(request.deviceCanCode)
+        assertEquals(true, request.deviceCanFactory)
+    }
+
+    @Test
+    fun `block without single can firmware has no can row`() = test {
+        prepareMain()
+        val (vm, _) = viewModel()
+
+        assertNull(vm.state.value.blockCan)
     }
 }

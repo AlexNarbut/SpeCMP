@@ -83,11 +83,15 @@ internal fun archiveDownloadTag(key: String): String = "firmware_archive_downloa
 /** testTag «Поделиться» в строке версии. */
 internal fun archiveShareTag(key: String): String = "firmware_archive_share_$key"
 
-/** Шапка архива без блока: система и подсистема (нажимается — выбор другой подсистемы) и канал. */
+/**
+ * Шапка архива без блока: система, подсистема — крупно название, мелко внутреннее имя прошивки (нажимается — выбор
+ * другой подсистемы) и канал.
+ */
 @Composable
 internal fun ArchiveNoUnitContext(
     system: String,
     subsystem: String,
+    systemName: String?,
     channel: FirmwareChannel,
     onChangeModel: () -> Unit,
     onChannelSelect: (FirmwareChannel) -> Unit,
@@ -104,7 +108,7 @@ internal fun ArchiveNoUnitContext(
         BoxWithConstraints {
             if (maxWidth < CONTEXT_ONE_ROW_MIN_WIDTH) {
                 CmpColumn(modifier = Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModelButton(system, subsystem, onChangeModel, Modifier.fillMaxWidth())
+                    ModelButton(system, subsystem, systemName, onChangeModel, Modifier.fillMaxWidth())
                     ChannelChip(channel, onChannelSelect, Modifier.padding(start = 4.dp, bottom = 4.dp))
                 }
             } else {
@@ -113,7 +117,7 @@ internal fun ArchiveNoUnitContext(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ModelButton(system, subsystem, onChangeModel, Modifier.weight(1f))
+                    ModelButton(system, subsystem, systemName, onChangeModel, Modifier.weight(1f))
                     ChannelChip(channel, onChannelSelect)
                 }
             }
@@ -122,7 +126,13 @@ internal fun ArchiveNoUnitContext(
 }
 
 @Composable
-private fun ModelButton(system: String, subsystem: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ModelButton(
+    system: String,
+    subsystem: String,
+    systemName: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val colors = cmpThemeColors()
     val a11y = stringResource(Strings.string.firmware_archive_a11y_change_model)
     CmpClickableSurface(
@@ -146,6 +156,10 @@ private fun ModelButton(system: String, subsystem: String, onClick: () -> Unit, 
             CmpColumn(modifier = Modifier.weight(1f)) {
                 CmpText(text = system, fontSize = 13.sp, color = colors.onSurfaceVariant)
                 CmpText(text = subsystem, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                // Внутреннее имя прошивки — мелко, если оно не совпадает с названием.
+                systemName?.takeIf { it != subsystem }?.let {
+                    CmpText(text = it, fontSize = 12.sp, color = colors.onSurfaceVariant)
+                }
             }
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_btn_change_model),

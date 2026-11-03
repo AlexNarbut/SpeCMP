@@ -16,6 +16,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
@@ -23,6 +24,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.BootEntryResult
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
@@ -64,6 +66,9 @@ class FirmwareCheckViewModel(
     // Модули блока по id: из них берётся цель входа в загрузчик. Карточки в state — только примитивы.
     private val modules = MutableStateFlow<Map<Long, FirmwareModule>>(emptyMap())
 
+    // CAN блока (единая CAN-прошивка): серверная версия основной программы ищется под него.
+    private val deviceCan = MutableStateFlow<FirmwareCan?>(null)
+
     // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
     private val pinLock: Flow<Duration?> =
         pinCooldown.lockedFor(_state.map { state -> state.deviceId.takeIf { state.dialog is CheckDialog.Pin } })
@@ -79,6 +84,7 @@ class FirmwareCheckViewModel(
     private suspend fun onDeviceReady(device: AlarmDevice) {
         val previous = _state.value
         _state.update { it.copy(deviceName = device.systemName, deviceId = device.systemId) }
+        deviceCan.update { device.can.toFirmwareCan() }
         val sameDevice = previous.deviceId == device.systemId
         if (!sameDevice || previous.content !is LCEState.Content) load(device)
     }
@@ -148,7 +154,9 @@ class FirmwareCheckViewModel(
     private suspend fun lookup(moduleId: Long) {
         val channel = _state.value.channel
         updateCard(moduleId) { it.copy(status = CardStatusUi.Searching) }
-        val response = withContext(dispatchers.io) { repository.latest(moduleId, channel) }
+        // CAN-фильтр — только у основной программы сигнализации: прошивки остальных модулей к CAN-коду не привязаны.
+        val can = deviceCan.value.takeIf { modules.value[moduleId]?.kind == FirmwareModuleKind.AlarmMain }
+        val response = withContext(dispatchers.io) { repository.latest(moduleId, channel, can) }
         _state.update { state ->
             if (state.channel != channel) {
                 state

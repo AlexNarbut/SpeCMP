@@ -6,13 +6,19 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileExporter
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveResult
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -33,8 +39,16 @@ internal class FakeFirmwareRepository : FirmwareRepository {
 
     override suspend fun modules(deviceName: String, transport: ConnectionTransport) = modulesResult
 
-    override suspend fun latest(moduleId: Long, channel: FirmwareChannel): Response<FirmwareVersion> {
+    /** CAN-фильтр каждого запроса последней версии (по порядку). */
+    val latestCans = mutableListOf<FirmwareCan?>()
+
+    override suspend fun latest(
+        moduleId: Long,
+        channel: FirmwareChannel,
+        can: FirmwareCan?
+    ): Response<FirmwareVersion> {
         latestCalls += moduleId to channel
+        latestCans += can
         return latest[moduleId to channel] ?: Response.Error(IllegalStateException("no version"))
     }
 
@@ -42,9 +56,36 @@ internal class FakeFirmwareRepository : FirmwareRepository {
     var mainModule: Response<Long?> = Response.Success(null)
     val mainModuleCalls = mutableListOf<String>()
 
-    override suspend fun mainModuleId(deviceName: String): Response<Long?> {
-        mainModuleCalls += deviceName
-        return mainModule
+    /** Bluetooth-модуль модели (архив без блока). */
+    var bluetoothModule: Response<Long?> = Response.Success(null)
+    val moduleCalls = mutableListOf<Pair<String, FirmwareModuleKind>>()
+
+    override suspend fun moduleId(deviceName: String, kind: FirmwareModuleKind): Response<Long?> {
+        moduleCalls += deviceName to kind
+        return when (kind) {
+            FirmwareModuleKind.AlarmMain -> {
+                mainModuleCalls += deviceName
+                mainModule
+            }
+
+            FirmwareModuleKind.BluetoothModule -> bluetoothModule
+
+            else -> Response.Success(null)
+        }
+    }
+
+    /** Системы базы устройств. */
+    var systemsResult: Response<List<FirmwareSystem>> = Response.Success(emptyList())
+
+    override suspend fun systems(): Response<List<FirmwareSystem>> = systemsResult
+
+    /** Файл версии по ссылке; нет — ошибка сети. */
+    val files = mutableMapOf<String, Response<ByteArray>>()
+    val downloads = mutableListOf<String>()
+
+    override suspend fun download(url: String): Response<ByteArray> {
+        downloads += url
+        return files[url] ?: Response.Error(IllegalStateException("no file"))
     }
 
     /** Страницы архива по номеру; нет страницы — ошибка сервера. */
@@ -54,6 +95,9 @@ internal class FakeFirmwareRepository : FirmwareRepository {
     /** Запросы архива целиком: модуль, страница и CAN-фильтр. */
     val archiveRequests = mutableListOf<Triple<Long, Int, String?>>()
 
+    /** CAN-фильтр запросов архива целиком (код и версия CAN-профиля). */
+    val archiveCans = mutableListOf<FirmwareCan?>()
+
     /** Сколько «идёт» запрос страницы — для ответа, пришедшего после обновления списка. */
     val archiveDelayMillis = mutableMapOf<Int, Long>()
 
@@ -62,10 +106,11 @@ internal class FakeFirmwareRepository : FirmwareRepository {
         channel: FirmwareChannel,
         page: Int,
         pageSize: Int,
-        canCode: String?
+        can: FirmwareCan?
     ): Response<FirmwareVersionPage> {
         archiveCalls += page
-        archiveRequests += Triple(moduleId, page, canCode)
+        archiveRequests += Triple(moduleId, page, can?.code)
+        archiveCans += can
         archiveDelayMillis[page]?.let { delay(it) }
         return archivePages[page] ?: Response.Error(IllegalStateException("no page"))
     }
@@ -146,5 +191,32 @@ internal class FakeUpdateRepository : FirmwareUpdateRepository {
     override fun updateFromFile(target: BootModeTarget, path: String): Flow<FirmwareUpdateProgress> {
         fileCalls += target to path
         return progress
+    }
+}
+
+internal class FakeFileExporter(
+    override val target: FirmwareSaveTarget = FirmwareSaveTarget.Downloads,
+    override val canShare: Boolean = true,
+    override val canOpenFolder: Boolean = false
+) : FirmwareFileExporter {
+    var saveResult: FirmwareSaveResult? = null
+    var shareResult: Boolean = true
+    val saved = mutableListOf<Pair<String, Int>>()
+    val shared = mutableListOf<String>()
+    val openedFolders = mutableListOf<String>()
+
+    override suspend fun save(fileName: String, bytes: ByteArray): FirmwareSaveResult {
+        saved += fileName to bytes.size
+        return saveResult ?: FirmwareSaveResult.Saved("Download/Pandora Spec/$fileName", "Download/Pandora Spec")
+    }
+
+    override suspend fun share(fileName: String, bytes: ByteArray): Boolean {
+        shared += fileName
+        return shareResult
+    }
+
+    override suspend fun openFolder(path: String): Boolean {
+        openedFolders += path
+        return true
     }
 }

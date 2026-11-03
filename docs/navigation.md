@@ -37,6 +37,7 @@ Nav3 back stack используется **внутри каждой зоны**:
 | `DeviceSelectionRoute` | `DeviceSelectionNavGraph` (`feature/device/selection`) | `ScanDeviceRoute` → экран поиска |
 | `ConfiguratorRoute` | `ConfiguratorEntry` (`feature/configurator-ui`, свой nav3-граф) | «Мои конфигурации», модели, облако, редактор конфигурации |
 | `VehicleSelectRoute(request)` | `VehicleSelectEntry` (`feature/vehicle-ui`, без nav3-графа: шаги каталога — в state VM, «назад» — `NavigationBackHandler`) | каталог автомобилей и карточка |
+| `FirmwareArchiveRoute` | `FirmwareArchiveHome` (`composeApp/navigation/FirmwareArchiveWiring.kt`: `FirmwareSystemsEntry` → `FirmwareArchiveEntry` из `feature/device/firmware`, шаг — в state, «назад» — `NavigationBackHandler`) | архив прошивок без блока: системы и подсистемы → архив подсистемы |
 
 Каждый граф фичи — свой `NavDisplay` со своим back stack и `entryDecorators`
 (`rememberSaveableStateHolderNavEntryDecorator()` + `rememberViewModelStoreNavEntryDecorator()`),

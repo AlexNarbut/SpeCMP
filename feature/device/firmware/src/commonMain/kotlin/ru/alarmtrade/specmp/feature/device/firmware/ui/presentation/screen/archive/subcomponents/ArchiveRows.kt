@@ -26,14 +26,21 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
-import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_less
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_download
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_more
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_select
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_share
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_installed
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_older
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_label_dialog_full_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_dialog_no_description
+import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_close
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
+import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -47,16 +54,18 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
 
 private val ButtonHeight = 48.dp
-private val ExpandedDescriptionMaxHeight = 200.dp
 private const val COLLAPSED_LINES = 2
 private const val DAY_MONTH_DIGITS = 2
 private const val YEAR_DIGITS = 4
 
-/** testTag строки версии в архиве. */
-internal fun archiveItemTag(version: String): String = "firmware_archive_item_$version"
+/** testTag строки версии в архиве; [key] — [ArchiveRowUi.key] (у версии без CAN — номер версии). */
+internal fun archiveItemTag(key: String): String = "firmware_archive_item_$key"
+
+/** testTag «Показать больше» в строке. */
+internal fun archiveMoreTag(key: String): String = "firmware_archive_more_$key"
 
 /** testTag кнопки «Выбрать» в строке. */
-internal fun archiveSelectTag(version: String): String = "firmware_archive_select_$version"
+internal fun archiveSelectTag(key: String): String = "firmware_archive_select_$key"
 
 /** Дата как её отдаёт сервер, в виде `дд.мм.гггг` (не зависит от языка приложения). */
 internal fun formatArchiveDate(date: LocalDate): String =
@@ -99,9 +108,9 @@ internal fun VersionBadge(kind: ArchiveRowKind, modifier: Modifier = Modifier) {
 }
 
 /**
- * Строка версии: номер, метка, дата, CAN и описание (раскрывается отдельной кнопкой — нажатие по ней версию не
- * выбирает). На широком окне ([master]) вся строка выбирает версию для панели справа; на узком — кнопка «Выбрать»
- * ([onPick] = `null` — просмотр без выбора, кнопки нет).
+ * Строка версии: номер, метка, дата, CAN и начало описания; «Показать больше» открывает диалог с полным описанием
+ * по центру экрана (нажатие по кнопке версию не выбирает). На широком окне ([master]) вся строка выбирает версию
+ * для панели справа; на узком — кнопка «Выбрать» ([onPick] = `null` — просмотр без выбора, кнопки нет).
  */
 @Composable
 internal fun ArchiveRow(
@@ -110,15 +119,18 @@ internal fun ArchiveRow(
     selected: Boolean,
     onSelect: () -> Unit,
     onPick: (() -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDownload: (() -> Unit)? = null,
+    onShare: (() -> Unit)? = null,
+    busy: Boolean = false
 ) {
     val colors = cmpThemeColors()
-    var expanded by remember(row.version) { mutableStateOf(false) }
+    var details by remember(row.key) { mutableStateOf(false) }
     val highlighted = selected || row.kind == ArchiveRowKind.Installed
     CmpClickableSurface(
         onClick = onSelect,
         enabled = master,
-        modifier = modifier.fillMaxWidth().testTag(archiveItemTag(row.version)),
+        modifier = modifier.fillMaxWidth().testTag(archiveItemTag(row.key)),
         shape = RoundedCornerShape(18.dp),
         color = if (selected) colors.primaryContainer else colors.surfaceContainerLow,
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
@@ -154,32 +166,62 @@ internal fun ArchiveRow(
                     text = row.description,
                     style = CmpTextStyle.Body,
                     color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
-                    maxLines = if (expanded) Int.MAX_VALUE else COLLAPSED_LINES,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = if (expanded) {
-                        Modifier.heightIn(max = ExpandedDescriptionMaxHeight).verticalScroll(rememberScrollState())
-                    } else {
-                        Modifier
-                    }
+                    maxLines = COLLAPSED_LINES,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            RowActions(row, master, expanded, onToggle = { expanded = !expanded }, onPick = onPick)
+            RowActions(
+                row = row,
+                master = master,
+                onDetails = { details = true },
+                onPick = onPick,
+                export = onDownload?.let { download -> { RowExportActions(row.key, busy, download, onShare) } }
+            )
         }
+    }
+    if (details) {
+        ArchiveVersionDialog(
+            row = row,
+            onDismiss = { details = false },
+            onPick = onPick?.let { pick ->
+                {
+                    details = false
+                    pick()
+                }
+            },
+            onDownload = onDownload?.let { download ->
+                {
+                    details = false
+                    download()
+                }
+            },
+            onShare = onShare?.let { share ->
+                {
+                    details = false
+                    share()
+                }
+            },
+            busy = busy
+        )
     }
 }
 
-/** Нижняя строка карточки: «Показать больше / Свернуть» (если есть описание) и «Выбрать» на узком окне. */
+/**
+ * Нижняя строка карточки: «Показать больше» (если есть описание) и на узком окне — «Выбрать» или (без блока,
+ * [export]) «Поделиться» + «Скачать».
+ */
 @Composable
 private fun RowActions(
     row: ArchiveRowUi,
     master: Boolean,
-    expanded: Boolean,
-    onToggle: () -> Unit,
-    onPick: (() -> Unit)?
+    onDetails: () -> Unit,
+    onPick: (() -> Unit)?,
+    export: (@Composable () -> Unit)? = null
 ) {
     val hasDescription = row.description.isNotBlank()
-    val showPick = !master && onPick != null
-    if (!hasDescription && !showPick) return
+    val showExport = !master && export != null
+    val showPick = !master && onPick != null && !showExport
+    if (!hasDescription && !showPick && !showExport) return
     CmpRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -187,21 +229,108 @@ private fun RowActions(
     ) {
         if (hasDescription) {
             CmpTextButton(
-                text = stringResource(
-                    if (expanded) Strings.string.firmware_archive_btn_less else Strings.string.firmware_archive_btn_more
-                ),
-                onClick = onToggle,
-                modifier = Modifier.height(ButtonHeight)
+                text = stringResource(Strings.string.firmware_archive_btn_more),
+                onClick = onDetails,
+                modifier = Modifier.height(ButtonHeight).testTag(archiveMoreTag(row.key))
             )
         } else {
             CmpColumn {}
         }
+        if (showExport && export != null) export()
         if (showPick && onPick != null) {
             CmpOutlinedButton(
                 text = stringResource(Strings.string.firmware_archive_btn_select),
                 onClick = onPick,
-                modifier = Modifier.height(ButtonHeight).testTag(archiveSelectTag(row.version))
+                modifier = Modifier.height(ButtonHeight).testTag(archiveSelectTag(row.key))
             )
         }
     }
 }
+
+/**
+ * «Показать больше»: версия по центру экрана — номер, метка, дата, CAN и полное описание с прокруткой; внизу —
+ * «Закрыть» и то же действие, что у строки («Выбрать», без блока — «Поделиться» и «Скачать»).
+ */
+@Composable
+private fun ArchiveVersionDialog(
+    row: ArchiveRowUi,
+    onDismiss: () -> Unit,
+    onPick: (() -> Unit)?,
+    onDownload: (() -> Unit)?,
+    onShare: (() -> Unit)?,
+    busy: Boolean
+) {
+    val colors = cmpThemeColors()
+    CmpDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag(ARCHIVE_VERSION_DIALOG_TAG),
+        width = CmpDialogWidth.Wide,
+        title = {
+            CmpRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                VersionText(row.version, fontSize = 26.sp)
+                VersionBadge(row.kind)
+            }
+        },
+        text = {
+            CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                CmpText(text = formatArchiveDate(row.createdOn), color = colors.onSurfaceVariant)
+                ArchiveRowCan(row)
+                CmpText(
+                    text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
+                    fontWeight = FontWeight.Medium,
+                    color = colors.onSurfaceVariant
+                )
+                CmpText(
+                    text = row.description.ifBlank {
+                        stringResource(Strings.string.firmware_check_msg_dialog_no_description)
+                    },
+                    style = CmpTextStyle.Body,
+                    modifier = Modifier.heightIn(max = DialogDescriptionMaxHeight).verticalScroll(rememberScrollState())
+                )
+            }
+        },
+        dismissButton = {
+            CmpTextButton(
+                text = stringResource(Strings.string.firmware_common_btn_close),
+                onClick = onDismiss,
+                modifier = Modifier.height(ButtonHeight)
+            )
+        },
+        confirmButton = {
+            when {
+                onDownload != null -> CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    onShare?.let {
+                        CmpTextButton(
+                            text = stringResource(Strings.string.firmware_archive_btn_share),
+                            onClick = it,
+                            enabled = !busy,
+                            modifier = Modifier.height(ButtonHeight)
+                        )
+                    }
+                    CmpButton(
+                        text = stringResource(Strings.string.firmware_archive_btn_download),
+                        onClick = onDownload,
+                        enabled = !busy,
+                        modifier = Modifier.height(ButtonHeight)
+                    )
+                }
+
+                onPick != null -> CmpButton(
+                    text = stringResource(Strings.string.firmware_archive_btn_select),
+                    onClick = onPick,
+                    modifier = Modifier.height(ButtonHeight)
+                )
+
+                else -> Unit
+            }
+        }
+    )
+}
+
+internal const val ARCHIVE_VERSION_DIALOG_TAG = "firmware_archive_version"
+
+/** Полное описание в диалоге — до ~60 % высоты телефона, дальше прокрутка. */
+private val DialogDescriptionMaxHeight = 420.dp

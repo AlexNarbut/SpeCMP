@@ -140,7 +140,7 @@ internal class FakeFastMountRepository : FastMountRepository {
     }
 
     override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String) = access
-    override suspend fun latestFirmware(systemName: String) = latest
+    override suspend fun latestFirmware(systemName: String, canCode: String?, canVersion: Int?) = latest
     override suspend fun configuration(id: Int): Response<FastMountConfiguration> {
         configurationRequests += id
         return configuration

@@ -43,6 +43,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRoute
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -91,6 +92,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(VehicleSelectRoute::class, VehicleSelectRoute.serializer())
             subclass(ConfiguratorRoute::class, ConfiguratorRoute.serializer())
             subclass(AppSettingsRoute::class, AppSettingsRoute.serializer())
+            subclass(FirmwareArchiveRoute::class, FirmwareArchiveRoute.serializer())
         }
     }
 }
@@ -164,6 +166,7 @@ private fun AuthedNavGraph() {
                 AppConfigurator(onExit = { backStack.popSafe() })
             }
             entry<AppSettingsRoute> { _ -> AppSettingsEntry(onBack = { backStack.popSafe() }) }
+            entry<FirmwareArchiveRoute> { _ -> FirmwareArchiveHome(onBack = { backStack.popSafe() }) }
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(
                     request = key.request,
@@ -261,7 +264,11 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
                 profile = UpdateProfile.Main,
                 deviceName = device.systemName,
                 canCode = canCode,
-                viewOnly = true
+                viewOnly = true,
+                // CAN блока — подсветка версий «как в блоке» рядом с кодом выбранного автомобиля.
+                deviceCanCode = device.can?.takeUnless { it.isFactory }?.code?.takeIf { it.isNotBlank() },
+                deviceCanVersion = device.can?.takeUnless { it.isFactory }?.version,
+                deviceCanProfile = device.can?.takeUnless { it.isFactory }?.firmwareVersion
             ),
             onPick = {},
             onBack = { archiveCanCode = null },
@@ -377,7 +384,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.Configurator -> backStack.navigateSafe(ConfiguratorRoute)
 
-        MainNavigationTarget.FirmwareArchive -> Unit
+        MainNavigationTarget.FirmwareArchive -> backStack.navigateSafe(FirmwareArchiveRoute)
 
         // Справочник автомобилей: блок не подключён — сначала выбор типа устройства.
         MainNavigationTarget.Cars -> backStack.navigateSafe(

@@ -29,6 +29,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_a11y_refresh
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_format_subtitle_system
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_screen
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_a11y_back
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
@@ -51,14 +52,19 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.I
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.deviceSubtitle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.firmwareLayoutOf
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileExporter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ARCHIVE_REFRESH_TAG
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveCanFilter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveDetail
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveEmpty
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveExportBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveFooter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveLoading
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveNoModelFirmware
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveNoUnitContext
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveRow
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.ArchiveSavedDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.subcomponents.RollbackDialog
 
 private val ListMaxWidth = 760.dp
@@ -80,23 +86,28 @@ typealias ArchiveVehiclePicker =
  * возвращается в [onPick] (закрыть архив — дело вызывающего; в режиме просмотра выбора нет), «назад» — [onBack].
  * Используется графом загрузчика; другие места подключают её через слот навигации в `composeApp`.
  * [vehiclePicker] — выбор автомобиля для CAN-фильтра; `null` — кнопки каталога нет, код вводится вручную.
+ * Без блока ([FirmwareArchiveRequest.noUnit]): [exporter] — «Скачать» / «Поделиться», [onChangeModel] — «Сменить»
+ * модель в шапке и «Выбрать другую модель».
  */
 @Composable
 fun FirmwareArchiveEntry(
     request: FirmwareArchiveRequest,
     onPick: (FirmwareVersion) -> Unit,
     onBack: () -> Unit,
-    vehiclePicker: ArchiveVehiclePicker? = null
+    vehiclePicker: ArchiveVehiclePicker? = null,
+    exporter: FirmwareFileExporter? = null,
+    onChangeModel: () -> Unit = {}
 ) {
     // Ключ — запрос: архив с другим модулем или CAN-фильтром в том же владельце — отдельная ViewModel.
     val viewModel = koinViewModel<FirmwareArchiveViewModel>(
         key = "FirmwareArchive:$request",
-        parameters = { parametersOf(request) }
+        parameters = { parametersOf(request, exporter) }
     )
     val vmState by viewModel.state.collectAsStateWithLifecycle()
+    val canInput by viewModel.canInput.collectAsStateWithLifecycle()
     val hasPicker = vehiclePicker != null
-    val state = remember(vmState, hasPicker) {
-        vmState.copy(canFilter = vmState.canFilter?.copy(canPickVehicle = hasPicker))
+    val state = remember(vmState, canInput, hasPicker) {
+        vmState.copy(canFilter = vmState.canFilter?.copy(canPickVehicle = hasPicker, input = canInput))
     }
 
     viewModel.effect.collectSideEffect { effect ->
@@ -107,7 +118,7 @@ fun FirmwareArchiveEntry(
 
     CmpBox(modifier = Modifier.fillMaxSize()) {
         // Один экземпляр на экран: дочерние composable пропускают рекомпозицию по равенству действий.
-        val actions = remember(viewModel, onBack) {
+        val actions = remember(viewModel, onBack, onChangeModel) {
             FirmwareArchiveActions(
                 onBack = onBack,
                 onRefresh = viewModel::onRefresh,
@@ -118,7 +129,16 @@ fun FirmwareArchiveEntry(
                 onRollbackConfirm = viewModel::onRollbackConfirm,
                 onRollbackDismiss = viewModel::onRollbackDismiss,
                 onCanInput = viewModel::onCanInput,
-                onVehiclePickerOpen = viewModel::onVehiclePickerOpen
+                onCanResetToDevice = viewModel::onCanResetToDevice,
+                onVehiclePickerOpen = viewModel::onVehiclePickerOpen,
+                onChangeModel = onChangeModel,
+                onChannelSelect = viewModel::onChannelSelect,
+                onDownload = viewModel::onDownload,
+                onShare = viewModel::onShare,
+                onSavedShare = viewModel::onSavedShare,
+                onSavedOpenFolder = viewModel::onSavedOpenFolder,
+                onSavedDismiss = viewModel::onSavedDismiss,
+                onExportErrorDismiss = viewModel::onExportErrorDismiss
             )
         }
         FirmwareArchiveContent(
@@ -127,7 +147,9 @@ fun FirmwareArchiveEntry(
         )
         if (state.vehiclePicker && vehiclePicker != null) {
             CmpSurface(modifier = Modifier.fillMaxSize()) {
-                vehiclePicker(state.deviceName, viewModel::onVehiclePicked, viewModel::onVehiclePickerClose)
+                // Без блока каталог — под имя прошивки подсистемы (у системы базы своё имя), с блоком — под модель.
+                val catalogDevice = if (request.noUnit) request.moduleName else state.deviceName
+                vehiclePicker(catalogDevice, viewModel::onVehiclePicked, viewModel::onVehiclePickerClose)
             }
         }
     }
@@ -140,8 +162,8 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
         topBar = {
             CmpTopAppBar(
                 title = { CmpText(text = stringResource(Strings.string.firmware_archive_title_screen)) },
-                subtitle = state.deviceTitle.takeIf { it.isNotBlank() }?.let { title ->
-                    { CmpText(text = deviceSubtitle(state.profile, title), style = CmpTextStyle.Caption) }
+                subtitle = archiveSubtitle(state)?.let { title ->
+                    { CmpText(text = title, style = CmpTextStyle.Caption) }
                 },
                 navigationIcon = {
                     CmpIconButton(
@@ -165,21 +187,32 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = firmwareLayoutOf(maxWidth)
             CmpColumn(modifier = Modifier.fillMaxSize()) {
+                if (state.noUnit) NoUnitBar(state, layout, actions)
+                state.exportError?.let { error -> ExportErrorBar(error, layout, actions) }
                 state.canFilter?.let { filter -> CanFilterBar(filter, layout, actions) }
                 CmpBox(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    when (val content = state.content) {
-                        LCEState.None, LCEState.Loading -> ArchiveLoading()
+                    if (state.noModelFirmware) {
+                        ArchiveNoModelFirmware(
+                            model = state.deviceTitle,
+                            onChangeModel = actions.onChangeModel
+                        )
+                    } else {
+                        when (val content = state.content) {
+                            LCEState.None, LCEState.Loading -> ArchiveLoading()
 
-                        is LCEState.Error -> ArchiveError(error = content.error, onRetry = actions.onRefresh)
+                            is LCEState.Error -> ArchiveError(error = content.error, onRetry = actions.onRefresh)
 
-                        is LCEState.Content -> if (content.content.isEmpty()) {
-                            ArchiveEmpty(
-                                onRefresh = actions.onRefresh,
-                                canCode = state.canFilter?.applied,
-                                onShowAll = { actions.onCanInput("") }
-                            )
-                        } else {
-                            ReadyBody(state, content, layout, actions)
+                            is LCEState.Content -> if (content.content.isEmpty()) {
+                                ArchiveEmpty(
+                                    onRefresh = actions.onRefresh,
+                                    filter = state.canFilter,
+                                    onShowAll = { actions.onCanInput("") },
+                                    onPickVehicle = actions.onVehiclePickerOpen,
+                                    onResetToDevice = actions.onCanResetToDevice
+                                )
+                            } else {
+                                ReadyBody(state, content, layout, actions)
+                            }
                         }
                     }
                 }
@@ -188,6 +221,58 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
     }
     state.rollback?.let {
         RollbackDialog(it, onConfirm = actions.onRollbackConfirm, onDismiss = actions.onRollbackDismiss)
+    }
+    state.saved?.let { saved ->
+        ArchiveSavedDialog(
+            saved = saved,
+            target = state.saveTarget,
+            canShare = state.canShare,
+            canOpenFolder = state.canOpenFolder,
+            onShare = actions.onSavedShare,
+            onOpenFolder = actions.onSavedOpenFolder,
+            onDismiss = actions.onSavedDismiss
+        )
+    }
+}
+
+/** Подзаголовок: без блока — «система · подсистема», с блоком — «Название  ID» / имя Bluetooth-модуля. */
+@Composable
+private fun archiveSubtitle(state: FirmwareArchiveState): String? {
+    if (state.noUnit) {
+        val system = state.deviceName ?: return null
+        return stringResource(Strings.string.firmware_archive_format_subtitle_system, system, state.deviceTitle)
+    }
+    return state.deviceTitle.takeIf { it.isNotBlank() }?.let { deviceSubtitle(state.profile, it) }
+}
+
+/** Шапка архива без блока во всю ширину содержимого (на широком окне — над обеими колонками). */
+@Composable
+private fun NoUnitBar(state: FirmwareArchiveState, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
+    val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
+    CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        ArchiveNoUnitContext(
+            system = state.deviceName.orEmpty(),
+            subsystem = state.deviceTitle,
+            systemName = state.moduleName,
+            channel = state.channel,
+            onChangeModel = actions.onChangeModel,
+            onChannelSelect = actions.onChannelSelect,
+            modifier = Modifier
+                .widthIn(max = if (layout == FirmwareLayout.Expanded) DetailMaxWidth else ListMaxWidth)
+                .padding(start = padding, top = padding, end = padding)
+        )
+    }
+}
+
+@Composable
+private fun ExportErrorBar(error: ArchiveExportError, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
+    val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
+    CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        ArchiveExportBanner(
+            error = error,
+            onDismiss = actions.onExportErrorDismiss,
+            modifier = Modifier.widthIn(max = ListMaxWidth).padding(start = padding, top = padding, end = padding)
+        )
     }
 }
 
@@ -203,6 +288,7 @@ private fun CanFilterBar(filter: CanFilterUi, layout: FirmwareLayout, actions: F
         ArchiveCanFilter(
             filter = filter,
             onInput = actions.onCanInput,
+            onResetToDevice = actions.onCanResetToDevice,
             onPickVehicle = actions.onVehiclePickerOpen,
             modifier = Modifier
                 .widthIn(max = if (expanded) MasterWidth + padding * 2 else ListMaxWidth)
@@ -219,7 +305,7 @@ private fun ReadyBody(
     actions: FirmwareArchiveActions
 ) {
     if (layout == FirmwareLayout.Expanded) {
-        val selected = content.content.firstOrNull { it.version == state.selected } ?: content.content.first()
+        val selected = content.content.firstOrNull { it.key == state.selected } ?: content.content.first()
         CmpRow(
             modifier = Modifier.fillMaxSize().widthIn(max = DetailMaxWidth).padding(24.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
@@ -235,7 +321,11 @@ private fun ReadyBody(
                 ArchiveDetail(
                     row = selected,
                     installedVersion = state.installedVersion,
-                    onInstall = if (state.viewOnly) null else ({ actions.onPick(selected.version) })
+                    canFilter = state.canFilter,
+                    onInstall = if (state.viewOnly) null else ({ actions.onPick(selected.key) }),
+                    onDownload = if (state.noUnit) ({ actions.onDownload(selected.key) }) else null,
+                    onShare = if (state.noUnit && state.canShare) ({ actions.onShare(selected.key) }) else null,
+                    busy = state.busy == selected.key
                 )
             }
         }
@@ -284,13 +374,16 @@ private fun VersionList(
                 InfoBanner(text = stringResource(Strings.string.firmware_common_msg_test_channel))
             }
         }
-        items(content.content, key = { it.version }) { row ->
+        items(content.content, key = { it.key }) { row ->
             ArchiveRow(
                 row = row,
                 master = master,
-                selected = master && state.selected == row.version,
-                onSelect = { actions.onSelectRow(row.version) },
-                onPick = if (state.viewOnly) null else ({ actions.onPick(row.version) })
+                selected = master && state.selected == row.key,
+                onSelect = { actions.onSelectRow(row.key) },
+                onPick = if (state.viewOnly) null else ({ actions.onPick(row.key) }),
+                onDownload = if (state.noUnit) ({ actions.onDownload(row.key) }) else null,
+                onShare = if (state.noUnit && state.canShare) ({ actions.onShare(row.key) }) else null,
+                busy = state.busy == row.key
             )
         }
         item(key = "footer") {

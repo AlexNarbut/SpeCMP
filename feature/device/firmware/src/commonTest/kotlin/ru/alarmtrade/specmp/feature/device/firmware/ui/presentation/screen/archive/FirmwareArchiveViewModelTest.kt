@@ -23,11 +23,19 @@ import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSubsystem
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
+import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFileExporter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileExporter
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveResult
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.systems.archiveRequestOf
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 
 class FirmwareArchiveViewModelTest {
@@ -59,12 +67,14 @@ class FirmwareArchiveViewModelTest {
     private fun TestScope.viewModel(
         installed: String? = "3.57",
         request: FirmwareArchiveRequest =
-            FirmwareArchiveRequest(1, FirmwareChannel.RELEASE, installed, "DX4G  77", UpdateProfile.Main)
+            FirmwareArchiveRequest(1, FirmwareChannel.RELEASE, installed, "DX4G  77", UpdateProfile.Main),
+        exporter: FirmwareFileExporter? = null
     ): Pair<FirmwareArchiveViewModel, MutableList<FirmwareArchiveEffect>> {
         val vm = FirmwareArchiveViewModel(
             request,
             repository,
-            AppDispatchers(dispatcher, dispatcher, dispatcher)
+            AppDispatchers(dispatcher, dispatcher, dispatcher),
+            exporter
         ).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<FirmwareArchiveEffect>()
@@ -344,5 +354,292 @@ class FirmwareArchiveViewModelTest {
         val row = vm.rows().single()
         assertEquals("0213", row.canCode)
         assertEquals("2.0", row.canVersion)
+    }
+
+    private fun deviceCanRequest(factory: Boolean = false) = FirmwareArchiveRequest(
+        moduleId = 1,
+        channel = FirmwareChannel.RELEASE,
+        installedVersion = "3.57",
+        deviceTitle = "DX9X  77",
+        profile = UpdateProfile.Main,
+        deviceName = "DX9X",
+        deviceCanCode = "2154".takeUnless { factory },
+        deviceCanVersion = 103.takeUnless { factory },
+        deviceCanProfile = "1.03".takeUnless { factory },
+        deviceCanFactory = factory
+    )
+
+    private fun canVersion(value: String, code: String, profile: String, profileCode: Int) = version(
+        value
+    ).copy(
+        url = "https://fw/$value/$code/$profile",
+        canCode = code,
+        canVersion = profile,
+        canVersionCode = profileCode
+    )
+
+    @Test
+    fun `block can filters by code and can profile version on open and highlights its rows`() = test {
+        repository.archivePages[1] = Response.Success(
+            FirmwareVersionPage(
+                listOf(
+                    canVersion("3.61", "2154", "1.03", 103),
+                    canVersion("3.60", "3312", "1.01", 101),
+                    version("3.58")
+                ),
+                1
+            )
+        )
+        val (vm, _) = viewModel(request = deviceCanRequest())
+
+        assertEquals(listOf<FirmwareCan?>(FirmwareCan("2154", 103)), repository.archiveCans)
+        val filter = vm.state.value.canFilter
+        assertEquals("2154", filter?.input)
+        assertEquals("1.03", filter?.deviceProfile)
+        assertEquals(true, filter?.isDeviceCode)
+        assertEquals(false, filter?.canResetToDevice)
+        assertEquals(listOf(true, false, false), vm.rows().map { it.canMatchesDevice })
+    }
+
+    @Test
+    fun `another code is searched without the can profile version and reset returns to the block can`() = test {
+        repository.archivePages[1] = page(1, "3.61")
+        val (vm, _) = viewModel(request = deviceCanRequest())
+
+        vm.onCanInput("3312")
+        runCurrent()
+        assertEquals(FirmwareCan("3312", null), repository.archiveCans.last())
+        assertEquals(true, vm.state.value.canFilter?.canResetToDevice)
+
+        vm.onCanResetToDevice()
+        runCurrent()
+        assertEquals(FirmwareCan("2154", 103), repository.archiveCans.last())
+        assertEquals("2154", vm.state.value.canFilter?.input)
+        assertEquals(false, vm.state.value.canFilter?.canResetToDevice)
+
+        // Пустое поле — все версии; код блока по-прежнему можно вернуть.
+        vm.onCanInput("")
+        runCurrent()
+        assertNull(repository.archiveCans.last())
+        assertEquals(true, vm.state.value.canFilter?.canResetToDevice)
+    }
+
+    @Test
+    fun `vehicle code from the card wins over the block can but block rows stay highlighted`() = test {
+        repository.archivePages[1] = Response.Success(
+            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "2154")), 1)
+        )
+        val (vm, _) = viewModel(request = deviceCanRequest().copy(canCode = "0213", viewOnly = true))
+
+        assertEquals(listOf<FirmwareCan?>(FirmwareCan("0213", null)), repository.archiveCans)
+        assertEquals(listOf(true), vm.rows().map { it.canMatchesDevice })
+    }
+
+    @Test
+    fun `factory can settings open all versions with nothing to highlight or reset`() = test {
+        repository.archivePages[1] = Response.Success(
+            FirmwareVersionPage(listOf(canVersion("3.57", "2154", "1.03", 103), version("3.57")), 1)
+        )
+        val (vm, _) = viewModel(request = deviceCanRequest(factory = true))
+
+        assertEquals(listOf<FirmwareCan?>(null), repository.archiveCans)
+        val filter = vm.state.value.canFilter
+        assertEquals(true, filter?.deviceFactory)
+        assertEquals(false, filter?.canResetToDevice)
+        // Сборка под CAN у блока с заводскими настройками — не «Установлена», без CAN — установлена.
+        assertEquals(listOf(ArchiveRowKind.New, ArchiveRowKind.Installed), vm.rows().map { it.kind })
+
+        vm.onCanResetToDevice()
+        runCurrent()
+        assertEquals(1, repository.archiveCans.size)
+    }
+
+    @Test
+    fun `installed is only the block build, the same number under another can or profile is new`() = test {
+        repository.archivePages[1] = Response.Success(
+            FirmwareVersionPage(
+                listOf(
+                    canVersion("3.57", "2154", "1.03", 103),
+                    canVersion("3.57", "2154", "1.02", 102),
+                    canVersion("3.57", "0188", "1.00", 100)
+                ),
+                1
+            )
+        )
+        val (vm, _) = viewModel(request = deviceCanRequest().copy(canCode = null, deviceCanCode = "2154"))
+        vm.onCanInput("")
+        runCurrent()
+
+        val rows = vm.rows()
+        assertEquals(listOf(ArchiveRowKind.Installed, ArchiveRowKind.New, ArchiveRowKind.New), rows.map { it.kind })
+        assertEquals(listOf(false, true, false), rows.map { it.canProfileDiffers })
+    }
+
+    @Test
+    fun `one version number under two can codes is two rows and the picked row is the right file`() = test {
+        repository.archivePages[1] = Response.Success(
+            FirmwareVersionPage(
+                listOf(
+                    version("3.61").copy(url = "https://fw/2154", canCode = "2154", canVersion = "1.03"),
+                    version("3.61").copy(url = "https://fw/3312", canCode = "3312", canVersion = "1.01")
+                ),
+                1
+            )
+        )
+        repository.archivePages[2] = Response.Success(
+            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "3312", canVersion = "1.01")), 2)
+        )
+        val (vm, effects) = viewModel(request = deviceCanRequest().copy(canCode = null, deviceCanCode = null))
+
+        assertEquals(listOf("3.61|2154|1.03", "3.61|3312|1.01"), vm.rows().map { it.key })
+
+        // Та же сборка на следующей странице — повтор, конец списка.
+        vm.onEndReached()
+        runCurrent()
+        assertEquals(2, vm.rows().size)
+
+        vm.onPick("3.61|3312|1.01")
+        runCurrent()
+        val picked = effects.filterIsInstance<FirmwareArchiveEffect.Picked>().single().version
+        assertEquals("https://fw/3312", picked.url)
+    }
+
+    private fun noUnitRequest(module: Long = 42, alarm: Boolean = true) = archiveRequestOf(
+        FirmwareSystem(1, "Pandora DX-4GS", emptyList()),
+        FirmwareSubsystem(
+            module,
+            if (alarm) "Основная программа" else "Bluetooth-модуль",
+            if (alarm) "DX-4GS" else "BT-M2",
+            if (alarm) FirmwareModuleKind.AlarmMain else FirmwareModuleKind.BluetoothModule
+        )
+    )
+
+    @Test
+    fun `no unit archive opens the picked subsystem and switches channel`() = test {
+        repository.archivePages[1] = page(1, "3.61")
+        val (vm, _) = viewModel(request = noUnitRequest())
+
+        assertEquals(true, vm.state.value.noUnit)
+        assertEquals(true, vm.state.value.viewOnly)
+        assertEquals(true, vm.state.value.canFilter?.noUnit)
+        assertEquals(Triple(42L, 1, null), repository.archiveRequests.last())
+        assertEquals(emptyList(), repository.moduleCalls)
+
+        vm.onChannelSelect(FirmwareChannel.BETA)
+        runCurrent()
+        assertEquals(FirmwareChannel.BETA, vm.state.value.channel)
+        assertEquals(2, repository.archiveRequests.size)
+    }
+
+    @Test
+    fun `can filter is only for the alarm main program`() = test {
+        repository.archivePages[1] = page(1, "1.16")
+        val (bluetooth, _) = viewModel(request = noUnitRequest(module = 7, alarm = false))
+        assertNull(bluetooth.state.value.canFilter)
+
+        // Основная программа не сигнализации (часы, трекер) — тоже без фильтра, с блоком или без.
+        val (watch, _) = viewModel(request = noUnitRequest().copy(canFilterAllowed = false))
+        assertNull(watch.state.value.canFilter)
+        val (unit, _) = viewModel(
+            request = FirmwareArchiveRequest(
+                1,
+                FirmwareChannel.RELEASE,
+                null,
+                "PW2",
+                UpdateProfile.Main,
+                canFilterAllowed = false
+            )
+        )
+        assertNull(unit.state.value.canFilter)
+    }
+
+    @Test
+    fun `subsystem without versions is no firmware, empty under a can filter is not`() = test {
+        repository.archivePages[1] = page(1)
+        val (vm, _) = viewModel(request = noUnitRequest())
+        assertEquals(true, vm.state.value.noModelFirmware)
+
+        vm.onCanInput("2154")
+        runCurrent()
+        assertEquals(false, vm.state.value.noModelFirmware)
+    }
+
+    @Test
+    fun `download saves the file under a readable name and shows the saved dialog`() = test {
+        repository.mainModule = Response.Success(42)
+        repository.archivePages[1] = Response.Success(
+            FirmwareVersionPage(
+                listOf(
+                    version("3.61 C").copy(url = "https://fw/files/main.pld?t=1", canCode = "2154", canVersion = "1.03")
+                ),
+                1
+            )
+        )
+        repository.files["https://fw/files/main.pld?t=1"] = Response.Success(ByteArray(16))
+        val exporter = FakeFileExporter()
+        val (vm, _) = viewModel(request = noUnitRequest(), exporter = exporter)
+        val key = vm.rows().single().key
+
+        vm.onDownload(key)
+        // Повторное нажатие, пока файл скачивается, вторую загрузку не запускает.
+        vm.onDownload(key)
+        runCurrent()
+        assertEquals(1, repository.downloads.size)
+
+        assertEquals(listOf("DX-4GS_3.61C_CAN2154-1.03.pld" to 16), exporter.saved)
+        assertNull(vm.state.value.busy)
+        val saved = vm.state.value.saved
+        assertEquals("DX-4GS_3.61C_CAN2154-1.03.pld", saved?.fileName)
+
+        // «Поделиться» из диалога: файл скачивается заново и уходит системному меню.
+        vm.onSavedShare()
+        runCurrent()
+        assertNull(vm.state.value.saved)
+        assertEquals(listOf("DX-4GS_3.61C_CAN2154-1.03.pld"), exporter.shared)
+    }
+
+    @Test
+    fun `download, save and share failures are banners, cancel is silent`() = test {
+        repository.archivePages[1] = page(1, "3.61")
+        val exporter = FakeFileExporter()
+        val (vm, _) = viewModel(request = noUnitRequest(), exporter = exporter)
+
+        vm.onDownload("3.61")
+        runCurrent()
+        assertIs<ArchiveExportError.Download>(vm.state.value.exportError)
+        assertEquals(emptyList(), exporter.saved)
+
+        repository.files["https://fw/3.61"] = Response.Success(ByteArray(4))
+        exporter.saveResult = FirmwareSaveResult.Cancelled
+        vm.onDownload("3.61")
+        runCurrent()
+        assertNull(vm.state.value.exportError)
+        assertNull(vm.state.value.saved)
+
+        exporter.saveResult = FirmwareSaveResult.Failed
+        vm.onDownload("3.61")
+        runCurrent()
+        assertEquals(ArchiveExportError.Save, vm.state.value.exportError)
+
+        exporter.shareResult = false
+        vm.onShare("3.61")
+        runCurrent()
+        assertEquals(ArchiveExportError.Share, vm.state.value.exportError)
+
+        vm.onExportErrorDismiss()
+        runCurrent()
+        assertNull(vm.state.value.exportError)
+    }
+
+    @Test
+    fun `archive with a unit does not download`() = test {
+        repository.archivePages[1] = page(1, "3.61")
+        repository.files["https://fw/3.61"] = Response.Success(ByteArray(4))
+        val exporter = FakeFileExporter()
+        val (vm, _) = viewModel(exporter = exporter)
+
+        vm.onDownload("3.61")
+        runCurrent()
+        assertEquals(emptyList(), exporter.saved)
     }
 }

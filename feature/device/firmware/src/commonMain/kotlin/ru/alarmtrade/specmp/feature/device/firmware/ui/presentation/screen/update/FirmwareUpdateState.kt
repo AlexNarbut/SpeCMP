@@ -81,7 +81,9 @@ data class FirmwareUpdateState(
     /** Команда выхода из загрузчика не прошла (баннер на выборе источника). */
     val exitError: Boolean = false,
     /** Выбранный файл не удалось взять (баннер на выборе источника). */
-    val fileError: FileError? = null
+    val fileError: FileError? = null,
+    /** CAN-прошивка блока на выборе источника (только основная программа блока с единой CAN-прошивкой). */
+    val blockCan: BlockCanUi? = null
 ) {
     /** «Назад» заблокирован (замок): процесс идёт, и блок нельзя бросить на полпути. */
     val locked: Boolean
@@ -104,6 +106,19 @@ data class FirmwareUpdateState(
         }
 }
 
+/** CAN-прошивка блока: код и профиль; `code == null` — заводские CAN-настройки. */
+@Immutable
+data class BlockCanUi(val code: String?, val profile: String?)
+
+/**
+ * CAN на шаге подтверждения: [blockCode] — код блока (`null` — заводские настройки), [newCode] и [newProfile] —
+ * сборки. Другой код — информация, а не запрет.
+ */
+@Immutable
+data class ConfirmCanUi(val blockCode: String?, val newCode: String, val newProfile: String?) {
+    val same: Boolean get() = blockCode == newCode
+}
+
 /** Почему файл прошивки не принят из файлового менеджера. */
 enum class FileError { TooLarge, Failed }
 
@@ -117,7 +132,8 @@ data class ConfirmUi(
     val newVersion: String,
     val description: String,
     val older: Boolean,
-    val localFile: Boolean = false
+    val localFile: Boolean = false,
+    val can: ConfirmCanUi? = null
 )
 
 /** Действия экрана обновления (stateless-контент получает их от VM или заглушки в галерее состояний). */

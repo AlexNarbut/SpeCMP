@@ -1,9 +1,11 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update
 
 import kotlinx.coroutines.flow.update
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
@@ -35,7 +37,11 @@ internal class Profile(
     /** Выход из загрузчика командой доступен (BLE). */
     val canExit: Boolean,
     /** Связь по BLE: передача прошивки переживает обрыв (SDK переподключается и продолжает). */
-    val overBle: Boolean
+    val overBle: Boolean,
+    /** CAN блока (единая CAN-прошивка, только основная программа): фильтр «Скачать» и архива. */
+    val can: FirmwareCan? = null,
+    /** Заводские CAN-настройки: кода нет — в архиве подсказка выбрать автомобиль. */
+    val factoryCan: Boolean = false
 )
 
 internal data class Core(
@@ -57,6 +63,10 @@ internal data class Core(
     /** Поток обновления SDK ещё идёт (не закончился и не сдался). */
     val running: Boolean = false
 ) {
+    /** Выбран модуль «основная программа сигнализации»: только у него прошивки под CAN-код. */
+    val isAlarmMain: Boolean
+        get() = profile?.modules?.firstOrNull { it.id == selectedModuleId }?.kind == FirmwareModuleKind.AlarmMain
+
     /** Передача по BLE, которую SDK продолжит после переподключения. */
     val resumable: Boolean
         get() = running && stage is UpdatePhase.Transfer && profile?.overBle == true
@@ -94,11 +104,23 @@ internal fun toState(core: Core, session: DeviceSessionState, reboot: DeviceRebo
         inBoot = session.isBoot,
         canExitBoot = profile?.canExit == true,
         exitError = core.exitError,
-        fileError = core.fileError
+        fileError = core.fileError,
+        blockCan = blockCanOf(profile)
     )
 }
 
+private fun blockCanOf(profile: Profile?): BlockCanUi? {
+    if (profile?.kind != UpdateProfile.Main) return null
+    val can = profile.can
+    return when {
+        can != null -> BlockCanUi(can.code, can.profileName)
+        profile.factoryCan -> BlockCanUi(code = null, profile = null)
+        else -> null
+    }
+}
+
 private fun confirmOf(core: Core, current: String?): ConfirmUi? {
+    val blockCan = blockCanOf(core.profile)
     core.localFile?.let { file ->
         return ConfirmUi(current, file.name, description = "", older = false, localFile = true)
     }
@@ -107,7 +129,10 @@ private fun confirmOf(core: Core, current: String?): ConfirmUi? {
             currentVersion = current,
             newVersion = version.version,
             description = version.description,
-            older = current != null && version.version.relationTo(current) == VersionRelation.Older
+            older = current != null && version.version.relationTo(current) == VersionRelation.Older,
+            can = version.canCode?.takeIf { blockCan != null }?.let { code ->
+                ConfirmCanUi(blockCode = blockCan?.code, newCode = code, newProfile = version.canVersion)
+            }
         )
     }
 }

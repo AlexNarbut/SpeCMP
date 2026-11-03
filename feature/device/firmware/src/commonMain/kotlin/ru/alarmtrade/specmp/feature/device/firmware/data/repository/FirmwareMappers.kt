@@ -5,6 +5,7 @@ import ru.alarmtrade.devices.domain.alarmDevice.firmware.FirmwareUpdateState
 import ru.alarmtrade.devices.domain.alarmDevice.firmware.FirmwareUpdateStatus
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SubsystemFirmware
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SubsystemFirmwareType
+import ru.alarmtrade.specialist.domain.alarmDevice.information.DeviceInformation
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemInformation
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specialist.domain.appDevice.ConnectionType
@@ -12,6 +13,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSubsystem
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
@@ -95,7 +98,8 @@ internal fun SubsystemFirmware.toDomain(): FirmwareVersion = FirmwareVersion(
     description = description,
     url = url,
     canCode = canCode?.takeIf { it.isNotBlank() },
-    canVersion = canVersionString?.takeIf { it.isNotBlank() }
+    canVersion = canVersionString?.takeIf { it.isNotBlank() },
+    canVersionCode = canVersion
 )
 
 /** Стадия SDK → стадия приложения; процент есть только на передаче. */
@@ -122,3 +126,9 @@ private fun DataWritingError?.toReason(): WriteFailureReason = when (this) {
     DataWritingError.APPLYING_ERROR -> WriteFailureReason.ApplyingError
     DataWritingError.UNKNOWN, null -> WriteFailureReason.Unknown
 }
+
+internal fun DeviceInformation.toSystem(): FirmwareSystem = FirmwareSystem(
+    id = id,
+    name = name,
+    subsystems = subsystems.map { FirmwareSubsystem(it.id, it.title, it.systemName, it.type.toKind()) }
+)

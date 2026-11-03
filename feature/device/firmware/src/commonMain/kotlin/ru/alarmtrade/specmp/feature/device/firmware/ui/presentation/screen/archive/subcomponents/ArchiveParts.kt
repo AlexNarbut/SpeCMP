@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,17 +24,32 @@ import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_all_versions
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_can_reset
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_install
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_pick_vehicle
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_refresh
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_btn_reinstall
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_error_more
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_error_msg
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_error_title
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_format_can_tag
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_label_can
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_label_can_panel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_label_can_profile
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_loading
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_loading_more
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_can_none
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_can_note_factory
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_can_note_other
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_can_note_profile
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_empty_can_car
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_empty_can_device
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_empty_can_other
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_older
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_rollback
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_msg_same
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_can_other
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_status_can_same
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_empty
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_empty_can
 import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_title_rollback
@@ -65,6 +81,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.Firmwa
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.ArchiveRowUi
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.CanFilterUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.RollbackUi
 
 private val CenterMaxWidth = 440.dp
@@ -87,30 +104,68 @@ internal fun ArchiveLoading() {
     }
 }
 
+/**
+ * Пусто. Без CAN-фильтра — «не найдено» и «Обновить». Под фильтром поле CAN остаётся над пустым состоянием:
+ * «Для CAN … прошивок не найдено» + «Показать все версии»; под кодом блока — подсказка поискать под другим кодом и
+ * «Выбрать автомобиль», под другим кодом — «Вернуть CAN блока».
+ */
 @Composable
-internal fun ArchiveEmpty(onRefresh: () -> Unit, canCode: String? = null, onShowAll: () -> Unit = {}) {
+internal fun ArchiveEmpty(
+    onRefresh: () -> Unit,
+    filter: CanFilterUi? = null,
+    onShowAll: () -> Unit = {},
+    onPickVehicle: () -> Unit = {},
+    onResetToDevice: () -> Unit = {}
+) {
+    val canCode = filter?.applied
     CenteredBody {
-        FirmwareHero(icon = CmpIcons.Inventory2, tone = HeroTone.Neutral, size = 88.dp)
+        FirmwareHero(
+            icon = if (canCode != null) CmpIcons.SearchOff else CmpIcons.Inventory2,
+            tone = HeroTone.Neutral,
+            size = 88.dp
+        )
         CmpText(
             text = canCode?.let { stringResource(Strings.string.firmware_archive_title_empty_can, it) }
                 ?: stringResource(Strings.string.firmware_archive_title_empty),
             style = CmpTextStyle.Title,
             textAlign = TextAlign.Center
         )
-        // С CAN-фильтром пусто — предлагаем все версии, без фильтра — повторить запрос.
-        CmpOutlinedButton(
-            text = stringResource(
-                if (canCode !=
-                    null
-                ) {
-                    Strings.string.firmware_archive_btn_all_versions
-                } else {
-                    Strings.string.firmware_archive_btn_refresh
-                }
-            ),
-            onClick = if (canCode != null) onShowAll else onRefresh,
+        if (filter == null || canCode == null) {
+            CmpOutlinedButton(
+                text = stringResource(Strings.string.firmware_archive_btn_refresh),
+                onClick = onRefresh,
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            )
+            return@CenteredBody
+        }
+        val carTitle = filter.carTitle
+        CmpText(
+            text = when {
+                filter.appliedIsDevice -> stringResource(Strings.string.firmware_archive_msg_empty_can_device)
+                carTitle != null -> stringResource(Strings.string.firmware_archive_msg_empty_can_car, carTitle)
+                else -> stringResource(Strings.string.firmware_archive_msg_empty_can_other)
+            },
+            color = cmpThemeColors().onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        CmpButton(
+            text = stringResource(Strings.string.firmware_archive_btn_all_versions),
+            onClick = onShowAll,
             modifier = Modifier.fillMaxWidth().height(52.dp)
         )
+        when {
+            filter.appliedIsDevice && filter.canPickVehicle -> CmpOutlinedButton(
+                text = stringResource(Strings.string.firmware_archive_btn_pick_vehicle),
+                onClick = onPickVehicle,
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            )
+
+            filter.canResetToDevice -> CmpOutlinedButton(
+                text = stringResource(Strings.string.firmware_archive_btn_can_reset),
+                onClick = onResetToDevice,
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            )
+        }
     }
 }
 
@@ -192,7 +247,11 @@ internal fun ArchiveDetail(
     row: ArchiveRowUi,
     installedVersion: String?,
     onInstall: (() -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    canFilter: CanFilterUi? = null,
+    onDownload: (() -> Unit)? = null,
+    onShare: (() -> Unit)? = null,
+    busy: Boolean = false
 ) {
     val colors = cmpThemeColors()
     CmpSurface(
@@ -216,7 +275,7 @@ internal fun ArchiveDetail(
                 }
                 CmpText(text = formatArchiveDate(row.createdOn), color = colors.onSurfaceVariant)
             }
-            ArchiveRowCan(row)
+            canFilter?.let { DetailCan(row, it) }
             CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
@@ -230,7 +289,11 @@ internal fun ArchiveDetail(
                     modifier = Modifier.heightIn(max = DetailDescriptionMaxHeight).verticalScroll(rememberScrollState())
                 )
             }
-            // Просмотр без установки: нет ни кнопки, ни предупреждений о выбранной версии.
+            // Без блока — «Скачать» / «Поделиться»; просмотр без установки — ни кнопки, ни предупреждений.
+            if (onDownload != null) {
+                DetailExportActions(busy, onDownload, onShare)
+                return@CmpColumn
+            }
             if (onInstall == null) return@CmpColumn
             when (row.kind) {
                 ArchiveRowKind.Older -> installedVersion?.let {
@@ -294,3 +357,93 @@ internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismi
         }
     )
 }
+
+/**
+ * Блок «CAN-прошивка» в панели версии: код и профиль сборки, «как в блоке» / «другой CAN» и что будет с блоком
+ * после установки. Без CAN — «Без привязки к CAN».
+ */
+@Composable
+private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
+    val colors = cmpThemeColors()
+    val deviceCode = filter.deviceCode
+    CmpSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = colors.surfaceContainerHigh
+    ) {
+        CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            CmpText(
+                text = stringResource(Strings.string.firmware_archive_label_can_panel),
+                fontWeight = FontWeight.Medium,
+                color = colors.onSurfaceVariant
+            )
+            val code = row.canCode
+            if (code == null) {
+                CmpText(text = stringResource(Strings.string.firmware_archive_msg_can_none))
+                return@CmpColumn
+            }
+            CmpRow(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CmpText(
+                    text = stringResource(Strings.string.firmware_archive_label_can, code),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                row.canVersion?.let { profile ->
+                    CmpText(
+                        text = stringResource(Strings.string.firmware_archive_label_can_profile) + " " + profile,
+                        color = colors.onSurfaceVariant
+                    )
+                }
+                if (deviceCode != null) CanPill(row.canMatchesDevice)
+            }
+            val note = when {
+                filter.deviceCode == null && filter.deviceFactory ->
+                    stringResource(Strings.string.firmware_archive_msg_can_note_factory, code)
+
+                deviceCode != null && !row.canMatchesDevice -> stringResource(
+                    Strings.string.firmware_archive_msg_can_note_other,
+                    canLabel(deviceCode, filter.deviceProfile),
+                    canLabel(code, row.canVersion)
+                )
+
+                row.canProfileDiffers && filter.deviceProfile != null ->
+                    stringResource(Strings.string.firmware_archive_msg_can_note_profile, filter.deviceProfile)
+
+                else -> null
+            }
+            note?.let { CmpText(text = it, style = CmpTextStyle.Body, color = colors.onSurfaceVariant) }
+        }
+    }
+}
+
+@Composable
+private fun canLabel(code: String, profile: String?): String =
+    profile?.let { stringResource(Strings.string.firmware_archive_format_can_tag, code, it) }
+        ?: stringResource(Strings.string.firmware_archive_label_can, code)
+
+@Composable
+private fun CanPill(mine: Boolean) {
+    val colors = cmpThemeColors()
+    CmpSurface(
+        shape = RoundedCornerShape(percent = PILL_PERCENT),
+        color = if (mine) colors.primary else Color.Transparent,
+        border = if (mine) null else BorderStroke(1.dp, colors.outline)
+    ) {
+        CmpText(
+            text = if (mine) {
+                stringResource(Strings.string.firmware_archive_status_can_same)
+            } else {
+                stringResource(Strings.string.firmware_archive_status_can_other)
+            },
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (mine) colors.onPrimary else colors.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+        )
+    }
+}
+
+private const val PILL_PERCENT = 50

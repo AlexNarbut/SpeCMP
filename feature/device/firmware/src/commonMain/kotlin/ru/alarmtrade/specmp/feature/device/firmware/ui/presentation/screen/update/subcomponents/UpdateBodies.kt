@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_label_can
+import ru.alarmtrade.specmp.core.localization.resources.firmware_archive_label_can_profile
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_btn_retry
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_msg_test_channel
@@ -54,17 +56,23 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_fi
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_msg
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_source
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_error_title
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_format_confirm_can_profile
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_apply
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_prepare
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_transfer
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_item_step_verify
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_can
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_channel
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_can
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_can_will_be
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_current
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_found
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_confirm_whats_new
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_subsystem
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_label_version
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_loading
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_can_other
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_can_same
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_local_file
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_no_description
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_msg_confirm_older
@@ -89,10 +97,13 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_en
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_finishing
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_lost
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_title_success
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_value_can_factory
+import ru.alarmtrade.specmp.core.localization.resources.firmware_update_value_confirm_can_factory
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
+import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpDropdown
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -107,6 +118,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.B
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.text
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.BlockCanUi
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmCanUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.ConfirmUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FailureKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
@@ -198,6 +211,9 @@ internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActio
             LabeledField(stringResource(Strings.string.firmware_update_label_version)) {
                 VersionText(version, fontSize = 20.sp)
             }
+        }
+        state.blockCan?.let { can ->
+            LabeledField(stringResource(Strings.string.firmware_update_label_can)) { BlockCan(can) }
         }
         if (!fileOnly) {
             LabeledField(stringResource(Strings.string.firmware_update_label_channel)) {
@@ -322,6 +338,7 @@ internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () 
             VersionRow(stringResource(Strings.string.firmware_update_label_confirm_found), confirm.newVersion)
         }
     }
+    confirm.can?.let { ConfirmCan(it) }
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -532,3 +549,91 @@ internal fun LostBody(updating: Boolean, onReconnect: () -> Unit, onDisconnect: 
         modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(LOST_DISCONNECT_TAG)
     )
 }
+
+/** «CAN 2154  профиль 1.03» или «Заводские CAN-настройки» под версией ПО на выборе источника. */
+@Composable
+private fun BlockCan(can: BlockCanUi) {
+    val code = can.code
+    if (code == null) {
+        CmpText(text = stringResource(Strings.string.firmware_update_value_can_factory), fontSize = 17.sp)
+        return
+    }
+    CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        VersionText(stringResource(Strings.string.firmware_archive_label_can, code), fontSize = 20.sp)
+        can.profile?.let { profile ->
+            CmpText(
+                text = stringResource(Strings.string.firmware_archive_label_can_profile) + " " + profile,
+                color = cmpThemeColors().onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * «CAN блока 2154 → будет 3312» с пояснением, что другой CAN допустим; при совпадении — «Версия собрана под CAN-код
+ * блока». Информация перед установкой, не запрет.
+ */
+@Composable
+private fun ConfirmCan(can: ConfirmCanUi) {
+    val colors = cmpThemeColors()
+    val content = if (can.same) colors.onSurface else colors.onSecondaryContainer
+    CmpSurface(
+        modifier = Modifier.fillMaxWidth().testTag(UPDATE_CONFIRM_CAN_TAG),
+        shape = RoundedCornerShape(16.dp),
+        color = if (can.same) colors.surfaceContainerLow else colors.secondaryContainer,
+        border = if (can.same) BorderStroke(1.dp, colors.outlineVariant) else BorderStroke(2.dp, colors.primary)
+    ) {
+        CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            CmpRow(
+                modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CmpText(text = stringResource(Strings.string.firmware_update_label_confirm_can), color = content)
+                CmpRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CmpText(
+                        text = can.blockCode ?: stringResource(
+                            Strings.string.firmware_update_value_confirm_can_factory
+                        ),
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = content
+                    )
+                    if (!can.same) {
+                        CmpIcon(
+                            icon = CmpIcons.ArrowForward,
+                            contentDescription = null,
+                            tint = content,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        CmpText(
+                            text = stringResource(Strings.string.firmware_update_label_confirm_can_will_be),
+                            fontWeight = FontWeight.Medium,
+                            color = content
+                        )
+                        CmpText(text = can.newCode, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = content)
+                    }
+                }
+            }
+            val message = stringResource(
+                if (can.same) {
+                    Strings.string.firmware_update_msg_confirm_can_same
+                } else {
+                    Strings.string.firmware_update_msg_confirm_can_other
+                }
+            )
+            CmpText(
+                text = can.newProfile?.let {
+                    stringResource(Strings.string.firmware_update_format_confirm_can_profile, message, it)
+                } ?: message,
+                style = CmpTextStyle.Body,
+                color = content
+            )
+        }
+    }
+}
+
+internal const val UPDATE_CONFIRM_CAN_TAG = "firmware_update_confirm_can"

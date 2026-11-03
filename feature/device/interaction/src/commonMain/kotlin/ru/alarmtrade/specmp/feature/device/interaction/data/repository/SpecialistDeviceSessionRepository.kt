@@ -119,7 +119,8 @@ class SpecialistDeviceSessionRepository(
                     CanInfo(
                         firmwareVersion = can.canVersionString,
                         code = can.canCode,
-                        isFactory = can.isFactoryCanSettings
+                        isFactory = can.isFactoryCanSettings,
+                        version = can.validCanVersion
                     )
                 } else {
                     null

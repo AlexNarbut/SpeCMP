@@ -56,7 +56,7 @@ class SpecialistFastMountRepository(
         return interactor.verifyDeviceUseCase.execute(request).toResponse().map { UnitAccess(it.hasAccess, it.message) }
     }
 
-    override suspend fun latestFirmware(systemName: String): Response<String?> {
+    override suspend fun latestFirmware(systemName: String, canCode: String?, canVersion: Int?): Response<String?> {
         val information = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
         val firmware = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
         val moduleId = when (
@@ -67,7 +67,14 @@ class SpecialistFastMountRepository(
             is Response.Error -> return response
         } ?: return Response.Success(null)
         return firmware.getLatestSubsystemFirmwareUseCase
-            .execute(SubsystemFirmwareRequest(subsystemId = moduleId, type = SubsystemFirmwareType.RELEASE))
+            .execute(
+                SubsystemFirmwareRequest(
+                    subsystemId = moduleId,
+                    type = SubsystemFirmwareType.RELEASE,
+                    canCode = canCode,
+                    canCodeVersion = canVersion
+                )
+            )
             .toResponse()
             .map { it.version }
     }

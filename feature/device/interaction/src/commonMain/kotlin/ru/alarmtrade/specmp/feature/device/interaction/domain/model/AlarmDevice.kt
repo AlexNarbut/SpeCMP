@@ -27,8 +27,12 @@ val AlarmDevice.title: String get() = deviceTitle(systemName, systemId)
 val AlarmDevice.displayFirmwareVersion: String
     get() = firmwareVersion.removePrefix("VER").trim()
 
-/** Данные CAN-прошивки блока. [isFactory] — заводские CAN-настройки: сначала нужно прошить блок под CAN-код авто. */
-data class CanInfo(val firmwareVersion: String, val code: String, val isFactory: Boolean)
+/**
+ * Данные CAN-прошивки блока. [isFactory] — заводские CAN-настройки: сначала нужно прошить блок под CAN-код авто.
+ * [firmwareVersion] — версия CAN-профиля для показа, [version] — она же числом (так её принимает сервер в запросах
+ * прошивок под CAN; `null` — блок не сообщил).
+ */
+data class CanInfo(val firmwareVersion: String, val code: String, val isFactory: Boolean, val version: Int? = null)
 
 /** Режим работы основной программы блока: рабочий или загрузчик (прошивка/восстановление). */
 enum class DeviceOperationMode { MAIN, BOOT }

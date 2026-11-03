@@ -25,10 +25,12 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
@@ -161,7 +163,10 @@ class FirmwareUpdateViewModel(
                     BootModeTarget.MainProgram,
                     device.systemName,
                     device.title,
-                    device.displayFirmwareVersion
+                    device.displayFirmwareVersion,
+                    // CAN — как блок сообщает его в загрузчике; не сообщил — ищем по всем версиям.
+                    can = device.can.toFirmwareCan(),
+                    factoryCan = device.can?.isFactory == true
                 )
             }
 
@@ -190,7 +195,9 @@ class FirmwareUpdateViewModel(
                     source.current,
                     modules,
                     canExit = transport == ConnectionTransport.BLE,
-                    overBle = transport == ConnectionTransport.BLE
+                    overBle = transport == ConnectionTransport.BLE,
+                    can = source.can,
+                    factoryCan = source.factoryCan
                 ),
                 selectedModuleId = state.selectedModuleId?.takeIf { id -> modules.any { it.id == id } }
                     ?: modules.firstOrNull()?.id,
@@ -208,7 +215,9 @@ class FirmwareUpdateViewModel(
         val target: BootModeTarget,
         val deviceName: String,
         val title: String,
-        val current: String
+        val current: String,
+        val can: FirmwareCan? = null,
+        val factoryCan: Boolean = false
     )
 
     // ───── интенты ─────
@@ -236,7 +245,8 @@ class FirmwareUpdateViewModel(
                 ) {
                     return@executeWithProceedLock
                 }
-                val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel) }
+                val can = start.profile?.can?.takeIf { start.isAlarmMain }
+                val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel, can) }
                 core.updateIf({ it.stage == UpdatePhase.Download }) { state ->
                     when (response) {
                         is Response.Success -> state.copy(
@@ -269,7 +279,12 @@ class FirmwareUpdateViewModel(
                     deviceTitle = state.value.deviceTitle,
                     profile = profile.kind,
                     // Каталог автомобилей CAN-фильтра — под модель блока (у Bluetooth-модуля фильтра нет).
-                    deviceName = profile.deviceName.takeIf { profile.kind == UpdateProfile.Main }
+                    deviceName = profile.deviceName.takeIf { profile.kind == UpdateProfile.Main },
+                    deviceCanCode = profile.can?.code,
+                    deviceCanVersion = profile.can?.version,
+                    deviceCanProfile = profile.can?.profileName,
+                    deviceCanFactory = profile.factoryCan,
+                    canFilterAllowed = current.isAlarmMain
                 )
             )
         )
