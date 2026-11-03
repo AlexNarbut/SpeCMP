@@ -42,7 +42,7 @@
         {c.bar}
         <window.AndroidDevice dark={c.dark} width={412} height={840}>
           <div data-theme={c.dark ? "dark" : undefined} style={{ height: "100%" }}>
-            <window.FirmwareApp key={c.key} {...c.props} onBack={() => window.psGo("advanced-mount")} />
+            <window.FirmwareApp key={c.key} {...c.props} platform="mobile" onBack={() => window.psGo("advanced-mount")} onHome={() => window.psGo("home")} />
           </div>
         </window.AndroidDevice>
       </React.Fragment>

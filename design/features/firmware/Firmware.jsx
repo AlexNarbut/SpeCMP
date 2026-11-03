@@ -22,7 +22,7 @@ const FW_NOTES = "• Улучшена стабильность связи по 
 (function () {
   if (document.getElementById("fw-anim")) return;
   const s = document.createElement("style"); s.id = "fw-anim";
-  s.textContent = "@keyframes fwRing{0%{transform:scale(.9);opacity:.5}100%{transform:scale(1.35);opacity:0}}@keyframes fwIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion: reduce){.fw-anim{animation:none!important}}";
+  s.textContent = "@keyframes fwRing{0%{transform:scale(.9);opacity:.5}100%{transform:scale(1.35);opacity:0}}@keyframes fwIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion: reduce){.fw-anim{animation:none!important}}.fw-hov:hover{background-color:color-mix(in srgb, var(--on-surface) 8%, transparent)!important}.fw-hov:focus-visible{outline:2px solid var(--primary);outline-offset:2px}";
   document.head.appendChild(s);
 })();
 
@@ -309,7 +309,7 @@ function Field({ label, children }) {
   return <div style={{ display: "flex", flexDirection: "column", gap: 6 }}><CmpText variant="labelLarge" color="var(--on-surface-variant)">{label}</CmpText>{children}</div>;
 }
 
-function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, nextVer, downgrade = false, onBack, onDone, onArchive }) {
+function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, nextVer, nextCan = null, blkCan = null, downgrade = false, onBack, onDone, onArchive }) {
   const P = FW_PROFILES[profile];
   const [phase, setPhase] = React.useState(phase0);
   const [live, setLive] = React.useState(live0);
@@ -370,6 +370,11 @@ function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, n
         : <CmpDropdown selectedValue={N(P.subs[sub])} options={P.subs.map(N)} onOptionSelected={(i) => setSub(i)} />}
     </Field>
     <Field label={L("Версия ПО:")}><Ver v={P.ver} size={20} /></Field>
+    {!bt && <Field label={L("CAN-прошивка:")}>
+      {blkCan
+        ? <span style={{ display: "inline-flex", alignItems: "baseline", flexWrap: "wrap", gap: "4px 12px" }}><Ver v={"CAN " + blkCan.can} size={20} /><span style={{ font: "400 16px var(--font-sans)", color: "var(--on-surface-variant)" }}>{L("профиль")} <b style={{ fontFamily: "var(--font-mono)", color: "var(--on-surface)" }}>{blkCan.prof}</b></span></span>
+        : <CmpText variant="bodyLarge">{L("Заводские CAN-настройки")}</CmpText>}
+    </Field>}
     <Field label={L("Тип канала обновления:")}>
       <CmpDropdown selectedValue={chName} options={FW_CHANNELS.map((c) => L(c[1]))} onOptionSelected={(i) => setChannel(FW_CHANNELS[i][0])} />
     </Field>
@@ -385,6 +390,21 @@ function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, n
   else if (phase === "confirm") content = <React.Fragment>
     <CmpText variant="headlineSmall" style={{ textAlign: "center" }}>{L("Подтвердите версию")}</CmpText>
     {verBlock(P.ver, nextVer || P.next)}
+    {nextCan && (() => {
+      const same = !!blkCan && nextCan.can === blkCan.can;
+      return (
+        <div style={{ width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 6, padding: 16, borderRadius: 16, textAlign: "left",
+          background: same ? "var(--surface-container-low)" : "var(--secondary-container)", color: same ? "var(--on-surface)" : "var(--on-secondary-container)", border: same ? "1px solid var(--outline-variant)" : "2px solid var(--primary)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", minHeight: 40 }}>
+            <CmpText variant="bodyLarge" color="currentColor">{L("CAN блока")}</CmpText>
+            <span style={{ display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: 8, fontFamily: "var(--font-mono)", fontSize: 19, fontWeight: 700 }}>
+              <span>{blkCan ? blkCan.can : L("заводские")}</span>
+              {!same && <React.Fragment><CmpIcon icon="arrow_forward" size={20} color="currentColor" /><span style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 500 }}>{L("будет")}</span><span>{nextCan.can}</span></React.Fragment>}
+            </span>
+          </div>
+          <CmpText variant="bodyMedium" color="currentColor">{same ? L("Версия собрана под CAN-код блока") : L("Блок будет прошит под другой автомобиль. Это допустимо — например, при переносе блока на другую машину.")} · {L("профиль")} {nextCan.prof}</CmpText>
+        </div>);
+    })()}
     <div style={{ padding: 14, borderRadius: 14, background: "var(--surface-container-high)", textAlign: "left", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("Что нового")}</CmpText>
       <div style={{ whiteSpace: "pre-line", marginTop: 4, maxHeight: "min(220px, 30vh)", overflowY: "auto" }} tabIndex={0}><CmpText variant="bodyMedium">{L(FW_NOTES)}</CmpText></div>
@@ -460,30 +480,130 @@ function FwUpdate({ layout, profile, phase0, channel0, reserve, live0 = false, n
 
 
 // ════════ Экран 3. Архив прошивок ════════════════════════════════════════════
+// Вход А — из «Обновление прошивки» (блок подключён): CAN-поле заполнено кодом блока, фильтр по коду и профилю.
+// Вход Б — с главного экрана без блока: модель (экран K2 конфигуратора) → архив с моделью и каналом в шапке,
+// «Скачать» / «Поделиться» вместо «Установить». У Bluetooth-модуля CAN-фильтра нет.
 const FW_VERS = [
-  { v: "3.61", d: "14.10.2026", desc: FW_NOTES },
-  { v: "3.60", d: "02.09.2026", desc: "• Исправлена ошибка постановки на охрану при низком заряде АКБ\n• Ускорено подключение по Bluetooth" },
+  { v: "3.61", d: "14.10.2026", can: "2154", prof: "1.03", desc: FW_NOTES },
+  { v: "3.61", d: "14.10.2026", can: "3312", prof: "1.01", desc: FW_NOTES },
+  { v: "3.60", d: "02.09.2026", can: "2154", prof: "1.03", desc: "• Исправлена ошибка постановки на охрану при низком заряде АКБ\n• Ускорено подключение по Bluetooth" },
+  { v: "3.60", d: "02.09.2026", can: "2154", prof: "1.02", desc: "• Исправлена ошибка постановки на охрану при низком заряде АКБ\n• Ускорено подключение по Bluetooth" },
   { v: "3.58", d: "19.07.2026", desc: "" },
-  { v: "3.57", d: "30.05.2026", desc: "• Первая версия с поддержкой профилей CAN 2.0\n• Оптимизировано энергопотребление в режиме охраны\n• Исправлены ошибки обработки датчика удара\n• Улучшена работа автозапуска при низких температурах\n• Обновлён протокол обмена с модулем часов" },
-  { v: "3.55", d: "11.04.2026", desc: "• Улучшена стабильность связи по Bluetooth" },
-  { v: "3.52", d: "03.02.2026", desc: "" },
+  { v: "3.57", d: "30.05.2026", can: "2154", prof: "1.03", desc: "• Первая версия с поддержкой профилей CAN 2.0\n• Оптимизировано энергопотребление в режиме охраны\n• Исправлены ошибки обработки датчика удара\n• Улучшена работа автозапуска при низких температурах\n• Обновлён протокол обмена с модулем часов" },
+  { v: "3.57", d: "30.05.2026", can: "0188", prof: "1.00", desc: "• Первая версия с поддержкой профилей CAN 2.0" },
+  { v: "3.55", d: "11.04.2026", can: "3312", prof: "1.01", desc: "• Улучшена стабильность связи по Bluetooth" },
+  { v: "3.52", d: "03.02.2026", can: "2154", prof: "1.01", desc: "" },
 ];
-const FW_INSTALLED = "3.57";
+const FW_BT_VERS = [
+  { v: "1.16", d: "01.10.2026", desc: "• Улучшена стабильность связи по Bluetooth" },
+  { v: "1.14", d: "12.06.2026", desc: "" },
+  { v: "1.12", d: "20.03.2026", desc: "" },
+];
+const FW_INSTALLED = "3.57", FW_BT_INSTALLED = "1.14";
+const FW_BLOCK_CAN = { can: "2154", prof: "1.03" };
+const FW_CARS = [{ name: "Kia Rio 2021", can: "0188" }, { name: "Hyundai Solaris 2020", can: "3312" }, { name: "Toyota Camry 2019", can: "0342" }];
+// Список моделей — тот же, что у K2 «Модель блока» в конфигураторе (cfg-data.js).
+const FW_MODELS = ["DX-9X", "DX-9X LoRa", "DX-9X Mini", "DX-91", "DX-91 LoRa", "DX-90B", "DX-90BT", "DX-6X", "DX-4GS", "DX-4G", "DX-40RS", "DX-40S", "DX-40R",
+  "DXL-5000", "DXL-4950", "DXL-4910", "X-1900 BT", "X-1800L", "X-1700", "X-3190L", "X-3110", "VX-4G GPS", "VX-3100", "VX-1000", "NAV-10", "NAV-08", "NAV-12",
+  "SMART PRO v3", "SMART v2", "Light Pro v2", "Light Pro", "BT-760", "BT-100", "IMMO-9", "IMMO-5", "CAN-6"];
+const FW_RECENT = ["DX-9X", "DX-4GS", "X-1900 BT"];
+const vid = (it) => it.v + "|" + (it.can || "-") + "|" + (it.prof || "-");
+const vnum = (v) => parseFloat(v);
+
+function fwCanInit(sc, entry) {
+  if (entry === "b") {
+    const f = { none: { can: "", src: "none" }, car: { can: "0188", src: "car", car: FW_CARS[0].name }, other: { can: "3312", src: "manual" }, partial: { can: "33", src: "manual" }, emptyother: { can: "0342", src: "car", car: FW_CARS[2].name } }[sc];
+    return { blk: null, f: f || { can: "", src: "none" } };
+  }
+  const blk = sc === "factory" ? null : sc === "emptyblock" ? { can: "4410", prof: "1.00" } : FW_BLOCK_CAN;
+  const f = { block: { can: "2154", src: "block" }, other: { can: "3312", src: "manual" }, car: { can: "0188", src: "car", car: FW_CARS[0].name }, cleared: { can: "", src: "manual" }, partial: { can: "21", src: "manual" }, factory: { can: "", src: "none" }, emptyblock: { can: "4410", src: "block" }, emptyother: { can: "9999", src: "manual" } }[sc];
+  return { blk, f: f || { can: "2154", src: "block" } };
+}
+function fwFilter(list, f, blk) {
+  if (f.can.length !== 4) return list;
+  if (f.src === "block" && blk) return list.filter((x) => x.can === blk.can && x.prof === blk.prof);
+  return list.filter((x) => x.can === f.can);
+}
 
 function VerBadge({ kind }) {
   const inst = kind === "installed";
   return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 26, padding: "0 10px", borderRadius: 999, boxSizing: "border-box", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", background: inst ? "var(--primary)" : "var(--surface-variant)", color: inst ? "var(--on-primary)" : "var(--on-surface-variant)" }}>{inst && <CmpIcon icon="check" size={16} color="currentColor" />}{inst ? L("Установлена") : L("Старее установленной")}</span>;
 }
 
-function VerRow({ it, kind, wide, sel, onSelect, onPick, i }) {
+// Метка CAN в строке: под код блока — акцент + «как в блоке»; другой код — приглушённая; без CAN — нет метки.
+function CanTag({ it, blk }) {
+  if (!it.can) return null;
+  const mine = !!blk && it.can === blk.can;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: 6, minHeight: 30, padding: "2px 10px", borderRadius: 8, boxSizing: "border-box", fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600,
+      background: mine ? "var(--secondary-container)" : "transparent", color: mine ? "var(--on-secondary-container)" : "var(--on-surface-variant)", border: mine ? "2px solid var(--primary)" : "1px solid var(--outline-variant)" }}>
+      {mine && <CmpIcon icon="link" size={18} color="currentColor" />}
+      <span>CAN {it.can} · {it.prof}</span>
+      {mine && <span style={{ fontFamily: "var(--font-sans)", fontWeight: 700 }}>· {L("как в блоке")}</span>}
+    </span>
+  );
+}
+
+function FwIconBtn({ icon, label, onClick, color = "var(--on-surface-variant)" }) {
+  return <button type="button" className="fw-hov" aria-label={label} title={label} onClick={onClick}
+    style={{ width: 48, height: 48, flex: "0 0 auto", border: "none", background: "transparent", borderRadius: 999, display: "grid", placeItems: "center", cursor: "pointer", color }}><CmpIcon icon={icon} size={24} color="currentColor" /></button>;
+}
+
+function CanField({ f, setF, blk, entry, onCatalog, onReset }) {
+  const [focus, setFocus] = React.useState(false);
+  const partial = f.can.length > 0 && f.can.length < 4;
+  const auto = entry === "a" && !!blk && f.src === "block" && f.can === blk.can;
+  const differs = entry === "a" && !!blk && !auto;
+  const border = partial ? "var(--error)" : focus ? "var(--primary)" : "var(--outline)";
+  const line = (icon, text, color = "var(--on-surface-variant)") => (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "0 4px" }}>
+      <CmpIcon icon={icon} size={20} color={color} />
+      <div style={{ flex: 1, minWidth: 0 }}><CmpText variant="bodyMedium" color={color}>{text}</CmpText></div>
+    </div>);
+  const carLine = f.src === "car" && f.car && f.can.length === 4 && line("directions_car", <b style={{ color: "var(--on-surface)" }}>{f.car}</b>, "var(--primary)");
+  let help = null;
+  if (partial) help = line("error", L("Введите 4 цифры CAN-кода"), "var(--error)");
+  else if (entry === "b") help = carLine || (!f.can && line("info", L("Выберите автомобиль, чтобы увидеть прошивки под его CAN")));
+  else if (!blk) help = <React.Fragment>{carLine}{line("info", f.can ? L("У блока заводские CAN-настройки") : L("У блока заводские CAN-настройки — выберите автомобиль или введите CAN-код"))}</React.Fragment>;
+  else if (auto) help = line("memory", <span><b>{L("CAN-код блока")}</b> · {L("профиль")} {blk.prof} — {L("подставлен автоматически")}</span>, "var(--primary)");
+  else help = <React.Fragment>{carLine}{!f.can && line("filter_alt_off", L("Фильтр снят — показаны все версии"))}</React.Fragment>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <label htmlFor="fw-can" style={{ padding: "0 4px" }}><CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("CAN-код автомобиля")}</CmpText></label>
+      <div style={{ display: "flex", alignItems: "center", gap: 2, minHeight: 60, padding: "0 4px 0 14px", borderRadius: 12, boxSizing: "border-box", border: `${focus || partial ? 2 : 1}px solid ${border}`, margin: focus || partial ? 0 : 1, background: auto ? "var(--surface-container-high)" : "var(--surface)" }}>
+        <CmpIcon icon={auto ? "memory" : "tag"} size={22} color={auto ? "var(--primary)" : "var(--on-surface-variant)"} />
+        <input id="fw-can" value={f.can} inputMode="numeric" pattern="[0-9]*" maxLength={4} placeholder={L("4 цифры")} autoComplete="off"
+          onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
+          onChange={(e) => setF({ can: e.target.value.replace(/\D/g, "").slice(0, 4), src: "manual" })}
+          style={{ flex: 1, minWidth: 0, height: 56, padding: "0 8px", border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 600, letterSpacing: ".12em", color: "var(--on-surface)" }} />
+        {f.can && <FwIconBtn icon="close" label={L("Очистить")} onClick={() => setF({ can: "", src: entry === "b" ? "none" : "manual" })} />}
+        <FwIconBtn icon="directions_car" label={L("Выбрать автомобиль из каталога")} onClick={onCatalog} color="var(--primary)" />
+      </div>
+      {help}
+      {differs && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0 8px", padding: "2px 4px 2px 12px", borderRadius: 12, background: "var(--surface-container-high)" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 48 }}><CmpIcon icon="memory" size={20} color="var(--on-surface-variant)" /><CmpText variant="bodyMedium">{L("CAN-код блока —")}</CmpText><Ver v={blk.can} size={16} /></span>
+          <CmpTextButton text={L("Вернуть CAN блока")} onClick={onReset} style={btn48} />
+        </div>)}
+    </div>
+  );
+}
+
+function VerRow({ it, kind, wide, sel, onSelect, onPick, onShare, busy, blk, entry, i }) {
   const [open, setOpen] = React.useState(false);
   const has = !!it.desc;
   const clamp = open ? { maxHeight: 200, overflowY: "auto" } : { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" };
+  const actions = !wide && (entry === "b"
+    ? <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <FwIconBtn icon="share" label={L("Поделиться")} onClick={onShare} />
+        <CmpOutlinedButton text={busy ? L("Скачиваем…") : L("Скачать")} icon="download" disabled={busy} onClick={onPick} style={btn48} />
+      </div>
+    : <CmpOutlinedButton text={L("Выбрать")} onClick={onPick} style={btn48} />);
   return (
     <div className="fw-anim" onClick={wide ? onSelect : undefined} role={wide ? "button" : undefined} tabIndex={wide ? 0 : undefined}
       style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 40}ms`, boxSizing: "border-box", borderRadius: 18, padding: 16, cursor: wide ? "pointer" : "default", display: "flex", flexDirection: "column", gap: 10, minWidth: 0,
         background: sel ? "var(--primary-container)" : "var(--surface-container-low)", color: sel ? "var(--on-primary-container)" : "var(--on-surface)",
-        border: sel ? "2px solid var(--primary)" : kind === "installed" ? "2px solid var(--primary)" : "1px solid var(--outline-variant)", margin: sel || kind === "installed" ? 0 : 1 }}>
+        border: sel || kind === "installed" ? "2px solid var(--primary)" : "1px solid var(--outline-variant)", margin: sel || kind === "installed" ? 0 : 1 }}>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, minWidth: 0 }}>
           <Ver v={it.v} size={24} color={sel ? "currentColor" : "var(--primary)"} />
@@ -491,91 +611,286 @@ function VerRow({ it, kind, wide, sel, onSelect, onPick, i }) {
         </div>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: sel ? "currentColor" : "var(--on-surface-variant)" }}>{it.d}</span>
       </div>
+      {it.can && <div style={{ display: "flex" }}><CanTag it={it} blk={blk} /></div>}
       {has && <div style={{ whiteSpace: "pre-line", ...clamp }}><CmpText variant="bodyMedium" color={sel ? "currentColor" : "var(--on-surface-variant)"}>{L(it.desc)}</CmpText></div>}
       {(has || !wide) && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginTop: 2 }}>
           {has ? <CmpTextButton text={open ? L("Свернуть") : L("Показать больше")} onClick={(e) => { e && e.stopPropagation && e.stopPropagation(); setOpen(!open); }} style={btn48} /> : <span />}
-          {!wide && <CmpOutlinedButton text={L("Выбрать")} onClick={onPick} style={btn48} />}
+          {actions}
         </div>)}
     </div>
   );
 }
 
-function FwArchive({ layout, scenario, channel, dialog0, onBack, onPick }) {
-  const [state, setState] = React.useState(scenario === "loading" ? "loading" : scenario);
-  const [dialog, setDialog] = React.useState(dialog0 ? FW_VERS[3 + 1].v : null);
-  const [selV, setSelV] = React.useState(dialog0 ? "3.55" : "3.61");
-  const wide = layout === "expanded";
-  React.useEffect(() => { if (state !== "loading") return; const t = setTimeout(() => setState("list"), 1500); return () => clearTimeout(t); }, [state]);
-  const instIdx = FW_VERS.findIndex((x) => x.v === FW_INSTALLED);
-  const kindOf = (i) => i === instIdx ? "installed" : i > instIdx ? "older" : "new";
-  const pick = (it, i) => kindOf(i) === "older" ? setDialog(it.v) : onPick(it.v, false);
-  const sel = FW_VERS.find((x) => x.v === selV), selI = FW_VERS.indexOf(sel);
-  const list = (state === "list" || state === "more" || state === "moreerror") ? FW_VERS : [];
-  const pad = layout === "compact" ? 14 : 24;
-  let body;
-  if (state === "loading") body = <Center><CmpCircularProgressIndicator /><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Загружаем список версий…")}</CmpText></Center>;
-  else if (state === "empty") body = <Center><Hero icon="inventory_2" tone="neutral" size={88} /><CmpText variant="titleLarge">{L("Для данного устройства не найдено прошивок. Попробуйте позже")}</CmpText><CmpOutlinedButton text={L("Обновить")} icon="refresh" fullWidth style={{ height: 52 }} onClick={() => setState("loading")} /></Center>;
-  else if (state === "error") body = <Center><Hero icon="cloud_off" tone="neutral" size={88} /><CmpText variant="titleLarge">{L("Нет связи с сервером")}</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Не удалось загрузить список версий. Проверьте интернет и повторите.")}</CmpText><CmpButton text={L("Повторить")} icon="refresh" fullWidth style={{ height: 52 }} onClick={() => setState("loading")} /></Center>;
-  else {
-    const footer = state === "more" ? <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, minHeight: 56 }}><Spin /><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Загружаем ещё…")}</CmpText></div>
-      : state === "moreerror" ? <Banner icon="cloud_off" tone="error"><span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><span>{L("Не удалось загрузить ещё версии")}</span><CmpTextButton text={L("Повторить")} onClick={() => setState("more")} style={btn48} /></span></Banner> : null;
-    const rows = list.map((it, i) => <VerRow key={it.v} i={i} it={it} kind={kindOf(i)} wide={wide} sel={wide && selV === it.v} onSelect={() => setSelV(it.v)} onPick={() => pick(it, i)} />);
-    const warn = channel !== "release" && <Banner icon="warning">{L(FW_TEST_WARN)}</Banner>;
-    body = wide ? (
-      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 24, padding: 24, boxSizing: "border-box", maxWidth: 1180, width: "100%", margin: "0 auto" }}>
-        <div style={{ flex: "0 0 440px", minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column", gap: 12, padding: 2 }}>{warn}{rows}{footer}</div>
-        <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "auto" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 24, borderRadius: 20, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}><Ver v={sel.v} size={34} />{kindOf(selI) !== "new" && <VerBadge kind={kindOf(selI)} />}</div>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, color: "var(--on-surface-variant)" }}>{sel.d}</span>
-            </div>
-            <div><CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("Полное описание")}</CmpText>
-              <div style={{ whiteSpace: "pre-line", marginTop: 6, maxHeight: 300, overflowY: "auto" }} tabIndex={0}><CmpText variant="bodyLarge">{sel.desc ? L(sel.desc) : L("Описание отсутствует")}</CmpText></div></div>
-            {kindOf(selI) === "older" && <Banner icon="warning">{L("Выбранная версия старее установленной")} <Ver v={FW_INSTALLED} color="currentColor" size={14} /></Banner>}
-            {kindOf(selI) === "installed" && <Banner icon="info" tone="ok">{L("Эта версия уже установлена. Можно переустановить")}</Banner>}
-            <CmpButton text={kindOf(selI) === "installed" ? L("Переустановить") : L("Установить")} icon="system_update" style={{ height: 52, alignSelf: "flex-start", minWidth: 240 }} onClick={() => pick(sel, selI)} />
-          </div>
-        </div>
-      </div>
-    ) : (
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: pad, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 12 }}>{warn}{rows}{footer}</div>
-      </div>
-    );
+// CAN выбранной версии в правой панели широкого окна.
+function CanInfo({ it, blk, entry }) {
+  const mine = !!blk && it.can === blk.can;
+  const pill = (on, text) => <span style={{ display: "inline-flex", alignItems: "center", gap: 4, height: 28, padding: "0 12px", borderRadius: 999, font: "600 13px var(--font-sans)", whiteSpace: "nowrap", background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)", border: on ? "none" : "1px solid var(--outline)" }}>{on && <CmpIcon icon="link" size={16} color="currentColor" />}{text}</span>;
+  let note = null;
+  if (entry === "a" && it.can) {
+    if (!blk) note = L("У блока заводские CAN-настройки. После установки блок будет прошит под") + ` CAN ${it.can}.`;
+    else if (!mine) note = `${L("Блок сейчас прошит под")} CAN ${blk.can} · ${blk.prof}. ${L("После установки будет")} CAN ${it.can} · ${it.prof}.`;
+    else if (it.prof !== blk.prof) note = `${L("Код как в блоке, профиль в блоке —")} ${blk.prof}.`;
   }
-  const dlgIt = FW_VERS.find((x) => x.v === dialog);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderRadius: 14, background: "var(--surface-container-high)" }}>
+      <CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("CAN-прошивка")}</CmpText>
+      {it.can ? (
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px 14px" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 700 }}>CAN {it.can}</span>
+          <span style={{ font: "400 16px var(--font-sans)", color: "var(--on-surface-variant)" }}>{L("профиль")} <b style={{ fontFamily: "var(--font-mono)", color: "var(--on-surface)" }}>{it.prof}</b></span>
+          {entry === "a" && blk && pill(mine, mine ? L("как в блоке") : L("другой CAN"))}
+        </div>
+      ) : <CmpText variant="bodyLarge">{L("Без привязки к CAN")}</CmpText>}
+      {note && <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{note}</CmpText>}
+    </div>
+  );
+}
+
+// Шапка архива без блока: модель (нажимается — смена модели), канал, модуль.
+function FwContext({ model, onModel, channel, setChannel, mod, setMod }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, padding: 6, borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+        <button type="button" className="fw-hov" onClick={onModel} aria-label={L("Сменить модель блока")}
+          style={{ flex: "1 1 220px", minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 12, padding: "0 10px", border: "none", borderRadius: 12, background: "transparent", cursor: "pointer", textAlign: "left", color: "var(--on-surface)" }}>
+          <CmpIcon icon="memory" size={26} color="var(--primary)" />
+          <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            <span style={{ font: "500 13px var(--font-sans)", color: "var(--on-surface-variant)" }}>{L("Модель блока")}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 700, overflowWrap: "anywhere" }}>{model}</span>
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 2, color: "var(--primary)", font: "600 14px var(--font-sans)" }}>{L("Сменить")}<CmpIcon icon="chevron_right" size={22} color="currentColor" /></span>
+        </button>
+        <ChannelChip channel={channel} onChange={setChannel} />
+      </div>
+      <div role="radiogroup" aria-label={L("Модуль")} style={{ display: "flex", padding: 4, gap: 4, borderRadius: 999, background: "var(--surface-container-high)" }}>
+        {[["single", "Основная программа"], ["bt", "Bluetooth-модуль"]].map(([k, l]) => {
+          const on = mod === k;
+          return <button key={k} type="button" role="radio" aria-checked={on} onClick={() => !on && setMod(k)}
+            style={{ flex: 1, minHeight: 48, padding: "0 10px", border: "none", borderRadius: 999, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600, background: on ? "var(--primary)" : "transparent", color: on ? "var(--on-primary)" : "var(--on-surface)" }}>{L(l)}</button>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FwArchive({ layout, scenario, channel: ch0, dialog0, entry = "a", canSc = "block", module0 = "single", model = "DX-4GS", platform = "mobile", onBack, onPick, onModel, onChannel, onModule }) {
+  const init = React.useMemo(() => fwCanInit(canSc, entry), []);
+  const blk = entry === "a" ? init.blk : null;
+  const [f, setF] = React.useState(init.f);
+  const [mod, setModRaw] = React.useState(module0);
+  const [channel, setChRaw] = React.useState(ch0);
+  const noFw = scenario === "nofw" || (entry === "b" && model === "IMMO-5");
+  const [state, setState] = React.useState(noFw ? "nofw" : scenario === "loading" ? "loading" : (scenario === "rollback" || scenario === "dl") ? "list" : scenario);
+  const fast = React.useRef(false);
+  const [dialog, setDialog] = React.useState(dialog0 ? FW_VERS.find((x) => x.v === "3.55") : null);
+  const [cat, setCat] = React.useState(false);
+  const [dl, setDl] = React.useState(scenario === "dl" ? { id: vid(FW_VERS[0]), it: FW_VERS[0], done: true } : null);
+  const [toast, setToast] = React.useState(null);
+  const [selId, setSelId] = React.useState(dialog0 ? null : null);
+  const wide = layout === "expanded";
+  const bt = mod === "bt";
+  React.useEffect(() => { if (state !== "loading") return; const t = setTimeout(() => { fast.current = false; setState(noFw ? "nofw" : "list"); }, fast.current ? 700 : 1500); return () => clearTimeout(t); }, [state]);
+  React.useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 3500); return () => clearTimeout(t); }, [toast]);
+  const reload = () => { fast.current = true; setState("loading"); };
+  const setFilter = (nf) => {
+    const f2 = { car: null, ...nf };
+    if (entry === "a" && blk && f2.can === blk.can && f2.src !== "car") f2.src = "block";
+    const changed = f2.can !== f.can || f2.src !== f.src;
+    setF(f2);
+    if (changed && (f2.can.length === 4 || f2.can.length === 0) && state !== "nofw") reload();
+  };
+  const setMod = (m) => { setModRaw(m); onModule && onModule(m); if (state !== "nofw") reload(); };
+  const setChannel = (c) => { setChRaw(c); onChannel && onChannel(c); if (state !== "nofw") reload(); };
+
+  const base = bt ? FW_BT_VERS : FW_VERS;
+  const inst = bt ? FW_BT_INSTALLED : FW_INSTALLED;
+  const list0 = bt ? base : fwFilter(base, f, blk);
+  const isBlockBuild = (it) => !!blk && it.can === blk.can && it.prof === blk.prof;
+  const kindOf = (it) => entry === "b" ? "new" : (it.v === inst && (bt || isBlockBuild(it))) ? "installed" : vnum(it.v) < vnum(inst) ? "older" : "new";
+  const listOn = state === "list" || state === "more" || state === "moreerror";
+  const list = listOn ? list0 : [];
+  const sel = list.find((x) => vid(x) === selId) || list[0];
+  const fname = (it) => `${model}${bt ? "_BT" : ""}_${it.v}${it.can ? "_CAN" + it.can + "-" + it.prof : ""}.bin`;
+  const download = (it) => { const id = vid(it); setDl({ id, it, done: false }); setTimeout(() => setDl((d) => d && d.id === id ? { ...d, done: true } : d), 1200); };
+  const share = (it) => setToast(L("Откроется системное меню «Поделиться»") + ": " + fname(it));
+  const pick = (it) => { if (entry === "b") return download(it); kindOf(it) === "older" ? setDialog(it) : onPick(it, false, blk); };
+  const resetBlk = () => blk && setFilter({ can: blk.can, src: "block" });
+  const pad = layout === "compact" ? 14 : 24;
+  const btn52 = { height: 52 };
+
+  let stateEl = null;
+  if (state === "loading") stateEl = <Center><CmpCircularProgressIndicator /><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Загружаем список версий…")}</CmpText></Center>;
+  else if (state === "empty") stateEl = <Center><Hero icon="inventory_2" tone="neutral" size={88} /><CmpText variant="titleLarge">{L("Для данного устройства не найдено прошивок. Попробуйте позже")}</CmpText><CmpOutlinedButton text={L("Обновить")} icon="refresh" fullWidth style={btn52} onClick={() => setState("loading")} /></Center>;
+  else if (state === "nofw") stateEl = <Center><Hero icon="inventory_2" tone="neutral" size={88} /><CmpText variant="titleLarge">{L("Для модели")} {model} {L("прошивок нет")}</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Проверьте модель на наклейке блока или выберите другую.")}</CmpText><CmpOutlinedButton text={L("Выбрать другую модель")} icon="swap_horiz" fullWidth style={btn52} onClick={onModel} /></Center>;
+  else if (state === "error") stateEl = <Center><Hero icon="cloud_off" tone="neutral" size={88} /><CmpText variant="titleLarge">{L("Нет связи с сервером")}</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Не удалось загрузить список версий. Проверьте интернет и повторите.")}</CmpText><CmpButton text={L("Повторить")} icon="refresh" fullWidth style={btn52} onClick={() => setState("loading")} /></Center>;
+  else if (!list0.length) {
+    const isBlk = entry === "a" && !!blk && f.src === "block";
+    stateEl = (
+      <Center>
+        <Hero icon="search_off" tone="neutral" size={88} />
+        <CmpText variant="titleLarge">{L("Для CAN")} {f.can} {L("прошивок не найдено")}</CmpText>
+        <CmpText variant="bodyLarge" color="var(--on-surface-variant)">{isBlk ? L("Под CAN-код блока сборок нет. Можно поискать под другим кодом: введите его в поле выше или выберите автомобиль.") : f.src === "car" && f.car ? `${f.car}: ${L("сборок под этот CAN-код пока нет.")}` : L("Проверьте код или выберите автомобиль из каталога.")}</CmpText>
+        <CmpButton text={L("Показать все версии")} icon="filter_alt_off" fullWidth style={btn52} onClick={() => setFilter({ can: "", src: entry === "b" ? "none" : "manual" })} />
+        {isBlk && <CmpOutlinedButton text={L("Выбрать автомобиль")} icon="directions_car" fullWidth style={btn52} onClick={() => setCat(true)} />}
+        {!isBlk && entry === "a" && blk && <CmpOutlinedButton text={L("Вернуть CAN блока")} icon="undo" fullWidth style={btn52} onClick={resetBlk} />}
+      </Center>);
+  }
+  const footer = state === "more" ? <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, minHeight: 56 }}><Spin /><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Загружаем ещё…")}</CmpText></div>
+    : state === "moreerror" ? <Banner icon="cloud_off" tone="error"><span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><span>{L("Не удалось загрузить ещё версии")}</span><CmpTextButton text={L("Повторить")} onClick={() => setState("more")} style={btn48} /></span></Banner> : null;
+  const rows = list.map((it, i) => <VerRow key={vid(it)} i={i} it={it} kind={kindOf(it)} wide={wide} blk={bt ? null : blk} entry={entry} sel={wide && sel && vid(sel) === vid(it)} busy={!!dl && !dl.done && dl.id === vid(it)}
+    onSelect={() => setSelId(vid(it))} onPick={() => pick(it)} onShare={() => share(it)} />);
+  const warn = channel !== "release" && <Banner icon="warning">{L(FW_TEST_WARN)}</Banner>;
+  const canBox = !bt && <CanField f={f} setF={setFilter} blk={blk} entry={entry} onCatalog={() => setCat(true)} onReset={resetBlk} />;
+  const strip = entry === "b" && <FwContext model={model} onModel={onModel} channel={channel} setChannel={setChannel} mod={mod} setMod={setMod} />;
+  const main = stateEl || <React.Fragment>{rows}{footer}</React.Fragment>;
+
+  let detail = null;
+  if (wide && sel && !stateEl) {
+    const k = kindOf(sel), busy = !!dl && !dl.done && dl.id === vid(sel);
+    detail = (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 24, borderRadius: 20, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}><Ver v={sel.v} size={34} />{k !== "new" && <VerBadge kind={k} />}</div>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, color: "var(--on-surface-variant)" }}>{sel.d}</span>
+        </div>
+        {!bt && <CanInfo it={sel} blk={blk} entry={entry} />}
+        <div><CmpText variant="labelLarge" color="var(--on-surface-variant)">{L("Полное описание")}</CmpText>
+          <div style={{ whiteSpace: "pre-line", marginTop: 6, maxHeight: 260, overflowY: "auto" }} tabIndex={0}><CmpText variant="bodyLarge">{sel.desc ? L(sel.desc) : L("Описание отсутствует")}</CmpText></div></div>
+        {k === "older" && <Banner icon="warning">{L("Выбранная версия старее установленной")} <Ver v={inst} color="currentColor" size={14} /></Banner>}
+        {k === "installed" && <Banner icon="info" tone="ok">{L("Эта версия уже установлена. Можно переустановить")}</Banner>}
+        {entry === "b"
+          ? <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <CmpButton text={busy ? L("Скачиваем…") : L("Скачать")} icon="download" disabled={busy} style={{ height: 52, minWidth: 200 }} onClick={() => download(sel)} />
+              <CmpOutlinedButton text={L("Поделиться")} icon="share" style={{ height: 52, minWidth: 180 }} onClick={() => share(sel)} />
+            </div>
+          : <CmpButton text={k === "installed" ? L("Переустановить") : L("Установить")} icon="system_update" style={{ height: 52, alignSelf: "flex-start", minWidth: 240 }} onClick={() => pick(sel)} />}
+      </div>);
+  } else if (wide) detail = (
+    <div style={{ height: "100%", minHeight: 240, display: "grid", placeItems: "center", borderRadius: 20, border: "1px dashed var(--outline-variant)", padding: 24, boxSizing: "border-box", textAlign: "center" }}>
+      <CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Описание версии появится здесь")}</CmpText>
+    </div>);
+
+  const body = wide ? (
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 16, padding: 24, boxSizing: "border-box", maxWidth: 1180, width: "100%", margin: "0 auto" }}>
+      {strip}
+      <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 24 }}>
+        <div style={{ flex: "0 0 440px", minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column", gap: 12, padding: 2 }}>{warn}{canBox}{main}</div>
+        <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "auto" }}>{detail}</div>
+      </div>
+    </div>
+  ) : (
+    <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: pad, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 12 }}>{strip}{warn}{canBox}{main}</div>
+    </div>
+  );
+  const sub = entry === "b" ? model + (bt ? " · " + L("Bluetooth-модуль") : "") : fwSub(bt ? "bt" : "single");
   return (
     <React.Fragment>
-      <CmpTopAppBar title={L("Архив прошивок")} subtitle={fwSub("single")} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription={L("Назад")} onClick={onBack} />}
-        actions={<button type="button" aria-label={L("Обновить список")} onClick={() => setState("loading")} style={{ width: 48, height: 48, border: "none", background: "transparent", borderRadius: 999, display: "grid", placeItems: "center", cursor: "pointer", color: "var(--primary)" }}><CmpIcon icon="refresh" size={26} color="currentColor" /></button>} />
+      <CmpTopAppBar title={L("Архив прошивок")} subtitle={sub} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription={L("Назад")} onClick={onBack} />}
+        actions={<FwIconBtn icon="refresh" label={L("Обновить список")} onClick={() => setState("loading")} color="var(--primary)" />} />
       {body}
-      {dlgIt && (
+      {dialog && (
         <CmpDialog open onDismissRequest={() => setDialog(null)} icon="warning" title={L("Установить более старую версию?")} style={{ maxWidth: 440 }}
-          text={<span>{L("Выбранная версия")} <Ver v={dlgIt.v} /> {L("старее установленной")} <Ver v={FW_INSTALLED} />. {L("Новые функции и исправления в ней могут отсутствовать.")}</span>}
+          text={<span>{L("Выбранная версия")} <Ver v={dialog.v} /> {L("старее установленной")} <Ver v={inst} />. {L("Новые функции и исправления в ней могут отсутствовать.")}</span>}
           dismissButton={<CmpTextButton text={L("Отмена")} onClick={() => setDialog(null)} style={btn48} />}
-          confirmButton={<CmpButton text={L("Установить")} onClick={() => { setDialog(null); onPick(dlgIt.v, true); }} style={btn48} />} />)}
+          confirmButton={<CmpButton text={L("Установить")} onClick={() => { const it = dialog; setDialog(null); onPick(it, true, blk); }} style={btn48} />} />)}
+      {cat && (
+        <CmpDialog open onDismissRequest={() => setCat(false)} icon="directions_car" title={L("Каталог автомобилей")} style={{ maxWidth: 460 }}
+          text={<span style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <span>{L("Общий экран каталога. Для примера — недавние:")}</span>
+            {FW_CARS.map((c) => (
+              <button key={c.can} type="button" className="fw-hov" onClick={() => { setCat(false); setFilter({ can: c.can, src: "car", car: c.name }); }}
+                style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "0 14px", border: "none", borderRadius: 12, background: "var(--surface-container-high)", cursor: "pointer", textAlign: "left", color: "var(--on-surface)", font: "500 16px var(--font-sans)" }}>
+                <CmpIcon icon="directions_car" size={24} color="var(--primary)" /><span style={{ flex: 1 }}>{c.name}</span><span style={{ fontFamily: "var(--font-mono)", color: "var(--on-surface-variant)" }}>CAN {c.can}</span>
+              </button>))}
+          </span>}
+          dismissButton={<CmpTextButton text={L("Отмена")} onClick={() => setCat(false)} style={btn48} />} />)}
+      {dl && dl.done && (
+        <CmpDialog open onDismissRequest={() => setDl(null)} icon="download_done" title={L("Прошивка скачана")} style={{ maxWidth: 460 }}
+          text={<span style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <span>{platform === "desktop" ? L("Файл сохранён в папку:") : L("Файл сохранён в «Файлы» → «Загрузки»:")}</span>
+            {platform === "desktop" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, overflowWrap: "anywhere" }}>C:\Users\Мастер\Downloads\Pandora Spec</span>}
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, fontWeight: 600, color: "var(--on-surface)", padding: "10px 12px", borderRadius: 10, background: "var(--surface-container-highest)", overflowWrap: "anywhere" }}>{fname(dl.it)}</span>
+            <span>{L("Установить файл можно позже: «Обновление прошивки» → «Выбрать файл…».")}</span>
+          </span>}
+          dismissButton={<CmpTextButton text={L("Готово")} onClick={() => setDl(null)} style={btn48} />}
+          confirmButton={platform === "desktop"
+            ? <CmpButton text={L("Открыть папку")} onClick={() => { setDl(null); setToast(L("Папка откроется в проводнике")); }} style={btn48} />
+            : <CmpButton text={L("Поделиться")} onClick={() => { const it = dl.it; setDl(null); share(it); }} style={btn48} />} />)}
+      {toast && <div role="status" style={{ position: "absolute", left: 16, right: 16, bottom: 16, margin: "0 auto", maxWidth: 560, padding: "14px 16px", borderRadius: 12, background: "var(--inverse-surface)", color: "var(--inverse-on-surface)", boxShadow: "var(--elevation-2)", zIndex: 30, font: "500 15px/1.35 var(--font-sans)", overflowWrap: "anywhere" }}>{toast}</div>}
     </React.Fragment>
   );
 }
 
-// ════════ Контейнер: проверка ⇄ обновление ════════════════════════════════════
-function FirmwareApp({ view = "check", scenario = "list", dialog = null, channel = "release", profile = "single", phase = "source", reserve = false, onBack = () => {} }) {
+// Вход Б, шаг 1: выбор модели блока. В приложении — тот же экран K2 конфигуратора (ModelsScreen),
+// здесь повторён его вид без зависимостей конфигуратора.
+function FwModels({ current, onPick, onBack }) {
+  const [q, setQ] = React.useState("");
+  const ql = q.trim().toLowerCase();
+  const all = FW_MODELS.filter((m) => !ql || m.toLowerCase().includes(ql));
+  const sec = (t) => <div style={{ padding: "14px 20px 4px" }}><CmpText variant="labelLarge" color="var(--on-surface-variant)">{t}</CmpText></div>;
+  const row = (m, icon) => (
+    <button key={icon + m} type="button" className="fw-hov" onClick={() => onPick(m)}
+      style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", minHeight: 64, padding: "0 16px 0 20px", border: "none", background: m === current ? "var(--secondary-container)" : "transparent", cursor: "pointer", textAlign: "left", color: m === current ? "var(--on-secondary-container)" : "var(--on-surface)", boxSizing: "border-box" }}>
+      <span style={{ width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--surface-container-highest)", flex: "0 0 auto" }}><CmpIcon icon={icon} size={22} color="var(--on-surface-variant)" /></span>
+      <span style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: 17, fontWeight: 600 }}>{m}</span>
+      {m === current && <CmpIcon icon="check" size={22} color="var(--primary)" />}
+      <CmpIcon icon="chevron_right" size={24} color="var(--on-surface-variant)" />
+    </button>);
+  return (
+    <React.Fragment>
+      <CmpTopAppBar title={L("Модель блока")} subtitle={L("Архив прошивок без подключения")} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription={L("Назад")} onClick={onBack} />} />
+      <div style={{ padding: "4px 16px 8px", maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 56, padding: "0 4px 0 16px", borderRadius: 999, background: "var(--surface-container-high)" }}>
+          <CmpIcon icon="search" size={24} color="var(--on-surface-variant)" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("Название модели")} aria-label={L("Название модели")}
+            style={{ flex: 1, minWidth: 0, height: 52, border: "none", outline: "none", background: "transparent", font: "400 17px var(--font-sans)", color: "var(--on-surface)" }} />
+          {q && <FwIconBtn icon="close" label={L("Очистить")} onClick={() => setQ("")} />}
+        </div>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", paddingBottom: 24 }}>
+          {!ql && <React.Fragment>{sec(L("Недавние"))}{FW_RECENT.map((m) => row(m, "history"))}</React.Fragment>}
+          {sec(ql ? L("Найдено:") + " " + all.length : L("Все модели") + " · " + FW_MODELS.length)}
+          {all.map((m) => row(m, "memory"))}
+          {ql && !all.length && <Center><Hero icon="search_off" tone="neutral" size={72} /><CmpText variant="titleMedium">{L("Модели нет:")} «{q}»</CmpText><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Проверьте название на наклейке блока.")}</CmpText></Center>}
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+// ════════ Контейнер: проверка ⇄ обновление ⇄ архив; вход Б: модель → архив ════════
+function FirmwareApp({ view = "check", entry = "a", scenario = "list", dialog = null, channel = "release", profile = "single", phase = "source", reserve = false, canSc = "block", module = "single", nextCan = null, nextVer = null, blkFactory = false, platform = "mobile", onBack = () => {}, onHome }) {
   const [rootRef, layout] = useFwWidth();
   const [v, setV] = React.useState(view);
   const [ch, setCh] = React.useState(channel);
+  const [mod, setMod] = React.useState(module);
   const [ph, setPh] = React.useState(phase);
   const [n, setN] = React.useState(0);
-  const [nx, setNx] = React.useState({ v: null, dg: false, live: false });
+  const [model, setModel] = React.useState("DX-4GS");
+  const [fromArch, setFromArch] = React.useState(false);
+  const [nx, setNx] = React.useState({ v: nextVer, dg: false, live: false, can: nextCan, blk: blkFactory ? null : FW_BLOCK_CAN });
+  const home = onHome || onBack;
+  const go = (x) => { setV(x); setN((k) => k + 1); };
+  let screen;
+  if (entry === "b") {
+    screen = v === "models"
+      ? <FwModels key={"m" + n} current={fromArch ? model : null} onBack={() => fromArch ? go("archive") : home()} onPick={(m) => { setModel(m); go("archive"); }} />
+      : <FwArchive key={"b" + n} entry="b" layout={layout} platform={platform} scenario={n ? "list" : scenario} canSc={n ? "none" : canSc} channel={ch} module0={mod} model={model}
+          onChannel={setCh} onModule={setMod} onBack={() => { setFromArch(false); go("models"); }} onModel={() => { setFromArch(true); go("models"); }} />;
+  } else if (v === "archive") {
+    screen = <FwArchive key={"a" + n} layout={layout} platform={platform} scenario={scenario} channel={ch} dialog0={dialog === "rollback"} canSc={canSc} module0={profile === "bt" ? "bt" : module}
+      onBack={() => { setPh("source"); setNx({ v: null, dg: false, live: false, can: null, blk: FW_BLOCK_CAN }); go("update"); }}
+      onPick={(it, dg, blk) => { setNx({ v: it.v, dg, live: true, can: it.can ? { can: it.can, prof: it.prof } : null, blk }); setPh("download"); go("update"); }} />;
+  } else if (v === "check") {
+    screen = <FwCheck key={"c" + n} layout={layout} scenario={scenario} dialog0={dialog} channel0={ch} onBack={onBack} onEnter={(c) => { setCh(c); setPh("entering"); go("update"); }} />;
+  } else {
+    screen = <FwUpdate key={"u" + n} layout={layout} profile={profile} phase0={ph} channel0={ch} reserve={reserve} live0={nx.live} nextVer={nx.v} nextCan={profile === "bt" ? null : nx.can} blkCan={nx.blk} downgrade={nx.dg} onBack={() => go("check")} onDone={onBack} onArchive={() => go("archive")} />;
+  }
   return (
-    <div ref={rootRef} style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)", overflow: "hidden" }}>
-      {v === "archive"
-        ? <FwArchive key={"a" + n} layout={layout} scenario={scenario} channel={ch} dialog0={dialog === "rollback"} onBack={() => { setPh("source"); setNx({ v: null, dg: false, live: false }); setV("update"); setN(n + 1); }} onPick={(ver, dg) => { setNx({ v: ver, dg, live: true }); setPh("download"); setV("update"); setN(n + 1); }} />
-        : v === "check"
-        ? <FwCheck key={"c" + n} layout={layout} scenario={scenario} dialog0={dialog} channel0={ch} onBack={onBack} onEnter={(c) => { setCh(c); setPh("entering"); setV("update"); setN(n + 1); }} />
-        : <FwUpdate key={"u" + n} layout={layout} profile={profile} phase0={ph} channel0={ch} reserve={reserve} live0={nx.live} nextVer={nx.v} downgrade={nx.dg} onBack={() => { setV("check"); setN(n + 1); }} onDone={onBack} onArchive={() => { setV("archive"); setN(n + 1); }} />}
-    </div>
+    <div ref={rootRef} style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)", overflow: "hidden" }}>{screen}</div>
   );
 }
 
@@ -585,25 +900,38 @@ function FwSeg({ items, value, onChange }) {
 }
 const FW_CHECK_OPTS = [["list", "Список"], ["states", "Состояния карточки"], ["loading", "Загрузка"], ["error", "Ошибка списка"], ["beta", "Beta-канал"], ["desc", "Диалог описания"], ["nodesc", "Описание пустое"], ["confirm", "Подтверждение"], ["pin", "PIN-диалог"], ["pinerr", "PIN: ошибка"]];
 const FW_ARCH_OPTS = [["list", "Список"], ["loading", "Загрузка"], ["more", "Догрузка"], ["moreerror", "Ошибка догрузки"], ["empty", "Пусто"], ["error", "Нет связи"], ["rollback", "Откат (диалог)"]];
-const FW_UPD_OPTS = [["entering", "Вход в загрузчик"], ["source", "Выбор источника"], ["dataerror", "Ошибка данных"], ["download", "1 Скачивание"], ["confirm", "2 Подтверждение"], ["prepare", "3 Подготовка"], ["transfer", "4 Передача"], ["verify", "5 Проверка"], ["apply", "6 Применение"], ["success", "7 Успех"], ["finishing", "Ожидание блока"], ["error", "8 Ошибка"], ["lost", "Обрыв связи"]];
+const FW_ARCH_OPTS_B = [["list", "Список"], ["loading", "Загрузка"], ["more", "Догрузка"], ["moreerror", "Ошибка догрузки"], ["nofw", "У модели нет прошивок"], ["error", "Нет связи"], ["dl", "Скачано (диалог)"]];
+const FW_CAN_A = [["block", "CAN: код блока"], ["other", "Другой код"], ["car", "Из автомобиля"], ["cleared", "Поле очищено"], ["partial", "1–3 цифры"], ["factory", "Заводские CAN"], ["emptyblock", "Пусто: код блока"], ["emptyother", "Пусто: другой код"]];
+const FW_CAN_B = [["none", "CAN: пусто"], ["car", "Из автомобиля"], ["other", "Введён код"], ["partial", "1–3 цифры"], ["emptyother", "Пусто под фильтром"]];
+const FW_UPD_OPTS = [["entering", "Вход в загрузчик"], ["source", "Выбор источника"], ["dataerror", "Ошибка данных"], ["download", "1 Скачивание"], ["confirm", "2 Подтверждение"], ["confirmcan", "2 Подтверждение · другой CAN"], ["prepare", "3 Подготовка"], ["transfer", "4 Передача"], ["verify", "5 Проверка"], ["apply", "6 Применение"], ["success", "7 Успех"], ["finishing", "Ожидание блока"], ["error", "8 Ошибка"], ["lost", "Обрыв связи"]];
 function useFwCtl() {
   const [dark, setDarkRaw] = React.useState(() => { try { const v = localStorage.getItem("ps-theme"); return v ? v === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) { return false; } });
   const setDark = (v) => { setDarkRaw(v); try { localStorage.setItem("ps-theme", v ? "dark" : "light"); } catch (e) {} };
   React.useEffect(() => { document.body.classList.toggle("page-dark", dark); }, [dark]);
+  const [entry, setEntry] = React.useState(() => { try { return new URLSearchParams(location.search).get("profile") === "nounit" ? "b" : "a"; } catch (e) { return "a"; } });
   const [view, setView] = React.useState("check");
+  const [bview, setBview] = React.useState("models");
   const [sc, setSc] = React.useState("list");
   const [ph, setPh] = React.useState("source");
   const [asc, setAsc] = React.useState("list");
+  const [bsc, setBsc] = React.useState("list");
+  const [acan, setAcan] = React.useState("block");
+  const [bcan, setBcan] = React.useState("none");
+  const [amod, setAmod] = React.useState("single");
   const [ach, setAch] = React.useState("release");
   const [profile, setProfile] = React.useState("single");
   const [reserve, setReserve] = React.useState(false);
+  const [ufac, setUfac] = React.useState(false);
   const [lang, setLang] = React.useState("ru");
   const [long, setLong] = React.useState(false);
   window.FW_LANG = lang; window.FW_LONG = long;
-  const props = view === "check"
-    ? { view, scenario: sc === "beta" || sc === "desc" || sc === "confirm" || sc === "pin" || sc === "pinerr" ? "list" : sc, dialog: sc === "desc" || sc === "nodesc" ? "desc" : sc === "confirm" ? "confirm" : sc === "pin" || sc === "pinerr" ? sc : null, channel: sc === "beta" ? "beta" : "release" }
-    : view === "archive" ? { view, scenario: asc === "rollback" ? "list" : asc, dialog: asc === "rollback" ? "rollback" : null, channel: ach }
-    : { view, phase: ph, profile, reserve };
+  let props;
+  if (entry === "b") props = { view: bview, entry: "b", scenario: bsc, channel: ach, canSc: bcan, module: amod };
+  else if (view === "check") props = { view, scenario: sc === "beta" || sc === "desc" || sc === "confirm" || sc === "pin" || sc === "pinerr" ? "list" : sc, dialog: sc === "desc" || sc === "nodesc" ? "desc" : sc === "confirm" ? "confirm" : sc === "pin" || sc === "pinerr" ? sc : null, channel: sc === "beta" ? "beta" : "release" };
+  else if (view === "archive") props = { view, scenario: asc === "rollback" ? "list" : asc, dialog: asc === "rollback" ? "rollback" : null, channel: ach, canSc: acan, module: amod };
+  else props = { view, phase: ph === "confirmcan" ? "confirm" : ph, profile, reserve, nextCan: ph === "confirmcan" ? { can: "3312", prof: "1.01" } : ph === "confirm" ? { can: "2154", prof: "1.03" } : null, nextVer: ph === "confirmcan" || ph === "confirm" ? "3.61" : null, blkFactory: ufac };
+  const chSeg = <FwSeg items={[["release", "Готовая"], ["beta", "Beta"], ["alpha", "Alpha"]]} value={ach} onChange={setAch} />;
+  const modSeg = <FwSeg items={[["single", "Основная"], ["bt", "Bluetooth-модуль"]]} value={amod} onChange={setAmod} />;
   const bar = (
     <React.Fragment>
       <button type="button" className="theme-fab" onClick={() => setDark(!dark)} aria-label={dark ? "Светлая тема" : "Тёмная тема"} title={dark ? "Светлая тема" : "Тёмная тема"}>{dark ? "☀" : "☾"}</button>
@@ -611,22 +939,30 @@ function useFwCtl() {
         <FwSeg items={[["ru", "RU"], ["en", "EN"]]} value={lang} onChange={setLang} />
         <FwSeg items={[["0", "Имена: короткие"], ["1", "Имена: 40 символов"]]} value={long ? "1" : "0"} onChange={(x) => setLong(x === "1")} />
         <FwSeg items={[["l", "Светлая"], ["d", "Тёмная"]]} value={dark ? "d" : "l"} onChange={(x) => setDark(x === "d")} />
-        <FwSeg items={[["check", "Проверка прошивки"], ["update", "Обновление прошивки"], ["archive", "Архив прошивок"]]} value={view} onChange={setView} />
+        <FwSeg items={[["a", "Вход А: блок подключён"], ["b", "Вход Б: без блока"]]} value={entry} onChange={setEntry} />
       </div>
       <div className="toolbar">
-        {view === "check"
+        {entry === "a"
+          ? <FwSeg items={[["check", "Проверка прошивки"], ["update", "Обновление прошивки"], ["archive", "Архив прошивок"]]} value={view} onChange={setView} />
+          : <FwSeg items={[["models", "1 Выбор модели"], ["archive", "2 Архив без блока"]]} value={bview} onChange={setBview} />}
+      </div>
+      <div className="toolbar">
+        {entry === "b"
+          ? (bview === "archive" ? <React.Fragment><FwSeg items={FW_ARCH_OPTS_B} value={bsc} onChange={setBsc} /><FwSeg items={FW_CAN_B} value={bcan} onChange={setBcan} />{chSeg}{modSeg}</React.Fragment> : null)
+          : view === "check"
           ? <FwSeg items={FW_CHECK_OPTS} value={sc} onChange={setSc} />
           : view === "archive"
-          ? <React.Fragment><FwSeg items={FW_ARCH_OPTS} value={asc} onChange={setAsc} /><FwSeg items={[["release", "Готовая"], ["beta", "Beta"]]} value={ach} onChange={setAch} /></React.Fragment>
+          ? <React.Fragment><FwSeg items={FW_ARCH_OPTS} value={asc} onChange={setAsc} /><FwSeg items={FW_CAN_A} value={acan} onChange={setAcan} />{chSeg}{modSeg}</React.Fragment>
           : <React.Fragment>
               <FwSeg items={FW_UPD_OPTS} value={ph} onChange={setPh} />
               <FwSeg items={[["single", "1 подсистема"], ["multi", "Несколько"], ["bt", "Bluetooth-модуль"]]} value={profile} onChange={setProfile} />
               <FwSeg items={[["0", "Резерв скрыт"], ["1", "Резерв показан"]]} value={reserve ? "1" : "0"} onChange={(x) => setReserve(x === "1")} />
+              <FwSeg items={[["0", "CAN блока 2154"], ["1", "Заводские CAN"]]} value={ufac ? "1" : "0"} onChange={(x) => setUfac(x === "1")} />
             </React.Fragment>}
       </div>
     </React.Fragment>
   );
-  return { dark, props, bar, key: [view, sc, asc, ach, ph, profile, reserve, lang, long].join() };
+  return { dark, props, bar, key: [entry, view, bview, sc, asc, bsc, acan, bcan, amod, ach, ph, profile, reserve, ufac, lang, long].join() };
 }
 
-Object.assign(window, { FirmwareApp, useFwCtl });
+Object.assign(window, { FirmwareApp, useFwCtl, FwSeg });

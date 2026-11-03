@@ -74,6 +74,11 @@ function HomeApp({
       const target = isDesktop ? "device-select-desktop" : "device-select";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
+    if (key === "firmware") {
+      // «Архив прошивок» без подключённого блока → вход Б: выбор модели → архив.
+      const target = isDesktop ? "firmware-desktop" : "firmware";
+      if (window.psHas && window.psHas(target)) window.psGo(target, "nounit");
+    }
     if (key === "configurator") {
       const target = isDesktop ? "configurator-desktop" : "configurator";
       if (window.psHas && window.psHas(target)) window.psGo(target);

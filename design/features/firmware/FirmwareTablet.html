@@ -54,7 +54,7 @@
           <div className="scaler" style={{ transform: `scale(${scale})` }}>
             <div className="tablet">
               <div className="screen" data-theme={c.dark ? "dark" : undefined} style={{ width: w, height: h }}>
-                <window.FirmwareApp key={orient + c.key} {...c.props} onBack={() => window.psGo("advanced-mount-tablet")} />
+                <window.FirmwareApp key={orient + c.key} {...c.props} platform="tablet" onBack={() => window.psGo("advanced-mount-tablet")} onHome={() => window.psGo("home-tablet")} />
               </div>
             </div>
           </div>
