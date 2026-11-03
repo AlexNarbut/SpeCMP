@@ -25,6 +25,8 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
     }
 
     fun submit() {
+        // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
+        if (_state.value.resetState is LCEState.Loading) return
         val credentials = ResetPasswordCredentials(email = _state.value.email)
         // Валидация — до запроса (как в регистрации): без мигания Loading перед ошибкой формы.
         if (credentials.validationError() != null) {

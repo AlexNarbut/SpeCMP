@@ -56,6 +56,7 @@ kotlin {
             implementation(project(":feature:device:settings-ui"))
             implementation(project(":feature:device:interaction-ui"))
             implementation(project(":feature:advanced-mount"))
+            implementation(project(":feature:fast-mount"))
 
             // Compose
             implementation(libs.compose.runtime)

@@ -1,0 +1,187 @@
+
+<!-- @dsCard group="Быстрый монтаж" viewport="1400x1000" name="Быстрый монтаж — состояния" subtitle="W1 колонка шагов (все статусы, появление Clone, перезагрузка) и F1–F17 на телефоне и в широком окне; light & dark" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Быстрый монтаж: состояния</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; padding: 20px 24px 40px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: sticky; top: 0; z-index: 50; padding: 8px 0; }
+  .seg { display: flex; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  h1 { font-size: 26px; margin: 8px 0 4px; color: #1d2124; }
+  h2 { font-size: 20px; margin: 36px 0 4px; color: #1d2124; }
+  p.note { margin: 0 0 14px; font-size: 14px; color: #3a3f44; max-width: 900px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 24px 20px; align-items: flex-start; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .cap { font-size: 14px; font-weight: 600; color: #222; max-width: 420px; }
+  .frame { border-radius: 14px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.22); background: var(--background); position: relative; }
+  .scaler { transform-origin: top left; }
+  body.page-dark { background: #101314; }
+  body.page-dark h1, body.page-dark h2, body.page-dark .cap { color: #dde2e6; }
+  body.page-dark p.note { color: #aab2b8; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+<script>window.CS_BASE = "../check-state/";</script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="../check-state/CheckState.jsx?v=3"></script>
+<script type="text/babel" src="./FastMount.jsx?v=3"></script>
+<script type="text/babel">
+  const PH = { w: 412, h: 840, s: 0.6 };
+  const TB = { w: 1280, h: 800, s: 0.5 };
+  const SM = { w: 800, h: 600, s: 0.6 };
+  function Frame({ dark, size, children }) {
+    return (
+      <div className="frame" style={{ width: size.w * size.s, height: size.h * size.s }}>
+        <div className="scaler" style={{ transform: `scale(${size.s})`, width: size.w, height: size.h }}>
+          <div data-theme={dark ? "dark" : undefined} style={{ width: size.w, height: size.h, background: "var(--background)" }}>{children}</div>
+        </div>
+      </div>
+    );
+  }
+  function Tile({ dark, code, cap, wide, small, conn }) {
+    return (
+      <div className="cell">
+        <div className="cap">{cap}</div>
+        <Frame dark={dark} size={small ? SM : wide ? TB : PH}><window.FastMountApp preset={code} conn={conn || "ble"} frozen forceLayout={wide ? "wide" : "compact"} onHome={() => {}} /></Frame>
+      </div>
+    );
+  }
+  function Rail({ dark, cap, ...p }) {
+    return (
+      <div className="cell">
+        <div className="cap">{cap}</div>
+        <div className="frame" data-theme={dark ? "dark" : undefined} style={{ width: 300, height: 700 }}><window.FM_StepRail {...p} /></div>
+      </div>
+    );
+  }
+  function CloneDemo({ dark }) {
+    const [need, setNeed] = React.useState(null);
+    const [k, setK] = React.useState(0);
+    return (
+      <div className="cell">
+        <div className="cap">Анимация: появление Clone (обход его потребовал)</div>
+        <div className="seg" style={{ alignSelf: "flex-start" }}>
+          <button className={need === null ? "on" : ""} onClick={() => { setNeed(null); setK(k + 1); }}>До итога обхода</button>
+          <button className={need === true ? "on" : ""} onClick={() => setNeed(true)}>▶ Нужен Clone</button>
+        </div>
+        <div className="frame" data-theme={dark ? "dark" : undefined} style={{ width: 300, height: 700 }}><window.FM_StepRail key={k} cur="bypass" cloneNeeded={need} cfgChosen /></div>
+      </div>
+    );
+  }
+  function Sec({ title, note, children }) {
+    return <React.Fragment><h2>{title}</h2>{note && <p className="note">{note}</p>}<div className="grid">{children}</div></React.Fragment>;
+  }
+  function App() {
+    const [dark, setDark] = React.useState(new URLSearchParams(location.search).get("theme") === "dark");
+    React.useEffect(() => { document.body.classList.toggle("page-dark", dark); }, [dark]);
+    const T = (code, cap, o = {}) => <Tile key={code + cap} dark={dark} code={code} cap={cap} {...o} />;
+    return (
+      <React.Fragment>
+        <div className="toolbar"><div className="seg"><button className={!dark ? "on" : ""} onClick={() => setDark(false)}>Светлая</button><button className={dark ? "on" : ""} onClick={() => setDark(true)}>Тёмная</button></div></div>
+        <h1>Быстрый монтаж — состояния</h1>
+        <p className="note">Кликабельный мастер — FastMount.html / FastMountTablet.html / FastMountDesktop.html. Здесь превью заморожены (без таймеров).</p>
+
+        <Sec title="W1 · Колонка шагов (планшет, desktop)" note="Вариант B. Статусы: пройден ✓, текущий (акцент, подложка), впереди, по необходимости (Clone пунктиром), пропущен, следующий после перезагрузки (пульсирует). Перезагрузка — «бегущая» линия с таймером между шагами. Тап по шагу — короткая справка, перехода нет. Подготовка — одна точка с подшагами.">
+          <Rail dark={dark} cap="Подготовка: конфигурация" cur="prep" prepSub="config" />
+          <Rail dark={dark} cap="Монтаж · Clone по необходимости" cur="mount" cfgChosen />
+          <Rail dark={dark} cap="Перезагрузка: обход → Clone" cur="bypass" cloneNeeded reboot={{ from: "bypass", to: "clone" }} rebootSecs={7} cfgChosen />
+          <Rail dark={dark} cap="Clone не потребовался · Slave" cur="slave" cloneNeeded={false} cfgChosen />
+          <Rail dark={dark} cap="USB: без Slave и проверки · справка открыта" conn="usb" cur="bypass" cfgChosen initialHelp="clone" />
+          <CloneDemo dark={dark} />
+          <div className="cell"><div className="cap">Компактная колонка (окно 760–899, Medium)</div><div className="frame" data-theme={dark ? "dark" : undefined} style={{ width: 88, height: 700 }}><window.FM_StepRail compact cur="mount" /></div></div>
+          <div className="cell"><div className="cap">Невысокое окно (&lt; 860): без карточки авто</div><div className="frame" data-theme={dark ? "dark" : undefined} style={{ width: 264, height: 600 }}><window.FM_StepRail width={264} dense cur="check" cloneNeeded={false} cfgChosen /></div></div>
+        </Sec>
+
+        <Sec title="Широкое окно (1280×800)" note="Колонка шагов слева, topbar и панель главной кнопки — справа. Контент с max-width.">
+          {T("F5a", "F5 · Сводка", { wide: true })}
+          {T("F8b", "F8 · Монтаж: карта слева, фото справа", { wide: true })}
+          {T("F9", "F9 · Перезагрузка: монтаж → обход", { wide: true })}
+          {T("F10b", "F10 · Итог «нужен Clone»", { wide: true })}
+          {T("F12", "F12 · Проверка системы внутри мастера", { wide: true })}
+          {T("F11", "F11 · Slave: «Обучение выполнено» рядом с «Далее»", { wide: true })}
+          {T("F4b", "F4 · Карточка конфигурации, несовпадение CAN", { wide: true })}
+          {T("F14", "F14 · Готово", { wide: true })}
+        </Sec>
+
+        <Sec title="Минимальное окно Desktop (800×600)" note="Колонка шагов компактная (88 dp, только номера; название и справка — по тапу), окно невысокое — контент одной колонкой со скроллом, главная кнопка закреплена.">
+          {T("F1", "F1 · Поиск", { wide: true, small: true })}
+          {T("F4b", "F4 · Карточка конфигурации, несовпадение CAN", { wide: true, small: true })}
+          {T("F5a", "F5 · Сводка", { wide: true, small: true })}
+          {T("F7a", "F7 · Запись настроек", { wide: true, small: true })}
+          {T("F8b", "F8 · Монтаж", { wide: true, small: true })}
+          {T("F9", "F9 · Перезагрузка", { wide: true, small: true })}
+          {T("F10b", "F10 · Итог «нужен Clone»", { wide: true, small: true })}
+          {T("F11", "F11 · Обучение Slave", { wide: true, small: true })}
+          {T("F12", "F12 · Проверка системы", { wide: true, small: true })}
+          {T("F13b", "F13 · Отзыв", { wide: true, small: true })}
+          {T("F14", "F14 · Готово", { wide: true, small: true })}
+          {T("F16a", "F16 · Выйти из быстрого монтажа?", { wide: true, small: true })}
+        </Sec>
+
+        <Sec title="F1–F4 · Подготовка">
+          {T("F1", "F1 · Поиск: «Только для сигнализаций»")}
+          {T("F2", "F2 · Блок не поддерживает быстрый монтаж")}
+          {T("F3a", "F3 · Проверка блока: всё актуально")}
+          {T("F3b", "F3 · Рекомендация обновить")}
+          {T("F3c", "F3 · Заводской CAN — «Далее» недоступна")}
+          {T("F3d", "F3 · Нет доступа к блоку")}
+          {T("F4a", "F4 · Карточка конфигурации")}
+          {T("F4b", "F4 · Несовпадение CAN")}
+        </Sec>
+        <Sec title="F5–F9 · Старт, запись, монтаж, перезагрузка">
+          {T("F5a", "F5 · Сводка: BLE с обходом и Slave")}
+          {T("F5b", "F5 · Сводка: USB", { conn: "usb" })}
+          {T("F6a", "F6 · Готовим монтаж…")}
+          {T("F6b", "F6 · Не удалось начать монтаж")}
+          {T("F7a", "F7 · Запись настроек (замок вместо «Назад»)")}
+          {T("F7b", "F7 · Настройки не записаны")}
+          {T("F8a", "F8 · Монтаж: карта скачивается")}
+          {T("F8b", "F8 · Готово к работе + тост «Настройки записаны»")}
+          {T("F8c", "F8 · Ошибка скачивания карты")}
+          {T("F8d", "F8 · Просмотр фото на весь экран")}
+          {T("F9", "F9 · Перезагрузка блока")}
+        </Sec>
+        <Sec title="F10–F14 · Обход, Clone, Slave, проверка, отзыв, готово">
+          {T("F10a", "F10 · Обход: успех → «Далее»")}
+          {T("F10b", "F10 · Обход: нужен Clone → «Далее»")}
+          {T("F10c", "F10 · Обход не завершён")}
+          {T("F10d", "F10 · Clone выполнен → «Далее»")}
+          {T("F11", "F11 · Обучение Slave")}
+          {T("F11b", "F11 · Подтверждение Slave")}
+          {T("F12", "F12 · Текущее задание и «Ожидает»")}
+          {T("F13a", "F13 · Отзыв: пустой")}
+          {T("F13b", "F13 · Отзыв: заполнен")}
+          {T("F13c", "F13 · Отзыв: отправка")}
+          {T("F14", "F14 · Готово")}
+        </Sec>
+        <Sec title="F15–F17 · Каркас: блок, диалоги, ошибки">
+          {T("F15", "F15 · Подключён другой блок")}
+          {T("FL", "Потеря связи (существующий экран)")}
+          {T("F16a", "F16 · Выйти из быстрого монтажа?")}
+          {T("F16b", "F16 · Вернуться к монтажу?")}
+          {T("F16c", "F16 · Вернуться к предыдущему шагу?")}
+          {T("F16d", "Монтаж завершён? (подтверждение)")}
+          {T("F17", "F17 · Ошибка шага (плашка)")}
+          {T("F7c", "PIN при записи (существующий диалог)")}
+        </Sec>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

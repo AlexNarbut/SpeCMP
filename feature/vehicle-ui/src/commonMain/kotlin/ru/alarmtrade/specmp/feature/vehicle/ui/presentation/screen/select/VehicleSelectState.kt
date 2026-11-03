@@ -80,6 +80,8 @@ internal data class VehicleSelectState(
     val combo: ComboSearch? = null,
     val comboModels: LCEState<List<CarModel>, CatalogError> = LCEState.None,
     val canResults: LCEState<List<CarSummary>, CatalogError> = LCEState.None,
+    /** CAN-код, по которому единственный результат уже открывался автоматически (не открывать повторно). */
+    val autoOpenedCan: String? = null,
     val card: LCEState<CarCard, CatalogError> = LCEState.None,
     val cardUi: CardUi = CardUi(),
     val recent: List<CarSummary> = emptyList(),

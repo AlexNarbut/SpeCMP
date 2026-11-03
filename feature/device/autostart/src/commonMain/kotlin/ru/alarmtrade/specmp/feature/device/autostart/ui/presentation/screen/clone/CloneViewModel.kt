@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -61,13 +62,12 @@ class CloneViewModel(
             state
         }
     }
+        .launchOnFirstStart {
+            onEachDeviceReady(::onDeviceReady)
+            onDeviceLost(::onConnectionLost)
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
-
-    init {
-        onEachDeviceReady(::onDeviceReady)
-        onDeviceLost(::onConnectionLost)
-    }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         _state.update {
@@ -110,7 +110,9 @@ class CloneViewModel(
         }
     }
 
+    /** «Начать» в подтверждении: диалог забирается сразу — повторный тап не перезапустит процедуру. */
     fun onConfirm() {
+        if (_state.value.dialog != CloneDialog.Confirm) return
         _state.update { it.copy(dialog = null) }
         run()
     }
@@ -118,6 +120,8 @@ class CloneViewModel(
     /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи не попадает. */
     fun onPinSubmit(pin: String) {
         val dialog = _state.value.dialog as? CloneDialog.Pin ?: return
+        // PIN уже отправляется — повторный тап не шлёт его второй раз.
+        if (dialog.pin.sending) return
         val servicePin = ServicePin.parseOrNull(pin) ?: return
         val systemId = _state.value.deviceId ?: return
         if (pinCooldown.remainingNow(systemId) > Duration.ZERO) return
@@ -158,12 +162,23 @@ class CloneViewModel(
         _state.update { it.copy(phase = ClonePhase.Start(), dialog = null) }
     }
 
-    /** [pinTries] — сколько раз PIN уже запрашивали в этой попытке (0 — PIN не вводили). */
+    /**
+     * [pinTries] — сколько раз PIN уже запрашивали в этой попытке (0 — PIN не вводили). Процедура уже идёт — повторный
+     * запуск ничего не делает (прервать — только [onExitConfirm]).
+     */
     private fun run(pinTries: Int = 0) {
-        procedure?.cancel()
+        if (procedure?.isActive == true) return
         procedure = launchOnDevice {
             _state.update { it.copy(phase = ClonePhase.Running(CloneStage.PREPARING)) }
-            repository.run().flowOn(dispatchers.io).collect { event -> onEvent(event, pinTries) }
+            // До итогового события (итог, неверный PIN, сбой): после него работа заканчивается —
+            // повтор не упрётся в неё.
+            repository.run()
+                .transformWhile { event ->
+                    emit(event)
+                    event is CloneEvent.Stage
+                }
+                .flowOn(dispatchers.io)
+                .collect { event -> onEvent(event, pinTries) }
         }
     }
 

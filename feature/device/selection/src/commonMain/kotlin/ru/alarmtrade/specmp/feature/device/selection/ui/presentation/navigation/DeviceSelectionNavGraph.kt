@@ -41,9 +41,16 @@ private val navConfig = SavedStateConfiguration {
  * @param onSessionCreate сессия с устройством создана — навигация приложения решает, куда вести.
  * @param onClose выход из графа поиска; `null` — поиск — корневой экран (без «Назад»).
  * @param serialEnabled искать и COM-порты (приложение прошивки); сессия по порту создаётся как по USB.
+ * @param alarmsOnly только сигнализации (быстрый монтаж): другие BLE-устройства видны, но недоступны. USB до
+ *   подключения не опознать — класс блока проверяет сценарий после подключения.
  */
 @Composable
-fun DeviceSelectionNavGraph(onSessionCreate: () -> Unit, onClose: (() -> Unit)?, serialEnabled: Boolean = false) {
+fun DeviceSelectionNavGraph(
+    onSessionCreate: () -> Unit,
+    onClose: (() -> Unit)?,
+    serialEnabled: Boolean = false,
+    alarmsOnly: Boolean = false
+) {
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
 
     NavDisplay(
@@ -61,7 +68,8 @@ fun DeviceSelectionNavGraph(onSessionCreate: () -> Unit, onClose: (() -> Unit)?,
                 DeviceSelectionScreen(
                     onSessionCreate = onSessionCreate,
                     onClose = onClose,
-                    serialEnabled = serialEnabled
+                    serialEnabled = serialEnabled,
+                    alarmsOnly = alarmsOnly
                 )
             }
         }

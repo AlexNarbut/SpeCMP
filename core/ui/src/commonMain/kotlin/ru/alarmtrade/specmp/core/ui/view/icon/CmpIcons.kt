@@ -185,5 +185,11 @@ enum class CmpIcons {
     NightsStay,
     Lightbulb,
     Moon,
-    Sun
+    Sun,
+
+    // ── Быстрый монтаж ──────────────────────────────────────
+    StarBorder,
+    RestartAlt,
+    CloudDone,
+    CloudSync
 }

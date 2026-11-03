@@ -4,6 +4,7 @@
     <string name="autostart_common_a11y_locked">Выход недоступен до завершения записи</string>
     <string name="autostart_common_btn_chat">В чат поддержки</string>
     <string name="autostart_common_btn_retry">Повторить</string>
+    <string name="autostart_common_btn_next">Далее</string>
     <string name="autostart_common_btn_close">Закрыть</string>
     <string name="autostart_common_btn_done">Готово</string>
     <string name="autostart_common_btn_open_clone">Перейти к процедуре Clone</string>
@@ -100,6 +101,7 @@
     <string name="autostart_bypass_subtitle_success">Бесключевой обход настроен. Проверьте автозапуск.</string>
     <string name="autostart_bypass_title_clone_required">Необходим CLONE для корректной работы автозапуска</string>
     <string name="autostart_bypass_subtitle_clone_required">Обучение завершено. Чтобы автозапуск работал, выполните процедуру Clone.</string>
+    <string name="autostart_bypass_subtitle_clone_next">Обучение завершено. Clone будет следующим шагом — отдельно открывать ничего не нужно.</string>
     <string name="autostart_bypass_title_not_supported">Бесключевой обход не поддерживается</string>
     <string name="autostart_bypass_subtitle_not_supported">Для этого автомобиля или прошивки блока обход недоступен.</string>
     <string name="autostart_bypass_title_error">Обучение не выполнено</string>

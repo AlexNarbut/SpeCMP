@@ -81,6 +81,7 @@
     <string name="configurator_card_btn_firmware">Go to firmware update</string>
     <string name="configurator_card_btn_open">Open settings</string>
     <string name="configurator_card_btn_load">Load into the editor</string>
+    <string name="configurator_card_btn_select">Select</string>
     <string name="configurator_card_btn_save_mine">Save to mine</string>
     <string name="configurator_card_btn_write">Write to unit</string>
     <string name="configurator_card_error">Could not load the configuration</string>

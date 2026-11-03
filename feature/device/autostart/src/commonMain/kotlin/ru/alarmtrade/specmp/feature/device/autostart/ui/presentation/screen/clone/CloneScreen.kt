@@ -19,6 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -105,10 +108,14 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.IllustrationMode
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StatusRow
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.StepNextButton
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
 
 internal const val CLONE_START_TAG = "autostart_clone_start"
+internal const val CLONE_STEP_NEXT_TAG = "autostart_clone_step_next"
 internal const val CLONE_CONFIRM_TAG = "autostart_clone_confirm"
 internal const val CLONE_RESULT_TAG = "autostart_clone_result"
 
@@ -151,9 +158,52 @@ fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () ->
     CloneContent(state = state, actions = actions, onClose = onBack)
 }
 
-/** Stateless-контент: фаза → тело и кнопки; диалоги поверх. */
+/**
+ * Clone как шаг мастера быстрого монтажа: шапка и нижняя панель — мастера ([chrome]), тело, статус, ошибки и диалоги —
+ * этого экрана. На успехе — «Далее» → [onNext].
+ *
+ * @param key ключ VM: новый ключ — процедура с начала, тот же — прежний итог.
+ */
 @Composable
-internal fun CloneContent(state: CloneState, actions: CloneActions, onClose: () -> Unit = actions.onBack) {
+fun CloneStep(
+    key: String,
+    chrome: AutostartStepChrome,
+    next: AutostartStepNext,
+    onNext: () -> Unit,
+    onBack: () -> Unit,
+    onOpenSupportChat: () -> Unit
+) {
+    val viewModel = koinViewModel<CloneViewModel>(key = key) { parametersOf(false) }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val actions = remember(viewModel, onBack, onOpenSupportChat) {
+        CloneActions(
+            onBack = { if (viewModel.onBackRequest()) onBack() },
+            onStart = viewModel::onStartClick,
+            onConfirm = viewModel::onConfirm,
+            onDialogDismiss = viewModel::onDialogDismiss,
+            onPinSubmit = viewModel::onPinSubmit,
+            onExitConfirm = viewModel::onExitConfirm,
+            onOpenSupportChat = onOpenSupportChat
+        )
+    }
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        onBackCompleted = actions.onBack
+    )
+    CloneContent(state = state, actions = actions, step = CloneStepMode(chrome, next, onNext))
+}
+
+/** Режим шага мастера (см. [CloneStep]). */
+internal class CloneStepMode(val chrome: AutostartStepChrome, val next: AutostartStepNext, val onNext: () -> Unit)
+
+/** Stateless-контент: фаза → тело и кнопки; диалоги поверх. [step] — шаг мастера быстрого монтажа. */
+@Composable
+internal fun CloneContent(
+    state: CloneState,
+    actions: CloneActions,
+    onClose: () -> Unit = actions.onBack,
+    step: CloneStepMode? = null
+) {
     val phase = state.phase
     val subtitle = state.deviceId?.let { id -> deviceTitle(state.deviceName.orEmpty(), id) }
     AutostartScaffold(
@@ -194,7 +244,8 @@ internal fun CloneContent(state: CloneState, actions: CloneActions, onClose: () 
             }
         },
         side = if (phase is ClonePhase.Start) ({ HowItWorks(howItems()) }) else null,
-        footer = footer(state, actions, onClose)
+        footer = footer(state, actions, onClose, step),
+        chrome = step?.chrome
     )
     CloneDialogHost(state, actions)
 }
@@ -394,7 +445,8 @@ private fun failureText(failure: CloneFailure): String = when (failure) {
 private fun footer(
     state: CloneState,
     actions: CloneActions,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    step: CloneStepMode?
 ): (@Composable ColumnScope.() -> Unit)? = when (val phase = state.phase) {
     is ClonePhase.Start -> {
         {
@@ -422,6 +474,12 @@ private fun footer(
                 Strings.string.autostart_clone_btn_finish
             }
             when {
+                result is CloneResult.Completed && step != null -> StepNextButton(
+                    next = step.next,
+                    onClick = step.onNext,
+                    modifier = Modifier.testTag(CLONE_STEP_NEXT_TAG)
+                )
+
                 result is CloneResult.Completed -> AutostartPrimaryButton(closeText, onClose)
 
                 result is CloneResult.NotSupported -> AutostartPrimaryButton(

@@ -268,6 +268,8 @@ class DeviceSession(
      * Ждём перезагрузку блока: до команды ([DeviceReboot.ToBoot]) или на стадии применения прошивки
      * ([DeviceReboot.ToMain]).
      * - [DeviceReboot.ToBoot] снимается, когда блок вернулся в загрузчике, по тайм-ауту, при [cancelReboot], [attach] и [close].
+     * - [DeviceReboot.Restart] снимается, когда блок снова в рабочем режиме, по тайм-ауту, при [cancelReboot],
+     *   [attach] и [close].
      * - [DeviceReboot.ToMain] держится, пока блок не вернулся в рабочий режим **и** пользователь не подтвердил
      *   ([acknowledgeReboot]); тайм-аут действует только до возврата блока.
      */
@@ -316,6 +318,8 @@ class DeviceSession(
                 current == null -> null
 
                 current.kind == DeviceReboot.ToBoot && mode.isBoot -> null
+
+                current.kind == DeviceReboot.Restart && mode is DeviceSessionState.Ready -> null
 
                 current.kind == DeviceReboot.ToMain && mode is DeviceSessionState.Ready ->
                     if (current.acknowledged) null else current.copy(reached = true)

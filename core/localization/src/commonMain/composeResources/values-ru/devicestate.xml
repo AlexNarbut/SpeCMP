@@ -267,4 +267,11 @@
     <string name="devicestate_event_value_power_off">Отключение питания</string>
     <string name="devicestate_event_value_settings_changed">Изменены настройки</string>
     <string name="devicestate_event_value_car_state">Изменение состояния автомобиля</string>
+    <string name="devicestate_fast_label_current">Текущее задание</string>
+    <string name="devicestate_fast_msg_waiting">Ожидает — после предыдущего</string>
+    <string name="devicestate_details_item_zones">Зоны</string>
+    <string name="devicestate_details_item_engine">Двигатель</string>
+    <string name="devicestate_details_item_link">Связь</string>
+    <string name="devicestate_details_item_extra">Дополнительно</string>
+    <string name="devicestate_details_msg_no_extra">Нет дополнительных данных</string>
 </resources>

@@ -51,6 +51,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     }
 
     fun submit() {
+        // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
+        if (_state.value.authState is LCEState.Loading) return
         val credentials = _state.value.toCredentials()
         // Пустые поля — ошибка формы до запроса, а не «сервер отклонил».
         if (!credentials.isValid()) {
@@ -79,6 +81,8 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     }
 
     fun resendActivationEmail() {
+        // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
+        if (_state.value.activationResendState is LCEState.Loading) return
         val credentials = _state.value.toCredentials()
         if (!credentials.isValid()) {
             _state.update { it.copy(activationResendState = LCEState.Error(AuthFormError.RequiredFields)) }

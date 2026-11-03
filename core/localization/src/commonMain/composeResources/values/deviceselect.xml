@@ -92,6 +92,7 @@
     <string name="deviceselect_common_value_mode_pairing">Pairing</string>
     <string name="deviceselect_common_value_mode_boot">Bootloader</string>
     <string name="deviceselect_common_value_kind_alarm">Alarm</string>
+    <string name="deviceselect_common_value_kind_microbot">Microbot</string>
     <string name="deviceselect_common_value_kind_tag">Tag</string>
     <string name="deviceselect_common_value_kind_relay">Relay</string>
     <string name="deviceselect_common_value_kind_immobilizer">Immobilizer</string>
@@ -111,4 +112,6 @@
     <string name="deviceselect_common_error_connection_failed">Failed to connect to the device</string>
     <string name="deviceselect_common_error_pairing_required">Put the unit into pairing mode and connect again.</string>
     <string name="deviceselect_common_error_bond_remove_device">The device is paired with another phone. Reset the pairing on the unit and try again.</string>
+    <!-- Поиск для быстрого монтажа: устройство не сигнализация -->
+    <string name="deviceselect_common_msg_alarms_only">Only for alarm systems</string>
 </resources>

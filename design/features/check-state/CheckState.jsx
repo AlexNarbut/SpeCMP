@@ -8,7 +8,7 @@
 
 const DS = window.PandoraSpecDesignSystem_b8d6e1;
 const { CmpTopAppBar, CmpIconButton, CmpButton, CmpOutlinedButton, CmpSurface, CmpText, CmpIcon, CmpCircularProgressIndicator, CmpLinearProgressIndicator, CmpTabRow, CmpSnackbar } = DS;
-const CsTextBtn = (p) => (DS.CmpTextButton ? <DS.CmpTextButton {...p} /> : <CmpOutlinedButton {...p} />);
+const CsTextBtn = ({ fullWidth, style, ...p }) => (DS.CmpTextButton ? <DS.CmpTextButton {...p} style={{ ...(fullWidth ? { width: "100%" } : null), ...style }} /> : <CmpOutlinedButton {...p} fullWidth={fullWidth} style={style} />);
 
 (function injectStyles() {
   if (document.getElementById("cs-anim")) return;
@@ -304,7 +304,7 @@ function DoorChip({ k, v, side, changed, tick, onClick }) {
   );
 }
 const VEH = {};
-function vehSvg(n) { if (!VEH[n]) VEH[n] = fetch("vehicle/" + n + ".svg").then((r) => r.text()).catch(() => ""); return VEH[n]; }
+function vehSvg(n) { if (!VEH[n]) VEH[n] = fetch((window.CS_BASE || "") + "vehicle/" + n + ".svg").then((r) => r.text()).catch(() => ""); return VEH[n]; }
 function VLayer({ n, color, anim, delay }) {
   const [h, setH] = React.useState("");
   React.useEffect(() => { let on = true; vehSvg(n).then((x) => on && setH(x)); return () => { on = false; }; }, [n]);
@@ -635,7 +635,7 @@ function useHold(ms, onDone, enabled = true) {
 
 // Иконки старого приложения (features/check-state/icons, перекрашены через currentColor): префикс "li:".
 const LI = {};
-function liSvg(n) { if (!LI[n]) LI[n] = fetch("icons/" + n + ".svg").then((r) => r.text()).catch(() => ""); return LI[n]; }
+function liSvg(n) { if (!LI[n]) LI[n] = fetch((window.CS_BASE || "") + "icons/" + n + ".svg").then((r) => r.text()).catch(() => ""); return LI[n]; }
 function Ico({ icon, size = 24, color }) {
   const li = typeof icon === "string" && icon.startsWith("li:");
   const [h, setH] = React.useState("");
@@ -772,21 +772,31 @@ function PinBody() {
 }
 
 // ── Чек-лист быстрого монтажа ───────────────────────────────────────────────
-function TaskRow({ t, st, d, changed, tick, n, onSkip, onAnswer }) {
+// current: undefined — свободный порядок; true — текущее задание (выделено); false — «Ожидает» (строгий порядок).
+function TaskRow({ t, st, d, changed, tick, n, onSkip, onAnswer, current }) {
   const done = st === "done" || st === "yes";
   const fail = st === "no";
   const skip = st === "skipped";
-  const pending = st === "pending";
+  const waiting = st === "pending" && current === false;
+  const pending = st === "pending" && !waiting;
+  const cur = pending && current === true;
   const live = t.type === "auto" && (t.guard ? { tone: d.guard === "disarmed" ? "rest" : "active", text: HERO[d.guard].title } : { tone: toneOf(d.z[t.zone]), text: zVal(t.zone, d.z[t.zone]) });
   const ch = t.type === "auto" && (t.guard ? changed.guard : changed[t.zone]);
   return (
-    <div style={{ position: "relative", display: "flex", gap: 12, padding: "12px 10px", borderRadius: 16, background: done ? "color-mix(in srgb, var(--success) 14%, transparent)" : fail ? "var(--error-container)" : "transparent", transition: "background .4s" }}>
+    <div style={{ position: "relative", display: "flex", gap: 12, padding: "12px 10px", borderRadius: 16, background: done ? "color-mix(in srgb, var(--success) 14%, transparent)" : fail ? "var(--error-container)" : cur ? "var(--secondary-container)" : "transparent", boxShadow: cur ? "inset 0 0 0 2px var(--primary)" : "none", transition: "background .4s" }}>
       {ch && done && <Flash on k={tick} radius={16} color="var(--success)" />}
-      <span style={{ position: "relative", width: 36, height: 36, borderRadius: 999, flex: "0 0 auto", display: "grid", placeItems: "center", background: done ? "var(--success)" : fail ? "var(--error)" : "transparent", border: pending ? "2px solid var(--outline)" : skip ? "2px dashed var(--outline)" : "none", color: done ? "#fff" : fail ? "var(--on-error)" : "var(--on-surface-variant)", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 700 }}>
+      <span style={{ position: "relative", width: 36, height: 36, borderRadius: 999, flex: "0 0 auto", display: "grid", placeItems: "center", background: done ? "var(--success)" : fail ? "var(--error)" : "transparent", border: cur ? "2px solid var(--primary)" : pending || waiting ? "2px solid var(--outline)" : skip ? "2px dashed var(--outline)" : "none", color: done ? "#fff" : fail ? "var(--on-error)" : cur ? "var(--primary)" : "var(--on-surface-variant)", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 700 }}>
         {done ? <CmpIcon icon="check" size={22} color="#fff" /> : fail ? <CmpIcon icon="close" size={22} /> : skip ? <CmpIcon icon="redo" size={20} /> : n}
       </span>
       <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-        <CmpText variant="titleMedium" weight={pending ? 600 : 500} color={fail ? "var(--on-error-container)" : "var(--on-surface)"} style={{ textWrap: "pretty", paddingTop: 6 }}>{t.text}</CmpText>
+        {cur && <CmpText variant="labelLarge" weight={700} color="var(--primary)" style={{ paddingTop: 2, marginBottom: -6 }}>Текущее задание</CmpText>}
+        <CmpText variant="titleMedium" weight={pending ? 600 : 500} color={fail ? "var(--on-error-container)" : waiting ? "var(--on-surface-variant)" : "var(--on-surface)"} style={{ textWrap: "pretty", paddingTop: cur ? 0 : 6 }}>{t.text}</CmpText>
+        {waiting && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--on-surface-variant)" }}>
+            <CmpIcon icon="schedule" size={20} />
+            <CmpText variant="bodyMedium" weight={600} color="var(--on-surface-variant)">Ожидает — после предыдущего</CmpText>
+          </span>
+        )}
         {t.type === "auto" && pending && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <CmpText variant="bodyMedium" color="var(--on-surface-variant)">Сейчас:</CmpText>
@@ -799,7 +809,7 @@ function TaskRow({ t, st, d, changed, tick, n, onSkip, onAnswer }) {
             {t.options.map((o) => <CmpOutlinedButton key={o} text={o} onClick={() => onAnswer(t.id, o === "Да" ? "yes" : "no")} style={BIG} />)}
           </div>
         )}
-        {!pending && (
+        {!pending && !waiting && (
           <CmpText variant="bodyMedium" weight={600} color={fail ? "var(--on-error-container)" : "var(--on-surface-variant)"}>
             {st === "done" ? "Проверка пройдена" : st === "yes" ? "Ответ: да" : st === "no" ? "Ответ: нет — не работает" : "Пропущено"}
           </CmpText>
@@ -811,11 +821,12 @@ function TaskRow({ t, st, d, changed, tick, n, onSkip, onAnswer }) {
     </div>
   );
 }
-function Checklist({ tasks, ts, d, changed, tick, onSkip, onAnswer, bare }) {
+function Checklist({ tasks, ts, d, changed, tick, onSkip, onAnswer, bare, seq }) {
+  const curId = seq ? (tasks.find((t) => ts[t.id] === "pending") || {}).id : null;
   const closed = tasks.filter((t) => ts[t.id] !== "pending").length;
   const fails = tasks.filter((t) => ts[t.id] === "no").length;
   const all = closed === tasks.length;
-  const order = [...tasks].sort((a, b) => (ts[a.id] === "pending" ? 0 : 1) - (ts[b.id] === "pending" ? 0 : 1));
+  const order = seq ? tasks : [...tasks].sort((a, b) => (ts[a.id] === "pending" ? 0 : 1) - (ts[b.id] === "pending" ? 0 : 1));
   const body = (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ padding: "10px 12px 12px", borderRadius: 16, background: all ? "color-mix(in srgb, var(--success) 20%, var(--surface-container-high))" : "var(--surface-container-high)", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -826,7 +837,7 @@ function Checklist({ tasks, ts, d, changed, tick, onSkip, onAnswer, bare }) {
         <CmpLinearProgressIndicator progress={closed / tasks.length} height={8} color={all ? "var(--success)" : "var(--primary)"} />
         <CmpText variant="bodyMedium" color="var(--on-surface)">{all ? (fails ? `Не работает: ${fails}. Нажмите «Далее», чтобы завершить.` : "Нажмите «Далее», чтобы завершить шаг.") : "Выполняйте действия в машине — задания отметятся сами."}</CmpText>
       </div>
-      {order.map((t) => <TaskRow key={t.id} t={t} st={ts[t.id]} d={d} changed={changed} tick={tick} n={tasks.indexOf(t) + 1} onSkip={onSkip} onAnswer={onAnswer} />)}
+      {order.map((t) => <TaskRow key={t.id} t={t} st={ts[t.id]} d={d} changed={changed} tick={tick} n={tasks.indexOf(t) + 1} onSkip={onSkip} onAnswer={onAnswer} current={seq ? t.id === curId : undefined} />)}
     </div>
   );
   return bare ? body : <Card title="Проверки" pad={8}>{body}</Card>;
@@ -882,9 +893,9 @@ function stripItems(d) {
     { icon: "li:gps", v: l.gps.fix ? `${l.gps.speed} км/ч` : "Нет", l: "GPS" },
   ].filter(Boolean);
 }
-function MetricStrip({ d, changed, tick }) {
+function MetricStrip({ d, changed, tick, wrap }) {
   return (
-    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2, scrollbarWidth: "none" }}>
+    <div style={{ display: "flex", flexWrap: wrap ? "wrap" : "nowrap", gap: 8, overflowX: wrap ? "visible" : "auto", paddingBottom: 2, scrollbarWidth: "none" }}>
       {stripItems(d).map((m) => (
         <div key={m.l} style={{ position: "relative", flex: "0 0 auto", minWidth: 88, boxSizing: "border-box", padding: "8px 12px", borderRadius: 14, background: m.on ? "var(--primary-container)" : "var(--surface-container-high)", color: m.on ? "var(--on-primary-container)" : "var(--on-surface)", display: "flex", flexDirection: "column", gap: 2 }}>
           <Flash on={m.ck && !!changed[m.ck]} k={tick} />
@@ -931,6 +942,66 @@ function AllCommandsSheet({ children, onClose }) {
     </div>
   );
 }
+// Широкое окно: машина развёрнута горизонтально (носом вправо) — низкий пульт, команды строкой под ней.
+function VehicleH({ d, height = 180 }) {
+  const w = Math.round((height * 1000) / 522);
+  return (
+    <div style={{ position: "relative", width: w, maxWidth: "100%", height, margin: "0 auto" }}>
+      <div style={{ position: "absolute", left: (w - height) / 2, top: (height - w) / 2, width: height, height: w, transform: "rotate(90deg)" }}><Vehicle d={d} width={height} /></div>
+    </div>
+  );
+}
+function PultWide({ d, changed, tick, cmds, cmdSt, loading, onFire, onDanger, onAll, carH = 170 }) {
+  const keys = ["arm", "disarm", d.engine.state === "off" ? "start" : "stop", "trunk", "panic"];
+  const pc = keys.map((k) => cmds.find((c) => c.k === k)).filter(Boolean);
+  return (
+    <Card pad={12}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", gap: 16, alignItems: "center" }}>
+          <div style={{ opacity: loading ? 0.3 : 1, transition: "opacity .3s", padding: "4px 0" }}><VehicleH d={loading ? baseData() : d} height={carH} /></div>
+          {loading ? <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{[0, 1, 2, 3].map((i) => <Skel key={i} h={56} w={88} r={14} />)}</div> : <MetricStrip d={d} changed={changed} tick={tick} wrap />}
+        </div>
+        {loading ? <Skel h={36} w="70%" r={12} /> : <ActiveChips d={d} changed={changed} tick={tick} />}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 8 }}>
+          {pc.map((c) => <CmdSquare key={c.k} c={c} st={cmdSt[c.k]} disabled={loading} onFire={onFire} onDanger={onDanger} />)}
+          <button type="button" onClick={onAll} style={{ height: 72, border: "1.5px solid var(--outline-variant)", borderRadius: 16, background: "transparent", color: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            <CmpIcon icon="apps" size={30} color="var(--primary)" />Все команды
+          </button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+// «Подробно» в широком окне — одна карточка с вкладками вместо длинной ленты карточек.
+function DetailsWide({ d, changed, tick, onZone, loading }) {
+  const [t, setT] = React.useState("zones");
+  const tabs = [["zones", "Зоны"], ["engine", "Двигатель"], ["link", "Связь"], ["extra", "Дополнительно"]];
+  const idx = tabs.findIndex((x) => x[0] === t);
+  let body = null;
+  if (loading) body = <div style={{ display: "flex", flexDirection: "column", gap: 8 }}><Skel h={22} w="40%" /><Skel h={88} /><Skel h={88} /></div>;
+  else if (t === "zones") body = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {GROUPS.map((g) => (
+        <div key={g.k} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "0 2px" }}><CmpText variant="titleMedium" weight={600}>{g.title}</CmpText><CmpText variant="labelLarge" color="var(--on-surface-variant)">{groupAside(g.k, d)}</CmpText></div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
+            {ZONES.filter((z) => z.grp === g.k).map((z) => <ZoneTile key={z.k} z={z} v={d.z[z.k]} changed={!!changed[z.k]} tick={tick} onClick={onZone && (() => onZone(z.k))} />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+  else if (t === "engine") body = <EngineCard d={d} tick={tick} changed={changed} />;
+  else if (t === "link") body = <LinkCard d={d} />;
+  else body = (d.can || d.ev || d.heater || d.camera || d.siren || d.hf || d.hours != null) ? <ExtraGroups d={d} /> : <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Нет дополнительных данных</CmpText>;
+  return (
+    <CmpSurface color="var(--surface-container-low)" radius={20} border style={{ boxSizing: "border-box", overflow: "hidden" }}>
+      <div style={{ padding: "14px 16px 0" }}><CmpText variant="titleMedium" weight={700}>Подробно</CmpText></div>
+      <CmpTabRow tabs={tabs.map((x) => ({ title: x[1] }))} selectedTabIndex={idx} onTabSelected={(i) => setT(tabs[i][0])} />
+      <div style={{ padding: 12 }}>{body}</div>
+    </CmpSurface>
+  );
+}
 function Pult({ d, changed, tick, cmds, cmdSt, loading, onFire, onDanger, onAll, carW = 196 }) {
   const keys = ["arm", "disarm", d.engine.state === "off" ? "start" : "stop", "trunk", "panic"];
   const pc = keys.map((k) => cmds.find((c) => c.k === k)).filter(Boolean);
@@ -952,7 +1023,7 @@ function Pult({ d, changed, tick, cmds, cmdSt, loading, onFire, onDanger, onAll,
 }
 
 // ── Экран ────────────────────────────────────────────────────────────────────
-function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", response = "ok", device = { name: "Pandora DX-4GS", id: "107131" }, onBack = () => {} }) {
+function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", response = "ok", device = { name: "Pandora DX-4GS", id: "107131" }, onBack = () => {}, onDone }) {
   const { useState, useEffect, useRef } = React;
   const init = React.useMemo(() => makeInit(preset || (mode === "quick" ? "F1" : "S2"), mode), []);
   const [rootRef, width] = useWidth();
@@ -1014,7 +1085,9 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
     setD(next); setChanged(ch); setLastAt(Date.now()); setNow(Date.now()); setTick((t) => t + 1);
     fired.forEach((k) => resolve(k, true));
     if (mode === "quick") {
-      const met = tasks.filter((t) => t.type === "auto" && tsRef.current[t.id] === "pending" && taskMet(t, next));
+      // Строгий порядок: отмечается только текущее (первое незакрытое) задание.
+      const curT = tasks.find((t) => tsRef.current[t.id] === "pending");
+      const met = curT && curT.type === "auto" && taskMet(curT, next) ? [curT] : [];
       if (met.length) {
         const upd = { ...tsRef.current }; met.forEach((t) => (upd[t.id] = "done"));
         tsRef.current = upd; setTs(upd); setToast({ id: met[met.length - 1].id, at: Date.now() });
@@ -1073,7 +1146,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
   };
   const next = () => {
     const left = tasks.filter((t) => ts[t.id] === "pending").length;
-    if (left) setDialog({ type: "finish" }); else setSnack({ text: "Шаг «Проверка состояния» завершён" });
+    if (left) setDialog({ type: "finish" }); else if (onDone) onDone(); else setSnack({ text: "Шаг «Проверка состояния» завершён" });
   };
   const skip = (id) => setTs((s) => ({ ...s, [id]: "skipped" }));
   const answer = (id, v) => setTs((s) => ({ ...s, [id]: v }));
@@ -1115,7 +1188,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
   const scrollRef = useRef(null);
   const goAll = () => setAllOpen(true);
   const pult = <Pult d={d} changed={changed} tick={tick} cmds={cmds} cmdSt={cmdSt} loading={loading} onFire={fire} onDanger={(c) => setSheet(c.k)} onAll={goAll} carW={wide ? 220 : 196} />;
-  const checklist = hasChecks && <Checklist tasks={tasks} ts={ts} d={d} changed={changed} tick={tick} onSkip={skip} onAnswer={answer} bare={!wide} />;
+  const checklist = hasChecks && <Checklist tasks={tasks} ts={ts} d={d} changed={changed} tick={tick} onSkip={skip} onAnswer={answer} bare={!wide} seq={mode === "quick"} />;
   const dock = mode === "quick" && (
     <div style={{ padding: "12px 14px 14px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)" }}>
       <CmpButton text={hasChecks && closed < tasks.length ? `Далее · пройдено ${closed} из ${tasks.length}` : "Далее"} icon="arrow_forward" fullWidth onClick={next} style={BIG} />
@@ -1136,18 +1209,26 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
 
   let body;
   if (wide) {
+    // Широкое окно: слева — статус, горизонтальный пульт и «Подробно» вкладками; справа — чек-лист (быстрый монтаж) или все команды.
+    const rightW = width >= 1200 ? 440 : width >= 960 ? 380 : 340;
+    const pultW = <PultWide d={d} changed={changed} tick={tick} cmds={cmds} cmdSt={cmdSt} loading={loading} onFire={fire} onDanger={(c) => setSheet(c.k)} onAll={goAll} carH={width >= 1100 ? 180 : 150} />;
     body = (
-      <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: width >= 1100 ? "440px minmax(0, 1fr)" : "400px minmax(0, 1fr)", gap: 20, padding: "16px 20px 0", maxWidth: 1320, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
-        <div style={{ position: "relative", minHeight: 0, display: "flex", flexDirection: "column" }}>
-          {toastEl}
-          <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column", gap: 12, paddingBottom: 20 }}>{hero}{banners}{pult}{checklist}</div>
-          {dock && <div style={{ margin: "0 0 0 -20px" }}>{dock}</div>}
+      <React.Fragment>
+        <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `minmax(0, 1fr) ${rightW}px`, gap: 16, padding: "12px 16px 0", maxWidth: 1400, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+          <div ref={scrollRef} style={{ minHeight: 0, overflow: "auto", display: "grid", alignContent: "start", gridAutoRows: "max-content", gridTemplateColumns: "minmax(0, 1fr)", gap: 12, paddingBottom: 16 }}>{hero}{banners}{pultW}<DetailsWide d={d} changed={changed} tick={tick} onZone={onZone} loading={loading} /></div>
+          <div style={{ position: "relative", minHeight: 0, display: "flex", flexDirection: "column" }}>
+            {toastEl}
+            <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "grid", alignContent: "start", gridAutoRows: "max-content", gridTemplateColumns: "minmax(0, 1fr)", gap: 12, paddingBottom: 16 }}>
+              {checklist || <div ref={cmdRef}><CommandsPanel cmds={cmds} cmdSt={cmdSt} disabled={loading} onFire={fire} onDanger={(c) => setSheet(c.k)} cols={rightW >= 400 ? 2 : 1} /></div>}
+            </div>
+          </div>
         </div>
-        <div ref={scrollRef} style={{ minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column", gap: 12, paddingBottom: 20 }}>
-          <CmpText variant="titleLarge" weight={600} style={{ padding: "4px 4px 0" }}>Подробно</CmpText>
-          {stateCol}{commands}
-        </div>
-      </div>
+        {dock && (
+          <div style={{ padding: "12px 16px 16px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)", display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ width: "100%", maxWidth: 400 }}><CmpButton text={hasChecks && closed < tasks.length ? `Далее · пройдено ${closed} из ${tasks.length}` : "Далее"} icon="arrow_forward" fullWidth onClick={next} style={BIG} /></div>
+          </div>
+        )}
+      </React.Fragment>
     );
   } else {
     const tabs = [...(hasChecks ? [{ k: "checks", title: `Проверки ${closed}/${tasks.length}` }] : []), { k: "pult", title: "Пульт" }, { k: "details", title: "Подробно" }];
@@ -1189,28 +1270,28 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
           actions={<>
             <CmpButton text="Выключить и выйти" fullWidth style={BIG} onClick={() => { setDialog(null); if (d.service) send({ k: "service" }); if (d.prog) send({ k: "prog" }); later(onBack, 600); }} />
             <CmpOutlinedButton text={both ? "Оставить включёнными" : "Оставить включённым"} fullWidth style={BIG} onClick={() => { setDialog(null); onBack(); }} />
-            <CsTextBtn text="Отмена" fullWidth style={BIG} onClick={() => setDialog(null)} />
+            <CsTextBtn text="Отмена" style={{ ...BIG, width: "100%" }} onClick={() => setDialog(null)} />
           </>} />
       )}
       {dialog && dialog.type === "pin" && (
         <Modal icon="pin" title="Режим программирования" text="Введите сервисный PIN блока." onDismiss={() => setDialog(null)}
           actions={<>
             <CmpButton text="Включить" fullWidth style={BIG} onClick={() => { setDialog(null); send({ k: "prog" }); }} />
-            <CsTextBtn text="Отмена" fullWidth style={BIG} onClick={() => setDialog(null)} />
+            <CsTextBtn text="Отмена" style={{ ...BIG, width: "100%" }} onClick={() => setDialog(null)} />
           </>}><PinBody /></Modal>
       )}
       {dialog && dialog.type === "finish" && (
         <Modal icon="playlist_add_check" tone="warn" title="Не все проверки пройдены. Завершить?" text={`Не пройдено: ${tasks.filter((t) => ts[t.id] === "pending").length} из ${tasks.length}.`} onDismiss={() => setDialog(null)}
           actions={<>
             <CmpButton text="Продолжить проверку" fullWidth style={BIG} onClick={() => { setDialog(null); setTab("checks"); }} />
-            <CmpOutlinedButton text="Завершить" fullWidth style={BIG} onClick={() => { setDialog(null); setSnack({ text: "Шаг «Проверка состояния» завершён" }); }} />
+            <CmpOutlinedButton text="Завершить" fullWidth style={BIG} onClick={() => { setDialog(null); if (onDone) onDone(); else setSnack({ text: "Шаг «Проверка состояния» завершён" }); }} />
           </>} />
       )}
       {dialog && dialog.type === "back" && (
         <Modal icon="undo" title="Вернуться на предыдущий шаг?" text="Проверка состояния будет прервана." onDismiss={() => setDialog(null)}
           actions={<>
             <CmpButton text="Вернуться" fullWidth style={BIG} onClick={() => { setDialog(null); onBack(); }} />
-            <CsTextBtn text="Отмена" fullWidth style={BIG} onClick={() => setDialog(null)} />
+            <CsTextBtn text="Отмена" style={{ ...BIG, width: "100%" }} onClick={() => setDialog(null)} />
           </>} />
       )}
       {lost && <LostOverlay onBack={onBack} />}

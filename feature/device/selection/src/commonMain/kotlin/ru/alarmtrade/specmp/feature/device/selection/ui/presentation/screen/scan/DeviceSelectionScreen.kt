@@ -95,8 +95,13 @@ private enum class DeviceSelectLayout { Compact, Stacked, Split }
  * one-shot эффекты и адаптивную раскладку (compact / stacked / split).
  */
 @Composable
-internal fun DeviceSelectionScreen(onSessionCreate: () -> Unit, onClose: (() -> Unit)?, serialEnabled: Boolean) {
-    val viewModel = koinViewModel<ScanDeviceViewModel>(parameters = { parametersOf(serialEnabled) })
+internal fun DeviceSelectionScreen(
+    onSessionCreate: () -> Unit,
+    onClose: (() -> Unit)?,
+    serialEnabled: Boolean,
+    alarmsOnly: Boolean
+) {
+    val viewModel = koinViewModel<ScanDeviceViewModel>(parameters = { parametersOf(serialEnabled, alarmsOnly) })
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
 

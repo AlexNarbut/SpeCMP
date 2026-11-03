@@ -1,0 +1,57 @@
+# feature/fast-mount
+
+- Мастер «Быстрый монтаж»: пошаговая установка сигнализации по облачной конфигурации. Один обособленный модуль
+  (domain + data + ui, DI — `fastMountModule`): логика мастера другим фичам не нужна. Макет —
+  `design/features/fast-mount` (состояния F1–F17, колонка шагов W1), changelog
+  `design/changelog/2026-11-02-fast-mount-check-state-home.md`; план и решения владельца — `.claude/tasks/fast-mount.md`.
+- **Порядок шагов задаёт SDK** (`FastMountInteractor`, машина состояний `StateTitle`), приложение только вызывает
+  «вперёд/назад» (`FastMountRepository.next/previous`) и слушает `steps()`. Маршрут BLE: запись настроек → монтаж →
+  [перезагрузка] → обход? → Clone? → Slave? → проверка системы → отзыв → финал; USB — без Slave и проверки системы;
+  SERIAL не поддерживается. План для сводки и колонки шагов — `fastMountPlan(configuration, transport)` по байтам
+  конфигурации (`isKeyBypassEnabled` / `isSlaveEnabled`), так же как маршрутизирует SDK. «Назад» по SDK
+  (`previous`) возвращает на настоящий предыдущий шаг: состояния Slave/проверки/отзыва запоминают предыдущее до
+  `Waiting*`.
+- `FastMountRepository` без состояния: класс блока, доступ к блоку (`verificationInteractor`), последняя прошивка
+  основной программы (`firmwareFilesInteractor`), конфигурация, скачивание карты монтажа (`filesInteractor`), шаги SDK.
+  Предметные ошибки SDK — `FastMountException(failure)` в `Response.Error`, в UI — `FastMountError.from`. Поток
+  `questions()` холодный, автоответы SDK считаются в подписчике — **ровно один подписчик** (VM, пока идёт проверка
+  системы). `start(configurationId)` перечитывает конфигурацию с сервера (SDK нужен `CarConfiguration`).
+- Вход: плитка «Быстрый монтаж» → `FastMountSelectionRoute` (`DeviceSelectionNavGraph(alarmsOnly = true)`: не
+  сигнализации видны пунктиром с плашкой «Только для сигнализаций», выбрать нельзя) → `FastMountRoute`
+  (`composeApp/navigation/FastMountWiring.kt`: `DeviceInteractionHost` + `FastMountEntry(onExit, onChooseAnother,
+  onOpenAdvancedMount, slots)`).
+- **Слоты** (`FastMountSlots`, подставляет `composeApp`; прямых зависимостей на другие фичи нет): обновление прошивки
+  (`FirmwareCheckScreen`), автомобиль (`VehicleSelectEntry`, `WITH_CONFIGURATIONS`, модель блока), конфигурация
+  (`ConfigurationPickerEntry` с `purpose = FAST_MOUNT` — «Выбрать», старт со списка конфигураций автомобиля, CAN блока
+  блокирует выбор), обход и Clone (`BypassLearningStep` / `CloneStep` автозапуска), проверка системы
+  (`CheckStateEntry` с чек-листом мастера, строгий порядок), открытие файла (`MountFileOpener` поверх
+  `SupportChatFileOpener`). Экраны обхода, Clone и проверки — **контент и VM своих фич в шапке и панели мастера**
+  (`MountStep.frame` → `AutostartStepChrome` / `CheckStateChrome`); ключ VM (`MountStep.key`) меняется на
+  «Вернуться к монтажу» — шаг проходится заново, «Назад» со Slave возвращает прежний итог обхода.
+- **VM** (`FastMountViewModel`, одна на мастер): фиксация блока (другой `systemId` — оверлей «Подключён другой блок»,
+  возврат нужного — продолжение), проверка блока (сигнализация → доступ → заводской CAN блокирует → новая прошивка —
+  только рекомендация), подготовка (автомобиль → конфигурация → сводка), шаги SDK: запись настроек стартует сама,
+  `busy` на переходах, ошибки шагов, итог обхода (`cloneNeeded`), статусы заданий проверки (курсор SDK сдвинулся —
+  пропущенные нами задания засчитал SDK), отзыв. Выход с монтажа — диалог, затем выход из режима программирования
+  (BLE, по возможности) и закрытие сессии.
+- **Перезагрузка** после монтажа, обхода и Clone (BLE): `DeviceSession.expectReboot(DeviceReboot.Restart)` — обёртка
+  не показывает обрыв как потерю связи, мастер держит экран «Перезагрузка блока…» с таймером до возврата блока; связь
+  не оборвалась за 10 с после перехода SDK — перезагрузки не было; не вернулся за 60 с — обёртка показывает потерю
+  связи, мастер ждёт блок.
+- Каркас (`ui/presentation/components`): < 760 dp — topbar «шаг · Модель ID» и закреплённая панель с главной
+  кнопкой; ≥ 760 dp — колонка шагов `StepRail` (≥ 1100 — 300 dp, 900–1099 — 264, 760–899 — компактная 88; ниже
+  860 dp по высоте — без карточки автомобиля), статусы — `railModel` (`RailModel.kt`, юнит-тесты). Две колонки
+  контента — от 860 dp ширины контента. Иллюстрации-плейсхолдеры макета — иконками (`RoundArt`, `BusyArt`); анимация
+  обучения Slave — спрайт-лист из `slave_learn.gif` старого приложения (`composeResources/drawable/fastmount_slave_learn.webp`, 18 кадров 800×550 сеткой 3×6).
+- Геолокация для отчёта о монтаже — молча (`SilentLocationProvider` в `core/specialist`, Android — последнее известное
+  положение при уже выданном разрешении); без неё SDK шлёт `0,0`. Отчёт уходит в фоне при финише (решение владельца:
+  статус отправки не показываем).
+- SDK (`specialist` 1.2.5): проверки автовопросов 46/47 «поставить/снять любым способом»; неизвестный автовопрос
+  засчитывается сразу; `isCompleted` — только после ответа на последний вопрос.
+- Строки — `fastmount.xml` (префикс `fastmount`). `testTag`: `fastmount_rail`, `fastmount_check_next`,
+  `fastmount_check_unsupported`, `fastmount_summary_start`, `fastmount_write_retry`, `fastmount_reboot`,
+  `fastmount_mount_map`, `fastmount_mount_done`, `fastmount_slave_next`, `fastmount_review_send`, `fastmount_done`,
+  `fastmount_wrong_device`, `fastmount_dialog_confirm|dismiss`.
+- Галерея состояний: `./gradlew :feature:fast-mount:jvmTest --tests '*Gallery*'` → `build/state-gallery/fast-mount`.
+- **Не проверено на железе:** старт сессии SDK, запись настроек (PIN — SDK), маршрут шагов, перезагрузки и их
+  тайминги, автоответы проверки системы при одновременном опросе экрана проверки, отчёт о монтаже.

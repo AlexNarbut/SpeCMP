@@ -267,4 +267,11 @@
     <string name="devicestate_event_value_power_off">Power off</string>
     <string name="devicestate_event_value_settings_changed">Settings changed</string>
     <string name="devicestate_event_value_car_state">Vehicle state changed</string>
+    <string name="devicestate_fast_label_current">Current task</string>
+    <string name="devicestate_fast_msg_waiting">Waiting — after the previous one</string>
+    <string name="devicestate_details_item_zones">Zones</string>
+    <string name="devicestate_details_item_engine">Engine</string>
+    <string name="devicestate_details_item_link">Connection</string>
+    <string name="devicestate_details_item_extra">Extra</string>
+    <string name="devicestate_details_msg_no_extra">No extra data</string>
 </resources>

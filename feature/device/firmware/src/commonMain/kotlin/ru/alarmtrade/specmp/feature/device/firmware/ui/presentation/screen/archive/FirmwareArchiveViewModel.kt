@@ -157,7 +157,8 @@ class FirmwareArchiveViewModel(
                 rollback = null
             )
         }
-        // Серийно: обновление не теряется, если подгрузка ещё идёт; её результат придёт до сброса и будет перезаписан.
+        // Серийно: обновление не теряется, если подгрузка ещё идёт; её ответ придёт уже после сброса и отбросится
+        // (loadPage: список ждёт другую страницу).
         safeLaunch { executeWithProceedLock(needSkipAnother = false) { loadPage(FIRST_PAGE) } }
     }
 
@@ -196,8 +197,8 @@ class FirmwareArchiveViewModel(
         val response = withContext(dispatchers.io) {
             repository.archivePage(moduleId, args.channel, page, PAGE_SIZE, canCode = filter)
         }
-        // Пока страница грузилась, фильтр сменили: список уже перезапрошен, этот ответ не нужен.
-        if (core.value.canApplied != filter) return
+        // Пока страница грузилась, фильтр сменили или список начали заново: этот ответ не нужен.
+        if (core.value.canApplied != filter || !core.value.awaits(page)) return
         when (response) {
             is Response.Success -> core.update { state ->
                 val known = state.items.mapTo(mutableSetOf()) { it.version }
@@ -225,6 +226,13 @@ class FirmwareArchiveViewModel(
             }
         }
     }
+
+    /**
+     * Список ждёт [page]: первую — после сброса (страниц ещё нет), следующую — пока идёт догрузка за последней
+     * показанной. Иначе ответ устарел (обновление во время догрузки) и не должен попасть в новый список.
+     */
+    private fun Core.awaits(page: Int): Boolean =
+        if (page == FIRST_PAGE) this.page == 0 else loadingMore && this.page == page - 1
 
     /** Модуль архива: из запроса или основной модуль модели блока (один раз за экран). */
     private suspend fun moduleId(): Response<Long?> {

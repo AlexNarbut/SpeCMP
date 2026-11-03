@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -58,13 +59,12 @@ class BypassLearningViewModel(
             state
         }
     }
+        .launchOnFirstStart {
+            onEachDeviceReady(::onDeviceReady)
+            onDeviceLost(::onConnectionLost)
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
-
-    init {
-        onEachDeviceReady(::onDeviceReady)
-        onDeviceLost(::onConnectionLost)
-    }
 
     private fun onDeviceReady(device: AlarmDevice) {
         _state.update {
@@ -99,7 +99,9 @@ class BypassLearningViewModel(
 
     /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи не попадает. */
     fun onPinSubmit(pin: String) {
-        if (_state.value.dialog !is BypassDialog.Pin) return
+        val dialog = _state.value.dialog as? BypassDialog.Pin ?: return
+        // PIN уже отправляется — повторный тап не шлёт его второй раз.
+        if (dialog.pin.sending) return
         val servicePin = ServicePin.parseOrNull(pin) ?: return
         start(servicePin)
     }
@@ -126,7 +128,8 @@ class BypassLearningViewModel(
 
     private fun start(pin: ServicePin?) {
         val systemId = _state.value.deviceId ?: return
-        learning?.cancel()
+        // Вход в режим программирования или обучение уже идут — повторный запуск их не обрывает.
+        if (learning?.isActive == true) return
         learning = launchOnDevice {
             val dialog = _state.value.dialog as? BypassDialog.Pin
             _state.update {
@@ -161,13 +164,20 @@ class BypassLearningViewModel(
 
     private suspend fun learn() {
         _state.update { it.copy(phase = BypassPhase.Running(), dialog = null) }
-        repository.learn().flowOn(dispatchers.io).collect { event ->
-            when (event) {
-                is BypassEvent.Step -> _state.update { it.copy(phase = BypassPhase.Running(event.step)) }
-                is BypassEvent.Finished -> _state.update { it.copy(phase = BypassPhase.Finished(event.result)) }
-                BypassEvent.Failure -> finishIfConnected(BypassResult.Error(BypassError.START_FAILED))
+        // До итогового события (итог, сбой): после него работа заканчивается — «Повторить» не упрётся в неё.
+        repository.learn()
+            .transformWhile { event ->
+                emit(event)
+                event is BypassEvent.Step
             }
-        }
+            .flowOn(dispatchers.io)
+            .collect { event ->
+                when (event) {
+                    is BypassEvent.Step -> _state.update { it.copy(phase = BypassPhase.Running(event.step)) }
+                    is BypassEvent.Finished -> _state.update { it.copy(phase = BypassPhase.Finished(event.result)) }
+                    BypassEvent.Failure -> finishIfConnected(BypassResult.Error(BypassError.START_FAILED))
+                }
+            }
     }
 
     // Сбой при живой связи — ошибка; при обрыве экран уже вернулся на старт (onConnectionLost).

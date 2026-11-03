@@ -7,10 +7,13 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.drop
 
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryLight,
@@ -90,10 +93,26 @@ private val DarkColorScheme = darkColorScheme(
 
 val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }
 
+/**
+ * Тема приложения. Тёмная/светлая — выбор пользователя из [themeStore] (переключатель меняет [LocalThemeIsDark] и
+ * сохраняется), а пока не выбирали — как в системе. Без хранилища (галереи, тесты) — всегда как в системе.
+ */
 @Composable
-fun AppTheme(onThemeChange: @Composable (isDark: Boolean) -> Unit, content: @Composable () -> Unit) {
+fun AppTheme(
+    onThemeChange: @Composable (isDark: Boolean) -> Unit,
+    themeStore: AppThemeStore? = null,
+    content: @Composable () -> Unit
+) {
     val systemIsDark = isSystemInDarkTheme()
-    val isDarkState = remember(systemIsDark) { mutableStateOf(systemIsDark) }
+    val isDarkState = remember(systemIsDark, themeStore) {
+        mutableStateOf(themeStore?.savedIsDark() ?: systemIsDark)
+    }
+    // Сохраняем только переключение пользователем: начальное значение (система или сохранённое) пропускаем.
+    if (themeStore != null) {
+        LaunchedEffect(isDarkState, themeStore) {
+            snapshotFlow { isDarkState.value }.drop(1).collect(themeStore::save)
+        }
+    }
     CompositionLocalProvider(
         LocalThemeIsDark provides isDarkState
     ) {

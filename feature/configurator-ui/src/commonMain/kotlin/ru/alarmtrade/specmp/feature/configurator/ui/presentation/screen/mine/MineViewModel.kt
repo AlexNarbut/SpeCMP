@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.reusing
+import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -159,32 +160,46 @@ internal class MineViewModel(
 
     /** «Сохранить в файл»: снимок записи во временный `.dxs` → системное сохранение. */
     fun onExport(item: LocalConfiguration) {
-        _state.update { it.copy(dialog = null, busy = true) }
+        if (!startBusy()) return
         safeLaunch {
-            val source = item.toSource()
-            val response = withContext(dispatchers.io) {
-                try {
-                    settings.snapshot(source, item.deviceName)
-                } finally {
-                    settings.close(source)
-                }
-            }
-            when (response) {
-                is Response.Error -> {
-                    logger.w(response.exception) { "Configuration export failed: ${response.message}" }
-                    _state.update { it.copy(busy = false) }
-                    _effect.tryEmit(MineEffect.Message(MineMessage.FAILED))
-                }
-
-                is Response.Success -> {
-                    export.update { response.value }
-                    _effect.tryEmit(
-                        MineEffect.ExportFile(response.value.path, settingsFileName(item.deviceName, item.name))
-                    )
-                }
+            try {
+                export(item)
+            } finally {
+                // Снимок отдан системному сохранению — флаг снимет onFileExported; иначе (ошибка, отмена) — здесь.
+                if (export.value == null) _state.update { it.copy(busy = false) }
             }
         }
     }
+
+    private suspend fun export(item: LocalConfiguration) {
+        val source = item.toSource()
+        val response = withContext(dispatchers.io) {
+            try {
+                settings.snapshot(source, item.deviceName)
+            } finally {
+                settings.close(source)
+            }
+        }
+        when (response) {
+            is Response.Error -> {
+                logger.w(response.exception) { "Configuration export failed: ${response.message}" }
+                _effect.tryEmit(MineEffect.Message(MineMessage.FAILED))
+            }
+
+            is Response.Success -> {
+                export.update { response.value }
+                _effect.tryEmit(
+                    MineEffect.ExportFile(response.value.path, settingsFileName(item.deviceName, item.name))
+                )
+            }
+        }
+    }
+
+    /**
+     * Действие с записью — одно за раз: «занято» ставится сразу и атомарно, повторный тап (копия, экспорт, удаление)
+     * его застанет и ничего не сделает. `false` — уже занято.
+     */
+    private fun startBusy(): Boolean = _state.updateIf({ !it.busy }) { it.copy(dialog = null, busy = true) }
 
     fun onFileExported(result: SettingsFileSaveResult) {
         val snapshot = export.getAndUpdate { null } ?: return
@@ -198,7 +213,7 @@ internal class MineViewModel(
     }
 
     private fun run(success: MineMessage, block: suspend () -> Response<*>) {
-        _state.update { it.copy(dialog = null, busy = true) }
+        if (!startBusy()) return
         safeLaunch {
             val response = try {
                 withContext(dispatchers.io) { block() }

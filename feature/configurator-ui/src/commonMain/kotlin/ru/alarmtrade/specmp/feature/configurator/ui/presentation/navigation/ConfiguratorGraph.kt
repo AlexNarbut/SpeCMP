@@ -134,15 +134,27 @@ fun ConfigurationPickerEntry(
     onPick: (SettingsSource) -> Unit,
     onOpenFirmwareUpdate: () -> Unit,
     onBack: () -> Unit,
-    vehiclePicker: ConfiguratorVehiclePicker
+    vehiclePicker: ConfiguratorVehiclePicker,
+    purpose: ConfigurationPickPurpose = ConfigurationPickPurpose.LOAD,
+    cloudCar: ConfigurationPickCar? = null
 ) {
     ConfiguratorGraph(
-        start = if (request.kind == ConfigurationPickKind.MINE) MineListRoute else CloudCarsRoute,
+        start = when {
+            request.kind == ConfigurationPickKind.MINE -> MineListRoute
+            cloudCar != null -> CloudListRoute(cloudCar.id, cloudCar.title)
+            else -> CloudCarsRoute
+        },
         onExit = onBack,
         vehiclePicker = vehiclePicker,
-        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate)
+        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose)
     )
 }
+
+/** Зачем выбирают конфигурацию: загрузить в редактор блока или для быстрого монтажа (кнопка «Выбрать»). */
+enum class ConfigurationPickPurpose { LOAD, FAST_MOUNT }
+
+/** Автомобиль, уже выбранный вызывающим: облако открывается сразу списком конфигураций для него. */
+data class ConfigurationPickCar(val id: Int, val title: String)
 
 /** Конфигуратор целиком или выбор конфигурации для загрузки в блок. */
 private sealed interface GraphMode {
@@ -155,7 +167,8 @@ private sealed interface GraphMode {
     class Pick(
         val request: ConfigurationPickRequest,
         val onPick: (SettingsSource) -> Unit,
-        val onOpenFirmwareUpdate: () -> Unit
+        val onOpenFirmwareUpdate: () -> Unit,
+        val purpose: ConfigurationPickPurpose
     ) : GraphMode
 }
 
@@ -436,7 +449,8 @@ private fun cloudCard(
             onWrite = full?.deviceEditor?.let {
                 { card -> card.toSource().toKey()?.let { key -> backStack.navigateSafe(DeviceWriteRoute(key)) } }
             },
-            onOpenFirmwareUpdate = pick?.onOpenFirmwareUpdate
+            onOpenFirmwareUpdate = pick?.onOpenFirmwareUpdate,
+            selectForMount = pick?.purpose == ConfigurationPickPurpose.FAST_MOUNT
         )
     }
     return state to actions

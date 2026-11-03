@@ -465,9 +465,13 @@ function ConfiguratorApp(props) {
     if (emptyFirst) return (
       <React.Fragment>{bar}
         <div className="vs-scroll" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-          <div style={{ maxWidth: 520, margin: "0 auto", padding: "32px 16px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 16 }}>
+          <div style={{ maxWidth: 420, margin: "0 auto", padding: "32px 16px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: 16 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}><D.Hero icon="inventory_2" /><CmpText variant="titleLarge">Здесь будут ваши конфигурации</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">Создайте первую: с нуля, из облака или из файла.</CmpText></div>
-            <div style={{ borderRadius: 16, background: "var(--surface-container-low)", border: "1px solid var(--outline-variant)", overflow: "hidden" }}>{createItems.map((m) => <K.OptRow key={m.t} icon={m.i} title={m.t} sub={m.sub} onClick={m.f} />)}</div>
+            {/* Кнопки создания — во всю ширину колонки (до 420dp) и выше обычных (52dp); первая — основная. */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>{createItems.map((m, i) => {
+              const Btn = i === 0 ? DS.CmpButton : DS.CmpOutlinedButton;
+              return <Btn key={m.t} text={m.t} onClick={m.f} fullWidth style={{ height: 52 }} />;
+            })}</div>
           </div>
         </div>
       </React.Fragment>

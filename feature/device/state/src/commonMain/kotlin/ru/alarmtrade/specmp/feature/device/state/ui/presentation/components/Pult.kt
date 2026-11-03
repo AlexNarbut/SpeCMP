@@ -11,6 +11,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -27,8 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,11 +62,13 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_unit_format_
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_unit_format_volt
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_zones_format_chip
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
@@ -333,12 +339,23 @@ internal fun gsmIcon(level: Int?): DrawableResource = when (level) {
 }
 
 @Composable
-private fun MetricStrip(vehicle: VehicleState) {
+private fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
     val colors = cmpThemeColors()
-    CmpRow(
-        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    val row: @Composable (@Composable () -> Unit) -> Unit = { items ->
+        if (wrap) {
+            CmpFlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) { items() }
+        } else {
+            CmpRow(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) { items() }
+        }
+    }
+    row {
         stripItems(vehicle).forEach { item ->
             val background = if (item.highlighted) colors.primaryContainer else colors.surfaceContainerHigh
             val content = if (item.highlighted) colors.onPrimaryContainer else colors.onSurface
@@ -608,3 +625,108 @@ private object DoorLayers {
     val rearRight =
         Res.drawable.devicestate_vehicle_bottom_right_close to Res.drawable.devicestate_vehicle_bottom_right_open
 }
+
+/**
+ * Пульт в широком окне (макет `PultWide`): машина развёрнута горизонтально (носом вправо), показатели сеткой справа,
+ * активные зоны, строка основных команд и «Все команды».
+ */
+@Composable
+internal fun PultWideCard(
+    state: CheckStateState,
+    carHeight: Dp,
+    onFire: (CommandUi) -> Unit,
+    onAllCommands: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val vehicle = state.vehicle
+    val colors = cmpThemeColors()
+    SectionCard(modifier = modifier) {
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            CmpRow(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                HorizontalVehicle(
+                    vehicle = vehicle,
+                    height = carHeight,
+                    modifier = Modifier.alpha(if (vehicle == null) LOADING_ALPHA else 1f)
+                )
+                CmpBox(modifier = Modifier.weight(1f)) {
+                    if (vehicle == null) {
+                        CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            repeat(SKELETON_METRICS) {
+                                CmpSkeleton(
+                                    modifier = Modifier.width(88.dp).height(56.dp),
+                                    shape = RoundedCornerShape(14.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        MetricStrip(vehicle, wrap = true)
+                    }
+                }
+            }
+            if (vehicle == null) {
+                CmpSkeleton(
+                    modifier = Modifier.fillMaxWidth(CHIPS_SKELETON_FRACTION).height(36.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            } else {
+                ActiveZones(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
+            }
+            CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                state.commands.filter { it.primary }.forEach { command ->
+                    CommandButton(
+                        command = command,
+                        status = state.status(command.command),
+                        enabled = !state.loading && state.pending == null,
+                        onFire = onFire,
+                        compact = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                CmpOutlinedButton(
+                    onClick = onAllCommands,
+                    modifier = Modifier.weight(1f).heightIn(min = 72.dp)
+                ) {
+                    CmpColumn(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CmpIcon(icon = CmpIcons.Menu, contentDescription = null, tint = colors.primary)
+                        CmpText(
+                            text = stringResource(Strings.string.devicestate_pult_btn_all_commands),
+                            fontSize = 13.sp,
+                            maxLines = 2
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Схема машины, развёрнутая на 90° (носом вправо): ширина — [height] / пропорция схемы. */
+@Composable
+private fun HorizontalVehicle(vehicle: VehicleState?, height: Dp, modifier: Modifier = Modifier) {
+    val width = height / VEHICLE_RATIO
+    CmpBox(
+        modifier = modifier
+            .size(width = width, height = height)
+            .layout { measurable, _ ->
+                val placeable = measurable.measure(Constraints.fixed(height.roundToPx(), width.roundToPx()))
+                layout(width.roundToPx(), height.roundToPx()) {
+                    placeable.place(
+                        (width.roundToPx() - placeable.width) / 2,
+                        (height.roundToPx() - placeable.height) / 2
+                    )
+                }
+            }
+    ) {
+        VehicleSchematic(
+            vehicle = vehicle,
+            modifier = Modifier.fillMaxSize().graphicsLayer {
+                rotationZ = QUARTER_TURN
+            }
+        )
+    }
+}
+
+private const val QUARTER_TURN = 90f

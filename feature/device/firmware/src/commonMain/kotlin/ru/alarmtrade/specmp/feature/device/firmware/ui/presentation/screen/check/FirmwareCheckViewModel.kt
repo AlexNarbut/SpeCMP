@@ -72,12 +72,9 @@ class FirmwareCheckViewModel(
         val dialog = state.dialog
         if (dialog is CheckDialog.Pin) state.copy(dialog = dialog.copy(lockedFor = lock)) else state
     }
+        .launchOnFirstStart { onEachDeviceReady(::onDeviceReady) }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
-
-    init {
-        onEachDeviceReady(::onDeviceReady)
-    }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         val previous = _state.value

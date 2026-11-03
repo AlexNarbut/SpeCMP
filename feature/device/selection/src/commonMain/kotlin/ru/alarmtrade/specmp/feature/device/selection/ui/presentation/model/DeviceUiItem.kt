@@ -38,7 +38,9 @@ sealed interface DeviceUiItem {
         val rssi: Int,
         val hasDeviceBond: Boolean,
         /** `null` — платформа не сообщает о сопряжении с телефоном (iOS). */
-        val hasPhoneBond: Boolean?
+        val hasPhoneBond: Boolean?,
+        /** Выбрать нельзя: поиск только сигнализаций (быстрый монтаж), а это другое устройство. */
+        val restricted: Boolean = false
     ) : DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.BLE
         override val typeIcon: CmpIcons get() = CmpIcons.Sensors
@@ -84,16 +86,7 @@ private const val RSSI_STEP_DBM = 5
 private fun Int.roundToStep(step: Int): Int = (toDouble() / step).roundToInt() * step
 
 internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
-    is ScannedDevice.Ble -> DeviceUiItem.Ble(
-        id = id,
-        name = name,
-        address = id,
-        kind = kind,
-        mode = mode,
-        rssi = rssi.roundToStep(RSSI_STEP_DBM),
-        hasDeviceBond = hasDeviceBond,
-        hasPhoneBond = hasPhoneBond
-    )
+    is ScannedDevice.Ble -> toUiItem(restricted = false)
 
     is ScannedDevice.Usb -> {
         val vidPid = "${vendorId.toHex4()}:${productId.toHex4()}"
@@ -112,6 +105,18 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
     is ScannedDevice.Serial -> toUiItem()
 }
 
+internal fun ScannedDevice.Ble.toUiItem(restricted: Boolean): DeviceUiItem.Ble = DeviceUiItem.Ble(
+    id = id,
+    name = name,
+    address = id,
+    kind = kind,
+    mode = mode,
+    rssi = rssi.roundToStep(RSSI_STEP_DBM),
+    hasDeviceBond = hasDeviceBond,
+    hasPhoneBond = hasPhoneBond,
+    restricted = restricted
+)
+
 internal fun ScannedDevice.Serial.toUiItem(): DeviceUiItem.Serial {
     val vidPid = if (vendorId != null && productId != null) "${vendorId.toHex4()}:${productId.toHex4()}" else null
     return DeviceUiItem.Serial(
@@ -121,6 +126,12 @@ internal fun ScannedDevice.Serial.toUiItem(): DeviceUiItem.Serial {
         vidPid = vidPid
     )
 }
+
+/**
+ * Строка недоступна для выбора (поиск только сигнализаций). У USB вид до подключения неизвестен — его проверяет
+ * сценарий после подключения.
+ */
+internal val DeviceUiItem.restricted: Boolean get() = this is DeviceUiItem.Ble && restricted
 
 /** Блок отдаёт версию как `VER3.57` — показываем `3.57`. */
 internal fun String.toDisplayFirmware(): String = removePrefix("VER").trim()

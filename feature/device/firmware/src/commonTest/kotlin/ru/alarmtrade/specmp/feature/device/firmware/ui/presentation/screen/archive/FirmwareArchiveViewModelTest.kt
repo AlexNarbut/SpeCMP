@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -148,6 +149,24 @@ class FirmwareArchiveViewModelTest {
         runCurrent()
         assertEquals(listOf("3.61", "3.60"), vm.rows().map { it.version })
         assertEquals(null, (vm.state.value.content as LCEState.Content).updateError)
+    }
+
+    @Test
+    fun `refresh while the next page loads drops the stale page`() = test {
+        repository.archivePages[1] = page(1, "3.61", "3.60")
+        repository.archivePages[2] = page(2, "3.58")
+        val (vm, _) = viewModel()
+        repository.archiveDelayMillis[2] = 1_000
+
+        vm.onEndReached()
+        runCurrent()
+        // Обновление, пока страница 2 ещё грузится: её ответ придёт в уже сброшенный список.
+        vm.onRefresh()
+        advanceTimeBy(1_001)
+        runCurrent()
+
+        assertEquals(listOf("3.61", "3.60"), vm.rows().map { it.version })
+        assertEquals(listOf(1, 2, 1), repository.archiveCalls)
     }
 
     @Test

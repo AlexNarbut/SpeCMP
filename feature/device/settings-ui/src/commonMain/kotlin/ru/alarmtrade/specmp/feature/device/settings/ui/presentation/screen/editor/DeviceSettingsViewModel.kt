@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -149,13 +150,10 @@ internal class DeviceSettingsViewModel(
         ->
         state.copy(connectedDeviceName = connected, searchQuery = query, searchHits = hits)
     }
-        .launchOnFirstStart { if (!followsDevice) load() }
+        // Блок — чтение на каждое (пере)подключение; конфигурация/файл — одно чтение.
+        .launchOnFirstStart { if (followsDevice) onEachDeviceReady(::onDeviceReady) else load() }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_STOP_TIMEOUT), _state.value)
-
-    init {
-        if (followsDevice) onEachDeviceReady(::onDeviceReady)
-    }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         _state.update {
@@ -343,20 +341,31 @@ internal class DeviceSettingsViewModel(
     fun onSingleCanUpdate() = onExitRequest(ExitTarget.FIRMWARE_UPDATE)
 
     fun onExitDiscard() {
-        val target = exitTarget()
-        _state.update { it.copy(dialog = null) }
+        val target = takeExitTarget() ?: return
         _effect.tryEmit(DeviceSettingsEffect.Exit(target))
     }
 
-    private fun exitTarget(): ExitTarget =
-        (_state.value.dialog as? SettingsDialog.ExitConfirm)?.target ?: ExitTarget.BACK
+    /**
+     * Диалог выхода забирается сразу (интенты — на главном потоке по очереди): повторный тап его уже не застанет и не
+     * запишет/не выйдет второй раз. `null` — диалога нет.
+     */
+    private fun takeExitTarget(): ExitTarget? {
+        val dialog = _state.value.dialog
+        val target = when (dialog) {
+            is SettingsDialog.ExitConfirm -> dialog.target
+            SettingsDialog.ExitSave -> ExitTarget.BACK
+            else -> return null
+        }
+        _state.update { it.copy(dialog = null) }
+        return target
+    }
 
     fun onWrite() {
         work { write(exitTo = null) }
     }
 
     fun onExitWrite() {
-        val target = exitTarget()
+        val target = takeExitTarget() ?: return
         work { write(exitTo = target) }
     }
 
@@ -473,7 +482,18 @@ internal class DeviceSettingsViewModel(
             }
             return
         }
-        work { preview(from, closeAfter) }
+        startPreview(from, closeAfter, notStarted = null)
+    }
+
+    /**
+     * Сравнение с [from]: «Сравниваем…» — сразу (повторный запуск во время сравнения ничего не делает), сама работа —
+     * в очереди за правками (не пропуск: иначе выбор «Загрузить из…», пока применяется значение, молча терялся).
+     * Без связи работа не стартует — показываем [notStarted].
+     */
+    private fun startPreview(from: SettingsSource, closeAfter: Boolean, notStarted: DiffState?) {
+        if (_state.value.diff is DiffState.Busy) return
+        _state.update { it.copy(diff = DiffState.Busy(from.displayTitle), dialog = null) }
+        work { preview(from, closeAfter) } ?: _state.update { it.copy(diff = notStarted) }
     }
 
     /** «Продолжить» в предупреждении о другой модели. */
@@ -483,22 +503,30 @@ internal class DeviceSettingsViewModel(
         if (dialog.forWrite) {
             _effect.tryEmit(DeviceSettingsEffect.WriteToDevice(source))
         } else {
-            work { preview(dialog.source, dialog.closeAfter) }
+            startPreview(dialog.source, dialog.closeAfter, notStarted = null)
         }
     }
 
     /** «Повторить» в ошибке сравнения. */
     fun onDiffRetry() {
         val error = _state.value.diff as? DiffState.Error ?: return
-        work { preview(error.from, error.closeAfter) }
+        startPreview(error.from, error.closeAfter, notStarted = error)
     }
 
-    private suspend fun preview(from: SettingsSource, closeAfter: Boolean) = executeWithProceedLock {
-        val deviceName = deviceModel() ?: return@executeWithProceedLock
-        val current = currentRoot() ?: return@executeWithProceedLock
+    /** «Сравниваем…» снимается и при отмене (обрыв связи, в т.ч. пока работа ждёт lock) и раннем выходе. */
+    private suspend fun preview(from: SettingsSource, closeAfter: Boolean) {
+        try {
+            executeWithProceedLock(needSkipAnother = false) { previewLocked(from, closeAfter) }
+        } finally {
+            _state.update { if (it.diff is DiffState.Busy) it.copy(diff = null) else it }
+        }
+    }
+
+    private suspend fun previewLocked(from: SettingsSource, closeAfter: Boolean) {
+        val deviceName = deviceModel() ?: return
+        val current = currentRoot() ?: return
         val title = from.displayTitle
         discardPreview()
-        _state.update { it.copy(diff = DiffState.Busy(title), dialog = null) }
         val snapshot = withContext(dispatchers.io) { repository.snapshot(from, deviceName) }
         if (closeAfter && from != source) withContext(dispatchers.io) { repository.close(from) }
         val next = (snapshot as? Response.Success)?.let {
@@ -517,7 +545,7 @@ internal class DeviceSettingsViewModel(
                     it.copy(diff = DiffState.Error(title, from, closeAfter))
                 }
             }
-            return@executeWithProceedLock
+            return
         }
         val diff = withContext(dispatchers.default) { current.diffTo(next.value) }
         preview.update { Preview(from, snapshot.value) }
@@ -611,7 +639,7 @@ internal class DeviceSettingsViewModel(
                 it.copy(saveForm = SaveForm(defaultConfigurationName(), "", deviceName, exitAfter))
             }
 
-            SaveTarget.FILE -> work { exportFile(exitAfter) }
+            SaveTarget.FILE -> saving { exportFile(exitAfter) }
         }
     }
 
@@ -623,7 +651,7 @@ internal class DeviceSettingsViewModel(
 
     /** «Сохранить в файл» / «Сохранить как файл…» из меню. */
     fun onExportRequest() {
-        work { exportFile(exitAfter = false) }
+        saving { exportFile(exitAfter = false) }
     }
 
     fun onSaveFormChange(name: String, description: String) {
@@ -643,7 +671,7 @@ internal class DeviceSettingsViewModel(
         val form = _state.value.saveForm ?: return
         if (form.name.isBlank()) return
         _state.update { it.copy(saveForm = null) }
-        work { saveToMine(form) }
+        saving { saveToMine(form) }
     }
 
     private suspend fun saveToMine(form: SaveForm) = executeWithProceedLock(needSkipAnother = false) {
@@ -721,13 +749,14 @@ internal class DeviceSettingsViewModel(
         if (source is SettingsSource.File) {
             _state.update { it.copy(dialog = SettingsDialog.OverwriteConfirm(exitAfter)) }
         } else {
-            work { saveSource(exitAfter) }
+            saving { saveSource(exitAfter) }
         }
     }
 
     fun onOverwriteConfirm() {
-        val exitAfter = (_state.value.dialog as? SettingsDialog.OverwriteConfirm)?.exitAfter ?: false
-        work { saveSource(exitAfter) }
+        val dialog = _state.value.dialog as? SettingsDialog.OverwriteConfirm ?: return
+        _state.update { it.copy(dialog = null) }
+        saving { saveSource(dialog.exitAfter) }
     }
 
     private suspend fun saveSource(exitAfter: Boolean) = executeWithProceedLock(needSkipAnother = false) {
@@ -746,9 +775,9 @@ internal class DeviceSettingsViewModel(
         val retry = (_state.value.dialog as? SettingsDialog.SaveError)?.retry ?: return
         _state.update { it.copy(dialog = null) }
         when (retry) {
-            is SaveRetry.Mine -> work { saveToMine(retry.form) }
-            SaveRetry.File -> work { exportFile(exitAfter = false) }
-            is SaveRetry.Source -> work { saveSource(retry.exitAfter) }
+            is SaveRetry.Mine -> saving { saveToMine(retry.form) }
+            SaveRetry.File -> saving { exportFile(exitAfter = false) }
+            is SaveRetry.Source -> saving { saveSource(retry.exitAfter) }
         }
     }
 
@@ -764,7 +793,7 @@ internal class DeviceSettingsViewModel(
     /** «Создать копию» «моей» конфигурации: [name] — «Копия — …». */
     fun onCopyRequest(name: String) {
         val deviceName = deviceModel() ?: return
-        work { saveToMine(SaveForm(name.take(LocalConfiguration.NAME_MAX_LENGTH), "", deviceName)) }
+        saving { saveToMine(SaveForm(name.take(LocalConfiguration.NAME_MAX_LENGTH), "", deviceName)) }
     }
 
     /** «Записать в блок» из конфигурации: другая модель — предупреждение. */
@@ -806,6 +835,10 @@ internal class DeviceSettingsViewModel(
 
     /** Подтверждён сброс (или «Повторить» после ошибки): после успеха меню перечитывается из блока. */
     fun onResetConfirm() {
+        val dialog = _state.value.dialog
+        if (dialog != SettingsDialog.ResetConfirm && dialog != SettingsDialog.ResetError) return
+        // Диалог закрывается сразу: повторный тап не поставит в очередь второй сброс.
+        _state.update { it.copy(dialog = null) }
         work { reset() }
     }
 
@@ -878,6 +911,23 @@ internal class DeviceSettingsViewModel(
         _state.value.header?.let { VehicleDeviceFilter.Device(it.deviceName) }
 
     private fun currentRoot(): SettingsSection? = _state.value.menu.content
+
+    /**
+     * Сохранение (в «Мои», в файл, источника): одно за раз. Флаг «сохраняем» ставится сразу и атомарно — повторный тап
+     * до первой приостановки работы его застанет; снимается по окончании, при отмене и если работа не стартовала.
+     * Экспорт держит флаг до ответа системного сохранения ([onFileExported]).
+     */
+    private fun saving(block: suspend () -> Unit) {
+        if (!_state.updateIf({ !it.isSaving }) { it.copy(isSaving = true) }) return
+        val job = work {
+            try {
+                block()
+            } finally {
+                if (export.value == null) _state.update { it.copy(isSaving = false) }
+            }
+        }
+        if (job == null) _state.update { it.copy(isSaving = false) }
+    }
 
     /** Работа с источником: для блока — только при связи (отменяется при обрыве), иначе — в скоупе VM. */
     private fun work(block: suspend CoroutineScope.() -> Unit): Job? =

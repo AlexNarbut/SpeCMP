@@ -24,10 +24,12 @@ import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_btn_skip
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_format_failed
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_format_progress
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_label_current
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_label_now
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_msg_all_done
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_msg_auto
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_msg_in_progress
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_msg_waiting
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_status_no
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_status_passed
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_status_skipped
@@ -72,7 +74,11 @@ internal fun ChecklistPanel(
     val success = cmpDomainColors().success
     val total = checklist.tasks.size
     val allDone = checklist.allClosed
-    val order = checklist.tasks.sortedBy { if (it.status == ChecklistStatus.PENDING) 0 else 1 }
+    val order = if (checklist.sequential) {
+        checklist.tasks
+    } else {
+        checklist.tasks.sortedBy { if (it.status == ChecklistStatus.PENDING) 0 else 1 }
+    }
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         CmpColumn(
             modifier = Modifier
@@ -126,6 +132,7 @@ internal fun ChecklistPanel(
         order.forEach { task ->
             TaskRow(
                 task = task,
+                sequential = checklist.sequential,
                 number = checklist.tasks.indexOf(task) + 1,
                 vehicle = vehicle,
                 onSkip = onSkip,
@@ -138,44 +145,94 @@ internal fun ChecklistPanel(
 @Composable
 private fun TaskRow(
     task: ChecklistTask,
+    sequential: Boolean,
     number: Int,
     vehicle: VehicleState?,
     onSkip: (String) -> Unit,
     onAnswer: (String, Int) -> Unit
 ) {
     val colors = cmpThemeColors()
-    val success = cmpDomainColors().success
     val pending = task.status == ChecklistStatus.PENDING
     val failed = task.status == ChecklistStatus.FAILED
-    val background = when (task.status) {
-        ChecklistStatus.PASSED -> success.copy(alpha = PASSED_ALPHA)
-        ChecklistStatus.FAILED -> colors.errorContainer
-        else -> Color.Transparent
-    }
+    // Строгий порядок: текущее задание выделено, остальные незакрытые — «Ожидает» (без кнопок).
+    val current = pending && sequential && task.active
+    val waiting = pending && sequential && !task.active
+    val background = taskBackground(task.status, current)
+    val shape = RoundedCornerShape(16.dp)
     CmpRow(
         modifier = Modifier
             .fillMaxWidth()
-            .background(background, RoundedCornerShape(16.dp))
+            .background(background, shape)
+            .then(if (current) Modifier.border(2.dp, colors.primary, shape) else Modifier)
             .padding(horizontal = 10.dp, vertical = 12.dp)
             .testTag(CHECKLIST_TASK_TAG_PREFIX + task.id),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        TaskBadge(task.status, number)
+        TaskBadge(task.status, number, current)
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            CurrentLabel(visible = current)
             CmpText(
                 text = task.text,
                 fontSize = 16.sp,
                 fontWeight = if (pending) FontWeight.SemiBold else FontWeight.Medium,
-                color = if (failed) colors.onErrorContainer else colors.onSurface,
-                modifier = Modifier.padding(top = 6.dp)
+                color = taskTextColor(failed, waiting),
+                modifier = Modifier.padding(top = if (current) 0.dp else 6.dp)
             )
-            TaskDetails(task, vehicle, onAnswer)
+            if (waiting) WaitingLabel() else TaskDetails(task, vehicle, onAnswer)
         }
-        if (pending && !task.manual) {
-            CmpTextButton(text = stringResource(Strings.string.devicestate_fast_btn_skip), onClick = {
-                onSkip(task.id)
-            })
-        }
+        SkipButton(visible = pending && !task.manual && !waiting, onClick = { onSkip(task.id) })
+    }
+}
+
+/** «Текущее задание» над текстом задания строгого порядка. */
+@Composable
+private fun CurrentLabel(visible: Boolean) {
+    if (!visible) return
+    CmpText(
+        text = stringResource(Strings.string.devicestate_fast_label_current),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold,
+        color = cmpThemeColors().primary
+    )
+}
+
+@Composable
+private fun SkipButton(visible: Boolean, onClick: () -> Unit) {
+    if (!visible) return
+    CmpTextButton(text = stringResource(Strings.string.devicestate_fast_btn_skip), onClick = onClick)
+}
+
+@Composable
+private fun taskBackground(status: ChecklistStatus, current: Boolean): Color = when (status) {
+    ChecklistStatus.PASSED -> cmpDomainColors().success.copy(alpha = PASSED_ALPHA)
+    ChecklistStatus.FAILED -> cmpThemeColors().errorContainer
+    else -> if (current) cmpThemeColors().secondaryContainer else Color.Transparent
+}
+
+@Composable
+private fun taskTextColor(failed: Boolean, waiting: Boolean) = when {
+    failed -> cmpThemeColors().onErrorContainer
+    waiting -> cmpThemeColors().onSurfaceVariant
+    else -> cmpThemeColors().onSurface
+}
+
+/** «Ожидает — после предыдущего»: задание строгого порядка ещё не текущее. */
+@Composable
+private fun WaitingLabel() {
+    val colors = cmpThemeColors()
+    CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        CmpIcon(
+            icon = CmpIcons.Schedule,
+            contentDescription = null,
+            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+        CmpText(
+            text = stringResource(Strings.string.devicestate_fast_msg_waiting),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.onSurfaceVariant
+        )
     }
 }
 
@@ -222,7 +279,7 @@ private val ChecklistTask.resultText: StringResource
     }
 
 @Composable
-private fun TaskBadge(status: ChecklistStatus, number: Int) {
+private fun TaskBadge(status: ChecklistStatus, number: Int, current: Boolean = false) {
     val colors = cmpThemeColors()
     val success = cmpDomainColors().success
     val modifier = Modifier.size(36.dp)
@@ -264,10 +321,15 @@ private fun TaskBadge(status: ChecklistStatus, number: Int) {
         }
 
         ChecklistStatus.PENDING -> CmpBox(
-            modifier.border(2.dp, colors.outline, CircleShape),
+            modifier.border(2.dp, if (current) colors.primary else colors.outline, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            CmpText(text = number.toString(), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            CmpText(
+                text = number.toString(),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (current) colors.primary else colors.onSurface
+            )
         }
     }
 }

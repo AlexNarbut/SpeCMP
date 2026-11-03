@@ -4,6 +4,7 @@
     <string name="autostart_common_a11y_locked">You can’t leave until writing is finished</string>
     <string name="autostart_common_btn_chat">Contact support</string>
     <string name="autostart_common_btn_retry">Retry</string>
+    <string name="autostart_common_btn_next">Next</string>
     <string name="autostart_common_btn_close">Close</string>
     <string name="autostart_common_btn_done">Done</string>
     <string name="autostart_common_btn_open_clone">Go to the Clone procedure</string>
@@ -100,6 +101,7 @@
     <string name="autostart_bypass_subtitle_success">Keyless bypass is set up. Check remote start.</string>
     <string name="autostart_bypass_title_clone_required">CLONE is required for remote start to work correctly</string>
     <string name="autostart_bypass_subtitle_clone_required">Learning is finished. Run the Clone procedure for remote start to work.</string>
+    <string name="autostart_bypass_subtitle_clone_next">Learning finished. Clone is the next step — you do not need to open anything else.</string>
     <string name="autostart_bypass_title_not_supported">Keyless bypass is not supported</string>
     <string name="autostart_bypass_subtitle_not_supported">Bypass is not available for this vehicle or unit firmware.</string>
     <string name="autostart_bypass_title_error">Learning failed</string>

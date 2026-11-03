@@ -34,7 +34,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DarkMode
@@ -106,6 +108,7 @@ import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.Schedule
@@ -121,6 +124,7 @@ import androidx.compose.material.icons.filled.SettingsRemote
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Sync
@@ -439,4 +443,12 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.Autorenew -> Icons.Filled.Autorenew
 
     CmpIcons.Redo -> Icons.AutoMirrored.Filled.Redo
+
+    CmpIcons.StarBorder -> Icons.Filled.StarBorder
+
+    CmpIcons.RestartAlt -> Icons.Filled.RestartAlt
+
+    CmpIcons.CloudDone -> Icons.Filled.CloudDone
+
+    CmpIcons.CloudSync -> Icons.Filled.CloudSync
 }

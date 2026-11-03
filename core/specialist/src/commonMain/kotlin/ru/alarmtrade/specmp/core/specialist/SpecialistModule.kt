@@ -4,10 +4,12 @@ import org.koin.dsl.module
 import ru.alarmtrade.common.core.configuration.CommonConfigurator
 import ru.alarmtrade.common.core.configuration.NetworkMonitor as SdkNetworkMonitor
 import ru.alarmtrade.common.core.configuration.ProvideCommon
+import ru.alarmtrade.common.core.configuration.ProvideGeo
 import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.SpecialistConfig
 import ru.alarmtrade.specialist.network.NetworkLogLevel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 
@@ -25,6 +27,13 @@ val specialistModule = module {
         getOrNull<NetworkMonitor>()?.let { monitor ->
             CommonConfigurator.networkMonitor = object : SdkNetworkMonitor {
                 override val isAvailable = monitor.isAvailable
+            }
+        }
+
+        // Координаты для отчёта быстрого монтажа — молча, без запроса разрешения; нет провайдера — `0,0` от SDK.
+        getOrNull<SilentLocationProvider>()?.let { location ->
+            CommonConfigurator.provideGeo = object : ProvideGeo {
+                override suspend fun getCurrentLocation(): Pair<Float, Float>? = location.lastKnown()
             }
         }
 
@@ -68,7 +77,11 @@ val specialistModule = module {
     single { get<SpecialistApp>().configurationInteractor }
     // «Мои конфигурации» настроек в хранилище приложения (feature/configurator).
     single { get<SpecialistApp>().localConfigurationInteractor }
+    // Мастер быстрого монтажа (feature/fast-mount): шаги, вопросы проверки системы, отзыв.
+    single { get<SpecialistApp>().fastMountInteractor }
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
+    // Язык конфигураций — настройка приложения (feature/app-settings).
+    single<ConfigurationLanguageStore> { SpecialistConfigurationLanguageStore(get()) }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }
     }

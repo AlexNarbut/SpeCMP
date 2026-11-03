@@ -38,6 +38,8 @@ kotlin {
             implementation(project(":core:localization"))
             // Жизненный цикл приложения для BaseViewModel (onAppForeground / onAppBackground)
             implementation(project(":core:lifecycle"))
+            // Сохранённая тема приложения (AppThemeStore)
+            implementation(libs.multiplatformSettings)
 
             // Compose — api so consumers get runtime/foundation/ui transitively
             // material3 stays implementation: feature modules use Cmp* wrappers, not material3 directly
