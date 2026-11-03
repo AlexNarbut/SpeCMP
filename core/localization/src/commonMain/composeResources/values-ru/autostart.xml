@@ -60,6 +60,7 @@
     <string name="autostart_bypass_item_ecu_done">Обмен данными с блоком управления двигателем завершён. Ожидайте</string>
     <string name="autostart_bypass_item_learning">Идёт процесс обучения, ожидайте</string>
     <string name="autostart_bypass_item_critical_lada">Обход иммобилайзера LADA CAN. Обмен данными с приложением.</string>
+    <string name="autostart_bypass_item_critical_lada_vesta">Обход иммобилайзера LADA Vesta CAN. Передача патча прошивки в блок сигнализации. Не выключайте зажигание.</string>
     <string name="autostart_bypass_item_critical_alarm">Обмен данными с блоком сигнализации.</string>
     <string name="autostart_bypass_item_critical_ecu">Обмен данными с блоком управления двигателем.</string>
     <string name="autostart_instruction_label_forbidden">Нельзя:</string>
@@ -135,6 +136,8 @@
     <string name="autostart_bypass_error_no_vin_what">Нет VIN номера в CAN шине.</string>
     <string name="autostart_bypass_error_lada_can_what">Нет связи по шине CAN или не активирован иммобилайзер.</string>
     <string name="autostart_bypass_error_lada_can_check">Проверьте подключение шины CAN.</string>
+    <string name="autostart_bypass_error_lada_vesta_patch_what">Не удалось передать патч прошивки в блок сигнализации.</string>
+    <string name="autostart_bypass_error_lada_vesta_patch_check">Проверьте соединение с блоком и повторите обучение.</string>
     <string name="autostart_bypass_error_repeat_check">Повторите обучение. При выключении зажигания обязательно извлекайте ключ из замка зажигания после каждого включения зажигания.</string>
     <string name="autostart_clone_title_screen">Процедура Clone</string>
     <string name="autostart_clone_subtitle_start">Блок передаст данные иммобилайзера, наш сервер вычислит ключ, приложение запишет его в блок. От вас — только ждать.</string>
