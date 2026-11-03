@@ -23,6 +23,7 @@ import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
 import ru.alarmtrade.specmp.core.specialist.specialistModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
+import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
@@ -75,7 +76,7 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
         LaunchedEffect(Unit) { specialistInitializer.start(appLocale.languageTag) }
         val specialistReady by specialistInitializer.ready.collectAsStateWithLifecycle()
 
-        AppTheme(onThemeChange) {
+        AppTheme(onThemeChange, themeStore = DefaultAppThemeStore) {
             if (specialistReady) {
                 FlasherNavigation()
             } else {

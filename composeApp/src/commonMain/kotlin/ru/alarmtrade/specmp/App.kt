@@ -24,6 +24,7 @@ import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
 import ru.alarmtrade.specmp.core.specialist.specialistModule
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
+import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
 import ru.alarmtrade.specmp.core.ui.view.image.rememberCmpImageLoader
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
@@ -111,7 +112,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
 
         // Единый ImageLoader приложения: memory/disk-кэш Coil общий для всех экранов (U-1).
         ProvideCmpImageLoader(rememberCmpImageLoader()) {
-            AppTheme(onThemeChange) {
+            AppTheme(onThemeChange, themeStore = DefaultAppThemeStore) {
                 if (specialistReady) {
                     AppNavigation()
                 } else {
