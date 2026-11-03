@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.upda
 
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -70,11 +72,9 @@ class FirmwareUpdateViewModel(
     private val dispatchers: AppDispatchers
 ) : BaseViewModel() {
 
-    private val core: MutableStateFlow<Core>
-
-    init {
-        val request = bootRequester.take()
-        core = MutableStateFlow(
+    // Начальное состояние — из запроса входа в загрузчик (модуль и канал), при создании VM.
+    private val core: MutableStateFlow<Core> = bootRequester.take().let { request ->
+        MutableStateFlow(
             Core(
                 selectedModuleId = request?.moduleId,
                 channel = request?.channel ?: FirmwareChannel.RELEASE
@@ -93,6 +93,16 @@ class FirmwareUpdateViewModel(
         deviceSession.state,
         deviceSession.reboot
     ) { core, session, reboot -> toState(core, session, reboot) }
+        // Всё живёт всю жизнь VM (обновление идёт и пока экран перекрыт архивом). Подписки на запросы — до первого
+        // запроса (UNDISPATCHED): у SharedFlow без replay запрос без подписчика потерялся бы.
+        .launchOnFirstStart {
+            launch(start = CoroutineStart.UNDISPATCHED) {
+                updateRequests.collectLatest { source -> if (source != null) runUpdate(source) }
+            }
+            // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
+            launch(start = CoroutineStart.UNDISPATCHED) { archivePicker.picks.collect(::onArchivePicked) }
+            deviceSession.state.collectLatest { onSession(it) }
+        }
         .flowOn(dispatchers.default)
         .stateIn(
             viewModelScope,
@@ -103,22 +113,14 @@ class FirmwareUpdateViewModel(
     private val _effect = sideEffectFlow<FirmwareUpdateEffect>()
     val effect: SharedFlow<FirmwareUpdateEffect> = _effect.asSharedFlow()
 
-    init {
-        safeLaunch { deviceSession.state.collectLatest { onSession(it) } }
-        safeLaunch {
-            updateRequests.collectLatest { source -> if (source != null) runUpdate(source) }
-        }
-        // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
-        safeLaunch { archivePicker.picks.collect(::onArchivePicked) }
-    }
-
     // ───── связь ─────
 
     private suspend fun onSession(session: DeviceSessionState) {
         when (session) {
             is DeviceSessionState.FirmwareBoot, is DeviceSessionState.BluetoothBoot -> {
                 onBootReturned()
-                if (core.value.profile == null) loadProfile(session)
+                // Под тем же замком, что и «Повторить»: чтение профиля не идёт дважды параллельно.
+                if (core.value.profile == null) executeWithProceedLock { loadProfile(session) }
             }
 
             DeviceSessionState.Disconnected, DeviceSessionState.Connecting ->
