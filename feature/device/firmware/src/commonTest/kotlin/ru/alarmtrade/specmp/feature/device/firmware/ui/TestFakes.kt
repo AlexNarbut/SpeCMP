@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +54,9 @@ internal class FakeFirmwareRepository : FirmwareRepository {
     /** Запросы архива целиком: модуль, страница и CAN-фильтр. */
     val archiveRequests = mutableListOf<Triple<Long, Int, String?>>()
 
+    /** Сколько «идёт» запрос страницы — для ответа, пришедшего после обновления списка. */
+    val archiveDelayMillis = mutableMapOf<Int, Long>()
+
     override suspend fun archivePage(
         moduleId: Long,
         channel: FirmwareChannel,
@@ -62,6 +66,7 @@ internal class FakeFirmwareRepository : FirmwareRepository {
     ): Response<FirmwareVersionPage> {
         archiveCalls += page
         archiveRequests += Triple(moduleId, page, canCode)
+        archiveDelayMillis[page]?.let { delay(it) }
         return archivePages[page] ?: Response.Error(IllegalStateException("no page"))
     }
 }
