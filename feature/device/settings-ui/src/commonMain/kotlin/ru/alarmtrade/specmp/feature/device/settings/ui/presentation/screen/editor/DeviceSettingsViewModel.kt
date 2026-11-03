@@ -150,13 +150,10 @@ internal class DeviceSettingsViewModel(
         ->
         state.copy(connectedDeviceName = connected, searchQuery = query, searchHits = hits)
     }
-        .launchOnFirstStart { if (!followsDevice) load() }
+        // Блок — чтение на каждое (пере)подключение; конфигурация/файл — одно чтение.
+        .launchOnFirstStart { if (followsDevice) onEachDeviceReady(::onDeviceReady) else load() }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_STOP_TIMEOUT), _state.value)
-
-    init {
-        if (followsDevice) onEachDeviceReady(::onDeviceReady)
-    }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         _state.update {
