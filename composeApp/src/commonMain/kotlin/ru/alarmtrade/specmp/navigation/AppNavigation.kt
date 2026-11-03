@@ -21,6 +21,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import ru.alarmtrade.specmp.core.ui.navigation.currentRoute
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
@@ -166,7 +167,8 @@ private fun AuthedNavGraph() {
             entry<VehicleSelectRoute> { key ->
                 VehicleSelectEntry(
                     request = key.request,
-                    onPick = { backStack.popSafe() },
+                    // Только свой маршрут: повторное «Выбрать» не закроет экран под ним.
+                    onPick = { if (backStack.currentRoute == key) backStack.popSafe() },
                     onBack = { backStack.popSafe() }
                 )
             }

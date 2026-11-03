@@ -12,8 +12,9 @@ fun <T : NavKey> NavBackStack<T>.navigateSafe(route: T) {
     if (currentRoute != route) add(route)
 }
 
-/** Заменить текущий верхний маршрут. */
+/** Заменить текущий верхний маршрут; он уже наверху — ничего (повторный клик не пересоздаёт экран). */
 fun <T : NavKey> NavBackStack<T>.replaceCurrent(route: T) {
+    if (currentRoute == route) return
     if (isNotEmpty()) removeAt(size - 1)
     add(route)
 }
