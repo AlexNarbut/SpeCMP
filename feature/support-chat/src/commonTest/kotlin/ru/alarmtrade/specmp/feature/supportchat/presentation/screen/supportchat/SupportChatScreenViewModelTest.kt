@@ -1049,6 +1049,8 @@ class SupportChatScreenViewModelTest {
             outbox = outbox
         )
         createdViewModels += viewModel
+        // Экран подписан на state — с этого стартует работа VM (launchOnFirstStart).
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
         if (advance) advanceUntilIdle()
         return viewModel
     }

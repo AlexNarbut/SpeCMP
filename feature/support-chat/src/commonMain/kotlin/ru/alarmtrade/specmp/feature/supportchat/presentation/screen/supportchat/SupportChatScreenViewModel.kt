@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
+import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
@@ -10,11 +11,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -58,7 +60,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
  * Конкурентность:
  * - события сессии собираются на main (поток репозитория — на io), лента и флаги — только
  *   `_state.update {}`;
- * - загрузка истории — одна за раз ([historyJob], main-confined);
+ * - загрузка истории — одна за раз ([historyJob], main-confined); прочтения — атомарным [ReadIds];
  * - отправка — [sendMutex]: новые, ретраи и очередь уходят строго по одной;
  * - outbox — явными переходами, собственный мьютекс реализации.
  */
@@ -74,7 +76,15 @@ class SupportChatScreenViewModel(
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
-    val state: StateFlow<SupportChatScreenState> = _state.asStateFlow()
+
+    // Старт экрана — при первой подписке на state: очередь восстанавливается первой (это самые новые сообщения,
+    // история при своей загрузке встаёт перед ними), затем сессия. Работа живёт всю жизнь VM.
+    val state: StateFlow<SupportChatScreenState> = _state
+        .launchOnFirstStart {
+            restoreOutbox()
+            sessionJob = safeLaunch { collectSession() }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
     private val _effect = sideEffectFlow<SupportChatEffect>()
     val effect: SharedFlow<SupportChatEffect> = _effect.asSharedFlow()
@@ -90,19 +100,9 @@ class SupportChatScreenViewModel(
     private var sessionJob: Job? = null
     private var historyJob: Job? = null
 
-    // Main-confined: интенты экрана и flush в viewModelScope.
-    private val markedAsReadIds = mutableSetOf<Long>()
-    private val pendingReadIds = mutableSetOf<Long>()
+    // Прочтения: отправленные (или в отправке) и ждущие отправки server id — атомарно, одним значением.
+    private val readIds = MutableStateFlow(ReadIds())
     private var readFlushJob: Job? = null
-
-    init {
-        sessionJob = safeLaunch {
-            // Очередь восстанавливается первой: это самые новые сообщения,
-            // история при своей загрузке встаёт перед ними.
-            restoreOutbox()
-            collectSession()
-        }
-    }
 
     // region Вложения композера
 
@@ -531,13 +531,13 @@ class SupportChatScreenViewModel(
                 message.id in idSet &&
                     !message.isMine &&
                     message.status != SupportChatMessageStatus.Read &&
-                    serverId !in markedAsReadIds &&
-                    serverId !in pendingReadIds
+                    serverId !in readIds.value.marked &&
+                    serverId !in readIds.value.pending
             }
         }
         if (eligibleServerIds.isEmpty()) return
 
-        pendingReadIds += eligibleServerIds
+        readIds.update { it.copy(pending = it.pending + eligibleServerIds) }
         // Не перезапускаем таймер при непрерывном скролле: flush не реже
         // одного раза за READ_FLUSH_DELAY.
         if (readFlushJob?.isActive == true) return
@@ -548,18 +548,14 @@ class SupportChatScreenViewModel(
     }
 
     private suspend fun flushReadIds() {
-        val ids = pendingReadIds.toList()
-        if (ids.isEmpty()) return
-
-        // Отмечаем как «в работе» сразу, чтобы не отправить дубль; при ошибке
+        // Отмечаем как «в работе» сразу (одним атомарным переходом), чтобы не отправить дубль; при ошибке
         // возвращаем в буфер — следующая видимость доотправит.
-        markedAsReadIds += ids
-        pendingReadIds.clear()
-        val response = withContext(dispatchers.io) { repository.markMessagesAsRead(ids) }
+        val ids = readIds.getAndUpdate { it.copy(marked = it.marked + it.pending, pending = emptySet()) }.pending
+        if (ids.isEmpty()) return
+        val response = withContext(dispatchers.io) { repository.markMessagesAsRead(ids.toList()) }
         if (response is Response.Error) {
             logger.d(response.exception) { "Failed to mark messages as read" }
-            markedAsReadIds -= ids.toSet()
-            pendingReadIds += ids
+            readIds.update { it.copy(marked = it.marked - ids, pending = it.pending + ids) }
         }
     }
 
@@ -644,6 +640,7 @@ class SupportChatScreenViewModel(
     // endregion
 
     private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
         val TYPING_TIMEOUT = 5.seconds
         val READ_FLUSH_DELAY = 300.milliseconds
         val RETRYABLE = setOf(SupportChatMessageStatus.Failed)
@@ -652,3 +649,6 @@ class SupportChatScreenViewModel(
         const val LOCAL_ID_PREFIX = "local-"
     }
 }
+
+/** Прочтения сообщений: [marked] — отправлены или в отправке, [pending] — ждут отправки (батч с задержкой). */
+private data class ReadIds(val marked: Set<Long> = emptySet(), val pending: Set<Long> = emptySet())
