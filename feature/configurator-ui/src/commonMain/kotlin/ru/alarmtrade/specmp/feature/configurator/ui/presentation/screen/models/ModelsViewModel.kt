@@ -48,7 +48,8 @@ internal class ModelsViewModel(
         .launchOnFirstStart {
             val recent = withContext(dispatchers.io) { models.recent() }
             _state.update { it.copy(recent = recent) }
-            load()
+            // Под тем же замком, что и «Повторить»: первая загрузка и повтор не идут параллельно.
+            executeWithProceedLock { load() }
         }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), _state.value)
