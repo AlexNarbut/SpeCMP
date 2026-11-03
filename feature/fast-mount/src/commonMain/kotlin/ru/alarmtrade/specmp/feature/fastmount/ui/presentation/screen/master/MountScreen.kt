@@ -30,19 +30,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.fastmount_common_btn_retry
@@ -68,7 +71,6 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpFullScreenDialog
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.image.CmpAsyncImage
-import ru.alarmtrade.specmp.core.ui.view.image.CmpImage
 import ru.alarmtrade.specmp.core.ui.view.image.CmpZoomableImage
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
@@ -88,24 +90,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardN
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.WizardScaffold
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.title
 import specmp.feature.fast_mount.generated.resources.Res
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_00
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_01
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_02
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_03
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_04
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_05
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_06
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_07
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_08
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_09
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_10
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_11
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_12
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_13
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_14
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_15
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_16
-import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn_17
+import specmp.feature.fast_mount.generated.resources.fastmount_slave_learn
 
 internal const val FAST_MOUNT_MOUNT_DONE_TAG = "fastmount_mount_done"
 internal const val FAST_MOUNT_MAP_TAG = "fastmount_mount_map"
@@ -114,6 +99,8 @@ private const val BYTES_IN_MB = 1024f * 1024f
 private const val SLAVE_FRAME_MILLIS = 200L
 private const val SLAVE_LAST_FRAME_MILLIS = 600L
 private const val SLAVE_RATIO = 800f / 550f
+private const val SLAVE_FRAMES = 18
+private const val SLAVE_COLUMNS = 3
 private const val VIEWER_BACKGROUND = 0xFF0C0E0F
 private const val VIEWER_BUTTON_ALPHA = 0.16f
 
@@ -621,53 +608,43 @@ private fun ViewerArrow(
 
 private const val DISABLED_ALPHA = 0.35f
 
-private val SlaveFrames: List<DrawableResource> = listOf(
-    Res.drawable.fastmount_slave_learn_00,
-    Res.drawable.fastmount_slave_learn_01,
-    Res.drawable.fastmount_slave_learn_02,
-    Res.drawable.fastmount_slave_learn_03,
-    Res.drawable.fastmount_slave_learn_04,
-    Res.drawable.fastmount_slave_learn_05,
-    Res.drawable.fastmount_slave_learn_06,
-    Res.drawable.fastmount_slave_learn_07,
-    Res.drawable.fastmount_slave_learn_08,
-    Res.drawable.fastmount_slave_learn_09,
-    Res.drawable.fastmount_slave_learn_10,
-    Res.drawable.fastmount_slave_learn_11,
-    Res.drawable.fastmount_slave_learn_12,
-    Res.drawable.fastmount_slave_learn_13,
-    Res.drawable.fastmount_slave_learn_14,
-    Res.drawable.fastmount_slave_learn_15,
-    Res.drawable.fastmount_slave_learn_16,
-    Res.drawable.fastmount_slave_learn_17
-)
-
-/** Анимация обучения штатного брелока (кадры `slave_learn.gif` старого приложения, 5 кадров/с). */
+/**
+ * Анимация обучения штатного брелока: спрайт-лист `fastmount_slave_learn.webp` из `slave_learn.gif` старого
+ * приложения — 18 кадров 800×550 сеткой [SLAVE_COLUMNS] колонки, 5 кадров/с, последний держится дольше.
+ */
 @Composable
 internal fun SlaveAnimation(modifier: Modifier = Modifier) {
-    var frame by remember { mutableIntStateOf(0) }
+    val sheet = imageResource(Res.drawable.fastmount_slave_learn)
+    val frame = remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(if (frame == SlaveFrames.lastIndex) SLAVE_LAST_FRAME_MILLIS else SLAVE_FRAME_MILLIS)
-            frame = (frame + 1) % SlaveFrames.size
+            delay(if (frame.intValue == SLAVE_FRAMES - 1) SLAVE_LAST_FRAME_MILLIS else SLAVE_FRAME_MILLIS)
+            frame.intValue = (frame.intValue + 1) % SLAVE_FRAMES
         }
     }
     // Кадры на белом фоне (исходник старого приложения) — в рамке, чтобы в тёмной теме не «висели» в воздухе.
+    // Кадр читается только при отрисовке — смена кадра не вызывает рекомпозицию.
     CmpBox(
         modifier = modifier
             .widthIn(max = 520.dp)
             .aspectRatio(SLAVE_RATIO)
             .clip(RoundedCornerShape(24.dp))
             .background(Color.White)
-    ) {
-        CmpImage(
-            painter = painterResource(SlaveFrames[frame]),
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+            .drawBehind {
+                val cell = IntSize(sheet.width / SLAVE_COLUMNS, sheet.height / rowsOf(SLAVE_FRAMES))
+                val index = frame.intValue
+                drawImage(
+                    image = sheet,
+                    srcOffset = IntOffset(index % SLAVE_COLUMNS * cell.width, index / SLAVE_COLUMNS * cell.height),
+                    srcSize = cell,
+                    dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+                    filterQuality = FilterQuality.Medium
+                )
+            }
+    )
 }
+
+private fun rowsOf(frames: Int) = (frames + SLAVE_COLUMNS - 1) / SLAVE_COLUMNS
 
 /** Описание конфигурации приходит HTML — для текста без разметки. */
 internal fun String.stripHtml(): String = replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
