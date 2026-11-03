@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -88,6 +90,12 @@ class AdvancedMountRootViewModel(
     ) { state, unread, remote, transport, productInfo ->
         state.copy(unreadCount = unread, remoteAvailable = remote, transport = transport, productInfo = productInfo)
     }
+        // Реакция на каждое (пере)подключение блока живёт всю жизнь VM: проверка нового блока и IMEI. Подписка на
+        // запросы проверки — до первого подключения (UNDISPATCHED): запрос без подписчика потерялся бы.
+        .launchOnFirstStart {
+            launch(start = CoroutineStart.UNDISPATCHED) { loadRequests.collectLatest(::verify) }
+            onEachDeviceReady(::onDeviceReady)
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
@@ -97,12 +105,6 @@ class AdvancedMountRootViewModel(
     // Проверка блока: новый запрос (повтор или другой блок) отменяет незаконченную прежнюю —
     // collectLatest, без поля-Job.
     private val loadRequests = MutableSharedFlow<AlarmDevice>(extraBufferCapacity = 1, onBufferOverflow = DROP_OLDEST)
-
-    init {
-        safeLaunch { loadRequests.collectLatest(::verify) }
-        // Реакция на каждое (пере)подключение блока живёт всю жизнь VM: проверка нового блока и IMEI.
-        onEachDeviceReady(::onDeviceReady)
-    }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         val previous = _state.value
