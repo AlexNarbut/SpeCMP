@@ -154,14 +154,16 @@ class MainScreenViewModel(
 
     private suspend fun initialRefresh() {
         logger.d { "Starting initial home data refresh" }
-        safeLaunch { refreshDatabaseVersion() } // параллельно, скелетон не гейтит
+        // Параллельно, скелетон не гейтят: синхронизация базы и проверка обновления приложения показывают себя
+        // своими индикаторами вверху экрана (проверка обновления — сетевой запрос, может идти долго).
+        safeLaunch { refreshDatabaseVersion() }
+        safeLaunch { checkAppUpdate() }
         try {
             coroutineScope {
                 awaitAll(
                     async { loadUserProfile() },
                     async { loadUserAppFeatures() },
-                    async { loadUserCommercial() },
-                    async { checkAppUpdate() }
+                    async { loadUserCommercial() }
                 )
             }
             logger.d { "Initial home data refresh completed" }
