@@ -604,6 +604,38 @@ class DeviceSettingsViewModelTest {
     }
 
     @Test
+    fun `repeated taps do not repeat a reset, a write with exit or a copy`() = test {
+        val vm = viewModel()
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+
+        vm.onResetRequest()
+        vm.onResetConfirm()
+        vm.onResetConfirm()
+        settle()
+        assertEquals(1, repository.resetCalls)
+
+        vm.onValueChange(11, SettingValue.Switch(true))
+        settle()
+        vm.onExitRequest()
+        vm.onExitWrite()
+        vm.onExitWrite()
+        settle()
+        assertEquals(1, repository.saveCalls)
+        assertEquals(1, effects.count { it is DeviceSettingsEffect.Exit })
+
+        val copying = CompletableDeferred<Unit>()
+        local.gate = copying
+        vm.onCopyRequest("Копия")
+        vm.onCopyRequest("Копия")
+        assertTrue(vm.state.value.isSaving)
+        copying.complete(Unit)
+        settle()
+        assertEquals(1, local.created.size)
+        assertEquals(false, vm.state.value.isSaving)
+    }
+
+    @Test
     fun `failed factory reset shows the error and keeps the menu`() = test {
         val vm = viewModel()
         repository.resetResult = Response.Error(IllegalStateException("timeout"))
@@ -769,6 +801,9 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
 private class FakeLocalConfigurations : LocalConfigurationsRepository {
     val created = mutableListOf<Pair<String, SettingsSource>>()
 
+    /** Пока не завершён — создание «идёт» (проверка повторных нажатий). */
+    var gate: CompletableDeferred<Unit>? = null
+
     override val changes: Flow<Unit> = emptyFlow()
 
     override suspend fun all(): Response<List<LocalConfiguration>> = Response.Success(emptyList())
@@ -780,6 +815,7 @@ private class FakeLocalConfigurations : LocalConfigurationsRepository {
         from: SettingsSource
     ): Response<SettingsSource.LocalConfiguration> {
         created += name to from
+        gate?.await()
         return Response.Success(SettingsSource.LocalConfiguration(created.size.toLong(), deviceName, name))
     }
 
