@@ -68,13 +68,11 @@ class FastMountViewModel(
     private val _effect: MutableSharedFlow<FastMountEffect> = sideEffectFlow()
     val effect: SharedFlow<FastMountEffect> = _effect.asSharedFlow()
 
+    // Подписки, которые перезапускаются или останавливаются по ходу мастера; повторные вызовы операций SDK
+    // отсекает общий замок VM (executeWithProceedLock), а не флаги.
     private var stepsJob: Job? = null
     private var questionsJob: Job? = null
-    private var rebootJob: Job? = null
     private var mapJob: Job? = null
-    private var mapBytes: ByteArray? = null
-    private var mountStart: TimeSource.Monotonic.ValueTimeMark? = null
-    private var writeRequested = false
 
     // region Блок
 
@@ -294,27 +292,28 @@ class FastMountViewModel(
 
     fun onStart() {
         val configuration = _state.value.configuration ?: return
-        if (_state.value.master.starting) return
+        safeLaunch { executeWithProceedLock { start(configuration.id) } }
+    }
+
+    private suspend fun start(configurationId: Int) {
         _state.update {
             it.copy(screen = WizardScreen.MASTER, master = it.master.copy(starting = true, startError = null))
         }
-        safeLaunch {
-            when (val response = io { repository.start(configuration.id) }) {
-                is Response.Success -> {
-                    mountStart = TimeSource.Monotonic.markNow()
-                    writeRequested = false
-                    _state.update { it.copy(master = it.master.copy(starting = false)) }
-                    observeSteps()
+        when (val response = io { repository.start(configurationId) }) {
+            is Response.Success -> {
+                _state.update {
+                    it.copy(master = it.master.copy(starting = false, startedAt = TimeSource.Monotonic.markNow()))
                 }
+                observeSteps()
+            }
 
-                is Response.Error -> _state.update {
-                    it.copy(
-                        master = it.master.copy(
-                            starting = false,
-                            startError = FastMountError.from(response.exception)
-                        )
+            is Response.Error -> _state.update {
+                it.copy(
+                    master = it.master.copy(
+                        starting = false,
+                        startError = FastMountError.from(response.exception)
                     )
-                }
+                )
             }
         }
     }
@@ -346,24 +345,18 @@ class FastMountViewModel(
                         it.master.toast
                     },
                     cloneNeeded = if (step == FastMountStep.CLONE) true else it.master.cloneNeeded,
-                    mountMinutes = mountStart?.elapsedNow()?.inWholeMinutes?.toInt() ?: 0
+                    mountMinutes = it.master.startedAt?.elapsedNow()?.inWholeMinutes?.toInt() ?: 0
                 )
             )
         }
         if (step == FastMountStep.SYSTEM_CHECK) observeQuestions() else stopQuestions()
-        // Запись настроек начинается сама: подтверждение было на сводке.
-        if (step == FastMountStep.WRITING_SETTINGS && !writeRequested) {
-            writeRequested = true
-            onWriteRetry()
-        }
+        // Запись настроек начинается сама — на первом шаге после старта: подтверждение было на сводке.
+        if (previous == null && step == FastMountStep.WRITING_SETTINGS) onWriteRetry()
     }
 
     fun onWriteRetry() {
-        val master = _state.value.master
-        if (master.busy || master.step != FastMountStep.WRITING_SETTINGS) return
-        _state.update { it.copy(master = it.master.copy(busy = true, error = null)) }
-        launchOnDevice { finishCall(io { repository.next() }) }
-            ?: _state.update { it.copy(master = it.master.copy(busy = false)) }
+        if (_state.value.master.step != FastMountStep.WRITING_SETTINGS) return
+        launchOnDevice { transition { io { repository.next() } } }
     }
 
     fun onMountDone() = showDialog(WizardDialog.MOUNT_DONE)
@@ -396,18 +389,36 @@ class FastMountViewModel(
     }
 
     private fun next() {
-        if (_state.value.master.busy) return
-        _state.update { it.copy(master = it.master.copy(busy = true, error = null)) }
-        safeLaunch { finishCall(io { repository.next() }) }
+        safeLaunch { transition { io { repository.next() } } }
     }
 
     private fun previous() {
-        if (_state.value.master.busy) return
-        _state.update { it.copy(master = it.master.copy(busy = true, error = null)) }
-        safeLaunch { finishCall(io { repository.previous() }) }
+        safeLaunch { transition { io { repository.previous() } } }
     }
 
-    private fun finishCall(response: Response<Unit>) {
+    /**
+     * Переход SDK под общим замком VM: один за раз, повторные нажатия во время перехода пропускаются. Возвращает
+     * ответ; `null` — переход пропущен или отменён.
+     */
+    private suspend fun transition(call: suspend () -> Response<Unit>): Response<Unit>? {
+        var response: Response<Unit>? = null
+        executeWithProceedLock { response = runTransition(call) }
+        return response
+    }
+
+    /** Переход SDK, когда замок уже взят: «занято» на время вызова, снимается и при отмене. */
+    private suspend fun runTransition(call: suspend () -> Response<Unit>): Response<Unit>? {
+        _state.update { it.copy(master = it.master.copy(busy = true, error = null)) }
+        var response: Response<Unit>? = null
+        try {
+            response = call()
+        } finally {
+            finishCall(response)
+        }
+        return response
+    }
+
+    private fun finishCall(response: Response<Unit>?) {
         _state.update {
             it.copy(
                 master = it.master.copy(
@@ -426,33 +437,24 @@ class FastMountViewModel(
      * показывает потерю связи, мастер ждёт возврата блока.
      */
     private fun nextWithReboot(from: FastMountStep) {
-        val master = _state.value.master
-        if (master.busy) return
-        val ble = _state.value.fixed?.transport == ConnectionTransport.BLE
-        if (!ble) {
+        if (_state.value.fixed?.transport != ConnectionTransport.BLE) {
             next()
             return
         }
+        // Замок держится до возврата блока: во время перезагрузки других переходов нет.
+        safeLaunch { executeWithProceedLock { rebootTransition(from) } }
+    }
+
+    private suspend fun rebootTransition(from: FastMountStep) {
         deviceSession.expectReboot(DeviceReboot.Restart)
-        _state.update {
-            it.copy(
-                master = it.master.copy(
-                    busy = true,
-                    error = null,
-                    reboot = RebootWait(from)
-                )
-            )
-        }
-        rebootJob?.cancel()
-        rebootJob = safeLaunch {
-            val response = io { repository.next() }
-            finishCall(response)
-            if (response is Response.Error) {
+        _state.update { it.copy(master = it.master.copy(reboot = RebootWait(from))) }
+        try {
+            if (runTransition { io { repository.next() } } is Response.Success) {
+                awaitReboot()
+            } else {
                 deviceSession.cancelReboot()
-                _state.update { it.copy(master = it.master.copy(reboot = null)) }
-                return@safeLaunch
             }
-            awaitReboot()
+        } finally {
             _state.update { it.copy(master = it.master.copy(reboot = null)) }
         }
     }
@@ -477,7 +479,7 @@ class FastMountViewModel(
     fun onMapRetry() = downloadMap()
 
     fun onMapOpen() {
-        val bytes = mapBytes ?: return
+        val bytes = (_state.value.master.mountMap as? MountMapState.Ready)?.bytes ?: return
         val name = _state.value.configuration?.mountingMap?.name?.takeIf { it.isNotBlank() } ?: DEFAULT_MAP_NAME
         _effect.tryEmit(FastMountEffect.OpenFile(name.withPdfExtension(), bytes))
     }
@@ -501,10 +503,7 @@ class FastMountViewModel(
         _state.update { it.copy(master = it.master.copy(mountMap = MountMapState.Downloading)) }
         mapJob = safeLaunch {
             val state = when (val response = io { repository.download(map.url) }) {
-                is Response.Success -> {
-                    mapBytes = response.value
-                    MountMapState.Ready(response.value.size)
-                }
+                is Response.Success -> MountMapState.Ready(response.value)
 
                 is Response.Error -> {
                     logger.w(response.exception) { "Mounting map download failed" }
@@ -581,15 +580,22 @@ class FastMountViewModel(
     fun onTaskAnswer(taskId: Int, option: Int) {
         val question = _state.value.configuration?.questions?.firstOrNull { it.id == taskId } ?: return
         val answer = question.answers.getOrNull(option) ?: return
-        if (_state.value.master.currentTask != taskId) return
-        markTask(taskId, if (answer.passed) MountTaskStatus.PASSED else MountTaskStatus.FAILED)
-        safeLaunch { (io { repository.answer(answer) } as? Response.Error)?.let { rollbackTask(taskId, it) } }
+        val status = if (answer.passed) MountTaskStatus.PASSED else MountTaskStatus.FAILED
+        closeTask(taskId, status) { repository.answer(answer) }
     }
 
-    fun onTaskSkip(taskId: Int) {
-        if (_state.value.master.currentTask != taskId) return
-        markTask(taskId, MountTaskStatus.SKIPPED)
-        safeLaunch { (io { repository.skip() } as? Response.Error)?.let { rollbackTask(taskId, it) } }
+    fun onTaskSkip(taskId: Int) = closeTask(taskId, MountTaskStatus.SKIPPED) { repository.skip() }
+
+    /** Закрыть открытое задание (курсор SDK на нём, ещё без статуса): двойное нажатие не отправит ответ дважды. */
+    private fun closeTask(taskId: Int, status: MountTaskStatus, call: suspend () -> Response<Unit>) {
+        safeLaunch {
+            executeWithProceedLock {
+                val master = _state.value.master
+                if (master.currentTask != taskId || master.statuses[taskId] != null) return@executeWithProceedLock
+                markTask(taskId, status)
+                (io { call() } as? Response.Error)?.let { rollbackTask(taskId, it) }
+            }
+        }
     }
 
     private fun markTask(taskId: Int, status: MountTaskStatus) {
@@ -605,13 +611,13 @@ class FastMountViewModel(
 
     /** «Далее» проверки системы (в т.ч. «Завершить» с незакрытыми): оставшиеся пропускаем по курсору SDK. */
     fun onSystemCheckNext() {
-        if (_state.value.master.busy) return
-        val pending = _state.value.master.checklist.tasks.filter { it.status == MountTaskStatus.PENDING }
-        _state.update { it.copy(master = it.master.copy(busy = true, error = null)) }
-        pending.forEach { markTask(it.id, MountTaskStatus.SKIPPED) }
         safeLaunch {
-            repeat(pending.size) { io { repository.skip() } }
-            finishCall(io { repository.next() })
+            transition {
+                val pending = _state.value.master.checklist.tasks.filter { it.status == MountTaskStatus.PENDING }
+                pending.forEach { markTask(it.id, MountTaskStatus.SKIPPED) }
+                repeat(pending.size) { io { repository.skip() } }
+                io { repository.next() }
+            }
         }
     }
 
@@ -633,23 +639,18 @@ class FastMountViewModel(
 
     fun onFeedbackSend() {
         val master = _state.value.master
-        if (master.busy || master.rating == 0 || master.feedback.isBlank()) return
-        _state.update { it.copy(master = it.master.copy(busy = true, error = null)) }
+        if (master.rating == 0 || master.feedback.isBlank()) return
         safeLaunch {
-            when (val response = io { repository.feedback(master.feedback.trim(), master.rating) }) {
-                is Response.Success -> finishCall(io { repository.next() })
-                is Response.Error -> finishCall(response)
+            transition {
+                when (val response = io { repository.feedback(master.feedback.trim(), master.rating) }) {
+                    is Response.Success -> io { repository.next() }
+                    is Response.Error -> response
+                }
             }
         }
     }
 
     // endregion
-
-    override fun onCleared() {
-        stepsJob?.cancel()
-        questionsJob?.cancel()
-        super.onCleared()
-    }
 
     private suspend fun <T> io(block: suspend () -> T): T = withContext(dispatchers.io) { block() }
 

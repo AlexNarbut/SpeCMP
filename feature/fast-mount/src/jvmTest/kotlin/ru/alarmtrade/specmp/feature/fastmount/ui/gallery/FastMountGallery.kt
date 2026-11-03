@@ -120,7 +120,7 @@ class FastMountGallery {
             "F8b-mount-ready-toast",
             master(
                 FastMountStep.MOUNT,
-                MasterState(mountMap = MountMapState.Ready(3_400_000), toast = WizardToast.SETTINGS_WRITTEN)
+                MasterState(mountMap = MountMapState.Ready(ByteArray(3_400_000)), toast = WizardToast.SETTINGS_WRITTEN)
             )
         )
         render("F8c-mount-map-error", master(FastMountStep.MOUNT, MasterState(mountMap = MountMapState.Failed)))

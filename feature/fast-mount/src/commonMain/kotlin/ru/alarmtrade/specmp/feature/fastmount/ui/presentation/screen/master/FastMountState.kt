@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.TimeSource
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPlan
@@ -110,7 +111,8 @@ sealed interface SummaryLoad {
  * @property stepAttempt номер прохода обхода/Clone: «Вернуться к монтажу» начинает их заново (новые VM экранов).
  * @property cloneNeeded обход потребовал Clone (`true`), не потребовал (`false`), ещё неизвестно (`null`).
  * @property statuses статусы заданий проверки системы по id вопроса.
- * @property mountMinutes длительность монтажа (с «Начать монтаж») — итоги на шаге отзыва.
+ * @property startedAt когда SDK стартовал монтаж («Начать монтаж»).
+ * @property mountMinutes длительность монтажа от [startedAt] на последнем шаге — итоги на шаге отзыва.
  */
 @Immutable
 data class MasterState(
@@ -129,6 +131,7 @@ data class MasterState(
     val checklist: MountChecklist = MountChecklist(),
     val rating: Int = 0,
     val feedback: String = "",
+    val startedAt: TimeSource.Monotonic.ValueTimeMark? = null,
     val mountMinutes: Int = 0,
     val toast: WizardToast? = null
 ) {
@@ -176,7 +179,11 @@ sealed interface MountMapState {
 
     data object Downloading : MountMapState
 
-    data class Ready(val sizeBytes: Int) : MountMapState
+    /** Скачанная карта: файл открывается из памяти системным приложением. Массив не меняется — `@Immutable`. */
+    @Immutable
+    class Ready(val bytes: ByteArray) : MountMapState {
+        val sizeBytes: Int get() = bytes.size
+    }
 
     data object Failed : MountMapState
 }

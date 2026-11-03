@@ -368,4 +368,30 @@ class FastMountViewModelTest {
         assertEquals(MasterScreen.FEEDBACK, state(vm).master.screen)
         assertEquals(1, state(vm).master.checklist.skipped)
     }
+
+    @Test
+    fun `repeated taps during an sdk call are skipped`() = test {
+        repository.onNext = { if (it == FastMountStep.WRITING_SETTINGS) FastMountStep.SYSTEM_CHECK else it }
+        repository.onPrevious = { FastMountStep.SLAVE }
+        val vm = started(ConnectionTransport.BLE)
+        repository.questionsState.value = QuestionsState(current = question(100), completed = false)
+        runCurrent()
+        repository.callMillis = 1_000
+
+        // Ответ ещё отправляется — второй тап того же ответа его не дублирует.
+        vm.onTaskAnswer(100, option = 0)
+        vm.onTaskAnswer(100, option = 0)
+        runCurrent()
+        assertEquals(1, repository.answers.size)
+        advanceTimeBy(1_001)
+
+        // «Назад» во время перехода — один вызов SDK, «занято» снимается после ответа.
+        vm.onSystemCheckBack()
+        vm.onSystemCheckBack()
+        runCurrent()
+        assertTrue(state(vm).master.busy)
+        advanceTimeBy(1_001)
+        assertEquals(1, repository.previousCalls)
+        assertEquals(false, state(vm).master.busy)
+    }
 }

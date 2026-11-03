@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.fastmount.ui
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -122,6 +123,9 @@ internal class FakeFastMountRepository : FastMountRepository {
     var onPrevious: (FastMountStep?) -> FastMountStep? = { it }
     val step = MutableStateFlow<FastMountStep?>(null)
     val questionsState = MutableStateFlow<QuestionsState?>(null)
+
+    /** Сколько «идёт» вызов SDK (вперёд/назад/ответ) — для проверки повторных нажатий во время вызова. */
+    var callMillis = 0L
     var classRequests = 0
     val configurationRequests = mutableListOf<Int>()
     var nextCalls = 0
@@ -153,12 +157,14 @@ internal class FakeFastMountRepository : FastMountRepository {
 
     override suspend fun next(): Response<Unit> {
         nextCalls++
+        delay(callMillis)
         if (nextResponse is Response.Success) step.value = onNext(step.value)
         return nextResponse
     }
 
     override suspend fun previous(): Response<Unit> {
         previousCalls++
+        delay(callMillis)
         step.value = onPrevious(step.value)
         return Response.Success(Unit)
     }
@@ -169,6 +175,7 @@ internal class FakeFastMountRepository : FastMountRepository {
 
     override suspend fun answer(answer: QuestionAnswer): Response<Unit> {
         answers += answer
+        delay(callMillis)
         return Response.Success(Unit)
     }
 
