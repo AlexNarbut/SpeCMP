@@ -116,6 +116,17 @@ class CloneViewModelTest {
     }
 
     @Test
+    fun `repeated confirm does not restart the running procedure`() = test {
+        val vm = viewModel()
+        vm.onStartClick()
+        runCurrent()
+        vm.onConfirm()
+        vm.onConfirm()
+        runCurrent()
+        assertEquals(1, repository.runs)
+    }
+
+    @Test
     fun `result refreshes attempts`() = test {
         val vm = started()
         repository.attempts = 2
