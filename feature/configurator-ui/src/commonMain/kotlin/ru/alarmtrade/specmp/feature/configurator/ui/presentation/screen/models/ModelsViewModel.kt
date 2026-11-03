@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
@@ -81,7 +82,8 @@ internal class ModelsViewModel(
             return
         }
         val key = file.copy(deviceName = deviceName)
-        _state.update { it.copy(checking = true) }
+        // Файл уже проверяется — повторный выбор не запускает вторую проверку.
+        if (!_state.updateIf({ !it.checking }) { it.copy(checking = true) }) return
         safeLaunch {
             val source = key.toSource()
             val response = try {
