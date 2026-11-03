@@ -296,19 +296,25 @@ private fun EmptyState(state: MineState, actions: MineActions) {
         ) {
             CmpButton(
                 text = stringResource(Strings.string.configurator_create_item_scratch),
-                onClick = actions.onCreateScratch
+                onClick = actions.onCreateScratch,
+                modifier = CreateButtonModifier
             )
             CmpOutlinedButton(
                 text = stringResource(Strings.string.configurator_create_item_cloud),
-                onClick = actions.onCreateCloud
+                onClick = actions.onCreateCloud,
+                modifier = CreateButtonModifier
             )
             CmpOutlinedButton(
                 text = stringResource(Strings.string.configurator_create_item_file),
-                onClick = actions.onCreateFile
+                onClick = actions.onCreateFile,
+                modifier = CreateButtonModifier
             )
         }
     }
 }
+
+// Кнопки создания в пустом состоянии — во всю ширину колонки CmpStateBox (до 420 dp) и выше обычных.
+private val CreateButtonModifier = Modifier.fillMaxWidth().height(52.dp)
 
 @Composable
 private fun MineList(state: MineState, items: List<LocalConfiguration>, actions: MineActions, wide: Boolean) {
