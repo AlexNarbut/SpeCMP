@@ -61,13 +61,12 @@ class CloneViewModel(
             state
         }
     }
+        .launchOnFirstStart {
+            onEachDeviceReady(::onDeviceReady)
+            onDeviceLost(::onConnectionLost)
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
-
-    init {
-        onEachDeviceReady(::onDeviceReady)
-        onDeviceLost(::onConnectionLost)
-    }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         _state.update {

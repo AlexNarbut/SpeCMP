@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -74,6 +75,8 @@ class FastMountViewModelTest {
             DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
         session.attach(transport)
         val vm = FastMountViewModel(session, repository, programMode, dispatchers).also { viewModels += it }
+        // Экран подписан на state — с этого стартует работа VM (launchOnFirstStart).
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
         return vm
     }
@@ -84,6 +87,12 @@ class FastMountViewModelTest {
         sessionRepository.device = device
         sessionRepository.link.value = DeviceLinkState.READY
         runCurrent()
+    }
+
+    /** Состояние, которое видит экран: `state` — `stateIn`, интент доходит до него после диспетчеризации. */
+    private fun TestScope.state(vm: FastMountViewModel): FastMountState {
+        runCurrent()
+        return vm.state.value
     }
 
     private val car = MountCar(id = 1, brand = "Volkswagen", model = "Polo", years = "2020", canCode = "0213")
@@ -103,22 +112,22 @@ class FastMountViewModelTest {
     @Test
     fun `alarm unit is fixed and ready`() = test {
         val vm = viewModel()
-        assertEquals(UnitCheck.Done(UnitVerdict.Ready), vm.state.value.check)
-        assertEquals(77, vm.state.value.fixed?.systemId)
-        assertEquals("3.57", vm.state.value.unit?.firmware)
+        assertEquals(UnitCheck.Done(UnitVerdict.Ready), state(vm).check)
+        assertEquals(77, state(vm).fixed?.systemId)
+        assertEquals("3.57", state(vm).unit?.firmware)
     }
 
     @Test
     fun `microbot is not supported`() = test {
         repository.deviceClass = Response.Success(MountDeviceClass.MICROBOT)
-        assertEquals(UnitCheck.Unsupported(UnsupportedReason.MICROBOT), viewModel().state.value.check)
+        assertEquals(UnitCheck.Unsupported(UnsupportedReason.MICROBOT), state(viewModel()).check)
     }
 
     @Test
     fun `unit without model in database is not supported without a server request`() = test {
         sessionRepository.device = testDevice(modelInDatabase = false)
         val vm = viewModel()
-        assertEquals(UnitCheck.Unsupported(UnsupportedReason.NOT_IN_DATABASE), vm.state.value.check)
+        assertEquals(UnitCheck.Unsupported(UnsupportedReason.NOT_IN_DATABASE), state(vm).check)
         assertEquals(0, repository.classRequests)
     }
 
@@ -126,53 +135,53 @@ class FastMountViewModelTest {
     fun `failed check can be retried`() = test {
         repository.deviceClass = Response.Error(IllegalStateException())
         val vm = viewModel()
-        assertIs<UnitCheck.Failed>(vm.state.value.check)
+        assertIs<UnitCheck.Failed>(state(vm).check)
 
         repository.deviceClass = Response.Success(MountDeviceClass.ALARM)
         vm.onRetryCheck()
         runCurrent()
-        assertEquals(UnitCheck.Done(UnitVerdict.Ready), vm.state.value.check)
+        assertEquals(UnitCheck.Done(UnitVerdict.Ready), state(vm).check)
     }
 
     @Test
     fun `no access and factory CAN block the wizard`() = test {
         repository.access = Response.Success(UnitAccess(granted = false, message = "Чужой блок"))
         val vm = viewModel()
-        assertEquals(UnitCheck.Done(UnitVerdict.NoAccess("Чужой блок")), vm.state.value.check)
+        assertEquals(UnitCheck.Done(UnitVerdict.NoAccess("Чужой блок")), state(vm).check)
         vm.onCheckNext()
-        assertEquals(WizardScreen.CHECK, vm.state.value.screen)
+        assertEquals(WizardScreen.CHECK, state(vm).screen)
 
         repository.access = Response.Success(UnitAccess(granted = true, message = ""))
         // На экране проверки переподключение проверяет блок заново (например, после обновления прошивки).
         reconnect(77, testDevice(can = CanInfo("1.0", "0000", isFactory = true)))
-        assertEquals(UnitCheck.Done(UnitVerdict.FactoryCan), vm.state.value.check)
+        assertEquals(UnitCheck.Done(UnitVerdict.FactoryCan), state(vm).check)
     }
 
     @Test
     fun `outdated firmware is only a recommendation`() = test {
         repository.latest = Response.Success("3.60")
         val vm = viewModel()
-        assertEquals(UnitCheck.Done(UnitVerdict.Outdated("3.60")), vm.state.value.check)
+        assertEquals(UnitCheck.Done(UnitVerdict.Outdated("3.60")), state(vm).check)
         vm.onCheckNext()
-        assertEquals(WizardScreen.VEHICLE, vm.state.value.screen)
+        assertEquals(WizardScreen.VEHICLE, state(vm).screen)
     }
 
     @Test
     fun `another unit after reconnect stops the wizard until the fixed one returns`() = test {
         val vm = viewModel()
         reconnect(systemId = 99)
-        assertEquals(testDevice(99).systemName + "  99", vm.state.value.wrongDevice)
-        assertEquals(77, vm.state.value.fixed?.systemId)
+        assertEquals(testDevice(99).systemName + "  99", state(vm).wrongDevice)
+        assertEquals(77, state(vm).fixed?.systemId)
 
         reconnect(systemId = 77)
-        assertNull(vm.state.value.wrongDevice)
-        assertEquals(UnitCheck.Done(UnitVerdict.Ready), vm.state.value.check)
+        assertNull(state(vm).wrongDevice)
+        assertEquals(UnitCheck.Done(UnitVerdict.Ready), state(vm).check)
     }
 
     @Test
     fun `preparation builds the plan and starts writing settings`() = test {
         val vm = started()
-        val state = vm.state.value
+        val state = state(vm)
         assertEquals(WizardScreen.MASTER, state.screen)
         // USB: без Slave и проверки системы; Clone — по необходимости.
         assertEquals(
@@ -201,23 +210,23 @@ class FastMountViewModelTest {
         vm.onBack()
         vm.onConfigurationPicked(7)
         runCurrent()
-        assertEquals(7, assertIs<SummaryLoad.Failed>(vm.state.value.summary).configurationId)
+        assertEquals(7, assertIs<SummaryLoad.Failed>(state(vm).summary).configurationId)
 
         repository.configuration = Response.Success(testConfiguration())
         vm.onRetrySummary()
         runCurrent()
         assertEquals(listOf(42, 7, 7), repository.configurationRequests)
-        assertEquals(SummaryLoad.Ready, vm.state.value.summary)
+        assertEquals(SummaryLoad.Ready, state(vm).summary)
     }
 
     @Test
     fun `start error returns to summary on back`() = test {
         repository.startResponse = Response.Error(IllegalStateException())
         val vm = started()
-        assertEquals(MasterScreen.STARTING, vm.state.value.master.screen)
-        assertIs<Any>(vm.state.value.master.startError)
+        assertEquals(MasterScreen.STARTING, state(vm).master.screen)
+        assertIs<Any>(state(vm).master.startError)
         vm.onBack()
-        assertEquals(WizardScreen.SUMMARY, vm.state.value.screen)
+        assertEquals(WizardScreen.SUMMARY, state(vm).screen)
     }
 
     @Test
@@ -234,23 +243,23 @@ class FastMountViewModelTest {
         }
         val vm = started()
         runCurrent()
-        assertEquals(MasterScreen.MOUNT, vm.state.value.master.screen)
-        assertEquals(WizardToast.SETTINGS_WRITTEN, vm.state.value.master.toast)
+        assertEquals(MasterScreen.MOUNT, state(vm).master.screen)
+        assertEquals(WizardToast.SETTINGS_WRITTEN, state(vm).master.toast)
 
         vm.onMountDone()
-        assertEquals(WizardDialog.MOUNT_DONE, vm.state.value.dialog)
+        assertEquals(WizardDialog.MOUNT_DONE, state(vm).dialog)
         vm.onDialogConfirm()
         runCurrent()
-        assertEquals(MasterScreen.BYPASS, vm.state.value.master.screen)
+        assertEquals(MasterScreen.BYPASS, state(vm).master.screen)
 
         vm.onBypassNext(cloneRequired = true)
         runCurrent()
-        assertEquals(true, vm.state.value.master.cloneNeeded)
-        assertEquals(MasterScreen.CLONE, vm.state.value.master.screen)
+        assertEquals(true, state(vm).master.cloneNeeded)
+        assertEquals(MasterScreen.CLONE, state(vm).master.screen)
 
         vm.onCloneNext()
         runCurrent()
-        assertEquals(MasterScreen.FEEDBACK, vm.state.value.master.screen)
+        assertEquals(MasterScreen.FEEDBACK, state(vm).master.screen)
 
         vm.onFeedbackSend()
         assertEquals(null, repository.feedback)
@@ -259,7 +268,7 @@ class FastMountViewModelTest {
         vm.onFeedbackSend()
         runCurrent()
         assertEquals("Всё по карте" to 5, repository.feedback)
-        assertEquals(MasterScreen.DONE, vm.state.value.master.screen)
+        assertEquals(MasterScreen.DONE, state(vm).master.screen)
     }
 
     @Test
@@ -271,7 +280,7 @@ class FastMountViewModelTest {
         backgroundScope.launch { vm.effect.toList(effects) }
 
         vm.onBack()
-        assertEquals(WizardDialog.EXIT, vm.state.value.dialog)
+        assertEquals(WizardDialog.EXIT, state(vm).dialog)
         vm.onDialogConfirm()
         runCurrent()
         assertEquals(1, programMode.exits)
@@ -284,14 +293,14 @@ class FastMountViewModelTest {
         repository.onPrevious = { FastMountStep.MOUNT }
         val vm = started()
         runCurrent()
-        assertEquals(MasterScreen.BYPASS, vm.state.value.master.screen)
+        assertEquals(MasterScreen.BYPASS, state(vm).master.screen)
 
         vm.onStepScreenBack()
-        assertEquals(WizardDialog.TO_MOUNT, vm.state.value.dialog)
+        assertEquals(WizardDialog.TO_MOUNT, state(vm).dialog)
         vm.onDialogConfirm()
         runCurrent()
-        assertEquals(MasterScreen.MOUNT, vm.state.value.master.screen)
-        assertEquals(1, vm.state.value.master.stepAttempt)
+        assertEquals(MasterScreen.MOUNT, state(vm).master.screen)
+        assertEquals(1, state(vm).master.stepAttempt)
     }
 
     @Test
@@ -308,19 +317,19 @@ class FastMountViewModelTest {
         vm.onMountDone()
         vm.onDialogConfirm()
         runCurrent()
-        assertEquals(MasterScreen.REBOOTING, vm.state.value.master.screen)
+        assertEquals(MasterScreen.REBOOTING, state(vm).master.screen)
         assertEquals(DeviceReboot.Restart, session.reboot.value)
 
         // Блок перезагрузился: SDK перешёл к обходу, связь оборвалась.
         repository.step.value = FastMountStep.KEY_BYPASS
         sessionRepository.link.value = DeviceLinkState.DISCONNECTED
         runCurrent()
-        assertEquals(MasterScreen.REBOOTING, vm.state.value.master.screen)
+        assertEquals(MasterScreen.REBOOTING, state(vm).master.screen)
 
         sessionRepository.link.value = DeviceLinkState.READY
         advanceTimeBy(1_000)
         runCurrent()
-        assertEquals(MasterScreen.BYPASS, vm.state.value.master.screen)
+        assertEquals(MasterScreen.BYPASS, state(vm).master.screen)
         assertNull(session.reboot.value)
     }
 
@@ -336,27 +345,27 @@ class FastMountViewModelTest {
         val vm = started(ConnectionTransport.BLE)
         repository.questionsState.value = QuestionsState(current = question(5, automatic = true), completed = false)
         runCurrent()
-        val first = vm.state.value.master.checklist
+        val first = state(vm).master.checklist
         assertEquals(listOf(5, 100, 101), first.tasks.map { it.id })
         assertTrue(first.tasks[0].active)
 
         // SDK засчитал авто-задание по телеметрии — курсор на ручном.
         repository.questionsState.value = QuestionsState(current = question(100), completed = false)
         runCurrent()
-        assertEquals(MountTaskStatus.PASSED, vm.state.value.master.checklist.tasks[0].status)
+        assertEquals(MountTaskStatus.PASSED, state(vm).master.checklist.tasks[0].status)
 
         vm.onTaskAnswer(100, option = 1)
         runCurrent()
-        assertEquals(MountTaskStatus.FAILED, vm.state.value.master.checklist.tasks[1].status)
+        assertEquals(MountTaskStatus.FAILED, state(vm).master.checklist.tasks[1].status)
         assertEquals(2, repository.answers.single().value)
 
         repository.questionsState.value = QuestionsState(current = question(101), completed = false)
         runCurrent()
         vm.onSystemCheckNext()
         runCurrent()
-        assertEquals(MountTaskStatus.SKIPPED, vm.state.value.master.checklist.tasks[2].status)
+        assertEquals(MountTaskStatus.SKIPPED, state(vm).master.checklist.tasks[2].status)
         assertEquals(1, repository.skips)
-        assertEquals(MasterScreen.FEEDBACK, vm.state.value.master.screen)
-        assertEquals(1, vm.state.value.master.checklist.skipped)
+        assertEquals(MasterScreen.FEEDBACK, state(vm).master.screen)
+        assertEquals(1, state(vm).master.checklist.skipped)
     }
 }

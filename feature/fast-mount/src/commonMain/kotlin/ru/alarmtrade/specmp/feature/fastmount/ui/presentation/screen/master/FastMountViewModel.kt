@@ -1,15 +1,17 @@
 package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master
 
+import androidx.lifecycle.viewModelScope
 import kotlin.time.TimeSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -59,7 +61,9 @@ class FastMountViewModel(
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(FastMountState())
-    val state: StateFlow<FastMountState> = _state.asStateFlow()
+    val state: StateFlow<FastMountState> = _state
+        .launchOnFirstStart { onEachDeviceReady(::onDeviceReady) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
     private val _effect: MutableSharedFlow<FastMountEffect> = sideEffectFlow()
     val effect: SharedFlow<FastMountEffect> = _effect.asSharedFlow()
@@ -71,10 +75,6 @@ class FastMountViewModel(
     private var mapBytes: ByteArray? = null
     private var mountStart: TimeSource.Monotonic.ValueTimeMark? = null
     private var writeRequested = false
-
-    init {
-        onEachDeviceReady(::onDeviceReady)
-    }
 
     // region Блок
 
@@ -654,6 +654,7 @@ class FastMountViewModel(
     private suspend fun <T> io(block: suspend () -> T): T = withContext(dispatchers.io) { block() }
 
     private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
         const val EXIT_TIMEOUT_MILLIS = 5_000L
         const val REBOOT_GRACE_MILLIS = 10_000L
         const val DEFAULT_MAP_NAME = "mounting-map"
