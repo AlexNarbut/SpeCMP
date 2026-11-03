@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -73,7 +74,8 @@ class CheckStateViewModel(
     // Время последнего снимка (или начала опроса): от него считается «Нет данных N с».
     private val lastSnapshot = MutableStateFlow<TimeMark?>(null)
 
-    private var resultSeq = 0
+    // Номер итога команды: одинаковые итоги подряд различимы — таймер старого не снимет новый.
+    private val resultIds = MutableStateFlow(0)
 
     private val polling: Flow<Unit> = connectedDevice
         .flatMapLatest { device ->
@@ -116,16 +118,15 @@ class CheckStateViewModel(
             dialog = withLock ?: dialog
         )
     }
+        .launchOnFirstStart {
+            onEachDeviceReady(::onDeviceReady)
+            onDeviceLost(::onConnectionLost)
+        }
         .flowOn(dispatchers.default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
     private val _effect = sideEffectFlow<CheckStateEffect>()
     val effect: SharedFlow<CheckStateEffect> = _effect.asSharedFlow()
-
-    init {
-        onEachDeviceReady(::onDeviceReady)
-        onDeviceLost(::onConnectionLost)
-    }
 
     private fun onDeviceReady(device: AlarmDevice) {
         _state.update { it.copy(deviceName = device.systemName, deviceId = device.systemId) }
@@ -335,7 +336,7 @@ class CheckStateViewModel(
         }
     }
 
-    private fun finished(outcome: CommandOutcome) = CommandStatus.Finished(outcome, ++resultSeq)
+    private fun finished(outcome: CommandOutcome) = CommandStatus.Finished(outcome, resultIds.updateAndGet { it + 1 })
 
     private fun Response<CommandReply>?.toOutcome(): CommandOutcome = when (this) {
         null -> CommandOutcome.NO_REPLY
