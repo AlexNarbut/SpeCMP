@@ -193,7 +193,9 @@ class CheckStateViewModel(
     }
 
     fun onPinSubmit(pin: String) {
-        if (_state.value.dialog !is CheckStateDialog.Pin) return
+        val dialog = _state.value.dialog as? CheckStateDialog.Pin ?: return
+        // PIN уже отправляется — повторный тап не запускает второй вход в режим программирования.
+        if (dialog.pin.sending || _state.value.pending != null) return
         val servicePin = ServicePin.parseOrNull(pin) ?: return
         enterProgramMode(servicePin)
     }
@@ -228,15 +230,19 @@ class CheckStateViewModel(
         val dialog = _state.value.dialog as? CheckStateDialog.Exit ?: return
         _state.update { it.copy(dialog = null) }
         val job = launchOnDevice {
-            withContext(dispatchers.io) {
-                if (dialog.service) {
-                    withTimeoutOrNull(COMMAND_TIMEOUT) {
-                        repository.send(StateCommand.SERVICE_MODE_OFF)
+            // Уходим и когда связь оборвалась посреди команд (работу с блоком отменяет обрыв).
+            try {
+                withContext(dispatchers.io) {
+                    if (dialog.service) {
+                        withTimeoutOrNull(COMMAND_TIMEOUT) {
+                            repository.send(StateCommand.SERVICE_MODE_OFF)
+                        }
                     }
+                    if (dialog.program) withTimeoutOrNull(COMMAND_TIMEOUT) { programModeRepository.exit() }
                 }
-                if (dialog.program) withTimeoutOrNull(COMMAND_TIMEOUT) { programModeRepository.exit() }
+            } finally {
+                _effect.tryEmit(CheckStateEffect.Close)
             }
-            _effect.tryEmit(CheckStateEffect.Close)
         }
         if (job == null) _effect.tryEmit(CheckStateEffect.Close)
     }
