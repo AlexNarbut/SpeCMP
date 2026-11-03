@@ -127,6 +127,27 @@ textarea.comment {
   width: 100%; margin-top: 10px; min-height: 54px; resize: vertical; border: 1px solid var(--line);
   border-radius: 10px; padding: 8px 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px;
 }
+.comment-label { display: block; margin-top: 12px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.comment-label + textarea.comment { margin-top: 4px; }
+.badge.edited { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.case-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.link-btn {
+  border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; padding: 2px 0; cursor: pointer;
+}
+.link-btn:disabled { color: var(--muted); cursor: default; }
+.editor { margin-top: 10px; display: grid; gap: 10px; }
+.editor label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.editor input, .editor textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg);
+  color: var(--text); font: inherit; font-size: 14px; text-transform: none; letter-spacing: normal;
+}
+.editor textarea { min-height: 96px; resize: vertical; }
+.editor .hint { font-size: 12px; color: var(--muted); }
+.editor .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.editor .error { color: var(--bug); font-size: 13px; }
+details.orig { margin-top: 10px; background: var(--surface-2); border-radius: 10px; padding: 8px 12px; }
+details.orig summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+details.orig .orig-title { margin-top: 6px; font-weight: 600; }
 .hidden { display: none !important; }
 .toast {
   position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--text); color: var(--bg);
@@ -144,7 +165,8 @@ textarea.comment {
   .progress { flex-basis: 100%; }
 }
 @media print {
-  .bar, nav.toc, .status, textarea.comment:placeholder-shown { display: none !important; }
+  .bar, nav.toc, .status, .link-btn, textarea.comment:placeholder-shown { display: none !important; }
+  .comment-label:has(+ textarea.comment:placeholder-shown) { display: none !important; }
   .layout { grid-template-columns: 1fr; }
   body { background: #fff; }
   .case, .card { break-inside: avoid; box-shadow: none; }
@@ -208,6 +230,14 @@ textarea.comment {
     return out;
   }
   function statusOf(id) { return (results[id] && results[id].status) || ""; }
+  // Правка тестировщика: { title, steps, expected } — поверх исходного кейса из brief.json.
+  function editOf(id) { return (results[id] && results[id].edit) || null; }
+  function view(c) { return editOf(c.id) || c; }
+  function lines(text) {
+    return String(text || "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+  }
+  function sameList(a, b) { return (a || []).join("\n") === (b || []).join("\n"); }
+  function oneLine(text) { return String(text || "").replace(/\s+/g, " ").trim(); }
   function visible(c) {
     if (filter.onlyNew && !c.new) return false;
     if (filter.onlyHigh && c.priority !== "high") return false;
@@ -222,7 +252,7 @@ textarea.comment {
     ["Ветка · коммит", [meta.branch, meta.commit].filter(Boolean).join(" · ")],
     ["Версии сборок", meta.versions], ["Бриф составлен", meta.generated]
   ].filter(function (r) { return r[1] !== undefined && r[1] !== null && r[1] !== ""; });
-  var kinds = { full: "Полная проверка", branch: "Проверка ветки", period: "Изменения за период" };
+  var kinds = { full: "Полная проверка", section: "Проверка раздела", branch: "Проверка ветки", period: "Изменения за период" };
   var top = document.getElementById("top");
   top.appendChild(el("div", { class: "kicker", text: (kinds[meta.kind] || "Бриф") + " · SpeCMP" }));
   top.appendChild(el("h1", { text: data.title || "" }));
@@ -264,7 +294,7 @@ textarea.comment {
   saveBtn.addEventListener("click", downloadReport);
   var resetBtn = el("button", { class: "btn", type: "button", text: "Сбросить отметки" });
   resetBtn.addEventListener("click", function () {
-    if (!confirm("Сбросить все отметки и комментарии?")) return;
+    if (!confirm("Сбросить все отметки, комментарии и правки кейсов?")) return;
     results = {}; save(); render();
   });
   bar.appendChild(el("div", { class: "chips" }, [copyBtn, saveBtn, resetBtn]));
@@ -290,11 +320,17 @@ textarea.comment {
   function caseCard(sec, c) {
     var card = el("article", { class: "card case", id: "case-" + c.id, "data-status": statusOf(c.id) });
     var badges = el("div", { class: "badges" });
+    var editedBadge = el("span", { class: "badge edited hidden", text: "Исправлен" });
+    badges.appendChild(editedBadge);
     if (c.new) badges.appendChild(el("span", { class: "badge new", text: "Новое" }));
     if (c.priority) badges.appendChild(el("span", { class: "badge" + (c.priority === "high" ? " high" : ""), text: PRIORITY_TEXT[c.priority] || c.priority }));
     (c.platforms || []).forEach(function (p) { badges.appendChild(el("span", { class: "badge", text: p })); });
     var status = el("div", { class: "status", role: "group", "aria-label": "Результат" });
-    var comment = el("textarea", { class: "comment", placeholder: "Комментарий: что не так, версия, устройство…" });
+    var commentId = "comment-" + c.id;
+    var comment = el("textarea", {
+      class: "comment", id: commentId,
+      placeholder: "Ваш комментарий к кейсу: что заметили, что не так, устройство и версия…"
+    });
     comment.value = (results[c.id] && results[c.id].comment) || "";
     comment.addEventListener("input", function () {
       results[c.id] = results[c.id] || {}; results[c.id].comment = comment.value; save();
@@ -312,19 +348,84 @@ textarea.comment {
       });
       status.appendChild(b);
     });
+    var editBtn = el("button", { class: "link-btn", type: "button", text: "✎ Исправить кейс" });
+    var titleNode = el("div", { class: "case-title" });
+    var body = el("div");
+
+    function columns(steps, expected) {
+      return el("div", { class: "cols" }, [
+        el("div", null, [el("h5", { text: "Шаги" }), list("ol", steps)]),
+        el("div", null, [el("h5", { text: "Ожидаемый результат" }), list("ul", expected)])
+      ]);
+    }
+    function paint() {
+      var v = view(c), edited = !!editOf(c.id);
+      titleNode.textContent = "";
+      titleNode.appendChild(el("span", { class: "case-id", text: c.id }));
+      titleNode.appendChild(document.createTextNode(v.title || ""));
+      editedBadge.classList.toggle("hidden", !edited);
+      editBtn.disabled = false;
+      body.textContent = "";
+      body.appendChild(columns(v.steps, v.expected));
+      if (edited) {
+        body.appendChild(el("details", { class: "orig" }, [
+          el("summary", { text: "Исходный вариант кейса" }),
+          el("div", { class: "orig-title", text: c.title || "" }),
+          columns(c.steps, c.expected)
+        ]));
+      }
+    }
+    function openEditor() {
+      var v = view(c);
+      editBtn.disabled = true;
+      body.textContent = "";
+      var title = el("input", { type: "text" }); title.value = v.title || "";
+      var steps = el("textarea"); steps.value = (v.steps || []).join("\n");
+      var expected = el("textarea"); expected.value = (v.expected || []).join("\n");
+      var error = el("div", { class: "error hidden", role: "alert" });
+      var saveB = el("button", { class: "btn primary", type: "button", text: "Сохранить" });
+      var cancelB = el("button", { class: "btn", type: "button", text: "Отмена" });
+      var revertB = el("button", { class: "btn" + (editOf(c.id) ? "" : " hidden"), type: "button", text: "Вернуть исходный" });
+      saveB.addEventListener("click", function () {
+        var next = { title: oneLine(title.value), steps: lines(steps.value), expected: lines(expected.value) };
+        if (!next.title || !next.steps.length || !next.expected.length) {
+          error.textContent = "Нужны название, хотя бы один шаг и хотя бы один ожидаемый результат.";
+          error.classList.remove("hidden");
+          return;
+        }
+        results[c.id] = results[c.id] || {};
+        if (next.title === c.title && sameList(next.steps, c.steps) && sameList(next.expected, c.expected)) delete results[c.id].edit;
+        else results[c.id].edit = next;
+        save(); paint();
+        toast(editOf(c.id) ? "Кейс исправлен — правка попадёт в отчёт" : "Без изменений");
+        if (editOf(c.id) && !comment.value) comment.focus();
+      });
+      cancelB.addEventListener("click", paint);
+      revertB.addEventListener("click", function () {
+        if (results[c.id]) delete results[c.id].edit;
+        save(); paint(); toast("Возвращён исходный вариант");
+      });
+      body.appendChild(el("div", { class: "editor" }, [
+        el("label", null, [document.createTextNode("Название"), title]),
+        el("label", null, [document.createTextNode("Шаги"), steps]),
+        el("label", null, [document.createTextNode("Ожидаемый результат"), expected]),
+        el("div", { class: "hint", text: "Каждый шаг и каждый ожидаемый результат — с новой строки. Почему исправили — напишите в комментарии ниже." }),
+        error,
+        el("div", { class: "actions" }, [saveB, cancelB, revertB])
+      ]));
+      title.focus();
+    }
+    editBtn.addEventListener("click", openEditor);
+
     card.appendChild(el("div", { class: "case-head" }, [
-      el("div", null, [
-        el("div", { class: "case-title" }, [el("span", { class: "case-id", text: c.id }), document.createTextNode(c.title || "")]),
-        badges
-      ]),
-      status
+      el("div", null, [titleNode, badges]),
+      el("div", { class: "case-side" }, [status, editBtn])
     ]));
-    card.appendChild(el("div", { class: "cols" }, [
-      el("div", null, [el("h5", { text: "Шаги" }), list("ol", c.steps)]),
-      el("div", null, [el("h5", { text: "Ожидаемый результат" }), list("ul", c.expected)])
-    ]));
+    card.appendChild(body);
     if (c.note) card.appendChild(el("div", { class: "note", text: c.note }));
+    card.appendChild(el("label", { class: "comment-label", for: commentId, text: "Комментарий тестировщика" }));
     card.appendChild(comment);
+    paint();
     return card;
   }
 
@@ -374,33 +475,51 @@ textarea.comment {
   }
 
   function reportText() {
-    var lines = ["# " + (data.title || "Бриф QA") + " — результаты", ""];
-    metaRows.forEach(function (r) { lines.push("- " + r[0] + ": " + r[1]); });
+    var out = ["# " + (data.title || "Бриф QA") + " — результаты", ""];
+    metaRows.forEach(function (r) { out.push("- " + r[0] + ": " + r[1]); });
     var cases = allCases(), counts = { ok: 0, bug: 0, block: 0, skip: 0, "": 0 };
     cases.forEach(function (x) { counts[statusOf(x.c.id)]++; });
-    lines.push("- Итог: OK " + counts.ok + ", Баг " + counts.bug + ", Блокер " + counts.block +
+    out.push("- Итог: OK " + counts.ok + ", Баг " + counts.bug + ", Блокер " + counts.block +
       ", Пропуск " + counts.skip + ", не проверено " + counts[""] + " из " + cases.length, "");
     var problems = cases.filter(function (x) { var s = statusOf(x.c.id); return s === "bug" || s === "block"; });
     if (problems.length) {
-      lines.push("## Проблемы", "");
+      out.push("## Проблемы", "");
       problems.forEach(function (x) {
         var r = results[x.c.id] || {};
-        lines.push("- **" + STATUS_TEXT[r.status] + "** " + x.c.id + " " + x.c.title + " (" + x.sec.title + ")" +
-          (r.comment ? " — " + r.comment.replace(/\s+/g, " ").trim() : ""));
+        out.push("- **" + STATUS_TEXT[r.status] + "** " + x.c.id + " " + view(x.c).title + " (" + x.sec.title + ")" +
+          (r.comment ? " — " + oneLine(r.comment) : ""));
       });
-      lines.push("");
+      out.push("");
     }
-    lines.push("## Все кейсы", "");
+    var edits = cases.filter(function (x) { return editOf(x.c.id); });
+    if (edits.length) {
+      out.push("## Исправленные кейсы", "", "Тестировщик поправил описание кейса — перенесите правку в бриф.", "");
+      edits.forEach(function (x) {
+        var e = editOf(x.c.id), r = results[x.c.id] || {};
+        out.push("### " + x.c.id + " " + e.title + " (" + x.sec.title + ")", "");
+        if (e.title !== x.c.title) out.push("- Название: было «" + x.c.title + "», стало «" + e.title + "»");
+        [["Шаги", "steps", true], ["Ожидаемый результат", "expected", false]].forEach(function (f) {
+          if (sameList(e[f[1]], x.c[f[1]])) return;
+          out.push("- " + f[0] + " — было:");
+          (x.c[f[1]] || []).forEach(function (t, i) { out.push("  " + (f[2] ? (i + 1) + ". " : "- ") + t); });
+          out.push("- " + f[0] + " — стало:");
+          e[f[1]].forEach(function (t, i) { out.push("  " + (f[2] ? (i + 1) + ". " : "- ") + t); });
+        });
+        if (r.comment) out.push("- Комментарий: " + oneLine(r.comment));
+        out.push("");
+      });
+    }
+    out.push("## Все кейсы", "");
     (data.sections || []).forEach(function (s) {
-      lines.push("### " + s.title);
+      out.push("### " + s.title);
       (s.cases || []).forEach(function (c) {
         var r = results[c.id] || {};
-        lines.push("- [" + STATUS_TEXT[r.status || ""] + "] " + c.id + " " + c.title +
-          (r.comment && r.status !== "bug" && r.status !== "block" ? " — " + r.comment.replace(/\s+/g, " ").trim() : ""));
+        out.push("- [" + STATUS_TEXT[r.status || ""] + "] " + c.id + " " + view(c).title + (r.edit ? " (исправлен)" : "") +
+          (r.comment && r.status !== "bug" && r.status !== "block" ? " — " + oneLine(r.comment) : ""));
       });
-      lines.push("");
+      out.push("");
     });
-    return lines.join("\n");
+    return out.join("\n");
   }
   function copyReport() {
     var text = reportText();

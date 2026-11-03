@@ -1,8 +1,17 @@
 # Разделы приложения для брифа QA
 
-Порядок разделов в брифе — как здесь. `id` — для `brief.json` и `changes.sh`; «Пути» — по ним коммиты
-раскладываются по разделам (первое совпадение сверху вниз; та же таблица — в `scripts/changes.sh`).
-«Источники» — что читать, чтобы описать раздел. Строки экранов: `<модуль>/src/commonMain/composeResources/values-ru/strings.xml`.
+Порядок разделов в брифе — как здесь. `id` — для `brief.json` и `changes.sh`.
+
+«Пути» — **единственный источник** раскладки коммитов: `scripts/changes.sh` читает эту строку (одна строка,
+только пути в обратных кавычках через запятую — без пояснений). Файл относится к первому разделу сверху вниз,
+чей путь — сам файл или его папка; поэтому узкие пути (`composeApp/…/FastMountWiring.kt`) стоят выше широких
+(`composeApp` в `platform`). `*` — любая часть пути (`core/localization/*/fastmount.xml` — строки раздела на
+всех языках). Один и тот же путь в нескольких разделах (модуль `feature/device/autostart` — у `bypass` и
+`clone`) — файл попадает во все эти разделы. Что раздел ещё затрагивает — в «Связано».
+
+«Источники» — что читать, чтобы описать раздел. Строки экранов — только в `core/localization`:
+`core/localization/src/commonMain/composeResources/values-ru/<префикс>.xml` (префикс модуля — в «Источниках»,
+ключи `<префикс>_<экран>_…`, `docs/localization.md`). Своих `strings.xml` в фичах нет.
 
 Платформы: **Android** (телефон), **iOS** (iPhone), **Desktop** (macOS / Windows). Bluetooth — только телефон
 (на desktop его нет); USB — Android (OTG) и desktop.
@@ -11,8 +20,8 @@
 
 ## auth — Авторизация
 
-- Пути: `feature/login`, `feature/auth-state`
-- Источники: `feature/login/AGENTS.md`, `feature/auth-state/AGENTS.md`, строки обоих модулей.
+- Пути: `feature/login`, `feature/auth-state`, `core/localization/*/login.xml`, `core/localization/*/authstate.xml`
+- Источники: `feature/login/AGENTS.md`, `feature/auth-state/AGENTS.md`, строки `login.xml`, `authstate.xml`.
 - Всегда проверять: вход; неверный логин/пароль; регистрация; восстановление пароля; активация аккаунта;
   выход и повторный вход; перезапуск приложения — сессия сохраняется; нет интернета при старте — экран
   ошибки проверки и «Повторить».
@@ -20,8 +29,9 @@
 
 ## home — Главный экран
 
-- Пути: `feature/main`, `feature/app-settings`
-- Источники: `feature/main/AGENTS.md`, `feature/app-settings/AGENTS.md`, строки, `design/features/home`.
+- Пути: `feature/main`, `feature/app-settings`, `feature/account`, `core/localization/*/main.xml`, `core/localization/*/appsettings.xml`, `core/localization/*/app.xml`
+- Источники: `feature/main/AGENTS.md`, `feature/app-settings/AGENTS.md`, `feature/account/AGENTS.md` (профиль в
+  боковом меню), строки `main.xml`, `appsettings.xml`, `app.xml`, `design/features/home`.
 - Всегда проверять: плитки и куда ведёт каждая (Быстрый монтаж, Расширенный монтаж, Конфигуратор настроек,
   Архив прошивок, Автомобили, Чат тех. поддержки и др. — неготовые плитки: что происходит при нажатии);
   боковое меню (профиль, версия, выход); «Настройки» — язык приложения (перезапуск) и язык конфигураций
@@ -31,10 +41,10 @@
 
 ## fast-mount — Быстрый монтаж
 
-- Пути: `feature/fast-mount`, слоты в `composeApp/navigation/FastMountWiring.kt`; затрагивает `feature/device/autostart`
-  (режим шага), `feature/device/state` (строгий порядок, широкая раскладка), `feature/configurator-ui` (выбор для
-  монтажа), `feature/device/selection` (только сигнализации).
-- Источники: `feature/fast-mount/AGENTS.md`, строки `fastmount_*`, `design/features/fast-mount`.
+- Пути: `feature/fast-mount`, `composeApp/src/commonMain/kotlin/ru/alarmtrade/specmp/navigation/FastMountWiring.kt`, `core/localization/*/fastmount.xml`
+- Связано: шаги мастера из `bypass` и `clone` и `check-state` (проверка системы), выбор конфигурации
+  из `configurator`, поиск из `scan` (только сигнализации) — их изменения могут менять и быстрый монтаж.
+- Источники: `feature/fast-mount/AGENTS.md`, строки `fastmount.xml`, `design/features/fast-mount`.
 - Всегда проверять: поиск — не сигнализации пунктиром и недоступны; блок не из базы / микробот → «Блок не
   поддерживает»; проверка блока (готов / новая прошивка — рекомендация / заводской CAN и нет доступа — «Далее»
   недоступна); автомобиль → конфигурация («Выбрать», несовпадение CAN) → сводка с планом (USB — без Slave и
@@ -47,19 +57,62 @@
 
 ## advanced-mount — Расширенный монтаж
 
-- Пути: `feature/advanced-mount`
-- Источники: `feature/advanced-mount` (экраны `presentation/screen`), строки модуля, `feature/device/AGENTS.md`
-  (режимы блока).
+- Пути: `feature/advanced-mount`, `core/localization/*/advancedmount.xml`
+- Источники: `feature/advanced-mount` (экраны `presentation/screen`), строки `advancedmount.xml`,
+  `feature/device/AGENTS.md` (режимы блока).
 - Всегда проверять: шапка блока (модель, ID, режим «Рабочий / Загрузчик», Bluetooth / USB, версии ПО,
   CAN-код, IMEI); «Читаем возможности блока…» и ошибка проверки на сервере; разделы и их доступность
   (заблокированные — «Сначала обновите CAN-прошивку»); блок, которого нет в базе устройств; выход и
   повторный вход в монтаж.
 - Платформы: Android, iOS (Bluetooth), Android/Desktop (USB).
 
+## bypass — Бесключевой обход (автозапуск)
+
+- Пути: `feature/device/autostart`, `core/localization/*/autostart.xml`
+- Связано: шаг «Обход иммобилайзера» в `fast-mount`; итог «нужен Clone» ведёт в `clone`; вход в режим
+  программирования (PIN) — общий с `check-state`.
+- Источники: `feature/device/AGENTS.md` (раздел «Бесключевой обход и Clone»), строки `autostart.xml`
+  (`autostart_bypass_*`, `autostart_common_*`, `autostart_pin_*`), `design/features/bypass-clone`,
+  `.claude/tasks/autostart-bypass-clone.md`.
+- Всегда проверять: расширенный монтаж → «Бесключевой обход»; PIN программирования (неверный PIN, пауза после
+  ошибки); обучение по шагам до итога (успех, ошибка с подсказкой «что проверить», итог «нужен Clone» →
+  «Перейти к процедуре Clone» и «Назад» в обход с сохранённым итогом); инструкции для отдельных марок;
+  критичные ожидания «Не прерывайте соединение»; обрыв связи во время обучения → «Процедура прервана»;
+  выход во время процесса — подтверждение; чат техподдержки с экрана ошибки.
+- Платформы: Android, iOS (Bluetooth); Android, Desktop (USB). Только на тестовом блоке и машине.
+
+## clone — Процедура Clone
+
+- Пути: `feature/device/autostart`, `core/localization/*/autostart.xml`
+- Связано: тот же модуль, что `bypass` (изменения попадают в оба раздела); шаг «Clone» в `fast-mount`.
+- Источники: `feature/device/AGENTS.md` (раздел «Бесключевой обход и Clone»), строки `autostart.xml`
+  (`autostart_clone_*`, `autostart_common_*`, `autostart_pin_*`), `design/features/bypass-clone`,
+  `.claude/tasks/autostart-bypass-clone.md`.
+- Всегда проверять: вход из расширенного монтажа («Процедура Clone») и из итога обхода («Вернуться к обходу»);
+  число попыток и подтверждение запуска; этапы «нажимать ничего не нужно»; на этапах записи выйти нельзя
+  (замок вместо «Назад», системный «Назад» не срабатывает); неверный PIN внутри процедуры; обрыв связи —
+  «Попытка не потрачена» до вычисления на сервере, позже «Проверьте число попыток» и перечитанный счётчик;
+  «уже выполнено»; «Повторить» (только при оставшихся попытках); чат техподдержки с экрана ошибки.
+- Платформы: Android, iOS (Bluetooth); Android, Desktop (USB). Только на тестовом блоке и машине — попытки
+  Clone ограничены.
+
+## check-state — Проверка состояния блока
+
+- Пути: `feature/device/state`, `core/localization/*/devicestate.xml`
+- Связано: шаг «Проверка системы» в `fast-mount` (задания по порядку).
+- Источники: `feature/device/AGENTS.md` (раздел «Проверка состояния»), строки `devicestate.xml`,
+  `design/features/check-state`.
+- Всегда проверять: плитка есть только при подключении по Bluetooth; состояние обновляется само (раз в
+  несколько секунд), «Нет данных N с» при долгом молчании блока; «Подробно» — зоны, двигатель, связь,
+  дополнительно; команды — по одной, удержание кнопки (запуск двигателя и паника — подтверждение с удержанием),
+  итог на кнопке и «Повторить»; режим программирования с PIN; уйти с экрана и вернуться — опрос продолжается;
+  потеря связи и переподключение; широкая раскладка на планшете.
+- Платформы: Android, iOS (только Bluetooth).
+
 ## scan — Поиск и выбор устройства
 
-- Пути: `feature/device/selection`
-- Источники: `feature/device/AGENTS.md` (раздел про selection), строки `device_select_*`.
+- Пути: `feature/device/selection`, `core/localization/*/deviceselect.xml`
+- Источники: `feature/device/AGENTS.md` (раздел про selection), строки `deviceselect.xml`.
 - Всегда проверять: поиск по Bluetooth, по USB и одновременно (разные тексты подсказок); нет разрешений
   (Android: «Устройства поблизости», iOS: Bluetooth) → «Открыть настройки»; Bluetooth выключен; на старых
   Android выключена геолокация; пустой список и советы; несколько блоков в списке; карточка устройства
@@ -68,8 +121,8 @@
 
 ## connection — Подключение и потеря связи
 
-- Пути: `feature/device/interaction`, `feature/device/interaction-ui`
-- Источники: `feature/device/AGENTS.md` (сессия, переподключение, тайминги).
+- Пути: `feature/device/interaction`, `feature/device/interaction-ui`, `core/localization/*/deviceinteraction.xml`
+- Источники: `feature/device/AGENTS.md` (сессия, переподключение, тайминги), строки `deviceinteraction.xml`.
 - Всегда проверять: «Подключение к блоку…» и выход с него; потеря связи (отойти / выключить питание блока /
   выключить Bluetooth на телефоне) → экран потери связи и автоматическое переподключение; «Отключиться»;
   выйти и сразу снова войти в тот же блок; USB — выдернуть и вставить кабель; блок в загрузчике при
@@ -78,8 +131,8 @@
 
 ## firmware — Прошивки
 
-- Пути: `feature/device/firmware`
-- Источники: `feature/device/AGENTS.md` (раздел «Прошивка»), строки `firmware_*`.
+- Пути: `feature/device/firmware`, `core/localization/*/firmware.xml`
+- Источники: `feature/device/AGENTS.md` (раздел «Прошивка»), строки `firmware.xml`.
 - Всегда проверять — **все типы**: основная прошивка блока, CAN-модуль, Bluetooth-модуль; источники версии —
   последняя с сервера, архив (более старая — подтверждение отката), файл с диска; PIN программирования
   (только Bluetooth: неверный PIN, пауза 15 с после ошибки); вход в загрузчик и возврат в рабочий режим;
@@ -89,9 +142,9 @@
 
 ## settings — Расширенные настройки блока
 
-- Пути: `feature/device/settings`, `feature/device/settings-ui`
+- Пути: `feature/device/settings`, `feature/device/settings-ui`, `core/localization/*/settings.xml`
 - Источники: `feature/device/AGENTS.md` (раздел «Расширенные настройки», «Конфигурации в редакторе»),
-  строки `settings_*`, `design/features/device-settings`.
+  строки `settings.xml`, `design/features/device-settings`.
 - Всегда проверять: чтение настроек из блока; дерево разделов, поиск; изменение значений всех видов
   (переключатель, список, число, время, CAN-код с выбором автомобиля); счётчик «Изменено» и «Записать»;
   выход с незаписанными изменениями; сброс к заводским; потеря связи во время чтения и записи; меню «⋯» —
@@ -100,19 +153,20 @@
 
 ## configurator — Конфигуратор настроек
 
-- Пути: `feature/configurator`, `feature/configurator-ui`
-- Источники: `feature/configurator/AGENTS.md`, строки `configurator_*`, `design/features/configurator`,
+- Пути: `feature/configurator`, `feature/configurator-ui`, `core/localization/*/configurator.xml`
+- Источники: `feature/configurator/AGENTS.md`, строки `configurator.xml`, `design/features/configurator`,
   `.claude/tasks/configurator.md` (раздел «Статус» — что сознательно не сделано).
 - Всегда проверять: «Мои конфигурации» — поиск, фильтр модели, создание (с нуля / из облака / из файла),
   копия, переименование, удаление; выбор модели блока (недавние и их удаление); редактор конфигурации —
   только просмотр, «Сохранить», «Сохранить как…», выход с несохранёнными; облако — выбор автомобиля, список
-  («Лучшие / Новые»), карточка, «Сохранить в мои»; облако после смены языка конфигураций в настройках; сохранение и открытие файла `.dxs` на каждой платформе.
+  («Лучшие / Новые»), карточка, «Сохранить в мои»; «Записать в блок» — из раздела «Конфигуратор настроек» в
+  расширенном монтаже (с главного экрана записи в блок нет); облако после смены языка конфигураций в настройках; сохранение и открытие файла `.dxs` на каждой платформе.
 - Платформы: все.
 
 ## vehicle — Автомобили
 
-- Пути: `feature/vehicle`, `feature/vehicle-ui`
-- Источники: `feature/vehicle/AGENTS.md`, строки `vehicle_*`, `design/features/vehicle-select`.
+- Пути: `feature/vehicle`, `feature/vehicle-ui`, `core/localization/*/vehicle.xml`
+- Источники: `feature/vehicle/AGENTS.md`, строки `vehicle.xml`, `design/features/vehicle-select`.
 - Всегда проверять: каталог марок → моделей → комплектаций; поиск по названию и по CAN-коду (4 ячейки);
   недавние (и удаление); фильтр; карточка автомобиля — вкладки (функции, схемы, карты монтажа), прокрутка
   под вкладками, архив прошивок из карточки; выбор автомобиля из настроек (CAN-код) и из архива прошивок;
@@ -121,8 +175,8 @@
 
 ## support-chat — Чат техподдержки
 
-- Пути: `feature/support-chat`
-- Источники: `feature/support-chat/AGENTS.md`, строки модуля.
+- Пути: `feature/support-chat`, `core/localization/*/supportchat.xml`
+- Источники: `feature/support-chat/AGENTS.md`, строки `supportchat.xml`.
 - Всегда проверять: история и подгрузка старых сообщений; отправка текста, картинки, документа; нет сети —
   плашка и очередь; повтор / удаление неотправленного; открытие и скачивание вложений; большой файл.
 - Платформы: все.
@@ -130,11 +184,12 @@
 ## platform — Общее и платформы
 
 - Пути: `composeApp`, `core`, `androidApp`, `iosApp`, `desktopApp`, `gradle`, `settings.gradle.kts`, `build.gradle.kts`
-- Источники: коммиты; `docs/build.md` (сборки).
+- Источники: коммиты; `docs/build.md` (сборки); общие строки `common.xml`.
 - В `full` — отдельного раздела нет (покрыт остальными). В `branch` / `since` — если затронут: короткая
   регрессия входа, главного экрана и подключения к блоку на всех платформах; что поменялось — по коммитам.
 
 ## Не для QA
 
-`design/`, `docs/`, `.ai/`, `.claude/`, `.agents/`, `*.md` вне перечисленного — в бриф не попадают
-(`changes.sh` выводит их в «Прочее» только для сведения).
+`design/`, `docs/`, `.ai/`, `.claude/`, `.agents/`, `.codex/`, `.gemini/`, любые `*.md`, а также файлы вне путей
+разделов (например, `flasherApp`) — в бриф не попадают: `changes.sh` выводит их в «Прочее» (`other`) только для
+сведения. Новый модуль приложения в «Прочем» — повод добавить его путь в подходящий раздел здесь.

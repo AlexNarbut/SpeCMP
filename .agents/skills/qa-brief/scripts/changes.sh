@@ -1,36 +1,58 @@
 #!/bin/bash
-# Изменения для брифа QA, разложенные по разделам (.agents/skills/qa-brief/sections.md).
+# Изменения для брифа QA, разложенные по разделам по строкам «- Пути:» из ../sections.md.
 #
 #   changes.sh full
+#   changes.sh section <раздел> [<раздел>…]
 #   changes.sh branch <ветка> [база=develop]
 #   changes.sh since <ГГГГ-ММ-ДД> [до ГГГГ-ММ-ДД] [ветка=develop]
 #
 # Печатает шапку (ветка, коммит, версии сборок, период, число коммитов) и по каждому разделу — коммиты
-# («дата hash тема») и изменённые файлы. В режиме full — только шапку и дату последнего изменения раздела.
+# («дата hash тема») и изменённые файлы. В режимах full / section — шапку, дату последнего изменения раздела
+# и (section) последние коммиты раздела — для «Что нового».
 
 set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+sections_md="$here/sections.md"
 cd "$(git rev-parse --show-toplevel)"
+[ -f "$sections_md" ] || { echo "Нет $sections_md" >&2; exit 1; }
 
-# Раздел по пути файла — первое совпадение сверху вниз (как в sections.md).
+# Раскладка из sections.md: строки «раздел<TAB>путь» в порядке файла (раздел — из «## <id> — …»,
+# пути — из «- Пути: `a`, `b`»). Единственный источник — sections.md, здесь таблицы нет.
+SECTION_PATHS=$(awk '
+    /^## / { sec = $2; next }
+    /^- Пути:/ && sec != "" {
+        line = $0
+        while (match(line, /`[^`]+`/)) {
+            print sec "\t" substr(line, RSTART + 1, RLENGTH - 2)
+            line = substr(line, RSTART + RLENGTH)
+        }
+    }' "$sections_md")
+[ -n "$SECTION_PATHS" ] || { echo "В $sections_md не найдено ни одной строки «- Пути:»" >&2; exit 1; }
+SECTIONS="$(printf '%s\n' "$SECTION_PATHS" | cut -f1 | awk '!seen[$0]++' | tr '\n' ' ')other"
+
+# Раздел по пути файла — первое совпадение сверху вниз. Путь раздела — сам файл, его папка или маска с `*`.
+# Тот же путь у нескольких разделов (autostart — bypass и clone) — печатаются все, через пробел.
+# Документация и конфиги агентов — всегда «Прочее» (в бриф не попадают).
 section_of() {
-    case "$1" in
-        feature/login/* | feature/auth-state/*) echo auth ;;
-        feature/main/*) echo home ;;
-        feature/advanced-mount/*) echo advanced-mount ;;
-        feature/device/selection/*) echo scan ;;
-        feature/device/interaction/* | feature/device/interaction-ui/*) echo connection ;;
-        feature/device/firmware/*) echo firmware ;;
-        feature/device/settings/* | feature/device/settings-ui/*) echo settings ;;
-        feature/configurator/* | feature/configurator-ui/*) echo configurator ;;
-        feature/vehicle/* | feature/vehicle-ui/*) echo vehicle ;;
-        feature/support-chat/*) echo support-chat ;;
-        */AGENTS.md | *.md | design/* | docs/* | .ai/* | .claude/* | .agents/* | .codex/* | .gemini/*) echo other ;;
-        composeApp/* | core/* | androidApp/* | iosApp/* | desktopApp/* | gradle/* | settings.gradle.kts | build.gradle.kts) echo platform ;;
-        *) echo other ;;
+    local f="$1" sec pat
+    case "$f" in
+        *.md | design/* | docs/* | .ai/* | .claude/* | .agents/* | .codex/* | .gemini/*) echo other; return ;;
     esac
+    while IFS=$'\t' read -r sec pat; do
+        # shellcheck disable=SC2053 # $pat — маска намеренно
+        if [[ "$f" == $pat || "$f" == "$pat"/* ]]; then
+            printf '%s\n' "$SECTION_PATHS" | awk -F'\t' -v p="$pat" '$2 == p { print $1 }' | tr '\n' ' '
+            echo
+            return
+        fi
+    done <<< "$SECTION_PATHS"
+    echo other
 }
 
-SECTIONS="auth home advanced-mount scan connection firmware settings configurator vehicle support-chat platform other"
+# Пути раздела через пробел (для git log -- …).
+paths_of() {
+    printf '%s\n' "$SECTION_PATHS" | awk -F'\t' -v s="$1" '$1 == s { print $2 }' | tr '\n' ' '
+}
 
 usage() {
     sed -n '4,8p' "$0" | sed 's/^# \{0,1\}//'
@@ -38,11 +60,12 @@ usage() {
 }
 
 header() {
-    local android ios desktop
-    android=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' androidApp/build.gradle.kts | head -1)
+    local android ios ios_build desktop
+    # Android и desktop — одна версия из каталога (gradle/libs.versions.toml, app-versionName).
+    android=$(sed -n 's/^app-versionName = "\(.*\)".*/\1/p' gradle/libs.versions.toml | head -1)
     ios=$(sed -n 's/^MARKETING_VERSION = //p' iosApp/Configuration/Config.xcconfig | head -1)
     ios_build=$(sed -n 's/^CURRENT_PROJECT_VERSION = //p' iosApp/Configuration/Config.xcconfig | head -1)
-    desktop=$(sed -n 's/.*packageVersion = "\(.*\)".*/\1/p' desktopApp/build.gradle.kts | head -1)
+    desktop=$android
     echo "Ветка: $(git rev-parse --abbrev-ref HEAD)   коммит: $(git rev-parse --short HEAD)   сегодня: $(date +%F)"
     echo "Версии: Android $android · iOS $ios ($ios_build) · Desktop $desktop"
 }
@@ -70,9 +93,10 @@ by_sections() {
             continue
         fi
         [ -z "$line" ] && continue
-        sec=$(section_of "$line")
-        echo "$hash" >> "$tmp/$sec.commits"
-        echo "$line" >> "$tmp/$sec.files"
+        for sec in $(section_of "$line"); do
+            echo "$hash" >> "$tmp/$sec.commits"
+            echo "$line" >> "$tmp/$sec.files"
+        done
     done < <(git log --no-merges --format='@@%h' --name-only "$@")
 
     for sec in $SECTIONS; do
@@ -95,11 +119,21 @@ case "$mode" in
         echo "Последние изменения по разделам:"
         for sec in $SECTIONS; do
             [ "$sec" = other ] && continue
-            paths=$(sed -n "/^## $sec /,/^## /p" .agents/skills/qa-brief/sections.md 2>/dev/null |
-                sed -n 's/^- Пути: //p' | tr -d '`' | tr ',' ' ')
-            [ -z "$paths" ] && continue
-            # shellcheck disable=SC2086
-            echo "  $sec: $(git log -1 --format='%ad %h %s' --date=short -- $paths)"
+            read -r -a paths <<< "$(paths_of "$sec")"
+            [ "${#paths[@]}" -eq 0 ] && continue
+            echo "  $sec: $(git log -1 --format='%ad %h %s' --date=short -- "${paths[@]}")"
+        done
+        ;;
+    section)
+        shift
+        [ "$#" -eq 0 ] && usage
+        header
+        for sec in "$@"; do
+            read -r -a paths <<< "$(paths_of "$sec")"
+            [ "${#paths[@]}" -eq 0 ] && { echo "Нет раздела $sec в $sections_md (есть: $SECTIONS)" >&2; exit 1; }
+            echo
+            echo "## $sec — последние коммиты (до 15)"
+            git log --no-merges -15 --format='  %ad %h %s' --date=short -- "${paths[@]}"
         done
         ;;
     branch)
