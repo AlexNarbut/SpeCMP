@@ -167,20 +167,17 @@ class FastMountViewModel(
     }
 
     fun onRetrySummary() {
-        _state.value.configuration?.let { loadConfiguration(it.id) } ?: pendingConfigurationId?.let(::loadConfiguration)
+        (_state.value.summary as? SummaryLoad.Failed)?.let { loadConfiguration(it.configurationId) }
     }
 
-    private var pendingConfigurationId: Int? = null
-
     private fun loadConfiguration(id: Int) {
-        pendingConfigurationId = id
         _state.update { it.copy(summary = SummaryLoad.Loading) }
         safeLaunch {
             when (val response = io { repository.configuration(id) }) {
                 is Response.Success -> applyConfiguration(response.value)
 
                 is Response.Error -> _state.update {
-                    it.copy(summary = SummaryLoad.Failed(FastMountError.from(response.exception)))
+                    it.copy(summary = SummaryLoad.Failed(id, FastMountError.from(response.exception)))
                 }
             }
         }

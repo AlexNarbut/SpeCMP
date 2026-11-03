@@ -95,7 +95,8 @@ sealed interface SummaryLoad {
 
     data object Ready : SummaryLoad
 
-    data class Failed(val error: FastMountError) : SummaryLoad
+    /** @property configurationId что не загрузилось — для повтора. */
+    data class Failed(val configurationId: Int, val error: FastMountError) : SummaryLoad
 }
 
 /**

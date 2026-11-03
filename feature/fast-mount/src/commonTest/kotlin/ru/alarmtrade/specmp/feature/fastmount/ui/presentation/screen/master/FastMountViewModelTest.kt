@@ -40,6 +40,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.FakeFastMountRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.FakeProgramModeRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.question
+import ru.alarmtrade.specmp.feature.fastmount.ui.testConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.ui.testDevice
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -186,6 +187,27 @@ class FastMountViewModelTest {
         )
         // Запись начинается сама.
         assertEquals(1, repository.nextCalls)
+    }
+
+    @Test
+    fun `summary retry reloads the configuration that failed`() = test {
+        val vm = viewModel()
+        vm.onCheckNext()
+        vm.onCarPicked(car)
+        vm.onConfigurationPicked(42)
+        runCurrent()
+        // Другая конфигурация не загрузилась — повтор берёт её id, а не уже загруженной.
+        repository.configuration = Response.Error(IllegalStateException())
+        vm.onBack()
+        vm.onConfigurationPicked(7)
+        runCurrent()
+        assertEquals(7, assertIs<SummaryLoad.Failed>(vm.state.value.summary).configurationId)
+
+        repository.configuration = Response.Success(testConfiguration())
+        vm.onRetrySummary()
+        runCurrent()
+        assertEquals(listOf(42, 7, 7), repository.configurationRequests)
+        assertEquals(SummaryLoad.Ready, vm.state.value.summary)
     }
 
     @Test

@@ -123,6 +123,7 @@ internal class FakeFastMountRepository : FastMountRepository {
     val step = MutableStateFlow<FastMountStep?>(null)
     val questionsState = MutableStateFlow<QuestionsState?>(null)
     var classRequests = 0
+    val configurationRequests = mutableListOf<Int>()
     var nextCalls = 0
     var previousCalls = 0
     var skips = 0
@@ -136,7 +137,11 @@ internal class FakeFastMountRepository : FastMountRepository {
 
     override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String) = access
     override suspend fun latestFirmware(systemName: String) = latest
-    override suspend fun configuration(id: Int) = configuration
+    override suspend fun configuration(id: Int): Response<FastMountConfiguration> {
+        configurationRequests += id
+        return configuration
+    }
+
     override suspend fun download(url: String): Response<ByteArray> = Response.Success(ByteArray(10))
 
     override suspend fun start(configurationId: Int): Response<Unit> {
