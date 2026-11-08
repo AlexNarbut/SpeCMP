@@ -12,7 +12,7 @@ data class LocalConfiguration(
     val description: String,
     val deviceName: String,
     val created: LocalDateTime,
-    val updated: LocalDateTime
+    val updated: LocalDateTime,
 ) {
     companion object {
         const val NAME_MAX_LENGTH = 50
@@ -41,7 +41,7 @@ data class CloudConfigurationSummary(
     val author: String,
     val rating: Int?,
     val updated: LocalDateTime,
-    val onlyForAuthor: Boolean
+    val onlyForAuthor: Boolean,
 )
 
 /** Карточка облачной конфигурации: полное описание (HTML), монтажная карта и вложения. */
@@ -49,7 +49,7 @@ data class CloudConfiguration(
     val summary: CloudConfigurationSummary,
     val fullDescriptionHtml: String,
     val mountingManual: ConfigurationAttachment?,
-    val attachments: List<ConfigurationAttachment>
+    val attachments: List<ConfigurationAttachment>,
 )
 
 /** Вложение: картинка (с превью) или PDF. */
@@ -63,7 +63,7 @@ enum class CloudConfigurationOrder { BEST, NEWEST }
 fun List<CloudConfigurationSummary>.sortedBy(order: CloudConfigurationOrder): List<CloudConfigurationSummary> =
     when (order) {
         CloudConfigurationOrder.BEST -> sortedWith(
-            compareByDescending<CloudConfigurationSummary> { it.rating ?: 0 }.thenByDescending { it.updated }
+            compareByDescending<CloudConfigurationSummary> { it.rating ?: 0 }.thenByDescending { it.updated },
         )
 
         CloudConfigurationOrder.NEWEST -> sortedByDescending { it.updated }

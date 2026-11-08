@@ -21,7 +21,7 @@ class CloudOrderTest {
         author = "Иванов",
         rating = rating,
         updated = LocalDateTime(2026, 10, day, 12, 0),
-        onlyForAuthor = false
+        onlyForAuthor = false,
     )
 
     private val items = listOf(item(1, null, 20), item(2, 4, 10), item(3, 4, 15), item(4, 5, 1))

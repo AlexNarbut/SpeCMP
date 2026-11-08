@@ -54,7 +54,7 @@ internal data class DeviceSettingsState(
     /** Подставляем значения конфигурации в редактор — блокирующий прогресс. */
     val isApplying: Boolean = false,
     /** Сохраняем (в конфигурацию, файл, «Мои») — блокирующий прогресс. */
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
 ) {
     val changedCount: Int get() = changedIds.size
 
@@ -80,7 +80,7 @@ internal data class SourceHeader(
     val title: String,
     val deviceName: String,
     val isReadOnly: Boolean,
-    val canSave: Boolean
+    val canSave: Boolean,
 ) {
     companion object {
         val Device = SourceHeader(SourceKind.DEVICE, "", "", isReadOnly = false, canSave = true)
@@ -117,7 +117,7 @@ internal data class SaveForm(
     val name: String,
     val description: String,
     val deviceName: String,
-    val exitAfter: Boolean = false
+    val exitAfter: Boolean = false,
 )
 
 /** Шапка: модель и номер блока; [singleCanCode] — код единой CAN-прошивки, если она есть. */
@@ -129,7 +129,7 @@ internal data class EditingSetting(
     val original: SettingValue,
     val draft: SettingValue,
     // Поиск автомобиля по CAN-коду в окне CAN-кода; пустой Content — для кода автомобиля нет.
-    val carSearch: LCEState<List<CarSummary>, SettingsError> = LCEState.None
+    val carSearch: LCEState<List<CarSummary>, SettingsError> = LCEState.None,
 ) {
     /** Черновик можно применить — считается один раз на изменение черновика, не на каждую рекомпозицию. */
     val canApply: Boolean = setting.accepts(draft)
@@ -163,7 +163,7 @@ internal sealed interface SettingsDialog {
         val deviceName: String,
         val forWrite: Boolean,
         /** Для загрузки: закрыть ли сессию источника после сравнения (см. [DiffState.Error.closeAfter]). */
-        val closeAfter: Boolean = true
+        val closeAfter: Boolean = true,
     ) : SettingsDialog
 
     data class LoadError(val kind: LoadErrorKind) : SettingsDialog
@@ -186,7 +186,7 @@ internal enum class LoadErrorKind {
     FILE,
 
     /** Не удалось получить конфигурацию (сеть, сервер). */
-    OTHER
+    OTHER,
 }
 
 internal sealed interface SaveRetry {
@@ -240,5 +240,5 @@ internal data class SettingsLocation(val sectionPath: List<Int>, val isSearch: B
 internal data class RowMarks(
     val changedIds: Set<Int>,
     val sectionChanges: Map<Int, Int>,
-    val cars: Map<Int, CarSummary>
+    val cars: Map<Int, CarSummary>,
 )

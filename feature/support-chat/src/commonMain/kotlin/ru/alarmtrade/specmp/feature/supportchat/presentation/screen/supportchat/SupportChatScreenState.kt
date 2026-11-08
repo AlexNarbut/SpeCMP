@@ -49,7 +49,7 @@ data class SupportChatScreenState(
     val typingAuthor: String? = null,
     // Вложения композера — сразу в presentation-модели, маппинг на границе VM.
     val pendingAttachments: ImmutableList<SupportChatUiAttachment> = persistentListOf(),
-    val downloadingAttachmentId: String? = null
+    val downloadingAttachmentId: String? = null,
 ) {
     /** Лента текущего состояния; пустая в None/Loading/Error. */
     val timeline: SupportChatTimeline

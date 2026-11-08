@@ -15,7 +15,7 @@ class FirmwareArchivePicker {
 
     private val _picks = MutableSharedFlow<FirmwareVersion>(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     val picks: SharedFlow<FirmwareVersion> = _picks.asSharedFlow()
 

@@ -26,18 +26,18 @@ class FastMountSlots(
     val vehiclePicker: @Composable (
         request: MountVehicleRequest,
         onPick: (MountCar) -> Unit,
-        onBack: () -> Unit
+        onBack: () -> Unit,
     ) -> Unit,
     val configurationPicker: @Composable (
         request: MountConfigurationRequest,
         onPick: (configurationId: Int) -> Unit,
         onOpenFirmwareUpdate: () -> Unit,
-        onBack: () -> Unit
+        onBack: () -> Unit,
     ) -> Unit,
     val bypass: @Composable (step: MountStep, onNext: (cloneRequired: Boolean) -> Unit) -> Unit,
     val clone: @Composable (step: MountStep, onNext: () -> Unit) -> Unit,
     val systemCheck: @Composable (step: MountStep, checklist: MountChecklist, actions: MountChecklistActions) -> Unit,
-    val fileOpener: MountFileOpener
+    val fileOpener: MountFileOpener,
 )
 
 /** Выбор автомобиля под модель блока ([deviceName] — `systemName`), [canCode] — CAN-код прошивки блока. */
@@ -54,7 +54,7 @@ class MountChecklistActions(
     val onAnswer: (taskId: Int, option: Int) -> Unit,
     val onSkip: (taskId: Int) -> Unit,
     val onNext: () -> Unit,
-    val onBack: () -> Unit
+    val onBack: () -> Unit,
 )
 
 /** Открыть файл системным приложением: `true` — открыт, `false` — нет приложения, `null` — ошибка. */
@@ -75,7 +75,7 @@ class MountStep(val key: String, val frame: MountStepFrame, val next: MountStepN
 @Immutable
 class MountStepFrame(
     val topBar: @Composable (locked: Boolean, onBack: () -> Unit) -> Unit,
-    val dock: @Composable (content: @Composable ColumnScope.() -> Unit) -> Unit
+    val dock: @Composable (content: @Composable ColumnScope.() -> Unit) -> Unit,
 )
 
 /** Переход мастера: [busy] — ждём SDK (спиннер на «Далее»), [error] — причина, по которой SDK не пустил дальше. */

@@ -27,7 +27,7 @@ class SdkErrorMapperTest {
         assertEquals(ApiError.Timeout, general(NetworkTimeoutException("GET", IOException("timeout"))).error())
         assertEquals(
             ApiError.ServerError,
-            general(ContentParsingException("GET", IllegalStateException("json"))).error()
+            general(ContentParsingException("GET", IllegalStateException("json"))).error(),
         )
     }
 

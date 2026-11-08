@@ -15,7 +15,7 @@ class MineStateTest {
     private val items = listOf(
         item(1, "Нива — без автозапуска", "Сирена тише", "DX-9X"),
         item(2, "Камри", "Автозапуск по температуре", "DX-4GS"),
-        item(3, "Веста", "", "dx-9x")
+        item(3, "Веста", "", "dx-9x"),
     )
 
     @Test

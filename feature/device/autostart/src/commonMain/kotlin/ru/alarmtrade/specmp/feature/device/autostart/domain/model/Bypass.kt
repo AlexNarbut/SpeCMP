@@ -17,7 +17,7 @@ enum class BypassStepKind {
     CRITICAL,
 
     /** Инструкция из нескольких пунктов: монтажник выполняет её сам, блок ждёт. */
-    INSTRUCTION
+    INSTRUCTION,
 }
 
 /** О чём шаг: определяет текст и иллюстрацию. */
@@ -36,7 +36,7 @@ enum class BypassSubject {
     LEARNING,
     LADA_APS,
     LADA_CAN,
-    TOYOTA_DAIHATSU
+    TOYOTA_DAIHATSU,
 }
 
 /** Текущий шаг обучения. */
@@ -74,7 +74,7 @@ enum class BypassError {
     MERCEDES_NO_VIN,
     MERCEDES_NO_RESPONSE_0F,
     LADA_CAN_BUS,
-    LADA_REPEAT
+    LADA_REPEAT,
 }
 
 /** Итог обучения. */

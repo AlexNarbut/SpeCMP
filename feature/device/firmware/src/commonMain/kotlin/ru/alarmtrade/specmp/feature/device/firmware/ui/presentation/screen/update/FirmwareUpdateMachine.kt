@@ -41,7 +41,7 @@ internal class Profile(
     /** CAN блока (единая CAN-прошивка, только основная программа): фильтр «Скачать» и архива. */
     val can: FirmwareCan? = null,
     /** Заводские CAN-настройки: кода нет — в архиве подсказка выбрать автомобиль. */
-    val factoryCan: Boolean = false
+    val factoryCan: Boolean = false,
 )
 
 internal data class Core(
@@ -61,7 +61,7 @@ internal data class Core(
     /** Связь пропадала, пока шёл процесс обновления. */
     val linkDropped: Boolean = false,
     /** Поток обновления SDK ещё идёт (не закончился и не сдался). */
-    val running: Boolean = false
+    val running: Boolean = false,
 ) {
     /** Выбран модуль «основная программа сигнализации»: только у него прошивки под CAN-код. */
     val isAlarmMain: Boolean
@@ -105,7 +105,7 @@ internal fun toState(core: Core, session: DeviceSessionState, reboot: DeviceRebo
         canExitBoot = profile?.canExit == true,
         exitError = core.exitError,
         fileError = core.fileError,
-        blockCan = blockCanOf(profile)
+        blockCan = blockCanOf(profile),
     )
 }
 
@@ -132,7 +132,7 @@ private fun confirmOf(core: Core, current: String?): ConfirmUi? {
             older = current != null && version.version.relationTo(current) == VersionRelation.Older,
             can = version.canCode?.takeIf { blockCan != null }?.let { code ->
                 ConfirmCanUi(blockCode = blockCan?.code, newCode = code, newProfile = version.canVersion)
-            }
+            },
         )
     }
 }

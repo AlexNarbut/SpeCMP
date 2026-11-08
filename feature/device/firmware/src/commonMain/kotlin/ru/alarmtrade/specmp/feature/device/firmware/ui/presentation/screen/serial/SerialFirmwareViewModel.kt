@@ -41,7 +41,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 class SerialFirmwareViewModel(
     private val repository: SerialFirmwareRepository,
     private val deviceSession: DeviceSession,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
     // Фазы экрана и баннеры выбора файла; блок добавляет state из сессии.
@@ -91,7 +91,7 @@ class SerialFirmwareViewModel(
                         state.copy(
                             phase = SerialPhase.Confirm(fileName, path, version, older, mismatch),
                             fileError = null,
-                            fileProblem = null
+                            fileProblem = null,
                         )
                     }
                 }

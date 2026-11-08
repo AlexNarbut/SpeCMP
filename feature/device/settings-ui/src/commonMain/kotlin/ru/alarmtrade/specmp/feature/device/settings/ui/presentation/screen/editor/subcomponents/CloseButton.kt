@@ -24,7 +24,7 @@ internal fun CloseButton(onClose: () -> Unit) {
         icon = CmpIcons.Close,
         contentDescription = stringResource(Strings.string.settings_common_a11y_close),
         tint = cmpThemeColors().onSurfaceVariant,
-        modifier = Modifier.testTag(SettingsTestTags.DIALOG_CLOSE)
+        modifier = Modifier.testTag(SettingsTestTags.DIALOG_CLOSE),
     )
 }
 

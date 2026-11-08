@@ -43,7 +43,7 @@ internal val testDevice = AlarmDevice(
     firmwareVersion = "VER3.57",
     mode = DeviceOperationMode.MAIN,
     features = emptySet(),
-    can = null
+    can = null,
 )
 
 internal class FakeSessionRepository(var device: AlarmDevice = testDevice) : DeviceSessionRepository {
@@ -52,7 +52,7 @@ internal class FakeSessionRepository(var device: AlarmDevice = testDevice) : Dev
 
     override fun linkState(): Flow<DeviceLinkState> = link
     override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Success(
-        BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14"))
+        BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14")),
     )
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
     override suspend fun readImei(): Response<String> = Response.Success("")
@@ -123,7 +123,7 @@ internal fun vehicle(
     zones: Map<Zone, ZoneValue> = emptyMap(),
     serviceMode: Boolean = false,
     programMode: Boolean = false,
-    engine: EngineInfo = EngineInfo(EngineStatus.STOPPED, temperature = 20, rpm = null, autostart = Autostart.Disabled)
+    engine: EngineInfo = EngineInfo(EngineStatus.STOPPED, temperature = 20, rpm = null, autostart = Autostart.Disabled),
 ) = VehicleState(
     security = security,
     alarm = false,
@@ -139,5 +139,5 @@ internal fun vehicle(
     heater = null,
     camera = null,
     siren = SirenMode.SIGNALS,
-    handsFree = HandsFreeMode.OFF
+    handsFree = HandsFreeMode.OFF,
 )

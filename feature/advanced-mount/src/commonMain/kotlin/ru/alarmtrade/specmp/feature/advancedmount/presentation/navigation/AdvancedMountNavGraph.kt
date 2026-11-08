@@ -41,7 +41,7 @@ internal data object AdvancedMountRootRoute : NavKey
 internal data class AdvancedMountSectionRoute(
     val section: MountSection,
     val deviceTitle: String,
-    val fromBypass: Boolean = false
+    val fromBypass: Boolean = false,
 ) : NavKey
 
 @Serializable
@@ -92,7 +92,7 @@ fun AdvancedMountNavGraph(
     bypassLearning: @Composable (onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     checkState: @Composable (onBack: () -> Unit) -> Unit,
-    vehicles: @Composable (onBack: () -> Unit) -> Unit
+    vehicles: @Composable (onBack: () -> Unit) -> Unit,
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
 
@@ -101,7 +101,7 @@ fun AdvancedMountNavGraph(
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         onBack = {
             if (!backStack.popSafe()) onExit()
@@ -114,7 +114,7 @@ fun AdvancedMountNavGraph(
                     },
                     onExtraClick = { extra, title -> backStack.navigateSafe(AdvancedMountExtraRoute(extra, title)) },
                     onOpenSupportChat = onOpenSupportChat,
-                    onBack = onExit
+                    onBack = onExit,
                 )
             }
             entry<AdvancedMountSectionRoute> { key ->
@@ -123,13 +123,13 @@ fun AdvancedMountNavGraph(
 
                     MountSection.SETTINGS -> settingsEditor({ backStack.popSafe() }) {
                         backStack.replaceCurrent(
-                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
+                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle),
                         )
                     }
 
                     MountSection.CONFIGURATOR -> configurator({ backStack.popSafe() }) {
                         backStack.replaceCurrent(
-                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle)
+                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle),
                         )
                     }
 
@@ -137,10 +137,10 @@ fun AdvancedMountNavGraph(
                         { backStack.popSafe() },
                         {
                             backStack.navigateSafe(
-                                AdvancedMountSectionRoute(MountSection.CLONE, key.deviceTitle, fromBypass = true)
+                                AdvancedMountSectionRoute(MountSection.CLONE, key.deviceTitle, fromBypass = true),
                             )
                         },
-                        onOpenSupportChat
+                        onOpenSupportChat,
                     )
 
                     MountSection.CLONE -> clone(key.fromBypass, { backStack.popSafe() }, onOpenSupportChat)
@@ -157,6 +157,6 @@ fun AdvancedMountNavGraph(
             entry<AdvancedMountExtraRoute> { key ->
                 ExtraStubScreen(extra = key.extra, deviceTitle = key.deviceTitle, onBack = { backStack.popSafe() })
             }
-        }
+        },
     )
 }

@@ -41,7 +41,7 @@ class CloneViewModel(
     private val repository: CloneRepository,
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
-    fromBypass: Boolean
+    fromBypass: Boolean,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(CloneState(fromBypass = fromBypass))
@@ -56,7 +56,7 @@ class CloneViewModel(
         val dialog = state.dialog
         if (dialog is CloneDialog.Pin) {
             state.copy(
-                dialog = dialog.copy(pin = dialog.pin.copy(lockedFor = lock))
+                dialog = dialog.copy(pin = dialog.pin.copy(lockedFor = lock)),
             )
         } else {
             state
@@ -74,7 +74,7 @@ class CloneViewModel(
             it.copy(
                 deviceName = device.systemName,
                 deviceId = device.systemId,
-                usb = deviceSession.transport.value != ConnectionTransport.BLE
+                usb = deviceSession.transport.value != ConnectionTransport.BLE,
             )
         }
         refreshAttempts()
@@ -195,8 +195,8 @@ class CloneViewModel(
                     it.copy(
                         phase = ClonePhase.Start(),
                         dialog = CloneDialog.Pin(
-                            ServicePinDialogState(wrong = pinTries > 0, wrongCount = pinTries + 1)
-                        )
+                            ServicePinDialogState(wrong = pinTries > 0, wrongCount = pinTries + 1),
+                        ),
                     )
                 }
             }

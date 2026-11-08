@@ -16,7 +16,7 @@
 |---|---|---|---|
 | **ktlint** | 1.8.0 | стиль и форматирование: импорты (неиспользуемые, порядок, wildcard), отступы, имена (`package-name`, `class-naming`, `function-naming`, `filename`) | да |
 | **compose-rules** | 0.6.7 (плагин ktlint) | правила Compose: `modifier`, `remember`, порядок и имена параметров, ViewModel в composable, эффекты | частично |
-| **Spotless** | 8.10.4 | Gradle-обёртка над ktlint + compose-rules: `spotlessCheck` / `spotlessApply`, работа только по изменённым файлам | да (через ktlint) |
+| **Spotless** | 8.10.4 | Gradle-обёртка над ktlint + compose-rules: `spotlessCheck` / `spotlessApply`, всё дерево (опционально ratchet) | да (через ktlint) |
 | **detekt** | 2.0.0-alpha.6 | смысл кода: мёртвый код, `!!`, исключения, неверный пакет, запрещённые вызовы, сложность и длина, магические числа | нет |
 | **Konsist** | 0.18.1 | архитектура: направление импортов между модулями и слоями, пакет = модуль, раскладка ролей, граница SDK | нет |
 | **PMD CPD** | 7.29.0 | скопированный код: одинаковые последовательности ≥ 100 токенов Kotlin | нет |
@@ -31,7 +31,7 @@
 ## Как это вызывается (архитектура)
 
 ```
-git commit ──► pre-commit ──► ./gradlew spotlessCheck        (стиль, только файлы изменённые с HEAD)
+git commit ──► pre-commit ──► ./gradlew spotlessCheck        (стиль, всё дерево)
                           ├─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
                           └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck          (смысл, весь проект, с type resolution)
@@ -79,13 +79,14 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
   | `desktopApp` | `detektMain`, `detektTest` | `main` и `test` |
 
   Dev-компиляция Compose Hot Reload (`detektDevJvm`, `detektDev`) не анализируется — это служебная компиляция с
-  тем же кодом. В `check`/`build` и в сборку APK ни detekt, ни Spotless не входят: плагин detekt по умолчанию
-  вешает `detekt` на `check`, Spotless — `spotlessCheck`; обе связи отключены в корневом `build.gradle.kts`
-  (`isEnforceCheck = false`, фильтр зависимостей `check`), чтобы `./gradlew build` не падал на стиле
-  незакоммиченных файлов.
-- **Ratchet у Spotless.** По умолчанию проверяются только файлы, изменённые относительно `HEAD` — ровно то, что
-  разработчик собирается коммитить; старый код не блокирует. Для проверки ветки целиком:
-  `-PspotlessRatchetFrom=origin/develop`.
+  тем же кодом. `spotlessCheck` входит в `check`/`build`; detekt — нет: плагин
+  detekt по умолчанию вешает `detekt` на `check`, связь отключена фильтром зависимостей `check` в `build-logic`.
+  В сборку APK ни detekt, ни Spotless не входят.
+- **Spotless — всё дерево.** По умолчанию проверяются все `**/src/**/*.kt` и `*.gradle.kts`, git не нужен.
+  Ограничить файлами, изменёнными относительно ветки: `-PspotlessRatchetFrom=origin/develop`.
+- **`.editorconfig` и Spotless.** `ij_kotlin_allow_trailing_comma*` и `ktlint_ignore_back_ticked_identifier`
+  Spotless из файла не берёт — они продублированы `editorConfigOverride` в корневом `build.gradle.kts`; держать
+  значения в синхроне. Висячие запятые обязательны (ktlint `trailing-comma-*`).
 
 ---
 
@@ -105,7 +106,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 
 | Что | Команда |
 |---|---|
-| Проверить стиль изменённых файлов | `./gradlew spotlessCheck` |
+| Проверить стиль всего дерева | `./gradlew spotlessCheck` |
 | Исправить стиль и импорты автоматически | `./gradlew spotlessApply` |
 | Проверить стиль относительно ветки | `./gradlew spotlessCheck -PspotlessRatchetFrom=origin/develop` |
 | Смысловая проверка всего проекта | `./gradlew detektCheck` |
@@ -303,8 +304,8 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
   `detektCheck` и при необходимости поднять detekt.
 - Состав `detektCheck` — фиксированный список имён задач. Новые source set'ы (`androidHostTest`, `iosTest`,
   `appleMain` и т. п.) сами в анализ не попадут: добавить их задачи в список в `build-logic/src/main/kotlin/DetektConventionPlugin.kt`.
-- Хук для агентов и `spotlessCheck` в pre-commit показывают нарушения всех файлов, изменённых с `HEAD`, поэтому
-  чужая незакоммиченная работа с нарушениями будет мешать, пока не будет исправлена.
+- Хук для агентов и `spotlessCheck` в pre-commit показывают нарушения всего дерева, поэтому чужая
+  незакоммиченная работа с нарушениями будет мешать, пока не будет исправлена.
 
 ---
 

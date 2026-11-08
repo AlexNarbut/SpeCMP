@@ -59,7 +59,7 @@ private fun Context.openInExternalApp(file: File): SupportChatFileOpenResult = t
     startActivity(
         Intent(Intent.ACTION_VIEW)
             .setDataAndType(uri, mimeType)
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK),
     )
     SupportChatFileOpenResult.Opened
 } catch (ignored: ActivityNotFoundException) {

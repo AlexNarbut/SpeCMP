@@ -19,7 +19,7 @@ val deviceSettingsUiModule = module {
             carsRepository = get(),
             deviceSession = get(),
             appScope = get(appScopeQualifier),
-            dispatchers = get()
+            dispatchers = get(),
         )
     }
 }

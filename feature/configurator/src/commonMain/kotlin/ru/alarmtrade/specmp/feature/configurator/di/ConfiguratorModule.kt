@@ -24,7 +24,7 @@ val configuratorModule = module {
     single<DeviceModelsRepository> {
         SpecialistDeviceModelsRepository(
             interactor = { get() },
-            settings = get<AppSettingsFactory>().create(CONFIGURATOR_PREFERENCES)
+            settings = get<AppSettingsFactory>().create(CONFIGURATOR_PREFERENCES),
         )
     }
 }

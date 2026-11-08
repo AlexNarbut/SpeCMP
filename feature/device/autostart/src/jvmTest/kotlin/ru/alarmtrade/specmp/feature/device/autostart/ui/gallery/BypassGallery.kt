@@ -81,6 +81,6 @@ class BypassGallery {
     @Test
     fun exit() = render(
         "17_exit",
-        step(BypassStepKind.ACTION, BypassSubject.ENGINE_START).copy(dialog = BypassDialog.Exit)
+        step(BypassStepKind.ACTION, BypassSubject.ENGINE_START).copy(dialog = BypassDialog.Exit),
     )
 }

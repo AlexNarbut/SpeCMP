@@ -25,7 +25,7 @@ internal fun BypassLearningState.toEvent(): BypassEvent = when (bypassStatus) {
     BypassLearningStatus.FINISH_ERROR -> {
         val error = bypassLearningError.toDomain()
         BypassEvent.Finished(
-            BypassResult.Error(error, code = errorCode.takeIf { error == BypassError.VAG_ECU_EXCHANGE })
+            BypassResult.Error(error, code = errorCode.takeIf { error == BypassError.VAG_ECU_EXCHANGE }),
         )
     }
 
@@ -69,7 +69,8 @@ internal fun BypassLearningState.toEvent(): BypassEvent = when (bypassStatus) {
     BypassLearningStatus.LEARNING_PROCESS -> step(BypassStepKind.WAIT, BypassSubject.LEARNING)
 
     BypassLearningStatus.REQUEST_MED_17_5_25,
-    BypassLearningStatus.REQUEST_MED_17_9_63 -> step(BypassStepKind.CRITICAL, BypassSubject.ALARM_EXCHANGE)
+    BypassLearningStatus.REQUEST_MED_17_9_63,
+    -> step(BypassStepKind.CRITICAL, BypassSubject.ALARM_EXCHANGE)
 
     BypassLearningStatus.GTP_AUTHORIZATION_ALGORITHM -> step(BypassStepKind.CRITICAL, BypassSubject.ECU_EXCHANGE)
 
@@ -142,5 +143,6 @@ internal fun BypassLearningError?.toDomain(): BypassError = when (this) {
     BypassLearningError.MED_TABLE_SEND,
     BypassLearningError.GTP_CALCULATE_NOT_VALID,
     BypassLearningError.GTP_SENDING_DATA,
-    null -> BypassError.GENERAL
+    null,
+    -> BypassError.GENERAL
 }

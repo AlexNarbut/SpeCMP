@@ -27,7 +27,7 @@ class CarMappersTest {
         features: List<CarFeature> = emptyList(),
         guides: List<CarMountPointGuide> = emptyList(),
         schemes: List<CarMountSchemeFile> = emptyList(),
-        imageUrl: String? = "https://img/camry.png"
+        imageUrl: String? = "https://img/camry.png",
     ) = CarInfo(
         carId = 7,
         carBrand = "Toyota",
@@ -45,7 +45,7 @@ class CarMappersTest {
         mountingSchemes = schemes,
         mountingMaps = emptyList(),
         userManualsExist = false,
-        userManuals = emptyList()
+        userManuals = emptyList(),
     )
 
     @Test
@@ -63,7 +63,7 @@ class CarMappersTest {
     fun `capabilities keep support and drop blank notes`() {
         val card = info(
             engine = EngineBlockByCanFeature.Available(isSupported = true, description = "<p>Через CAN2</p>"),
-            keyless = ImmobilizerBypassFeature.Available(isSupported = false, description = " ")
+            keyless = ImmobilizerBypassFeature.Available(isSupported = false, description = " "),
         ).toCard()
 
         assertEquals(CarCapability.Supported("<p>Через CAN2</p>"), card.engineBlockByCan)
@@ -82,17 +82,17 @@ class CarMappersTest {
         val card = info(
             features = listOf(
                 CarFeature("Двери", null, CarFeatureGroup.MAIN, 2, emptyList(), listOf(CarBusGroup.CAN1)),
-                CarFeature("Зажигание", "", CarFeatureGroup.EXTENDED, 1, listOf(CarBusGroup.LIN), emptyList())
+                CarFeature("Зажигание", "", CarFeatureGroup.EXTENDED, 1, listOf(CarBusGroup.LIN), emptyList()),
             ),
             guides = listOf(
                 CarMountPointGuide(
                     "Замок",
                     null,
                     "CAN",
-                    listOf(CarMountPointGuideImage("2", "u2", 2), CarMountPointGuideImage("1", "u1", 1))
-                )
+                    listOf(CarMountPointGuideImage("2", "u2", 2), CarMountPointGuideImage("1", "u1", 1)),
+                ),
             ),
-            schemes = listOf(CarMountSchemeFile("B", null, "b.pdf", 2), CarMountSchemeFile("A", "", "a.pdf", 1))
+            schemes = listOf(CarMountSchemeFile("B", null, "b.pdf", 2), CarMountSchemeFile("A", "", "a.pdf", 1)),
         ).toCard()
 
         assertEquals(listOf("Зажигание", "Двери"), card.features.map { it.name })
@@ -118,7 +118,7 @@ class CarMappersTest {
         assertNull(emptySet<DomainGroup>().toSdkFilter())
         assertEquals(
             listOf(CarFeatureGroup.MAIN, CarFeatureGroup.TRAILER),
-            setOf(DomainGroup.TRAILER, DomainGroup.MAIN).toSdkFilter()
+            setOf(DomainGroup.TRAILER, DomainGroup.MAIN).toSdkFilter(),
         )
     }
 }

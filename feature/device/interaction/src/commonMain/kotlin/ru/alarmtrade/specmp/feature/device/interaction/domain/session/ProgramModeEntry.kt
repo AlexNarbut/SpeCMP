@@ -18,7 +18,7 @@ enum class ProgramModeEntryResult {
     WRONG_PIN,
 
     /** Команда не прошла: нет связи, блок не ответил. */
-    FAILED
+    FAILED,
 }
 
 /**
@@ -29,7 +29,7 @@ enum class ProgramModeEntryResult {
 class ProgramModeEntry(
     private val deviceSession: DeviceSession,
     private val programMode: ProgramModeRepository,
-    private val pinCooldown: ServicePinCooldown
+    private val pinCooldown: ServicePinCooldown,
 ) {
     /** PIN программирования нужен только на BLE: на USB SDK пропускает режим программирования. */
     fun isPinLocked(systemId: Long): Boolean = deviceSession.transport.value == ConnectionTransport.BLE &&

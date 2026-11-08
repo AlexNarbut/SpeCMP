@@ -16,7 +16,7 @@ class RailModelTest {
     fun `usb path has no slave and system check`() {
         assertEquals(
             listOf(RailKey.PREP, RailKey.WRITE, RailKey.MOUNT, RailKey.BYPASS, RailKey.CLONE, RailKey.REVIEW),
-            railPath(plan = null, usb = true)
+            railPath(plan = null, usb = true),
         )
     }
 

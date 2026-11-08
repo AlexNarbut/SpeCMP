@@ -15,7 +15,7 @@ data class AlarmDevice(
      * Модель блока есть в базе устройств на телефоне. `false` — возможности не прочитаны, потому что базы нет или
      * она устарела (а не потому, что блок не поддерживается): нужна синхронизация базы.
      */
-    val modelInDatabase: Boolean = true
+    val modelInDatabase: Boolean = true,
 )
 
 /** Подпись блока «DX-9X  1234567» (модель и номер) — шапки экранов и маршрутов. */
@@ -49,7 +49,7 @@ data class BluetoothManufacturer(
     val firmwareName: String,
     val deviceName: String,
     val bootFirmwareVersion: String,
-    val mainFirmwareVersion: String
+    val mainFirmwareVersion: String,
 )
 
 /** Возможности блока, от которых зависит меню работы с устройством (подмножество `SubsystemFeature` SDK). */
@@ -59,7 +59,7 @@ enum class DeviceFeature {
     SETTINGS,
     BYPASS_LEARNING,
     CLONE,
-    DYNAMIC_DEVICES
+    DYNAMIC_DEVICES,
 }
 
 /** Связь с блоком по данным SDK (`getDeviceConnectionStateFlowUseCase`). */

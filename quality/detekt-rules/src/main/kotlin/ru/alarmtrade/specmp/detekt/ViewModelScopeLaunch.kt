@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.psi.KtThisExpression
 class ViewModelScopeLaunch(config: Config) :
     Rule(
         config,
-        "Корутины ViewModel запускаются через intent/safeLaunch базы ViewModel — они логируют необработанные исключения."
+        "Корутины ViewModel запускаются через intent/safeLaunch базы ViewModel — они логируют необработанные исключения.",
     ) {
 
     override fun visitCallExpression(expression: KtCallExpression) {

@@ -64,14 +64,14 @@ class DeviceSession(
     private val sessionRepository: DeviceSessionRepository,
     private val connectionRepository: DeviceConnectionRepository,
     dispatchers: AppDispatchers,
-    parentContext: CoroutineContext = EmptyCoroutineContext
+    parentContext: CoroutineContext = EmptyCoroutineContext,
 ) {
 
     private val logger = Logger.withTag(LOG_TAG)
 
     private val scope = CoroutineScope(
         parentContext + SupervisorJob(parentContext[Job]) + dispatchers.io +
-            CoroutineExceptionHandler { _, throwable -> logger.e(throwable) { "Unhandled session exception" } }
+            CoroutineExceptionHandler { _, throwable -> logger.e(throwable) { "Unhandled session exception" } },
     )
 
     private val sessionMutex = Mutex()
@@ -111,7 +111,7 @@ class DeviceSession(
 
     val state: StateFlow<DeviceSessionState> = merge(
         sessionRepository.linkState().distinctUntilChanged().map { SessionEvent.Link(it) },
-        modeRefreshes.map { SessionEvent.RefreshMode }
+        modeRefreshes.map { SessionEvent.RefreshMode },
     )
         .transformLatest { event ->
             if (event == SessionEvent.RefreshMode) {
@@ -173,7 +173,7 @@ class DeviceSession(
         .stateIn(
             scope = scope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0),
-            initialValue = DeviceSessionState.Connecting
+            initialValue = DeviceSessionState.Connecting,
         )
 
     /** Сессия создана поиском устройства — запомнить, по какому транспорту. */
@@ -430,7 +430,7 @@ class DeviceSession(
     private data class RebootExpectation(
         val kind: DeviceReboot,
         val acknowledged: Boolean = false,
-        val reached: Boolean = false
+        val reached: Boolean = false,
     )
 
     private companion object {

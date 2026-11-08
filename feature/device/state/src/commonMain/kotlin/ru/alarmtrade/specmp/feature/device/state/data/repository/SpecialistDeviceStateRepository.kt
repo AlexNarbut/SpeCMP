@@ -35,7 +35,7 @@ import ru.alarmtrade.specmp.feature.device.state.domain.repository.DeviceStateRe
  * + `start/stopRequestingDeviceStateUseCase` (период 3 с задан в SDK) и `sendControlCommandUseCase`.
  */
 class SpecialistDeviceStateRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
+    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : DeviceStateRepository {
 
     override fun states(): Flow<Response<VehicleState>> = flow {
@@ -66,7 +66,7 @@ class SpecialistDeviceStateRepository(
                 .toResponse()
         ) {
             is Response.Success -> Response.Success(
-                if (response.value.isSuccess) CommandReply.DONE else CommandReply.REJECTED
+                if (response.value.isSuccess) CommandReply.DONE else CommandReply.REJECTED,
             )
 
             is Response.Error -> response

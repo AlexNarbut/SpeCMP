@@ -10,7 +10,8 @@ import androidx.compose.ui.unit.dp
 internal enum class SettingsLayout(val treeWidth: Dp) {
     Compact(0.dp),
     Medium(232.dp),
-    Expanded(280.dp);
+    Expanded(280.dp),
+    ;
 
     val isWide: Boolean get() = this != Compact
 }

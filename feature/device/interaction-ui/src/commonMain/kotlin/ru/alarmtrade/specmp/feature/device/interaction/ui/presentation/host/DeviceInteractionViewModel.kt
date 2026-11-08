@@ -36,7 +36,7 @@ class DeviceInteractionViewModel(private val deviceSession: DeviceSession) : Bas
                     is DeviceSessionState.Ready -> false
                     is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> true
                     DeviceSessionState.Connecting, DeviceSessionState.Disconnected -> previous.wasBoot
-                }
+                },
             )
         }
         .combine(deviceSession.transport) { state, transport -> state.copy(transport = transport ?: state.transport) }

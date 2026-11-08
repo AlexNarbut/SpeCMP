@@ -27,7 +27,7 @@ internal fun FirmwareArchiveHome(onBack: () -> Unit) {
     }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = { archive = null }
+        onBackCompleted = { archive = null },
     )
     FirmwareArchiveEntry(
         request = request,
@@ -35,6 +35,6 @@ internal fun FirmwareArchiveHome(onBack: () -> Unit) {
         onBack = { archive = null },
         vehiclePicker = { deviceName, onPick, onPickerBack -> ArchiveVehiclePicker(deviceName, onPick, onPickerBack) },
         exporter = rememberFirmwareFileExporter(),
-        onChangeModel = { archive = null }
+        onChangeModel = { archive = null },
     )
 }

@@ -41,7 +41,7 @@ class FirmwareBootEntry(
     private val deviceSession: DeviceSession,
     private val bootRequester: FirmwareBootRequester,
     private val pinCooldown: ServicePinCooldown,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) {
     private val logger = Logger.withTag("FirmwareBootEntry")
 
@@ -53,7 +53,7 @@ class FirmwareBootEntry(
         request: FirmwareBootRequest,
         target: BootModeTarget,
         systemId: Long,
-        pin: ServicePin?
+        pin: ServicePin?,
     ): BootEntryResult {
         if (isPinLocked(systemId)) return BootEntryResult.PinLocked
         bootRequester.request(request)

@@ -30,7 +30,7 @@ class ArchitectureTest {
                 testName = "module-direction",
                 additionalMessage = "core/* импортирует только core/*, feature/* — core/* и feature/*; " +
                     "пакеты composition roots (composeApp, flasherApp) не импортируются. " +
-                    "docs/architecture.md, «Граф зависимостей модулей»"
+                    "docs/architecture.md, «Граф зависимостей модулей»",
             ) { true }
     }
 
@@ -40,7 +40,7 @@ class ArchitectureTest {
             testName = "module-package",
             additionalMessage = "Пакет файла начинается с базового пакета модуля: feature/auth-state → " +
                 "$ROOT.feature.authstate, feature/device/settings-ui → $ROOT.feature.device.settings.ui. " +
-                "docs/architecture.md, «Пространства имён»"
+                "docs/architecture.md, «Пространства имён»",
         ) { file ->
             val pkg = file.packagee?.name.orEmpty()
             pkg == file.basePackage || pkg.startsWith(file.basePackage + ".")
@@ -83,7 +83,7 @@ class ArchitectureTest {
             .assertFalse(
                 testName = "data-isolation",
                 additionalMessage = "data реализует контракты domain и не знает об UI и Koin-модулях. " +
-                    "docs/patterns.md, «Data — репозитории»"
+                    "docs/patterns.md, «Data — репозитории»",
             ) { true }
     }
 
@@ -95,7 +95,7 @@ class ArchitectureTest {
                 testName = "feature-data-isolation",
                 additionalMessage = "Чужая фича доступна только через domain (контракты domain/repository, модели); " +
                     "её data — реализация, привязывается в её Koin-модуле. docs/architecture.md, " +
-                    "«Граф зависимостей модулей»"
+                    "«Граф зависимостей модулей»",
             ) { true }
     }
 
@@ -108,7 +108,7 @@ class ArchitectureTest {
                 additionalMessage = "Раскладка ролей фичи: реализация репозитория (класс *Repository, " +
                     "Specialist*Repository) — data/repository; *DataSource(Impl) — data/datasource; " +
                     "*CoordinatorImpl/*ControllerImpl — data/service или platform; *Coordinator/*Controller — " +
-                    "только interface в domain/service. docs/patterns.md, «Data — репозитории»"
+                    "только interface в domain/service. docs/patterns.md, «Data — репозитории»",
             ) { it.isPlacedByRole() }
     }
 
@@ -119,7 +119,7 @@ class ArchitectureTest {
             .assertTrue(
                 testName = "repository-in-domain",
                 additionalMessage = "Интерфейс *Repository фичи — контракт domain: feature/<name>/domain/repository, " +
-                    "реализация — в data/repository. docs/patterns.md, «Domain»"
+                    "реализация — в data/repository. docs/patterns.md, «Domain»",
             ) { it.resideInPackage("..domain..") }
     }
 
@@ -152,7 +152,7 @@ class ArchitectureTest {
             testName = "serializable-placement",
             additionalMessage = "@Serializable — только форматы передачи и хранения (пакеты ..data..), маршруты " +
                 "навигации (..navigation.. или NavKey) и типы их аргументов. Доменные и UI-модели не сериализуются. " +
-                "docs/patterns.md, «Сериализация»"
+                "docs/patterns.md, «Сериализация»",
         ) { declaration ->
             SERIALIZABLE_PACKAGES.any { declaration.resideInPackage(it) } ||
                 declaration in routes ||
@@ -168,7 +168,7 @@ class ArchitectureTest {
             .assertTrue(
                 testName = "composable-in-presentation",
                 additionalMessage = "@Composable в feature-модуле — только в пакете presentation, включая форматтеры " +
-                    "на строках. docs/architecture.md, «Раскладка `presentation/`»"
+                    "на строках. docs/architecture.md, «Раскладка `presentation/`»",
             ) { it.resideInPackage("..presentation..") }
     }
 
@@ -192,7 +192,7 @@ class ArchitectureTest {
             .assertFalse(
                 testName = "no-fakes-in-production",
                 additionalMessage = "Fake*/Stub* — тестовые дублёры: только в тестовых source set'ах. Рабочая " +
-                    "заглушка в проде — явный NoOp* (поведение «ничего не делать» — часть контракта)."
+                    "заглушка в проде — явный NoOp* (поведение «ничего не делать» — часть контракта).",
             ) { it.name.startsWith("Fake") || it.name.startsWith("Stub") }
     }
 
@@ -203,7 +203,7 @@ class ArchitectureTest {
                 testName = "forbidden-suffix",
                 additionalMessage = "Роль — в имени: *Helper/*Utils запрещены везде (функции-расширения или класс " +
                     "с ролью); *Manager — только платформенная обёртка над нативным API " +
-                    "(${PLATFORM_SOURCE_SETS.joinToString()})."
+                    "(${PLATFORM_SOURCE_SETS.joinToString()}).",
             ) {
                 VAGUE_SUFFIXES.any(it.name::endsWith) ||
                     (it.name.endsWith(MANAGER) && it.containingFile.sourceSetName !in PLATFORM_SOURCE_SETS)
@@ -223,7 +223,7 @@ class ArchitectureTest {
         }.assertFalse(
             testName = "top-level-init-order",
             additionalMessage = "Верхнеуровневое свойство читает свойство, объявленное ниже в том же файле: при " +
-                "инициализации файла оно ещё null (на iOS — падение Koin в includes). Перенеси зависимость выше"
+                "инициализации файла оно ещё null (на iOS — падение Koin в includes). Перенеси зависимость выше",
         ) { true }
     }
 
@@ -236,7 +236,7 @@ class ArchitectureTest {
                 additionalMessage =
                     "*DataSource получает только реализация репозитория (data/repository) и составной " +
                         "*DataSource; ViewModel, use case и доменные сервисы ходят через репозиторий. " +
-                        "docs/patterns.md, «Data — репозитории»"
+                        "docs/patterns.md, «Data — репозитории»",
             ) { it.type.text.baseTypeName().isDataSourceName() }
     }
 
@@ -258,7 +258,7 @@ private val APP_MODULES = setOf(
     "androidApp",
     "desktopApp",
     "flasherAndroidApp",
-    "flasherDesktopApp"
+    "flasherDesktopApp",
 )
 
 private val KoFileDeclaration.isCore get() = moduleName.startsWith("core/")
@@ -292,7 +292,7 @@ private val DOMAIN_FORBIDDEN_PREFIXES = listOf(
     "$ROOT.core.ui.",
     "com.russhwolf.",
     "kotlinx.serialization.",
-    "io.ktor."
+    "io.ktor.",
 )
 
 // Где пакет ..data.. недоступен: фича — вне data/di, core — presentation, приложения — вне di.

@@ -89,7 +89,7 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
                 } else {
                     message
                 }
-            }
+            },
         )
     }
 
@@ -102,7 +102,7 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
     fun tryTransition(
         id: String,
         from: Set<SupportChatMessageStatus>,
-        to: SupportChatMessageStatus
+        to: SupportChatMessageStatus,
     ): SupportChatTimeline? {
         val current = find(id) ?: return null
         if (current.status !in from) return null
@@ -136,7 +136,7 @@ private fun sorted(messages: List<SupportChatMessage>): List<SupportChatMessage>
 
 private fun List<SupportChatMessage>.indexOfEcho(
     echo: SupportChatMessage,
-    accepts: (SupportChatMessage) -> Boolean = { true }
+    accepts: (SupportChatMessage) -> Boolean = { true },
 ): Int {
     // Обе ветки — FIFO: порядок подтверждений сервера соответствует порядку отправки.
     val byContent = indexOfFirst { it.isAwaitingEcho() && accepts(it) && it.contentMatches(echo) }

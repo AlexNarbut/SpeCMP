@@ -29,12 +29,12 @@ fun FastMountEntry(
     onExit: () -> Unit,
     onChooseAnother: () -> Unit,
     onOpenAdvancedMount: () -> Unit,
-    slots: FastMountSlots
+    slots: FastMountSlots,
 ) {
     FastMountScreen(
         onExit = onExit,
         onChooseAnother = onChooseAnother,
         onOpenAdvancedMount = onOpenAdvancedMount,
-        slots = slots
+        slots = slots,
     )
 }

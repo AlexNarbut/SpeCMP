@@ -53,7 +53,7 @@ class AppSettingsViewModelTest {
             restartSupported
         },
         configurationLanguages,
-        AppDispatchers(dispatcher, dispatcher, dispatcher)
+        AppDispatchers(dispatcher, dispatcher, dispatcher),
     ).also { vm -> backgroundScope.launch { vm.state.collect {} } }
 
     @BeforeTest

@@ -16,6 +16,6 @@ fun CmpFullScreenDialog(onDismissRequest: () -> Unit, modifier: Modifier = Modif
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false),
-        content = { Box(modifier) { content() } }
+        content = { Box(modifier) { content() } },
     )
 }

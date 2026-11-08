@@ -54,7 +54,7 @@ enum class FailureKind {
     DeviceNotReady,
     ApplyingError,
     Preparation,
-    Unknown
+    Unknown,
 }
 
 /** Что обновляем: основная программа блока или Bluetooth-модуль; от этого зависят подзаголовок и данные. */
@@ -83,7 +83,7 @@ data class FirmwareUpdateState(
     /** Выбранный файл не удалось взять (баннер на выборе источника). */
     val fileError: FileError? = null,
     /** CAN-прошивка блока на выборе источника (только основная программа блока с единой CAN-прошивкой). */
-    val blockCan: BlockCanUi? = null
+    val blockCan: BlockCanUi? = null,
 ) {
     /** «Назад» заблокирован (замок): процесс идёт, и блок нельзя бросить на полпути. */
     val locked: Boolean
@@ -95,14 +95,16 @@ data class FirmwareUpdateState(
             UpdatePhase.Verify,
             UpdatePhase.Apply,
             UpdatePhase.Success,
-            UpdatePhase.Finishing -> true
+            UpdatePhase.Finishing,
+            -> true
 
             UpdatePhase.Loading,
             UpdatePhase.Source,
             UpdatePhase.DataError,
             UpdatePhase.Confirm,
             is UpdatePhase.Error,
-            is UpdatePhase.Lost -> false
+            is UpdatePhase.Lost,
+            -> false
         }
 }
 
@@ -133,7 +135,7 @@ data class ConfirmUi(
     val description: String,
     val older: Boolean,
     val localFile: Boolean = false,
-    val can: ConfirmCanUi? = null
+    val can: ConfirmCanUi? = null,
 )
 
 /** Действия экрана обновления (stateless-контент получает их от VM или заглушки в галерее состояний). */
@@ -153,7 +155,7 @@ class FirmwareUpdateActions(
     val onDisconnect: () -> Unit = {},
     val onExitBootClick: () -> Unit = {},
     val onExitDialogDismiss: () -> Unit = {},
-    val onExitConfirm: () -> Unit = {}
+    val onExitConfirm: () -> Unit = {},
 )
 
 /** Одноразовые события экрана обновления. */

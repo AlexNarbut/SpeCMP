@@ -81,7 +81,7 @@ internal fun IntegerEditor(setting: IntegerSetting, value: Int, onChange: (Int) 
         units = setting.units,
         minValueText = setting.minValueText,
         maxValueText = setting.maxValueText,
-        onChange = onChange
+        onChange = onChange,
     )
 }
 
@@ -93,7 +93,7 @@ internal fun IntRangeEditor(
     units: String?,
     onChange: (Int) -> Unit,
     minValueText: String? = null,
-    maxValueText: String? = null
+    maxValueText: String? = null,
 ) {
     val edgeLabel = edgeText(value, range.first, range.last, minValueText, maxValueText)
     NumberEditor(
@@ -108,10 +108,10 @@ internal fun IntRangeEditor(
             value = value.toFloat(),
             range = range.first.toFloat()..range.last.toFloat(),
             steps = (range.last - range.first - 1).takeIf { it in 0..MAX_SLIDER_STEPS } ?: 0,
-            onChange = { onChange(it.roundToInt().coerceIn(range)) }
+            onChange = { onChange(it.roundToInt().coerceIn(range)) },
         ),
         minLabel = minValueText ?: withUnits(range.first.toString(), units),
-        maxLabel = maxValueText ?: withUnits(range.last.toString(), units)
+        maxLabel = maxValueText ?: withUnits(range.last.toString(), units),
     )
 }
 
@@ -120,7 +120,7 @@ internal fun DecimalEditor(setting: DecimalSetting, value: Float, onChange: (Flo
     val snap = { raw: Double ->
         ((raw / setting.step).roundToLong() * setting.step.toDouble()).toFloat().coerceIn(
             setting.minValue,
-            setting.maxValue
+            setting.maxValue,
         )
     }
     val edgeLabel = edgeText(value, setting.minValue, setting.maxValue, setting.minValueText, setting.maxValueText)
@@ -137,17 +137,17 @@ internal fun DecimalEditor(setting: DecimalSetting, value: Float, onChange: (Flo
         rangeError = stringResource(
             Strings.string.settings_edit_error_range,
             decimalNumber(setting, setting.minValue),
-            decimalNumber(setting, setting.maxValue)
+            decimalNumber(setting, setting.maxValue),
         ),
         onStep = { delta -> onChange(snap(value.toDouble() + delta * setting.step)) },
         slider = SliderSpec(
             value = value,
             range = setting.minValue..setting.maxValue,
             steps = stepsCount.takeIf { it in 0..MAX_SLIDER_STEPS } ?: 0,
-            onChange = { onChange(snap(it.toDouble())) }
+            onChange = { onChange(snap(it.toDouble())) },
         ),
         minLabel = decimalText(setting, setting.minValue),
-        maxLabel = decimalText(setting, setting.maxValue)
+        maxLabel = decimalText(setting, setting.maxValue),
     )
 }
 
@@ -155,7 +155,7 @@ private class SliderSpec(
     val value: Float,
     val range: ClosedFloatingPointRange<Float>,
     val steps: Int,
-    val onChange: (Float) -> Unit
+    val onChange: (Float) -> Unit,
 )
 
 /** Крупное значение между кнопками −/+ (автоповтор), ввод с клавиатуры по нажатию на число, ползунок, края. */
@@ -171,7 +171,7 @@ private fun <T> NumberEditor(
     onStep: (delta: Int) -> Unit,
     slider: SliderSpec,
     minLabel: String,
-    maxLabel: String
+    maxLabel: String,
 ) {
     val colors = cmpThemeColors()
     var typing by remember { mutableStateOf(false) }
@@ -182,7 +182,7 @@ private fun <T> NumberEditor(
         CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = 88.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CmpStepButton(
                 icon = CmpIcons.Remove,
@@ -190,7 +190,7 @@ private fun <T> NumberEditor(
                 onStep = {
                     typing = false
                     onStep(-1)
-                }
+                },
             )
             CmpColumn(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (typing) {
@@ -205,7 +205,7 @@ private fun <T> NumberEditor(
                         singleLine = true,
                         isError = typedInvalid,
                         supportingText = if (typedInvalid) ({ CmpText(text = rangeError) }) else null,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     )
                 } else {
                     val typeLabel = stringResource(Strings.string.settings_edit_a11y_type_value)
@@ -218,19 +218,19 @@ private fun <T> NumberEditor(
                                 typing = true
                             }
                             .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CmpText(
                             text = bigText,
                             fontSize = BigNumberSize,
                             fontWeight = FontWeight.SemiBold,
-                            color = colors.onSurface
+                            color = colors.onSurface,
                         )
                         if (units != null) {
                             CmpText(
                                 text = " $units",
                                 fontSize = UnitsSize,
-                                color = colors.onSurfaceVariant
+                                color = colors.onSurfaceVariant,
                             )
                         }
                     }
@@ -242,7 +242,7 @@ private fun <T> NumberEditor(
                 onStep = {
                     typing = false
                     onStep(1)
-                }
+                },
             )
         }
         CmpSlider(
@@ -252,7 +252,7 @@ private fun <T> NumberEditor(
                 slider.onChange(it)
             },
             valueRange = slider.range,
-            steps = slider.steps
+            steps = slider.steps,
         )
         CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             CmpText(text = minLabel, style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
@@ -276,12 +276,12 @@ internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int)
                     .heightIn(min = 56.dp)
                     .background(
                         if (isSelected) colors.secondaryContainer else Color.Transparent,
-                        RoundedCornerShape(16.dp)
+                        RoundedCornerShape(16.dp),
                     )
                     .clickable(role = Role.RadioButton) { onSelect(index) }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpRadioButton(selected = isSelected, onClick = null)
                 CmpText(
@@ -289,7 +289,7 @@ internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int)
                     style = CmpTextStyle.BodyLarge,
                     fontWeight = if (isSelected) FontWeight.SemiBold else null,
                     color = if (isSelected) colors.onSecondaryContainer else colors.onSurface,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -312,7 +312,7 @@ internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) 
                     stringResource(Strings.string.settings_edit_label_counter, value.length, setting.maxLength)
                 } else {
                     setting.validationErrorText ?: stringResource(Strings.string.settings_edit_error_invalid)
-                }
+                },
             )
         },
         keyboardOptions = KeyboardOptions(
@@ -320,9 +320,9 @@ internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) 
                 TextInputType.TEXT -> KeyboardType.Text
                 TextInputType.NUMBER -> KeyboardType.Number
                 TextInputType.PHONE -> KeyboardType.Phone
-            }
+            },
         ),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     )
 }
 
@@ -332,25 +332,25 @@ internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
     CmpRow(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         TimeUnit(
             value = value.hours,
             upLabel = stringResource(Strings.string.settings_edit_a11y_hours_up),
             downLabel = stringResource(Strings.string.settings_edit_a11y_hours_down),
-            onStep = { delta -> onChange(value.copy(hours = (value.hours + delta).mod(HOURS_IN_DAY))) }
+            onStep = { delta -> onChange(value.copy(hours = (value.hours + delta).mod(HOURS_IN_DAY))) },
         )
         CmpText(
             text = ":",
             fontSize = BigNumberSize,
             fontWeight = FontWeight.SemiBold,
-            color = cmpThemeColors().onSurface
+            color = cmpThemeColors().onSurface,
         )
         TimeUnit(
             value = value.minutes,
             upLabel = stringResource(Strings.string.settings_edit_a11y_minutes_up),
             downLabel = stringResource(Strings.string.settings_edit_a11y_minutes_down),
-            onStep = { delta -> onChange(value.copy(minutes = (value.minutes + delta).mod(MINUTES_IN_HOUR))) }
+            onStep = { delta -> onChange(value.copy(minutes = (value.minutes + delta).mod(MINUTES_IN_HOUR))) },
         )
     }
 }
@@ -367,13 +367,13 @@ private fun TimeUnit(value: Int, upLabel: String, downLabel: String, onStep: (In
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             color = cmpThemeColors().onSurface,
-            modifier = Modifier.widthIn(min = 84.dp)
+            modifier = Modifier.widthIn(min = 84.dp),
         )
         CmpStepButton(
             icon = CmpIcons.KeyboardArrowDown,
             contentDescription = downLabel,
             onStep = { onStep(-1) },
-            size = 56.dp
+            size = 56.dp,
         )
     }
 }

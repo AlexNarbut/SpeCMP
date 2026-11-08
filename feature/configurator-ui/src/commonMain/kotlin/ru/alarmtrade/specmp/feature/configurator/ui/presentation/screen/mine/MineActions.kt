@@ -27,5 +27,5 @@ internal class MineActions(
     val onWrite: (LocalConfiguration) -> Unit,
     val onDeleteRequest: (LocalConfiguration) -> Unit,
     val onDeleteConfirm: () -> Unit,
-    val onDialogDismiss: () -> Unit
+    val onDialogDismiss: () -> Unit,
 )

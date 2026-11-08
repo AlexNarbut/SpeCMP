@@ -17,6 +17,6 @@ fun specialistModules(appVersionName: String, appVersionCode: Int): List<Module>
     val version = SpecialistAppVersion(name = appVersionName, code = appVersionCode)
     return listOf(
         specialistModule,
-        module { single<SpecialistAppVersionProvider> { SpecialistAppVersionProvider { version } } }
+        module { single<SpecialistAppVersionProvider> { SpecialistAppVersionProvider { version } } },
     )
 }

@@ -31,7 +31,7 @@ class FakeDeviceScanRepository(
     private val serial: List<ScannedDevice.Serial> = emptyList(),
     private val transports: Set<DeviceTransport> = setOf(DeviceTransport.BLE, DeviceTransport.USB),
     private val bleResponse: Response<List<ScannedDevice.Ble>> = Response.Success(ble),
-    private val usbResponse: Response<List<ScannedDevice.Usb>> = Response.Success(usb)
+    private val usbResponse: Response<List<ScannedDevice.Usb>> = Response.Success(usb),
 ) : DeviceScanRepository {
     // Число подписок на BLE-поиск (перезапуски поиска).
     var bleScanStarts: Int = 0
@@ -54,7 +54,7 @@ class FakeDeviceConnectionRepository(
     // Задержка до первого статуса: реальное подключение не мгновенно.
     private val connectDelayMillis: Long = 0,
     // Статусы по попыткам BLE-подключения (последняя повторяется); по умолчанию — [states].
-    private val bleAttempts: List<List<Response<DeviceConnectionState>>> = listOf(states)
+    private val bleAttempts: List<List<Response<DeviceConnectionState>>> = listOf(states),
 ) : DeviceConnectionRepository {
     var closeCount: Int = 0
         private set
@@ -83,7 +83,7 @@ class FakeDeviceConnectionRepository(
     }
 
     private fun connectFlow(
-        attemptStates: List<Response<DeviceConnectionState>>
+        attemptStates: List<Response<DeviceConnectionState>>,
     ): Flow<Response<DeviceConnectionState>> = flow {
         if (connectDelayMillis > 0) delay(connectDelayMillis)
         emitAll(attemptStates.asFlow())
@@ -101,7 +101,7 @@ class FakePermissionsController(private val state: PermissionState = PermissionS
 class FakePermissionsProvider(
     private val controller: PermissionsController = FakePermissionsController(),
     private val blePermissions: List<Permission> = emptyList(),
-    private val locationEnabled: Boolean = true
+    private val locationEnabled: Boolean = true,
 ) : PermissionsProvider {
     override fun getController(): PermissionsController = controller
     override fun getBlePermission(): List<Permission> = blePermissions

@@ -21,7 +21,7 @@ enum class CarBus(val family: BusFamily) {
     IMO_KEY1(BusFamily.IMO),
     IMO_KEY2(BusFamily.IMO),
     IMO_KEY1_PLUS_IMO_KEY2(BusFamily.IMO),
-    UNKNOWN(BusFamily.UNKNOWN)
+    UNKNOWN(BusFamily.UNKNOWN),
 }
 
 /** Семейство шин — цвет чипа; номер шины — в подписи. */

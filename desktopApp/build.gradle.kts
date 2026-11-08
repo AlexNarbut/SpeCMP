@@ -67,7 +67,7 @@ if (isMacArm && desktopJvmHome == null) {
         doFirst {
             logger.warn(
                 "WARNING: macOS arm64 без x86_64-JDK 17 — USB-устройства не будут найдены (usb4java). " +
-                    "Установите x86_64-JDK 17 или задайте compose.jvmHome, см. docs/build.md."
+                    "Установите x86_64-JDK 17 или задайте compose.jvmHome, см. docs/build.md.",
             )
         }
     }
@@ -82,7 +82,7 @@ compose.desktop {
             targetFormats(
                 TargetFormat.Dmg,
                 TargetFormat.Msi,
-                TargetFormat.Deb
+                TargetFormat.Deb,
             )
             packageName = "SpeCMP"
             packageVersion = libs.versions.app.versionName.get()

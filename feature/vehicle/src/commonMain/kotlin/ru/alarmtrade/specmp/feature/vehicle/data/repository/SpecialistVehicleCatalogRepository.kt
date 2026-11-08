@@ -39,7 +39,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepo
 class SpecialistVehicleCatalogRepository(
     private val cars: () -> CarsInteractor,
     private val configurations: () -> ConfigurationInteractor,
-    private val deviceInformation: () -> DeviceInformationInteractor
+    private val deviceInformation: () -> DeviceInformationInteractor,
 ) : VehicleCatalogRepository {
 
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> = when (query.catalog) {
@@ -103,7 +103,7 @@ class SpecialistVehicleCatalogRepository(
     override suspend fun findByCanCode(
         canCode: String,
         device: VehicleDeviceFilter?,
-        groups: Set<CarFeatureGroup>
+        groups: Set<CarFeatureGroup>,
     ): Response<List<CarSummary>> = withCars { interactor ->
         subsystems(device).mapIfSuccess { types ->
             interactor.getCarInformationByCanCodeUseCase

@@ -57,12 +57,12 @@ internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
         modifier = modifier,
         shape = CircleShape,
         color = colors.surface,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpRow(
             modifier = Modifier.heightIn(min = 28.dp).padding(start = 4.dp, end = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             WireSwatch(wire.colors)
             CmpText(
@@ -73,7 +73,7 @@ internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
                 },
                 style = CmpTextStyle.Caption,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.onSurface
+                color = colors.onSurface,
             )
         }
     }
@@ -87,7 +87,7 @@ private fun WireSwatch(rgb: List<Int>) {
         modifier = Modifier
             .size(width = SwatchSize.width.dp, height = SwatchSize.height.dp)
             .clip(RoundedCornerShape(6.dp))
-            .border(1.dp, outline, RoundedCornerShape(6.dp))
+            .border(1.dp, outline, RoundedCornerShape(6.dp)),
     ) {
         when (fills.size) {
             0 -> {
@@ -105,7 +105,7 @@ private fun WireSwatch(rgb: List<Int>) {
                 drawRect(
                     fills[1],
                     topLeft = Offset(0f, size.height * TWO_COLOR_STRIPE_FROM),
-                    size = Size(size.width, size.height * TWO_COLOR_STRIPE_FROM)
+                    size = Size(size.width, size.height * TWO_COLOR_STRIPE_FROM),
                 )
             }
 
@@ -131,7 +131,7 @@ internal fun PolarityBadge(polarity: Polarity) {
             Strings.string.settings_common_value_polarity_plus_sign
         } else {
             Strings.string.settings_common_value_polarity_minus_sign
-        }
+        },
     )
     // Знак рисуется линиями, а не глифом шрифта: текст в маленьком круге смещается из-за отступов шрифта.
     Canvas(
@@ -139,7 +139,7 @@ internal fun PolarityBadge(polarity: Polarity) {
             .size(24.dp)
             .background(if (plus) colors.primary else Color.Transparent, CircleShape)
             .border(2.dp, if (plus) colors.primary else colors.onSurface, CircleShape)
-            .semantics { contentDescription = label }
+            .semantics { contentDescription = label },
     ) {
         val half = size.minDimension * SIGN_HALF_LENGTH
         val stroke = SIGN_STROKE.dp.toPx()
@@ -150,7 +150,7 @@ internal fun PolarityBadge(polarity: Polarity) {
                 Offset(center.x, center.y - half),
                 Offset(center.x, center.y + half),
                 stroke,
-                StrokeCap.Round
+                StrokeCap.Round,
             )
         }
     }
@@ -170,14 +170,14 @@ internal fun ChangedChip() {
             .background(colors.tertiaryContainer, CircleShape)
             .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         CmpDot(size = 8.dp)
         CmpText(
             text = stringResource(Strings.string.settings_common_value_changed),
             style = CmpTextStyle.Caption,
             fontWeight = FontWeight.SemiBold,
-            color = colors.onTertiaryContainer
+            color = colors.onTertiaryContainer,
         )
     }
 }
@@ -198,6 +198,6 @@ internal fun ContactBadge(type: InputContactType) {
         color = colors.onSurface,
         modifier = Modifier
             .background(colors.surfaceVariant, CircleShape)
-            .padding(horizontal = 10.dp, vertical = 3.dp)
+            .padding(horizontal = 10.dp, vertical = 3.dp),
     )
 }

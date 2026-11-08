@@ -31,14 +31,14 @@ private val CenterMaxWidth = 440.dp
 internal fun FirmwareCenteredBody(content: @Composable () -> Unit) {
     CmpBox(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpColumn(
             modifier = Modifier.widthIn(
-                max = CenterMaxWidth
+                max = CenterMaxWidth,
             ).fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             content()
         }
@@ -55,7 +55,7 @@ internal fun FirmwareLoadError(icon: CmpIcons, title: String, message: String, o
         CmpButton(
             text = stringResource(Strings.string.firmware_common_btn_retry),
             onClick = onRetry,
-            modifier = Modifier.fillMaxWidth().height(52.dp)
+            modifier = Modifier.fillMaxWidth().height(52.dp),
         )
     }
 }

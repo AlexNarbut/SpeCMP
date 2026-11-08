@@ -65,7 +65,7 @@ class ScanDeviceViewModel(
     private val dispatchers: AppDispatchers,
     serialEnabled: Boolean = false,
     /** Поиск для быстрого монтажа: BLE-устройства, которые не сигнализации, видны, но недоступны. */
-    private val alarmsOnly: Boolean = false
+    private val alarmsOnly: Boolean = false,
 ) : BaseViewModel() {
 
     private val requirements = permissionsProvider.deviceAccessRequirements()
@@ -87,7 +87,7 @@ class ScanDeviceViewModel(
 
     private val devicesState: Flow<LCEState<List<DeviceUiItem>, ScanError>> = combine(stepFlow, scanRestartsFlow) {
             step,
-            _
+            _,
         ->
         step
     }
@@ -105,7 +105,7 @@ class ScanDeviceViewModel(
                         emit(Response.Success(emptyList()))
                     },
                     scanRepository.scanUsb().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) },
-                    serial
+                    serial,
                 ) { bleResponse, usbResponse, serialResponse -> mergeDevices(bleResponse, usbResponse, serialResponse) }
             }
         }
@@ -126,7 +126,7 @@ class ScanDeviceViewModel(
         stepFlow,
         devicesState,
         selectedIdFlow,
-        searchedLongEnough
+        searchedLongEnough,
     ) { step, devices, selectedId, searchedLong ->
         ScanDeviceState(
             step = step,
@@ -134,7 +134,7 @@ class ScanDeviceViewModel(
             supportedTransports = supportedTransports,
             devices = devices,
             selectedId = selectedId,
-            searchedLongEnough = searchedLong
+            searchedLongEnough = searchedLong,
         )
     }
         // Старт: при первой подписке на state запросить разрешения и перейти на скан/adapterOff/denied.
@@ -302,7 +302,7 @@ class ScanDeviceViewModel(
             logger.i { "connectBle id=${item.id} attempt=${attempt + 1} start" }
             val result = connectionRepository.connectBle(
                 item.id,
-                CONNECT_TIMEOUT_MILLIS
+                CONNECT_TIMEOUT_MILLIS,
             ).flowOn(dispatchers.io).awaitTerminal()
             logger.i {
                 "connectBle id=${item.id} attempt=${attempt + 1} result=$result " +
@@ -354,7 +354,7 @@ class ScanDeviceViewModel(
     private fun mergeDevices(
         bleResponse: Response<List<ScannedDevice.Ble>>,
         usbResponse: Response<List<ScannedDevice.Usb>>,
-        serialResponse: Response<List<ScannedDevice.Serial>>
+        serialResponse: Response<List<ScannedDevice.Serial>>,
     ): LCEState<List<DeviceUiItem>, ScanError> {
         // Ошибка одного транспорта не прячет устройства, найденные другим.
         val ble = (bleResponse as? Response.Success)?.value.orEmpty()

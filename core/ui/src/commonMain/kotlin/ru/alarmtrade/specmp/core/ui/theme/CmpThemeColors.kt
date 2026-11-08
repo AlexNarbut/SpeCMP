@@ -38,7 +38,7 @@ data class CmpThemeColors(
     val surfaceContainer: Color,
     val surfaceContainerHigh: Color,
     val surfaceContainerHighest: Color,
-    val scrim: Color
+    val scrim: Color,
 )
 
 @Composable
@@ -74,6 +74,6 @@ fun cmpThemeColors(): CmpThemeColors {
         surfaceContainer = s.surfaceContainer,
         surfaceContainerHigh = s.surfaceContainerHigh,
         surfaceContainerHighest = s.surfaceContainerHighest,
-        scrim = s.scrim
+        scrim = s.scrim,
     )
 }

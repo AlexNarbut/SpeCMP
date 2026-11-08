@@ -30,7 +30,7 @@ data class FastMountState(
     val configuration: FastMountConfiguration? = null,
     val plan: FastMountPlan? = null,
     val master: MasterState = MasterState(),
-    val dialog: WizardDialog? = null
+    val dialog: WizardDialog? = null,
 ) {
     val usb: Boolean get() = fixed?.transport == ConnectionTransport.USB
 }
@@ -41,7 +41,7 @@ data class FixedDevice(
     val systemId: Long,
     val systemName: String,
     val title: String,
-    val transport: ConnectionTransport?
+    val transport: ConnectionTransport?,
 )
 
 /** Данные блока для карточек: прошивка без `VER`, CAN-прошивка ([canCode] `null` — блок без CAN-прошивки). */
@@ -133,7 +133,7 @@ data class MasterState(
     val feedback: String = "",
     val startedAt: TimeSource.Monotonic.ValueTimeMark? = null,
     val mountMinutes: Int = 0,
-    val toast: WizardToast? = null
+    val toast: WizardToast? = null,
 ) {
     val screen: MasterScreen
         get() = when {
@@ -165,7 +165,7 @@ enum class MasterScreen {
     SLAVE,
     SYSTEM_CHECK,
     FEEDBACK,
-    DONE
+    DONE,
 }
 
 /** Ожидание перезагрузки после шага [from] (таймер ведёт экран). */
@@ -202,7 +202,7 @@ enum class WizardDialog {
     MOUNT_DONE,
 
     /** «Обучение Slave завершено?» */
-    SLAVE_DONE
+    SLAVE_DONE,
 }
 
 enum class WizardToast { SETTINGS_WRITTEN, FILE_NO_APP, FILE_FAILED }

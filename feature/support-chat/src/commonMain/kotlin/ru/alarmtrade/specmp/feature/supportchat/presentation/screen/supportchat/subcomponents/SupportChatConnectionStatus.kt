@@ -48,7 +48,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatCo
 internal fun SupportChatConnectionStatus(
     banner: SupportChatConnectionBanner?,
     colors: CmpThemeColors,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var shown by remember { mutableStateOf<SupportChatConnectionBanner?>(null) }
     LaunchedEffect(banner) {
@@ -66,7 +66,7 @@ internal fun SupportChatConnectionStatus(
         modifier = modifier,
         enter = fadeIn(),
         exit = fadeOut(),
-        label = VISIBILITY_LABEL
+        label = VISIBILITY_LABEL,
     ) {
         val current = shown ?: SupportChatConnectionBanner.Reconnecting
         val isProblem = current != SupportChatConnectionBanner.Connecting
@@ -74,18 +74,18 @@ internal fun SupportChatConnectionStatus(
             shape = RoundedCornerShape(percent = 50),
             color = if (isProblem) colors.errorContainer else colors.surfaceContainerHigh,
             contentColor = if (isProblem) colors.onErrorContainer else colors.onSurfaceVariant,
-            shadowElevation = 2.dp
+            shadowElevation = 2.dp,
         ) {
             CmpRow(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (isProblem) {
                     CmpIcon(
                         icon = CmpIcons.WifiOff,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(16.dp),
                     )
                 }
                 CmpText(
@@ -94,17 +94,17 @@ internal fun SupportChatConnectionStatus(
                             SupportChatConnectionBanner.Connecting -> Strings.string.supportchat_chat_title_connecting
                             SupportChatConnectionBanner.Reconnecting -> Strings.string.supportchat_chat_msg_reconnecting
                             SupportChatConnectionBanner.AuthFailed -> Strings.string.supportchat_chat_error_chat_auth
-                        }
+                        },
                     ),
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 // Попыток при AuthFailed нет — и спиннера нет.
                 if (current != SupportChatConnectionBanner.AuthFailed) {
                     CmpCircularProgressIndicator(
                         modifier = Modifier.size(14.dp),
                         strokeWidth = 2.dp,
-                        color = if (isProblem) colors.onErrorContainer else colors.onSurfaceVariant
+                        color = if (isProblem) colors.onErrorContainer else colors.onSurfaceVariant,
                     )
                 }
             }

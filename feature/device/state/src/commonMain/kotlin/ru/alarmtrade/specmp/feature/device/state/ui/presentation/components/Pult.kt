@@ -145,7 +145,7 @@ internal fun PultCard(
     carWidth: Dp,
     onFire: (CommandUi) -> Unit,
     onAllCommands: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val vehicle = state.vehicle
     val hold = remember { HoldState() }
@@ -166,33 +166,33 @@ internal fun PultCard(
                     CmpBox(modifier = Modifier.width(carWidth)) {
                         VehicleSchematic(
                             vehicle = vehicle,
-                            modifier = Modifier.fillMaxWidth().alpha(if (vehicle == null) LOADING_ALPHA else 1f)
+                            modifier = Modifier.fillMaxWidth().alpha(if (vehicle == null) LOADING_ALPHA else 1f),
                         )
                         HoldOverlay(hold = hold, progress = progress)
                     }
                 }
                 CmpColumn(
                     modifier = Modifier.width(CommandsColumnWidth),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     PrimaryCommands(
                         commands = state.commands,
                         status = { state.status(it.command) },
                         enabled = !state.loading && state.pending == null,
                         hold = hold,
-                        onFire = onFire
+                        onFire = onFire,
                     )
                     CmpTextButton(
                         text = stringResource(Strings.string.devicestate_pult_btn_all_commands),
                         onClick = onAllCommands,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
             if (vehicle == null) {
                 CmpSkeleton(
                     modifier = Modifier.fillMaxWidth(CHIPS_SKELETON_FRACTION).height(36.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
                 )
             } else {
                 ActiveZones(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
@@ -216,7 +216,7 @@ private fun BoxScope.HoldOverlay(hold: HoldState, progress: Float) {
             .background(colors.surfaceContainerLow.copy(alpha = OVERLAY_ALPHA), RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpText(
             text = if (hold.pressed) {
@@ -227,7 +227,7 @@ private fun BoxScope.HoldOverlay(hold: HoldState, progress: Float) {
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = colors.onSurface,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         if (hold.pressed) {
             CmpLinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth().height(6.dp))
@@ -241,7 +241,7 @@ private data class StripItem(
     val icon: DrawableResource,
     val value: String,
     val label: String,
-    val highlighted: Boolean = false
+    val highlighted: Boolean = false,
 )
 
 @Composable
@@ -257,8 +257,8 @@ private fun stripItems(vehicle: VehicleState): List<StripItem> {
                     icon = Res.drawable.devicestate_ic_autostart,
                     value = formatMinutesSeconds(autostart.secondsLeft),
                     label = stringResource(Strings.string.devicestate_metric_label_autostart),
-                    highlighted = true
-                )
+                    highlighted = true,
+                ),
             )
         }
         engine.rpm?.let {
@@ -266,45 +266,45 @@ private fun stripItems(vehicle: VehicleState): List<StripItem> {
                 StripItem(
                     Res.drawable.devicestate_ic_speed,
                     it.toString(),
-                    stringResource(Strings.string.devicestate_metric_label_rpm)
-                )
+                    stringResource(Strings.string.devicestate_metric_label_rpm),
+                ),
             )
         }
         add(
             StripItem(
                 Res.drawable.devicestate_ic_voltage,
                 stringResource(Strings.string.devicestate_unit_format_volt, formatOneDecimal(power.voltage)),
-                stringResource(Strings.string.devicestate_metric_label_network)
-            )
+                stringResource(Strings.string.devicestate_metric_label_network),
+            ),
         )
         add(
             StripItem(
                 Res.drawable.devicestate_ic_engine,
                 stringResource(Strings.string.devicestate_unit_format_celsius, engine.temperature),
-                stringResource(Strings.string.devicestate_metric_label_engine)
-            )
+                stringResource(Strings.string.devicestate_metric_label_engine),
+            ),
         )
         add(
             StripItem(
                 Res.drawable.devicestate_ic_cabin,
                 stringResource(Strings.string.devicestate_unit_format_celsius, power.cabinTemp),
-                stringResource(Strings.string.devicestate_metric_label_cabin)
-            )
+                stringResource(Strings.string.devicestate_metric_label_cabin),
+            ),
         )
         add(
             StripItem(
                 Res.drawable.devicestate_ic_out_temp,
                 stringResource(Strings.string.devicestate_unit_format_celsius, power.outsideTemp),
-                stringResource(Strings.string.devicestate_metric_label_outside)
-            )
+                stringResource(Strings.string.devicestate_metric_label_outside),
+            ),
         )
         power.fuelPercent?.let {
             add(
                 StripItem(
                     Res.drawable.devicestate_ic_fuel,
                     stringResource(Strings.string.devicestate_unit_format_percent, it),
-                    stringResource(Strings.string.devicestate_metric_label_fuel)
-                )
+                    stringResource(Strings.string.devicestate_metric_label_fuel),
+                ),
             )
         }
         val gsm = link.gsmLevel
@@ -316,16 +316,16 @@ private fun stripItems(vehicle: VehicleState): List<StripItem> {
                 } else {
                     stringResource(Strings.string.devicestate_metric_format_gsm, gsm)
                 },
-                label = stringResource(Strings.string.devicestate_metric_label_gsm)
-            )
+                label = stringResource(Strings.string.devicestate_metric_label_gsm),
+            ),
         )
         add(
             StripItem(
                 icon = Res.drawable.devicestate_ic_gps,
                 value = link.speedKmh?.let { stringResource(Strings.string.devicestate_unit_format_kmh, it) }
                     ?: stringResource(Strings.string.devicestate_metric_value_no_gps),
-                label = stringResource(Strings.string.devicestate_metric_label_gps)
-            )
+                label = stringResource(Strings.string.devicestate_metric_label_gps),
+            ),
         )
     }
 }
@@ -346,12 +346,12 @@ private fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
             CmpFlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) { items() }
         } else {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) { items() }
         }
     }
@@ -363,31 +363,31 @@ private fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
                 modifier = Modifier
                     .widthIn(min = 88.dp)
                     .background(background, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 CmpRow(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     CmpIcon(
                         painter = painterResource(item.icon),
                         contentDescription = null,
                         tint = if (item.highlighted) content else colors.primary,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
                     CmpText(
                         text = item.value,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = content,
-                        maxLines = 1
+                        maxLines = 1,
                     )
                 }
                 CmpText(
                     text = item.label,
                     fontSize = 13.sp,
                     color = if (item.highlighted) content else colors.onSurfaceVariant,
-                    maxLines = 1
+                    maxLines = 1,
                 )
             }
         }
@@ -402,14 +402,14 @@ private fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
     CmpRow(
         modifier = Modifier.fillMaxWidth().height(40.dp).horizontalScroll(rememberScrollState()),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (active.isEmpty()) {
             CmpIcon(
                 icon = CmpIcons.CheckCircle,
                 contentDescription = null,
                 tint = theme.primary,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(22.dp),
             )
             CmpText(text = stringResource(Strings.string.devicestate_pult_msg_all_ok), fontSize = 16.sp, maxLines = 1)
         }
@@ -428,8 +428,8 @@ private fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
                         } else {
                             colors.row
                         },
-                        shape
-                    )
+                        shape,
+                    ),
             ) {
                 ChangeFlash(
                     on = zone in changed,
@@ -441,28 +441,28 @@ private fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
                     } else {
                         theme.primary
                     },
-                    radius = 10.dp
+                    radius = 10.dp,
                 )
                 CmpRow(
                     modifier = Modifier.heightIn(min = 36.dp).padding(start = 8.dp, end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     CmpIcon(
                         icon = zone.icon,
                         contentDescription = null,
                         tint = theme.accent(tone),
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     CmpText(
                         text = stringResource(
                             Strings.string.devicestate_zones_format_chip,
                             stringResource(zone.label),
-                            zoneValueText(zone, vehicle.zone(zone)).lowercase()
+                            zoneValueText(zone, vehicle.zone(zone)).lowercase(),
                         ),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
-                        maxLines = 1
+                        maxLines = 1,
                     )
                 }
             }
@@ -486,7 +486,7 @@ internal fun VehicleSchematic(vehicle: VehicleState?, modifier: Modifier = Modif
                     painter = painterResource(layer.drawable),
                     contentDescription = null,
                     tint = layer.color,
-                    modifier = Modifier.matchParentSize()
+                    modifier = Modifier.matchParentSize(),
                 )
             }
         }
@@ -501,9 +501,9 @@ private fun autostartFrame(): Int {
         targetValue = 2f,
         animationSpec = infiniteRepeatable(
             tween(AUTOSTART_FRAME_MILLIS * 2, easing = LinearEasing),
-            RepeatMode.Restart
+            RepeatMode.Restart,
         ),
-        label = "autostartFrame"
+        label = "autostartFrame",
     )
     return value.toInt().coerceIn(0, 1)
 }
@@ -529,7 +529,7 @@ private fun vehicleLayers(vehicle: VehicleState?): List<Layer> {
         Zone.DOOR_FRONT_LEFT to DoorLayers.frontLeft,
         Zone.DOOR_FRONT_RIGHT to DoorLayers.frontRight,
         Zone.DOOR_REAR_LEFT to DoorLayers.rearLeft,
-        Zone.DOOR_REAR_RIGHT to DoorLayers.rearRight
+        Zone.DOOR_REAR_RIGHT to DoorLayers.rearRight,
     ).map { (zone, pair) ->
         val tone = vehicle?.zone(zone)?.tone ?: ZoneTone.REST
         Layer(if (tone == ZoneTone.REST) pair.first else pair.second, layerColor(tone))
@@ -547,7 +547,7 @@ private fun zoneLayers(vehicle: VehicleState): List<Layer> {
     }
     val sensors = listOfNotNull(
         sensorLayer(vehicle.zone(Zone.SHOCK), extra = false),
-        sensorLayer(vehicle.zone(Zone.EXTRA_SENSOR), extra = true)
+        sensorLayer(vehicle.zone(Zone.EXTRA_SENSOR), extra = true),
     ).map { (drawable, tone) -> Layer(drawable, layerColor(tone)) }
     return zones + sensors
 }
@@ -581,7 +581,7 @@ private val ZoneLayers = listOf(
     Zone.NEUTRAL to Res.drawable.devicestate_vehicle_parking,
     Zone.LIGHTS to Res.drawable.devicestate_vehicle_light,
     Zone.MOTION to Res.drawable.devicestate_vehicle_moving_sens,
-    Zone.TILT to Res.drawable.devicestate_vehicle_angle_sensor
+    Zone.TILT to Res.drawable.devicestate_vehicle_angle_sensor,
 )
 
 private fun sensorLayer(value: ZoneValue, extra: Boolean): Pair<DrawableResource, ZoneTone>? {
@@ -599,21 +599,21 @@ private class SensorLayers(
     val warning: DrawableResource,
     val main: DrawableResource,
     val warningOff: DrawableResource,
-    val mainOff: DrawableResource
+    val mainOff: DrawableResource,
 )
 
 private val ShockSensorLayers = SensorLayers(
     warning = Res.drawable.devicestate_vehicle_sensor_alert_zone,
     main = Res.drawable.devicestate_vehicle_sensor_main_zone,
     warningOff = Res.drawable.devicestate_vehicle_sensor_alert_zone_off,
-    mainOff = Res.drawable.devicestate_vehicle_sensor_main_zone_off
+    mainOff = Res.drawable.devicestate_vehicle_sensor_main_zone_off,
 )
 
 private val ExtraSensorLayers = SensorLayers(
     warning = Res.drawable.devicestate_vehicle_ext_sensor_alert_zone,
     main = Res.drawable.devicestate_vehicle_ext_sensor_main_zone,
     warningOff = Res.drawable.devicestate_vehicle_ext_sensor_alert_zone_off,
-    mainOff = Res.drawable.devicestate_vehicle_ext_sensor_main_zone_off
+    mainOff = Res.drawable.devicestate_vehicle_ext_sensor_main_zone_off,
 )
 
 /** Слои дверей: закрыта / открыта. */
@@ -636,7 +636,7 @@ internal fun PultWideCard(
     carHeight: Dp,
     onFire: (CommandUi) -> Unit,
     onAllCommands: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val vehicle = state.vehicle
     val colors = cmpThemeColors()
@@ -644,12 +644,12 @@ internal fun PultWideCard(
         CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 HorizontalVehicle(
                     vehicle = vehicle,
                     height = carHeight,
-                    modifier = Modifier.alpha(if (vehicle == null) LOADING_ALPHA else 1f)
+                    modifier = Modifier.alpha(if (vehicle == null) LOADING_ALPHA else 1f),
                 )
                 CmpBox(modifier = Modifier.weight(1f)) {
                     if (vehicle == null) {
@@ -657,7 +657,7 @@ internal fun PultWideCard(
                             repeat(SKELETON_METRICS) {
                                 CmpSkeleton(
                                     modifier = Modifier.width(88.dp).height(56.dp),
-                                    shape = RoundedCornerShape(14.dp)
+                                    shape = RoundedCornerShape(14.dp),
                                 )
                             }
                         }
@@ -669,7 +669,7 @@ internal fun PultWideCard(
             if (vehicle == null) {
                 CmpSkeleton(
                     modifier = Modifier.fillMaxWidth(CHIPS_SKELETON_FRACTION).height(36.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
                 )
             } else {
                 ActiveZones(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
@@ -682,19 +682,19 @@ internal fun PultWideCard(
                         enabled = !state.loading && state.pending == null,
                         onFire = onFire,
                         compact = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
                 CmpOutlinedButton(
                     onClick = onAllCommands,
-                    modifier = Modifier.weight(1f).heightIn(min = 72.dp)
+                    modifier = Modifier.weight(1f).heightIn(min = 72.dp),
                 ) {
                     CmpColumn(horizontalAlignment = Alignment.CenterHorizontally) {
                         CmpIcon(icon = CmpIcons.Menu, contentDescription = null, tint = colors.primary)
                         CmpText(
                             text = stringResource(Strings.string.devicestate_pult_btn_all_commands),
                             fontSize = 13.sp,
-                            maxLines = 2
+                            maxLines = 2,
                         )
                     }
                 }
@@ -715,16 +715,16 @@ private fun HorizontalVehicle(vehicle: VehicleState?, height: Dp, modifier: Modi
                 layout(width.roundToPx(), height.roundToPx()) {
                     placeable.place(
                         (width.roundToPx() - placeable.width) / 2,
-                        (height.roundToPx() - placeable.height) / 2
+                        (height.roundToPx() - placeable.height) / 2,
                     )
                 }
-            }
+            },
     ) {
         VehicleSchematic(
             vehicle = vehicle,
             modifier = Modifier.fillMaxSize().graphicsLayer {
                 rotationZ = QUARTER_TURN
-            }
+            },
         )
     }
 }

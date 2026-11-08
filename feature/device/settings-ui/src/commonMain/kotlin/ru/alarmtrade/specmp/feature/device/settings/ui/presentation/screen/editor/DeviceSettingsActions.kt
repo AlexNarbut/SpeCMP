@@ -27,5 +27,5 @@ internal class DeviceSettingsActions(
     /** Загрузка и сохранение конфигураций. */
     val transfer: TransferActions,
     /** Открыть окно настройки корневого уровня из дерева (например «Код модели»). */
-    val onEditSetting: (settingId: Int) -> Unit = {}
+    val onEditSetting: (settingId: Int) -> Unit = {},
 )

@@ -42,11 +42,11 @@ private class IosFirmwareFilePicker(private val viewController: UIViewController
     override fun launch() {
         val picker = UIDocumentPickerViewController(
             documentTypes = listOf(DATA_UTI),
-            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen
+            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen,
         ).apply { allowsMultipleSelection = false }
         val delegate = FirmwareDocumentPickerDelegate(
             onPicked = { channel.trySend(it) },
-            onFinished = { activeDelegate = null }
+            onFinished = { activeDelegate = null },
         )
         activeDelegate = delegate
         picker.delegate = delegate
@@ -60,7 +60,7 @@ private class IosFirmwareFilePicker(private val viewController: UIViewController
 
 private class FirmwareDocumentPickerDelegate(
     private val onPicked: (FirmwareFilePickResult) -> Unit,
-    private val onFinished: () -> Unit
+    private val onFinished: () -> Unit,
 ) : NSObject(),
     UIDocumentPickerDelegateProtocol {
 
@@ -106,7 +106,7 @@ private fun NSURL.copyToTemporary(): FirmwareFilePickResult {
             path = directory,
             withIntermediateDirectories = true,
             attributes = null,
-            error = null
+            error = null,
         )
         if (!created || !fileManager.copyItemAtURL(this, NSURL.fileURLWithPath(destination), error = null)) {
             fileManager.removeItemAtPath(root, error = null)

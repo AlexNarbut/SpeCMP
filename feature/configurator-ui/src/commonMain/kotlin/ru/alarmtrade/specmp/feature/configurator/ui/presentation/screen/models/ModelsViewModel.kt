@@ -37,7 +37,7 @@ internal class ModelsViewModel(
     private val models: DeviceModelsRepository,
     private val settings: DeviceSettingsRepository,
     deviceSession: DeviceSession,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(ModelsState(fileName = file?.name))

@@ -71,7 +71,7 @@ internal fun SupportChatMessageBubble(
     onDelete: (String) -> Unit = {},
     onImageClick: (String) -> Unit = {},
     onDocumentClick: (SupportChatUiAttachment) -> Unit = {},
-    onDownloadAttachment: (SupportChatUiAttachment) -> Unit = {}
+    onDownloadAttachment: (SupportChatUiAttachment) -> Unit = {},
 ) {
     val isMine = message.isMine
     val horizontalAlignment = if (isMine) Alignment.End else Alignment.Start
@@ -79,13 +79,13 @@ internal fun SupportChatMessageBubble(
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         if (!isMine && message.authorEmail != null) {
             CmpText(
                 text = message.authorEmail,
                 modifier = Modifier.padding(horizontal = 6.dp),
-                color = colors.primary
+                color = colors.primary,
             )
         }
 
@@ -100,18 +100,18 @@ internal fun SupportChatMessageBubble(
             } else {
                 BorderStroke(
                     width = 1.dp,
-                    color = colors.outlineVariant
+                    color = colors.outlineVariant,
                 )
-            }
+            },
         ) {
             CmpColumn(
                 modifier = Modifier.padding(
                     start = if (isImage(message)) 6.dp else 14.dp,
                     end = if (isImage(message)) 6.dp else 14.dp,
                     top = if (isImage(message)) 6.dp else 10.dp,
-                    bottom = 8.dp
+                    bottom = 8.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 message.text?.let { text ->
                     CmpText(text = text)
@@ -127,8 +127,8 @@ internal fun SupportChatMessageBubble(
                         isDownloading = isDownloading,
                         downloadAction = attachment.downloadAction(
                             isMine = isMine,
-                            onDownloadAttachment = onDownloadAttachment
-                        )
+                            onDownloadAttachment = onDownloadAttachment,
+                        ),
                     )
                 }
 
@@ -136,7 +136,7 @@ internal fun SupportChatMessageBubble(
                     message = message,
                     colors = colors,
                     isImage = isImage(message),
-                    modifier = Modifier.align(Alignment.End)
+                    modifier = Modifier.align(Alignment.End),
                 )
             }
         }
@@ -148,7 +148,7 @@ internal fun SupportChatMessageBubble(
             FailedMessageActions(
                 canRetry = message.canRetry,
                 onRetry = { onRetry(message.id) },
-                onDelete = { onDelete(message.id) }
+                onDelete = { onDelete(message.id) },
             )
         }
     }
@@ -165,7 +165,7 @@ private fun Modifier.maxWidthFraction(fraction: Float): Modifier = layout { meas
         constraints.maxWidth
     }
     val placeable = measurable.measure(
-        constraints.copy(minWidth = minOf(constraints.minWidth, maxWidth), maxWidth = maxWidth)
+        constraints.copy(minWidth = minOf(constraints.minWidth, maxWidth), maxWidth = maxWidth),
     )
     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
 }
@@ -174,17 +174,17 @@ private fun Modifier.maxWidthFraction(fraction: Float): Modifier = layout { meas
 private fun FailedMessageActions(canRetry: Boolean, onRetry: () -> Unit, onDelete: () -> Unit) {
     CmpRow(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (canRetry) {
             CmpTextButton(
                 text = stringResource(Strings.string.supportchat_common_btn_retry),
-                onClick = onRetry
+                onClick = onRetry,
             )
         }
         CmpTextButton(
             text = stringResource(Strings.string.supportchat_chat_btn_delete),
-            onClick = onDelete
+            onClick = onDelete,
         )
     }
 }
@@ -194,7 +194,7 @@ private fun MessageMetaRow(
     message: SupportChatUiMessage,
     colors: CmpThemeColors,
     isImage: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val metaColor = if (message.isMine) {
         colors.onPrimaryContainer.copy(alpha = 0.7f)
@@ -207,11 +207,11 @@ private fun MessageMetaRow(
             .padding(horizontal = if (isImage) 8.dp else 0.dp)
             .padding(top = 2.dp),
         horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpText(
             text = message.timeLabel,
-            color = metaColor
+            color = metaColor,
         )
 
         if (message.isMine) {
@@ -220,7 +220,7 @@ private fun MessageMetaRow(
                 status = message.status,
                 metaColor = metaColor,
                 readColor = colors.primary,
-                errorColor = colors.error
+                errorColor = colors.error,
             )
         }
     }
@@ -232,31 +232,31 @@ private fun MessageStatusIcon(status: SupportChatMessageStatus, metaColor: Color
         SupportChatMessageStatus.Sending -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Strings.string.supportchat_chat_a11y_status_sending)
+            stringResource(Strings.string.supportchat_chat_a11y_status_sending),
         )
 
         SupportChatMessageStatus.Sent -> Triple(
             CmpIcons.Done,
             metaColor,
-            stringResource(Strings.string.supportchat_chat_a11y_status_sent)
+            stringResource(Strings.string.supportchat_chat_a11y_status_sent),
         )
 
         SupportChatMessageStatus.Read -> Triple(
             CmpIcons.DoneAll,
             readColor,
-            stringResource(Strings.string.supportchat_chat_a11y_status_read)
+            stringResource(Strings.string.supportchat_chat_a11y_status_read),
         )
 
         SupportChatMessageStatus.Pending -> Triple(
             CmpIcons.Schedule,
             metaColor,
-            stringResource(Strings.string.supportchat_chat_a11y_status_pending)
+            stringResource(Strings.string.supportchat_chat_a11y_status_pending),
         )
 
         SupportChatMessageStatus.Failed -> Triple(
             CmpIcons.Warning,
             errorColor,
-            stringResource(Strings.string.supportchat_chat_a11y_status_failed)
+            stringResource(Strings.string.supportchat_chat_a11y_status_failed),
         )
     }
 
@@ -264,7 +264,7 @@ private fun MessageStatusIcon(status: SupportChatMessageStatus, metaColor: Color
         icon = icon,
         contentDescription = description,
         tint = tint,
-        modifier = Modifier.size(16.dp)
+        modifier = Modifier.size(16.dp),
     )
 }
 
@@ -276,7 +276,7 @@ private fun SupportChatAttachmentContent(
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
     isDownloading: Boolean,
-    downloadAction: (() -> Unit)?
+    downloadAction: (() -> Unit)?,
 ) {
     when (attachment.kind) {
         // Действия с документом («Открыть» / «Скачать») — диалог по тапу; байты
@@ -288,7 +288,7 @@ private fun SupportChatAttachmentContent(
                 sizeBytes = attachment.sizeBytes,
                 contentColor = contentColor,
                 isDownloading = isDownloading,
-                onClick = { onDocumentClick(attachment) }
+                onClick = { onDocumentClick(attachment) },
             )
         }
 
@@ -299,7 +299,7 @@ private fun SupportChatAttachmentContent(
                 colors = colors,
                 onClick = onImageClick,
                 isDownloading = isDownloading,
-                downloadAction = downloadAction
+                downloadAction = downloadAction,
             )
         }
     }
@@ -308,7 +308,7 @@ private fun SupportChatAttachmentContent(
 // Скачивание — только для входящих вложений (от поддержки) с известным url.
 private fun SupportChatUiAttachment.downloadAction(
     isMine: Boolean,
-    onDownloadAttachment: (SupportChatUiAttachment) -> Unit
+    onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
 ): (() -> Unit)? {
     if (isMine) return null
     if (url == null) return null
@@ -322,7 +322,7 @@ private fun SupportChatDocumentAttachment(
     sizeBytes: Long?,
     contentColor: Color,
     isDownloading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val metadata = documentMetadata(name = name, mimeType = mimeType, sizeBytes = sizeBytes)
 
@@ -334,22 +334,22 @@ private fun SupportChatDocumentAttachment(
                 enabled = !isDownloading,
                 onClickLabel = stringResource(Strings.string.supportchat_chat_a11y_document_actions),
                 role = Role.Button,
-                onClick = onClick
+                onClick = onClick,
             ),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpBox(
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(contentColor.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.Description,
                 contentDescription = null,
-                tint = contentColor
+                tint = contentColor,
             )
         }
 
@@ -357,12 +357,12 @@ private fun SupportChatDocumentAttachment(
             CmpText(
                 text = name,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
             if (metadata.isNotEmpty()) {
                 CmpText(
                     text = metadata,
-                    color = contentColor.copy(alpha = 0.7f)
+                    color = contentColor.copy(alpha = 0.7f),
                 )
             }
         }
@@ -371,7 +371,7 @@ private fun SupportChatDocumentAttachment(
             CmpCircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
                 strokeWidth = 2.dp,
-                color = contentColor
+                color = contentColor,
             )
         }
     }
@@ -384,11 +384,11 @@ private fun SupportChatImageAttachment(
     colors: CmpThemeColors,
     onClick: (String) -> Unit,
     isDownloading: Boolean,
-    downloadAction: (() -> Unit)?
+    downloadAction: (() -> Unit)?,
 ) {
     CmpSubcomposeAsyncImage(
         model = source,
-        contentDescription = name
+        contentDescription = name,
     ) {
         // Высота фиксирована, ширина следует за пропорциями изображения —
         // пустот по бокам пузыря нет ни у портретных, ни у панорамных картинок.
@@ -408,21 +408,21 @@ private fun SupportChatImageAttachment(
                     Brush.linearGradient(
                         colors = listOf(
                             colors.surfaceVariant,
-                            colors.surfaceContainerHighest
-                        )
-                    )
+                            colors.surfaceContainerHighest,
+                        ),
+                    ),
                 )
                 .then(
                     // Без источника (ни url, ни локального файла) смотреть нечего.
-                    if (source != null) Modifier.clickable { onClick(source) } else Modifier
+                    if (source != null) Modifier.clickable { onClick(source) } else Modifier,
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpImage(
                 painter = imagePainter,
                 contentDescription = name,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
 
             if (isDownloading || downloadAction != null) {
@@ -432,21 +432,21 @@ private fun SupportChatImageAttachment(
                         .padding(8.dp),
                     shape = RoundedCornerShape(20.dp),
                     color = colors.surface.copy(alpha = 0.85f),
-                    contentColor = colors.onSurface
+                    contentColor = colors.onSurface,
                 ) {
                     if (isDownloading) {
                         CmpCircularProgressIndicator(
                             modifier = Modifier
                                 .padding(6.dp)
                                 .size(24.dp),
-                            strokeWidth = 2.dp
+                            strokeWidth = 2.dp,
                         )
                     } else if (downloadAction != null) {
                         CmpIconButton(
                             onClick = downloadAction,
                             icon = CmpIcons.Download,
                             contentDescription = stringResource(Strings.string.supportchat_chat_a11y_download),
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp),
                         )
                     }
                 }
@@ -469,7 +469,7 @@ private fun bubbleShape(isMine: Boolean): RoundedCornerShape = RoundedCornerShap
     topStart = 16.dp,
     topEnd = 16.dp,
     bottomStart = if (isMine) 16.dp else 4.dp,
-    bottomEnd = if (isMine) 4.dp else 16.dp
+    bottomEnd = if (isMine) 4.dp else 16.dp,
 )
 
 private fun isImage(message: SupportChatUiMessage): Boolean =

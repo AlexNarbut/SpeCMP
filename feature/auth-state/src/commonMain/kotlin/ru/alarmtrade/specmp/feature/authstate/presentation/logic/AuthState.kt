@@ -5,5 +5,5 @@ enum class AuthState {
     WAITING,
     NO_AUTH,
     AUTHED,
-    CHECK_FAILED
+    CHECK_FAILED,
 }

@@ -56,7 +56,7 @@ fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         onBack = { backStack.popSafe() },
         entryProvider = entryProvider<NavKey> {
@@ -64,9 +64,9 @@ fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
                 MainScreen(
                     isDarkTheme = isDark,
                     onThemeChange = { isDarkState.value = it },
-                    onNavigateToFeature = onNavigateToFeature
+                    onNavigateToFeature = onNavigateToFeature,
                 )
             }
-        }
+        },
     )
 }

@@ -13,7 +13,7 @@ data class CarCard(
     val mountingMaps: List<CarDocument>,
     /** Первые народные карты (сервер отдаёт до 15); [hasUserManuals] — есть ли они вообще. */
     val userManuals: List<UserManualRef>,
-    val hasUserManuals: Boolean
+    val hasUserManuals: Boolean,
 )
 
 /** Возможность автомобиля (блокировка по CAN, бесключевой обход). [note] — примечание в HTML. */
@@ -29,7 +29,7 @@ data class CarFeature(
     val description: String?,
     val group: CarFeatureGroup,
     val reads: List<CarBus>,
-    val controls: List<CarBus>
+    val controls: List<CarBus>,
 )
 
 /** Группа функций; неизвестный код сервера SDK приводит к [MAIN]. */

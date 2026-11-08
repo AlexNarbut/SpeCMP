@@ -21,12 +21,12 @@ fun CmpIconButton(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    tint: Color = Color.Unspecified
+    tint: Color = Color.Unspecified,
 ) {
     IconButton(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled
+        enabled = enabled,
     ) {
         CmpIcon(icon = icon, contentDescription = contentDescription, tint = tint)
     }
@@ -39,12 +39,12 @@ fun CmpIconButton(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    tint: Color = Color.Unspecified
+    tint: Color = Color.Unspecified,
 ) {
     IconButton(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled
+        enabled = enabled,
     ) {
         CmpIcon(imageVector = icon, contentDescription = contentDescription, tint = tint)
     }

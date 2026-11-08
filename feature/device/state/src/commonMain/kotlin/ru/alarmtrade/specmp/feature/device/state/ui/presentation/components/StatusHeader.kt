@@ -81,31 +81,31 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .background(background, shape)
-            .testTag(CHECK_STATE_HERO_TAG)
+            .testTag(CHECK_STATE_HERO_TAG),
     ) {
         GuardFlash(on = state.guardChanged, key = state.tick, color = content)
         CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             CmpBox(
                 modifier = Modifier.size(44.dp).background(style.iconBackground, CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 when (val icon = style.icon) {
                     is HeroIcon.Vector -> CmpIcon(
                         icon = icon.icon,
                         contentDescription = null,
                         tint = style.iconTint,
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(26.dp),
                     )
 
                     is HeroIcon.Drawable -> CmpIcon(
                         painter = painterResource(icon.drawable),
                         contentDescription = null,
                         tint = style.iconTint,
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp),
                     )
                 }
                 if (vehicle != null && !stale) OnlineDot(tick = state.tick, ring = background)
@@ -116,7 +116,7 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
                     CmpText(
                         text = stringResource(Strings.string.devicestate_hero_loading_first),
                         color = content,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
                     )
                 } else {
                     val title = if (alarm) Strings.string.devicestate_hero_status_alarm else vehicle.security.title
@@ -124,7 +124,7 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
                         text = stringResource(title),
                         color = content,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                     HeroSubtitle(state = state, color = content)
                 }
@@ -145,7 +145,7 @@ private data class HeroStyle(
     val content: Color,
     val icon: HeroIcon,
     val iconBackground: Color,
-    val iconTint: Color
+    val iconTint: Color,
 )
 
 /** Цвета и иконка статуса: снято — нейтрально, охрана — primary, тревога — error (макет `HERO`). */
@@ -170,7 +170,7 @@ private fun heroStyle(state: CheckStateState): HeroStyle {
         content = content,
         icon = icon,
         iconBackground = colors.secondaryContainer.takeIf { calm } ?: content.copy(alpha = ICON_BG_ALPHA),
-        iconTint = colors.onSecondaryContainer.takeIf { calm } ?: content
+        iconTint = colors.onSecondaryContainer.takeIf { calm } ?: content,
     )
 }
 
@@ -196,7 +196,7 @@ private fun HeroSubtitle(state: CheckStateState, color: Color) {
             } else {
                 stringResource(
                     Strings.string.devicestate_hero_format_alarm,
-                    zones.joinToString()
+                    zones.joinToString(),
                 )
             }
         }
@@ -216,7 +216,7 @@ private fun OnlineDot(tick: Int, ring: Color) {
         modifier = Modifier
             .size(44.dp)
             .padding(1.dp),
-        contentAlignment = Alignment.TopEnd
+        contentAlignment = Alignment.TopEnd,
     ) {
         CmpBox(
             modifier = Modifier
@@ -225,7 +225,7 @@ private fun OnlineDot(tick: Int, ring: Color) {
                 .scale(scale.value)
                 .background(cmpDomainColors().success, CircleShape)
                 .border(2.dp, ring, CircleShape)
-                .semantics { contentDescription = a11y }
+                .semantics { contentDescription = a11y },
         )
     }
 }
@@ -242,6 +242,6 @@ private fun GuardFlash(on: Boolean, key: Int, color: Color) {
             .heightIn(min = 72.dp)
             .drawBehind {
                 drawRoundRect(color = color.copy(alpha = alpha.value), cornerRadius = CornerRadius(20.dp.toPx()))
-            }
+            },
     )
 }

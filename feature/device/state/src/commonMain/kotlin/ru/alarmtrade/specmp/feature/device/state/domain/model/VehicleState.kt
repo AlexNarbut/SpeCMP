@@ -20,7 +20,7 @@ data class VehicleState(
     val heater: HeaterInfo?,
     val camera: CameraInfo?,
     val siren: SirenMode,
-    val handsFree: HandsFreeMode
+    val handsFree: HandsFreeMode,
 ) {
     fun zone(zone: Zone): ZoneValue = zones[zone] ?: ZoneValue.OFF
 }
@@ -46,7 +46,7 @@ enum class Zone(val group: ZoneGroup, val kind: ZoneKind) {
     SHOCK(ZoneGroup.SENSORS, ZoneKind.ZONED_SENSOR),
     EXTRA_SENSOR(ZoneGroup.SENSORS, ZoneKind.ZONED_SENSOR),
     MOTION(ZoneGroup.SENSORS, ZoneKind.SENSOR),
-    TILT(ZoneGroup.SENSORS, ZoneKind.SENSOR)
+    TILT(ZoneGroup.SENSORS, ZoneKind.SENSOR),
 }
 
 /** Тип зоны — от него зависят подписи значений («Открыта» / «Нажат» / «Сработал»). */
@@ -67,7 +67,8 @@ enum class ZoneValue {
     /** Сработала основная зона. */
     MAIN,
     WARNING_OFF,
-    MAIN_OFF;
+    MAIN_OFF,
+    ;
 
     val tone: ZoneTone
         get() = when (this) {
@@ -87,7 +88,7 @@ data class EngineInfo(
     val temperature: Int,
     /** Обороты; `null` — двигатель не запущен или блок их не знает. */
     val rpm: Int?,
-    val autostart: Autostart
+    val autostart: Autostart,
 )
 
 enum class EngineStatus { STOPPED, READY, RUNNING }
@@ -108,7 +109,7 @@ data class PowerInfo(
     val cabinTemp: Int,
     val outsideTemp: Int,
     /** Топливо, %; `null` — нет данных. */
-    val fuelPercent: Int?
+    val fuelPercent: Int?,
 )
 
 data class LinkInfo(
@@ -118,7 +119,7 @@ data class LinkInfo(
     /** Скорость по GPS, км/ч; `null` — нет фиксации. */
     val speedKmh: Int?,
     val sms: Boolean,
-    val calls: Boolean
+    val calls: Boolean,
 )
 
 data class CanInfo(
@@ -127,7 +128,7 @@ data class CanInfo(
     val consumption: Int?,
     val washerLow: Boolean,
     val windowsOpen: Set<Window>,
-    val tires: TirePressure?
+    val tires: TirePressure?,
 )
 
 enum class Window { FRONT_LEFT, FRONT_RIGHT, REAR_LEFT, REAR_RIGHT }
@@ -138,7 +139,7 @@ data class TirePressure(
     val frontRight: Float,
     val rearLeft: Float,
     val rearRight: Float,
-    val spare: Float?
+    val spare: Float?,
 )
 
 data class EvInfo(
@@ -146,7 +147,7 @@ data class EvInfo(
     val socPercent: Int,
     val sohPercent: Int,
     val batteryTemp: Int,
-    val rangeKm: Int?
+    val rangeKm: Int?,
 )
 
 enum class EvCharging { NONE, CONNECTED, SLOW, FAST }
@@ -156,7 +157,7 @@ data class HeaterInfo(
     val temperature: Int,
     val voltage: Float,
     val powerPercent: Int,
-    val hasErrors: Boolean
+    val hasErrors: Boolean,
 )
 
 data class CameraInfo(val recording: Boolean, val minutes: Int?)
@@ -183,5 +184,5 @@ enum class DeviceEventKind {
     LOW_VOLTAGE,
     POWER_OFF,
     SETTINGS_CHANGED,
-    CAR_STATE
+    CAR_STATE,
 }

@@ -28,7 +28,7 @@ class SettingsRecentVehiclesStore(settings: Settings) : RecentVehiclesStore {
             },
             write = { cars ->
                 settings.putString(catalog.key(), json.encodeToString(serializer, cars.map { it.toStored() }))
-            }
+            },
         )
     }
 
@@ -52,7 +52,7 @@ class SettingsRecentVehiclesStore(settings: Settings) : RecentVehiclesStore {
         val yearFrom: Int,
         val yearTo: Int,
         val canCode: String,
-        val imageUrl: String? = null
+        val imageUrl: String? = null,
     ) {
         fun toDomain() = CarSummary(id, brand, model, name, yearFrom..yearTo, canCode, imageUrl)
     }

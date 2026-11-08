@@ -27,7 +27,7 @@ class DetektConventionPlugin : Plugin<Project> {
             setDependsOn(
                 dependsOn.filterNot {
                     (it as? TaskProvider<*>)?.name == "detekt" || (it as? Task)?.name == "detekt"
-                }
+                },
             )
         }
 
@@ -55,11 +55,11 @@ class DetektConventionPlugin : Plugin<Project> {
                             "detektIosMainSourceSet",
                             // desktop-обёртки (kotlin("jvm"))
                             "detektMain",
-                            "detektTest"
+                            "detektTest",
                         )
                     }
                     it.name in names
-                }
+                },
             )
         }
     }

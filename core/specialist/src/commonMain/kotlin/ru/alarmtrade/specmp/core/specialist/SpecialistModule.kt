@@ -44,11 +44,11 @@ val specialistModule = module {
                 // query (email) не маскируются.
                 networkConfig = SpecialistConfig.Network(
                     logLevel = NetworkLogLevel.NONE,
-                    logWebSocketFrames = false
+                    logWebSocketFrames = false,
                 ),
                 mainDispatcher = dispatchers.main,
-                backgroundDispatcher = dispatchers.default
-            )
+                backgroundDispatcher = dispatchers.default,
+            ),
         )
     }
     single { get<SpecialistApp>().authInteractor }

@@ -41,7 +41,7 @@ internal fun LoadFailed(
     error: CatalogError,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    compact: Boolean = false
+    compact: Boolean = false,
 ) {
     val offline = error == CatalogError.Common(ApiError.NoConnection)
     CmpStateBox(
@@ -51,11 +51,11 @@ internal fun LoadFailed(
             CatalogError.LoadFailed -> stringResource(Strings.string.vehicle_catalog_title_error)
         },
         text = stringResource(
-            if (offline) Strings.string.vehicle_catalog_msg_offline else Strings.string.vehicle_catalog_msg_error
+            if (offline) Strings.string.vehicle_catalog_msg_offline else Strings.string.vehicle_catalog_msg_error,
         ),
         tone = CmpStateTone.Error,
         compact = compact,
-        modifier = modifier
+        modifier = modifier,
     ) {
         StateAction(text = stringResource(Strings.string.vehicle_common_btn_retry), onClick = onRetry, primary = true)
     }
@@ -67,14 +67,14 @@ internal fun FilteredOut(
     onReset: () -> Unit,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
-    text: String? = null
+    text: String? = null,
 ) {
     CmpStateBox(
         icon = CmpIcons.FilterAltOff,
         title = stringResource(Strings.string.vehicle_catalog_title_filter_empty),
         text = text ?: stringResource(Strings.string.vehicle_catalog_msg_filter_empty),
         compact = compact,
-        modifier = modifier
+        modifier = modifier,
     ) {
         StateAction(text = stringResource(Strings.string.vehicle_catalog_btn_filter_reset), onClick = onReset)
     }
@@ -101,11 +101,11 @@ internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Bool
             CmpRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpSkeleton(
                     Modifier.size(if (thumb) PhotoThumbSize else ThumbSize),
-                    shape = RoundedCornerShape(ThumbRadius)
+                    shape = RoundedCornerShape(ThumbRadius),
                 )
                 CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     CmpSkeleton(Modifier.width(180.dp).height(18.dp))

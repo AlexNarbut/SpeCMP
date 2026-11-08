@@ -21,7 +21,7 @@ fun AppSettingsEntry(onBack: () -> Unit) {
             onApply = viewModel::onApply,
             onConfirm = viewModel::onConfirm,
             onDialogDismiss = viewModel::onDialogDismiss,
-            onConfigurationLanguageSelect = viewModel::onConfigurationLanguageSelect
+            onConfigurationLanguageSelect = viewModel::onConfigurationLanguageSelect,
         )
     }
     AppSettingsScreen(state, actions)

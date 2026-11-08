@@ -15,5 +15,5 @@ internal data class ModelsState(
     /** Проверяем файл в выбранной модели. */
     val checking: Boolean = false,
     /** Файл не открылся для этой модели. */
-    val fileError: String? = null
+    val fileError: String? = null,
 )

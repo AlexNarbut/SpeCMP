@@ -4,7 +4,8 @@ import com.russhwolf.settings.Settings
 
 enum class AppLocale(val languageTag: String) {
     English("en"),
-    Russian("ru");
+    Russian("ru"),
+    ;
 
     companion object {
         fun fromLanguageTag(languageTag: String): AppLocale =

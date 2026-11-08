@@ -37,7 +37,7 @@ class ViewModelContractNamesTest {
         assertEquals(1, result.size)
         assertEquals(
             "первый дженерик BaseViewModel — тип состояния, имя должно оканчиваться на State (docs/patterns.md): `FooUi`",
-            result.single().message
+            result.single().message,
         )
     }
 

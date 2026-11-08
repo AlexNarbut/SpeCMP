@@ -42,15 +42,15 @@ import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSu
 class MainScreenViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
     private val isAppUpdateSupported = isMainAppUpdateSupported()
     private val _state = MutableStateFlow(
         MainScreenState(
             isAppUpdateSupported = isAppUpdateSupported,
-            appVersionName = mainRepository.appVersion.name
-        )
+            appVersionName = mainRepository.appVersion.name,
+        ),
     )
 
     private val _effect = sideEffectFlow<MainScreenEffect>()
@@ -76,7 +76,7 @@ class MainScreenViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT),
-            initialValue = _state.value
+            initialValue = _state.value,
         )
 
     fun onMenuClicked() {
@@ -131,7 +131,7 @@ class MainScreenViewModel(
         safeLaunch {
             _state.update {
                 it.copy(
-                    logoutState = LCEState.Loading
+                    logoutState = LCEState.Loading,
                 )
             }
 
@@ -144,7 +144,7 @@ class MainScreenViewModel(
                     logger.d { "Logout failed" }
                     _state.update {
                         it.copy(
-                            logoutState = LCEState.Error(MainError.from(response.exception))
+                            logoutState = LCEState.Error(MainError.from(response.exception)),
                         )
                     }
                 }
@@ -163,7 +163,7 @@ class MainScreenViewModel(
                 awaitAll(
                     async { loadUserProfile() },
                     async { loadUserAppFeatures() },
-                    async { loadUserCommercial() }
+                    async { loadUserCommercial() },
                 )
             }
             logger.d { "Initial home data refresh completed" }
@@ -182,7 +182,7 @@ class MainScreenViewModel(
                 profileState = response.asLCEState(MainError::from)
                     .mapContent { profile ->
                         MainProfile(name = profile.name, email = profile.email)
-                    }
+                    },
             )
         }
     }
@@ -193,7 +193,7 @@ class MainScreenViewModel(
         val response = loadWithTimeout { mainRepository.currentUserAppFeatures() }
         _state.update {
             it.copy(
-                appFeaturesState = response.asLCEState(MainError::from)
+                appFeaturesState = response.asLCEState(MainError::from),
             )
         }
     }
@@ -204,7 +204,7 @@ class MainScreenViewModel(
         val response = loadWithTimeout { mainRepository.currentUserCommercial() }
         _state.update {
             it.copy(
-                userCommercialState = response.asLCEState(MainError::from)
+                userCommercialState = response.asLCEState(MainError::from),
             )
         }
     }
@@ -248,7 +248,7 @@ class MainScreenViewModel(
         val response = loadWithTimeout { mainRepository.checkAppUpdate() }
         _state.update {
             it.copy(
-                appUpdateState = response.asLCEState(MainError::from)
+                appUpdateState = response.asLCEState(MainError::from),
             )
         }
     }

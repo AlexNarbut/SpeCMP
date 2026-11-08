@@ -13,7 +13,7 @@ data class FirmwareModule(
     val kind: FirmwareModuleKind,
     val systemName: String,
     val title: String,
-    val bootTarget: BootModeTarget?
+    val bootTarget: BootModeTarget?,
 ) {
     val isBootSupported: Boolean get() = bootTarget != null
 }
@@ -36,5 +36,5 @@ enum class FirmwareModuleKind {
     ChargingStationTester,
     CanModule,
     Microbot,
-    Unknown
+    Unknown,
 }

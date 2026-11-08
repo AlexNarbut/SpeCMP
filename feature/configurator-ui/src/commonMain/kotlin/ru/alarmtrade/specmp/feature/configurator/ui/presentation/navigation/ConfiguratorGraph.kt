@@ -83,7 +83,7 @@ typealias ConfiguratorVehiclePicker = @Composable (
     catalog: VehicleCatalog,
     deviceName: String?,
     onPick: (CarSummary) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) -> Unit
 
 private val navConfig = SavedStateConfiguration {
@@ -114,13 +114,13 @@ fun ConfiguratorEntry(
     vehiclePicker: ConfiguratorVehiclePicker,
     filePicker: SettingsFilePicker,
     fileSaver: SettingsFileSaver,
-    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null
+    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null,
 ) {
     ConfiguratorGraph(
         start = MineListRoute,
         onExit = onExit,
         vehiclePicker = vehiclePicker,
-        mode = GraphMode.Full(filePicker, fileSaver, deviceEditor)
+        mode = GraphMode.Full(filePicker, fileSaver, deviceEditor),
     )
 }
 
@@ -136,7 +136,7 @@ fun ConfigurationPickerEntry(
     onBack: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
     purpose: ConfigurationPickPurpose = ConfigurationPickPurpose.LOAD,
-    cloudCar: ConfigurationPickCar? = null
+    cloudCar: ConfigurationPickCar? = null,
 ) {
     ConfiguratorGraph(
         start = when {
@@ -146,7 +146,7 @@ fun ConfigurationPickerEntry(
         },
         onExit = onBack,
         vehiclePicker = vehiclePicker,
-        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose)
+        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose),
     )
 }
 
@@ -161,14 +161,14 @@ private sealed interface GraphMode {
     class Full(
         val filePicker: SettingsFilePicker,
         val fileSaver: SettingsFileSaver,
-        val deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)?
+        val deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)?,
     ) : GraphMode
 
     class Pick(
         val request: ConfigurationPickRequest,
         val onPick: (SettingsSource) -> Unit,
         val onOpenFirmwareUpdate: () -> Unit,
-        val purpose: ConfigurationPickPurpose
+        val purpose: ConfigurationPickPurpose,
     ) : GraphMode
 }
 
@@ -180,7 +180,7 @@ private fun ConfiguratorGraph(
     start: NavKey,
     onExit: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
-    mode: GraphMode
+    mode: GraphMode,
 ) {
     val backStack = rememberNavBackStack(navConfig, start)
     val back = { if (!backStack.popSafe()) onExit() }
@@ -189,7 +189,7 @@ private fun ConfiguratorGraph(
         onBack = back,
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {
             entry<MineListRoute> { _ -> Opaque { MineEntry(backStack, mode, back) } }
@@ -206,7 +206,7 @@ private fun ConfiguratorGraph(
                     onOpenConfiguration = { opened -> opened.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) } },
                     onWriteToDevice = full?.deviceEditor?.let {
                         { source -> source.toKey()?.let { backStack.navigateSafe(DeviceWriteRoute(it)) } }
-                    }
+                    },
                 )
             }
             entry<CloudCarsRoute> { _ ->
@@ -215,7 +215,7 @@ private fun ConfiguratorGraph(
                         VehicleCatalog.WITH_CONFIGURATIONS,
                         (mode as? GraphMode.Pick)?.request?.deviceName,
                         { car -> backStack.navigateSafe(CloudListRoute(car.id, car.fullName())) },
-                        back
+                        back,
                     )
                 }
             }
@@ -230,7 +230,7 @@ private fun ConfiguratorGraph(
             entry<DeviceWriteRoute> { key ->
                 (mode as? GraphMode.Full)?.deviceEditor?.invoke(key.source.toSource(), back)
             }
-        }
+        },
     )
 }
 
@@ -256,7 +256,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
         filePicker.results.collect { result ->
             when (result) {
                 is SettingsFilePickResult.Picked -> backStack.navigateSafe(
-                    ModelsRoute(SourceKey.File(result.path, "", result.name, result.inPlace))
+                    ModelsRoute(SourceKey.File(result.path, "", result.name, result.inPlace)),
                 )
 
                 SettingsFilePickResult.Failed -> snackbarHostState.showSnackbar(fileFailed)
@@ -273,7 +273,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
                 val result = snackbarHostState.showSnackbar(
                     getString(Strings.string.configurator_common_msg_copied),
                     actionLabel = getString(Strings.string.configurator_common_btn_open),
-                    duration = CmpSnackbarDuration.Long
+                    duration = CmpSnackbarDuration.Long,
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
                     effect.configuration.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) }
@@ -286,7 +286,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
                 viewModel.onFileExported((full?.fileSaver ?: NoSaver).save(effect.path, effect.fileName))
 
             is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
-                getString(Strings.string.configurator_common_msg_file_saved, effect.name)
+                getString(Strings.string.configurator_common_msg_file_saved, effect.name),
             )
         }
     }
@@ -294,7 +294,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
     MineScreen(
         state = if (full?.deviceEditor == null) state.copy(connectedDeviceName = null) else state,
         actions = actions,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -303,7 +303,7 @@ private fun mineActions(
     backStack: NavBackStack<NavKey>,
     mode: GraphMode,
     filePicker: SettingsFilePicker,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ): MineActions {
     val pick = mode as? GraphMode.Pick
     val full = mode as? GraphMode.Full
@@ -349,7 +349,7 @@ private fun mineActions(
         },
         onDeleteRequest = viewModel::onDeleteRequest,
         onDeleteConfirm = viewModel::onDeleteConfirm,
-        onDialogDismiss = viewModel::onDialogDismiss
+        onDialogDismiss = viewModel::onDialogDismiss,
     )
 }
 
@@ -370,7 +370,7 @@ private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBac
         onPick = viewModel::onPick,
         onRecentRemove = viewModel::onRecentRemove,
         onRetry = viewModel::onRetry,
-        onDialogDismiss = viewModel::onDialogDismiss
+        onDialogDismiss = viewModel::onDialogDismiss,
     )
 }
 
@@ -389,7 +389,7 @@ private fun CloudListEntry(key: CloudListRoute, backStack: NavBackStack<NavKey>,
         onRetry = viewModel::onRetry,
         onOpen = { item -> backStack.navigateSafe(CloudCardRoute(item.id, item.name)) },
         onSelect = viewModel::onSelect,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
     ) { id ->
         val (cardState, actions) = cloudCard(id, backStack, mode, snackbarHostState)
         CloudCardContent(cardState, actions)
@@ -402,13 +402,13 @@ private fun cloudCard(
     id: Int,
     backStack: NavBackStack<NavKey>,
     mode: GraphMode,
-    snackbarHostState: CmpSnackbarHostState
+    snackbarHostState: CmpSnackbarHostState,
 ): Pair<CloudCardState, CloudCardActions> {
     val pick = mode as? GraphMode.Pick
     val full = mode as? GraphMode.Full
     val viewModel = koinViewModel<CloudCardViewModel>(
         key = "cloud_card_$id",
-        parameters = { parametersOf(id, pick?.request?.firmwareCanCode) }
+        parameters = { parametersOf(id, pick?.request?.firmwareCanCode) },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
@@ -420,7 +420,7 @@ private fun cloudCard(
                 val result = snackbarHostState.showSnackbar(
                     getString(Strings.string.configurator_common_msg_saved_mine),
                     actionLabel = if (full != null) getString(Strings.string.configurator_common_btn_open) else null,
-                    duration = CmpSnackbarDuration.Long
+                    duration = CmpSnackbarDuration.Long,
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
                     effect.configuration.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) }
@@ -428,7 +428,7 @@ private fun cloudCard(
             }
 
             CloudCardEffect.SaveFailed -> snackbarHostState.showSnackbar(
-                getString(Strings.string.configurator_common_msg_failed)
+                getString(Strings.string.configurator_common_msg_failed),
             )
         }
     }
@@ -450,7 +450,7 @@ private fun cloudCard(
                 { card -> card.toSource().toKey()?.let { key -> backStack.navigateSafe(DeviceWriteRoute(key)) } }
             },
             onOpenFirmwareUpdate = pick?.onOpenFirmwareUpdate,
-            selectForMount = pick?.purpose == ConfigurationPickPurpose.FAST_MOUNT
+            selectForMount = pick?.purpose == ConfigurationPickPurpose.FAST_MOUNT,
         )
     }
     return state to actions

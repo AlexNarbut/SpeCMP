@@ -61,7 +61,7 @@ class FirmwareArchiveViewModel(
     private val args: FirmwareArchiveRequest,
     private val repository: FirmwareRepository,
     private val dispatchers: AppDispatchers,
-    private val exporter: FirmwareFileExporter? = null
+    private val exporter: FirmwareFileExporter? = null,
 ) : BaseViewModel() {
 
     private data class Core(
@@ -85,7 +85,7 @@ class FirmwareArchiveViewModel(
         val vehiclePicker: Boolean = false,
         val busy: String? = null,
         val saved: ArchiveSavedUi? = null,
-        val exportError: ArchiveExportError? = null
+        val exportError: ArchiveExportError? = null,
     ) {
         val canLoadMore: Boolean get() = load is LCEState.Content && hasMore && !loadingMore && moreError == null
     }
@@ -96,8 +96,8 @@ class FirmwareArchiveViewModel(
                 moduleId = args.moduleId,
                 channel = args.channel,
                 canInput = initial.orEmpty(),
-                canApplied = initial
-            )
+                canApplied = initial,
+            ),
         )
     }
 
@@ -116,7 +116,7 @@ class FirmwareArchiveViewModel(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            toState(core.value, rowsOf(core.value.items))
+            toState(core.value, rowsOf(core.value.items)),
         )
 
     // Текст поля CAN — отдельно и синхронно: state считается в фоне, и поле с ним отставало бы от ввода (курсор
@@ -144,7 +144,7 @@ class FirmwareArchiveViewModel(
                 canMatchesDevice = args.deviceCanCode != null && version.canCode == args.deviceCanCode,
                 canProfileDiffers = args.deviceCanCode != null && version.canCode == args.deviceCanCode &&
                     version.canVersionCode != null && args.deviceCanVersion != null &&
-                    version.canVersionCode != args.deviceCanVersion
+                    version.canVersionCode != args.deviceCanVersion,
             )
         }
 
@@ -173,7 +173,7 @@ class FirmwareArchiveViewModel(
                     deviceCode = args.deviceCanCode,
                     deviceProfile = args.deviceCanProfile,
                     deviceFactory = args.deviceCanFactory,
-                    noUnit = args.noUnit
+                    noUnit = args.noUnit,
                 )
             } else {
                 null
@@ -190,7 +190,7 @@ class FirmwareArchiveViewModel(
             exportError = core.exportError,
             saveTarget = exporter?.target ?: FirmwareSaveTarget.Downloads,
             canShare = exporter?.canShare == true,
-            canOpenFolder = exporter?.canOpenFolder == true
+            canOpenFolder = exporter?.canOpenFolder == true,
         )
     }
 
@@ -231,7 +231,7 @@ class FirmwareArchiveViewModel(
                 loadingMore = false,
                 moreError = null,
                 rollback = null,
-                noModule = false
+                noModule = false,
             )
         }
         // Серийно: обновление не теряется, если подгрузка ещё идёт; её ответ придёт уже после сброса и отбросится
@@ -292,7 +292,7 @@ class FirmwareArchiveViewModel(
                     // Нет новых версий — конец (источник признак не отдаёт; см. KDoc класса).
                     hasMore = fresh.isNotEmpty(),
                     loadingMore = false,
-                    moreError = null
+                    moreError = null,
                 )
             }
 
@@ -300,7 +300,7 @@ class FirmwareArchiveViewModel(
                 if (page == FIRST_PAGE) {
                     state.copy(
                         load = LCEState.Error(FirmwareError.from(response.exception)),
-                        loadingMore = false
+                        loadingMore = false,
                     )
                 } else {
                     state.copy(loadingMore = false, moreError = FirmwareError.from(response.exception))

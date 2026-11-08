@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.psi.KtUserType
 class ViewModelContractNames(config: Config) :
     Rule(
         config,
-        "Дженерики BaseViewModel<S, E>: S оканчивается на State, E — на Effect (или Nothing)."
+        "Дженерики BaseViewModel<S, E>: S оканчивается на State, E — на Effect (или Nothing).",
     ) {
 
     override fun visitClass(klass: KtClass) {

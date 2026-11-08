@@ -33,7 +33,7 @@ class FirmwareMappersTest {
             SubsystemType.WATCH_MAIN,
             SubsystemType.GPS_TRACKER_MAIN,
             SubsystemType.BMW_BYPASS_MAIN,
-            SubsystemType.REMOTE_CONTROL_MAIN
+            SubsystemType.REMOTE_CONTROL_MAIN,
         ).forEach { type ->
             assertEquals(BootModeTarget.MainProgram, type.bootTarget(ConnectionTransport.BLE), "BLE $type")
             assertEquals(BootModeTarget.MainProgram, type.bootTarget(ConnectionTransport.USB), "USB $type")
@@ -44,7 +44,7 @@ class FirmwareMappersTest {
     fun `bluetooth module is updatable only over ble`() {
         assertEquals(
             BootModeTarget.BluetoothModule,
-            SubsystemType.BLUETOOTH_MODULE.bootTarget(ConnectionTransport.BLE)
+            SubsystemType.BLUETOOTH_MODULE.bootTarget(ConnectionTransport.BLE),
         )
         assertNull(SubsystemType.BLUETOOTH_MODULE.bootTarget(ConnectionTransport.USB))
     }
@@ -59,7 +59,7 @@ class FirmwareMappersTest {
             SubsystemType.CHARGING_STATION_TESTER,
             SubsystemType.BATTERY_CHARGER_MAIN,
             SubsystemType.WATCH_INTERFACE,
-            SubsystemType.UNKNOWN
+            SubsystemType.UNKNOWN,
         ).forEach { type ->
             assertNull(type.bootTarget(ConnectionTransport.BLE), "BLE $type")
             assertNull(type.bootTarget(ConnectionTransport.USB), "USB $type")
@@ -90,7 +90,7 @@ class FirmwareMappersTest {
             url = "https://example.com/fw.bin",
             canCode = null,
             canVersion = null,
-            canVersionString = null
+            canVersionString = null,
         ).toDomain()
 
         assertEquals(LocalDate(2026, 10, 14), firmware.createdOn)
@@ -103,23 +103,23 @@ class FirmwareMappersTest {
     fun `sdk update states map to stages`() {
         assertEquals(
             FirmwareUpdateProgress.Sending(64),
-            FirmwareUpdateState(FirmwareUpdateStatus.SENDING_DATA, stateProgress = 64).toProgress()
+            FirmwareUpdateState(FirmwareUpdateStatus.SENDING_DATA, stateProgress = 64).toProgress(),
         )
         assertEquals(
             FirmwareUpdateProgress.Sending(null),
-            FirmwareUpdateState(FirmwareUpdateStatus.SENDING_DATA).toProgress()
+            FirmwareUpdateState(FirmwareUpdateStatus.SENDING_DATA).toProgress(),
         )
         assertEquals(
             FirmwareUpdateProgress.Verifying,
-            FirmwareUpdateState(FirmwareUpdateStatus.CHECKING_CRC).toProgress()
+            FirmwareUpdateState(FirmwareUpdateStatus.CHECKING_CRC).toProgress(),
         )
         assertEquals(
             FirmwareUpdateProgress.Applying,
-            FirmwareUpdateState(FirmwareUpdateStatus.APPLYING).toProgress()
+            FirmwareUpdateState(FirmwareUpdateStatus.APPLYING).toProgress(),
         )
         assertEquals(
             FirmwareUpdateProgress.Finished,
-            FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_SUCCESS).toProgress()
+            FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_SUCCESS).toProgress(),
         )
     }
 
@@ -132,17 +132,17 @@ class FirmwareMappersTest {
             DataWritingError.WRONG_PACKET_LENGTH to WriteFailureReason.WrongPacketLength,
             DataWritingError.DEVICE_NOT_READY to WriteFailureReason.DeviceNotReady,
             DataWritingError.APPLYING_ERROR to WriteFailureReason.ApplyingError,
-            DataWritingError.UNKNOWN to WriteFailureReason.Unknown
+            DataWritingError.UNKNOWN to WriteFailureReason.Unknown,
         )
         expected.forEach { (error, reason) ->
             assertEquals(
                 FirmwareUpdateProgress.Failed(FirmwareFailure.Write(reason)),
-                FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR, error = error).toProgress()
+                FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR, error = error).toProgress(),
             )
         }
         assertEquals(
             FirmwareUpdateProgress.Failed(FirmwareFailure.Write(WriteFailureReason.Unknown)),
-            FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR).toProgress()
+            FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR).toProgress(),
         )
     }
 }

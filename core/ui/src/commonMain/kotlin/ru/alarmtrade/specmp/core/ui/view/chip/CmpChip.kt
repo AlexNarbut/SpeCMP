@@ -36,7 +36,7 @@ fun CmpChip(
     icon: CmpIcons? = null,
     selected: Boolean = false,
     onClear: (() -> Unit)? = null,
-    clearContentDescription: String? = null
+    clearContentDescription: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     Surface(
@@ -44,7 +44,7 @@ fun CmpChip(
         shape = CircleShape,
         color = if (selected) colors.secondaryContainer else colors.surface,
         contentColor = if (selected) colors.onSecondaryContainer else colors.onSurface,
-        border = if (selected) null else BorderStroke(1.dp, colors.outline)
+        border = if (selected) null else BorderStroke(1.dp, colors.outline),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(
@@ -54,7 +54,7 @@ fun CmpChip(
                     .heightIn(min = 48.dp)
                     .padding(start = 14.dp, end = if (onClear != null) 4.dp else 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 icon?.let { CmpIcon(icon = it, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 Text(
@@ -62,7 +62,7 @@ fun CmpChip(
                     style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = 280.dp)
+                    modifier = Modifier.widthIn(max = 280.dp),
                 )
             }
             if (onClear != null) {

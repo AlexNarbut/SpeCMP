@@ -18,7 +18,7 @@ val fastMountModule = module {
             deviceInformation = { get() },
             verification = { get() },
             firmwareFiles = { get() },
-            files = { get() }
+            files = { get() },
         )
     }
 

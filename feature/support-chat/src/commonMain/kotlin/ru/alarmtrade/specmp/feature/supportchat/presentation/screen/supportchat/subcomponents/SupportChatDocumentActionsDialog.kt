@@ -22,7 +22,7 @@ internal fun SupportChatDocumentActionsDialog(
     attachment: SupportChatUiAttachment,
     onOpen: () -> Unit,
     onDownload: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     CmpDialog(
         onDismissRequest = onDismiss,
@@ -30,18 +30,18 @@ internal fun SupportChatDocumentActionsDialog(
         confirmButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.supportchat_chat_btn_open),
-                onClick = onOpen
+                onClick = onOpen,
             )
         },
         dismissButton = if (attachment.url != null) {
             {
                 CmpTextButton(
                     text = stringResource(Strings.string.supportchat_chat_btn_download),
-                    onClick = onDownload
+                    onClick = onDownload,
                 )
             }
         } else {
             null
-        }
+        },
     )
 }

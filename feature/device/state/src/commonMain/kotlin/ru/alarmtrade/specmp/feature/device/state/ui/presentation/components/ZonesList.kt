@@ -45,7 +45,7 @@ internal fun ZonesList(vehicle: VehicleState, changed: Set<Zone>, tick: Int, mod
             SectionCard(
                 title = stringResource(group.title),
                 aside = groupAside(group, zones, vehicle),
-                contentPadding = 6.dp
+                contentPadding = 6.dp,
             ) {
                 CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     zones.forEach { zone ->
@@ -93,25 +93,25 @@ private fun ZoneRow(zone: Zone, value: ZoneValue, changed: Boolean, tick: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .background(colors.row, shape)
-            .testTag(ZONE_TAG_PREFIX + zone.name.lowercase())
+            .testTag(ZONE_TAG_PREFIX + zone.name.lowercase()),
     ) {
         ChangeFlash(on = changed, key = tick, color = if (tone == ZoneTone.ALARM) theme.error else theme.primary)
         CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(
-                min = 64.dp
+                min = 64.dp,
             ).padding(start = 8.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CmpBox(
                 modifier = Modifier.size(44.dp).background(colors.icon, CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     icon = zone.icon,
                     contentDescription = null,
                     tint = colors.iconTint,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
             }
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -125,7 +125,7 @@ private fun ZoneRow(zone: Zone, value: ZoneValue, changed: Boolean, tick: Int) {
                         FontWeight.Medium
                     } else {
                         FontWeight.SemiBold
-                    }
+                    },
                 )
                 if (changed) ChangedTag()
             }

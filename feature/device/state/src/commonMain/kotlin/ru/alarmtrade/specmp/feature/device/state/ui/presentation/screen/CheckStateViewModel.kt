@@ -65,7 +65,7 @@ class CheckStateViewModel(
     pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
     private val fastMount: Boolean,
-    private val timeSource: TimeSource = TimeSource.Monotonic
+    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state =
@@ -115,7 +115,7 @@ class CheckStateViewModel(
         val withLock = (dialog as? CheckStateDialog.Pin)?.let { it.copy(pin = it.pin.copy(lockedFor = lock)) }
         state.copy(
             staleSeconds = stale.takeIf { state.vehicle != null && currentDevice != null },
-            dialog = withLock ?: dialog
+            dialog = withLock ?: dialog,
         )
     }
         .launchOnFirstStart {
@@ -139,7 +139,7 @@ class CheckStateViewModel(
             state.copy(
                 pending = null,
                 statuses = if (lost != null && state.pending == lost.first) state.statuses + lost else state.statuses,
-                dialog = state.dialog.takeUnless { it is CheckStateDialog.Pin }
+                dialog = state.dialog.takeUnless { it is CheckStateDialog.Pin },
             )
         }
     }
@@ -156,7 +156,7 @@ class CheckStateViewModel(
                 tick = state.tick + 1,
                 changedZones = if (previous == null) emptySet() else changedZones(previous, vehicle),
                 guardChanged = previous != null && previous.security != vehicle.security,
-                commands = commandsFor(vehicle, fastMount)
+                commands = commandsFor(vehicle, fastMount),
             )
         }
         if (fastMount && vehicle.programMode) exitProgramModeOnce()
@@ -289,7 +289,7 @@ class CheckStateViewModel(
                 it.copy(
                     pending = command,
                     statuses = it.statuses + (command to CommandStatus.Sending),
-                    dialog = dialog?.let { pinDialog -> pinDialog.copy(pin = pinDialog.pin.copy(sending = true)) }
+                    dialog = dialog?.let { pinDialog -> pinDialog.copy(pin = pinDialog.pin.copy(sending = true)) },
                 )
             }
             when (withContext(dispatchers.io) { programMode.enter(systemId, pin) }) {
@@ -312,7 +312,7 @@ class CheckStateViewModel(
             it.copy(
                 pending = null,
                 statuses = it.statuses - StateCommand.PROGRAM_MODE_ON,
-                dialog = CheckStateDialog.Pin(ServicePinDialogState(wrong = wrong, wrongCount = count))
+                dialog = CheckStateDialog.Pin(ServicePinDialogState(wrong = wrong, wrongCount = count)),
             )
         }
     }
@@ -323,7 +323,7 @@ class CheckStateViewModel(
             it.copy(
                 pending = null,
                 statuses = it.statuses + (command to status),
-                dialog = it.dialog.takeUnless { dialog -> dialog is CheckStateDialog.Pin }
+                dialog = it.dialog.takeUnless { dialog -> dialog is CheckStateDialog.Pin },
             )
         }
         _effect.tryEmit(CheckStateEffect.CommandFinished(command, outcome))

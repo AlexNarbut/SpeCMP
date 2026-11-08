@@ -13,7 +13,7 @@ data class MountQuestion(
     val task: String,
     val expected: String,
     val automatic: Boolean,
-    val answers: List<QuestionAnswer>
+    val answers: List<QuestionAnswer>,
 )
 
 /** Вариант ответа. `value == 1` — «работает», `0` — ответ при пропуске (если есть). */

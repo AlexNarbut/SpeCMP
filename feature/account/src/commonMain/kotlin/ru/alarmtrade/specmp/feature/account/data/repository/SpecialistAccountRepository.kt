@@ -19,8 +19,8 @@ class SpecialistAccountRepository(private val userInteractor: UserInteractor) : 
                 Response.Success(
                     AccountProfile(
                         name = user.userContactInformation.fullName,
-                        email = user.login
-                    )
+                        email = user.login,
+                    ),
                 )
             }
 

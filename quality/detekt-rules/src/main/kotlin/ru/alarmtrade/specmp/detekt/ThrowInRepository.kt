@@ -68,8 +68,8 @@ class ThrowInRepository(config: Config) :
                 Entity.from(element),
                 "$what в ${owner.name} вне safeRun/safeResponseRun/asResponseFlow: репозиторий и use case " +
                     "не бросают. Верните Response.Error (return@safeResponseRun Response.Error(…)) или null " +
-                    "из хелпера и бросайте внутри лямбды safeRun { } (docs/patterns.md, «Контракт результата»)."
-            )
+                    "из хелпера и бросайте внутри лямбды safeRun { } (docs/patterns.md, «Контракт результата»).",
+            ),
         )
     }
 

@@ -45,19 +45,19 @@ internal fun FilterPanel(draft: Set<CarFeatureGroup>, wide: Boolean, actions: Ve
             title = { CmpText(text = stringResource(Strings.string.vehicle_filter_title_screen)) },
             text = { FilterBody(draft = draft, onToggle = actions.onFilterToggle) },
             dismissButton = { ResetButton(actions) },
-            confirmButton = { ApplyButton(actions) }
+            confirmButton = { ApplyButton(actions) },
         )
     } else {
         CmpBottomSheet(onDismissRequest = actions.onFilterDismiss) {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpText(text = stringResource(Strings.string.vehicle_filter_title_screen), style = CmpTextStyle.Title)
                 FilterBody(draft = draft, onToggle = actions.onFilterToggle)
                 CmpRow(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
                 ) {
                     ResetButton(actions)
                     ApplyButton(actions)
@@ -73,7 +73,7 @@ private fun FilterBody(draft: Set<CarFeatureGroup>, onToggle: (CarFeatureGroup) 
         CmpText(
             text = stringResource(Strings.string.vehicle_filter_msg_hint),
             style = CmpTextStyle.Body,
-            color = cmpThemeColors().onSurfaceVariant
+            color = cmpThemeColors().onSurfaceVariant,
         )
         CarFeatureGroup.entries.forEach { group ->
             CmpRow(
@@ -84,7 +84,7 @@ private fun FilterBody(draft: Set<CarFeatureGroup>, onToggle: (CarFeatureGroup) 
                     .heightIn(min = 52.dp)
                     .testTag(VehicleTestTags.filterGroup(group.name.lowercase())),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpCheckbox(checked = group in draft, onCheckedChange = { onToggle(group) })
                 CmpText(text = groupLabel(group), style = CmpTextStyle.BodyLarge)
@@ -98,7 +98,7 @@ private fun ResetButton(actions: VehicleSelectActions) {
     CmpTextButton(
         text = stringResource(Strings.string.vehicle_filter_btn_reset),
         onClick = actions.onFilterDraftReset,
-        modifier = Modifier.heightIn(min = 48.dp).testTag(VehicleTestTags.FILTER_RESET)
+        modifier = Modifier.heightIn(min = 48.dp).testTag(VehicleTestTags.FILTER_RESET),
     )
 }
 
@@ -107,6 +107,6 @@ private fun ApplyButton(actions: VehicleSelectActions) {
     CmpButton(
         text = stringResource(Strings.string.vehicle_filter_btn_apply),
         onClick = actions.onFilterApply,
-        modifier = Modifier.heightIn(min = 48.dp).testTag(VehicleTestTags.FILTER_APPLY)
+        modifier = Modifier.heightIn(min = 48.dp).testTag(VehicleTestTags.FILTER_APPLY),
     )
 }

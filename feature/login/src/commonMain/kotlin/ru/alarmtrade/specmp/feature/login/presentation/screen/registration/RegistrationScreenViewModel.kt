@@ -56,7 +56,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
             _state.update {
                 it.copy(
                     fieldErrors = fieldErrors.mapTo(mutableSetOf()) { error -> error.toFieldError() },
-                    registrationState = it.registrationState.dismissError()
+                    registrationState = it.registrationState.dismissError(),
                 )
             }
             return
@@ -65,7 +65,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         safeLaunch {
             _state.update {
                 it.copy(
-                    registrationState = LCEState.Loading
+                    registrationState = LCEState.Loading,
                 )
             }
 
@@ -76,10 +76,10 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
 
     private inline fun RegistrationScreenState.withFieldEdited(
         field: RegistrationFieldError,
-        edit: RegistrationScreenState.() -> RegistrationScreenState
+        edit: RegistrationScreenState.() -> RegistrationScreenState,
     ): RegistrationScreenState = edit().copy(
         registrationState = registrationState.dismissError(),
-        fieldErrors = fieldErrors - field
+        fieldErrors = fieldErrors - field,
     )
 
     private fun RegistrationScreenState.toCredentials(): SignUpCredentials = SignUpCredentials(
@@ -87,7 +87,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         email = email,
         phoneNumber = phoneNumber,
         password = password,
-        isInstallerConfirmed = isInstallerConfirmed
+        isInstallerConfirmed = isInstallerConfirmed,
     )
 
     private fun SignUpValidationError.toFieldError(): RegistrationFieldError = when (this) {

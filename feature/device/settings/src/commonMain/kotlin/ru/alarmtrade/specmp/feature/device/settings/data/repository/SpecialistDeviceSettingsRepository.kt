@@ -31,7 +31,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
  */
 class SpecialistDeviceSettingsRepository(
     private val settingsInteractor: () -> AlarmDeviceSettingsInteractor,
-    private val alarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
+    private val alarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : DeviceSettingsRepository {
 
     override suspend fun open(source: SettingsSource, reload: Boolean): Response<SettingsSection> {
@@ -78,7 +78,7 @@ class SpecialistDeviceSettingsRepository(
     override suspend fun copy(
         from: SettingsSource,
         to: SettingsSource,
-        saveChanges: Boolean
+        saveChanges: Boolean,
     ): Response<SettingsSection> {
         val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
         return interactor.copyDeviceSettingsUseCase
@@ -88,7 +88,7 @@ class SpecialistDeviceSettingsRepository(
             .mapIfError { error ->
                 if (error.exception is WrongSettingsSizeException) {
                     Response.Error(
-                        SettingsMismatchException(error.exception)
+                        SettingsMismatchException(error.exception),
                     )
                 } else {
                     error

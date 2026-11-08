@@ -10,13 +10,13 @@ fun CmpSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    thumbContent: (@Composable () -> Unit)? = null
+    thumbContent: (@Composable () -> Unit)? = null,
 ) {
     Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier,
         enabled = enabled,
-        thumbContent = thumbContent
+        thumbContent = thumbContent,
     )
 }

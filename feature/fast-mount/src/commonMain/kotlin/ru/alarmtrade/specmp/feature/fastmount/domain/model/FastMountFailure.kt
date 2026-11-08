@@ -28,5 +28,5 @@ enum class MountDeviceClass {
 
     /** Позже — свой мастер; пока не поддерживается. */
     MICROBOT,
-    OTHER
+    OTHER,
 }

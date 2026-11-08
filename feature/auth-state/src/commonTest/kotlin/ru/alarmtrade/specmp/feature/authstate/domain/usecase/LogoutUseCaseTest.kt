@@ -27,7 +27,7 @@ class LogoutUseCaseTest {
         val closeable = RecordingAuthCloseable()
         val useCase = LogoutUseCase(
             FakeAuthStateRepository(Response.Error(IllegalStateException("logout failed"))),
-            listOf(closeable)
+            listOf(closeable),
         )
 
         val result = useCase.execute()

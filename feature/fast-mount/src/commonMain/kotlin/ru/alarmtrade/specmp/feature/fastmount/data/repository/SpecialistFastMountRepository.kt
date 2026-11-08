@@ -46,7 +46,7 @@ class SpecialistFastMountRepository(
     private val deviceInformation: () -> DeviceInformationInteractor,
     private val verification: () -> VerificationInteractor,
     private val firmwareFiles: () -> FirmwareFilesInteractor,
-    private val files: () -> RemoteFilesInteractor
+    private val files: () -> RemoteFilesInteractor,
 ) : FastMountRepository {
 
     override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<UnitAccess> {
@@ -72,8 +72,8 @@ class SpecialistFastMountRepository(
                     subsystemId = moduleId,
                     type = SubsystemFirmwareType.RELEASE,
                     canCode = canCode,
-                    canCodeVersion = canVersion
-                )
+                    canCodeVersion = canVersion,
+                ),
             )
             .toResponse()
             .map { it.version }

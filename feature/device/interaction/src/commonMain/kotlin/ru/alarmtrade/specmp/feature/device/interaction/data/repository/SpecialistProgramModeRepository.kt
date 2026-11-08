@@ -11,7 +11,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.Program
 
 /** [ProgramModeRepository] над `setProgramModeUseCase` / `exitProgramModeUseCase`: неверный PIN — исход, не ошибка. */
 class SpecialistProgramModeRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
+    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : ProgramModeRepository {
 
     override suspend fun enter(): Response<ProgramModeResult> {

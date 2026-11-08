@@ -23,7 +23,7 @@ class ChannelPolarityTest {
         canEditPolarity = editable,
         defaultPolarity = default,
         availableLogics = emptyList(),
-        enabledLogics = emptyList()
+        enabledLogics = emptyList(),
     )
 
     @Test
@@ -47,7 +47,7 @@ class ChannelPolarityTest {
         channel = Channel(1, "IN1", emptyList()),
         defaultPolarity = Polarity.MINUS,
         availableLogics = emptyList(),
-        enabledLogics = emptyList()
+        enabledLogics = emptyList(),
     )
 
     @Test

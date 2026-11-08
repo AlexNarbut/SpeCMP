@@ -26,7 +26,7 @@ internal data class MineState(
     /** Модели, которые есть в списке, — варианты фильтра. Производное — [withLists]. */
     val models: List<String> = emptyList(),
     /** Список после поиска и фильтра по модели. Производное — [withLists]. */
-    val filtered: List<LocalConfiguration> = emptyList()
+    val filtered: List<LocalConfiguration> = emptyList(),
 ) {
     val all: List<LocalConfiguration> get() = list.content.orEmpty()
 
@@ -61,6 +61,6 @@ internal fun MineState.withLists(): MineState {
                     q.isEmpty() || item.name.contains(q, ignoreCase = true) ||
                         item.description.contains(q, ignoreCase = true)
                     )
-        }
+        },
     )
 }

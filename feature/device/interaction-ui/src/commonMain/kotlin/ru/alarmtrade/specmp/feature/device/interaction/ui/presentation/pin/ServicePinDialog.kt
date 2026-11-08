@@ -77,7 +77,7 @@ data class ServicePinDialogState(
     val sending: Boolean = false,
     val wrong: Boolean = false,
     val wrongCount: Int = 0,
-    val lockedFor: Duration? = null
+    val lockedFor: Duration? = null,
 )
 
 /**
@@ -95,7 +95,7 @@ fun ServicePinDialog(
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
     modifier: Modifier = Modifier,
-    testTagPrefix: String = SERVICE_PIN_TAG_PREFIX
+    testTagPrefix: String = SERVICE_PIN_TAG_PREFIX,
 ) {
     var pin by remember { mutableStateOf("") }
     val locked = state.lockedFor != null
@@ -110,7 +110,7 @@ fun ServicePinDialog(
         text = {
             CmpColumn(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 CmpText(text = message, style = CmpTextStyle.Body)
                 PinCells(
@@ -119,7 +119,7 @@ fun ServicePinDialog(
                     isError = state.wrong,
                     enabled = canType,
                     inputTag = "${testTagPrefix}_input",
-                    onDone = { if (pin.length == PIN_LENGTH) onSubmit(pin) }
+                    onDone = { if (pin.length == PIN_LENGTH) onSubmit(pin) },
                 )
                 PinStatus(state = state, lockedTag = "${testTagPrefix}_locked")
             }
@@ -129,14 +129,14 @@ fun ServicePinDialog(
                 text = stringResource(Strings.string.deviceinteraction_pin_btn_cancel),
                 onClick = onDismiss,
                 enabled = !state.sending,
-                modifier = Modifier.height(ButtonHeight).testTag("${testTagPrefix}_cancel")
+                modifier = Modifier.height(ButtonHeight).testTag("${testTagPrefix}_cancel"),
             )
         },
         confirmButton = {
             CmpButton(
                 onClick = { onSubmit(pin) },
                 enabled = canType && pin.length == PIN_LENGTH,
-                modifier = Modifier.height(ButtonHeight).testTag("${testTagPrefix}_submit")
+                modifier = Modifier.height(ButtonHeight).testTag("${testTagPrefix}_submit"),
             ) {
                 if (state.sending) {
                     CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)
@@ -144,7 +144,7 @@ fun ServicePinDialog(
                     CmpText(text = stringResource(Strings.string.deviceinteraction_pin_btn_submit))
                 }
             }
-        }
+        },
     )
 }
 
@@ -155,13 +155,13 @@ private fun PinStatus(state: ServicePinDialogState, lockedTag: String) {
     CmpColumn(
         modifier = Modifier.heightIn(min = 44.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (state.wrong) {
             CmpText(
                 text = stringResource(Strings.string.deviceinteraction_pin_error_wrong),
                 fontWeight = FontWeight.SemiBold,
-                color = colors.error
+                color = colors.error,
             )
         }
         if (seconds != null) {
@@ -169,7 +169,7 @@ private fun PinStatus(state: ServicePinDialogState, lockedTag: String) {
                 text = stringResource(Strings.string.deviceinteraction_pin_msg_locked, seconds.toInt()),
                 color = colors.onSurfaceVariant,
                 style = CmpTextStyle.Body,
-                modifier = Modifier.testTag(lockedTag)
+                modifier = Modifier.testTag(lockedTag),
             )
         }
     }
@@ -182,7 +182,7 @@ private fun PinCells(
     isError: Boolean,
     enabled: Boolean,
     inputTag: String,
-    onDone: () -> Unit
+    onDone: () -> Unit,
 ) {
     val colors = cmpThemeColors()
     val focus = remember { FocusRequester() }
@@ -201,7 +201,7 @@ private fun PinCells(
                         isError -> BorderStroke(2.dp, colors.error)
                         active && enabled -> BorderStroke(2.dp, colors.primary)
                         else -> BorderStroke(1.dp, colors.outline)
-                    }
+                    },
                 ) {
                     CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         if (index < pin.length) CmpText(text = "•", fontSize = 30.sp)
@@ -223,7 +223,7 @@ private fun PinCells(
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onDone() })
+            keyboardActions = KeyboardActions(onDone = { onDone() }),
         )
     }
 }

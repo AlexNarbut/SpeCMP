@@ -35,7 +35,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceC
 class SpecialistDeviceConnectionRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
     private val usbConnectorInteractor: () -> UsbConnectorInteractor,
-    private val serialConnectorInteractor: () -> SerialConnectorInteractor
+    private val serialConnectorInteractor: () -> SerialConnectorInteractor,
 ) : DeviceConnectionRepository {
 
     override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = flow {
@@ -50,15 +50,15 @@ class SpecialistDeviceConnectionRepository(
                     .execute(
                         ConnectToBluetoothDeviceRequest(
                             deviceMacAddress = deviceId,
-                            connectionParameters = ConnectionParameters(timeout = timeoutMillis)
-                        )
+                            connectionParameters = ConnectionParameters(timeout = timeoutMillis),
+                        ),
                     )
                     .map { response -> response.toResponse().map { it.toDomain() } }
             }.onCompletion {
                 // connect SDK внутри запускает свой поиск (manufacturer data) и не останавливает
                 // его. Подписку обычно отменяют (первый финальный статус, отмена, таймаут).
                 withContext(NonCancellable) { interactor.stopBluetoothScanUseCase.execute() }
-            }
+            },
         )
     }
 
@@ -73,7 +73,7 @@ class SpecialistDeviceConnectionRepository(
                 interactor.openUsbDeviceSessionFlowableUseCase
                     .execute(ConnectToUsbDeviceRequest(deviceId))
                     .map { response -> response.toResponse().map { it.toDomain() } }
-            }
+            },
         )
     }
 
@@ -88,7 +88,7 @@ class SpecialistDeviceConnectionRepository(
                 interactor.openSerialPortSessionFlowableUseCase
                     .execute(ConnectToSerialPortRequest(portId, SERIAL_BAUD_RATE, SerialDeviceType.Alarm))
                     .map { response -> response.toResponse().map { it.toDomain() } }
-            }
+            },
         )
     }
 
@@ -109,7 +109,7 @@ class SpecialistDeviceConnectionRepository(
         ConnectingStatus.BONDING_FAIL -> DeviceConnectionState.PAIRING_REQUIRED
 
         ConnectingStatus.CONNECTING_FAIL,
-        ConnectingStatus.FAIL
+        ConnectingStatus.FAIL,
         -> DeviceConnectionState.FAILED
 
         else -> DeviceConnectionState.CONNECTING
@@ -121,7 +121,7 @@ class SpecialistDeviceConnectionRepository(
         UsbConnectingState.FAILED -> DeviceConnectionState.FAILED
 
         UsbConnectingState.ASKING_PERMISSIONS,
-        UsbConnectingState.INITIALIZING
+        UsbConnectingState.INITIALIZING,
         -> DeviceConnectionState.CONNECTING
     }
 
@@ -131,7 +131,7 @@ class SpecialistDeviceConnectionRepository(
         SerialPortConnectingStatus.FAILED -> DeviceConnectionState.FAILED
 
         SerialPortConnectingStatus.ASKING_PERMISSIONS,
-        SerialPortConnectingStatus.INITIALIZING
+        SerialPortConnectingStatus.INITIALIZING,
         -> DeviceConnectionState.CONNECTING
     }
 

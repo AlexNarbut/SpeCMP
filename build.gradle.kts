@@ -92,14 +92,14 @@ tasks.register<JavaExec>("cpdCheck") {
             "feature/**/src/**/*.kt",
             "composeApp/src/**/*.kt",
             "flasherApp/src/**/*.kt",
-            "quality/**/src/**/*.kt"
+            "quality/**/src/**/*.kt",
         )
         exclude(
             "**/build/**",
             "**/generated/**",
             // Тесты: фикстуры и arrange-блоки повторяются намеренно — читаемость теста важнее DRY.
             "**/src/test/**",
-            "**/src/*Test/**"
+            "**/src/*Test/**",
         )
     }
     val fileList = layout.buildDirectory.file("cpd/files.txt")
@@ -133,7 +133,7 @@ moduleGraphAssert {
             "-X> :feature:.*-ui",
         ":feature:(advanced-mount|fast-mount|device:(autostart|firmware|state|settings-ui)) " +
             "-X> :feature:(?!device:interaction-ui$).*-ui",
-        ":feature:configurator-ui -X> :feature:(?!device:(interaction-ui|settings-ui)$).*-ui"
+        ":feature:configurator-ui -X> :feature:(?!device:(interaction-ui|settings-ui)$).*-ui",
     )
     configurations = setOf(
         "api",
@@ -148,35 +148,51 @@ moduleGraphAssert {
         "iosMainImplementation",
         "jvmMainApi",
         "jvmMainImplementation",
-        "jvmTestImplementation"
+        "jvmTestImplementation",
     )
 }
 
 // Качество кода: docs/code-quality.md.
-// Один корневой Spotless на весь репозиторий (ktlint + compose-rules). По умолчанию проверяются только файлы,
-// изменённые относительно HEAD; для проверки ветки — -PspotlessRatchetFrom=origin/develop.
-// В check/build не входит: запускается только spotlessCheck / spotlessApply.
+// Spotless не подхватывает эти свойства из .editorconfig (дефолты стиля android_studio берут верх),
+// поэтому они продублированы явным override; значения держать в синхроне с .editorconfig.
+val ktlintEditorConfigOverride = mapOf(
+    "ij_kotlin_allow_trailing_comma" to true,
+    "ij_kotlin_allow_trailing_comma_on_call_site" to true,
+    "ktlint_ignore_back_ticked_identifier" to true,
+)
+
+// Один корневой Spotless (ktlint + compose-rules) на весь репозиторий, входит в check. По умолчанию проверяется
+// всё дерево; -PspotlessRatchetFrom=<ref> ограничивает проверку файлами, изменёнными относительно ref.
 spotless {
-    isEnforceCheck = false
-    ratchetFrom(providers.gradleProperty("spotlessRatchetFrom").getOrElse("HEAD"))
+    providers.gradleProperty("spotlessRatchetFrom").orNull?.let { ratchetFrom(it) }
     kotlin {
         target(
             fileTree(rootDir) {
                 include("**/src/**/*.kt")
                 exclude("**/build/**", "**/generated/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
-            }
+            },
         )
         ktlint(libs.versions.ktlint.get())
+            .setEditorConfigPath(rootProject.file(".editorconfig"))
+            .editorConfigOverride(ktlintEditorConfigOverride)
             .customRuleSets(listOf("io.nlopez.compose.rules:ktlint:${libs.versions.composeRules.get()}"))
     }
     kotlinGradle {
         target(
             fileTree(rootDir) {
-                include("*.gradle.kts", "*/*.gradle.kts", "*/*/*.gradle.kts", "*/*/*/*.gradle.kts")
+                include(
+                    "*.gradle.kts",
+                    "*/*.gradle.kts",
+                    "*/*/*.gradle.kts",
+                    "*/*/*/*.gradle.kts",
+                    "build-logic/src/**/*.gradle.kts",
+                )
                 exclude("**/build/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
-            }
+            },
         )
         ktlint(libs.versions.ktlint.get())
+            .setEditorConfigPath(rootProject.file(".editorconfig"))
+            .editorConfigOverride(ktlintEditorConfigOverride)
     }
 }
 
@@ -188,7 +204,7 @@ subprojects {
         "org.jetbrains.kotlin.multiplatform",
         "org.jetbrains.kotlin.android",
         "org.jetbrains.kotlin.jvm",
-        "com.android.application"
+        "com.android.application",
     ).forEach { id ->
         pluginManager.withPlugin(id) { pluginManager.apply("specmp.detekt") }
     }

@@ -19,7 +19,7 @@ data class CarSummary(
     val name: String,
     val years: IntRange,
     val canCode: String,
-    val imageUrl: String?
+    val imageUrl: String?,
 )
 
 /** «Toyota Camry 2.5 AT»: марка, модель и комплектация без пустых частей и повторов — единая подпись автомобиля. */

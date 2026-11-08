@@ -28,12 +28,12 @@ class CmpSnackbarHostState {
         message: String,
         actionLabel: String? = null,
         withDismissAction: Boolean = false,
-        duration: CmpSnackbarDuration = CmpSnackbarDuration.Short
+        duration: CmpSnackbarDuration = CmpSnackbarDuration.Short,
     ): CmpSnackbarResult = delegate.showSnackbar(
         message = message,
         actionLabel = actionLabel,
         withDismissAction = withDismissAction,
-        duration = duration.toMaterial()
+        duration = duration.toMaterial(),
     ).toCmp()
 
     private fun CmpSnackbarDuration.toMaterial(): SnackbarDuration = when (this) {
@@ -55,7 +55,7 @@ fun rememberCmpSnackbarHostState(): CmpSnackbarHostState = remember { CmpSnackba
 fun CmpSnackbarHost(hostState: CmpSnackbarHostState, modifier: Modifier = Modifier) {
     SnackbarHost(
         hostState = hostState.delegate,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -64,7 +64,7 @@ fun CmpSnackbar(
     data: CmpSnackbarData,
     modifier: Modifier = Modifier,
     onActionClick: (() -> Unit)? = null,
-    onDismiss: (() -> Unit)? = null
+    onDismiss: (() -> Unit)? = null,
 ) {
     Snackbar(
         modifier = modifier,
@@ -77,7 +77,7 @@ fun CmpSnackbar(
             { CmpTextButton(text = "✕", onClick = onDismiss) }
         } else {
             null
-        }
+        },
     ) {
         CmpText(text = data.message)
     }

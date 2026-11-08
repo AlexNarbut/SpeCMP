@@ -72,7 +72,7 @@ class DeviceInteractionViewModelTest {
         sessionRepository,
         connectionRepository,
         AppDispatchers(dispatcher, dispatcher, dispatcher),
-        backgroundScope.coroutineContext
+        backgroundScope.coroutineContext,
     )
 
     @BeforeTest

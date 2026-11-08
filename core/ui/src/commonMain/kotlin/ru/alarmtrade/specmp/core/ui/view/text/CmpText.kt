@@ -26,7 +26,7 @@ enum class CmpTextStyle {
     /** Крупный основной текст (bodyLarge, 16 sp): строки списков настроек, пункты выбора. */
     BodyLarge,
     Body,
-    Caption
+    Caption,
 }
 
 @Composable
@@ -39,7 +39,7 @@ fun CmpText(
     textAlign: TextAlign? = null,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
-    style: CmpTextStyle? = null
+    style: CmpTextStyle? = null,
 ) {
     if (style != null) {
         val textStyle: TextStyle = when (style) {
@@ -56,7 +56,7 @@ fun CmpText(
             overflow = overflow,
             maxLines = maxLines,
             style = textStyle,
-            fontWeight = fontWeight
+            fontWeight = fontWeight,
         )
     } else {
         Text(
@@ -67,7 +67,7 @@ fun CmpText(
             color = color,
             textAlign = textAlign,
             overflow = overflow,
-            maxLines = maxLines
+            maxLines = maxLines,
         )
     }
 }
@@ -85,7 +85,7 @@ fun CmpText(
     textAlign: TextAlign? = null,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
-    style: CmpTextStyle = CmpTextStyle.Body
+    style: CmpTextStyle = CmpTextStyle.Body,
 ) {
     Text(
         text = text,
@@ -95,7 +95,7 @@ fun CmpText(
         overflow = overflow,
         maxLines = maxLines,
         style = style.toTextStyle(),
-        fontWeight = fontWeight
+        fontWeight = fontWeight,
     )
 }
 

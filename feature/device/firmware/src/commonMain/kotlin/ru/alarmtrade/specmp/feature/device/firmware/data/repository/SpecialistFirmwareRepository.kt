@@ -30,7 +30,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 class SpecialistFirmwareRepository(
     private val deviceInformation: () -> DeviceInformationInteractor,
     private val firmwareFiles: () -> FirmwareFilesInteractor,
-    private val files: () -> RemoteFilesInteractor
+    private val files: () -> RemoteFilesInteractor,
 ) : FirmwareRepository {
 
     override suspend fun modules(deviceName: String, transport: ConnectionTransport): Response<List<FirmwareModule>> {
@@ -42,7 +42,7 @@ class SpecialistFirmwareRepository(
     override suspend fun latest(
         moduleId: Long,
         channel: FirmwareChannel,
-        can: FirmwareCan?
+        can: FirmwareCan?,
     ): Response<FirmwareVersion> {
         val interactor = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
         return interactor.getLatestSubsystemFirmwareUseCase
@@ -51,8 +51,8 @@ class SpecialistFirmwareRepository(
                     subsystemId = moduleId,
                     type = channel.toSdk(),
                     canCode = can?.code,
-                    canCodeVersion = can?.version
-                )
+                    canCodeVersion = can?.version,
+                ),
             )
             .toResponse()
             .map { it.toDomain() }
@@ -82,7 +82,7 @@ class SpecialistFirmwareRepository(
         channel: FirmwareChannel,
         page: Int,
         pageSize: Int,
-        can: FirmwareCan?
+        can: FirmwareCan?,
     ): Response<FirmwareVersionPage> {
         val interactor = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
         return interactor.getSubsystemFirmwaresUseCase
@@ -93,8 +93,8 @@ class SpecialistFirmwareRepository(
                     pageNumber = page,
                     pageSize = pageSize,
                     canCode = can?.code,
-                    canCodeVersion = can?.version
-                )
+                    canCodeVersion = can?.version,
+                ),
             )
             .toResponse()
             .map { list -> FirmwareVersionPage(items = list.map { it.toDomain() }, pageNumber = page) }

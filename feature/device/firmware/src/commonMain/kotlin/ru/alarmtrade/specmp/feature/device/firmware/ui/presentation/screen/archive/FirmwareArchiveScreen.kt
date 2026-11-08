@@ -96,12 +96,12 @@ fun FirmwareArchiveEntry(
     onBack: () -> Unit,
     vehiclePicker: ArchiveVehiclePicker? = null,
     exporter: FirmwareFileExporter? = null,
-    onChangeModel: () -> Unit = {}
+    onChangeModel: () -> Unit = {},
 ) {
     // Ключ — запрос: архив с другим модулем или CAN-фильтром в том же владельце — отдельная ViewModel.
     val viewModel = koinViewModel<FirmwareArchiveViewModel>(
         key = "FirmwareArchive:$request",
-        parameters = { parametersOf(request, exporter) }
+        parameters = { parametersOf(request, exporter) },
     )
     val vmState by viewModel.state.collectAsStateWithLifecycle()
     val canInput by viewModel.canInput.collectAsStateWithLifecycle()
@@ -138,12 +138,12 @@ fun FirmwareArchiveEntry(
                 onSavedShare = viewModel::onSavedShare,
                 onSavedOpenFolder = viewModel::onSavedOpenFolder,
                 onSavedDismiss = viewModel::onSavedDismiss,
-                onExportErrorDismiss = viewModel::onExportErrorDismiss
+                onExportErrorDismiss = viewModel::onExportErrorDismiss,
             )
         }
         FirmwareArchiveContent(
             state = state,
-            actions = actions
+            actions = actions,
         )
         if (state.vehiclePicker && vehiclePicker != null) {
             CmpSurface(modifier = Modifier.fillMaxSize()) {
@@ -169,7 +169,7 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back),
                     )
                 },
                 actions = {
@@ -178,11 +178,11 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                         icon = CmpIcons.Refresh,
                         contentDescription = stringResource(Strings.string.firmware_archive_a11y_refresh),
                         tint = cmpThemeColors().primary,
-                        modifier = Modifier.testTag(ARCHIVE_REFRESH_TAG)
+                        modifier = Modifier.testTag(ARCHIVE_REFRESH_TAG),
                     )
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = firmwareLayoutOf(maxWidth)
@@ -194,7 +194,7 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                     if (state.noModelFirmware) {
                         ArchiveNoModelFirmware(
                             model = state.deviceTitle,
-                            onChangeModel = actions.onChangeModel
+                            onChangeModel = actions.onChangeModel,
                         )
                     } else {
                         when (val content = state.content) {
@@ -208,7 +208,7 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
                                     filter = state.canFilter,
                                     onShowAll = { actions.onCanInput("") },
                                     onPickVehicle = actions.onVehiclePickerOpen,
-                                    onResetToDevice = actions.onCanResetToDevice
+                                    onResetToDevice = actions.onCanResetToDevice,
                                 )
                             } else {
                                 ReadyBody(state, content, layout, actions)
@@ -230,7 +230,7 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
             canOpenFolder = state.canOpenFolder,
             onShare = actions.onSavedShare,
             onOpenFolder = actions.onSavedOpenFolder,
-            onDismiss = actions.onSavedDismiss
+            onDismiss = actions.onSavedDismiss,
         )
     }
 }
@@ -259,7 +259,7 @@ private fun NoUnitBar(state: FirmwareArchiveState, layout: FirmwareLayout, actio
             onChannelSelect = actions.onChannelSelect,
             modifier = Modifier
                 .widthIn(max = if (layout == FirmwareLayout.Expanded) DetailMaxWidth else ListMaxWidth)
-                .padding(start = padding, top = padding, end = padding)
+                .padding(start = padding, top = padding, end = padding),
         )
     }
 }
@@ -271,7 +271,7 @@ private fun ExportErrorBar(error: ArchiveExportError, layout: FirmwareLayout, ac
         ArchiveExportBanner(
             error = error,
             onDismiss = actions.onExportErrorDismiss,
-            modifier = Modifier.widthIn(max = ListMaxWidth).padding(start = padding, top = padding, end = padding)
+            modifier = Modifier.widthIn(max = ListMaxWidth).padding(start = padding, top = padding, end = padding),
         )
     }
 }
@@ -283,7 +283,7 @@ private fun CanFilterBar(filter: CanFilterUi, layout: FirmwareLayout, actions: F
     val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = if (expanded) Alignment.TopStart else Alignment.TopCenter
+        contentAlignment = if (expanded) Alignment.TopStart else Alignment.TopCenter,
     ) {
         ArchiveCanFilter(
             filter = filter,
@@ -292,7 +292,7 @@ private fun CanFilterBar(filter: CanFilterUi, layout: FirmwareLayout, actions: F
             onPickVehicle = actions.onVehiclePickerOpen,
             modifier = Modifier
                 .widthIn(max = if (expanded) MasterWidth + padding * 2 else ListMaxWidth)
-                .padding(start = padding, top = padding, end = padding)
+                .padding(start = padding, top = padding, end = padding),
         )
     }
 }
@@ -302,20 +302,20 @@ private fun ReadyBody(
     state: FirmwareArchiveState,
     content: LCEState.Content<List<ArchiveRowUi>, FirmwareError>,
     layout: FirmwareLayout,
-    actions: FirmwareArchiveActions
+    actions: FirmwareArchiveActions,
 ) {
     if (layout == FirmwareLayout.Expanded) {
         val selected = content.content.firstOrNull { it.key == state.selected } ?: content.content.first()
         CmpRow(
             modifier = Modifier.fillMaxSize().widthIn(max = DetailMaxWidth).padding(24.dp),
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
+            horizontalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             VersionList(
                 state = state,
                 content = content,
                 master = true,
                 actions = actions,
-                modifier = Modifier.widthIn(max = MasterWidth).fillMaxHeight()
+                modifier = Modifier.widthIn(max = MasterWidth).fillMaxHeight(),
             )
             CmpBox(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
                 ArchiveDetail(
@@ -325,7 +325,7 @@ private fun ReadyBody(
                     onInstall = if (state.viewOnly) null else ({ actions.onPick(selected.key) }),
                     onDownload = if (state.noUnit) ({ actions.onDownload(selected.key) }) else null,
                     onShare = if (state.noUnit && state.canShare) ({ actions.onShare(selected.key) }) else null,
-                    busy = state.busy == selected.key
+                    busy = state.busy == selected.key,
                 )
             }
         }
@@ -337,7 +337,7 @@ private fun ReadyBody(
                 master = false,
                 actions = actions,
                 modifier = Modifier.widthIn(max = ListMaxWidth).fillMaxHeight(),
-                padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
+                padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp,
             )
         }
     }
@@ -350,7 +350,7 @@ private fun VersionList(
     master: Boolean,
     actions: FirmwareArchiveActions,
     modifier: Modifier = Modifier,
-    padding: Dp = 2.dp
+    padding: Dp = 2.dp,
 ) {
     val listState = rememberLazyListState()
     // Докрутили почти до конца — просим следующую страницу (это сигнал UI → VM, не бизнес-логика).
@@ -367,7 +367,7 @@ private fun VersionList(
         state = listState,
         modifier = modifier,
         contentPadding = PaddingValues(padding),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (state.channel.isTest) {
             item(key = "test-channel") {
@@ -383,7 +383,7 @@ private fun VersionList(
                 onPick = if (state.viewOnly) null else ({ actions.onPick(row.key) }),
                 onDownload = if (state.noUnit) ({ actions.onDownload(row.key) }) else null,
                 onShare = if (state.noUnit && state.canShare) ({ actions.onShare(row.key) }) else null,
-                busy = state.busy == row.key
+                busy = state.busy == row.key,
             )
         }
         item(key = "footer") {

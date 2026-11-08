@@ -49,7 +49,7 @@ fun DeviceSelectionNavGraph(
     onSessionCreate: () -> Unit,
     onClose: (() -> Unit)?,
     serialEnabled: Boolean = false,
-    alarmsOnly: Boolean = false
+    alarmsOnly: Boolean = false,
 ) {
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
 
@@ -58,7 +58,7 @@ fun DeviceSelectionNavGraph(
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         onBack = {
             if (!backStack.popSafe()) onClose?.invoke()
@@ -69,9 +69,9 @@ fun DeviceSelectionNavGraph(
                     onSessionCreate = onSessionCreate,
                     onClose = onClose,
                     serialEnabled = serialEnabled,
-                    alarmsOnly = alarmsOnly
+                    alarmsOnly = alarmsOnly,
                 )
             }
-        }
+        },
     )
 }

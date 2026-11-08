@@ -34,7 +34,7 @@ data class CheckStateState(
     val statuses: Map<StateCommand, CommandStatus> = emptyMap(),
     val pending: StateCommand? = null,
     val programExiting: Boolean = false,
-    val dialog: CheckStateDialog? = null
+    val dialog: CheckStateDialog? = null,
 ) {
     val loading: Boolean get() = vehicle == null
 

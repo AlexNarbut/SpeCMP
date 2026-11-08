@@ -23,7 +23,7 @@ internal fun AutostartPrimaryButton(text: StringResource, onClick: () -> Unit, m
     CmpButton(
         text = stringResource(text),
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight)
+        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight),
     )
 }
 
@@ -33,13 +33,13 @@ internal fun AutostartSecondaryButton(
     text: StringResource,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
 ) {
     CmpOutlinedButton(
         text = stringResource(text),
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight)
+        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight),
     )
 }
 
@@ -55,7 +55,7 @@ internal fun StepNextButton(next: AutostartStepNext, onClick: () -> Unit, modifi
     CmpButton(
         onClick = onClick,
         enabled = !next.busy,
-        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight)
+        modifier = modifier.fillMaxWidth().height(AutostartButtonHeight),
     ) {
         if (next.busy) {
             CmpCircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.5.dp)

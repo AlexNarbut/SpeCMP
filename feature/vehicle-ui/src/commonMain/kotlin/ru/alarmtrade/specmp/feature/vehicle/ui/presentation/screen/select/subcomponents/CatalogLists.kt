@@ -93,14 +93,14 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 internal fun CatalogList(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
-    content: LazyListScope.() -> Unit
+    content: LazyListScope.() -> Unit,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = listState,
         contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
-        content = content
+        content = content,
     )
 }
 
@@ -111,7 +111,7 @@ internal fun <T> LazyListScope.levelState(
     actions: VehicleSelectActions,
     skeleton: Int,
     thumb: Boolean = false,
-    compact: Boolean = false
+    compact: Boolean = false,
 ): T? = when (load) {
     is LCEState.Content -> load.content
 
@@ -135,7 +135,7 @@ internal fun LazyListScope.brandItems(
     state: VehicleSelectState,
     actions: VehicleSelectActions,
     showRecent: Boolean,
-    compact: Boolean
+    compact: Boolean,
 ) {
     val brands = levelState(state.brands, CatalogLevel.BRANDS, actions, skeleton = 6, compact = compact) ?: return
     val combo = state.combo
@@ -161,7 +161,7 @@ internal fun LazyListScope.brandItems(
                 brand = brand,
                 query = state.query,
                 selected = state.selection.brand?.id == brand.id,
-                onClick = { actions.onBrandPick(brand) }
+                onClick = { actions.onBrandPick(brand) },
             )
         }
     }
@@ -176,14 +176,14 @@ private fun EmptyBrands(state: VehicleSelectState, actions: VehicleSelectActions
         q.isEmpty() -> CmpStateBox(
             icon = CmpIcons.Inventory2,
             title = stringResource(Strings.string.vehicle_catalog_title_empty),
-            compact = compact
+            compact = compact,
         )
 
         looksLikeCanCode(q) && state.mode.canSearchAvailable -> CmpStateBox(
             icon = CmpIcons.Pin,
             title = stringResource(Strings.string.vehicle_catalog_title_digits, q),
             text = stringResource(Strings.string.vehicle_catalog_msg_digits),
-            compact = compact
+            compact = compact,
         ) {
             StateAction(text = stringResource(Strings.string.vehicle_search_btn_by_can), onClick = {
                 actions.onSearchByCan(q)
@@ -198,14 +198,14 @@ private fun EmptyBrands(state: VehicleSelectState, actions: VehicleSelectActions
                     Strings.string.vehicle_catalog_msg_nothing_can
                 } else {
                     Strings.string.vehicle_catalog_msg_nothing
-                }
+                },
             ),
-            compact = compact
+            compact = compact,
         ) {
             if (state.mode.canSearchAvailable) {
                 StateAction(
                     text = stringResource(Strings.string.vehicle_search_btn_by_can),
-                    onClick = { actions.onSearchByCan("") }
+                    onClick = { actions.onSearchByCan("") },
                 )
             }
         }
@@ -220,7 +220,7 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
             subtitle = stringResource(Strings.string.vehicle_catalog_label_all_models),
             onClick = { actions.onBrandPick(combo.brand) },
             lead = { BrandLogo(name = combo.brand.name, url = combo.brand.logoUrl) },
-            modifier = Modifier.testTag(VehicleTestTags.brand(combo.brand.id))
+            modifier = Modifier.testTag(VehicleTestTags.brand(combo.brand.id)),
         )
     }
     fadeItem("combo-title") {
@@ -229,7 +229,7 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
                 stringResource(Strings.string.vehicle_catalog_title_combo, combo.brand.name)
             } else {
                 stringResource(Strings.string.vehicle_catalog_title_combo_query, combo.brand.name, combo.rest)
-            }
+            },
         )
     }
     val models = levelState(state.comboModels, CatalogLevel.COMBO, actions, skeleton = 3, thumb = true, compact = true)
@@ -241,7 +241,7 @@ private fun LazyListScope.comboItems(state: VehicleSelectState, actions: Vehicle
                 icon = CmpIcons.SearchOff,
                 title = stringResource(Strings.string.vehicle_catalog_title_nothing),
                 text = stringResource(Strings.string.vehicle_catalog_msg_combo_none, combo.brand.name, combo.rest),
-                compact = true
+                compact = true,
             )
         }
         return
@@ -265,7 +265,7 @@ internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: Vehicl
                     onClick = { actions.onRecentRemove(car) },
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.vehicle_catalog_a11y_recent_remove),
-                    tint = colors.onSurfaceVariant
+                    tint = colors.onSurfaceVariant,
                 )
             },
             lead = {
@@ -273,12 +273,12 @@ internal fun LazyListScope.recentItems(recent: List<CarSummary>, actions: Vehicl
                     modifier = Modifier
                         .size(ThumbSize)
                         .background(colors.secondaryContainer, RoundedCornerShape(ThumbRadius)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CmpIcon(icon = CmpIcons.History, contentDescription = null, tint = colors.onSecondaryContainer)
                 }
             },
-            modifier = Modifier.testTag(VehicleTestTags.recent(car.id))
+            modifier = Modifier.testTag(VehicleTestTags.recent(car.id)),
         )
     }
     fadeItem("recent-divider") { CmpDivider(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) }
@@ -292,7 +292,7 @@ internal fun BrandRow(brand: CarBrand, query: String, selected: Boolean, onClick
         selected = selected,
         dense = true,
         lead = { BrandLogo(name = brand.name, url = brand.logoUrl) },
-        modifier = Modifier.testTag(VehicleTestTags.brand(brand.id))
+        modifier = Modifier.testTag(VehicleTestTags.brand(brand.id)),
     )
 }
 
@@ -303,7 +303,7 @@ internal fun LazyListScope.modelItems(
     state: VehicleSelectState,
     actions: VehicleSelectActions,
     accordion: Boolean,
-    compact: Boolean
+    compact: Boolean,
 ) {
     val brand = state.selection.brand ?: return
     val models = levelState(state.models, CatalogLevel.MODELS, actions, skeleton = 5, thumb = true, compact = compact)
@@ -316,7 +316,7 @@ internal fun LazyListScope.modelItems(
                 CmpStateBox(
                     icon = CmpIcons.Inventory2,
                     title = stringResource(Strings.string.vehicle_catalog_title_models_empty),
-                    compact = compact
+                    compact = compact,
                 )
             }
         }
@@ -332,9 +332,9 @@ internal fun LazyListScope.modelItems(
                 text = stringResource(
                     Strings.string.vehicle_catalog_msg_models_none_query,
                     brand.name,
-                    state.query.trim()
+                    state.query.trim(),
                 ),
-                compact = compact
+                compact = compact,
             )
         }
         return
@@ -348,7 +348,7 @@ internal fun LazyListScope.modelItems(
                 selected = state.selection.model?.id == model.id && !open,
                 expandable = accordion,
                 expanded = open,
-                onClick = { actions.onModelPick(model) }
+                onClick = { actions.onModelPick(model) },
             )
         }
         if (open) trimItems(state, actions, inline = true)
@@ -362,7 +362,7 @@ internal fun ModelRow(
     selected: Boolean,
     onClick: () -> Unit,
     expandable: Boolean = false,
-    expanded: Boolean = false
+    expanded: Boolean = false,
 ) {
     VehicleRow(
         title = highlighted(model.name, query),
@@ -376,13 +376,13 @@ internal fun ModelRow(
                 CmpIcon(
                     icon = if (expanded) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = cmpThemeColors().onSurfaceVariant
+                    tint = cmpThemeColors().onSurfaceVariant,
                 )
             }
         } else {
             null
         },
-        modifier = Modifier.testTag(VehicleTestTags.model(model.id))
+        modifier = Modifier.testTag(VehicleTestTags.model(model.id)),
     )
 }
 
@@ -399,7 +399,7 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
                 icon = CmpIcons.Inventory2,
                 title = stringResource(Strings.string.vehicle_catalog_title_trims_empty),
                 text = stringResource(Strings.string.vehicle_catalog_msg_trims_empty, model.name),
-                compact = true
+                compact = true,
             )
         }
         return
@@ -412,7 +412,7 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
                 icon = CmpIcons.SearchOff,
                 title = stringResource(Strings.string.vehicle_catalog_title_nothing),
                 text = stringResource(Strings.string.vehicle_catalog_msg_trims_none_query),
-                compact = true
+                compact = true,
             )
         }
         return
@@ -425,7 +425,7 @@ internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: Vehicle
             selected = state.selection.carId == trim.id,
             pick = state.mode.pick,
             inline = inline,
-            actions = actions
+            actions = actions,
         )
     }
 }
@@ -438,7 +438,7 @@ private fun TrimRow(
     selected: Boolean,
     pick: Boolean,
     inline: Boolean,
-    actions: VehicleSelectActions
+    actions: VehicleSelectActions,
 ) {
     VehicleRow(
         title = highlighted(trim.name, query),
@@ -454,12 +454,12 @@ private fun TrimRow(
             {
                 PickButton(
                     onClick = { actions.onPick(trim.id) },
-                    modifier = Modifier.testTag(VehicleTestTags.trimPick(trim.id))
+                    modifier = Modifier.testTag(VehicleTestTags.trimPick(trim.id)),
                 )
             }
         } else {
             null
-        }
+        },
     )
 }
 
@@ -468,7 +468,7 @@ internal fun PickButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     CmpOutlinedButton(
         text = stringResource(Strings.string.vehicle_common_btn_pick),
         onClick = onClick,
-        modifier = modifier.padding(top = 6.dp).heightIn(min = 48.dp)
+        modifier = modifier.padding(top = 6.dp).heightIn(min = 48.dp),
     )
 }
 
@@ -481,7 +481,7 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
                 text = stringResource(Strings.string.vehicle_can_msg_enter),
                 style = CmpTextStyle.BodyLarge,
                 color = cmpThemeColors().onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             )
         }
         return
@@ -494,11 +494,11 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
                 icon = CmpIcons.SearchOff,
                 title = stringResource(Strings.string.vehicle_can_title_none, state.canCode),
                 text = stringResource(Strings.string.vehicle_can_msg_none),
-                compact = compact
+                compact = compact,
             ) {
                 StateAction(
                     text = stringResource(Strings.string.vehicle_search_btn_by_name),
-                    onClick = { actions.onSearchModeChange(SearchMode.NAME) }
+                    onClick = { actions.onSearchModeChange(SearchMode.NAME) },
                 )
             }
         }
@@ -517,7 +517,7 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
             } else {
                 null
             },
-            modifier = Modifier.testTag(VehicleTestTags.canResult(car.id))
+            modifier = Modifier.testTag(VehicleTestTags.canResult(car.id)),
         )
     }
 }
@@ -533,7 +533,7 @@ internal fun SectionTitle(text: String, modifier: Modifier = Modifier) {
         style = CmpTextStyle.Body,
         fontWeight = FontWeight.SemiBold,
         color = cmpThemeColors().onSurfaceVariant,
-        modifier = modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 4.dp)
+        modifier = modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
     )
 }
 
@@ -544,6 +544,6 @@ private fun LetterHeader(letter: String) {
         style = CmpTextStyle.BodyLarge,
         fontWeight = FontWeight.Bold,
         color = cmpThemeColors().primary,
-        modifier = Modifier.padding(start = 12.dp, top = 14.dp, bottom = 4.dp).height(24.dp)
+        modifier = Modifier.padding(start = 12.dp, top = 14.dp, bottom = 4.dp).height(24.dp),
     )
 }

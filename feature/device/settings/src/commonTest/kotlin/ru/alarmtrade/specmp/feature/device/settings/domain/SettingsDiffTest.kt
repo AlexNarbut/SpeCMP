@@ -34,7 +34,7 @@ class SettingsDiffTest {
         id = 41, number = "4.1", name = "Вход 1", description = null,
         value = SettingValue.Input(InputValue(listOf(true, false, true), InputContactType.NORMALLY_OPEN)),
         channel = Channel(1, "IN1", emptyList()), defaultPolarity = Polarity.MINUS,
-        availableLogics = listOf(hood, trunk, doors), enabledLogics = listOf(hood, doors)
+        availableLogics = listOf(hood, trunk, doors), enabledLogics = listOf(hood, doors),
     )
     private val inputs = section(400, "4", "Входы", input)
     private val can = CanCodeSetting(61, "6.1", "CAN-код", null, SettingValue.Can(CanCode("1032", null)))
@@ -93,8 +93,8 @@ class SettingsDiffTest {
     fun `channel change lists added and removed functions`() {
         val next = root.replace(
             input.copy(
-                value = SettingValue.Input(InputValue(listOf(false, true, true), InputContactType.NORMALLY_CLOSED))
-            )
+                value = SettingValue.Input(InputValue(listOf(false, true, true), InputContactType.NORMALLY_CLOSED)),
+            ),
         )
 
         val change = root.diffTo(next).sections.single().changes.single()
@@ -104,7 +104,7 @@ class SettingsDiffTest {
         assertEquals(listOf(hood), logics?.removed)
         assertNull(
             root.diffTo(root.replace(shock.copy(value = SettingValue.Switch(true))))
-                .sections.single().changes.single().logicsChange()
+                .sections.single().changes.single().logicsChange(),
         )
     }
 

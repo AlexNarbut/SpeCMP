@@ -40,7 +40,7 @@ sealed interface DeviceUiItem {
         /** `null` — платформа не сообщает о сопряжении с телефоном (iOS). */
         val hasPhoneBond: Boolean?,
         /** Выбрать нельзя: поиск только сигнализаций (быстрый монтаж), а это другое устройство. */
-        val restricted: Boolean = false
+        val restricted: Boolean = false,
     ) : DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.BLE
         override val typeIcon: CmpIcons get() = CmpIcons.Sensors
@@ -57,7 +57,7 @@ sealed interface DeviceUiItem {
         val vidPid: String,
         override val systemId: Long?,
         val firmwareVersion: String?,
-        val isBootMode: Boolean?
+        val isBootMode: Boolean?,
     ) : DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.USB
         override val typeIcon: CmpIcons get() = CmpIcons.Memory
@@ -69,7 +69,7 @@ sealed interface DeviceUiItem {
         override val name: String,
         override val address: String,
         /** VID:PID адаптера, hex; `null` — платформа не сообщает. */
-        val vidPid: String?
+        val vidPid: String?,
     ) : DeviceUiItem {
         override val transport: DeviceTransport get() = DeviceTransport.SERIAL
         override val typeIcon: CmpIcons get() = CmpIcons.Cable
@@ -98,7 +98,7 @@ internal fun ScannedDevice.toUiItem(): DeviceUiItem = when (this) {
             vidPid = vidPid,
             systemId = systemId,
             firmwareVersion = firmwareVersion?.toDisplayFirmware(),
-            isBootMode = isBootMode
+            isBootMode = isBootMode,
         )
     }
 
@@ -114,7 +114,7 @@ internal fun ScannedDevice.Ble.toUiItem(restricted: Boolean): DeviceUiItem.Ble =
     rssi = rssi.roundToStep(RSSI_STEP_DBM),
     hasDeviceBond = hasDeviceBond,
     hasPhoneBond = hasPhoneBond,
-    restricted = restricted
+    restricted = restricted,
 )
 
 internal fun ScannedDevice.Serial.toUiItem(): DeviceUiItem.Serial {
@@ -123,7 +123,7 @@ internal fun ScannedDevice.Serial.toUiItem(): DeviceUiItem.Serial {
         id = id,
         name = name,
         address = if (name != id) id else vidPid.orEmpty(),
-        vidPid = vidPid
+        vidPid = vidPid,
     )
 }
 

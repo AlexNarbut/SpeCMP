@@ -15,7 +15,7 @@ data class FirmwareCheckState(
     val channel: FirmwareChannel = FirmwareChannel.RELEASE,
     val dialog: CheckDialog? = null,
     /** Команда входа в загрузчик не удалась (нет связи, блок не ответил) — баннер над списком. */
-    val bootFailed: Boolean = false
+    val bootFailed: Boolean = false,
 )
 
 /** Карточка модуля: только примитивы и enum — устойчива для Compose. */
@@ -25,7 +25,7 @@ data class ModuleCardUi(
     val kind: FirmwareModuleKind,
     val title: String,
     val currentVersion: CurrentVersionUi,
-    val status: CardStatusUi
+    val status: CardStatusUi,
 )
 
 sealed interface CurrentVersionUi {
@@ -71,7 +71,7 @@ sealed interface CheckDialog {
         val sending: Boolean = false,
         val wrong: Boolean = false,
         val wrongCount: Int = 0,
-        val lockedFor: Duration? = null
+        val lockedFor: Duration? = null,
     ) : CheckDialog
 }
 
@@ -85,5 +85,5 @@ class FirmwareCheckActions(
     val onUpdateClick: (Long) -> Unit = {},
     val onDialogDismiss: () -> Unit = {},
     val onConfirmBoot: () -> Unit = {},
-    val onPinSubmit: (String) -> Unit = {}
+    val onPinSubmit: (String) -> Unit = {},
 )

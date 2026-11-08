@@ -69,7 +69,7 @@ internal fun ModelsScreen(
     onPick: (String) -> Unit,
     onRecentRemove: (String) -> Unit,
     onRetry: () -> Unit,
-    onDialogDismiss: () -> Unit
+    onDialogDismiss: () -> Unit,
 ) {
     CmpScaffold(
         topBar = {
@@ -81,18 +81,18 @@ internal fun ModelsScreen(
                             state.fileName?.let { stringResource(Strings.string.configurator_models_subtitle_file, it) }
                                 ?: stringResource(Strings.string.configurator_models_subtitle_new),
                         style = CmpTextStyle.Caption,
-                        maxLines = 1
+                        maxLines = 1,
                     )
                 },
                 navigationIcon = {
                     CmpIconButton(
                         onClick = onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.configurator_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.configurator_common_a11y_back),
                     )
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         CmpColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
             CmpSearchField(
@@ -101,12 +101,12 @@ internal fun ModelsScreen(
                 placeholder = stringResource(Strings.string.configurator_models_placeholder_search),
                 clearContentDescription = stringResource(Strings.string.configurator_common_a11y_clear),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                    .testTag(ConfiguratorTestTags.MODELS_SEARCH)
+                    .testTag(ConfiguratorTestTags.MODELS_SEARCH),
             )
             when (val list = state.list) {
                 LCEState.None, LCEState.Loading -> CmpBox(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CmpCircularProgressIndicator()
                 }
@@ -116,12 +116,12 @@ internal fun ModelsScreen(
                     title = list.error.text(Strings.string.configurator_models_error),
                     text = stringResource(Strings.string.configurator_models_error_msg),
                     tone = CmpStateTone.Error,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     CmpButton(
                         text = stringResource(Strings.string.configurator_common_btn_retry),
                         onClick = onRetry,
-                        modifier = Modifier.testTag(ConfiguratorTestTags.RETRY)
+                        modifier = Modifier.testTag(ConfiguratorTestTags.RETRY),
                     )
                 }
 
@@ -137,12 +137,12 @@ internal fun ModelsScreen(
             confirmButton = {
                 CmpButton(
                     text = stringResource(Strings.string.configurator_common_btn_other_model),
-                    onClick = onDialogDismiss
+                    onClick = onDialogDismiss,
                 )
             },
             dismissButton = {
                 CmpTextButton(text = stringResource(Strings.string.configurator_common_btn_cancel), onClick = onBack)
-            }
+            },
         )
     }
     if (state.checking) {
@@ -154,7 +154,7 @@ internal fun ModelsScreen(
                     CmpCircularProgressIndicator()
                 }
             },
-            confirmButton = {}
+            confirmButton = {},
         )
     }
 }
@@ -164,7 +164,7 @@ private fun ModelsList(
     state: ModelsState,
     models: List<String>,
     onPick: (String) -> Unit,
-    onRecentRemove: (String) -> Unit
+    onRecentRemove: (String) -> Unit,
 ) {
     val q = state.query.trim()
     val filtered = models.filter { q.isEmpty() || it.contains(q, ignoreCase = true) }
@@ -180,7 +180,7 @@ private fun ModelsList(
                 recent,
                 CmpIcons.History,
                 onPick,
-                onRemove = onRecentRemove
+                onRemove = onRecentRemove,
             )
         }
         if (filtered.isEmpty()) {
@@ -188,7 +188,7 @@ private fun ModelsList(
                 CmpText(
                     text = stringResource(Strings.string.configurator_models_msg_nothing, q),
                     color = cmpThemeColors().onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth().padding(24.dp)
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
                 )
             }
         } else {
@@ -203,7 +203,7 @@ private fun LazyListScope.group(
     names: List<String>,
     icon: CmpIcons?,
     onPick: (String) -> Unit,
-    onRemove: ((String) -> Unit)? = null
+    onRemove: ((String) -> Unit)? = null,
 ) {
     item(key = "header_${title.key}") {
         CmpColumn {
@@ -213,7 +213,7 @@ private fun LazyListScope.group(
                 style = CmpTextStyle.Body,
                 fontWeight = FontWeight.Medium,
                 color = cmpThemeColors().onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
             )
         }
     }
@@ -226,7 +226,7 @@ private fun LazyListScope.group(
                 .testTag(ConfiguratorTestTags.model(name))
                 .padding(start = 16.dp, end = if (onRemove != null) 4.dp else 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             icon?.let { CmpIcon(icon = it, contentDescription = null, tint = cmpThemeColors().onSurfaceVariant) }
             CmpText(text = name, style = CmpTextStyle.BodyLarge, modifier = Modifier.weight(1f))
@@ -235,7 +235,7 @@ private fun LazyListScope.group(
                     onClick = { remove(name) },
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.configurator_models_a11y_recent_remove),
-                    tint = cmpThemeColors().onSurfaceVariant
+                    tint = cmpThemeColors().onSurfaceVariant,
                 )
             }
         }

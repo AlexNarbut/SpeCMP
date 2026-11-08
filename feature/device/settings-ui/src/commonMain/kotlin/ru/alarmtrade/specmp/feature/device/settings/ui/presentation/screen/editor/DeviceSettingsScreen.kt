@@ -125,7 +125,7 @@ internal fun DeviceSettingsContent(
     location: SettingsLocation,
     actions: DeviceSettingsActions,
     snackbarHostState: CmpSnackbarHostState,
-    pane: @Composable (layout: SettingsLayout) -> Unit
+    pane: @Composable (layout: SettingsLayout) -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val layout = settingsLayoutOf(maxWidth)
@@ -133,7 +133,7 @@ internal fun DeviceSettingsContent(
         CmpScaffold(
             topBar = { TopBar(state, location, actions) },
             bottomBar = { WriteBar(state, actions) },
-            snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) }
+            snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
         ) { padding ->
             CmpColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
                 when (val menu = state.menu) {
@@ -160,7 +160,7 @@ private fun ReadyBody(
     layout: SettingsLayout,
     windowWidth: Dp,
     actions: DeviceSettingsActions,
-    pane: @Composable (layout: SettingsLayout) -> Unit
+    pane: @Composable (layout: SettingsLayout) -> Unit,
 ) {
     CmpRow(modifier = Modifier.fillMaxSize()) {
         if (layout.isWide) {
@@ -175,11 +175,11 @@ private fun ReadyBody(
                 changedIds = state.changedIds,
                 width = { treeWidth },
                 onEditSetting = actions.onEditSetting,
-                onSelect = { id -> actions.onNavigateTo(root.pathTo(id).orEmpty().map { it.id } + id) }
+                onSelect = { id -> actions.onNavigateTo(root.pathTo(id).orEmpty().map { it.id } + id) },
             )
             TreeResizeHandle(
                 onDrag = { delta -> treeWidth = (treeWidth + delta).coerceIn(TreeMinWidth, maxTree) },
-                onDragStop = { actions.onTreeWidthChange(treeWidth.value.roundToInt()) }
+                onDragStop = { actions.onTreeWidthChange(treeWidth.value.roundToInt()) },
             )
         }
         CmpColumn(modifier = Modifier.weight(1f).fillMaxSize().background(cmpThemeColors().background)) {
@@ -206,15 +206,15 @@ private fun TreeResizeHandle(onDrag: (Dp) -> Unit, onDragStop: () -> Unit) {
             .draggable(
                 orientation = Orientation.Horizontal,
                 state = rememberDraggableState { deltaPx -> currentOnDrag(with(density) { deltaPx.toDp() }) },
-                onDragStopped = { onDragStop() }
+                onDragStopped = { onDragStop() },
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpBox(modifier = Modifier.width(1.dp).fillMaxHeight().background(colors.outlineVariant))
         CmpBox(
             modifier = Modifier
                 .size(width = 4.dp, height = 32.dp)
-                .background(colors.outline, CircleShape)
+                .background(colors.outline, CircleShape),
         )
     }
 }
@@ -237,20 +237,20 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
                 CmpFlowRow(
                     itemVerticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     CmpText(
                         text = stringResource(
                             Strings.string.settings_editor_label_device,
                             device.deviceName,
-                            device.deviceId.toString()
+                            device.deviceId.toString(),
                         ),
-                        style = CmpTextStyle.Caption
+                        style = CmpTextStyle.Caption,
                     )
                     device.singleCanCode?.let { code -> CanBadge(code) }
                 }
             }
-        }
+        },
     )
 }
 
@@ -259,7 +259,7 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
 private fun ConfigurationTopBar(
     state: DeviceSettingsState,
     location: SettingsLocation,
-    actions: DeviceSettingsActions
+    actions: DeviceSettingsActions,
 ) {
     val source = state.source
     SettingsTopBar(
@@ -270,14 +270,14 @@ private fun ConfigurationTopBar(
             CmpText(
                 text = source.title.ifEmpty { stringResource(Strings.string.settings_source_title_defaults) },
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         },
         subtitle = {
             CmpFlowRow(
                 itemVerticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 val (icon, label) = when (source.kind) {
                     SourceKind.MINE -> CmpIcons.Inventory2 to Strings.string.settings_common_value_source_mine
@@ -294,7 +294,7 @@ private fun ConfigurationTopBar(
                 CmpText(text = source.deviceName, style = CmpTextStyle.Caption, maxLines = 1)
                 if (source.isReadOnly) ReadOnlyBadge()
             }
-        }
+        },
     )
 }
 
@@ -305,7 +305,7 @@ private fun SettingsTopBar(
     location: SettingsLocation,
     actions: DeviceSettingsActions,
     title: @Composable () -> Unit,
-    subtitle: (@Composable () -> Unit)?
+    subtitle: (@Composable () -> Unit)?,
 ) {
     CmpTopAppBar(
         title = title,
@@ -314,7 +314,7 @@ private fun SettingsTopBar(
             CmpIconButton(
                 onClick = actions.onBack,
                 icon = CmpIcons.ArrowBack,
-                contentDescription = stringResource(Strings.string.settings_common_a11y_back)
+                contentDescription = stringResource(Strings.string.settings_common_a11y_back),
             )
         },
         actions = {
@@ -323,11 +323,11 @@ private fun SettingsTopBar(
                     onClick = actions.onSearch,
                     modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
                     icon = CmpIcons.Search,
-                    contentDescription = stringResource(Strings.string.settings_common_a11y_search)
+                    contentDescription = stringResource(Strings.string.settings_common_a11y_search),
                 )
                 MoreMenu(state, actions)
             }
-        }
+        },
     )
 }
 
@@ -348,7 +348,7 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
                 expanded = false
                 onClick()
             },
-            modifier = Modifier.testTag(tag)
+            modifier = Modifier.testTag(tag),
         )
     }
     CmpBox {
@@ -356,7 +356,7 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
             onClick = { expanded = true },
             icon = CmpIcons.MoreVert,
             contentDescription = stringResource(Strings.string.settings_common_a11y_more),
-            modifier = Modifier.testTag(SettingsTestTags.MENU)
+            modifier = Modifier.testTag(SettingsTestTags.MENU),
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             when (state.source.kind) {
@@ -379,7 +379,7 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
                     item(
                         Strings.string.settings_menu_item_save_file,
                         CmpIcons.Description,
-                        SettingsTestTags.MENU_SAVE_FILE
+                        SettingsTestTags.MENU_SAVE_FILE,
                     ) {
                         transfer.onExport()
                     }
@@ -392,14 +392,14 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
                     item(
                         Strings.string.settings_menu_item_save_mine,
                         CmpIcons.Inventory2,
-                        SettingsTestTags.MENU_SAVE_MINE
+                        SettingsTestTags.MENU_SAVE_MINE,
                     ) {
                         transfer.onSaveToMine()
                     }
                     item(
                         Strings.string.settings_menu_item_save_file_as,
                         CmpIcons.SaveAs,
-                        SettingsTestTags.MENU_SAVE_FILE
+                        SettingsTestTags.MENU_SAVE_FILE,
                     ) {
                         transfer.onExport()
                     }
@@ -409,14 +409,14 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
                     item(
                         Strings.string.settings_menu_item_save_mine,
                         CmpIcons.Inventory2,
-                        SettingsTestTags.MENU_SAVE_MINE
+                        SettingsTestTags.MENU_SAVE_MINE,
                     ) {
                         transfer.onSaveToMine()
                     }
                     item(
                         Strings.string.settings_menu_item_save_file,
                         CmpIcons.Description,
-                        SettingsTestTags.MENU_SAVE_FILE
+                        SettingsTestTags.MENU_SAVE_FILE,
                     ) {
                         transfer.onExport()
                     }
@@ -426,7 +426,7 @@ private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions)
                 item(
                     Strings.string.settings_menu_item_write_device,
                     CmpIcons.Upload,
-                    SettingsTestTags.MENU_WRITE_DEVICE
+                    SettingsTestTags.MENU_WRITE_DEVICE,
                 ) {
                     transfer.onWriteToDevice()
                 }
@@ -446,8 +446,8 @@ private fun CanBadge(code: String) {
         maxLines = 1,
         modifier = Modifier.background(
             colors.secondaryContainer,
-            CircleShape
-        ).padding(horizontal = 10.dp, vertical = 2.dp)
+            CircleShape,
+        ).padding(horizontal = 10.dp, vertical = 2.dp),
     )
 }
 
@@ -456,7 +456,7 @@ private fun Crumbs(
     root: SettingsSection,
     state: DeviceSettingsState,
     location: SettingsLocation,
-    actions: DeviceSettingsActions
+    actions: DeviceSettingsActions,
 ) {
     val sections = location.sectionPath.mapNotNull { id -> root.findNode(id) as? SettingsSection }
     val items =
@@ -464,13 +464,13 @@ private fun Crumbs(
             sections.map { section ->
                 CmpBreadcrumb(
                     label = if (section.number.isEmpty()) section.name else "${section.number} ${section.name}",
-                    marked = (state.sectionChanges[section.id] ?: 0) > 0
+                    marked = (state.sectionChanges[section.id] ?: 0) > 0,
                 )
             }
     CmpBreadcrumbs(
         items = items,
         onItemClick = { index -> actions.onNavigateTo(location.sectionPath.take(index)) },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
     )
     CmpDivider(color = cmpThemeColors().outlineVariant)
 }
@@ -484,13 +484,13 @@ private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions)
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CmpDot()
             CmpText(
                 text = stringResource(Strings.string.settings_editor_label_changed, state.changedCount),
                 style = CmpTextStyle.Title,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             CmpButton(
                 text = stringResource(
@@ -498,10 +498,10 @@ private fun WriteBar(state: DeviceSettingsState, actions: DeviceSettingsActions)
                         BarAction.WRITE -> Strings.string.settings_editor_btn_write
                         BarAction.SAVE -> Strings.string.settings_editor_btn_save
                         BarAction.SAVE_AS -> Strings.string.settings_editor_btn_save_as
-                    }
+                    },
                 ),
                 onClick = actions.transfer.onBarAction,
-                modifier = Modifier.widthIn(min = 160.dp).heightIn(min = 52.dp).testTag(SettingsTestTags.WRITE)
+                modifier = Modifier.widthIn(min = 160.dp).heightIn(min = 52.dp).testTag(SettingsTestTags.WRITE),
             )
         }
     }
@@ -518,69 +518,69 @@ private fun Dialogs(state: DeviceSettingsState, wide: Boolean, actions: DeviceSe
         SettingsDialog.SingleCanFirmware -> SingleCanFirmwareDialog(
             canCode = state.header?.singleCanCode.orEmpty(),
             onUpdate = actions.onSingleCanUpdate,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is SettingsDialog.ExitConfirm -> ExitDialog(
             changed = state.changedCount,
             onWrite = actions.onExitWrite,
             onDiscard = actions.onExitDiscard,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         SettingsDialog.ResetConfirm -> ResetConfirmDialog(
             changed = state.changedCount,
             onConfirm = actions.onResetConfirm,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         SettingsDialog.ResetError -> ResetErrorDialog(
             onRetry = actions.onResetConfirm,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         SettingsDialog.WriteError -> WriteErrorDialog(
             changed = state.changedCount,
             onRetry = actions.onWrite,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         SettingsDialog.LoadSources -> LoadSourcesPanel(
             deviceName = deviceName,
             wide = wide,
             onPick = transfer.onLoadSourcePick,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is SettingsDialog.SaveTargets -> SaveTargetsPanel(
             deviceName = deviceName,
             wide = wide,
             onPick = transfer.onSaveTargetPick,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is SettingsDialog.ModelMismatch -> ModelMismatchDialog(
             sourceDeviceName = dialog.sourceDeviceName,
             deviceName = dialog.deviceName,
             onContinue = transfer.onMismatchContinue,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is SettingsDialog.LoadError -> LoadErrorDialog(
             kind = dialog.kind,
             onOtherSource = transfer.onLoadRequest,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is SettingsDialog.SaveError -> SaveErrorDialog(
             onRetry = transfer.onSaveRetry,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is SettingsDialog.OverwriteConfirm -> OverwriteDialog(
             fileName = state.source.title,
             onConfirm = transfer.onOverwriteConfirm,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         SettingsDialog.ExitSave -> ExitSaveDialog(
@@ -588,7 +588,7 @@ private fun Dialogs(state: DeviceSettingsState, wide: Boolean, actions: DeviceSe
             saveAs = state.barAction != BarAction.SAVE,
             onSave = transfer.onExitSave,
             onDiscard = actions.onExitDiscard,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         null -> Unit

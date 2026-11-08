@@ -11,7 +11,7 @@ fun CmpButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, 
     Button(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled
+        enabled = enabled,
     ) {
         CmpText(text = text)
     }
@@ -22,12 +22,12 @@ fun CmpButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        content = content
+        content = content,
     )
 }

@@ -22,8 +22,8 @@ class FirmwareSystemsGallery {
         listOf(
             FirmwareSubsystem(10, "Основная программа", "DX4GS", FirmwareModuleKind.AlarmMain),
             FirmwareSubsystem(11, "Bluetooth-модуль", "BTM2", FirmwareModuleKind.BluetoothModule),
-            FirmwareSubsystem(12, "GPS-модуль", "NAV-08", FirmwareModuleKind.GpsTracker)
-        )
+            FirmwareSubsystem(12, "GPS-модуль", "NAV-08", FirmwareModuleKind.GpsTracker),
+        ),
     )
     private val tag =
         FirmwareSystem(2, "Pandora BT-760", listOf(FirmwareSubsystem(20, "Метка", "BT760", FirmwareModuleKind.Unknown)))
@@ -32,8 +32,8 @@ class FirmwareSystemsGallery {
         "Pandora Watch",
         listOf(
             FirmwareSubsystem(30, "Часы", "PW2", FirmwareModuleKind.WatchMain),
-            FirmwareSubsystem(31, "Bluetooth часов", "PW2BT", FirmwareModuleKind.WatchBluetooth)
-        )
+            FirmwareSubsystem(31, "Bluetooth часов", "PW2BT", FirmwareModuleKind.WatchBluetooth),
+        ),
     )
 
     private fun render(name: String, state: FirmwareSystemsState) = StateGallery.render(outDir, name) {
@@ -49,16 +49,16 @@ class FirmwareSystemsGallery {
                 listOf(
                     SystemRowUi(tag, tag.subsystems, expanded = false),
                     SystemRowUi(dx, dx.subsystems, expanded = true),
-                    SystemRowUi(watch, watch.subsystems, expanded = false)
-                )
-            )
-        )
+                    SystemRowUi(watch, watch.subsystems, expanded = false),
+                ),
+            ),
+        ),
     )
 
     @Test
     fun search() = render(
         "02_search",
-        FirmwareSystemsState(LCEState.Content(listOf(SystemRowUi(dx, dx.subsystems.take(1), expanded = true))), "dx4")
+        FirmwareSystemsState(LCEState.Content(listOf(SystemRowUi(dx, dx.subsystems.take(1), expanded = true))), "dx4"),
     )
 
     @Test

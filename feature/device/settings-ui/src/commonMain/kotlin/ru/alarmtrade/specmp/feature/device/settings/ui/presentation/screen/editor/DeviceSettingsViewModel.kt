@@ -94,7 +94,7 @@ internal class DeviceSettingsViewModel(
     private val carsRepository: VehicleCatalogRepository,
     deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val followsDevice = source.capabilities.followsDeviceConnection
@@ -104,8 +104,8 @@ internal class DeviceSettingsViewModel(
             treeWidthDp = preferences.treeWidthDp(),
             canResetToFactory = source.capabilities.canResetToFactory,
             source = source.header(),
-            canWriteToDevice = options.canWriteToDevice
-        )
+            canWriteToDevice = options.canWriteToDevice,
+        ),
     )
     private val _effect = sideEffectFlow<DeviceSettingsEffect>()
     val effect: SharedFlow<DeviceSettingsEffect> = _effect.asSharedFlow()
@@ -146,7 +146,7 @@ internal class DeviceSettingsViewModel(
     val state: StateFlow<DeviceSettingsState> = combine(_state, connectedDeviceName, search) {
             state,
             connected,
-            (query, hits)
+            (query, hits),
         ->
         state.copy(connectedDeviceName = connected, searchQuery = query, searchHits = hits)
     }
@@ -184,7 +184,7 @@ internal class DeviceSettingsViewModel(
                 dialog = null,
                 diff = null,
                 isWriting = false,
-                isResetting = false
+                isResetting = false,
             )
         }
         when (val response = withContext(dispatchers.io) { repository.open(source, reload = true) }) {
@@ -212,7 +212,7 @@ internal class DeviceSettingsViewModel(
     }
 
     private suspend fun applyValue(settingId: Int, value: SettingValue) = executeWithProceedLock(
-        needSkipAnother = false
+        needSkipAnother = false,
     ) {
         when (val response = withContext(dispatchers.io) { repository.setValue(source, settingId, value) }) {
             is Response.Error -> {
@@ -254,8 +254,8 @@ internal class DeviceSettingsViewModel(
             state.copy(
                 editing = editing.copy(
                     draft = draft,
-                    carSearch = if (codeChanged) LCEState.None else editing.carSearch
-                )
+                    carSearch = if (codeChanged) LCEState.None else editing.carSearch,
+                ),
             )
         }
     }
@@ -426,8 +426,8 @@ internal class DeviceSettingsViewModel(
                             ConfigurationPickKind.CLOUD
                         },
                         deviceName = deviceName,
-                        firmwareCanCode = it.header?.singleCanCode
-                    )
+                        firmwareCanCode = it.header?.singleCanCode,
+                    ),
                 )
             }
 
@@ -452,7 +452,7 @@ internal class DeviceSettingsViewModel(
                 val deviceName = deviceModel() ?: return
                 requestLoad(
                     SettingsSource.File(result.path, deviceName, name = result.name, inPlace = result.inPlace),
-                    closeAfter = true
+                    closeAfter = true,
                 )
             }
 
@@ -476,8 +476,8 @@ internal class DeviceSettingsViewModel(
                         sourceDeviceName,
                         deviceName,
                         forWrite = false,
-                        closeAfter = closeAfter
-                    )
+                        closeAfter = closeAfter,
+                    ),
                 )
             }
             return
@@ -659,8 +659,8 @@ internal class DeviceSettingsViewModel(
             state.copy(
                 saveForm = state.saveForm?.copy(
                     name = name.take(LocalConfiguration.NAME_MAX_LENGTH),
-                    description = description.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH)
-                )
+                    description = description.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH),
+                ),
             )
         }
     }
@@ -712,8 +712,8 @@ internal class DeviceSettingsViewModel(
                     _effect.tryEmit(
                         DeviceSettingsEffect.ExportFile(
                             response.value.path,
-                            settingsFileName(deviceName, exportTitle())
-                        )
+                            settingsFileName(deviceName, exportTitle()),
+                        ),
                     )
                 }
             }

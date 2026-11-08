@@ -90,7 +90,7 @@ internal fun SerialFirmwareUpdateState.toProgress(): SerialFirmwareProgress = wh
             SerialFirmwareUpdateError.APPLYING -> SerialFirmwareFailure.Applying
             SerialFirmwareUpdateError.CONNECTION_LOST -> SerialFirmwareFailure.ConnectionLost
             null -> SerialFirmwareFailure.Unknown
-        }
+        },
     )
 }
 

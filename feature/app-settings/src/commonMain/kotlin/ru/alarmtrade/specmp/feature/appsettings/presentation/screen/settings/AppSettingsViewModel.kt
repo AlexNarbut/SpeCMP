@@ -28,7 +28,7 @@ internal class AppSettingsViewModel(
     private val localeStore: AppLocaleStore,
     private val restarter: AppRestarter,
     private val configurationLanguages: ConfigurationLanguageStore,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(AppSettingsState(current = localeStore.current()))

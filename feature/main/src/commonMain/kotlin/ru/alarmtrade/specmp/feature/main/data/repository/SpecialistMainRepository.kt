@@ -40,7 +40,7 @@ class SpecialistMainRepository(
     private val userInteractor: UserInteractor,
     private val accountRepository: AccountRepository,
     private val chatInteractor: ChatInteractor,
-    private val appVersionProvider: SpecialistAppVersionProvider
+    private val appVersionProvider: SpecialistAppVersionProvider,
 ) : MainRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
@@ -75,7 +75,7 @@ class SpecialistMainRepository(
             safeFlowRun {
                 appUpdatesInteractor.synchronizeSettingsVersionUseCase.execute()
                     .map { response -> response.toDatabaseSyncStatusResponse() }
-            }
+            },
         )
     }
 
@@ -114,13 +114,13 @@ class SpecialistMainRepository(
     private fun SettingsUpdatingStatus.toMainDatabaseSyncStatus(): MainDatabaseSyncStatus = when (this) {
         is SettingsUpdatingStatus.CheckLocalVersion,
         is SettingsUpdatingStatus.CheckNetworkVersion,
-        is SettingsUpdatingStatus.CheckVersionCompatibility
+        is SettingsUpdatingStatus.CheckVersionCompatibility,
         -> MainDatabaseSyncStatus.InProgress.CheckingVersion
 
         is SettingsUpdatingStatus.DownloadingNewVersion -> MainDatabaseSyncStatus.InProgress.Downloading
 
         is SettingsUpdatingStatus.UpdateFromDownloadedFileStarted,
-        is SettingsUpdatingStatus.UpdateFromLocalFileStarted
+        is SettingsUpdatingStatus.UpdateFromLocalFileStarted,
         -> MainDatabaseSyncStatus.InProgress.Applying
 
         is SettingsUpdatingStatus.FinishedSuccess ->
@@ -145,12 +145,12 @@ class SpecialistMainRepository(
     private fun Collection<UserAppFeature>.toMainUserAppFeatures(): MainUserAppFeatures = MainUserAppFeatures(
         hasCanScanner = UserAppFeature.CAN_SCANNER in this,
         hasOrdersRequest = UserAppFeature.ORDERS_REQUEST in this,
-        hasProductSearch = UserAppFeature.PRODUCT_SEARCH in this
+        hasProductSearch = UserAppFeature.PRODUCT_SEARCH in this,
     )
 
     private fun SpecialistAppVersion.toMainAppVersion(): MainAppVersion = MainAppVersion(
         name = name,
-        code = code
+        code = code,
     )
 
     private fun UserCommercial?.toMainUserCommercial(): MainUserCommercial =

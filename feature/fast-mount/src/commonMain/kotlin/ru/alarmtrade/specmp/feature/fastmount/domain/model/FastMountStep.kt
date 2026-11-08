@@ -27,5 +27,5 @@ enum class FastMountStep {
     FEEDBACK,
 
     /** Монтаж завершён; отчёт уходит на сервер в фоне. */
-    FINISH
+    FINISH,
 }

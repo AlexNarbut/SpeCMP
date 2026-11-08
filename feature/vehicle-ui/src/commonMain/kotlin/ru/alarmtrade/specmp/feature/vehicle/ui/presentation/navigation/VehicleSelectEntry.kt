@@ -45,12 +45,12 @@ fun VehicleSelectEntry(
     onPick: (CarSummary) -> Unit,
     onBack: () -> Unit,
     onOpenFirmwareArchive: ((canCode: String) -> Unit)? = null,
-    onOpenUserManual: ((manualId: Int) -> Unit)? = null
+    onOpenUserManual: ((manualId: Int) -> Unit)? = null,
 ) {
     // Ключ — запрос: каталог для другого режима в том же владельце (справочник и выбор для архива) — своя ViewModel.
     val viewModel = koinViewModel<VehicleSelectViewModel>(
         key = "VehicleSelect:$request",
-        parameters = { parametersOf(request) }
+        parameters = { parametersOf(request) },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
@@ -80,7 +80,7 @@ fun VehicleSelectEntry(
         val layout = vehicleLayoutOf(maxWidth)
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
-            onBackCompleted = { viewModel.onBack(layout) }
+            onBackCompleted = { viewModel.onBack(layout) },
         )
         val actions = remember(viewModel, layout, onOpenFirmwareArchive, onOpenUserManual) {
             VehicleSelectActions(
@@ -120,8 +120,8 @@ fun VehicleSelectEntry(
                     onOpenFirmwareArchive = onOpenFirmwareArchive,
                     onOpenUserManual = onOpenUserManual,
                     onDialogDismiss = viewModel::onDialogDismiss,
-                    onMismatchConfirm = viewModel::onMismatchConfirm
-                )
+                    onMismatchConfirm = viewModel::onMismatchConfirm,
+                ),
             )
         }
         VehicleSelectContent(
@@ -129,7 +129,7 @@ fun VehicleSelectEntry(
             layout = layout,
             windowWidth = maxWidth,
             actions = actions,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
         )
     }
 }

@@ -21,7 +21,7 @@ actual fun rememberPlatformKoinModules(): List<Module> {
                 single<Context> { appContext }
                 single<NetworkMonitor> { AndroidNetworkMonitor(appContext) }
                 single<AppRestarter> { AppRestarter { appContext.restartApplication() } }
-            }
+            },
         )
     }
 }

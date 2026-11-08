@@ -17,13 +17,13 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
  */
 internal fun DeviceSettingsState.withCarSearch(
     code: String,
-    response: Response<List<CarSummary>>
+    response: Response<List<CarSummary>>,
 ): DeviceSettingsState {
     val current = editing ?: return this
     if ((current.draft as? SettingValue.Can)?.value?.code != code) return this
     return when (response) {
         is Response.Error -> copy(
-            editing = current.copy(carSearch = LCEState.Error(SettingsError.from(response.exception)))
+            editing = current.copy(carSearch = LCEState.Error(SettingsError.from(response.exception))),
         )
 
         is Response.Success -> {
@@ -31,7 +31,7 @@ internal fun DeviceSettingsState.withCarSearch(
             val draft = found.singleOrNull()?.let { SettingValue.Can(CanCode(code, it.id)) } ?: current.draft
             copy(
                 editing = current.copy(draft = draft, carSearch = LCEState.Content(found)),
-                cars = cars + found.associateBy { it.id }
+                cars = cars + found.associateBy { it.id },
             )
         }
     }
@@ -51,6 +51,6 @@ internal fun DeviceSettingsState.withCatalogCar(car: CarSummary): DeviceSettings
     return copy(
         vehiclePicker = false,
         editing = current.copy(draft = SettingValue.Can(CanCode(car.canCode, car.id)), carSearch = LCEState.None),
-        cars = cars + (car.id to car)
+        cars = cars + (car.id to car),
     )
 }

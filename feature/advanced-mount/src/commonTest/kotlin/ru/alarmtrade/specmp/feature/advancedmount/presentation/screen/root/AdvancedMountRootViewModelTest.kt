@@ -60,7 +60,7 @@ class AdvancedMountRootViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS, DeviceFeature.CLONE),
-        can = null
+        can = null,
     )
 
     private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
@@ -97,7 +97,7 @@ class AdvancedMountRootViewModelTest {
         override suspend fun verify(
             systemId: Long,
             systemName: String,
-            firmwareVersion: String
+            firmwareVersion: String,
         ): Response<DeviceAccess> {
             verifyCount++
             return access
@@ -189,7 +189,7 @@ class AdvancedMountRootViewModelTest {
         assertTrue(content.unsupported)
         assertEquals(
             listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
-            content.sections
+            content.sections,
         )
     }
 
@@ -206,7 +206,7 @@ class AdvancedMountRootViewModelTest {
         vm.onSectionClick(MountSection.FIRMWARE_UPDATE)
         assertEquals(
             listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)),
-            effects
+            effects,
         )
 
         effects.clear()
@@ -216,7 +216,7 @@ class AdvancedMountRootViewModelTest {
         // Переход к обновлению — экран проверки прошивок (он сам запрашивает PIN и вход в загрузчик), не прямая команда.
         assertEquals(
             listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)),
-            effects
+            effects,
         )
         assertEquals(0, sessionRepository.bootModeCount)
     }

@@ -21,7 +21,7 @@ class FirmwareUpdateMachineTest {
         currentVersion = "3.57",
         modules = emptyList(),
         canExit = overBle,
-        overBle = overBle
+        overBle = overBle,
     )
 
     @Test
@@ -34,7 +34,7 @@ class FirmwareUpdateMachineTest {
     fun `unit back in main mode after apply means success`() {
         assertEquals(
             UpdatePhase.Success,
-            phaseOf(Core(stage = UpdatePhase.Apply), DeviceSessionState.Ready(device), null)
+            phaseOf(Core(stage = UpdatePhase.Apply), DeviceSessionState.Ready(device), null),
         )
     }
 
@@ -45,7 +45,7 @@ class FirmwareUpdateMachineTest {
 
         assertEquals(
             UpdatePhase.Transfer(percent = 40, reconnecting = true),
-            phaseOf(transfer, DeviceSessionState.Disconnected, null)
+            phaseOf(transfer, DeviceSessionState.Disconnected, null),
         )
     }
 
@@ -56,7 +56,7 @@ class FirmwareUpdateMachineTest {
         assertEquals(UpdatePhase.Lost(updating = true), phaseOf(prepare, DeviceSessionState.Connecting, null))
         assertEquals(
             UpdatePhase.Lost(updating = false),
-            phaseOf(Core(stage = UpdatePhase.Source), DeviceSessionState.Disconnected, null)
+            phaseOf(Core(stage = UpdatePhase.Source), DeviceSessionState.Disconnected, null),
         )
     }
 }

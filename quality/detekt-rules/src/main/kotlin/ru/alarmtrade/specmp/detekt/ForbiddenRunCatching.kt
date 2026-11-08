@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.psi.KtCallableReferenceExpression
 class ForbiddenRunCatching(config: Config) :
     Rule(
         config,
-        "runCatching перехватывает CancellationException и ломает отмену корутин — используйте safeRun."
+        "runCatching перехватывает CancellationException и ломает отмену корутин — используйте safeRun.",
     ) {
 
     override fun visitCallExpression(expression: KtCallExpression) {

@@ -12,7 +12,7 @@ val vehicleUiModule = module {
             request = request,
             repository = get(),
             recentStore = get(),
-            dispatchers = get()
+            dispatchers = get(),
         )
     }
 }

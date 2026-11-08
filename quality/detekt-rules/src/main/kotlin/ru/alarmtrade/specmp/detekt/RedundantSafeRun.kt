@@ -48,16 +48,16 @@ class RedundantSafeRun(config: Config) :
                 Finding(
                     Entity.from(expression),
                     "safeRun вокруг Response даёт Response<Response<T>>: вызов уже не бросает — уберите обёртку " +
-                        "или используйте map*/mapIfSuccess (docs/patterns.md, «Data — репозитории»)."
-                )
+                        "или используйте map*/mapIfSuccess (docs/patterns.md, «Data — репозитории»).",
+                ),
             )
 
             callee == SAFE_RESPONSE_RUN && statements.size == 1 && last.isSimpleCall() && last.isResponse() -> report(
                 Finding(
                     Entity.from(expression),
                     "safeResponseRun вокруг одного вызова, который уже возвращает Response: обёртка избыточна " +
-                        "(docs/patterns.md, «Data — репозитории»)."
-                )
+                        "(docs/patterns.md, «Data — репозитории»).",
+                ),
             )
         }
     }

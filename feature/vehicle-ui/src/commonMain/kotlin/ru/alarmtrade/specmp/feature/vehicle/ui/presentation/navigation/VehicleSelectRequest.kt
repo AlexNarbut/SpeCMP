@@ -22,5 +22,5 @@ data class VehicleSelectRequest(
     val catalog: VehicleCatalog,
     val device: VehicleDeviceFilter?,
     val firmwareCanCode: String? = null,
-    val warnOnCanMismatch: Boolean = false
+    val warnOnCanMismatch: Boolean = false,
 )

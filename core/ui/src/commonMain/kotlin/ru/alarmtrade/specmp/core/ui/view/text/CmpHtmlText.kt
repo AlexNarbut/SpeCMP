@@ -27,7 +27,7 @@ fun CmpHtmlText(
     html: String,
     modifier: Modifier = Modifier,
     maxLines: Int = Int.MAX_VALUE,
-    color: Color = LocalContentColor.current
+    color: Color = LocalContentColor.current,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
     val text = remember(html, linkColor) { parseSimpleHtml(html, linkColor) }
@@ -37,7 +37,7 @@ fun CmpHtmlText(
         style = MaterialTheme.typography.bodyLarge,
         color = color,
         maxLines = maxLines,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -54,7 +54,7 @@ private val entities = mapOf(
     "&laquo;" to "«",
     "&raquo;" to "»",
     "&mdash;" to "—",
-    "&ndash;" to "–"
+    "&ndash;" to "–",
 )
 
 /**
@@ -81,7 +81,7 @@ private class SimpleHtmlWriter(private val builder: AnnotatedString.Builder, pri
             tag(
                 name = match.groupValues[TAG_GROUP].lowercase(),
                 closing = match.groupValues[CLOSING_GROUP] == "/",
-                attributes = match.groupValues[ATTRIBUTES_GROUP]
+                attributes = match.groupValues[ATTRIBUTES_GROUP],
             )
         }
         text(html.substring(cursor))

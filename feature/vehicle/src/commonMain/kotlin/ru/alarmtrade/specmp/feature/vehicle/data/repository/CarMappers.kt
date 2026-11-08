@@ -39,7 +39,7 @@ internal fun CarInfo.toSummary() = CarSummary(
     name = carName,
     years = productionYears,
     canCode = canCode,
-    imageUrl = carImageUrl?.ifBlank { null }
+    imageUrl = carImageUrl?.ifBlank { null },
 )
 
 internal fun CarInfo.toCard() = CarCard(
@@ -59,7 +59,7 @@ internal fun CarInfo.toCard() = CarCard(
             title = guide.title,
             type = guide.type,
             description = guide.description?.ifBlank { null },
-            photos = guide.images.sortedBy { it.order }.map { MountPhoto(it.name, it.url) }
+            photos = guide.images.sortedBy { it.order }.map { MountPhoto(it.name, it.url) },
         )
     },
     schemes = mountingSchemes.sortedBy {
@@ -69,7 +69,7 @@ internal fun CarInfo.toCard() = CarCard(
         it.order
     }.map { CarDocument(it.name, it.description?.ifBlank { null }, it.url) },
     userManuals = userManuals.map { UserManualRef(it.id, it.title, it.description.ifBlank { null }) },
-    hasUserManuals = userManualsExist || userManuals.isNotEmpty()
+    hasUserManuals = userManualsExist || userManuals.isNotEmpty(),
 )
 
 private fun capability(isSupported: Boolean, description: String?): CarCapability {
@@ -82,7 +82,7 @@ private fun SdkCarFeature.toDomain() = CarFeature(
     description = description?.ifBlank { null },
     group = group.toDomain(),
     reads = statuses.map { it.toDomain() },
-    controls = commands.map { it.toDomain() }
+    controls = commands.map { it.toDomain() },
 )
 
 internal fun SdkCarFeatureGroup.toDomain(): CarFeatureGroup = when (this) {

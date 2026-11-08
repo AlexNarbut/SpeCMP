@@ -23,7 +23,7 @@ data class MountTask(
     val status: MountTaskStatus,
     val active: Boolean,
     val auto: AutoTaskKind?,
-    val options: List<String>
+    val options: List<String>,
 )
 
 enum class MountTaskStatus { PENDING, PASSED, FAILED, SKIPPED }
@@ -39,7 +39,8 @@ enum class AutoTaskKind {
     TRUNK,
     IGNITION,
     BRAKE,
-    HANDBRAKE;
+    HANDBRAKE,
+    ;
 
     companion object {
         /** По id автоматического вопроса SDK (`AutomaticChecksFactory`); неизвестный — `null`. */

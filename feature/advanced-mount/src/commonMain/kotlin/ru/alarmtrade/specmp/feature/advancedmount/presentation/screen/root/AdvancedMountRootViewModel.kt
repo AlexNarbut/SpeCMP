@@ -49,7 +49,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel
 class AdvancedMountRootViewModel(
     deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(AdvancedMountRootState())
@@ -86,7 +86,7 @@ class AdvancedMountRootViewModel(
         unreadCount,
         remoteAvailable,
         transport,
-        productInfo
+        productInfo,
     ) { state, unread, remote, transport, productInfo ->
         state.copy(unreadCount = unread, remoteAvailable = remote, transport = transport, productInfo = productInfo)
     }
@@ -134,11 +134,11 @@ class AdvancedMountRootViewModel(
                 LCEState.Content(
                     MountAccess.Ready(
                         sections = device.features.toSections(
-                            bluetooth = deviceSession.transport.value == ConnectionTransport.BLE
+                            bluetooth = deviceSession.transport.value == ConnectionTransport.BLE,
                         ),
                         unsupported = device.features == null,
-                        modelNotInDatabase = device.features == null && !device.modelInDatabase
-                    )
+                        modelNotInDatabase = device.features == null && !device.modelInDatabase,
+                    ),
                 )
             } else {
                 LCEState.Content(MountAccess.Denied(access.value.message))

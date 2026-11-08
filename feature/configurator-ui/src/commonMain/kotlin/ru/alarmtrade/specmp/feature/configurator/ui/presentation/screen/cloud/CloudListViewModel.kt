@@ -32,7 +32,7 @@ internal class CloudListViewModel(
     private val carId: Int,
     private val deviceName: String,
     private val cloud: CloudConfigurationsRepository,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(CloudListState(modelFilter = deviceName.ifEmpty { null }))

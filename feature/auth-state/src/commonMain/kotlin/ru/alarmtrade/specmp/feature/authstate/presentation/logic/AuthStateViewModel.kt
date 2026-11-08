@@ -42,7 +42,7 @@ class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispat
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
-            initialValue = AuthStateScreenState()
+            initialValue = AuthStateScreenState(),
         )
 
     fun retry() {

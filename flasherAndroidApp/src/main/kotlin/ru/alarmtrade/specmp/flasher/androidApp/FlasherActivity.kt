@@ -63,7 +63,7 @@ class FlasherActivity : FragmentActivity() {
                 FlasherApp(
                     appVersionName = versionName,
                     appVersionCode = versionCode,
-                    onThemeChange = { ThemeChanged(it) }
+                    onThemeChange = { ThemeChanged(it) },
                 )
             }
         }

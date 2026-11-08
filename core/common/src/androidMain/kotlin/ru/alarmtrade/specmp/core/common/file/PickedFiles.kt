@@ -18,7 +18,7 @@ fun ContentResolver.queryNameAndSize(uri: Uri): DocumentMeta {
         val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
         DocumentMeta(
             name = nameIndex.takeIf { index -> index != -1 }?.let(it::getString),
-            sizeBytes = sizeIndex.takeIf { index -> index != -1 && !it.isNull(index) }?.let(it::getLong)
+            sizeBytes = sizeIndex.takeIf { index -> index != -1 && !it.isNull(index) }?.let(it::getLong),
         )
     }
 }

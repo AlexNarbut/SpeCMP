@@ -27,7 +27,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
             it.copy(
                 login = value,
                 authState = it.authState.dismissError(),
-                activationResendState = LCEState.None
+                activationResendState = LCEState.None,
             )
         }
     }
@@ -37,7 +37,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
             it.copy(
                 password = value,
                 authState = it.authState.dismissError(),
-                activationResendState = LCEState.None
+                activationResendState = LCEState.None,
             )
         }
     }
@@ -64,7 +64,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
             _state.update {
                 it.copy(
                     authState = LCEState.Loading,
-                    activationResendState = LCEState.None
+                    activationResendState = LCEState.None,
                 )
             }
 
@@ -73,7 +73,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
 
                 is Response.Error -> _state.update {
                     it.copy(
-                        authState = LCEState.Error(AuthFormError.from(response.exception))
+                        authState = LCEState.Error(AuthFormError.from(response.exception)),
                     )
                 }
             }
@@ -100,7 +100,7 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         _state.update {
             it.copy(
                 authState = LCEState.None,
-                activationResendState = LCEState.None
+                activationResendState = LCEState.None,
             )
         }
     }
@@ -119,6 +119,6 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
 
     private fun LoginScreenState.toCredentials(): LoginCredentials = LoginCredentials(
         login = login,
-        password = password
+        password = password,
     )
 }

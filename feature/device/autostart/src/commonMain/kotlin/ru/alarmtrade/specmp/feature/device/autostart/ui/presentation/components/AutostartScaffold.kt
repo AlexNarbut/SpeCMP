@@ -132,7 +132,7 @@ internal fun AutostartScaffold(
     modifier: Modifier = Modifier,
     side: (@Composable ColumnScope.() -> Unit)? = null,
     footer: (@Composable ColumnScope.() -> Unit)? = null,
-    chrome: AutostartStepChrome? = null
+    chrome: AutostartStepChrome? = null,
 ) {
     val colors = cmpThemeColors()
     CmpScaffold(
@@ -149,7 +149,7 @@ internal fun AutostartScaffold(
                             val a11y = stringResource(Strings.string.autostart_common_a11y_locked)
                             CmpBox(
                                 modifier = Modifier.size(48.dp).semantics { contentDescription = a11y },
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 CmpIcon(icon = CmpIcons.Lock, contentDescription = null, tint = colors.onSurfaceVariant)
                             }
@@ -157,13 +157,13 @@ internal fun AutostartScaffold(
                             CmpIconButton(
                                 onClick = onBack,
                                 icon = CmpIcons.ArrowBack,
-                                contentDescription = stringResource(Strings.string.autostart_common_a11y_back)
+                                contentDescription = stringResource(Strings.string.autostart_common_a11y_back),
                             )
                         }
-                    }
+                    },
                 )
             }
-        }
+        },
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = autostartLayoutOf(maxWidth)
@@ -173,7 +173,7 @@ internal fun AutostartScaffold(
                 StatusStrip(layout = layout, content = status)
                 CmpColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Body(layout = layout, main = main, side = side, footer = footer.takeUnless { compact })
                 }
@@ -184,7 +184,7 @@ internal fun AutostartScaffold(
                         CmpColumn(
                             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
-                            content = footer
+                            content = footer,
                         )
                     }
                 }
@@ -198,21 +198,21 @@ private fun Body(
     layout: AutostartLayout,
     main: @Composable ColumnScope.(AutostartLayout) -> Unit,
     side: (@Composable ColumnScope.() -> Unit)?,
-    footer: (@Composable ColumnScope.() -> Unit)?
+    footer: (@Composable ColumnScope.() -> Unit)?,
 ) {
     val gap = if (layout == AutostartLayout.Compact) 16.dp else 20.dp
     val column: @Composable (Modifier) -> Unit = { columnModifier ->
         CmpColumn(
             modifier = columnModifier,
             verticalArrangement = Arrangement.spacedBy(gap),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             main(layout)
             if (footer != null) {
                 CmpColumn(
                     modifier = Modifier.widthIn(max = FooterMaxWidth).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    content = footer
+                    content = footer,
                 )
             }
             if (side != null && layout != AutostartLayout.Expanded) side()
@@ -220,23 +220,23 @@ private fun Body(
     }
     when (layout) {
         AutostartLayout.Compact -> column(
-            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
         )
 
         AutostartLayout.Medium -> column(Modifier.widthIn(max = MediumMaxWidth).fillMaxWidth().padding(24.dp))
 
         AutostartLayout.Expanded -> CmpRow(
             modifier = Modifier.widthIn(
-                max = ExpandedMaxWidth
+                max = ExpandedMaxWidth,
             ).fillMaxWidth().padding(horizontal = 32.dp, vertical = 28.dp),
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
         ) {
             column(Modifier.weight(1f))
             if (side != null) {
                 CmpColumn(
                     modifier = Modifier.width(SideWidth),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    content = side
+                    content = side,
                 )
             }
         }
@@ -254,12 +254,12 @@ private fun StatusStrip(layout: AutostartLayout, content: (@Composable () -> Uni
         // К прозрачному тому же цвету, а не к Color.Transparent (прозрачный чёрный): иначе полоса темнеет, пока гаснет.
         if (shown) colors.surfaceContainerLow else colors.surfaceContainerLow.copy(alpha = 0f),
         tween(STATUS_FADE_MILLIS, easing = EaseInOut),
-        label = "statusBackground"
+        label = "statusBackground",
     )
     val divider by animateColorAsState(
         if (shown) colors.outlineVariant else colors.outlineVariant.copy(alpha = 0f),
         tween(STATUS_FADE_MILLIS, easing = EaseInOut),
-        label = "statusDivider"
+        label = "statusDivider",
     )
     // Пока полоса гаснет, в ней остаётся последнее содержимое (макет: `lastStatus`), а не пустота.
     var last by remember { mutableStateOf(content) }
@@ -270,7 +270,7 @@ private fun StatusStrip(layout: AutostartLayout, content: (@Composable () -> Uni
                 .fillMaxWidth()
                 .height(if (layout == AutostartLayout.Compact) 63.dp else 67.dp)
                 .padding(horizontal = if (layout == AutostartLayout.Compact) 16.dp else 32.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpBox(modifier = Modifier.widthIn(max = 976.dp).fillMaxWidth().alpha(alpha)) { last?.invoke() }
         }
@@ -300,13 +300,13 @@ internal fun StatusRow(text: String, key: Any, modifier: Modifier = Modifier, st
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             CmpText(
                 text = elapsed,
                 color = colors.onSurfaceVariant,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.semantics { contentDescription = a11y }
+                modifier = Modifier.semantics { contentDescription = a11y },
             )
         }
     }
@@ -322,7 +322,7 @@ internal fun InfoBanner(
     tone: BannerTone,
     modifier: Modifier = Modifier,
     title: String? = null,
-    text: String? = null
+    text: String? = null,
 ) {
     val colors = cmpThemeColors()
     val (bg, fg) = when (tone) {
@@ -335,7 +335,7 @@ internal fun InfoBanner(
             .fillMaxWidth()
             .background(bg, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -354,24 +354,24 @@ internal fun HowItWorks(items: List<Pair<CmpIcons, String>>, modifier: Modifier 
             .fillMaxWidth()
             .background(colors.surfaceContainerLow, RoundedCornerShape(20.dp))
             .border(1.dp, colors.outlineVariant, RoundedCornerShape(20.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         items.forEachIndexed { index, (icon, text) ->
             if (index > 0) CmpBox(Modifier.fillMaxWidth().height(1.dp).background(colors.outlineVariant))
             CmpRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpBox(
                     modifier = Modifier.size(40.dp).background(colors.secondaryContainer, RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CmpIcon(
                         icon = icon,
                         contentDescription = null,
                         tint = colors.onSecondaryContainer,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 CmpText(text = text, style = CmpTextStyle.Body, modifier = Modifier.weight(1f))
@@ -389,7 +389,7 @@ internal fun IllustrationFrame(
     illustration: AutostartIllustration,
     layout: AutostartLayout,
     modifier: Modifier = Modifier,
-    mode: IllustrationMode = IllustrationMode.Idle
+    mode: IllustrationMode = IllustrationMode.Idle,
 ) {
     val colors = cmpThemeColors()
     val shape = RoundedCornerShape(32.dp)
@@ -406,17 +406,17 @@ internal fun IllustrationFrame(
                 } else {
                     PULSE_WAIT_MILLIS
                 },
-                easing = EaseOut
+                easing = EaseOut,
             ),
-            RepeatMode.Restart
+            RepeatMode.Restart,
         ),
-        label = "pulse"
+        label = "pulse",
     )
     val breath by transition.animateFloat(
         initialValue = 1f,
         targetValue = BREATH_MIN_ALPHA,
         animationSpec = infiniteRepeatable(tween(BREATH_HALF_MILLIS, easing = EaseInOut), RepeatMode.Reverse),
-        label = "breath"
+        label = "breath",
     )
     val request = mode == IllustrationMode.Request
     val animated = request || mode == IllustrationMode.Wait
@@ -428,7 +428,7 @@ internal fun IllustrationFrame(
                     .fillMaxSize()
                     .scale(PULSE_SCALE_FROM + PULSE_SCALE_GROW * pulse)
                     .alpha(PULSE_ALPHA * (1f - pulse))
-                    .border(BorderStroke(3.dp, colors.primary), shape)
+                    .border(BorderStroke(3.dp, colors.primary), shape),
             )
         }
         AutostartIllustrationLayers(
@@ -444,7 +444,7 @@ internal fun IllustrationFrame(
                 .alpha(if (mode == IllustrationMode.Wait) breath else 1f)
                 .background(if (request) colors.primaryContainer else colors.surfaceContainerLow, shape)
                 .border(if (request) 3.dp else 1.dp, if (request) colors.primary else colors.outlineVariant, shape)
-                .padding(6.dp)
+                .padding(6.dp),
         )
     }
 }
@@ -456,7 +456,7 @@ internal fun Headline(title: String, modifier: Modifier = Modifier, subtitle: St
     CmpColumn(
         modifier = modifier.widthIn(max = 560.dp).fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpText(text = title, fontSize = 24.sp, fontWeight = FontWeight.Normal, textAlign = TextAlign.Center)
         if (subtitle != null) {
@@ -464,7 +464,7 @@ internal fun Headline(title: String, modifier: Modifier = Modifier, subtitle: St
                 text = subtitle,
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -483,16 +483,16 @@ internal fun ExitDialog(onStay: () -> Unit, onExit: () -> Unit) {
             CmpTextButton(
                 text = stringResource(Strings.string.autostart_exit_btn_yes),
                 onClick = onExit,
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(48.dp),
             )
         },
         confirmButton = {
             CmpButton(
                 text = stringResource(Strings.string.autostart_exit_btn_no),
                 onClick = onStay,
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(48.dp),
             )
-        }
+        },
     )
 }
 
@@ -519,12 +519,12 @@ internal fun <K> StepAppear(stepKey: K, modifier: Modifier = Modifier, content: 
                 ExitTransition.None using SizeTransform(clip = false)
         },
         contentAlignment = Alignment.TopCenter,
-        label = "stepAppear"
+        label = "stepAppear",
     ) { key ->
         CmpColumn(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) { content(key) }
     }
 }

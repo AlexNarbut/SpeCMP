@@ -93,12 +93,12 @@ internal fun WizardScaffold(
     centered: Boolean = false,
     dock: (@Composable () -> Unit)? = null,
     overlay: @Composable () -> Unit = {},
-    body: @Composable ColumnScope.() -> Unit
+    body: @Composable ColumnScope.() -> Unit,
 ) {
     CmpScaffold(
         modifier = modifier,
         topBar = { WizardTopBar(title, subtitle, nav, onBack) },
-        bottomBar = { dock?.invoke() }
+        bottomBar = { dock?.invoke() },
     ) { padding ->
         CmpBox(modifier = Modifier.fillMaxSize().padding(padding)) {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -110,7 +110,7 @@ internal fun WizardScaffold(
                         .heightIn(min = if (centered) minHeight else 0.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = if (centered) Arrangement.Center else Arrangement.Top,
-                    content = body
+                    content = body,
                 )
             }
             overlay()
@@ -124,7 +124,7 @@ internal fun WizardTopBar(title: String, subtitle: String?, nav: WizardNav, onBa
     CmpTopAppBar(
         title = { CmpText(text = title, maxLines = 1) },
         subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption, maxLines = 1) } },
-        navigationIcon = { NavIcon(nav, onBack) }
+        navigationIcon = { NavIcon(nav, onBack) },
     )
 }
 
@@ -135,14 +135,14 @@ private fun NavIcon(nav: WizardNav, onBack: () -> Unit) {
         WizardNav.BACK -> CmpIconButton(
             onClick = onBack,
             icon = CmpIcons.ArrowBack,
-            contentDescription = stringResource(Strings.string.fastmount_common_a11y_back)
+            contentDescription = stringResource(Strings.string.fastmount_common_a11y_back),
         )
 
         WizardNav.LOCK -> {
             val a11y = stringResource(Strings.string.fastmount_common_a11y_locked)
             CmpBox(
                 modifier = Modifier.size(48.dp).semantics { contentDescription = a11y },
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(icon = CmpIcons.Lock, contentDescription = null, tint = colors.onSurfaceVariant)
             }
@@ -157,7 +157,7 @@ private fun NavIcon(nav: WizardNav, onBack: () -> Unit) {
 internal fun ContentColumn(
     modifier: Modifier = Modifier,
     maxWidth: Dp = 760.dp,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     val wide = LocalWizardWide.current
     CmpColumn(
@@ -168,10 +168,10 @@ internal fun ContentColumn(
                 start = if (wide) 24.dp else 16.dp,
                 end = if (wide) 24.dp else 16.dp,
                 top = if (wide) 20.dp else 16.dp,
-                bottom = if (wide) 28.dp else 24.dp
+                bottom = if (wide) 28.dp else 24.dp,
             ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
-        content = content
+        content = content,
     )
 }
 
@@ -190,7 +190,7 @@ internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Mo
                 CmpRow(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     CmpBox(modifier = Modifier.weight(1f)) {
                         if (note != null) {
@@ -202,7 +202,7 @@ internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Mo
             } else {
                 CmpColumn(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     buttons.forEach { it() }
                     if (note != null) {
@@ -211,7 +211,7 @@ internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Mo
                             style = CmpTextStyle.Body,
                             color = colors.onSurfaceVariant,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }
@@ -233,12 +233,12 @@ internal fun DockFrame(modifier: Modifier = Modifier, content: @Composable Colum
             CmpBox(Modifier.fillMaxWidth().height(1.dp).background(colors.outlineVariant))
             CmpBox(
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                contentAlignment = Alignment.CenterEnd
+                contentAlignment = Alignment.CenterEnd,
             ) {
                 CmpColumn(
                     modifier = if (wide) Modifier.width(DockColumnWidth) else Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    content = content
+                    content = content,
                 )
             }
         }
@@ -257,7 +257,7 @@ internal fun MainButton(
     enabled: Boolean = true,
     busy: Boolean = false,
     busyText: String? = null,
-    outlined: Boolean = false
+    outlined: Boolean = false,
 ) {
     val content: @Composable () -> Unit = {
         CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -289,7 +289,7 @@ internal fun Banner(
     title: String? = null,
     text: String? = null,
     action: String? = null,
-    onAction: () -> Unit = {}
+    onAction: () -> Unit = {},
 ) {
     val colors = cmpThemeColors()
     val (bg, fg, defaultIcon) = when (tone) {
@@ -303,7 +303,7 @@ internal fun Banner(
             .fillMaxWidth()
             .background(bg, RoundedCornerShape(18.dp))
             .padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = icon ?: defaultIcon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -312,7 +312,7 @@ internal fun Banner(
             if (action != null) {
                 CmpOutlinedButton(
                     onClick = onAction,
-                    modifier = Modifier.padding(top = 6.dp).heightIn(min = 48.dp)
+                    modifier = Modifier.padding(top = 6.dp).heightIn(min = 48.dp),
                 ) {
                     CmpText(text = action, color = fg, fontWeight = FontWeight.SemiBold)
                 }
@@ -328,7 +328,7 @@ internal fun InfoCard(
     title: String? = null,
     icon: CmpIcons? = null,
     aside: (@Composable () -> Unit)? = null,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = cmpThemeColors()
     val shape = RoundedCornerShape(20.dp)
@@ -336,20 +336,20 @@ internal fun InfoCard(
         modifier = modifier
             .fillMaxWidth()
             .background(colors.surfaceContainerLow, shape)
-            .border(BorderStroke(1.dp, colors.outlineVariant), shape)
+            .border(BorderStroke(1.dp, colors.outlineVariant), shape),
     ) {
         if (title != null) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (icon != null) {
                     CmpIcon(
                         icon = icon,
                         contentDescription = null,
                         tint = colors.primary,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
                 }
                 CmpText(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
@@ -367,7 +367,7 @@ internal fun KeyValue(label: String, value: String, modifier: Modifier = Modifie
     CmpRow(
         modifier = modifier.fillMaxWidth().heightIn(min = 44.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpText(text = label, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
         CmpText(
@@ -376,7 +376,7 @@ internal fun KeyValue(label: String, value: String, modifier: Modifier = Modifie
             fontWeight = FontWeight.SemiBold,
             color = tone ?: colors.onSurface,
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -398,7 +398,7 @@ internal fun Tag(text: String, modifier: Modifier = Modifier, icon: CmpIcons? = 
             .background(bg, RoundedCornerShape(10.dp))
             .padding(horizontal = 12.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (icon != null) CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(18.dp))
         CmpText(text = text, color = fg, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
@@ -411,13 +411,13 @@ internal fun RatingLabel(rating: Int, modifier: Modifier = Modifier) {
     CmpRow(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         CmpIcon(
             icon = CmpIcons.Star,
             contentDescription = null,
             tint = cmpDomainColors().rating,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(20.dp),
         )
         CmpText(text = rating.toString(), fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
@@ -430,7 +430,7 @@ internal fun Hero(
     modifier: Modifier = Modifier,
     text: String? = null,
     art: @Composable () -> Unit = {},
-    content: @Composable ColumnScope.() -> Unit = {}
+    content: @Composable ColumnScope.() -> Unit = {},
 ) {
     val colors = cmpThemeColors()
     CmpColumn(
@@ -439,7 +439,7 @@ internal fun Hero(
             .fillMaxWidth()
             .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         art()
         CmpText(text = title, fontSize = 24.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
@@ -448,7 +448,7 @@ internal fun Hero(
                 text = text,
                 style = CmpTextStyle.BodyLarge,
                 color = colors.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
         content()
@@ -481,13 +481,13 @@ internal fun BusyArt(icon: CmpIcons, modifier: Modifier = Modifier, spin: Boolea
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(RING_MILLIS), RepeatMode.Restart),
-        label = "ring"
+        label = "ring",
     )
     val angle by transition.animateFloat(
         initialValue = 0f,
         targetValue = if (spin) FULL_TURN else 0f,
         animationSpec = infiniteRepeatable(tween(SPIN_MILLIS, easing = LinearEasing)),
-        label = "spin"
+        label = "spin",
     )
     CmpBox(modifier = modifier.size(size + 12.dp), contentAlignment = Alignment.Center) {
         CmpBox(
@@ -495,7 +495,7 @@ internal fun BusyArt(icon: CmpIcons, modifier: Modifier = Modifier, spin: Boolea
                 .size(size)
                 .scale(1f + RING_GROW * ring)
                 .alpha(RING_ALPHA * (1f - ring))
-                .background(colors.primaryContainer, CircleShape)
+                .background(colors.primaryContainer, CircleShape),
         )
         CmpBox(modifier = Modifier.size(size).background(colors.primaryContainer, CircleShape))
         CmpCircularProgressIndicator(modifier = Modifier.size(size + 12.dp), strokeWidth = 4.dp)
@@ -503,7 +503,7 @@ internal fun BusyArt(icon: CmpIcons, modifier: Modifier = Modifier, spin: Boolea
             icon = icon,
             contentDescription = null,
             tint = colors.onPrimaryContainer,
-            modifier = Modifier.size(size * BUSY_ICON_SHARE).rotate(angle)
+            modifier = Modifier.size(size * BUSY_ICON_SHARE).rotate(angle),
         )
     }
 }

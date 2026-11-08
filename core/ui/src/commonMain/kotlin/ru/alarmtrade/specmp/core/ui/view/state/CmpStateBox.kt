@@ -41,7 +41,7 @@ fun CmpStateBox(
     text: String? = null,
     tone: CmpStateTone = CmpStateTone.Neutral,
     compact: Boolean = false,
-    actions: @Composable ColumnScope.() -> Unit = {}
+    actions: @Composable ColumnScope.() -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     val error = tone == CmpStateTone.Error
@@ -52,19 +52,19 @@ fun CmpStateBox(
                 .padding(horizontal = if (compact) 16.dp else 20.dp, vertical = if (compact) 24.dp else 40.dp)
                 .then(if (error) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
                 modifier = Modifier
                     .size(if (compact) 64.dp else 80.dp)
                     .background(if (error) colors.errorContainer else colors.surfaceContainerHigh, CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     icon = icon,
                     contentDescription = null,
                     tint = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
-                    modifier = Modifier.size(if (compact) 32.dp else 40.dp)
+                    modifier = Modifier.size(if (compact) 32.dp else 40.dp),
                 )
             }
             Text(text = title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
@@ -73,7 +73,7 @@ fun CmpStateBox(
                     text = it,
                     style = MaterialTheme.typography.bodyLarge,
                     color = colors.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
             actions()

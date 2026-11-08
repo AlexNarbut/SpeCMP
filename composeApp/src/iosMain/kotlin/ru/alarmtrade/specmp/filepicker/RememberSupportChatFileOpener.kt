@@ -51,7 +51,7 @@ private class PreviewDelegate(private val presenter: UIViewController) :
     NSObject(),
     UIDocumentInteractionControllerDelegateProtocol {
     override fun documentInteractionControllerViewControllerForPreview(
-        controller: UIDocumentInteractionController
+        controller: UIDocumentInteractionController,
     ): UIViewController = presenter
 }
 

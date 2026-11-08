@@ -50,7 +50,7 @@ fun CmpStepButton(
     onStep: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    size: Dp = 64.dp
+    size: Dp = 64.dp,
 ) {
     val currentOnStep by rememberUpdatedState(onStep)
     var pressed by remember { mutableStateOf(false) }
@@ -59,7 +59,7 @@ fun CmpStepButton(
         !enabled -> colors.onSurface.copy(alpha = PRESSED_OVERLAY_ALPHA)
 
         pressed -> colors.onSecondaryContainer.copy(alpha = PRESSED_OVERLAY_ALPHA).compositeOver(
-            colors.secondaryContainer
+            colors.secondaryContainer,
         )
 
         else -> colors.secondaryContainer
@@ -103,7 +103,7 @@ fun CmpStepButton(
                         pressed = false
                     }
                 }
-            }
+            },
     ) {
         Box(contentAlignment = Alignment.Center) {
             CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(size / 2))

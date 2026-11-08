@@ -42,12 +42,12 @@ internal fun VehicleSelectContent(
     windowWidth: Dp,
     actions: VehicleSelectActions,
     snackbarHostState: CmpSnackbarHostState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpScaffold(
         modifier = modifier,
         topBar = { TopBar(state = state, wide = layout.isWide, actions = actions) },
-        snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
@@ -65,7 +65,7 @@ internal fun VehicleSelectContent(
             point = point,
             photo = state.cardUi.photo,
             onPhotoChange = actions.card.onPhotoChange,
-            onClose = actions.card.onViewerClose
+            onClose = actions.card.onViewerClose,
         )
     }
 }
@@ -91,7 +91,7 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
                 state = state,
                 wide = false,
                 actions = actions,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
             )
         }
         CrumbsBar(state = state, actions = actions, typeChip = step != CompactStep.CARD)
@@ -105,7 +105,7 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
                     pick = shown.mode.pick,
                     actions = actions.card,
                     onRetry = actions.onRetry,
-                    onPick = actions.onPick
+                    onPick = actions.onPick,
                 )
 
                 else -> CatalogList(
@@ -115,7 +115,7 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
                         brandsList
                     } else {
                         rememberLazyListState()
-                    }
+                    },
                 ) {
                     when (shownStep) {
                         CompactStep.BRANDS -> brandItems(shown, actions, showRecent = true, compact = false)

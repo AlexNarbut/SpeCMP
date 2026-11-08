@@ -69,19 +69,19 @@ internal fun DeviceState.toVehicleState(): VehicleState? {
             Zone.SHOCK to car.shockSensor.toZone(),
             Zone.EXTRA_SENSOR to car.additionalSensor.toZone(),
             Zone.MOTION to car.movementSensor.toZone(),
-            Zone.TILT to car.tiltSensor.toZone()
+            Zone.TILT to car.tiltSensor.toZone(),
         ),
         engine = EngineInfo(
             status = car.engineState.engineStatus.toEngine(),
             temperature = car.engineState.temperature,
             rpm = car.engineState.rpm.takeIf { it > 0 && car.engineState.engineStatus.isStarted() },
-            autostart = car.automaticStart.toAutostart()
+            autostart = car.automaticStart.toAutostart(),
         ),
         power = PowerInfo(
             voltage = car.voltage,
             cabinTemp = car.cabinTemp,
             outsideTemp = car.outsideTemp,
-            fuelPercent = car.fuel.fuelInPercents.takeIf { it > 0 }
+            fuelPercent = car.fuel.fuelInPercents.takeIf { it > 0 },
         ),
         link = alarmDevice.toLink(),
         event = lastEvent.event.eventType.toEventKind(),
@@ -90,7 +90,7 @@ internal fun DeviceState.toVehicleState(): VehicleState? {
         heater = car.heaterState.toHeater(),
         camera = alarmDevice.cameraState.toCamera(),
         siren = alarmDevice.sirenSignalStatus.toSiren(),
-        handsFree = alarmDevice.handsFreeStatus.toHandsFree()
+        handsFree = alarmDevice.handsFreeStatus.toHandsFree(),
     )
 }
 
@@ -134,7 +134,7 @@ private fun AlarmDeviceState.toLink(): LinkInfo {
         gpsFix = gpsFix,
         speedKmh = gps.speed.toInt().takeIf { gpsFix },
         sms = gsm.smsEnabled,
-        calls = gsm.callsEnabled
+        calls = gsm.callsEnabled,
     )
 }
 
@@ -153,7 +153,7 @@ internal fun CanState.toCan(): CanInfo? {
         consumption = fuelConsumption.takeIf { it > 0 },
         washerLow = lowWasherLiquid,
         windowsOpen = windows,
-        tires = tires
+        tires = tires,
     )
     val empty = can.mileageKm == null && can.rangeKm == null && can.consumption == null && !can.washerLow &&
         windows.isEmpty() && tires == null
@@ -175,7 +175,7 @@ internal fun EvState.toEv(): EvInfo? {
         socPercent = batteryStateOfCharge.toInt(),
         sohPercent = batteryStateOfHealth.toInt(),
         batteryTemp = batteryTemperature,
-        rangeKm = distanceToEmpty.takeIf { it > 0 }
+        rangeKm = distanceToEmpty.takeIf { it > 0 },
     )
 }
 
@@ -188,7 +188,7 @@ internal fun HeaterState.toHeater(): HeaterInfo? {
         temperature = temp,
         voltage = voltage,
         powerPercent = power,
-        hasErrors = errors.isNotEmpty()
+        hasErrors = errors.isNotEmpty(),
     )
 }
 

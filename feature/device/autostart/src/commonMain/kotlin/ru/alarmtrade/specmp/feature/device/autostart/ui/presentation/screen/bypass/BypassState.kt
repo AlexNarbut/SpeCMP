@@ -37,5 +37,5 @@ data class BypassState(
     val canCode: String? = null,
     val cloneAvailable: Boolean = false,
     val phase: BypassPhase = BypassPhase.Start(),
-    val dialog: BypassDialog? = null
+    val dialog: BypassDialog? = null,
 )

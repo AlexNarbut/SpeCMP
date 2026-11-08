@@ -18,7 +18,7 @@ class DeviceUiItemTest {
         productId = 0x5710,
         systemId = systemId,
         firmwareVersion = firmwareVersion,
-        isBootMode = false
+        isBootMode = false,
     )
 
     @Test
@@ -58,6 +58,6 @@ class DeviceUiItemTest {
         mode = ScannedDeviceMode.BASE,
         rssi = rssi,
         hasDeviceBond = false,
-        hasPhoneBond = false
+        hasPhoneBond = false,
     )
 }

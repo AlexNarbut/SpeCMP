@@ -64,7 +64,7 @@ fun FlasherNavigation() {
         waitingState = { StartLoading() },
         noAuthState = { LoginNavGraph() },
         authedState = { AuthedNavGraph() },
-        errorState = { onRetry -> SessionCheckErrorScreen(onRetry = onRetry) }
+        errorState = { onRetry -> SessionCheckErrorScreen(onRetry = onRetry) },
     )
 }
 
@@ -77,7 +77,7 @@ private fun AuthedNavGraph() {
         onBack = { backStack.popSafe() },
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {
             entry<ScanRoute> { _ ->
@@ -86,11 +86,11 @@ private fun AuthedNavGraph() {
                 DeviceSelectionNavGraph(
                     onSessionCreate = { backStack.replaceCurrent(DeviceRoute) },
                     onClose = null,
-                    serialEnabled = true
+                    serialEnabled = true,
                 )
             }
             entry<DeviceRoute> { _ -> DeviceEntry(onExit = { backStack.replaceCurrent(ScanRoute) }) }
-        }
+        },
     )
 }
 
@@ -114,10 +114,10 @@ private fun DeviceEntry(onExit: () -> Unit) {
                     onExit = exit,
                     onOpenSupportChat = {},
                     filePicker = filePicker,
-                    sources = FirmwareSources.FileOnly
+                    sources = FirmwareSources.FileOnly,
                 )
             }
-        }
+        },
     ) { _, exit ->
         if (serial) {
             SerialFirmwareScreen(onExit = exit, filePicker = filePicker)

@@ -24,7 +24,7 @@ internal fun ListDetailPane(
     wide: Boolean,
     detail: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    list: @Composable ColumnScope.() -> Unit
+    list: @Composable ColumnScope.() -> Unit,
 ) {
     CmpRow(modifier = modifier.fillMaxSize()) {
         val listModifier = if (wide) Modifier.weight(LIST_WEIGHT).fillMaxHeight() else Modifier.fillMaxSize()

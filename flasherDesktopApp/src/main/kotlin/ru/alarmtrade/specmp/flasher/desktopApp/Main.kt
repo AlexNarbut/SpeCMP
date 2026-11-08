@@ -14,10 +14,10 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(
             width = 900.dp,
-            height = 720.dp
+            height = 720.dp,
         ),
         title = "SpeCMP Flasher",
-        icon = painterResource("icon.png")
+        icon = painterResource("icon.png"),
     ) {
         FlasherApp(appVersionName = versionName, appVersionCode = versionCode)
     }

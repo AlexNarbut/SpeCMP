@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 class ViewModelMutableProperty(config: Config) :
     Rule(
         config,
-        "У ViewModel нет var-свойств и изменяемых коллекций: состояние — в state, перезапуск корутины — launchReplacing."
+        "У ViewModel нет var-свойств и изменяемых коллекций: состояние — в state, перезапуск корутины — launchReplacing.",
     ) {
 
     override fun visitClass(klass: KtClass) {
@@ -52,8 +52,8 @@ class ViewModelMutableProperty(config: Config) :
             Finding(
                 Entity.from(declaration),
                 "изменяемая коллекция ${declaration.name} во ViewModel: неизменяемая коллекция в state через reduce; " +
-                    MESSAGE
-            )
+                    MESSAGE,
+            ),
         )
     }
 
@@ -78,11 +78,11 @@ class ViewModelMutableProperty(config: Config) :
         const val VIEW_MODEL_SUFFIX = "ViewModel"
         val MUTABLE_TYPES = setOf(
             "MutableList", "MutableSet", "MutableMap", "MutableCollection",
-            "ArrayList", "HashMap", "HashSet", "LinkedHashMap", "LinkedHashSet"
+            "ArrayList", "HashMap", "HashSet", "LinkedHashMap", "LinkedHashSet",
         )
         val MUTABLE_FACTORIES = setOf(
             "mutableListOf", "mutableSetOf", "mutableMapOf", "arrayListOf", "hashMapOf", "hashSetOf",
-            "linkedMapOf", "linkedSetOf", "ArrayList", "HashMap", "HashSet", "LinkedHashMap", "LinkedHashSet"
+            "linkedMapOf", "linkedSetOf", "ArrayList", "HashMap", "HashSet", "LinkedHashMap", "LinkedHashSet",
         )
         const val MESSAGE =
             "служебное значение — поле state («VM bookkeeping»), отменяемая/перезапускаемая корутина — " +

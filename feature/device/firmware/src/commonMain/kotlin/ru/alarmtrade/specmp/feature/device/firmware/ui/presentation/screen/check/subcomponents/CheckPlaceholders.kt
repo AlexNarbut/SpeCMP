@@ -23,7 +23,7 @@ internal fun ModulesLoading() {
         CmpText(
             text = stringResource(Strings.string.firmware_check_loading_modules),
             color = cmpThemeColors().onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -34,6 +34,6 @@ internal fun ModulesError(error: FirmwareError, onRetry: () -> Unit) {
         icon = CmpIcons.ErrorOutline,
         title = error.text(Strings.string.firmware_check_error_title),
         message = stringResource(Strings.string.firmware_check_error_msg),
-        onRetry = onRetry
+        onRetry = onRetry,
     )
 }

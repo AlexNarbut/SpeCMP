@@ -50,5 +50,5 @@ data class AppDispatchers(
      * Main dispatcher for UI updates.
      * Maps to Dispatchers.Main.
      */
-    val main: CoroutineDispatcher = Dispatchers.Main
+    val main: CoroutineDispatcher = Dispatchers.Main,
 )

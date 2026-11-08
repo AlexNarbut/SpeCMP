@@ -28,7 +28,7 @@ class AutostartMappersTest {
     private fun bypass(
         status: BypassLearningStatus,
         error: BypassLearningError = BypassLearningError.NO_ERROR,
-        code: Int = 0
+        code: Int = 0,
     ) = BypassLearningState(status, error, code).toEvent()
 
     private fun clone(
@@ -36,7 +36,7 @@ class AutostartMappersTest {
         result: CloneStatus = CloneStatus.REQUIRED,
         error: CloneCalculatingError = CloneCalculatingError.NO_ERROR,
         tips: List<String> = emptyList(),
-        written: Boolean = false
+        written: Boolean = false,
     ) = CloneProcedureState(status, result, error, tips).toEvent(written)
 
     @Test
@@ -63,12 +63,12 @@ class AutostartMappersTest {
             BypassLearningStatus.LADA_CAN_IMMO_BYPASS,
             BypassLearningStatus.REQUEST_MED_17_5_25,
             BypassLearningStatus.REQUEST_MED_17_9_63,
-            BypassLearningStatus.GTP_AUTHORIZATION_ALGORITHM
+            BypassLearningStatus.GTP_AUTHORIZATION_ALGORITHM,
         ).forEach { status ->
             assertEquals(
                 BypassStepKind.CRITICAL,
                 assertIs<BypassEvent.Step>(bypass(status)).step.kind,
-                "status $status"
+                "status $status",
             )
         }
         val ecu = assertIs<BypassEvent.Step>(bypass(BypassLearningStatus.EXCHANGE_DATA_WITH_ECU_STARTED)).step
@@ -98,7 +98,7 @@ class AutostartMappersTest {
             BypassLearningError.MED_TABLE_SEND,
             BypassLearningError.GTP_CALCULATE_NOT_VALID,
             BypassLearningError.GTP_SENDING_DATA,
-            null
+            null,
         ).forEach { assertEquals(BypassError.GENERAL, it.toDomain(), "error $it") }
         assertEquals(BypassError.OPTION_NOT_SELECTED, BypassLearningError.BYPASS_OPTION_IS_NOT_SELECTED.toDomain())
     }
@@ -107,7 +107,7 @@ class AutostartMappersTest {
     fun cloneStagesFollowProcedure() {
         assertEquals(
             CloneEvent.Stage(CloneStage.CALCULATING, inQueue = true),
-            clone(CloneProcedureStatus.CALCULATING_NEW)
+            clone(CloneProcedureStatus.CALCULATING_NEW),
         )
         assertEquals(CloneEvent.Stage(CloneStage.CALCULATING), clone(CloneProcedureStatus.CALCULATING_WORK))
         val writing = clone(CloneProcedureStatus.CALCULATED)
@@ -129,7 +129,7 @@ class AutostartMappersTest {
         val event = clone(
             CloneProcedureStatus.CALCULATING_ERROR,
             error = CloneCalculatingError.DEVICE_DENIED,
-            tips = listOf("Проверьте CAN код", " ")
+            tips = listOf("Проверьте CAN код", " "),
         )
         val failed = assertIs<CloneResult.Failed>(assertIs<CloneEvent.Finished>(event).result)
         assertEquals(CloneFailure.DEVICE_DENIED, failed.failure)
@@ -145,7 +145,7 @@ class AutostartMappersTest {
         CloneCalculatingError.entries.forEach { clone(CloneProcedureStatus.CALCULATING_ERROR, error = it) }
         assertEquals(
             CloneResult.NotSupported,
-            assertIs<CloneEvent.Finished>(clone(CloneProcedureStatus.COMPLETED, CloneStatus.NOT_SUPPORTED)).result
+            assertIs<CloneEvent.Finished>(clone(CloneProcedureStatus.COMPLETED, CloneStatus.NOT_SUPPORTED)).result,
         )
     }
 }

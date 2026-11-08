@@ -24,7 +24,8 @@ internal fun CloneProcedureState.toEvent(written: Boolean): CloneEvent = when (s
     CloneProcedureStatus.CALCULATING_WORK -> CloneEvent.Stage(CloneStage.CALCULATING)
 
     CloneProcedureStatus.CALCULATED,
-    CloneProcedureStatus.WRITING_TO_ALARM_DEVICE -> CloneEvent.Stage(CloneStage.WRITING)
+    CloneProcedureStatus.WRITING_TO_ALARM_DEVICE,
+    -> CloneEvent.Stage(CloneStage.WRITING)
 
     CloneProcedureStatus.READING_CONFIRMATION_FROM_ALARM_DEVICE -> CloneEvent.Stage(CloneStage.VERIFYING)
 
@@ -46,7 +47,8 @@ internal val CloneEvent.isWriting: Boolean
 
 private fun CloneStatus.toResult(written: Boolean): CloneResult = when (this) {
     CloneStatus.OK,
-    CloneStatus.COMPLETED -> CloneResult.Completed(already = !written)
+    CloneStatus.COMPLETED,
+    -> CloneResult.Completed(already = !written)
 
     CloneStatus.NOT_SUPPORTED -> CloneResult.NotSupported
 
@@ -79,5 +81,6 @@ private fun CloneCalculatingError.toFailure(): CloneFailure = when (this) {
     CloneCalculatingError.DEBUG -> CloneFailure.DEBUG
 
     CloneCalculatingError.UNKNOWN_ERROR,
-    CloneCalculatingError.NO_ERROR -> CloneFailure.UNKNOWN
+    CloneCalculatingError.NO_ERROR,
+    -> CloneFailure.UNKNOWN
 }

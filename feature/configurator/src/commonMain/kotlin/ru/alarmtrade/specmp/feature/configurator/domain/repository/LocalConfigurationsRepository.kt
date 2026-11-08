@@ -21,7 +21,7 @@ interface LocalConfigurationsRepository {
         name: String,
         description: String,
         deviceName: String,
-        from: SettingsSource
+        from: SettingsSource,
     ): Response<SettingsSource.LocalConfiguration>
 
     /**
@@ -31,7 +31,7 @@ interface LocalConfigurationsRepository {
     suspend fun updateInfo(
         configuration: LocalConfiguration,
         name: String,
-        description: String
+        description: String,
     ): Response<SettingsSource.LocalConfiguration>
 
     suspend fun delete(id: Long): Response<Unit>

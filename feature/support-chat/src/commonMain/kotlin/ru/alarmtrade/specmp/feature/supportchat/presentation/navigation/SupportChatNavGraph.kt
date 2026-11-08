@@ -45,7 +45,7 @@ fun SupportChatEntry(
     filePicker: SupportChatFilePicker,
     fileSaver: SupportChatFileSaver,
     attachmentFiles: SupportChatAttachmentFiles,
-    fileOpener: SupportChatFileOpener
+    fileOpener: SupportChatFileOpener,
 ) {
     val viewModel = koinViewModel<SupportChatScreenViewModel> {
         parametersOf(fileSaver, attachmentFiles, fileOpener)
@@ -73,14 +73,14 @@ fun SupportChatEntry(
             onLoadMore = viewModel::onLoadMore,
             onMessagesVisible = viewModel::onMessagesVisible,
             onDownloadAttachment = viewModel::onDownloadAttachment,
-            onOpenAttachment = viewModel::onOpenAttachment
+            onOpenAttachment = viewModel::onOpenAttachment,
         )
     }
 
     SupportChatScreen(
         state = state,
         effect = viewModel.effect,
-        actions = actions
+        actions = actions,
     )
 }
 

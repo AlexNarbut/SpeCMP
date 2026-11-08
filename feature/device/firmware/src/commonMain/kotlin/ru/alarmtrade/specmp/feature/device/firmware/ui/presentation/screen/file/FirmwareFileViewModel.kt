@@ -50,7 +50,7 @@ class FirmwareFileViewModel(
     private val repository: FirmwareRepository,
     bootRequester: FirmwareBootRequester,
     pinCooldown: ServicePinCooldown,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
@@ -77,7 +77,7 @@ class FirmwareFileViewModel(
             it.copy(
                 deviceName = device.systemName,
                 deviceId = device.systemId,
-                firmwareVersion = device.displayFirmwareVersion
+                firmwareVersion = device.displayFirmwareVersion,
             )
         }
         if (previous.deviceId != device.systemId || previous.target !is LCEState.Content) load(device)

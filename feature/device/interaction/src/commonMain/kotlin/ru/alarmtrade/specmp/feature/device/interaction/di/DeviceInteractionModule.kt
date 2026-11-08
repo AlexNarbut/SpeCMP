@@ -24,7 +24,7 @@ val deviceInteractionModule = module {
         SpecialistDeviceConnectionRepository(
             bluetoothConnectorInteractor = { get() },
             usbConnectorInteractor = { get() },
-            serialConnectorInteractor = { get() }
+            serialConnectorInteractor = { get() },
         )
     }
     single<DeviceSessionRepository> {

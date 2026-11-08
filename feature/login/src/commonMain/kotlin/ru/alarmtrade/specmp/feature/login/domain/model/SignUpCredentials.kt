@@ -5,7 +5,7 @@ data class SignUpCredentials(
     val email: String,
     val phoneNumber: String,
     val password: String,
-    val isInstallerConfirmed: Boolean
+    val isInstallerConfirmed: Boolean,
 ) {
     val normalizedFullName: String = fullName.trim()
     val normalizedEmail: String = email.trim()

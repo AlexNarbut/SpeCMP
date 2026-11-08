@@ -21,7 +21,7 @@ enum class CloneInterruption {
     ATTEMPT_KEPT,
 
     /** Оборвалось на вычислении или позже — попытка могла списаться. */
-    CHECK_ATTEMPTS
+    CHECK_ATTEMPTS,
 }
 
 /** Фаза экрана: старт → процесс → итог. */
@@ -57,7 +57,7 @@ data class CloneState(
     val attempts: CloneAttempts = CloneAttempts.Loading,
     val phase: ClonePhase = ClonePhase.Start(),
     val dialog: CloneDialog? = null,
-    val fromBypass: Boolean = false
+    val fromBypass: Boolean = false,
 ) {
     /** Старт возможен: попытки не исчерпаны (неизвестно — можно). */
     val canStart: Boolean get() = (attempts as? CloneAttempts.Known)?.count != 0

@@ -33,7 +33,7 @@ class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOut
             val entries = read()
             val index = entries.indexOfFirst { it.clientId == entry.clientId }
             write(
-                if (index == -1) entries + entry else entries.toMutableList().apply { set(index, entry) }
+                if (index == -1) entries + entry else entries.toMutableList().apply { set(index, entry) },
             )
         }
     }
@@ -46,7 +46,7 @@ class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOut
                 write(
                     entries.toMutableList().apply {
                         set(index, get(index).copy(status = SupportChatOutboxEntry.Status.Sent))
-                    }
+                    },
                 )
             }
         }
@@ -95,7 +95,7 @@ internal data class SupportChatOutboxEntry(
     val timeMillis: Long,
     val text: String?,
     val attachment: Attachment?,
-    val status: Status
+    val status: Status,
 ) {
 
     @Serializable
@@ -106,7 +106,7 @@ internal data class SupportChatOutboxEntry(
         val kind: Kind,
         val localPath: String,
         val mimeType: String?,
-        val sizeBytes: Long?
+        val sizeBytes: Long?,
     )
 
     @Serializable
@@ -130,7 +130,8 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
 
         SupportChatMessageStatus.Sending,
         SupportChatMessageStatus.Sent,
-        SupportChatMessageStatus.Read -> return null
+        SupportChatMessageStatus.Read,
+        -> return null
     }
     val source = attachment
     val storedAttachment = if (source != null) {
@@ -144,7 +145,7 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
             },
             localPath = localPath,
             mimeType = (source as? SupportChatAttachment.Document)?.mimeType,
-            sizeBytes = (source as? SupportChatAttachment.Document)?.sizeBytes
+            sizeBytes = (source as? SupportChatAttachment.Document)?.sizeBytes,
         )
     } else {
         null
@@ -154,7 +155,7 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
         timeMillis = time.toEpochMilliseconds(),
         text = text,
         attachment = storedAttachment,
-        status = entryStatus
+        status = entryStatus,
     )
 }
 
@@ -167,7 +168,7 @@ private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage = SupportChat
             SupportChatOutboxEntry.Kind.Image -> SupportChatAttachment.Image(
                 id = stored.id,
                 name = stored.name,
-                localPath = stored.localPath
+                localPath = stored.localPath,
             )
 
             SupportChatOutboxEntry.Kind.Document -> SupportChatAttachment.Document(
@@ -175,7 +176,7 @@ private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage = SupportChat
                 name = stored.name,
                 localPath = stored.localPath,
                 mimeType = stored.mimeType,
-                sizeBytes = stored.sizeBytes
+                sizeBytes = stored.sizeBytes,
             )
         }
     },
@@ -185,8 +186,9 @@ private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage = SupportChat
     status = when (status) {
         // Доставка Sent неизвестна (эха не было) — повторяем.
         SupportChatOutboxEntry.Status.Pending,
-        SupportChatOutboxEntry.Status.Sent -> SupportChatMessageStatus.Pending
+        SupportChatOutboxEntry.Status.Sent,
+        -> SupportChatMessageStatus.Pending
 
         SupportChatOutboxEntry.Status.Failed -> SupportChatMessageStatus.Failed
-    }
+    },
 )

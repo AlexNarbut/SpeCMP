@@ -87,7 +87,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
                 add(advancedMountModule)
                 add(fastMountModule)
                 add(appSettingsModule)
-            }
+            },
         )
     }) {
         // Привязка PermissionsController к жизненному циклу корневой активити — один раз

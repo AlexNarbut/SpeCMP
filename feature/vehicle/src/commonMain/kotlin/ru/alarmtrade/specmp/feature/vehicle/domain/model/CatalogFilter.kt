@@ -19,5 +19,5 @@ sealed interface VehicleDeviceFilter {
 data class CatalogQuery(
     val catalog: VehicleCatalog,
     val device: VehicleDeviceFilter?,
-    val groups: Set<CarFeatureGroup> = emptySet()
+    val groups: Set<CarFeatureGroup> = emptySet(),
 )

@@ -129,9 +129,9 @@ private fun Uri.copyToAttachments(context: Context, kind: SupportChatPickKind): 
                 name = name,
                 path = target.absolutePath,
                 mimeType = resolver.getType(this),
-                sizeBytes = copied
+                sizeBytes = copied,
             ),
-            kind
+            kind,
         )
     } catch (e: Exception) {
         logger.w(e) { "Failed to copy picked attachment '$name'" }

@@ -107,7 +107,7 @@ fun AppNavigation() {
         authedState = { AuthedNavGraph() },
         errorState = { onRetry ->
             SessionCheckErrorScreen(onRetry = onRetry)
-        }
+        },
     )
 }
 
@@ -125,14 +125,14 @@ private fun AuthedNavGraph() {
             rememberSaveableStateHolderNavEntryDecorator(),
             // Per-entry ViewModelStoreOwner: VM живёт ровно столько, сколько запись
             // бэкстека, и очищается при pop (см. docs/navigation.md).
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
                 MainNavGraph(
                     onNavigateToFeature = { target ->
                         navigateFromMain(target, backStack)
-                    }
+                    },
                 )
             }
             entry<SupportChatRoute> { _ ->
@@ -141,7 +141,7 @@ private fun AuthedNavGraph() {
                     filePicker = rememberSupportChatFilePicker(),
                     fileSaver = rememberSupportChatFileSaver(),
                     attachmentFiles = rememberSupportChatAttachmentFiles(),
-                    fileOpener = rememberSupportChatFileOpener()
+                    fileOpener = rememberSupportChatFileOpener(),
                 )
             }
             entry<DeviceSelectionRoute> { _ ->
@@ -149,7 +149,7 @@ private fun AuthedNavGraph() {
                     // Сессия создана — поиск заменяется flow работы с устройством:
                     // «Назад» из монтажа не возвращает в поиск.
                     onSessionCreate = { backStack.replaceCurrent(AdvancedMountRoute) },
-                    onClose = { backStack.popSafe() }
+                    onClose = { backStack.popSafe() },
                 )
             }
             entry<FastMountSelectionRoute> { _ ->
@@ -157,7 +157,7 @@ private fun AuthedNavGraph() {
                     // Как в расширенном монтаже: «Назад» из мастера не возвращает в поиск.
                     onSessionCreate = { backStack.replaceCurrent(FastMountRoute) },
                     onClose = { backStack.popSafe() },
-                    alarmsOnly = true
+                    alarmsOnly = true,
                 )
             }
             entry<FastMountRoute> { _ -> FastMountGraph(backStack) }
@@ -172,7 +172,7 @@ private fun AuthedNavGraph() {
                     request = key.request,
                     // Только свой маршрут: повторное «Выбрать» не закроет экран под ним.
                     onPick = { if (backStack.currentRoute == key) backStack.popSafe() },
-                    onBack = { backStack.popSafe() }
+                    onBack = { backStack.popSafe() },
                 )
             }
             entry<AdvancedMountRoute> { _ ->
@@ -186,9 +186,9 @@ private fun AuthedNavGraph() {
                             filePicker = rememberFirmwareFilePicker(),
                             vehiclePicker = { deviceName, onPick, onPickerBack ->
                                 ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-                            }
+                            },
                         )
-                    }
+                    },
                 ) { device, onExit ->
                     AdvancedMountNavGraph(
                         onExit = onExit,
@@ -205,27 +205,27 @@ private fun AuthedNavGraph() {
                                     DeviceSettingsEditor(
                                         onExit = onEditorBack,
                                         onOpenFirmwareUpdate = onOpenFirmwareUpdate,
-                                        loadOnOpen = load
+                                        loadOnOpen = load,
                                     )
-                                }
+                                },
                             )
                         },
                         bypassLearning = { onBack, onOpenClone, onOpenSupportChat ->
                             BypassLearningEntry(
                                 onBack = onBack,
                                 onOpenClone = onOpenClone,
-                                onOpenSupportChat = onOpenSupportChat
+                                onOpenSupportChat = onOpenSupportChat,
                             )
                         },
                         clone = { fromBypass, onBack, onOpenSupportChat ->
                             CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
                         },
                         checkState = { onBack -> CheckStateEntry(onBack = onBack) },
-                        vehicles = { onBack -> DeviceVehicles(device, onBack) }
+                        vehicles = { onBack -> DeviceVehicles(device, onBack) },
                     )
                 }
             }
-        }
+        },
     )
 }
 
@@ -243,17 +243,17 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
                 mode = VehicleSelectMode.VIEW,
                 catalog = VehicleCatalog.ALL,
                 device = VehicleDeviceFilter.Device(device.systemName),
-                firmwareCanCode = device.can?.code
+                firmwareCanCode = device.can?.code,
             ),
             onPick = {},
             onBack = onBack,
-            onOpenFirmwareArchive = { archiveCanCode = it }
+            onOpenFirmwareArchive = { archiveCanCode = it },
         )
     } else {
         // Архив поверх справочника: «назад» возвращает к карточке автомобиля, а не закрывает раздел.
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
-            onBackCompleted = { archiveCanCode = null }
+            onBackCompleted = { archiveCanCode = null },
         )
         FirmwareArchiveEntry(
             request = FirmwareArchiveRequest(
@@ -268,13 +268,13 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
                 // CAN блока — подсветка версий «как в блоке» рядом с кодом выбранного автомобиля.
                 deviceCanCode = device.can?.takeUnless { it.isFactory }?.code?.takeIf { it.isNotBlank() },
                 deviceCanVersion = device.can?.takeUnless { it.isFactory }?.version,
-                deviceCanProfile = device.can?.takeUnless { it.isFactory }?.firmwareVersion
+                deviceCanProfile = device.can?.takeUnless { it.isFactory }?.firmwareVersion,
             ),
             onPick = {},
             onBack = { archiveCanCode = null },
             vehiclePicker = { deviceName, onPick, onPickerBack ->
                 ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-            }
+            },
         )
     }
 }
@@ -283,7 +283,7 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
 @Composable
 private fun AppConfigurator(
     onExit: () -> Unit,
-    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null
+    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null,
 ) {
     ConfiguratorEntry(
         onExit = onExit,
@@ -292,7 +292,7 @@ private fun AppConfigurator(
         },
         filePicker = rememberSettingsFilePicker(),
         fileSaver = rememberSettingsFileSaver(),
-        deviceEditor = deviceEditor
+        deviceEditor = deviceEditor,
     )
 }
 
@@ -304,7 +304,7 @@ private fun AppConfigurator(
 private fun DeviceSettingsEditor(
     onExit: () -> Unit,
     onOpenFirmwareUpdate: () -> Unit,
-    loadOnOpen: SettingsSource? = null
+    loadOnOpen: SettingsSource? = null,
 ) {
     DeviceSettingsEntry(
         onExit = onExit,
@@ -322,12 +322,12 @@ private fun DeviceSettingsEditor(
                 onBack = onPickerBack,
                 vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
                     ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
-                }
+                },
             )
         },
         filePicker = rememberSettingsFilePicker(),
         fileSaver = rememberSettingsFileSaver(),
-        loadOnOpen = loadOnOpen
+        loadOnOpen = loadOnOpen,
     )
 }
 
@@ -340,7 +340,7 @@ internal fun ConfiguratorVehicles(
     catalog: VehicleCatalog,
     deviceName: String?,
     onPick: (CarSummary) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     VehicleSelectEntry(
         request = VehicleSelectRequest(
@@ -349,10 +349,10 @@ internal fun ConfiguratorVehicles(
             device = deviceName?.let { VehicleDeviceFilter.Device(it) }
                 ?: VehicleDeviceFilter.Type(VehicleDeviceType.ALARM).takeIf {
                     catalog == VehicleCatalog.WITH_CONFIGURATIONS
-                }
+                },
         ),
         onPick = onPick,
-        onBack = onBack
+        onBack = onBack,
     )
 }
 
@@ -361,18 +361,18 @@ internal fun ConfiguratorVehicles(
 internal fun ArchiveVehiclePicker(
     deviceName: String?,
     onPick: (canCode: String, carTitle: String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     VehicleSelectEntry(
         request = VehicleSelectRequest(
             mode = VehicleSelectMode.PICK,
             catalog = VehicleCatalog.ALL,
-            device = deviceName?.let { VehicleDeviceFilter.Device(it) }
+            device = deviceName?.let { VehicleDeviceFilter.Device(it) },
         ),
         onPick = { car ->
             onPick(car.canCode, car.fullName())
         },
-        onBack = onBack
+        onBack = onBack,
     )
 }
 
@@ -388,7 +388,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         // Справочник автомобилей: блок не подключён — сначала выбор типа устройства.
         MainNavigationTarget.Cars -> backStack.navigateSafe(
-            VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null))
+            VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null)),
         )
 
         MainNavigationTarget.CanScanner -> Unit
@@ -413,7 +413,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 private fun AppStartLoading() {
     CmpBox(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpCircularProgressIndicator(color = cmpThemeColors().primary)
     }

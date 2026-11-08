@@ -50,24 +50,24 @@ internal fun VehicleDialogs(dialog: VehicleDialog, wide: Boolean, actions: CardA
                     text = stringResource(
                         Strings.string.vehicle_mismatch_msg_text,
                         dialog.car.canCode,
-                        dialog.firmwareCanCode
+                        dialog.firmwareCanCode,
                     ),
-                    style = CmpTextStyle.BodyLarge
+                    style = CmpTextStyle.BodyLarge,
                 )
             },
             dismissButton = {
                 CmpTextButton(
                     text = stringResource(Strings.string.vehicle_common_btn_cancel),
-                    onClick = actions.onDialogDismiss
+                    onClick = actions.onDialogDismiss,
                 )
             },
             confirmButton = {
                 CmpButton(
                     text = stringResource(Strings.string.vehicle_mismatch_btn_confirm),
                     onClick = actions.onMismatchConfirm,
-                    modifier = Modifier.testTag(VehicleTestTags.MISMATCH_CONFIRM)
+                    modifier = Modifier.testTag(VehicleTestTags.MISMATCH_CONFIRM),
                 )
-            }
+            },
         )
     }
 }
@@ -78,7 +78,7 @@ private fun CapabilityNote(dialog: VehicleDialog.CapabilityNote, wide: Boolean, 
         when (dialog.kind) {
             CapabilityKind.ENGINE_BLOCK -> Strings.string.vehicle_cap_label_engine_block
             CapabilityKind.KEYLESS_BYPASS -> Strings.string.vehicle_cap_label_keyless
-        }
+        },
     )
     val note = dialog.capability.note.orEmpty()
     if (wide) {
@@ -88,25 +88,25 @@ private fun CapabilityNote(dialog: VehicleDialog.CapabilityNote, wide: Boolean, 
             text = { CmpHtmlText(html = note) },
             confirmButton = {
                 CmpTextButton(text = stringResource(Strings.string.vehicle_common_btn_close), onClick = onDismiss)
-            }
+            },
         )
     } else {
         CmpBottomSheet(onDismissRequest = onDismiss) {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 CmpText(text = title, style = CmpTextStyle.Title)
                 CmpHtmlText(html = note)
                 CmpRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CmpButton(
                         text = stringResource(Strings.string.vehicle_common_btn_close),
                         onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                     )
                 }
             }

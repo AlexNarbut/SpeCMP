@@ -40,13 +40,13 @@ internal class SupportChatMessageMapper {
             is ChatMessageContent.Image -> attachment = SupportChatAttachment.Image(
                 id = content.id,
                 name = content.name,
-                url = content.url
+                url = content.url,
             )
 
             is ChatMessageContent.Document -> attachment = SupportChatAttachment.Document(
                 id = content.id,
                 name = content.name,
-                url = content.url
+                url = content.url,
             )
         }
 
@@ -58,7 +58,7 @@ internal class SupportChatMessageMapper {
             time = message.time.toInstant(TimeZone.UTC),
             isMine = myEmail != null && message.sender.login == myEmail,
             authorEmail = message.sender.login,
-            status = if (message.wasRead) SupportChatMessageStatus.Read else SupportChatMessageStatus.Sent
+            status = if (message.wasRead) SupportChatMessageStatus.Read else SupportChatMessageStatus.Sent,
         )
     }
 }

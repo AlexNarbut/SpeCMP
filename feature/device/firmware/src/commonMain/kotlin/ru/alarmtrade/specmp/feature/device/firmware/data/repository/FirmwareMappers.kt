@@ -32,7 +32,7 @@ internal fun SubsystemInformation.toModule(transport: ConnectionTransport): Firm
     kind = type.toKind(),
     systemName = systemName,
     title = title,
-    bootTarget = type.bootTarget(transport)
+    bootTarget = type.bootTarget(transport),
 )
 
 /**
@@ -56,7 +56,8 @@ internal fun SubsystemType.bootTarget(transport: ConnectionTransport): BootModeT
         SubsystemType.WATCH_MAIN,
         SubsystemType.GPS_TRACKER_MAIN,
         SubsystemType.BMW_BYPASS_MAIN,
-        SubsystemType.REMOTE_CONTROL_MAIN -> BootModeTarget.MainProgram
+        SubsystemType.REMOTE_CONTROL_MAIN,
+        -> BootModeTarget.MainProgram
 
         SubsystemType.BLUETOOTH_MODULE -> BootModeTarget.BluetoothModule
 
@@ -67,7 +68,8 @@ internal fun SubsystemType.bootTarget(transport: ConnectionTransport): BootModeT
         SubsystemType.CHARGING_STATION_TESTER,
         SubsystemType.CAN_STM32H563IIK,
         SubsystemType.MICROBOT_MAIN,
-        SubsystemType.UNKNOWN -> null
+        SubsystemType.UNKNOWN,
+        -> null
     }
 }
 
@@ -99,7 +101,7 @@ internal fun SubsystemFirmware.toDomain(): FirmwareVersion = FirmwareVersion(
     url = url,
     canCode = canCode?.takeIf { it.isNotBlank() },
     canVersion = canVersionString?.takeIf { it.isNotBlank() },
-    canVersionCode = canVersion
+    canVersionCode = canVersion,
 )
 
 /** Стадия SDK → стадия приложения; процент есть только на передаче. */
@@ -113,7 +115,7 @@ internal fun FirmwareUpdateState.toProgress(): FirmwareUpdateProgress = when (st
     FirmwareUpdateStatus.FINISHED_SUCCESS -> FirmwareUpdateProgress.Finished
 
     FirmwareUpdateStatus.FINISHED_ERROR -> FirmwareUpdateProgress.Failed(
-        FirmwareFailure.Write(error.toReason())
+        FirmwareFailure.Write(error.toReason()),
     )
 }
 
@@ -130,5 +132,5 @@ private fun DataWritingError?.toReason(): WriteFailureReason = when (this) {
 internal fun DeviceInformation.toSystem(): FirmwareSystem = FirmwareSystem(
     id = id,
     name = name,
-    subsystems = subsystems.map { FirmwareSubsystem(it.id, it.title, it.systemName, it.type.toKind()) }
+    subsystems = subsystems.map { FirmwareSubsystem(it.id, it.title, it.systemName, it.type.toKind()) },
 )

@@ -26,7 +26,7 @@ internal data class RequestKey(
     val catalog: CatalogKey,
     val device: DeviceFilterKey?,
     val firmwareCanCode: String?,
-    val warnOnCanMismatch: Boolean
+    val warnOnCanMismatch: Boolean,
 ) {
     fun toRequest() = VehicleSelectRequest(
         mode = mode,
@@ -43,11 +43,11 @@ internal data class RequestKey(
                 when (device.type) {
                     DeviceTypeKey.ALARM -> VehicleDeviceType.ALARM
                     DeviceTypeKey.MICROBOT -> VehicleDeviceType.MICROBOT
-                }
+                },
             )
         },
         firmwareCanCode = firmwareCanCode,
-        warnOnCanMismatch = warnOnCanMismatch
+        warnOnCanMismatch = warnOnCanMismatch,
     )
 
     companion object {
@@ -66,11 +66,11 @@ internal data class RequestKey(
                     when (device.type) {
                         VehicleDeviceType.ALARM -> DeviceTypeKey.ALARM
                         VehicleDeviceType.MICROBOT -> DeviceTypeKey.MICROBOT
-                    }
+                    },
                 )
             },
             firmwareCanCode = request.firmwareCanCode,
-            warnOnCanMismatch = request.warnOnCanMismatch
+            warnOnCanMismatch = request.warnOnCanMismatch,
         )
     }
 }

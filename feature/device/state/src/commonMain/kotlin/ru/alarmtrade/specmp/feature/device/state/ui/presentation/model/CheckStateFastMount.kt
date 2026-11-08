@@ -24,14 +24,14 @@ data class CheckStateFastMount(
     val onSkip: (taskId: String) -> Unit,
     val onAnswer: (taskId: String, option: Int) -> Unit,
     val chrome: CheckStateChrome? = null,
-    val nextBusy: Boolean = false
+    val nextBusy: Boolean = false,
 )
 
 /** Шапка ([topBar] с «Назад» экрана) и нижняя панель ([dock]) мастера быстрого монтажа. */
 @Immutable
 class CheckStateChrome(
     val topBar: @Composable (onBack: () -> Unit) -> Unit,
-    val dock: @Composable (content: @Composable ColumnScope.() -> Unit) -> Unit
+    val dock: @Composable (content: @Composable ColumnScope.() -> Unit) -> Unit,
 )
 
 /**
@@ -61,7 +61,7 @@ data class ChecklistTask(
     val zone: Zone? = null,
     val guard: Boolean = false,
     val options: List<String> = emptyList(),
-    val active: Boolean = true
+    val active: Boolean = true,
 ) {
     val manual: Boolean get() = options.isNotEmpty()
 }
@@ -74,5 +74,5 @@ enum class ChecklistStatus {
 
     /** Ответ «нет — не работает». */
     FAILED,
-    SKIPPED
+    SKIPPED,
 }

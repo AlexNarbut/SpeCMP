@@ -40,7 +40,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 fun <T> sideEffectFlow(): MutableSharedFlow<T> = MutableSharedFlow(
     replay = 0,
     extraBufferCapacity = SIDE_EFFECT_BUFFER,
-    onBufferOverflow = BufferOverflow.DROP_OLDEST
+    onBufferOverflow = BufferOverflow.DROP_OLDEST,
 )
 
 private const val SIDE_EFFECT_BUFFER = 16
@@ -66,7 +66,7 @@ private const val SIDE_EFFECT_BUFFER = 16
 @Composable
 fun <T> Flow<T>.collectSideEffect(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
-    onEffect: suspend (effect: T) -> Unit
+    onEffect: suspend (effect: T) -> Unit,
 ) {
     val effectFlow = this
     val lifecycleOwner = LocalLifecycleOwner.current

@@ -13,5 +13,5 @@ enum class ConfigurationPickKind { MINE, CLOUD }
 data class ConfigurationPickRequest(
     val kind: ConfigurationPickKind,
     val deviceName: String,
-    val firmwareCanCode: String?
+    val firmwareCanCode: String?,
 )

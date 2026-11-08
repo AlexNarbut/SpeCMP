@@ -25,7 +25,7 @@ enum class MountSection(val needsCan: Boolean = false) {
     SUPPORT_CHAT,
     VOICE_FIRMWARE,
     COMMUNITY_MAPS,
-    VEHICLES
+    VEHICLES,
 }
 
 /** Разделы, доступные, когда возможности блока прочитать не удалось («устройство не поддерживается»). */
@@ -45,7 +45,8 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
             MountSection.SETTINGS,
             MountSection.CONFIGURATOR,
             MountSection.TECH_REQUESTS,
-            MountSection.COMMUNITY_MAPS -> DeviceFeature.SETTINGS in this
+            MountSection.COMMUNITY_MAPS,
+            -> DeviceFeature.SETTINGS in this
 
             MountSection.BYPASS_LEARNING -> DeviceFeature.BYPASS_LEARNING in this
 
@@ -58,7 +59,8 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
             MountSection.CHECK_STATE -> bluetooth
 
             MountSection.SUPPORT_CHAT,
-            MountSection.VEHICLES -> true
+            MountSection.VEHICLES,
+            -> true
         }
     }
 }
@@ -68,5 +70,5 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
 @SerialName("advanced-mount.MountExtra")
 enum class MountExtra {
     PRODUCT_INFO,
-    REMOTE_SYNC
+    REMOTE_SYNC,
 }

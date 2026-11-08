@@ -14,7 +14,7 @@ import androidx.compose.runtime.Immutable
 @Immutable
 class AutostartStepChrome(
     val topBar: @Composable (locked: Boolean, onBack: () -> Unit) -> Unit,
-    val dock: @Composable (content: @Composable ColumnScope.() -> Unit) -> Unit
+    val dock: @Composable (content: @Composable ColumnScope.() -> Unit) -> Unit,
 )
 
 /**

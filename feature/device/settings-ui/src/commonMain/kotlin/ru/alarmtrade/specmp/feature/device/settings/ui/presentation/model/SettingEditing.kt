@@ -25,7 +25,8 @@ internal val Setting.opensEditor: Boolean
         is OptionSetting -> !isSegmented
 
         is IntegerSetting, is DecimalSetting, is TextSetting, is TimeSetting, is InputSetting, is OutputSetting,
-        is AutoStartScheduleSetting, is SirenSetting, is CanCodeSetting -> true
+        is AutoStartScheduleSetting, is SirenSetting, is CanCodeSetting,
+        -> true
 
         else -> false
     }

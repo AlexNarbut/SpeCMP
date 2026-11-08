@@ -49,5 +49,5 @@ data class FirmwareArchiveRequest(
     val deviceCanFactory: Boolean = false,
     val noUnit: Boolean = false,
     val canFilterAllowed: Boolean = true,
-    val moduleName: String? = null
+    val moduleName: String? = null,
 )

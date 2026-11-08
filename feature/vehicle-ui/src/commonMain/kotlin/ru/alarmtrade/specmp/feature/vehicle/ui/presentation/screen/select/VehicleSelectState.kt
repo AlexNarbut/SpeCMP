@@ -27,7 +27,8 @@ internal enum class CardTab { FEATURES, MOUNT_POINTS, SCHEMES, MAPS, USER_MANUAL
 internal enum class VehicleLayout {
     COMPACT,
     MEDIUM,
-    EXPANDED;
+    EXPANDED,
+    ;
 
     val isWide: Boolean get() = this != COMPACT
 }
@@ -38,7 +39,7 @@ internal data class CatalogSelection(
     val model: CarModel? = null,
     /** Комплектация, чья карточка открыта. */
     val carId: Int? = null,
-    val cardSource: CardSource = CardSource.CATALOG
+    val cardSource: CardSource = CardSource.CATALOG,
 )
 
 /** Поиск «марка модель» на уровне марок: марка распознана, [rest] — фильтр её моделей. */
@@ -52,7 +53,7 @@ internal data class CardUi(
     val photo: Int = 0,
     val viewerOpen: Boolean = false,
     val notesExpanded: Boolean = false,
-    val collapsedGroups: Set<CarFeatureGroup> = emptySet()
+    val collapsedGroups: Set<CarFeatureGroup> = emptySet(),
 )
 
 internal sealed interface VehicleDialog {
@@ -90,7 +91,7 @@ internal data class VehicleSelectState(
     val filterDraft: Set<CarFeatureGroup>? = null,
     val dialog: VehicleDialog? = null,
     /** Идёт получение данных автомобиля для «Выбрать» из строки. */
-    val picking: Boolean = false
+    val picking: Boolean = false,
 ) {
     val showTypeChoice: Boolean get() = mode.typeSelectable && deviceType == null
 }
@@ -103,7 +104,7 @@ internal data class VehicleSelectModeUi(
     /** Тип устройства выбирается пользователем (чип «Сигнализация ▾» в шапке). */
     val typeSelectable: Boolean,
     val deviceName: String?,
-    val firmwareCanCode: String?
+    val firmwareCanCode: String?,
 ) {
     val canSearchAvailable: Boolean get() = !configurationsOnly
     val filterAvailable: Boolean get() = !configurationsOnly

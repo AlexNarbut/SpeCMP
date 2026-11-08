@@ -36,7 +36,7 @@ import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 class SpecialistInitializer(
     private val interactor: AppDeviceInformationInteractor,
     private val deviceInformationProvider: SpecialistDeviceInformationProvider,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) {
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 

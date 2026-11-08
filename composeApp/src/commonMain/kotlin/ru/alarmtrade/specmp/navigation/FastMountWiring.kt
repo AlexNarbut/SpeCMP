@@ -78,9 +78,9 @@ internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
                 filePicker = rememberFirmwareFilePicker(),
                 vehiclePicker = { deviceName, onPick, onPickerBack ->
                     ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-                }
+                },
             )
-        }
+        },
     ) { _, onExit ->
         FastMountEntry(
             onExit = onExit,
@@ -92,7 +92,7 @@ internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
                 exit = FastMountExit.ADVANCED_MOUNT
                 onExit()
             },
-            slots = fastMountSlots(onOpenSupportChat)
+            slots = fastMountSlots(onOpenSupportChat),
         )
     }
 }
@@ -109,10 +109,10 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                         mode = VehicleSelectMode.PICK,
                         catalog = VehicleCatalog.WITH_CONFIGURATIONS,
                         device = VehicleDeviceFilter.Device(request.deviceName),
-                        firmwareCanCode = request.canCode
+                        firmwareCanCode = request.canCode,
                     ),
                     onPick = { car -> onPick(car.toMountCar()) },
-                    onBack = onBack
+                    onBack = onBack,
                 )
             },
             configurationPicker = { request, onPick, onOpenFirmwareUpdate, onBack ->
@@ -120,7 +120,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     request = ConfigurationPickRequest(
                         kind = ConfigurationPickKind.CLOUD,
                         deviceName = request.deviceName,
-                        firmwareCanCode = request.canCode
+                        firmwareCanCode = request.canCode,
                     ),
                     onPick = { source -> (source as? SettingsSource.RemoteConfiguration)?.let { onPick(it.id) } },
                     onOpenFirmwareUpdate = onOpenFirmwareUpdate,
@@ -129,7 +129,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                         ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
                     },
                     purpose = ConfigurationPickPurpose.FAST_MOUNT,
-                    cloudCar = ConfigurationPickCar(request.car.id, request.car.title)
+                    cloudCar = ConfigurationPickCar(request.car.id, request.car.title),
                 )
             },
             bypass = { step, onNext ->
@@ -139,7 +139,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     next = AutostartStepNext(step.next.busy, step.next.error),
                     onNext = onNext,
                     onBack = step.onBack,
-                    onOpenSupportChat = onOpenSupportChat
+                    onOpenSupportChat = onOpenSupportChat,
                 )
             },
             clone = { step, onNext ->
@@ -149,7 +149,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     next = AutostartStepNext(step.next.busy, step.next.error),
                     onNext = onNext,
                     onBack = step.onBack,
-                    onOpenSupportChat = onOpenSupportChat
+                    onOpenSupportChat = onOpenSupportChat,
                 )
             },
             systemCheck = { step, checklist, actions ->
@@ -163,10 +163,10 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                         onAnswer = { id, option -> id.toIntOrNull()?.let { actions.onAnswer(it, option) } },
                         chrome = CheckStateChrome(
                             topBar = { onBack -> step.frame.topBar(false, onBack) },
-                            dock = step.frame.dock
+                            dock = step.frame.dock,
                         ),
-                        nextBusy = step.next.busy
-                    )
+                        nextBusy = step.next.busy,
+                    ),
                 )
             },
             fileOpener = MountFileOpener { name, bytes ->
@@ -175,7 +175,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     SupportChatFileOpenResult.NoApp -> false
                     SupportChatFileOpenResult.Failed -> null
                 }
-            }
+            },
         )
     }
 }
@@ -187,7 +187,7 @@ private fun CarSummary.toMountCar(): MountCar = MountCar(
     brand = brand,
     model = model,
     years = if (years.first == years.last) "${years.first}" else "${years.first}–${years.last}",
-    canCode = canCode
+    canCode = canCode,
 )
 
 /** Чек-лист мастера → чек-лист экрана проверки (строгий порядок, зоны авто-заданий). */
@@ -205,10 +205,10 @@ private fun MountChecklist.toCheckState(): CheckStateChecklist = CheckStateCheck
             zone = task.auto?.zone(),
             guard = task.auto == AutoTaskKind.GUARD,
             options = task.options,
-            active = task.active
+            active = task.active,
         )
     },
-    sequential = true
+    sequential = true,
 )
 
 private fun AutoTaskKind.zone(): Zone? = when (this) {

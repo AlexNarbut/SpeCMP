@@ -21,7 +21,7 @@ class ViewModelFileContentsTest {
         assertEquals(1, findings.size)
         assertEquals(
             "`FooState` вынеси в свой файл FooState.kt: файл ViewModel содержит только ViewModel",
-            findings.single().message
+            findings.single().message,
         )
     }
 
@@ -38,7 +38,7 @@ class ViewModelFileContentsTest {
         assertEquals(1, findings.size)
         assertEquals(
             "`Helper` перенеси внутрь ViewModel как private вложенный тип: файл ViewModel содержит только ViewModel",
-            findings.single().message
+            findings.single().message,
         )
     }
 

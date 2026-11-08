@@ -16,7 +16,7 @@ internal data class CloudCardState(
     val viewer: ConfigurationAttachment? = null,
     val saveForm: CloudSaveForm? = null,
     val busy: Boolean = false,
-    val connectedDeviceName: String? = null
+    val connectedDeviceName: String? = null,
 ) {
     /** CAN-код конфигурации не совпадает с единой CAN-прошивкой блока — загрузить нельзя. */
     val canMismatch: Boolean

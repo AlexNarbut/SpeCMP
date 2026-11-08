@@ -20,7 +20,7 @@ data class SupportChatUiAttachment(
     val url: String?,
     val localPath: String?,
     val mimeType: String?,
-    val sizeBytes: Long?
+    val sizeBytes: Long?,
 ) {
     enum class Kind { Image, Document }
 }
@@ -36,7 +36,7 @@ fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this
         url = url,
         localPath = localPath,
         mimeType = null,
-        sizeBytes = null
+        sizeBytes = null,
     )
 
     is SupportChatAttachment.Document -> SupportChatUiAttachment(
@@ -46,7 +46,7 @@ fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this
         url = url,
         localPath = localPath,
         mimeType = mimeType,
-        sizeBytes = sizeBytes
+        sizeBytes = sizeBytes,
     )
 }
 
@@ -56,7 +56,7 @@ fun SupportChatUiAttachment.toDomain(): SupportChatAttachment = when (kind) {
         id = id,
         name = name,
         url = url,
-        localPath = localPath
+        localPath = localPath,
     )
 
     SupportChatUiAttachment.Kind.Document -> SupportChatAttachment.Document(
@@ -65,7 +65,7 @@ fun SupportChatUiAttachment.toDomain(): SupportChatAttachment = when (kind) {
         url = url,
         localPath = localPath,
         mimeType = mimeType,
-        sizeBytes = sizeBytes
+        sizeBytes = sizeBytes,
     )
 }
 
@@ -81,5 +81,5 @@ fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): Su
         url = null,
         localPath = path,
         mimeType = mimeType,
-        sizeBytes = sizeBytes
+        sizeBytes = sizeBytes,
     )

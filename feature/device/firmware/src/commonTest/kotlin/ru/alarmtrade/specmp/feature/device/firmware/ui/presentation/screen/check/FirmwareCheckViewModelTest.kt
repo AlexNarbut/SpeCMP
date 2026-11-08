@@ -60,7 +60,7 @@ class FirmwareCheckViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = emptySet(),
-        can = null
+        can = null,
     )
 
     private val alarmModule = FirmwareModule(
@@ -68,21 +68,21 @@ class FirmwareCheckViewModelTest {
         kind = FirmwareModuleKind.AlarmMain,
         systemName = "DX4G",
         title = "Pandora DX 4G",
-        bootTarget = BootModeTarget.MainProgram
+        bootTarget = BootModeTarget.MainProgram,
     )
     private val bluetoothModule = FirmwareModule(
         id = 2,
         kind = FirmwareModuleKind.BluetoothModule,
         systemName = "BTM2",
         title = "Pandora BT",
-        bootTarget = BootModeTarget.BluetoothModule
+        bootTarget = BootModeTarget.BluetoothModule,
     )
     private val watchModule = FirmwareModule(
         id = 3,
         kind = FirmwareModuleKind.WatchBluetooth,
         systemName = "PW2",
         title = "Pandora Watch",
-        bootTarget = null
+        bootTarget = null,
     )
 
     private fun version(value: String, description: String = "") =
@@ -117,7 +117,7 @@ class FirmwareCheckViewModelTest {
             sessionRepository,
             FakeConnectionRepository(),
             dispatchers,
-            backgroundScope.coroutineContext
+            backgroundScope.coroutineContext,
         )
         session.attach(transport)
         val vm = FirmwareCheckViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
@@ -171,7 +171,7 @@ class FirmwareCheckViewModelTest {
         // Первое чтение — определение режима при подключении (BLE), второе — версия для карточки.
         sessionRepository.bluetoothVersions = listOf(
             sessionRepository.bluetoothVersions.single(),
-            Response.Error(IllegalStateException("no answer"))
+            Response.Error(IllegalStateException("no answer")),
         )
         val vm = viewModel()
 
@@ -317,7 +317,7 @@ class FirmwareCheckViewModelTest {
         repository.latest[2L to FirmwareChannel.RELEASE] = Response.Success(version("1.16"))
         sessionRepository.bootResults = listOf(
             Response.Success(BootModeResult.WrongPin),
-            Response.Success(BootModeResult.Entered)
+            Response.Success(BootModeResult.Entered),
         )
         val vm = viewModel()
         vm.onUpdateClick(2)

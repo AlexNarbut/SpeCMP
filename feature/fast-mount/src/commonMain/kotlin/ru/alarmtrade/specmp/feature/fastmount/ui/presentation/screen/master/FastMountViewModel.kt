@@ -57,7 +57,7 @@ class FastMountViewModel(
     deviceSession: DeviceSession,
     private val repository: FastMountRepository,
     private val programMode: ProgramModeRepository,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(FastMountState())
@@ -81,7 +81,7 @@ class FastMountViewModel(
             systemId = device.systemId,
             systemName = device.systemName,
             title = device.title,
-            transport = deviceSession.transport.value
+            transport = deviceSession.transport.value,
         ).also { fixed -> _state.update { it.copy(fixed = fixed) } }
         if (device.systemId != fixed.systemId) {
             logger.d { "Another unit connected: ${device.systemId}, expected ${fixed.systemId}" }
@@ -193,8 +193,8 @@ class FastMountViewModel(
                 plan = plan,
                 summary = SummaryLoad.Ready,
                 master = it.master.copy(
-                    mountMap = if (configuration.mountingMap == null) MountMapState.None else MountMapState.Downloading
-                )
+                    mountMap = if (configuration.mountingMap == null) MountMapState.None else MountMapState.Downloading,
+                ),
             )
         }
         // Карту монтажа качаем заранее: к шагу «Монтаж» она обычно уже готова.
@@ -314,8 +314,8 @@ class FastMountViewModel(
                 it.copy(
                     master = it.master.copy(
                         starting = false,
-                        startError = FastMountError.from(response.exception)
-                    )
+                        startError = FastMountError.from(response.exception),
+                    ),
                 )
             }
         }
@@ -348,8 +348,8 @@ class FastMountViewModel(
                         it.master.toast
                     },
                     cloneNeeded = if (step == FastMountStep.CLONE) true else it.master.cloneNeeded,
-                    mountMinutes = it.master.startedAt?.elapsedNow()?.inWholeMinutes?.toInt() ?: 0
-                )
+                    mountMinutes = it.master.startedAt?.elapsedNow()?.inWholeMinutes?.toInt() ?: 0,
+                ),
             )
         }
         if (step == FastMountStep.SYSTEM_CHECK) observeQuestions() else stopQuestions()
@@ -426,8 +426,8 @@ class FastMountViewModel(
             it.copy(
                 master = it.master.copy(
                     busy = false,
-                    error = (response as? Response.Error)?.let { error -> FastMountError.from(error.exception) }
-                )
+                    error = (response as? Response.Error)?.let { error -> FastMountError.from(error.exception) },
+                ),
             )
         }
         if (response is Response.Error) logger.w(response.exception) { "Fast mount transition failed" }
@@ -555,8 +555,8 @@ class FastMountViewModel(
             state.copy(
                 master = state.master.copy(
                     statuses = statuses,
-                    currentTask = all.getOrNull(currentIndex)?.id
-                )
+                    currentTask = all.getOrNull(currentIndex)?.id,
+                ),
             )
         }
         rebuildChecklist()
@@ -573,7 +573,7 @@ class FastMountViewModel(
                     status = master.statuses[question.id] ?: MountTaskStatus.PENDING,
                     active = question.id == master.currentTask && master.statuses[question.id] == null,
                     auto = if (question.automatic) AutoTaskKind.of(question.id) else null,
-                    options = if (question.automatic) emptyList() else question.answers.map { it.text }
+                    options = if (question.automatic) emptyList() else question.answers.map { it.text },
                 )
             }
             state.copy(master = master.copy(checklist = MountChecklist(tasks)))
@@ -671,5 +671,5 @@ private fun AlarmDevice.toUnitInfo(): UnitInfo = UnitInfo(
     firmware = displayFirmwareVersion,
     canCode = can?.code,
     canVersion = can?.firmwareVersion,
-    canFactory = can?.isFactory == true
+    canFactory = can?.isFactory == true,
 )

@@ -48,8 +48,8 @@ class ViewModelPublicApi(config: Config) :
                     Finding(
                         Entity.atName(member),
                         "`${member.name}` в ${classOrObject.name}: $problem. Наружу — только state, sideEffect и " +
-                            "интенты с результатом Unit; данные экрана — через state (docs/patterns.md, «BaseViewModel»)."
-                    )
+                            "интенты с результатом Unit; данные экрана — через state (docs/patterns.md, «BaseViewModel»).",
+                    ),
                 )
             }
     }

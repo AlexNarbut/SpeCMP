@@ -72,7 +72,7 @@ class SupportChatScreenViewModel(
     fileSaver: SupportChatFileSaver,
     private val attachmentFiles: SupportChatAttachmentFiles,
     fileOpener: SupportChatFileOpener,
-    private val outbox: SupportChatOutbox
+    private val outbox: SupportChatOutbox,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
@@ -154,7 +154,7 @@ class SupportChatScreenViewModel(
         _state.update {
             it.copy(
                 history = LCEState.Content(it.timeline.withOptimistic(outgoing)),
-                pendingAttachments = persistentListOf()
+                pendingAttachments = persistentListOf(),
             )
         }
 
@@ -250,7 +250,7 @@ class SupportChatScreenViewModel(
             name = attachment.name,
             path = localPath,
             mimeType = (attachment as? SupportChatAttachment.Document)?.mimeType,
-            sizeBytes = (attachment as? SupportChatAttachment.Document)?.sizeBytes
+            sizeBytes = (attachment as? SupportChatAttachment.Document)?.sizeBytes,
         )
         return withContext(dispatchers.io) {
             when (attachment) {
@@ -327,7 +327,7 @@ class SupportChatScreenViewModel(
                     it.copy(
                         connection = SupportChatConnection.Online,
                         hasConnectionIssue = false,
-                        isChatAuthFailed = false
+                        isChatAuthFailed = false,
                     )
                 }
                 // Пока соединения не было, могли прийти сообщения; очередь — после страницы.
@@ -336,13 +336,14 @@ class SupportChatScreenViewModel(
 
             SupportChatConnectionState.Reconnecting,
             SupportChatConnectionState.WaitingForNetwork,
-            SupportChatConnectionState.AuthFailed -> {
+            SupportChatConnectionState.AuthFailed,
+            -> {
                 logger.d { "Chat connection lost: $state" }
                 _state.update {
                     it.copy(
                         connection = SupportChatConnection.Offline,
                         hasConnectionIssue = true,
-                        isChatAuthFailed = state == SupportChatConnectionState.AuthFailed
+                        isChatAuthFailed = state == SupportChatConnectionState.AuthFailed,
                     )
                 }
                 requeueUnconfirmed()
@@ -359,9 +360,9 @@ class SupportChatScreenViewModel(
                             it.history
                         } else {
                             LCEState.Error(
-                                SupportChatError.HistoryUnavailable
+                                SupportChatError.HistoryUnavailable,
                             )
-                        }
+                        },
                     )
                 }
             }
@@ -407,7 +408,7 @@ class SupportChatScreenViewModel(
      */
     private fun updateTimelineConfirming(
         transform: (SupportChatTimeline) -> SupportChatTimeline,
-        extra: (SupportChatScreenState) -> SupportChatScreenState = { it }
+        extra: (SupportChatScreenState) -> SupportChatScreenState = { it },
     ): List<SupportChatMessage> {
         var confirmed = emptyList<SupportChatMessage>()
         _state.update { current ->
@@ -463,7 +464,7 @@ class SupportChatScreenViewModel(
                     LCEState.Loading
                 } else {
                     current.history
-                }
+                },
             )
         }
         historyJob = safeLaunch { loadHistoryPage(cursor = null) }
@@ -485,9 +486,9 @@ class SupportChatScreenViewModel(
                             isLoadingMore = false,
                             isHistoryPagingFailed = false,
                             historyCursor = if (resetPaging) page.nextCursor else current.historyCursor,
-                            hasMoreHistory = if (resetPaging) page.nextCursor != null else current.hasMoreHistory
+                            hasMoreHistory = if (resetPaging) page.nextCursor != null else current.hasMoreHistory,
                         )
-                    }
+                    },
                 )
                 confirmed.forEach { forget(it) }
             }
@@ -505,9 +506,9 @@ class SupportChatScreenViewModel(
                             current.history
                         } else {
                             LCEState.Error(
-                                SupportChatError.from(response.exception)
+                                SupportChatError.from(response.exception),
                             )
-                        }
+                        },
                     )
                 }
                 if (hadContent) _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
@@ -624,7 +625,7 @@ class SupportChatScreenViewModel(
     private fun optimisticMessage(
         timestamp: Instant,
         text: String? = null,
-        attachment: SupportChatAttachment? = null
+        attachment: SupportChatAttachment? = null,
     ): SupportChatMessage = SupportChatMessage(
         // Глобально уникален: переживает пересоздание VM и процесса (ключ outbox).
         id = "$LOCAL_ID_PREFIX${Uuid.random()}",
@@ -634,7 +635,7 @@ class SupportChatScreenViewModel(
         time = timestamp,
         isMine = true,
         authorEmail = null,
-        status = SupportChatMessageStatus.Sending
+        status = SupportChatMessageStatus.Sending,
     )
 
     // endregion

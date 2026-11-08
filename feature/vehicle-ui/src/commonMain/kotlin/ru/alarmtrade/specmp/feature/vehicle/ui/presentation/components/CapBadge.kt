@@ -55,7 +55,7 @@ internal fun CapBadge(
     capability: CarCapability,
     onNote: () -> Unit,
     modifier: Modifier = Modifier,
-    tile: Boolean = false
+    tile: Boolean = false,
 ) {
     val colors = cmpThemeColors()
     val success = cmpDomainColors().success
@@ -72,7 +72,7 @@ internal fun CapBadge(
         is CarCapability.Supported -> Triple(
             lerp(colors.surface, success, SUCCESS_TINT),
             success,
-            lerp(success, colors.onSurface, SUCCESS_ICON_MIX)
+            lerp(success, colors.onSurface, SUCCESS_ICON_MIX),
         )
 
         is CarCapability.NotSupported -> Triple(colors.errorContainer, colors.error, colors.error)
@@ -85,7 +85,7 @@ internal fun CapBadge(
         Modifier.clickable(
             role = Role.Button,
             onClickLabel = stringResource(Strings.string.vehicle_cap_a11y_note),
-            onClick = onNote
+            onClick = onNote,
         )
     } else {
         Modifier
@@ -96,7 +96,7 @@ internal fun CapBadge(
             .background(background)
             .border(1.dp, border, shape)
             .then(clickable)
-            .heightIn(min = if (tile) 112.dp else 56.dp)
+            .heightIn(min = if (tile) 112.dp else 56.dp),
     ) {
         val labels: @Composable () -> Unit = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -104,7 +104,7 @@ internal fun CapBadge(
                     text = label,
                     style = CmpTextStyle.Body,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface
+                    color = colors.onSurface,
                 )
                 CmpText(text = text, style = CmpTextStyle.Body, color = colors.onSurface)
             }
@@ -115,14 +115,14 @@ internal fun CapBadge(
                     icon = CmpIcons.Info,
                     contentDescription = null,
                     tint = colors.primary,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(22.dp),
                 )
             }
         }
         if (tile) {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(26.dp))
@@ -134,7 +134,7 @@ internal fun CapBadge(
             CmpRow(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(26.dp))
                 CmpBox(modifier = Modifier.weight(1f)) { labels() }

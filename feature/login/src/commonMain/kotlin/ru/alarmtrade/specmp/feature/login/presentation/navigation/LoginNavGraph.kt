@@ -82,7 +82,7 @@ fun LoginNavGraph() {
                 CmpText(
                     text = routeTitle(currentRoute),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         },
@@ -91,17 +91,17 @@ fun LoginNavGraph() {
                 CmpIconButton(
                     onClick = { backStack.popSafe() },
                     icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Strings.string.login_common_a11y_back)
+                    contentDescription = stringResource(Strings.string.login_common_a11y_back),
                 )
             }
-        }
+        },
     ) { layoutMode ->
         LoginNavDisplay(
             backStack = backStack,
             state = state,
             colors = colors,
             layoutMode = layoutMode,
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }
@@ -112,7 +112,7 @@ private fun LoginNavDisplay(
     state: State<LoginScreenState>,
     colors: CmpThemeColors,
     layoutMode: AuthLayoutMode,
-    viewModel: LoginScreenViewModel
+    viewModel: LoginScreenViewModel,
 ) {
     NavDisplay(
         backStack = backStack,
@@ -122,7 +122,7 @@ private fun LoginNavDisplay(
             // Дефолтный декоратор NavDisplay: без него не работает SavedStateHandle.
             rememberSaveableStateHolderNavEntryDecorator(),
             // Per-entry ViewModelStoreOwner (см. docs/navigation.md).
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
@@ -130,7 +130,7 @@ private fun LoginNavDisplay(
                     layoutMode = layoutMode,
                     modifier = Modifier.fillMaxSize(),
                     colors = colors,
-                    error = state.value.authError?.text(Strings.string.login_common_error_auth_failed)
+                    error = state.value.authError?.text(Strings.string.login_common_error_auth_failed),
                 ) {
                     LoginScreen(
                         state = state.value,
@@ -150,7 +150,7 @@ private fun LoginNavDisplay(
                         },
                         onResendActivationEmail = viewModel::resendActivationEmail,
                         onDismissActivationRequest = viewModel::dismissActivationRequest,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
@@ -159,7 +159,7 @@ private fun LoginNavDisplay(
                     layoutMode = layoutMode,
                     colors = colors,
                     onBackToLogin = { backStack.popSafe() },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
             entry<ForgotPasswordRoute> { _ ->
@@ -167,10 +167,10 @@ private fun LoginNavDisplay(
                     layoutMode = layoutMode,
                     colors = colors,
                     onBackToLogin = { backStack.popSafe() },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
-        }
+        },
     )
 }
 

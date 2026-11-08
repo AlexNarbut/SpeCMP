@@ -43,7 +43,7 @@ fun CmpCodeField(
     modifier: Modifier = Modifier,
     length: Int = 4,
     isError: Boolean = false,
-    focusRequester: FocusRequester = remember { FocusRequester() }
+    focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
@@ -73,21 +73,21 @@ fun CmpCodeField(
                                 .border(
                                     width = if (isError || active) 2.dp else 1.dp,
                                     color = borderColor,
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(12.dp),
                                 ),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = value.getOrNull(index)?.toString().orEmpty(),
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 28.sp,
-                                color = colors.onSurface
+                                color = colors.onSurface,
                             )
                         }
                     }
                 }
-            }
+            },
         )
         if (value.isNotEmpty()) {
             CmpIconButton(
@@ -96,7 +96,7 @@ fun CmpCodeField(
                     focusRequester.requestFocus()
                 },
                 icon = CmpIcons.Close,
-                contentDescription = clearContentDescription
+                contentDescription = clearContentDescription,
             )
         }
     }

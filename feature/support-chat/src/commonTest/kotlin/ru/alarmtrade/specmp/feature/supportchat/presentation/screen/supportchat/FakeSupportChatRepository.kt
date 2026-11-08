@@ -29,7 +29,7 @@ class FakeSupportChatRepository : SupportChatRepository {
     // События внутри активной сессии (сообщения, прочтение, набор, смены состояния соединения).
     private val events = MutableSharedFlow<SupportChatEvent>(
         extraBufferCapacity = 64,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     // false — сессия остаётся в Connecting, пока тест не вызовет connect().

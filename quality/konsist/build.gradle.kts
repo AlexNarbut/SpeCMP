@@ -32,13 +32,13 @@ tasks.test {
         "androidApp",
         "desktopApp",
         "flasherAndroidApp",
-        "flasherDesktopApp"
+        "flasherDesktopApp",
     ).forEach { dir ->
         inputs.files(
             fileTree(rootDir.resolve(dir)) {
                 include("**/src/**/*.kt", "**/build.gradle.kts")
                 exclude("**/build/**")
-            }
+            },
         ).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("sources-$dir")
     }
 }

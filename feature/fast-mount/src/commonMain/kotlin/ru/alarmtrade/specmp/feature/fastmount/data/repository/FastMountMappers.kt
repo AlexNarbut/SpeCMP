@@ -54,7 +54,8 @@ internal fun StateTitle.toStep(): FastMountStep? = when (this) {
     StateTitle.KEY_BYPASS_LEARNING_FINISHED,
     StateTitle.CLONE_FINISHED,
     StateTitle.SLAVE_LEARNING_FINISHED,
-    StateTitle.SYSTEM_CHECK_FINISHED -> null
+    StateTitle.SYSTEM_CHECK_FINISHED,
+    -> null
 }
 
 /** Предметная ошибка SDK быстрого монтажа; прочие (сеть, связь, неизвестные) — `null`, остаются как есть. */
@@ -99,12 +100,12 @@ internal fun CarConfiguration.toDomain(): FastMountConfiguration {
                 title = image.shortDescription,
                 description = image.fullDescription,
                 previewUrl = image.previewUrl.takeIf { it.isNotBlank() },
-                url = image.url
+                url = image.url,
             )
         },
         keyBypass = settings.hasByte { isKeyBypassEnabled() },
         slave = settings.hasByte { isSlaveEnabled() },
-        questions = questions.flatMap { group -> group.questions.map { it.toDomain() } }
+        questions = questions.flatMap { group -> group.questions.map { it.toDomain() } },
     )
 }
 
@@ -121,7 +122,7 @@ internal fun ConfigurationQuestion.toDomain(): MountQuestion = MountQuestion(
     task = algorithmDescription,
     expected = resultDescription,
     automatic = isAutomatic,
-    answers = answers.map { it.toDomain() }
+    answers = answers.map { it.toDomain() },
 )
 
 internal fun ConfigurationQuestionAnswer.toDomain(): QuestionAnswer = QuestionAnswer(text = answer, value = value)

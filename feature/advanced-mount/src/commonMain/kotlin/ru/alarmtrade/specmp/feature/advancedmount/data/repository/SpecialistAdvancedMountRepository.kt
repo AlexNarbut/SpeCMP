@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMoun
 class SpecialistAdvancedMountRepository(
     private val verificationInteractor: VerificationInteractor,
     private val chatInteractor: ChatInteractor,
-    private val userInteractor: UserInteractor
+    private val userInteractor: UserInteractor,
 ) : AdvancedMountRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
@@ -52,7 +52,7 @@ class SpecialistAdvancedMountRepository(
         chatInteractor.openChatUseCase.execute(ConnectChatRequest())
         emitAll(
             chatInteractor.isAvailableRemoteMountFlowUseCase.execute()
-                .map { response -> (response as? SpecialistResponse.Success)?.value ?: false }
+                .map { response -> (response as? SpecialistResponse.Success)?.value ?: false },
         )
     }
         .catch { e ->

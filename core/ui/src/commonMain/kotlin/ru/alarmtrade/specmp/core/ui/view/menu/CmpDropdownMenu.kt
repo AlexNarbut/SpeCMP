@@ -23,13 +23,13 @@ fun CmpDropdownMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         modifier = modifier.defaultMinSize(minWidth = MenuMinWidth),
-        content = content
+        content = content,
     )
 }
 
@@ -46,7 +46,7 @@ fun CmpDropdownMenuItem(text: String, onClick: () -> Unit, selected: Boolean, mo
             } else {
                 Spacer(Modifier.size(CheckSlot))
             }
-        }
+        },
     )
 }
 
@@ -57,13 +57,13 @@ fun CmpDropdownMenuItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: CmpIcons? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
 ) {
     DropdownMenuItem(
         text = { CmpText(text = text) },
         onClick = onClick,
         modifier = modifier.defaultMinSize(minHeight = MenuItemMinHeight),
         enabled = enabled,
-        leadingIcon = icon?.let { { CmpIcon(icon = it, contentDescription = null) } }
+        leadingIcon = icon?.let { { CmpIcon(icon = it, contentDescription = null) } },
     )
 }

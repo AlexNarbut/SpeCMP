@@ -13,7 +13,7 @@ internal fun MainScreen(
     isDarkTheme: Boolean,
     onThemeChange: (Boolean) -> Unit,
     onNavigateToFeature: (MainNavigationTarget) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val viewModel = koinViewModel<MainScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -36,6 +36,6 @@ internal fun MainScreen(
         isDarkTheme = isDarkTheme,
         onThemeChange = onThemeChange,
         onLogout = viewModel::logout,
-        modifier = modifier
+        modifier = modifier,
     )
 }

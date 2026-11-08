@@ -190,9 +190,9 @@ class FastMountViewModelTest {
                 FastMountStep.MOUNT,
                 FastMountStep.KEY_BYPASS,
                 FastMountStep.CLONE,
-                FastMountStep.FEEDBACK
+                FastMountStep.FEEDBACK,
             ),
-            state.plan?.steps?.map { it.step }
+            state.plan?.steps?.map { it.step },
         )
         // Запись начинается сама.
         assertEquals(1, repository.nextCalls)

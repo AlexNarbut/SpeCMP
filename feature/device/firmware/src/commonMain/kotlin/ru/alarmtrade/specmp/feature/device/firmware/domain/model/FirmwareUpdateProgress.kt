@@ -37,5 +37,5 @@ enum class WriteFailureReason {
     WrongPacketLength,
     DeviceNotReady,
     ApplyingError,
-    Unknown
+    Unknown,
 }

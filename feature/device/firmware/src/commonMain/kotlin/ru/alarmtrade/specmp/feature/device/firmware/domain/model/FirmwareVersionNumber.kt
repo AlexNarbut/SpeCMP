@@ -16,7 +16,7 @@ class FirmwareVersionNumber private constructor(
     private val parts: List<Int>,
     private val label: String?,
     private val labelNumber: Int,
-    private val text: String
+    private val text: String,
 ) : Comparable<FirmwareVersionNumber> {
 
     override fun compareTo(other: FirmwareVersionNumber): Int = compare(other, withRevisions = true)
@@ -71,7 +71,7 @@ class FirmwareVersionNumber private constructor(
                 parts = numbers.split('.').map { it.toIntOrNull() ?: 0 },
                 label = label.lowercase().ifEmpty { null },
                 labelNumber = labelNumber.toIntOrNull() ?: 0,
-                text = text
+                text = text,
             )
         }
     }

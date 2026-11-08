@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
  */
 class SpecialistLocalConfigurationsRepository(
     private val interactor: () -> LocalSettingsConfigurationInteractor,
-    private val settings: DeviceSettingsRepository
+    private val settings: DeviceSettingsRepository,
 ) : LocalConfigurationsRepository {
 
     private val _changes = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -55,7 +55,7 @@ class SpecialistLocalConfigurationsRepository(
         name: String,
         description: String,
         deviceName: String,
-        from: SettingsSource
+        from: SettingsSource,
     ): Response<SettingsSource.LocalConfiguration> {
         val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
         val created = sdk.createLocalConfigurationUseCase
@@ -79,7 +79,7 @@ class SpecialistLocalConfigurationsRepository(
     override suspend fun updateInfo(
         configuration: LocalConfiguration,
         name: String,
-        description: String
+        description: String,
     ): Response<SettingsSource.LocalConfiguration> {
         val old = configuration.toSource()
         val created = create(name, description, configuration.deviceName, from = old)
@@ -115,5 +115,5 @@ internal fun LocalSettingsConfigurationInfo.toDomain() = LocalConfiguration(
     description = description,
     deviceName = deviceName,
     created = createdDate,
-    updated = updatedDate
+    updated = updatedDate,
 )

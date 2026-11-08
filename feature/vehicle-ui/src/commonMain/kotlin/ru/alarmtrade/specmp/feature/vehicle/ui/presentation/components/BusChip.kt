@@ -58,7 +58,7 @@ internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
             drawRoundRect(
                 color = color,
                 cornerRadius = CornerRadius(8.dp.toPx()),
-                style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f)))
+                style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f))),
             )
         }
     } else {
@@ -69,13 +69,13 @@ internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
     }
     CmpBox(
         modifier = modifier.heightIn(min = 32.dp).then(frame).padding(horizontal = 10.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpText(
             text = stringResource(busLabel(bus)),
             style = CmpTextStyle.Body,
             fontWeight = FontWeight.SemiBold,
-            color = cmpThemeColors().onSurface
+            color = cmpThemeColors().onSurface,
         )
     }
 }

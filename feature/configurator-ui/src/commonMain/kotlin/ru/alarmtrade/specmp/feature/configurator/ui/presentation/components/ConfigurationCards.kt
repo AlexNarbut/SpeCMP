@@ -55,13 +55,13 @@ internal fun RatingLabel(rating: Int?, modifier: Modifier = Modifier) {
     CmpRow(
         modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         CmpIcon(
             icon = CmpIcons.Star,
             contentDescription = null,
             tint = cmpDomainColors().rating,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(20.dp),
         )
         CmpText(text = rating.toString(), style = CmpTextStyle.BodyLarge, fontWeight = FontWeight.SemiBold)
     }
@@ -75,13 +75,13 @@ internal fun MineCard(
     dateText: (LocalDateTime) -> String,
     onClick: () -> Unit,
     onMenu: (() -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     CmpClickableCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().testTag(ConfiguratorTestTags.mine(item.id)),
-        border = if (selected) BorderStroke(2.dp, colors.primary) else null
+        border = if (selected) BorderStroke(2.dp, colors.primary) else null,
     ) {
         CmpRow(modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)) {
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -90,12 +90,12 @@ internal fun MineCard(
                     style = CmpTextStyle.BodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 CmpFlowRow(
                     itemVerticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     ModelBadge(item.deviceName)
                     CmpText(text = dateText(item.updated), style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
@@ -106,7 +106,7 @@ internal fun MineCard(
                         style = CmpTextStyle.Body,
                         color = colors.onSurfaceVariant,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -115,7 +115,7 @@ internal fun MineCard(
                     onClick = it,
                     icon = CmpIcons.MoreVert,
                     contentDescription = stringResource(Strings.string.configurator_common_a11y_more),
-                    modifier = Modifier.testTag(ConfiguratorTestTags.mineMenu(item.id))
+                    modifier = Modifier.testTag(ConfiguratorTestTags.mineMenu(item.id)),
                 )
             }
         }
@@ -129,13 +129,13 @@ internal fun CloudItemCard(
     selected: Boolean,
     dateText: (LocalDateTime) -> String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     CmpClickableCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().testTag(ConfiguratorTestTags.cloud(item.id)),
-        border = if (selected) BorderStroke(2.dp, colors.primary) else null
+        border = if (selected) BorderStroke(2.dp, colors.primary) else null,
     ) {
         CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             CmpRow(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -145,7 +145,7 @@ internal fun CloudItemCard(
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 RatingLabel(item.rating)
             }
@@ -155,7 +155,7 @@ internal fun CloudItemCard(
                     style = CmpTextStyle.Body,
                     color = colors.onSurfaceVariant,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             CloudMeta(item, dateText)
@@ -171,20 +171,20 @@ internal fun CloudMeta(item: CloudConfigurationSummary, dateText: (LocalDateTime
     CmpFlowRow(
         itemVerticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         ModelBadge(item.deviceName)
         if (item.onlyForAuthor) {
             CmpText(
                 text = stringResource(Strings.string.configurator_cloud_label_only_author),
                 style = CmpTextStyle.Body,
-                color = colors.onTertiaryContainer
+                color = colors.onTertiaryContainer,
             )
         }
         CmpText(
             text = stringResource(Strings.string.configurator_cloud_format_meta, item.author, dateText(item.updated)),
             style = CmpTextStyle.Body,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
 }

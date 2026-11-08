@@ -95,14 +95,14 @@ internal fun ArchiveNoUnitContext(
     channel: FirmwareChannel,
     onChangeModel: () -> Unit,
     onChannelSelect: (FirmwareChannel) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     CmpSurface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         // Узко — канал переносится под подсистему (ей нужна вся ширина), широко — в одну строку.
         BoxWithConstraints {
@@ -115,7 +115,7 @@ internal fun ArchiveNoUnitContext(
                 CmpRow(
                     modifier = Modifier.padding(6.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     ModelButton(system, subsystem, systemName, onChangeModel, Modifier.weight(1f))
                     ChannelChip(channel, onChannelSelect)
@@ -131,7 +131,7 @@ private fun ModelButton(
     subsystem: String,
     systemName: String?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     val a11y = stringResource(Strings.string.firmware_archive_a11y_change_model)
@@ -140,18 +140,18 @@ private fun ModelButton(
         modifier = modifier.heightIn(min = 56.dp).testTag(ARCHIVE_CHANGE_MODEL_TAG),
         shape = RoundedCornerShape(12.dp),
         color = colors.surfaceContainerLow,
-        contentColor = colors.onSurface
+        contentColor = colors.onSurface,
     ) {
         CmpRow(
             modifier = Modifier.padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(
                 icon = CmpIcons.Memory,
                 contentDescription = a11y,
                 tint = colors.primary,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size(26.dp),
             )
             CmpColumn(modifier = Modifier.weight(1f)) {
                 CmpText(text = system, fontSize = 13.sp, color = colors.onSurfaceVariant)
@@ -165,13 +165,13 @@ private fun ModelButton(
                 text = stringResource(Strings.string.firmware_archive_btn_change_model),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.primary
+                color = colors.primary,
             )
             CmpIcon(
                 icon = CmpIcons.ChevronRight,
                 contentDescription = null,
                 tint = colors.primary,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(22.dp),
             )
         }
     }
@@ -187,14 +187,14 @@ internal fun RowExportActions(key: String, busy: Boolean, onDownload: () -> Unit
                 icon = CmpIcons.Share,
                 contentDescription = stringResource(Strings.string.firmware_archive_btn_share),
                 enabled = !busy,
-                modifier = Modifier.testTag(archiveShareTag(key))
+                modifier = Modifier.testTag(archiveShareTag(key)),
             )
         }
         CmpOutlinedButton(
             text = downloadLabel(busy),
             onClick = onDownload,
             enabled = !busy,
-            modifier = Modifier.height(ButtonHeight).testTag(archiveDownloadTag(key))
+            modifier = Modifier.height(ButtonHeight).testTag(archiveDownloadTag(key)),
         )
     }
 }
@@ -207,14 +207,14 @@ internal fun DetailExportActions(busy: Boolean, onDownload: () -> Unit, onShare:
             text = downloadLabel(busy),
             onClick = onDownload,
             enabled = !busy,
-            modifier = Modifier.widthIn(min = 200.dp).height(52.dp)
+            modifier = Modifier.widthIn(min = 200.dp).height(52.dp),
         )
         if (onShare != null) {
             CmpOutlinedButton(
                 text = stringResource(Strings.string.firmware_archive_btn_share),
                 onClick = onShare,
                 enabled = !busy,
-                modifier = Modifier.widthIn(min = 180.dp).height(52.dp)
+                modifier = Modifier.widthIn(min = 180.dp).height(52.dp),
             )
         }
     }
@@ -225,28 +225,28 @@ internal fun DetailExportActions(busy: Boolean, onDownload: () -> Unit, onShare:
 internal fun ArchiveNoModelFirmware(model: String, onChangeModel: () -> Unit) {
     CmpBox(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpColumn(
             modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             FirmwareHero(icon = CmpIcons.Inventory2, tone = HeroTone.Neutral, size = 88.dp)
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_title_no_model_firmware, model),
                 style = CmpTextStyle.Title,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_msg_no_model_firmware),
                 color = cmpThemeColors().onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
             CmpButton(
                 text = stringResource(Strings.string.firmware_archive_btn_other_model),
                 onClick = onChangeModel,
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+                modifier = Modifier.fillMaxWidth().height(52.dp),
             )
         }
     }
@@ -270,9 +270,9 @@ internal fun ArchiveExportBanner(error: ArchiveExportError, onDismiss: () -> Uni
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
-        }
+        },
     )
 }
 
@@ -288,7 +288,7 @@ internal fun ArchiveSavedDialog(
     canOpenFolder: Boolean,
     onShare: () -> Unit,
     onOpenFolder: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val colors = cmpThemeColors()
     val primary: (@Composable () -> Unit)? = when {
@@ -296,7 +296,7 @@ internal fun ArchiveSavedDialog(
             {
                 CmpButton(
                     text = stringResource(Strings.string.firmware_archive_btn_open_folder),
-                    onClick = onOpenFolder
+                    onClick = onOpenFolder,
                 )
             }
         }
@@ -311,7 +311,7 @@ internal fun ArchiveSavedDialog(
         CmpTextButton(
             text = stringResource(Strings.string.firmware_archive_btn_done),
             onClick = onDismiss,
-            modifier = Modifier.height(ButtonHeight)
+            modifier = Modifier.height(ButtonHeight),
         )
     }
     CmpDialog(
@@ -328,9 +328,9 @@ internal fun ArchiveSavedDialog(
                             FirmwareSaveTarget.Downloads -> Strings.string.firmware_archive_msg_saved_downloads
                             FirmwareSaveTarget.Folder -> Strings.string.firmware_archive_msg_saved_folder
                             FirmwareSaveTarget.Chosen -> Strings.string.firmware_archive_msg_saved_chosen
-                        }
+                        },
                     ),
-                    style = CmpTextStyle.Body
+                    style = CmpTextStyle.Body,
                 )
                 if (target == FirmwareSaveTarget.Folder) {
                     saved.folder?.let { CmpText(text = it, fontSize = 14.sp, color = colors.onSurfaceVariant) }
@@ -338,22 +338,22 @@ internal fun ArchiveSavedDialog(
                 CmpSurface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    color = colors.surfaceContainerHighest
+                    color = colors.surfaceContainerHighest,
                 ) {
                     CmpText(
                         text = saved.fileName,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                     )
                 }
                 CmpText(
                     text = stringResource(Strings.string.firmware_archive_msg_saved_hint),
-                    style = CmpTextStyle.Body
+                    style = CmpTextStyle.Body,
                 )
             }
         },
         dismissButton = if (primary != null) done else null,
-        confirmButton = primary ?: done
+        confirmButton = primary ?: done,
     )
 }
 

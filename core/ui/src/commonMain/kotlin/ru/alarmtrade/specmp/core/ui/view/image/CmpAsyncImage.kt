@@ -61,7 +61,7 @@ fun CmpAsyncImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
     alignment: Alignment = Alignment.Center,
-    imageLoader: ImageLoader = cmpImageLoader()
+    imageLoader: ImageLoader = cmpImageLoader(),
 ) {
     AsyncImage(
         model = model,
@@ -69,7 +69,7 @@ fun CmpAsyncImage(
         imageLoader = imageLoader,
         modifier = modifier,
         contentScale = contentScale,
-        alignment = alignment
+        alignment = alignment,
     )
 }
 
@@ -93,13 +93,13 @@ fun CmpSubcomposeAsyncImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     imageLoader: ImageLoader = cmpImageLoader(),
-    content: @Composable CmpSubcomposeAsyncImageScope.() -> Unit
+    content: @Composable CmpSubcomposeAsyncImageScope.() -> Unit,
 ) {
     SubcomposeAsyncImage(
         model = model,
         contentDescription = contentDescription,
         imageLoader = imageLoader,
-        modifier = modifier
+        modifier = modifier,
     ) {
         content(CmpSubcomposeAsyncImageScope(painter))
     }
@@ -124,14 +124,14 @@ fun CmpAsyncImageWithPlaceholder(
     placeholder: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    imageLoader: ImageLoader = cmpImageLoader()
+    imageLoader: ImageLoader = cmpImageLoader(),
 ) {
     var phase by remember(model) { mutableStateOf(ImagePhase.LOADING) }
     var fade by remember(model) { mutableStateOf(true) }
     val alpha = animateFloatAsState(
         targetValue = if (phase == ImagePhase.SUCCESS) 1f else 0f,
         animationSpec = if (fade) tween(IMAGE_FADE_MS) else snap(),
-        label = "imageFade"
+        label = "imageFade",
     )
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (phase != ImagePhase.SUCCESS) placeholder()
@@ -151,7 +151,7 @@ fun CmpAsyncImageWithPlaceholder(
                 if (state is AsyncImagePainter.State.Success) {
                     fade = state.result.dataSource != DataSource.MEMORY_CACHE
                 }
-            }
+            },
         )
     }
 }

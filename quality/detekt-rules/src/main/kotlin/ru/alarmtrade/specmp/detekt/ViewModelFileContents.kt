@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.psi.KtTypeAlias
 class ViewModelFileContents(config: Config) :
     Rule(
         config,
-        "Файл ViewModel содержит только ViewModel: остальные типы — в своих файлах или вложенными private-типами."
+        "Файл ViewModel содержит только ViewModel: остальные типы — в своих файлах или вложенными private-типами.",
     ) {
 
     override fun visitKtFile(file: KtFile) {

@@ -20,7 +20,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarg
  * разными потоками SDK. Файл по `url` SDK скачивает сам — это стадия [FirmwareUpdateProgress.Preparing].
  */
 class SpecialistFirmwareUpdateRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
+    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : FirmwareUpdateRepository {
 
     override fun update(target: BootModeTarget, firmware: FirmwareVersion): Flow<FirmwareUpdateProgress> =
@@ -55,7 +55,7 @@ class SpecialistFirmwareUpdateRepository(
                         FirmwareFailure.Preparation
                     } else {
                         FirmwareFailure.Unknown
-                    }
+                    },
                 )
             }
             emit(last)

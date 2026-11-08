@@ -20,7 +20,7 @@ import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
 class SpecialistLoginRepository(
     private val authInteractor: AuthInteractor,
-    private val specialistInitializer: SpecialistInitializer
+    private val specialistInitializer: SpecialistInitializer,
 ) : LoginRepository {
 
     override suspend fun login(credentials: LoginCredentials): Response<LoginResult> =
@@ -53,24 +53,24 @@ class SpecialistLoginRepository(
 
     private fun LoginCredentials.toLoginRequest(): LoginRequest = LoginRequest(
         username = normalizedLogin,
-        password = password
+        password = password,
     )
 
     private fun SignUpCredentials.toSignUpRequest(): SignUpRequest = SignUpRequest(
         email = normalizedEmail,
         password = password,
         fullName = normalizedFullName,
-        phoneNumber = normalizedPhoneNumber
+        phoneNumber = normalizedPhoneNumber,
     )
 
     private fun ResetPasswordCredentials.toResetPasswordRequest(): ResetPasswordRequest = ResetPasswordRequest(
-        login = normalizedEmail
+        login = normalizedEmail,
     )
 
     private fun LoginCredentials.toResendActivationEmailRequest(): ResendActivationEmailRequest =
         ResendActivationEmailRequest(
             email = normalizedLogin,
-            password = password
+            password = password,
         )
 
     private suspend fun saveDeviceInformation(): Response<Unit> = specialistInitializer.syncClientInfo()

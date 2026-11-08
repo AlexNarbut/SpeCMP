@@ -71,7 +71,7 @@ class FirmwareUpdateViewModel(
     private val updateRepository: FirmwareUpdateRepository,
     bootRequester: FirmwareBootRequester,
     archivePicker: FirmwareArchivePicker,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
     // Начальное состояние — из запроса входа в загрузчик (модуль и канал), при создании VM.
@@ -79,21 +79,21 @@ class FirmwareUpdateViewModel(
         MutableStateFlow(
             Core(
                 selectedModuleId = request?.moduleId,
-                channel = request?.channel ?: FirmwareChannel.RELEASE
-            )
+                channel = request?.channel ?: FirmwareChannel.RELEASE,
+            ),
         )
     }
 
     // Запуск (и отмена, `null`) обновления: collectLatest отменяет предыдущий процесс сам, без поля-Job.
     private val updateRequests = MutableSharedFlow<UpdateSource?>(
         extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     val state: StateFlow<FirmwareUpdateState> = combine(
         core,
         deviceSession.state,
-        deviceSession.reboot
+        deviceSession.reboot,
     ) { core, session, reboot -> toState(core, session, reboot) }
         // Всё живёт всю жизнь VM (обновление идёт и пока экран перекрыт архивом). Подписки на запросы — до первого
         // запроса (UNDISPATCHED): у SharedFlow без replay запрос без подписчика потерялся бы.
@@ -109,7 +109,7 @@ class FirmwareUpdateViewModel(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            toState(core.value, deviceSession.state.value, deviceSession.reboot.value)
+            toState(core.value, deviceSession.state.value, deviceSession.reboot.value),
         )
 
     private val _effect = sideEffectFlow<FirmwareUpdateEffect>()
@@ -166,7 +166,7 @@ class FirmwareUpdateViewModel(
                     device.displayFirmwareVersion,
                     // CAN — как блок сообщает его в загрузчике; не сообщил — ищем по всем версиям.
                     can = device.can.toFirmwareCan(),
-                    factoryCan = device.can?.isFactory == true
+                    factoryCan = device.can?.isFactory == true,
                 )
             }
 
@@ -177,7 +177,7 @@ class FirmwareUpdateViewModel(
                     BootModeTarget.BluetoothModule,
                     manufacturer.firmwareName,
                     manufacturer.deviceName,
-                    manufacturer.mainFirmwareVersion
+                    manufacturer.mainFirmwareVersion,
                 )
             }
 
@@ -197,7 +197,7 @@ class FirmwareUpdateViewModel(
                     canExit = transport == ConnectionTransport.BLE,
                     overBle = transport == ConnectionTransport.BLE,
                     can = source.can,
-                    factoryCan = source.factoryCan
+                    factoryCan = source.factoryCan,
                 ),
                 selectedModuleId = state.selectedModuleId?.takeIf { id -> modules.any { it.id == id } }
                     ?: modules.firstOrNull()?.id,
@@ -205,7 +205,7 @@ class FirmwareUpdateViewModel(
                     if (modules.isEmpty()) UpdatePhase.DataError else UpdatePhase.Source
                 } else {
                     state.stage
-                }
+                },
             )
         }
     }
@@ -217,7 +217,7 @@ class FirmwareUpdateViewModel(
         val title: String,
         val current: String,
         val can: FirmwareCan? = null,
-        val factoryCan: Boolean = false
+        val factoryCan: Boolean = false,
     )
 
     // ───── интенты ─────
@@ -252,12 +252,12 @@ class FirmwareUpdateViewModel(
                         is Response.Success -> state.copy(
                             stage = UpdatePhase.Confirm,
                             candidate = response.value,
-                            localFile = null
+                            localFile = null,
                         )
 
                         is Response.Error -> state.copy(
                             stage = UpdatePhase.Source,
-                            sourceError = FirmwareError.from(response.exception)
+                            sourceError = FirmwareError.from(response.exception),
                         )
                     }
                 }
@@ -284,9 +284,9 @@ class FirmwareUpdateViewModel(
                     deviceCanVersion = profile.can?.version,
                     deviceCanProfile = profile.can?.profileName,
                     deviceCanFactory = profile.factoryCan,
-                    canFilterAllowed = current.isAlarmMain
-                )
-            )
+                    canFilterAllowed = current.isAlarmMain,
+                ),
+            ),
         )
     }
 
@@ -301,7 +301,7 @@ class FirmwareUpdateViewModel(
                     candidate = null,
                     localFile = result,
                     sourceError = null,
-                    fileError = null
+                    fileError = null,
                 )
 
                 FirmwareFilePickResult.TooLarge -> state.copy(fileError = FileError.TooLarge)
@@ -353,7 +353,7 @@ class FirmwareUpdateViewModel(
                     candidate = null,
                     localFile = null,
                     sourceError = null,
-                    exitError = false
+                    exitError = false,
                 )
             }
         } else {

@@ -40,9 +40,9 @@ class FastMountMappersTest {
                 StateTitle.KEY_BYPASS_LEARNING_FINISHED,
                 StateTitle.CLONE_FINISHED,
                 StateTitle.SLAVE_LEARNING_FINISHED,
-                StateTitle.SYSTEM_CHECK_FINISHED
+                StateTitle.SYSTEM_CHECK_FINISHED,
             ),
-            shown.filterValues { it == null }.keys
+            shown.filterValues { it == null }.keys,
         )
         // Каждый шаг мастера достижим из какого-то состояния SDK.
         assertEquals(FastMountStep.entries.toSet(), shown.values.filterNotNull().toSet())
@@ -59,7 +59,7 @@ class FastMountMappersTest {
         assertEquals(FastMountFailure.TransportNotSupported, NotImplementedError().toFastMountFailure())
         assertEquals(
             FastMountFailure.TransportNotSupported,
-            CannotExecuteByCurrentConnectionType("op", ConnectionType.USB).toFastMountFailure()
+            CannotExecuteByCurrentConnectionType("op", ConnectionType.USB).toFastMountFailure(),
         )
         assertNull(IllegalStateException().toFastMountFailure())
     }
@@ -68,7 +68,7 @@ class FastMountMappersTest {
     fun deviceClassByMainSubsystem() {
         assertEquals(
             MountDeviceClass.ALARM,
-            listOf(SubsystemType.BLUETOOTH_MODULE, SubsystemType.ALARM_MAIN).toDeviceClass()
+            listOf(SubsystemType.BLUETOOTH_MODULE, SubsystemType.ALARM_MAIN).toDeviceClass(),
         )
         assertEquals(MountDeviceClass.MICROBOT, listOf(SubsystemType.MICROBOT_MAIN).toDeviceClass())
         assertEquals(MountDeviceClass.OTHER, listOf(SubsystemType.WATCH_MAIN).toDeviceClass())

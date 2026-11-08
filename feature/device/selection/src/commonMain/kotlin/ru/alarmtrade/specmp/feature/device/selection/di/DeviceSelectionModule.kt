@@ -17,7 +17,7 @@ val deviceSelectionModule = module {
         SpecialistDeviceScanRepository(
             bluetoothConnectorInteractor = { get() },
             usbConnectorInteractor = { get() },
-            serialConnectorInteractor = { get() }
+            serialConnectorInteractor = { get() },
         )
     }
     // serialEnabled — поиск COM-портов (только приложение прошивки), alarmsOnly — только сигнализации (быстрый

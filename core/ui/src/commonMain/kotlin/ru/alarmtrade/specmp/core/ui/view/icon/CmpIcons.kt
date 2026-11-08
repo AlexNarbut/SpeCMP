@@ -191,5 +191,5 @@ enum class CmpIcons {
     StarBorder,
     RestartAlt,
     CloudDone,
-    CloudSync
+    CloudSync,
 }

@@ -69,7 +69,7 @@ internal fun ChannelRow(
     path: String?,
     actions: SettingRowActions,
     infoButton: @Composable () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     val channel = setting.channelOrNull ?: return
@@ -88,14 +88,14 @@ internal fun ChannelRow(
             .heightIn(min = 56.dp)
             .clickable(role = if (toggle != null) Role.Switch else Role.Button, onClick = onClick)
             .padding(end = 4.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         infoButton()
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             CmpFlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                itemVerticalAlignment = Alignment.CenterVertically
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 if (setting.number.isNotEmpty()) {
                     CmpText(text = setting.number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
@@ -104,7 +104,7 @@ internal fun ChannelRow(
                     text = settingTitle(setting.name, channel),
                     style = CmpTextStyle.BodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface
+                    color = colors.onSurface,
                 )
                 ChannelBadge(setting)
                 if (changed) ChangedChip()
@@ -116,7 +116,7 @@ internal fun ChannelRow(
                     style = CmpTextStyle.BodyLarge,
                     color = if (functions.isEmpty()) colors.onSurfaceVariant else colors.primary,
                     maxLines = FUNCTIONS_MAX_LINES,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             if (path != null) {
@@ -150,7 +150,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
     when (setting) {
         is SwitchOutputSetting -> CmpBox(
             modifier = Modifier.size(width = 64.dp, height = 48.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpSwitch(checked = setting.value.enabled, onCheckedChange = null)
         }
@@ -161,7 +161,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                 icon = CmpIcons.SwapHoriz,
                 contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_contact),
                 tint = colors.primary,
-                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
+                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id)),
             )
         }
 
@@ -171,7 +171,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                 icon = CmpIcons.SwapHoriz,
                 contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_polarity),
                 tint = colors.primary,
-                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
+                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id)),
             )
         } else {
             CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -179,7 +179,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                     icon = CmpIcons.Lock,
                     contentDescription = stringResource(Strings.string.settings_io_a11y_locked),
                     tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -222,10 +222,10 @@ private fun InputValue.toggled() = copy(
     type = when (type) {
         InputContactType.NORMALLY_OPEN -> InputContactType.NORMALLY_CLOSED
         else -> InputContactType.NORMALLY_OPEN
-    }
+    },
 )
 
 /** − ↔ +; не заданная полярность становится «+» (после «−» по умолчанию). */
 private fun OutputValue.toggled() = copy(
-    polarity = if (polarity == Polarity.MINUS) Polarity.PLUS else Polarity.MINUS
+    polarity = if (polarity == Polarity.MINUS) Polarity.PLUS else Polarity.MINUS,
 )

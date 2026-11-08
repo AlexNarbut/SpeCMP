@@ -88,7 +88,7 @@ internal fun FastMountScreen(
     onExit: () -> Unit,
     onChooseAnother: () -> Unit,
     onOpenAdvancedMount: () -> Unit,
-    slots: FastMountSlots
+    slots: FastMountSlots,
 ) {
     val viewModel = koinViewModel<FastMountViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -109,7 +109,7 @@ internal fun FastMountScreen(
             onChooseAnother = viewModel::onChooseAnother,
             onOpenAdvancedMount = viewModel::onOpenAdvancedMount,
             onRetrySummary = viewModel::onRetrySummary,
-            onStart = viewModel::onStart
+            onStart = viewModel::onStart,
         )
     }
     val master = remember(viewModel) {
@@ -126,7 +126,7 @@ internal fun FastMountScreen(
             onFeedbackChange = viewModel::onFeedbackChange,
             onFeedbackSend = viewModel::onFeedbackSend,
             onRetryStep = viewModel::onRetryStep,
-            onHome = viewModel::onExit
+            onHome = viewModel::onExit,
         )
     }
     val checklist = remember(viewModel) {
@@ -134,7 +134,7 @@ internal fun FastMountScreen(
             onAnswer = viewModel::onTaskAnswer,
             onSkip = viewModel::onTaskSkip,
             onNext = viewModel::onSystemCheckNext,
-            onBack = viewModel::onSystemCheckBack
+            onBack = viewModel::onSystemCheckBack,
         )
     }
     FastMountContent(
@@ -145,7 +145,7 @@ internal fun FastMountScreen(
         onDialogConfirm = viewModel::onDialogConfirm,
         onDialogDismiss = viewModel::onDialogDismiss,
         onToastHide = viewModel::onToastShown,
-        onExit = viewModel::onExit
+        onExit = viewModel::onExit,
     )
 }
 
@@ -175,7 +175,7 @@ private fun SlotScreen(
     state: FastMountState,
     slots: FastMountSlots,
     viewModel: FastMountViewModel,
-    checklist: MountChecklistActions
+    checklist: MountChecklistActions,
 ) {
     val fixed = state.fixed ?: return
     when (screen) {
@@ -184,7 +184,7 @@ private fun SlotScreen(
         SlotScreen.VEHICLE -> slots.vehiclePicker(
             MountVehicleRequest(fixed.systemName, state.unit?.canCode),
             viewModel::onCarPicked,
-            viewModel::onBack
+            viewModel::onBack,
         )
 
         SlotScreen.CONFIGURATION -> state.car?.let { car ->
@@ -192,7 +192,7 @@ private fun SlotScreen(
                 MountConfigurationRequest(fixed.systemName, state.unit?.canCode, car),
                 viewModel::onConfigurationPicked,
                 viewModel::onOpenFirmwareUpdate,
-                viewModel::onBack
+                viewModel::onBack,
             )
         }
 
@@ -203,7 +203,7 @@ private fun SlotScreen(
         SlotScreen.SYSTEM_CHECK -> slots.systemCheck(
             mountStep(state, RailKey.CHECK, viewModel),
             state.master.checklist,
-            checklist
+            checklist,
         )
     }
 }
@@ -218,7 +218,7 @@ private fun mountStep(state: FastMountState, key: RailKey, viewModel: FastMountV
             topBar = { locked, onBack ->
                 WizardTopBar(title, subtitle, if (locked) WizardNav.LOCK else WizardNav.BACK, onBack)
             },
-            dock = { content -> DockFrame(content = content) }
+            dock = { content -> DockFrame(content = content) },
         )
     }
     val master = state.master
@@ -226,7 +226,7 @@ private fun mountStep(state: FastMountState, key: RailKey, viewModel: FastMountV
         key = "fastmount-${key.name.lowercase()}-${master.stepAttempt}",
         frame = frame,
         next = MountStepNext(busy = master.busy, error = master.error?.takeIf { !master.busy }?.text()),
-        onBack = viewModel::onStepScreenBack
+        onBack = viewModel::onStepScreenBack,
     )
 }
 
@@ -241,7 +241,7 @@ internal fun FastMountContent(
     onDialogDismiss: () -> Unit,
     onToastHide: () -> Unit,
     onExit: () -> Unit,
-    rebootSecondsOverride: Int? = null
+    rebootSecondsOverride: Int? = null,
 ) {
     val rebooting = state.screen == WizardScreen.MASTER && state.master.screen == MasterScreen.REBOOTING
     val rebootSeconds = rebootSecondsOverride ?: rememberRebootSeconds(rebooting)
@@ -251,7 +251,7 @@ internal fun FastMountContent(
     if (slot == null && state.wrongDevice == null) {
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
-            onBackCompleted = if (state.screen == WizardScreen.CHECK) prep.onChooseAnother else prep.onBack
+            onBackCompleted = if (state.screen == WizardScreen.CHECK) prep.onChooseAnother else prep.onBack,
         )
     }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -267,7 +267,7 @@ internal fun FastMountContent(
                         width = railWidth,
                         rebootSeconds = rebootSeconds,
                         dense = dense,
-                        car = state.railCar()
+                        car = state.railCar(),
                     )
                 }
                 CmpBox(modifier = Modifier.weight(1f).fillMaxSize()) {
@@ -279,7 +279,7 @@ internal fun FastMountContent(
                             prep,
                             master,
                             model.rows.firstOrNull { it.status == RailStatus.NEXT }?.key,
-                            rebootSeconds
+                            rebootSeconds,
                         )
                     }
                     Toast(state.master.toast, onToastHide, Modifier.align(Alignment.BottomCenter))
@@ -297,7 +297,7 @@ private fun OwnScreen(
     prep: PrepActions,
     master: MasterActions,
     rebootNext: RailKey?,
-    rebootSeconds: Int
+    rebootSeconds: Int,
 ) {
     when (state.screen) {
         WizardScreen.CHECK -> UnitCheckScreen(state, prep)
@@ -371,7 +371,7 @@ private fun Toast(toast: WizardToast?, onHide: () -> Unit, modifier: Modifier = 
             WizardToast.SETTINGS_WRITTEN -> Strings.string.fastmount_write_msg_done
             WizardToast.FILE_NO_APP -> Strings.string.fastmount_common_msg_file_no_app
             WizardToast.FILE_FAILED -> Strings.string.fastmount_common_msg_file_failed
-        }
+        },
     )
     CmpBox(modifier = modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 100.dp)) {
         CmpBox(
@@ -382,7 +382,7 @@ private fun Toast(toast: WizardToast?, onHide: () -> Unit, modifier: Modifier = 
                 .heightIn(min = 56.dp)
                 .background(colors.onSurface, RoundedCornerShape(12.dp))
                 .padding(horizontal = 16.dp, vertical = 14.dp),
-            contentAlignment = Alignment.CenterStart
+            contentAlignment = Alignment.CenterStart,
         ) {
             CmpText(text = text, color = colors.surface)
         }
@@ -399,7 +399,7 @@ private fun WrongDeviceOverlay(expected: String, connected: String, onExit: () -
             Hero(
                 title = stringResource(Strings.string.fastmount_wrong_title_screen),
                 text = stringResource(Strings.string.fastmount_wrong_format_msg, connected, expected),
-                art = { RoundArt(icon = CmpIcons.SyncProblem, tone = BannerTone.ERROR, size = 96.dp) }
+                art = { RoundArt(icon = CmpIcons.SyncProblem, tone = BannerTone.ERROR, size = 96.dp) },
             ) {
                 CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     UnitRow(stringResource(Strings.string.fastmount_wrong_label_connected), connected, ok = false)
@@ -407,20 +407,20 @@ private fun WrongDeviceOverlay(expected: String, connected: String, onExit: () -
                 }
                 CmpRow(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     CmpCircularProgressIndicator(modifier = Modifier.widthIn(max = 18.dp), strokeWidth = 2.5.dp)
                     CmpText(
                         text = stringResource(Strings.string.fastmount_wrong_format_wait, expected),
                         color = colors.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
                 MainButton(
                     text = stringResource(Strings.string.fastmount_wrong_btn_disconnect),
                     icon = CmpIcons.LinkOff,
                     outlined = true,
-                    onClick = onExit
+                    onClick = onExit,
                 )
             }
         }
@@ -438,12 +438,12 @@ private fun UnitRow(label: String, title: String, ok: Boolean) {
             .background(if (ok) colors.surfaceContainerHigh else colors.errorContainer, RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(
             icon = if (ok) CmpIcons.CheckCircle else CmpIcons.Cancel,
             contentDescription = null,
-            tint = if (ok) colors.primary else colors.onErrorContainer
+            tint = if (ok) colors.primary else colors.onErrorContainer,
         )
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(text = label, style = CmpTextStyle.Body, color = if (ok) colors.onSurfaceVariant else fg)

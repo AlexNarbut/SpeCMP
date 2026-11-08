@@ -35,7 +35,7 @@ internal fun testDevice(
     systemId: Long = 77,
     modelInDatabase: Boolean = true,
     firmware: String = "VER3.57",
-    can: CanInfo? = CanInfo(firmwareVersion = "1.2", code = "0213", isFactory = false)
+    can: CanInfo? = CanInfo(firmwareVersion = "1.2", code = "0213", isFactory = false),
 ) = AlarmDevice(
     systemId = systemId,
     systemName = "DX-9X",
@@ -43,7 +43,7 @@ internal fun testDevice(
     mode = DeviceOperationMode.MAIN,
     features = emptySet(),
     can = can,
-    modelInDatabase = modelInDatabase
+    modelInDatabase = modelInDatabase,
 )
 
 internal class FakeSessionRepository(var device: AlarmDevice = testDevice()) : DeviceSessionRepository {
@@ -51,7 +51,7 @@ internal class FakeSessionRepository(var device: AlarmDevice = testDevice()) : D
 
     override fun linkState(): Flow<DeviceLinkState> = link
     override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Success(
-        BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX-9X", "1.0", "1.14"))
+        BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX-9X", "1.0", "1.14")),
     )
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
     override suspend fun readImei(): Response<String> = Response.Success("")
@@ -86,13 +86,13 @@ internal fun question(id: Int, automatic: Boolean = false) = MountQuestion(
     task = "Задание $id",
     expected = "",
     automatic = automatic,
-    answers = if (automatic) emptyList() else listOf(QuestionAnswer("Да", 1), QuestionAnswer("Нет", 2))
+    answers = if (automatic) emptyList() else listOf(QuestionAnswer("Да", 1), QuestionAnswer("Нет", 2)),
 )
 
 internal fun testConfiguration(
     keyBypass: Boolean = true,
     slave: Boolean = true,
-    questions: List<MountQuestion> = listOf(question(5, automatic = true), question(100), question(101))
+    questions: List<MountQuestion> = listOf(question(5, automatic = true), question(100), question(101)),
 ) = FastMountConfiguration(
     id = 42,
     name = "Polo VI",
@@ -105,7 +105,7 @@ internal fun testConfiguration(
     images = emptyList(),
     keyBypass = keyBypass,
     slave = slave,
-    questions = questions
+    questions = questions,
 )
 
 /**

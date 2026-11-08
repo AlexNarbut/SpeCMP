@@ -21,7 +21,7 @@ sealed class SupportChatAttachment {
         override val id: String,
         override val name: String,
         override val url: String? = null,
-        override val localPath: String? = null
+        override val localPath: String? = null,
     ) : SupportChatAttachment()
 
     data class Document(
@@ -30,6 +30,6 @@ sealed class SupportChatAttachment {
         override val url: String? = null,
         override val localPath: String? = null,
         val mimeType: String? = null,
-        val sizeBytes: Long? = null
+        val sizeBytes: Long? = null,
     ) : SupportChatAttachment()
 }

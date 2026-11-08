@@ -17,7 +17,7 @@ fun AuthStateNavGraph(
     waitingState: @Composable () -> Unit,
     noAuthState: @Composable () -> Unit,
     authedState: @Composable () -> Unit,
-    errorState: @Composable (onRetry: () -> Unit) -> Unit
+    errorState: @Composable (onRetry: () -> Unit) -> Unit,
 ) {
     val viewModel = koinViewModel<AuthStateViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -28,7 +28,7 @@ fun AuthStateNavGraph(
             fadeIn(animationSpec = tween(TRANSITION_DURATION_MILLIS))
                 .togetherWith(fadeOut(animationSpec = tween(TRANSITION_DURATION_MILLIS)))
         },
-        label = ANIMATION_LABEL
+        label = ANIMATION_LABEL,
     ) { current ->
         when (current.state) {
             AuthState.WAITING -> waitingState()

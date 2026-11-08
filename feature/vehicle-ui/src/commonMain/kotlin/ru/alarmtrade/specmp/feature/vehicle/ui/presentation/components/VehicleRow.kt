@@ -40,7 +40,7 @@ internal fun VehicleRow(
     lead: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     action: (@Composable () -> Unit)? = null,
-    content: (@Composable () -> Unit)? = null
+    content: (@Composable () -> Unit)? = null,
 ) {
     val colors = cmpThemeColors()
     CmpColumn(modifier = modifier.fillMaxWidth()) {
@@ -53,7 +53,7 @@ internal fun VehicleRow(
                 .heightIn(min = if (dense) 56.dp else 64.dp)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             lead?.invoke()
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -62,7 +62,7 @@ internal fun VehicleRow(
                     style = CmpTextStyle.BodyLarge,
                     color = if (selected) colors.onSecondaryContainer else colors.onSurface,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 subtitle?.let {
                     CmpText(
@@ -70,7 +70,7 @@ internal fun VehicleRow(
                         style = CmpTextStyle.Body,
                         color = colors.onSurfaceVariant,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 action?.invoke()
@@ -81,7 +81,7 @@ internal fun VehicleRow(
                 chevron -> CmpIcon(
                     icon = CmpIcons.ChevronRight,
                     contentDescription = null,
-                    tint = colors.onSurfaceVariant
+                    tint = colors.onSurfaceVariant,
                 )
             }
         }

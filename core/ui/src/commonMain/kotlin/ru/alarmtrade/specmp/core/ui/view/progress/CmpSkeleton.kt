@@ -30,12 +30,12 @@ fun CmpSkeleton(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape
         initialValue = 1f,
         targetValue = SKELETON_MIN_ALPHA,
         animationSpec = infiniteRepeatable(tween(SKELETON_PERIOD_MS, easing = LinearEasing), RepeatMode.Reverse),
-        label = "skeletonAlpha"
+        label = "skeletonAlpha",
     )
     // Альфа читается в фазе draw: пульс не рекомпозирует скелетон каждый кадр.
     Box(
         modifier
             .graphicsLayer { this.alpha = alpha.value }
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape),
     )
 }

@@ -13,5 +13,5 @@ internal fun carLabel(car: CarSummary): String = stringResource(
     Strings.string.settings_can_format_car,
     car.fullName(),
     car.years.first,
-    car.years.last
+    car.years.last,
 )

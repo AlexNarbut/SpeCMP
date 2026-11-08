@@ -6,7 +6,7 @@ import androidx.compose.ui.unit.dp
 enum class AuthLayoutMode {
     Compact,
     Medium,
-    Expanded
+    Expanded,
 }
 
 fun authLayoutModeForWidth(width: Dp): AuthLayoutMode = when {

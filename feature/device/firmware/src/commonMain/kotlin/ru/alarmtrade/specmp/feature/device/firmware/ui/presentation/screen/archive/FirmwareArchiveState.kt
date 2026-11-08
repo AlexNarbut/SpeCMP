@@ -32,7 +32,7 @@ data class ArchiveRowUi(
     /** Версия собрана под CAN-код подключённого блока — подсветка «как в блоке». */
     val canMatchesDevice: Boolean = false,
     /** Под CAN-код блока, но профиль у блока другой (пояснение в панели версии). */
-    val canProfileDiffers: Boolean = false
+    val canProfileDiffers: Boolean = false,
 ) {
     val key: String get() = archiveRowKey(version, canCode, canVersion)
 }
@@ -53,7 +53,7 @@ data class CanFilterUi(
     val deviceProfile: String? = null,
     val deviceFactory: Boolean = false,
     /** Архив без блока: под пустым полем — «Выберите автомобиль…». */
-    val noUnit: Boolean = false
+    val noUnit: Boolean = false,
 ) {
     /** В поле код блока — фильтр поставлен приложением («подставлен автоматически»). */
     val isDeviceCode: Boolean get() = deviceCode != null && input == deviceCode
@@ -121,7 +121,7 @@ data class FirmwareArchiveState(
     val exportError: ArchiveExportError? = null,
     val saveTarget: FirmwareSaveTarget = FirmwareSaveTarget.Downloads,
     val canShare: Boolean = false,
-    val canOpenFolder: Boolean = false
+    val canOpenFolder: Boolean = false,
 )
 
 /** Действия экрана архива (stateless-контент получает их от VM или заглушки в галерее состояний). */
@@ -144,7 +144,7 @@ class FirmwareArchiveActions(
     val onSavedShare: () -> Unit = {},
     val onSavedOpenFolder: () -> Unit = {},
     val onSavedDismiss: () -> Unit = {},
-    val onExportErrorDismiss: () -> Unit = {}
+    val onExportErrorDismiss: () -> Unit = {},
 )
 
 sealed interface FirmwareArchiveEffect {

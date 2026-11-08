@@ -23,6 +23,6 @@ actual fun createSpecialistDeviceInformation(): AppDeviceInformation {
     return AppDeviceInformation(
         deviceId = deviceId,
         deviceType = deviceType,
-        deviceDescription = "$osName $osVersion, JVM $javaVersion $javaVendor, SpeCMP"
+        deviceDescription = "$osName $osVersion, JVM $javaVersion $javaVendor, SpeCMP",
     )
 }

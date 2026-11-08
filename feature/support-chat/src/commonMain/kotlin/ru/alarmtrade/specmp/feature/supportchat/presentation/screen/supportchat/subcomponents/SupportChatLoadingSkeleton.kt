@@ -34,9 +34,9 @@ internal fun SupportChatLoadingSkeleton(colors: CmpThemeColors, modifier: Modifi
         targetValue = 0.85f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 900),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = SKELETON_ALPHA_LABEL
+        label = SKELETON_ALPHA_LABEL,
     )
     val skeletonColor = colors.surfaceVariant.copy(alpha = alpha)
 
@@ -44,14 +44,14 @@ internal fun SupportChatLoadingSkeleton(colors: CmpThemeColors, modifier: Modifi
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpBox(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .width(96.dp)
                 .height(28.dp)
-                .background(skeletonColor, RoundedCornerShape(percent = 50))
+                .background(skeletonColor, RoundedCornerShape(percent = 50)),
         )
         SkeletonBubble(widthFraction = 0.78f, height = 72.dp, isMine = true, color = skeletonColor)
         SkeletonBubble(widthFraction = 0.62f, height = 56.dp, isMine = true, color = skeletonColor)
@@ -65,7 +65,7 @@ internal fun SupportChatLoadingSkeleton(colors: CmpThemeColors, modifier: Modifi
 private fun SkeletonBubble(widthFraction: Float, height: Dp, isMine: Boolean, color: Color) {
     CmpBox(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart
+        contentAlignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart,
     ) {
         CmpBox(
             modifier = Modifier
@@ -77,9 +77,9 @@ private fun SkeletonBubble(widthFraction: Float, height: Dp, isMine: Boolean, co
                         topStart = 16.dp,
                         topEnd = 16.dp,
                         bottomStart = if (isMine) 16.dp else 4.dp,
-                        bottomEnd = if (isMine) 4.dp else 16.dp
-                    )
-                )
+                        bottomEnd = if (isMine) 4.dp else 16.dp,
+                    ),
+                ),
         )
     }
 }

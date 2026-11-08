@@ -18,13 +18,13 @@ class VehicleSelectTransitionsTest {
             configurationsOnly = false,
             typeSelectable = false,
             deviceName = "DX-9X",
-            firmwareCanCode = null
-        )
+            firmwareCanCode = null,
+        ),
     )
     private val inCard = base.copy(
         selection = CatalogSelection(brand, model, carId = 1),
         trims = LCEState.Content(listOf(CarTrim(1, "1.4"))),
-        query = "a1"
+        query = "a1",
     )
 
     @Test
@@ -33,7 +33,7 @@ class VehicleSelectTransitionsTest {
         assertEquals(CatalogSelection(brand), inCard.withCrumb(CrumbTarget.BRAND).selection)
         assertEquals(
             CatalogSelection(brand, model, carId = null),
-            inCard.withCrumb(CrumbTarget.MODEL).selection
+            inCard.withCrumb(CrumbTarget.MODEL).selection,
         )
         assertEquals(LCEState.None, inCard.withCrumb(CrumbTarget.BRAND).trims)
         assertEquals("", inCard.withCrumb(CrumbTarget.MODEL).query)

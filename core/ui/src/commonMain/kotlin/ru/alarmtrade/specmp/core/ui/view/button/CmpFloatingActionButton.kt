@@ -15,25 +15,25 @@ fun CmpFloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: CmpFabSize = CmpFabSize.Default,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     when (size) {
         CmpFabSize.Small -> SmallFloatingActionButton(
             onClick = onClick,
             modifier = modifier,
-            content = content
+            content = content,
         )
 
         CmpFabSize.Default -> FloatingActionButton(
             onClick = onClick,
             modifier = modifier,
-            content = content
+            content = content,
         )
 
         CmpFabSize.Large -> LargeFloatingActionButton(
             onClick = onClick,
             modifier = modifier,
-            content = content
+            content = content,
         )
     }
 }

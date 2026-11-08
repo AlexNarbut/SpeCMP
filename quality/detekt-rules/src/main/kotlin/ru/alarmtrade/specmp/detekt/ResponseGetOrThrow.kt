@@ -37,8 +37,8 @@ class ResponseGetOrThrow(config: Config) :
                 Entity.from(expression),
                 "getOrThrow() на Response превращает ошибку в исключение: ветвитесь по Response " +
                     "(when/onSuccess/onError/fold/map*) или берите getOrNull()/getOrElse() " +
-                    "(docs/patterns.md, «Контракт результата»)."
-            )
+                    "(docs/patterns.md, «Контракт результата»).",
+            ),
         )
     }
 

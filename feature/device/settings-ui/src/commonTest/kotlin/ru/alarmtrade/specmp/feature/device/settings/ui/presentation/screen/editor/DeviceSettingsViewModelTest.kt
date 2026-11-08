@@ -91,7 +91,7 @@ class DeviceSettingsViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = emptySet(),
-        can = null
+        can = null,
     )
 
     private val shock = SwitchSetting(11, "3.2.1", "Датчик удара", null, SettingValue.Switch(false), null, null)
@@ -102,7 +102,7 @@ class DeviceSettingsViewModelTest {
         SettingValue.Input(InputValue(listOf(true, false), InputContactType.NORMALLY_OPEN)),
         Channel(1, "IN1", emptyList()), Polarity.MINUS,
         availableLogics = listOf(ChannelLogic(0, "Двери", null), ChannelLogic(1, "Багажник", null)),
-        enabledLogics = emptyList()
+        enabledLogics = emptyList(),
     )
     private fun channel(id: Int, on: Boolean) = SwitchOutputSetting(
         id,
@@ -112,7 +112,7 @@ class DeviceSettingsViewModelTest {
         SettingValue.SwitchOutput(on),
         Channel(id, "CH$id", emptyList()),
         Polarity.MINUS,
-        emptyList()
+        emptyList(),
     )
     private val timerChannels =
         SettingsSection(50, "4.1.1", "Выбор канала", null, listOf(channel(51, true), channel(52, false)))
@@ -121,7 +121,7 @@ class DeviceSettingsViewModelTest {
         "",
         "",
         null,
-        listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors)), door, timerChannels, can)
+        listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors)), door, timerChannels, can),
     )
     private val can get() = CanCodeSetting(61, "6.1", "CAN-код", null, SettingValue.Can(CanCode("2154", 17)))
 
@@ -148,7 +148,7 @@ class DeviceSettingsViewModelTest {
 
     private fun TestScope.viewModel(
         source: SettingsSource = SettingsSource.Device,
-        options: SettingsEditorOptions = SettingsEditorOptions()
+        options: SettingsEditorOptions = SettingsEditorOptions(),
     ): DeviceSettingsViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         val session =
@@ -164,7 +164,7 @@ class DeviceSettingsViewModelTest {
             cars,
             session,
             backgroundScope,
-            dispatchers
+            dispatchers,
         )
             .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
@@ -305,7 +305,7 @@ class DeviceSettingsViewModelTest {
 
         assertEquals(
             listOf<Pair<String, SettingsSource>>("Нива без автозапуска" to SettingsSource.Device),
-            local.created
+            local.created,
         )
         assertNull(vm.state.value.saveForm)
     }
@@ -496,7 +496,7 @@ class DeviceSettingsViewModelTest {
         vm.onSettingClick(41)
         assertEquals(
             SettingValue.Input(InputValue(listOf(true, false), InputContactType.NORMALLY_OPEN)),
-            vm.state.value.editing?.original
+            vm.state.value.editing?.original,
         )
         val draft = SettingValue.Input(InputValue(listOf(true, true), InputContactType.NORMALLY_CLOSED))
         vm.onDraftChange(draft)
@@ -770,7 +770,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     override suspend fun copy(
         from: SettingsSource,
         to: SettingsSource,
-        saveChanges: Boolean
+        saveChanges: Boolean,
     ): Response<SettingsSection> {
         copyGate?.await()
         copyResult?.let { return it }
@@ -812,7 +812,7 @@ private class FakeLocalConfigurations : LocalConfigurationsRepository {
         name: String,
         description: String,
         deviceName: String,
-        from: SettingsSource
+        from: SettingsSource,
     ): Response<SettingsSource.LocalConfiguration> {
         created += name to from
         gate?.await()
@@ -858,7 +858,7 @@ private class FakeCars : VehicleCatalogRepository {
     override suspend fun findByCanCode(
         canCode: String,
         device: VehicleDeviceFilter?,
-        groups: Set<CarFeatureGroup>
+        groups: Set<CarFeatureGroup>,
     ): Response<List<CarSummary>> = when {
         fail -> Response.Error(IllegalStateException("no server"))
         canCode == "7001" -> Response.Success(listOf(rio))

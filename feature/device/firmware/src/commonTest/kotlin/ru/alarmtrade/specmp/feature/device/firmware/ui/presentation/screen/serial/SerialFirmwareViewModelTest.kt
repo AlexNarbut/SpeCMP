@@ -46,11 +46,11 @@ class SerialFirmwareViewModelTest {
         firmwareVersion = "VER1.00",
         mode = DeviceOperationMode.BOOT,
         features = null,
-        can = null
+        can = null,
     )
 
     private class FakeSerialRepository(
-        var fileInfo: Response<FrmFileInfo> = Response.Success(FrmFileInfo("grc-key", "VER1.01"))
+        var fileInfo: Response<FrmFileInfo> = Response.Success(FrmFileInfo("grc-key", "VER1.01")),
     ) : SerialFirmwareRepository {
         val progress = Channel<SerialFirmwareProgress>(Channel.UNLIMITED)
         var updatedPath: String? = null
@@ -116,7 +116,7 @@ class SerialFirmwareViewModelTest {
         runCurrent()
         assertEquals(
             SerialPhase.Confirm("dx.frm", "/tmp/dx.frm", fileVersion = "VER1.01", older = false),
-            viewModel.state.value.phase
+            viewModel.state.value.phase,
         )
         assertEquals("VER1.00", viewModel.state.value.deviceVersion)
 
@@ -227,7 +227,7 @@ class SerialFirmwareViewModelTest {
         runCurrent()
         assertEquals(
             SerialPhase.Confirm("old.frm", "/tmp/old.frm", fileVersion = "VER0.90", older = true),
-            viewModel.state.value.phase
+            viewModel.state.value.phase,
         )
         assertEquals(null, viewModel.state.value.fileProblem)
         viewModel.viewModelScope.cancel()

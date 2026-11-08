@@ -83,7 +83,7 @@ class KitGalleryTest {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             CmpSegmentedButton(options = listOf("Имп", "Пост", "Выкл"), selectedIndex = 0, onSelect = {})
             CmpSegmentedButton(
@@ -91,14 +91,14 @@ class KitGalleryTest {
                 selectedIndex = 1,
                 onSelect = {},
                 modifier = Modifier.width(160.dp),
-                minHeight = 44.dp
+                minHeight = 44.dp,
             )
             CmpSegmentedButton(
                 options = listOf("Тон", "Мелодия"),
                 selectedIndex = 0,
                 onSelect = {},
                 enabled = false,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 CmpStepButton(icon = CmpIcons.Remove, contentDescription = "Меньше", onStep = {})
@@ -113,16 +113,16 @@ class KitGalleryTest {
             }
             CmpBreadcrumbs(
                 items = listOf(CmpBreadcrumb("Все"), CmpBreadcrumb("3 Охрана", marked = true)),
-                onItemClick = {}
+                onItemClick = {},
             )
             CmpBreadcrumbs(
                 items = listOf(
                     CmpBreadcrumb("Все"),
                     CmpBreadcrumb("3 Охрана", marked = true),
                     CmpBreadcrumb("3.2 Датчики", marked = true),
-                    CmpBreadcrumb("3.2.5 Доп. датчики")
+                    CmpBreadcrumb("3.2.5 Доп. датчики"),
                 ),
-                onItemClick = {}
+                onItemClick = {},
             )
         }
     }
@@ -134,7 +134,7 @@ class KitGalleryTest {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CmpSearchField(value = "toyota cam", onValueChange = {
             }, placeholder = "Марка", clearContentDescription = "")
@@ -157,7 +157,7 @@ class KitGalleryTest {
             }
             CmpHtmlText(
                 html = "<p>Блокировка <b>по CAN2</b>, нужен модуль.</p>" +
-                    "<ul><li>Снять пломбу</li><li>Подключить <i>CAN-H</i></li></ul>"
+                    "<ul><li>Снять пломбу</li><li>Подключить <i>CAN-H</i></li></ul>",
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val domain = cmpDomainColors()
@@ -169,7 +169,7 @@ class KitGalleryTest {
                 title = "Не удалось загрузить",
                 text = "Сервер не ответил. Выбранные марка и модель сохранены.",
                 tone = CmpStateTone.Error,
-                compact = true
+                compact = true,
             )
         }
     }

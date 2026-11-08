@@ -21,7 +21,7 @@ data class FirmwareVersion(
     val url: String,
     val canCode: String? = null,
     val canVersion: String? = null,
-    val canVersionCode: Int? = null
+    val canVersionCode: Int? = null,
 )
 
 /**

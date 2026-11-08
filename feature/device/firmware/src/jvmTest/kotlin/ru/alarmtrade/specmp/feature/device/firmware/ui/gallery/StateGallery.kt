@@ -38,9 +38,9 @@ internal object StateGallery {
                         x.toFloat(),
                         (GAP + row * (rowHeight + GAP)).toFloat(),
                         image.width.toFloat(),
-                        image.height.toFloat()
+                        image.height.toFloat(),
                     ),
-                    Paint()
+                    Paint(),
                 )
                 x += image.width + GAP
             }

@@ -129,21 +129,21 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
                         CmpIconButton(
                             onClick = actions.onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.configurator_common_a11y_back)
+                            contentDescription = stringResource(Strings.string.configurator_common_a11y_back),
                         )
-                    }
+                    },
                 )
             },
             floatingActionButton = {
                 if (!state.pickMode) {
                     CmpFloatingActionButton(
                         onClick = actions.onCreateRequest,
-                        modifier = Modifier.testTag(ConfiguratorTestTags.CREATE)
+                        modifier = Modifier.testTag(ConfiguratorTestTags.CREATE),
                     ) {
                         CmpRow(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             CmpIcon(icon = CmpIcons.Add, contentDescription = null)
                             CmpText(text = stringResource(Strings.string.configurator_common_btn_create))
@@ -151,7 +151,7 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
                     }
                 }
             },
-            snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) }
+            snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
         ) { padding ->
             ListDetailPane(wide, detail = { MineDetail(state, actions) }, modifier = Modifier.padding(padding)) {
                 MineToolbar(state, actions)
@@ -167,19 +167,19 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
 private fun MineToolbar(state: MineState, actions: MineActions) {
     CmpColumn(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CmpSearchField(
             value = state.query,
             onValueChange = actions.onQueryChange,
             placeholder = stringResource(Strings.string.configurator_mine_placeholder_search),
             clearContentDescription = stringResource(Strings.string.configurator_common_a11y_clear),
-            modifier = Modifier.fillMaxWidth().testTag(ConfiguratorTestTags.SEARCH)
+            modifier = Modifier.fillMaxWidth().testTag(ConfiguratorTestTags.SEARCH),
         )
         ModelFilterChip(
             models = (state.models + listOfNotNull(state.modelFilter)).distinct(),
             selected = state.modelFilter,
-            onSelect = actions.onModelFilter
+            onSelect = actions.onModelFilter,
         )
     }
 }
@@ -197,7 +197,7 @@ internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: 
             selected = selected != null,
             onClear = selected?.let { { onSelect(null) } },
             clearContentDescription = clear,
-            modifier = Modifier.testTag(ConfiguratorTestTags.MODEL_FILTER)
+            modifier = Modifier.testTag(ConfiguratorTestTags.MODEL_FILTER),
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             CmpDropdownMenuItem(
@@ -206,7 +206,7 @@ internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: 
                 onClick = {
                     expanded = false
                     onSelect(null)
-                }
+                },
             )
             models.forEach { model ->
                 CmpDropdownMenuItem(
@@ -215,7 +215,7 @@ internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: 
                     onClick = {
                         expanded = false
                         onSelect(model)
-                    }
+                    },
                 )
             }
         }
@@ -227,7 +227,7 @@ private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
     when (state.list) {
         LCEState.None, LCEState.Loading -> CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             repeat(SKELETON_ROWS) { CmpSkeleton(modifier = Modifier.fillMaxWidth().height(96.dp)) }
         }
@@ -236,12 +236,12 @@ private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
             icon = CmpIcons.ErrorOutline,
             title = state.list.error.text(Strings.string.configurator_common_error_title),
             tone = CmpStateTone.Error,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             CmpButton(
                 text = stringResource(Strings.string.configurator_common_btn_retry),
                 onClick = actions.onRetry,
-                modifier = Modifier.testTag(ConfiguratorTestTags.RETRY)
+                modifier = Modifier.testTag(ConfiguratorTestTags.RETRY),
             )
         }
 
@@ -250,18 +250,18 @@ private fun MineContent(state: MineState, actions: MineActions, wide: Boolean) {
             when {
                 state.all.isEmpty() || (state.pickMode && items.isEmpty() && state.query.isBlank()) -> EmptyState(
                     state,
-                    actions
+                    actions,
                 )
 
                 items.isEmpty() -> CmpStateBox(
                     icon = CmpIcons.SearchOff,
                     title = stringResource(Strings.string.configurator_nothing_title),
                     text = stringResource(Strings.string.configurator_nothing_msg),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     CmpOutlinedButton(
                         text = stringResource(Strings.string.configurator_common_btn_reset_filter),
-                        onClick = actions.onResetFilter
+                        onClick = actions.onResetFilter,
                     )
                 }
 
@@ -278,12 +278,12 @@ private fun EmptyState(state: MineState, actions: MineActions) {
             icon = CmpIcons.Inventory2,
             title = stringResource(Strings.string.configurator_mine_title_empty_pick, state.modelFilter.orEmpty()),
             text = stringResource(Strings.string.configurator_mine_msg_empty_pick),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             if (state.modelFilter != null) {
                 CmpOutlinedButton(
                     text = stringResource(Strings.string.configurator_common_btn_reset_filter),
-                    onClick = actions.onResetFilter
+                    onClick = actions.onResetFilter,
                 )
             }
         }
@@ -292,22 +292,22 @@ private fun EmptyState(state: MineState, actions: MineActions) {
             icon = CmpIcons.Inventory2,
             title = stringResource(Strings.string.configurator_empty_title),
             text = stringResource(Strings.string.configurator_empty_msg),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             CmpButton(
                 text = stringResource(Strings.string.configurator_create_item_scratch),
                 onClick = actions.onCreateScratch,
-                modifier = CreateButtonModifier
+                modifier = CreateButtonModifier,
             )
             CmpOutlinedButton(
                 text = stringResource(Strings.string.configurator_create_item_cloud),
                 onClick = actions.onCreateCloud,
-                modifier = CreateButtonModifier
+                modifier = CreateButtonModifier,
             )
             CmpOutlinedButton(
                 text = stringResource(Strings.string.configurator_create_item_file),
                 onClick = actions.onCreateFile,
-                modifier = CreateButtonModifier
+                modifier = CreateButtonModifier,
             )
         }
     }
@@ -334,7 +334,7 @@ private fun MineList(state: MineState, items: List<LocalConfiguration>, actions:
         state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(shown, key = { it.id }) { item ->
             MineCard(
@@ -342,7 +342,7 @@ private fun MineList(state: MineState, items: List<LocalConfiguration>, actions:
                 selected = wide && item.id == state.selectedId,
                 dateText = dateText,
                 onClick = { if (wide && !state.pickMode) actions.onSelect(item.id) else actions.onOpen(item) },
-                onMenu = if (state.pickMode) null else ({ actions.onMenu(item) })
+                onMenu = if (state.pickMode) null else ({ actions.onMenu(item) }),
             )
         }
         if (hasMore) {
@@ -365,7 +365,7 @@ private fun MineDetail(state: MineState, actions: MineActions) {
             icon = CmpIcons.Inventory2,
             title = stringResource(Strings.string.configurator_detail_msg_empty),
             compact = true,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         )
         return
     }
@@ -373,65 +373,65 @@ private fun MineDetail(state: MineState, actions: MineActions) {
     val copyName = stringResource(Strings.string.configurator_common_format_copy_name, item.name)
     CmpColumn(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpText(text = item.name, style = CmpTextStyle.Title)
         CmpFlowRow(
             itemVerticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             ModelBadge(item.deviceName)
             CmpText(
                 text = stringResource(Strings.string.configurator_card_label_updated, dateText(item.updated)),
                 style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
             CmpText(
                 text = stringResource(Strings.string.configurator_detail_label_created, dateText(item.created)),
                 style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
         }
         CmpText(
             text = item.description.ifBlank { stringResource(Strings.string.configurator_detail_msg_no_description) },
             style = CmpTextStyle.BodyLarge,
-            color = if (item.description.isBlank()) colors.onSurfaceVariant else colors.onSurface
+            color = if (item.description.isBlank()) colors.onSurfaceVariant else colors.onSurface,
         )
         CmpFlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpButton(
                 text = stringResource(Strings.string.configurator_common_btn_open),
                 onClick = { actions.onOpen(item) },
-                modifier = Modifier.testTag(ConfiguratorTestTags.OPEN)
+                modifier = Modifier.testTag(ConfiguratorTestTags.OPEN),
             )
             if (state.connectedDeviceName != null) {
                 CmpOutlinedButton(
                     text = stringResource(Strings.string.configurator_menu_item_write),
-                    onClick = { actions.onWrite(item) }
+                    onClick = { actions.onWrite(item) },
                 )
             }
             CmpOutlinedButton(
                 text = stringResource(Strings.string.configurator_menu_item_save_file),
-                onClick = { actions.onExport(item) }
+                onClick = { actions.onExport(item) },
             )
         }
         CmpFlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpTextButton(
                 text = stringResource(Strings.string.configurator_menu_item_rename),
-                onClick = { actions.onRenameRequest(item) }
+                onClick = { actions.onRenameRequest(item) },
             )
             CmpTextButton(text = stringResource(Strings.string.configurator_menu_item_copy), onClick = {
                 actions.onCopy(item, copyName)
             })
             CmpTextButton(
                 text = stringResource(Strings.string.configurator_menu_item_delete),
-                onClick = { actions.onDeleteRequest(item) }
+                onClick = { actions.onDeleteRequest(item) },
             )
         }
     }
@@ -443,28 +443,28 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
         MineDialog.Create -> ConfigurationOptionsPanel(
             title = stringResource(Strings.string.configurator_create_title),
             wide = wide,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         ) {
             ConfigurationOptionRow(
                 icon = CmpIcons.Factory,
                 title = stringResource(Strings.string.configurator_create_item_scratch),
                 subtitle = stringResource(Strings.string.configurator_create_subtitle_scratch),
                 onClick = actions.onCreateScratch,
-                modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_SCRATCH)
+                modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_SCRATCH),
             )
             ConfigurationOptionRow(
                 icon = CmpIcons.Cloud,
                 title = stringResource(Strings.string.configurator_create_item_cloud),
                 subtitle = stringResource(Strings.string.configurator_create_subtitle_cloud),
                 onClick = actions.onCreateCloud,
-                modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_CLOUD)
+                modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_CLOUD),
             )
             ConfigurationOptionRow(
                 icon = CmpIcons.Description,
                 title = stringResource(Strings.string.configurator_create_item_file),
                 subtitle = stringResource(Strings.string.configurator_create_subtitle_file),
                 onClick = actions.onCreateFile,
-                modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_FILE)
+                modifier = Modifier.testTag(ConfiguratorTestTags.CREATE_FILE),
             )
         }
 
@@ -477,7 +477,7 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
             deviceName = null,
             onChange = actions.onRenameChange,
             onConfirm = actions.onRenameSubmit,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is MineDialog.Delete -> CmpDialog(
@@ -488,15 +488,15 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
                 CmpButton(
                     text = stringResource(Strings.string.configurator_common_btn_delete),
                     onClick = actions.onDeleteConfirm,
-                    modifier = Modifier.testTag(ConfiguratorTestTags.DELETE_CONFIRM)
+                    modifier = Modifier.testTag(ConfiguratorTestTags.DELETE_CONFIRM),
                 )
             },
             dismissButton = {
                 CmpTextButton(
                     text = stringResource(Strings.string.configurator_common_btn_cancel),
-                    onClick = actions.onDialogDismiss
+                    onClick = actions.onDialogDismiss,
                 )
-            }
+            },
         )
 
         null -> Unit
@@ -513,21 +513,21 @@ private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean,
             title = stringResource(Strings.string.configurator_menu_item_rename),
             subtitle = null,
             onClick = { actions.onRenameRequest(item) },
-            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_RENAME)
+            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_RENAME),
         )
         ConfigurationOptionRow(
             icon = CmpIcons.ContentCopy,
             title = stringResource(Strings.string.configurator_menu_item_copy),
             subtitle = null,
             onClick = { actions.onCopy(item, copyName) },
-            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_COPY)
+            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_COPY),
         )
         ConfigurationOptionRow(
             icon = CmpIcons.Description,
             title = stringResource(Strings.string.configurator_menu_item_save_file),
             subtitle = null,
             onClick = { actions.onExport(item) },
-            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_SAVE_FILE)
+            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_SAVE_FILE),
         )
         if (canWrite) {
             ConfigurationOptionRow(
@@ -535,7 +535,7 @@ private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean,
                 title = stringResource(Strings.string.configurator_menu_item_write),
                 subtitle = null,
                 onClick = { actions.onWrite(item) },
-                modifier = Modifier.testTag(ConfiguratorTestTags.MENU_WRITE)
+                modifier = Modifier.testTag(ConfiguratorTestTags.MENU_WRITE),
             )
         }
         ConfigurationOptionRow(
@@ -543,7 +543,7 @@ private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean,
             title = stringResource(Strings.string.configurator_menu_item_delete),
             subtitle = null,
             onClick = { actions.onDeleteRequest(item) },
-            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_DELETE)
+            modifier = Modifier.testTag(ConfiguratorTestTags.MENU_DELETE),
         )
     }
 }

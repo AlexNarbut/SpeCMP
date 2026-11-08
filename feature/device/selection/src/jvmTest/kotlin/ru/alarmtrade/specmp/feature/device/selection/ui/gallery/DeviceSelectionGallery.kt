@@ -28,7 +28,7 @@ class DeviceSelectionGallery {
             ScannedDeviceMode.BASE,
             -48,
             hasDeviceBond = true,
-            hasPhoneBond = true
+            hasPhoneBond = true,
         ),
         ScannedDevice.Ble(
             "C8:FD:19:22:8B:04",
@@ -37,7 +37,7 @@ class DeviceSelectionGallery {
             ScannedDeviceMode.PAIRING,
             -67,
             hasDeviceBond = false,
-            hasPhoneBond = false
+            hasPhoneBond = false,
         ),
         ScannedDevice.Usb(
             "usb-1",
@@ -47,7 +47,7 @@ class DeviceSelectionGallery {
             0x5710,
             systemId = 1076884189,
             firmwareVersion = "VER3.57",
-            isBootMode = false
+            isBootMode = false,
         ),
         ScannedDevice.Usb(
             "usb-2",
@@ -57,7 +57,7 @@ class DeviceSelectionGallery {
             0x5751,
             systemId = null,
             firmwareVersion = "VER3.42",
-            isBootMode = true
+            isBootMode = true,
         ),
         ScannedDevice.Ble(
             "7A:11:0D:5E:C3:90",
@@ -66,7 +66,7 @@ class DeviceSelectionGallery {
             ScannedDeviceMode.BASE,
             -75,
             hasDeviceBond = false,
-            hasPhoneBond = false
+            hasPhoneBond = false,
         ),
         ScannedDevice.Ble(
             "3C:2E:FF:90:11:AA",
@@ -75,14 +75,14 @@ class DeviceSelectionGallery {
             ScannedDeviceMode.BOOT,
             -83,
             hasDeviceBond = true,
-            hasPhoneBond = true
-        )
+            hasPhoneBond = true,
+        ),
     ).map { it.toUiItem() }
 
     private val base = ScanDeviceState(
         step = ScanStep.Scanning,
         requirements = listOf(DeviceAccessRequirement.BLUETOOTH, DeviceAccessRequirement.USB),
-        supportedTransports = setOf(DeviceTransport.BLE, DeviceTransport.USB)
+        supportedTransports = setOf(DeviceTransport.BLE, DeviceTransport.USB),
     )
     private val list = base.copy(devices = LCEState.Content(devices))
 
@@ -141,9 +141,9 @@ class DeviceSelectionGallery {
             devices = LCEState.Content(
                 devices.map { item ->
                     if (item is DeviceUiItem.Ble && item.name == "Pandora D-032") item.copy(restricted = true) else item
-                }
-            )
-        )
+                },
+            ),
+        ),
     )
 
     @Test

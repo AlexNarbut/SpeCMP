@@ -20,7 +20,7 @@ internal fun writeTempFile(dirName: String, fileName: String, bytes: ByteArray):
         path = directory,
         withIntermediateDirectories = true,
         attributes = null,
-        error = null
+        error = null,
     )
     if (!created) return null
     val url = NSURL.fileURLWithPath("$directory/${safeFileName(fileName)}")

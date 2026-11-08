@@ -22,7 +22,7 @@ data class AutoStartSchedule(
     val isMorningStartEnabled: Boolean,
     val morningStartTime: TimeOfDay,
     val isEveningStartEnabled: Boolean,
-    val eveningStartTime: TimeOfDay
+    val eveningStartTime: TimeOfDay,
 )
 
 enum class Weekday { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY }

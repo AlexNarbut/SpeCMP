@@ -28,20 +28,20 @@ val testDevice = AlarmDevice(
     firmwareVersion = "3.57",
     mode = DeviceOperationMode.MAIN,
     features = emptySet(),
-    can = null
+    can = null,
 )
 
 /** Сессия на тестовом планировщике; скоуп сессии — дочерний к `backgroundScope` (гасится в конце теста). */
 fun TestScope.testSession(
     repository: DeviceSessionRepository = FakeDeviceSessionRepository(),
-    connection: DeviceConnectionRepository = FakeDeviceConnectionRepository()
+    connection: DeviceConnectionRepository = FakeDeviceConnectionRepository(),
 ): DeviceSession {
     val dispatcher = UnconfinedTestDispatcher(testScheduler)
     return DeviceSession(
         repository,
         connection,
         AppDispatchers(dispatcher, dispatcher, dispatcher),
-        backgroundScope.coroutineContext
+        backgroundScope.coroutineContext,
     )
 }
 
@@ -50,7 +50,7 @@ val testManufacturer = BluetoothManufacturer(
     firmwareName = "BT-DX4G",
     deviceName = "DX4G",
     bootFirmwareVersion = "1.02",
-    mainFirmwareVersion = "2.15"
+    mainFirmwareVersion = "2.15",
 )
 
 class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DISCONNECTED) : DeviceSessionRepository {
@@ -65,7 +65,7 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
 
     /** Ответ readBluetoothModule (BLE). */
     var bluetoothModule: Response<BluetoothModule> = Response.Success(
-        BluetoothModule(BluetoothModuleMode.MAIN, testManufacturer)
+        BluetoothModule(BluetoothModuleMode.MAIN, testManufacturer),
     )
     var bluetoothReadCount = 0
         private set

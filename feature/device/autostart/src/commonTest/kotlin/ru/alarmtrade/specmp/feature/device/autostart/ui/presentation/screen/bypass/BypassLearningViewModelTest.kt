@@ -49,7 +49,7 @@ class BypassLearningViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val sessionRepository = FakeSessionRepository(
-        testDevice.copy(features = setOf(DeviceFeature.CLONE), can = CanInfo("1.0", "VWPOLO20", isFactory = false))
+        testDevice.copy(features = setOf(DeviceFeature.CLONE), can = CanInfo("1.0", "VWPOLO20", isFactory = false)),
     )
     private val repository = FakeBypassRepository()
     private val programMode = FakeProgramModeRepository()

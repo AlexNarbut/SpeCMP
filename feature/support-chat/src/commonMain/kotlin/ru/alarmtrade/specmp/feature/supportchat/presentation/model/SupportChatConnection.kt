@@ -9,7 +9,7 @@ package ru.alarmtrade.specmp.feature.supportchat.presentation.model
 enum class SupportChatConnection {
     Connecting,
     Online,
-    Offline
+    Offline,
 }
 
 /**
@@ -20,5 +20,5 @@ enum class SupportChatConnection {
 enum class SupportChatConnectionBanner {
     Connecting,
     Reconnecting,
-    AuthFailed
+    AuthFailed,
 }

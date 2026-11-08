@@ -32,7 +32,7 @@ class AdvancedMountStatesGallery {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = DeviceFeature.entries.toSet(),
-        can = CanInfo(firmwareVersion = "12.05", code = "0A1F", isFactory = true)
+        can = CanInfo(firmwareVersion = "12.05", code = "0A1F", isFactory = true),
     )
     private val module = AlarmDevice(
         systemId = 1076884189,
@@ -40,7 +40,7 @@ class AdvancedMountStatesGallery {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS, DeviceFeature.DYNAMIC_DEVICES),
-        can = null
+        can = null,
     )
 
     private val alarmReady = AdvancedMountRootState(
@@ -50,7 +50,7 @@ class AdvancedMountStatesGallery {
         content = LCEState.Content(MountAccess.Ready(MountSection.entries.toList(), unsupported = false)),
         unreadCount = 3,
         remoteAvailable = true,
-        productInfo = true
+        productInfo = true,
     )
     private val moduleBase = AdvancedMountRootState(device = module, transport = ConnectionTransport.USB)
 
@@ -63,15 +63,15 @@ class AdvancedMountStatesGallery {
     @Test
     fun verifyError() = render(
         "02_verify_error",
-        moduleBase.copy(content = LCEState.Error(MountError.Common(ApiError.NoConnection)))
+        moduleBase.copy(content = LCEState.Error(MountError.Common(ApiError.NoConnection))),
     )
 
     @Test
     fun denied() = render(
         "03_denied",
         moduleBase.copy(
-            content = LCEState.Content(MountAccess.Denied("Блок заблокирован для данной учётной записи монтажника."))
-        )
+            content = LCEState.Content(MountAccess.Denied("Блок заблокирован для данной учётной записи монтажника.")),
+        ),
     )
 
     @Test
@@ -79,8 +79,8 @@ class AdvancedMountStatesGallery {
         "04_unsupported",
         moduleBase.copy(
             device = module.copy(features = null),
-            content = LCEState.Content(MountAccess.Ready(UnsupportedSections, unsupported = true))
-        )
+            content = LCEState.Content(MountAccess.Ready(UnsupportedSections, unsupported = true)),
+        ),
     )
 
     @Test
@@ -89,9 +89,9 @@ class AdvancedMountStatesGallery {
         moduleBase.copy(
             device = module.copy(features = null, modelInDatabase = false),
             content = LCEState.Content(
-                MountAccess.Ready(UnsupportedSections, unsupported = true, modelNotInDatabase = true)
-            )
-        )
+                MountAccess.Ready(UnsupportedSections, unsupported = true, modelNotInDatabase = true),
+            ),
+        ),
     )
 
     @Test
@@ -100,9 +100,9 @@ class AdvancedMountStatesGallery {
         moduleBase.copy(
             imei = "351756051523999",
             content = LCEState.Content(
-                MountAccess.Ready(module.features.toSections(bluetooth = false), unsupported = false)
-            )
-        )
+                MountAccess.Ready(module.features.toSections(bluetooth = false), unsupported = false),
+            ),
+        ),
     )
 
     @Test
@@ -114,8 +114,8 @@ class AdvancedMountStatesGallery {
         alarmReady.copy(
             device = alarm.copy(can = CanInfo("12.05", "0A1F", isFactory = false)),
             unreadCount = 0,
-            remoteAvailable = false
-        )
+            remoteAvailable = false,
+        ),
     )
 
     @Test
@@ -127,7 +127,7 @@ class AdvancedMountStatesGallery {
     @Test
     fun bootMode() = render(
         "10_header_boot_mode",
-        moduleBase.copy(device = module.copy(mode = DeviceOperationMode.BOOT), content = LCEState.Loading)
+        moduleBase.copy(device = module.copy(mode = DeviceOperationMode.BOOT), content = LCEState.Loading),
     )
 
     @Test

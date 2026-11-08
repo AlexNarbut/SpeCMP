@@ -63,7 +63,7 @@ internal data class ToneColors(
     val pillText: Color,
     val icon: Color,
     val iconTint: Color,
-    val text: Color
+    val text: Color,
 )
 
 internal fun CmpThemeColors.tone(tone: ZoneTone): ToneColors = when (tone) {
@@ -73,7 +73,7 @@ internal fun CmpThemeColors.tone(tone: ZoneTone): ToneColors = when (tone) {
         pillText = onSurface,
         icon = surfaceContainerHighest,
         iconTint = onSurfaceVariant,
-        text = onSurface
+        text = onSurface,
     )
 
     ZoneTone.ACTIVE -> ToneColors(
@@ -82,7 +82,7 @@ internal fun CmpThemeColors.tone(tone: ZoneTone): ToneColors = when (tone) {
         pillText = onPrimary,
         icon = primary,
         iconTint = onPrimary,
-        text = onPrimaryContainer
+        text = onPrimaryContainer,
     )
 
     ZoneTone.ALARM -> ToneColors(
@@ -91,7 +91,7 @@ internal fun CmpThemeColors.tone(tone: ZoneTone): ToneColors = when (tone) {
         pillText = onError,
         icon = error,
         iconTint = onError,
-        text = onErrorContainer
+        text = onErrorContainer,
     )
 
     ZoneTone.MUTED -> ToneColors(
@@ -100,7 +100,7 @@ internal fun CmpThemeColors.tone(tone: ZoneTone): ToneColors = when (tone) {
         pillText = onSurfaceVariant,
         icon = surfaceContainerHigh,
         iconTint = onSurfaceVariant,
-        text = onSurface
+        text = onSurface,
     )
 }
 
@@ -118,27 +118,27 @@ internal fun SectionCard(
     title: String? = null,
     aside: String? = null,
     contentPadding: Dp = 12.dp,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = cmpThemeColors()
     CmpSurface(
         modifier = modifier.fillMaxWidth(),
         shape = CardShape,
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpColumn {
             if (title != null) {
                 CmpRow(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     CmpText(
                         text = title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     if (aside != null) CmpText(text = aside, fontSize = 14.sp, color = colors.onSurfaceVariant)
                 }
@@ -160,14 +160,14 @@ internal fun ValuePill(text: String, tone: ZoneTone, modifier: Modifier = Modifi
             .background(colors.pill, RoundedCornerShape(16.dp))
             .then(if (tone == ZoneTone.MUTED) Modifier.border(1.dp, outline, RoundedCornerShape(16.dp)) else Modifier)
             .padding(horizontal = 12.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpText(
             text = text,
             color = colors.pillText,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -181,14 +181,14 @@ internal fun ChangedTag(modifier: Modifier = Modifier) {
             .heightIn(min = 22.dp)
             .background(colors.primary, CircleShape)
             .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpText(
             text = stringResource(Strings.string.devicestate_zones_status_changed),
             color = colors.onPrimary,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
@@ -209,7 +209,7 @@ internal fun BoxScope.ChangeFlash(on: Boolean, key: Int, color: Color, radius: D
                 val corner = CornerRadius(radius.toPx())
                 drawRoundRect(color = color.copy(alpha = alpha.value), cornerRadius = corner)
             }
-            .border(2.dp, color, RoundedCornerShape(radius))
+            .border(2.dp, color, RoundedCornerShape(radius)),
     )
 }
 
@@ -220,13 +220,13 @@ internal fun KeyValueRow(
     value: String,
     modifier: Modifier = Modifier,
     tone: ZoneTone = ZoneTone.REST,
-    trailing: (@Composable () -> Unit)? = null
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = cmpThemeColors()
     CmpRow(
         modifier = modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 4.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpText(text = label, fontSize = 16.sp, color = colors.onSurface, modifier = Modifier.weight(1f))
         CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -246,7 +246,7 @@ internal fun StateBanner(
     neutral: Boolean = false,
     busy: Boolean = false,
     action: String? = null,
-    onAction: () -> Unit = {}
+    onAction: () -> Unit = {},
 ) {
     val colors = cmpThemeColors()
     val background = if (neutral) colors.surfaceContainerHighest else colors.tertiaryContainer
@@ -257,7 +257,7 @@ internal fun StateBanner(
             .background(background, RoundedCornerShape(16.dp))
             .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when {
             busy -> CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 3.dp, color = content)
@@ -266,7 +266,7 @@ internal fun StateBanner(
                 icon = icon,
                 contentDescription = null,
                 tint = content,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size(26.dp),
             )
         }
         CmpColumn(modifier = Modifier.weight(1f)) {
@@ -286,14 +286,14 @@ internal fun MetricTile(label: String, value: String, unit: String?, modifier: M
             .heightIn(min = 72.dp)
             .background(colors.surfaceContainerHigh, RoundedCornerShape(14.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
     ) {
         CmpText(
             text = label,
             fontSize = 14.sp,
             color = colors.onSurfaceVariant,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
         CmpRow(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             CmpText(text = value, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = colors.onSurface)
@@ -313,7 +313,7 @@ internal fun ZonesSkeleton(modifier: Modifier = Modifier) {
                     repeat(rows) {
                         CmpRow(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             CmpSkeleton(modifier = Modifier.size(44.dp), shape = CircleShape)
                             CmpSkeleton(modifier = Modifier.weight(1f).heightIn(min = 18.dp))

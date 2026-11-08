@@ -46,7 +46,7 @@ internal class CloudCardViewModel(
     private val settings: DeviceSettingsRepository,
     private val configurations: LocalConfigurationsRepository,
     deviceSession: DeviceSession,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(CloudCardState(firmwareCanCode = firmwareCanCode))
@@ -108,8 +108,8 @@ internal class CloudCardViewModel(
             it.copy(
                 saveForm = CloudSaveForm(
                     name = card.summary.name.take(LocalConfiguration.NAME_MAX_LENGTH),
-                    description = card.summary.shortDescription.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH)
-                )
+                    description = card.summary.shortDescription.take(LocalConfiguration.DESCRIPTION_MAX_LENGTH),
+                ),
             )
         }
     }
@@ -134,7 +134,7 @@ internal class CloudCardViewModel(
                             form.name.trim(),
                             form.description.trim(),
                             card.summary.deviceName,
-                            source
+                            source,
                         )
                     } finally {
                         settings.close(source)

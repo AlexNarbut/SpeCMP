@@ -71,7 +71,7 @@ internal fun CardPane(
     onRetry: (CatalogLevel) -> Unit,
     onPick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    padding: Dp = 16.dp
+    padding: Dp = 16.dp,
 ) {
     // Скелетон → карточка / ошибка — затуханием, а не резкой подменой.
     FadeContent(targetState = card, contentKey = { it::class }, modifier = modifier) { shown ->
@@ -91,7 +91,7 @@ private fun CardPaneState(
     onRetry: (CatalogLevel) -> Unit,
     onPick: (Int) -> Unit,
     padding: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     when (card) {
         LCEState.None, LCEState.Loading -> CardSkeleton(wide = wide, modifier = modifier.padding(padding))
@@ -108,7 +108,7 @@ private fun CardPaneState(
                 wide = wide,
                 actions = actions,
                 padding = padding,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             if (pick) PickBar(card = card.content, padding = padding, onPick = onPick)
         }
@@ -124,7 +124,7 @@ private fun CardContent(
     wide: Boolean,
     actions: CardActions,
     padding: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val tabs = card.tabs()
     val tab = ui.tab?.takeIf { it in tabs } ?: tabs.firstOrNull()
@@ -141,7 +141,7 @@ private fun CardContent(
                 wide = wide,
                 notesExpanded = ui.notesExpanded,
                 actions = actions,
-                modifier = Modifier.padding(start = padding, end = padding, top = padding)
+                modifier = Modifier.padding(start = padding, end = padding, top = padding),
             )
         }
         if (tab == null) {
@@ -157,7 +157,7 @@ private fun CardContent(
                     tabs = tabs.map { CmpTabItem(tabTitle(it)) },
                     onTabSelect = { actions.onTabSelect(tabs[it]) },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                    scrollable = true
+                    scrollable = true,
                 )
             }
         }
@@ -170,7 +170,7 @@ private fun CardContent(
                 collapsed = ui.collapsedGroups,
                 wide = wide,
                 padding = padding,
-                onGroupToggle = actions.onGroupToggle
+                onGroupToggle = actions.onGroupToggle,
             )
         } else {
             item(key = "tab-${tab.name}") {
@@ -198,7 +198,7 @@ private fun TabBody(card: CarCard, tab: CardTab, ui: CardUi, actions: CardAction
                     photo = ui.photo,
                     onBack = actions.onPointClose,
                     onPhotoChange = actions.onPhotoChange,
-                    onFullScreen = actions.onViewerOpen
+                    onFullScreen = actions.onViewerOpen,
                 )
             }
         }
@@ -219,7 +219,7 @@ private fun tabTitle(tab: CardTab): String = stringResource(
         CardTab.SCHEMES -> Strings.string.vehicle_tab_label_schemes
         CardTab.MAPS -> Strings.string.vehicle_tab_label_maps
         CardTab.USER_MANUALS -> Strings.string.vehicle_tab_label_manuals
-    }
+    },
 )
 
 @Composable
@@ -230,7 +230,7 @@ private fun NoTabs(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .background(colors.surfaceContainerHigh, RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = CmpIcons.Info, contentDescription = null, tint = colors.onSurfaceVariant)
         CmpText(text = stringResource(Strings.string.vehicle_card_msg_no_tabs), style = CmpTextStyle.BodyLarge)
@@ -248,13 +248,13 @@ private fun PickBar(card: CarCard, padding: Dp, onPick: (Int) -> Unit) {
                 .fillMaxWidth()
                 .padding(horizontal = padding, vertical = 12.dp)
                 .heightIn(min = 56.dp)
-                .testTag(VehicleTestTags.CARD_PICK)
+                .testTag(VehicleTestTags.CARD_PICK),
         ) {
             CmpIcon(icon = CmpIcons.Check, contentDescription = null)
             CmpText(
                 text = stringResource(Strings.string.vehicle_card_btn_pick, card.summary.fullName()),
                 modifier = Modifier.padding(start = 8.dp),
-                maxLines = 1
+                maxLines = 1,
             )
         }
     }
@@ -267,7 +267,7 @@ internal fun CardSkeleton(wide: Boolean, modifier: Modifier = Modifier) {
         CmpRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpSkeleton(
                 Modifier.width(if (wide) 200.dp else 120.dp).aspectRatio(PHOTO_RATIO),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
             )
             CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CmpSkeleton(Modifier.width(180.dp).height(26.dp))

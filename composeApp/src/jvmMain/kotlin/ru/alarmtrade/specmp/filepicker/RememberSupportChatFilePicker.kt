@@ -29,7 +29,7 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
         DesktopSupportChatFilePicker(
             imageTitle = imageTitle,
             imagesLabel = imagesLabel,
-            fileTitle = fileTitle
+            fileTitle = fileTitle,
         )
     }
 }
@@ -37,7 +37,7 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
 private class DesktopSupportChatFilePicker(
     private val imageTitle: String,
     private val imagesLabel: String,
-    private val fileTitle: String
+    private val fileTitle: String,
 ) : SupportChatFilePicker {
 
     // Диалог модальный и синхронный: результат кладётся в буфер сразу после закрытия.
@@ -54,8 +54,8 @@ private class DesktopSupportChatFilePicker(
                 "png",
                 "gif",
                 "webp",
-                "bmp"
-            )
+                "bmp",
+            ),
         )
         channel.trySend(file.toPickerResult(SupportChatPickKind.Image))
     }
@@ -63,7 +63,7 @@ private class DesktopSupportChatFilePicker(
     override fun launchDocument() {
         val file = showDialog(
             title = fileTitle,
-            filter = null
+            filter = null,
         )
         channel.trySend(file.toPickerResult(SupportChatPickKind.Document))
     }
@@ -107,7 +107,7 @@ private class DesktopSupportChatFilePicker(
             name = name,
             path = absolutePath,
             mimeType = mimeType,
-            sizeBytes = length()
+            sizeBytes = length(),
         )
     }
 }

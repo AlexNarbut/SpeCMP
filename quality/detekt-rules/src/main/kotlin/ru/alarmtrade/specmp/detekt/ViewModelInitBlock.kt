@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.psi.KtClassBody
 class ViewModelInitBlock(config: Config) :
     Rule(
         config,
-        "init во ViewModel запрещён: стартовая работа — onStart() из BaseViewModel."
+        "init во ViewModel запрещён: стартовая работа — onStart() из BaseViewModel.",
     ) {
 
     override fun visitAnonymousInitializer(initializer: KtAnonymousInitializer) {

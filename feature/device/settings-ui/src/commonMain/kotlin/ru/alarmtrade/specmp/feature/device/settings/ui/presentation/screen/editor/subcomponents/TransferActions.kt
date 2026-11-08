@@ -25,5 +25,5 @@ internal class TransferActions(
     val onBarAction: () -> Unit,
     val onExitSave: () -> Unit,
     val onCopy: (name: String) -> Unit,
-    val onWriteToDevice: () -> Unit
+    val onWriteToDevice: () -> Unit,
 )

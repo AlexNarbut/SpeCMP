@@ -18,7 +18,7 @@ sealed interface SettingsSource {
         val path: String,
         val deviceName: String,
         val name: String = path.substringAfterLast('/'),
-        val inPlace: Boolean = true
+        val inPlace: Boolean = true,
     ) : SettingsSource
 
     /** Конфигурация из локального хранилища. */
@@ -40,7 +40,7 @@ data class SettingsSourceCapabilities(
     /** Источник — подключённый блок: при переподключении меню перечитывается из блока. */
     val followsDeviceConnection: Boolean,
     /** Только просмотр (облако, заводские): правки сохраняются только «как…» в другой источник. */
-    val isReadOnly: Boolean = false
+    val isReadOnly: Boolean = false,
 )
 
 val SettingsSource.capabilities: SettingsSourceCapabilities
@@ -48,26 +48,26 @@ val SettingsSource.capabilities: SettingsSourceCapabilities
         SettingsSource.Device -> SettingsSourceCapabilities(
             canSave = true,
             canResetToFactory = true,
-            followsDeviceConnection = true
+            followsDeviceConnection = true,
         )
 
         is SettingsSource.File -> SettingsSourceCapabilities(
             canSave = inPlace,
             canResetToFactory = false,
-            followsDeviceConnection = false
+            followsDeviceConnection = false,
         )
 
         is SettingsSource.LocalConfiguration -> SettingsSourceCapabilities(
             canSave = true,
             canResetToFactory = false,
-            followsDeviceConnection = false
+            followsDeviceConnection = false,
         )
 
         is SettingsSource.RemoteConfiguration, is SettingsSource.Defaults -> SettingsSourceCapabilities(
             canSave = false,
             canResetToFactory = false,
             followsDeviceConnection = false,
-            isReadOnly = true
+            isReadOnly = true,
         )
     }
 

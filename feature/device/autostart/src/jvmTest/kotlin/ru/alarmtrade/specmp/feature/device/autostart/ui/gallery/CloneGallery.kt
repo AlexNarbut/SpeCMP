@@ -64,7 +64,7 @@ class CloneGallery {
     @Test
     fun already() = render(
         "11_already",
-        base.copy(fromBypass = true, phase = ClonePhase.Finished(CloneResult.Completed(already = true)))
+        base.copy(fromBypass = true, phase = ClonePhase.Finished(CloneResult.Completed(already = true))),
     )
 
     @Test
@@ -75,8 +75,8 @@ class CloneGallery {
         "13_error_tips",
         failed(
             CloneFailure.CALC_ERROR,
-            listOf("Проверьте, что выбран правильный CAN код автомобиля", "Выполните бесключевой обход повторно")
-        )
+            listOf("Проверьте, что выбран правильный CAN код автомобиля", "Выполните бесключевой обход повторно"),
+        ),
     )
 
     @Test
@@ -88,12 +88,12 @@ class CloneGallery {
     @Test
     fun interruptedKept() = render(
         "16_interrupted_kept",
-        base.copy(phase = ClonePhase.Start(CloneInterruption.ATTEMPT_KEPT))
+        base.copy(phase = ClonePhase.Start(CloneInterruption.ATTEMPT_KEPT)),
     )
 
     @Test
     fun interruptedCheck() = render(
         "17_interrupted_check",
-        base.copy(phase = ClonePhase.Start(CloneInterruption.CHECK_ATTEMPTS))
+        base.copy(phase = ClonePhase.Start(CloneInterruption.CHECK_ATTEMPTS)),
     )
 }

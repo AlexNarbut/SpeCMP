@@ -13,7 +13,7 @@ data class CmpNavigationItem(
     val icon: @Composable () -> Unit,
     val label: (@Composable () -> Unit)? = null,
     val enabled: Boolean = true,
-    val alwaysShowLabel: Boolean = true
+    val alwaysShowLabel: Boolean = true,
 )
 
 @Composable
@@ -26,7 +26,7 @@ fun CmpNavigationBar(items: List<CmpNavigationItem>, modifier: Modifier = Modifi
                 icon = item.icon,
                 label = item.label,
                 enabled = item.enabled,
-                alwaysShowLabel = item.alwaysShowLabel
+                alwaysShowLabel = item.alwaysShowLabel,
             )
         }
     }

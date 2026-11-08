@@ -14,7 +14,7 @@ class RecentList<T, K>(
     private val max: Int,
     private val key: (T) -> K,
     private val read: () -> List<T>,
-    private val write: (List<T>) -> Unit
+    private val write: (List<T>) -> Unit,
 ) {
     private val lock = Mutex()
 

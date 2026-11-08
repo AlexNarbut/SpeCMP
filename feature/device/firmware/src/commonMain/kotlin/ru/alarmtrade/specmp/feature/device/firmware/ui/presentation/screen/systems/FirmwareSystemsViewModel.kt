@@ -31,7 +31,7 @@ data class SystemRowUi(val system: FirmwareSystem, val subsystems: List<Firmware
 data class FirmwareSystemsState(
     val content: LCEState<List<SystemRowUi>, FirmwareError> = LCEState.Loading,
     val query: String = "",
-    val order: SystemsOrder = SystemsOrder.Added
+    val order: SystemsOrder = SystemsOrder.Added,
 )
 
 /**
@@ -43,14 +43,14 @@ data class FirmwareSystemsState(
 class FirmwareSystemsViewModel(
     private val repository: FirmwareRepository,
     private val preferences: FirmwareArchivePreferences,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseViewModel() {
 
     private data class Core(
         val load: LCEState<List<FirmwareSystem>, FirmwareError> = LCEState.Loading,
         val query: String = "",
         val expanded: Set<Long> = emptySet(),
-        val order: SystemsOrder
+        val order: SystemsOrder,
     )
 
     // Порядок — из настроек сразу: первый кадр списка уже в нём.
@@ -76,7 +76,7 @@ class FirmwareSystemsViewModel(
                 load = when (response) {
                     is Response.Success -> LCEState.Content(response.value)
                     is Response.Error -> LCEState.Error(FirmwareError.from(response.exception))
-                }
+                },
             )
         }
     }
@@ -111,7 +111,7 @@ class FirmwareSystemsViewModel(
             is LCEState.Error -> load
 
             is LCEState.Content -> LCEState.Content(
-                rowsOf(ordered(load.content, core.order), core.query.trim(), core.expanded)
+                rowsOf(ordered(load.content, core.order), core.query.trim(), core.expanded),
             )
         }
         return FirmwareSystemsState(content = content, query = core.query, order = core.order)

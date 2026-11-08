@@ -25,7 +25,7 @@ fun SettingsDiff.filter(query: String): SettingsDiff {
     return copy(
         canCode = canCode?.takeIf { it.after.matches(q) },
         sections = sections.map { section -> section.copy(changes = section.changes.filter { it.after.matches(q) }) }
-            .filter { it.changes.isNotEmpty() }
+            .filter { it.changes.isNotEmpty() },
     )
 }
 
@@ -64,7 +64,7 @@ fun SettingChange.logicsChange(): ChannelLogicsChange? {
     fun List<Boolean>.on(logic: ChannelLogic) = getOrElse(logic.id) { false }
     return ChannelLogicsChange(
         added = logics.filter { now.on(it) && !was.on(it) },
-        removed = logics.filter { was.on(it) && !now.on(it) }
+        removed = logics.filter { was.on(it) && !now.on(it) },
     )
 }
 

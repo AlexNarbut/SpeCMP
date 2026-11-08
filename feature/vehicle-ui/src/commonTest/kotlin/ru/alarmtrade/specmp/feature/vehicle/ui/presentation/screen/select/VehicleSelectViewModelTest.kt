@@ -71,13 +71,13 @@ class VehicleSelectViewModelTest {
         catalog: VehicleCatalog = VehicleCatalog.ALL,
         device: VehicleDeviceFilter? = VehicleDeviceFilter.Device("DX-9X"),
         firmwareCanCode: String? = null,
-        warnOnCanMismatch: Boolean = false
+        warnOnCanMismatch: Boolean = false,
     ): Pair<VehicleSelectViewModel, MutableList<VehicleSelectEffect>> {
         val vm = VehicleSelectViewModel(
             request = VehicleSelectRequest(mode, catalog, device, firmwareCanCode, warnOnCanMismatch),
             repository = repository,
             recentStore = recent,
-            dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+            dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher),
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
@@ -394,7 +394,7 @@ private class FakeCatalog : VehicleCatalogRepository {
     override suspend fun findByCanCode(
         canCode: String,
         device: VehicleDeviceFilter?,
-        groups: Set<CarFeatureGroup>
+        groups: Set<CarFeatureGroup>,
     ): Response<List<CarSummary>> {
         canQueries += canCode
         return Response.Success(
@@ -402,7 +402,7 @@ private class FakeCatalog : VehicleCatalogRepository {
                 "2154" -> listOf(camrySummary)
                 "1032" -> listOf(camrySummary.copy(id = 41), camrySummary.copy(id = 42))
                 else -> emptyList()
-            }
+            },
         )
     }
 
@@ -428,13 +428,13 @@ private class FakeCatalog : VehicleCatalogRepository {
             keylessBypass = CarCapability.NoData,
             notes = emptyList(),
             features = listOf(
-                CarFeature("Двери", null, CarFeatureGroup.MAIN, emptyList(), emptyList())
+                CarFeature("Двери", null, CarFeatureGroup.MAIN, emptyList(), emptyList()),
             ),
             mountPoints = emptyList(),
             schemes = emptyList(),
             mountingMaps = emptyList(),
             userManuals = emptyList(),
-            hasUserManuals = false
+            hasUserManuals = false,
         )
     }
 }

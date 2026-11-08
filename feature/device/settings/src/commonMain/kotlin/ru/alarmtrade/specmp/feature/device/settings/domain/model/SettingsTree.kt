@@ -42,7 +42,7 @@ fun SettingsSection.replace(setting: Setting): SettingsSection = copy(
             child is SettingsSection -> child.replace(setting)
             else -> child
         }
-    }
+    },
 )
 
 /**

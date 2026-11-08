@@ -17,7 +17,7 @@ data class SettingsSection(
     override val number: String,
     override val name: String,
     override val description: String?,
-    val children: List<SettingNode>
+    val children: List<SettingNode>,
 ) : SettingNode
 
 /** Настройка-лист: 12 типов; [value] — текущее значение в форме, в которой оно уходит в `setValue`. */
@@ -42,7 +42,7 @@ data class SwitchSetting(
     override val value: SettingValue.Switch,
     /** Подписи состояний «вкл»/«выкл», если устройство их задаёт. */
     val onTitle: String?,
-    val offTitle: String?
+    val offTitle: String?,
 ) : Setting
 
 data class OptionSetting(
@@ -51,7 +51,7 @@ data class OptionSetting(
     override val name: String,
     override val description: String?,
     override val value: SettingValue.Option,
-    val options: List<String>
+    val options: List<String>,
 ) : Setting
 
 data class IntegerSetting(
@@ -64,7 +64,7 @@ data class IntegerSetting(
     val units: String?,
     /** Подписи крайних значений вместо числа (например «Выкл» при минимуме). */
     val minValueText: String?,
-    val maxValueText: String?
+    val maxValueText: String?,
 ) : Setting
 
 data class DecimalSetting(
@@ -78,7 +78,7 @@ data class DecimalSetting(
     val step: Float,
     val units: String?,
     val minValueText: String?,
-    val maxValueText: String?
+    val maxValueText: String?,
 ) : Setting
 
 data class TextSetting(
@@ -91,7 +91,7 @@ data class TextSetting(
     val inputType: TextInputType,
     /** Регулярное выражение для проверки ввода и текст ошибки от устройства. */
     val validationPattern: String?,
-    val validationErrorText: String?
+    val validationErrorText: String?,
 ) : Setting {
     /**
      * Скомпилированный [validationPattern] — один раз на настройку; некорректный шаблон — `null` (ввод не блокирует).
@@ -112,7 +112,7 @@ data class TimeSetting(
     override val number: String,
     override val name: String,
     override val description: String?,
-    override val value: SettingValue.Time
+    override val value: SettingValue.Time,
 ) : Setting
 
 data class AutoStartScheduleSetting(
@@ -121,7 +121,7 @@ data class AutoStartScheduleSetting(
     override val name: String,
     override val description: String?,
     override val value: SettingValue.AutoStart,
-    val dayOfWeek: Weekday
+    val dayOfWeek: Weekday,
 ) : Setting
 
 data class SirenSetting(
@@ -133,7 +133,7 @@ data class SirenSetting(
     /** Диапазон номера тона/мелодии — один на настройку, не зависит от типа. */
     val range: IntRange,
     val units: String?,
-    val event: SirenEvent
+    val event: SirenEvent,
 ) : Setting
 
 data class CanCodeSetting(
@@ -141,7 +141,7 @@ data class CanCodeSetting(
     override val number: String,
     override val name: String,
     override val description: String?,
-    override val value: SettingValue.Can
+    override val value: SettingValue.Can,
 ) : Setting
 
 data class InputSetting(
@@ -154,7 +154,7 @@ data class InputSetting(
     val defaultPolarity: Polarity,
     /** Все функции, которые можно назначить входу; состояние — [InputValue.logicsState] по [ChannelLogic.id]. */
     val availableLogics: List<ChannelLogic>,
-    val enabledLogics: List<ChannelLogic>
+    val enabledLogics: List<ChannelLogic>,
 ) : Setting
 
 data class OutputSetting(
@@ -167,7 +167,7 @@ data class OutputSetting(
     val canEditPolarity: Boolean,
     val defaultPolarity: Polarity,
     val availableLogics: List<ChannelLogic>,
-    val enabledLogics: List<ChannelLogic>
+    val enabledLogics: List<ChannelLogic>,
 ) : Setting
 
 data class SwitchOutputSetting(
@@ -179,5 +179,5 @@ data class SwitchOutputSetting(
     val channel: Channel,
     val polarity: Polarity,
     /** Назначенные функции — только для показа. */
-    val enabledLogics: List<ChannelLogic>
+    val enabledLogics: List<ChannelLogic>,
 ) : Setting

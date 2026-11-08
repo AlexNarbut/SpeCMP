@@ -55,7 +55,7 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
                 add(deviceInteractionModule)
                 add(deviceInteractionUiModule)
                 add(deviceFirmwareModule)
-            }
+            },
         )
     }) {
         // Привязка PermissionsController к жизненному циклу корневой активити — один раз на приложение.

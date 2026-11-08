@@ -126,7 +126,7 @@ internal fun kindLabel(kind: DeviceKind): String = stringResource(
         DeviceKind.MODULE -> Strings.string.deviceselect_common_value_kind_module
         DeviceKind.SENSOR -> Strings.string.deviceselect_common_value_kind_sensor
         DeviceKind.OTHER -> Strings.string.deviceselect_common_value_kind_other
-    }
+    },
 )
 
 /** Подпись режима. Обычный режим у BLE — «Обычный», у USB и COM — «Рабочий». */
@@ -141,7 +141,7 @@ internal fun modeLabel(mode: ScannedDeviceMode, transport: DeviceTransport): Str
         ScannedDeviceMode.PAIRING -> Strings.string.deviceselect_common_value_mode_pairing
 
         ScannedDeviceMode.BOOT -> Strings.string.deviceselect_common_value_mode_boot
-    }
+    },
 )
 
 /** Режим устройства, если известен (у USB — только после опроса блока, у COM — неизвестен до прошивки). */
@@ -171,7 +171,7 @@ internal fun ModeBadge(mode: ScannedDeviceMode) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             fontSize = DsType.LabelSmall,
             fontWeight = FontWeight.Medium,
-            color = fg
+            color = fg,
         )
     }
 }
@@ -188,7 +188,7 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
         DeviceInfoRow(
             label = stringResource(Strings.string.deviceselect_detail_label_mode),
             value = modeLabel(mode, item.transport),
-            strong = mode != ScannedDeviceMode.BASE
+            strong = mode != ScannedDeviceMode.BASE,
         )
     }
     return when (item) {
@@ -201,14 +201,14 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
                         Strings.string.deviceselect_detail_label_uuid
                     } else {
                         Strings.string.deviceselect_detail_label_mac
-                    }
+                    },
                 ),
-                value = item.address
+                value = item.address,
             ),
             DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_type), kindLabel(item.kind)),
             DeviceInfoRow(
                 stringResource(Strings.string.deviceselect_detail_label_signal),
-                stringResource(Strings.string.deviceselect_common_format_rssi, item.rssi)
+                stringResource(Strings.string.deviceselect_common_format_rssi, item.rssi),
             ),
             modeRow,
             item.hasPhoneBond?.let {
@@ -216,26 +216,26 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
             },
             DeviceInfoRow(
                 stringResource(Strings.string.deviceselect_detail_label_device_bond),
-                if (item.hasDeviceBond) yes else no
-            )
+                if (item.hasDeviceBond) yes else no,
+            ),
         )
 
         is DeviceUiItem.Usb -> listOfNotNull(
             DeviceInfoRow(
                 stringResource(Strings.string.deviceselect_detail_label_system_id),
-                item.systemId?.toString() ?: stringResource(Strings.string.deviceselect_common_value_unknown)
+                item.systemId?.toString() ?: stringResource(Strings.string.deviceselect_common_value_unknown),
             ),
             DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_manufacturer), item.manufacturerName),
             DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_vid_pid), item.vidPid),
             item.firmwareVersion?.let {
                 DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_firmware), it)
             },
-            modeRow
+            modeRow,
         )
 
         is DeviceUiItem.Serial -> listOfNotNull(
             DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_port), item.id),
-            item.vidPid?.let { DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_vid_pid), it) }
+            item.vidPid?.let { DeviceInfoRow(stringResource(Strings.string.deviceselect_detail_label_vid_pid), it) },
         )
     }
 }
@@ -258,7 +258,7 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 CmpText(text = row.label, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
                 CmpText(
@@ -267,7 +267,7 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
                     fontSize = DsType.BodyMedium,
                     fontWeight = if (row.strong) FontWeight.Bold else FontWeight.Medium,
                     color = if (row.strong) colors.primary else colors.onSurface,
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.End,
                 )
             }
         }
@@ -289,7 +289,7 @@ internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConne
                         text = it,
                         modifier = Modifier.padding(top = 8.dp),
                         fontSize = DsType.BodyMedium,
-                        color = colors.onSurfaceVariant
+                        color = colors.onSurfaceVariant,
                     )
                 }
             }
@@ -299,7 +299,7 @@ internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConne
         },
         confirmButton = {
             CmpTextButton(text = stringResource(Strings.string.deviceselect_common_btn_connect), onClick = onConnect)
-        }
+        },
     )
 }
 
@@ -317,7 +317,7 @@ internal fun DeviceTile(icon: CmpIcons, sizeDp: Int) {
         modifier = Modifier.size(sizeDp.dp),
         shape = RoundedCornerShape(if (sizeDp >= LARGE_TILE_MIN_SIZE_DP) 20.dp else 12.dp),
         color = colors.surfaceVariant,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpIcon(icon = icon, contentDescription = null, tint = colors.onSurfaceVariant)
@@ -332,18 +332,18 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
     CmpSurface(
         shape = CircleShape,
         color = colors.secondaryContainer,
-        contentColor = colors.onSecondaryContainer
+        contentColor = colors.onSecondaryContainer,
     ) {
         CmpRow(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(
                 icon = transport.icon(),
                 contentDescription = null,
                 modifier = Modifier.size(if (short) 14.dp else 18.dp),
-                tint = colors.onSecondaryContainer
+                tint = colors.onSecondaryContainer,
             )
             CmpText(
                 text = if (short && transport == DeviceTransport.BLE) {
@@ -352,7 +352,7 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
                     transportLabel(transport)
                 },
                 fontSize = if (short) DsType.LabelSmall else DsType.BodyMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }
@@ -376,7 +376,7 @@ internal fun DeviceRow(
     onClick: () -> Unit,
     tileSize: Int,
     showMode: Boolean = false,
-    onInfo: (() -> Unit)? = null
+    onInfo: (() -> Unit)? = null,
 ) {
     val colors = cmpThemeColors()
     val restricted = item.restricted
@@ -388,7 +388,7 @@ internal fun DeviceRow(
         // Недоступно в этом поиске (быстрый монтаж — только сигнализации): без заливки, пунктирная рамка (макет F1).
         color = rowColor(restricted, selected),
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
-        border = if (selected || restricted) null else BorderStroke(1.dp, colors.outlineVariant)
+        border = if (selected || restricted) null else BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(
@@ -401,10 +401,10 @@ internal fun DeviceRow(
                     14.dp
                 },
                 top = 10.dp,
-                bottom = 10.dp
+                bottom = 10.dp,
             ),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpBox(modifier = Modifier.alpha(if (restricted) RESTRICTED_ALPHA else 1f)) {
                 DeviceTile(icon = item.typeIcon, sizeDp = tileSize)
@@ -414,7 +414,7 @@ internal fun DeviceRow(
                 CmpRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // У BLE имя занимает всю ширину, чтобы RSSI прижался вправо.
                     CmpText(
@@ -423,7 +423,7 @@ internal fun DeviceRow(
                         fontSize = DsType.TitleMedium,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     if (showMode) item.notableMode?.let { ModeBadge(it) }
                     if (item is DeviceUiItem.Ble) {
@@ -432,14 +432,14 @@ internal fun DeviceRow(
                             fontSize = DsType.LabelLarge,
                             fontWeight = FontWeight.Medium,
                             color = secondary,
-                            maxLines = 1
+                            maxLines = 1,
                         )
                     }
                 }
                 CmpRow(
                     modifier = Modifier.padding(top = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TransportChip(transport = item.transport, short = true)
                     if (restricted) {
@@ -450,7 +450,7 @@ internal fun DeviceRow(
                             fontSize = DsType.LabelSmall,
                             color = secondary,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -477,14 +477,14 @@ private fun RowTrail(onInfo: (() -> Unit)?, restricted: Boolean, selected: Boole
                 onClick = it,
                 icon = CmpIcons.MoreVert,
                 contentDescription = stringResource(Strings.string.deviceselect_common_a11y_device_info),
-                tint = colors.onSurfaceVariant
+                tint = colors.onSurfaceVariant,
             )
         }
         if (!restricted) {
             CmpIcon(
                 icon = CmpIcons.ChevronRight,
                 contentDescription = null,
-                tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
+                tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
             )
         }
     }
@@ -499,20 +499,20 @@ private fun AlarmsOnlyChip() {
             .background(colors.surfaceContainerHighest, RoundedCornerShape(10.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpIcon(
             icon = CmpIcons.Block,
             contentDescription = null,
             tint = colors.onSurface,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(16.dp),
         )
         CmpText(
             text = stringResource(Strings.string.deviceselect_common_msg_alarms_only),
             fontSize = DsType.LabelSmall,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -524,8 +524,8 @@ private fun Modifier.dashedBorder(color: Color): Modifier = drawBehind {
         cornerRadius = CornerRadius(16.dp.toPx()),
         style = Stroke(
             width = 1.5.dp.toPx(),
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(DASH_ON, DASH_OFF))
-        )
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(DASH_ON, DASH_OFF)),
+        ),
     )
 }
 
@@ -558,14 +558,14 @@ internal fun Hero(icon: CmpIcons, tone: HeroTone = HeroTone.Primary) {
 internal fun CenterState(content: @Composable () -> Unit) {
     CmpBox(
         modifier = Modifier.fillMaxSize().verticalScroll(
-            rememberScrollState()
+            rememberScrollState(),
         ).padding(horizontal = 24.dp, vertical = 32.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpColumn(
             modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(22.dp)
+            verticalArrangement = Arrangement.spacedBy(22.dp),
         ) { content() }
     }
 }
@@ -578,18 +578,18 @@ internal fun PermissionRow(icon: CmpIcons, label: String, desc: String) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpSurface(
                 modifier = Modifier.size(44.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = colors.secondaryContainer,
-                contentColor = colors.onSecondaryContainer
+                contentColor = colors.onSecondaryContainer,
             ) {
                 CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CmpIcon(icon = icon, contentDescription = null, tint = colors.onSecondaryContainer)
@@ -611,18 +611,18 @@ internal fun FixSteps(items: List<String>, done: Boolean) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items.forEach { text ->
                 CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CmpIcon(
                         icon = if (done) CmpIcons.CheckCircle else CmpIcons.ChevronRight,
                         contentDescription = null,
-                        tint = colors.primary
+                        tint = colors.primary,
                     )
                     CmpText(text = text, fontSize = DsType.BodyMedium, color = colors.onSurfaceVariant)
                 }
@@ -648,19 +648,19 @@ internal fun StateHeadline(title: String, subtitle: String) {
     val colors = cmpThemeColors()
     CmpColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CmpText(
             text = title,
             fontSize = DsType.HeadlineSmall,
             fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         CmpText(
             text = subtitle,
             fontSize = DsType.BodyLarge,
             color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }

@@ -62,7 +62,7 @@ fun FirmwareBootGraph(
     onOpenSupportChat: () -> Unit,
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
     vehiclePicker: ArchiveVehiclePicker? = null,
-    sources: FirmwareSources = FirmwareSources.All
+    sources: FirmwareSources = FirmwareSources.All,
 ) {
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
     val archivePicker = koinInject<FirmwareArchivePicker>()
@@ -72,7 +72,7 @@ fun FirmwareBootGraph(
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         onBack = { backStack.popSafe() },
         entryProvider = entryProvider<NavKey> {
@@ -82,7 +82,7 @@ fun FirmwareBootGraph(
                     onOpenSupportChat = onOpenSupportChat,
                     filePicker = filePicker,
                     onOpenArchive = { request -> backStack.navigateSafe(FirmwareArchiveRoute(request)) },
-                    sources = sources
+                    sources = sources,
                 )
             }
             entry<FirmwareArchiveRoute> { key ->
@@ -94,9 +94,9 @@ fun FirmwareBootGraph(
                         backStack.popSafe()
                     },
                     onBack = { backStack.popSafe() },
-                    vehiclePicker = vehiclePicker
+                    vehiclePicker = vehiclePicker,
                 )
             }
-        }
+        },
     )
 }

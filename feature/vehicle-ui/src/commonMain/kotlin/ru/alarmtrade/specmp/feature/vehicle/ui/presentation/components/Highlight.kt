@@ -27,8 +27,8 @@ internal fun highlight(text: String, query: String, color: Color): AnnotatedStri
             append(
                 text.substring(
                     start,
-                    start + q.length
-                )
+                    start + q.length,
+                ),
             )
         }
         append(text.substring(start + q.length))

@@ -41,19 +41,19 @@ internal fun CarPhoto(
     url: String?,
     modifier: Modifier = Modifier,
     radius: Dp = 10.dp,
-    contentDescription: String? = null
+    contentDescription: String? = null,
 ) {
     val colors = cmpThemeColors()
     Box(
         modifier = modifier.clip(RoundedCornerShape(radius)).background(colors.surfaceContainerHigh),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         val placeholder: @Composable () -> Unit = {
             CmpIcon(
                 icon = CmpIcons.DirectionsCar,
                 contentDescription = null,
                 tint = colors.outline,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(28.dp),
             )
         }
         if (url == null) {
@@ -65,7 +65,7 @@ internal fun CarPhoto(
                 placeholder = placeholder,
                 // Вписываем по большей стороне: фото видно целиком, ничего не обрезается.
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -80,12 +80,12 @@ internal fun BrandLogo(name: String, url: String?, modifier: Modifier = Modifier
             text = name.take(1).uppercase(),
             style = CmpTextStyle.BodyLarge,
             fontWeight = FontWeight.Bold,
-            color = colors.onSecondaryContainer
+            color = colors.onSecondaryContainer,
         )
     }
     Box(
         modifier = modifier.size(size).clip(RoundedCornerShape(ThumbRadius)).background(colors.secondaryContainer),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         if (url == null) {
             letter()
@@ -94,7 +94,7 @@ internal fun BrandLogo(name: String, url: String?, modifier: Modifier = Modifier
                 model = url,
                 contentDescription = null,
                 placeholder = letter,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }

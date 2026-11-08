@@ -45,7 +45,7 @@ internal fun CarConfigurationInfo.toSummary() = CloudConfigurationSummary(
     // Оценок нет — SDK отдаёт 0.
     rating = rating.takeIf { it > 0 },
     updated = lastUpdateDate,
-    onlyForAuthor = !isAvailable
+    onlyForAuthor = !isAvailable,
 )
 
 internal fun CarConfiguration.toDomain() = CloudConfiguration(
@@ -58,7 +58,7 @@ internal fun CarConfiguration.toDomain() = CloudConfiguration(
         ConfigurationAttachment(
             title = image.shortDescription,
             previewUrl = image.previewUrl.takeIf { it.isNotBlank() },
-            url = image.url
+            url = image.url,
         )
-    }
+    },
 )

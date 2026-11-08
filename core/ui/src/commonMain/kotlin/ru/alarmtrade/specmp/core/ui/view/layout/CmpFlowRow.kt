@@ -16,13 +16,13 @@ fun CmpFlowRow(
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     itemVerticalAlignment: Alignment.Vertical = Alignment.Top,
-    content: @Composable FlowRowScope.() -> Unit
+    content: @Composable FlowRowScope.() -> Unit,
 ) {
     FlowRow(
         modifier = modifier,
         horizontalArrangement = horizontalArrangement,
         verticalArrangement = verticalArrangement,
         itemVerticalAlignment = itemVerticalAlignment,
-        content = content
+        content = content,
     )
 }

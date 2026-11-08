@@ -31,7 +31,7 @@ internal fun groupLabel(group: CarFeatureGroup): String = stringResource(
         CarFeatureGroup.EXTENDED -> Strings.string.vehicle_group_label_extended
         CarFeatureGroup.ELECTRIC -> Strings.string.vehicle_group_label_electric
         CarFeatureGroup.TRAILER -> Strings.string.vehicle_group_label_trailer
-    }
+    },
 )
 
 /** Полное название типа устройства (экран выбора типа, подзаголовок). */
@@ -40,7 +40,7 @@ internal fun typeLabel(type: VehicleDeviceType): String = stringResource(
     when (type) {
         VehicleDeviceType.ALARM -> Strings.string.vehicle_type_label_alarm
         VehicleDeviceType.MICROBOT -> Strings.string.vehicle_type_label_microbot
-    }
+    },
 )
 
 /** Короткое название типа (чип в шапке). */
@@ -49,5 +49,5 @@ internal fun typeChipLabel(type: VehicleDeviceType): String = stringResource(
     when (type) {
         VehicleDeviceType.ALARM -> Strings.string.vehicle_type_btn_alarm
         VehicleDeviceType.MICROBOT -> Strings.string.vehicle_type_btn_microbot
-    }
+    },
 )

@@ -45,7 +45,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceS
  */
 class SpecialistDeviceSessionRepository(
     private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
-    private val appUpdatesInteractor: () -> AppUpdatesInteractor
+    private val appUpdatesInteractor: () -> AppUpdatesInteractor,
 ) : DeviceSessionRepository {
 
     override fun linkState(): Flow<DeviceLinkState> = flow {
@@ -62,7 +62,7 @@ class SpecialistDeviceSessionRepository(
                     is SpecialistResponse.Success -> response.value.toDomain()
                     is SpecialistResponse.Error -> DeviceLinkState.DISCONNECTED
                 }
-            }
+            },
         )
     }.catch { e ->
         if (e is CancellationException) throw e
@@ -81,15 +81,15 @@ class SpecialistDeviceSessionRepository(
         return interactor.getBluetoothOperationModeUseCase.execute().toResponse().mapIfSuccess { mode ->
             when (mode) {
                 BluetoothOperationMode.BLE_MAIN_MODE -> Response.Success(
-                    BluetoothModule(BluetoothModuleMode.MAIN, manufacturer)
+                    BluetoothModule(BluetoothModuleMode.MAIN, manufacturer),
                 )
 
                 BluetoothOperationMode.BLE_BOOT_MODE -> Response.Success(
-                    BluetoothModule(BluetoothModuleMode.BOOT, manufacturer)
+                    BluetoothModule(BluetoothModuleMode.BOOT, manufacturer),
                 )
 
                 BluetoothOperationMode.ERROR -> Response.Error(
-                    IllegalStateException("Bluetooth module mode is unknown")
+                    IllegalStateException("Bluetooth module mode is unknown"),
                 )
             }
         }
@@ -120,13 +120,13 @@ class SpecialistDeviceSessionRepository(
                         firmwareVersion = can.canVersionString,
                         code = can.canCode,
                         isFactory = can.isFactoryCanSettings,
-                        version = can.validCanVersion
+                        version = can.validCanVersion,
                     )
                 } else {
                     null
                 },
-                modelInDatabase = !modelMissing
-            )
+                modelInDatabase = !modelMissing,
+            ),
         )
     }
 
@@ -199,7 +199,7 @@ class SpecialistDeviceSessionRepository(
         firmwareName = firmwareName,
         deviceName = deviceName,
         bootFirmwareVersion = bootFirmwareVersion,
-        mainFirmwareVersion = mainFirmwareVersion
+        mainFirmwareVersion = mainFirmwareVersion,
     )
 
     private fun ConnectionState.toDomain(): DeviceLinkState = when (this) {

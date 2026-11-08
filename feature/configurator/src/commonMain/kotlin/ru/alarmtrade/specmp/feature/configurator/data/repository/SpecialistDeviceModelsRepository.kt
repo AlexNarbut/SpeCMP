@@ -31,7 +31,7 @@ class SpecialistDeviceModelsRepository(private val interactor: () -> DeviceInfor
                 ?.let { raw -> safeRun { json.decodeFromString(serializer, raw) }.getValueIfSuccess() }
                 .orEmpty()
         },
-        write = { settings.putString(RECENT_KEY, json.encodeToString(serializer, it)) }
+        write = { settings.putString(RECENT_KEY, json.encodeToString(serializer, it)) },
     )
 
     override suspend fun models(): Response<List<String>> {

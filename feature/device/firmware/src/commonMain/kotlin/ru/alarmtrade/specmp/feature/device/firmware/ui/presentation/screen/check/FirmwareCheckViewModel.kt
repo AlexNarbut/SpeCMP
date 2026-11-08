@@ -56,7 +56,7 @@ class FirmwareCheckViewModel(
     private val repository: FirmwareRepository,
     bootRequester: FirmwareBootRequester,
     pinCooldown: ServicePinCooldown,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
@@ -113,7 +113,7 @@ class FirmwareCheckViewModel(
         kind = module.kind,
         title = module.displayTitle,
         currentVersion = CurrentVersionUi.Reading,
-        status = if (module.isBootSupported) CardStatusUi.Searching else CardStatusUi.NotSupported
+        status = if (module.isBootSupported) CardStatusUi.Searching else CardStatusUi.NotSupported,
     )
 
     /** Текущая версия модуля, затем — серверная (если модуль можно обновить). */
@@ -129,7 +129,8 @@ class FirmwareCheckViewModel(
             FirmwareModuleKind.WatchMain,
             FirmwareModuleKind.GpsTracker,
             FirmwareModuleKind.BmwBypass,
-            FirmwareModuleKind.RemoteControlMain -> CurrentVersionUi.Known(device.displayFirmwareVersion)
+            FirmwareModuleKind.RemoteControlMain,
+            -> CurrentVersionUi.Known(device.displayFirmwareVersion)
 
             FirmwareModuleKind.BluetoothModule -> {
                 val response = withContext(dispatchers.io) { deviceSession.readBluetoothModule() }
@@ -146,7 +147,8 @@ class FirmwareCheckViewModel(
             FirmwareModuleKind.ChargingStationTester,
             FirmwareModuleKind.CanModule,
             FirmwareModuleKind.Microbot,
-            FirmwareModuleKind.Unknown -> CurrentVersionUi.Absent
+            FirmwareModuleKind.Unknown,
+            -> CurrentVersionUi.Absent
         }
 
     /** Серверная версия модуля в текущем канале; ответ прежнего канала отбрасывается. */
@@ -261,7 +263,7 @@ class FirmwareCheckViewModel(
 
     private fun FirmwareCheckState.withCard(
         moduleId: Long,
-        transform: (ModuleCardUi) -> ModuleCardUi
+        transform: (ModuleCardUi) -> ModuleCardUi,
     ): FirmwareCheckState {
         val ready = content as? LCEState.Content ?: return this
         return copy(
@@ -274,8 +276,8 @@ class FirmwareCheckViewModel(
                     } else {
                         card
                     }
-                }
-            )
+                },
+            ),
         )
     }
 

@@ -28,8 +28,8 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("ResponseGetOrThrow") to ::ResponseGetOrThrow,
             RuleName("ResponseIgnored") to ::ResponseIgnored,
             RuleName("DirectClockUsage") to ::DirectClockUsage,
-            RuleName("ThrowInRepository") to ::ThrowInRepository
-        )
+            RuleName("ThrowInRepository") to ::ThrowInRepository,
+        ),
     )
 
     companion object {

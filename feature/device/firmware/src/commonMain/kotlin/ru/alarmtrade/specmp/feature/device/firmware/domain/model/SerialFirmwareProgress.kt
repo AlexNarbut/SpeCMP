@@ -40,5 +40,5 @@ enum class SerialFirmwareFailure {
 
     /** COM-порт пропал во время шага; обновление нужно начать заново. */
     ConnectionLost,
-    Unknown
+    Unknown,
 }

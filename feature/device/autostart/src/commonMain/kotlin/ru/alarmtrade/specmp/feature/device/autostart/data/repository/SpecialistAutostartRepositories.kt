@@ -19,7 +19,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepo
  * Поток кончается на итоге или сбое; ошибка SDK — [BypassEvent.Failure].
  */
 class SpecialistBypassLearningRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
+    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : BypassLearningRepository {
 
     override fun learn(): Flow<BypassEvent> = flow {

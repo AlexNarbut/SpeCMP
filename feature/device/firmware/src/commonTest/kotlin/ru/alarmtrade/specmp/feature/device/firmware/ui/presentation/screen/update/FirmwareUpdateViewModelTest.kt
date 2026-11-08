@@ -63,7 +63,7 @@ class FirmwareUpdateViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = emptySet(),
-        can = null
+        can = null,
     )
     private val bootDevice = workDevice.copy(mode = DeviceOperationMode.BOOT)
 
@@ -72,14 +72,14 @@ class FirmwareUpdateViewModelTest {
         kind = FirmwareModuleKind.AlarmMain,
         systemName = "DX4G",
         title = "Pandora DX 4G",
-        bootTarget = BootModeTarget.MainProgram
+        bootTarget = BootModeTarget.MainProgram,
     )
     private val bluetoothModule = FirmwareModule(
         id = 2,
         kind = FirmwareModuleKind.BluetoothModule,
         systemName = "BTM2",
         title = "Pandora BT",
-        bootTarget = BootModeTarget.BluetoothModule
+        bootTarget = BootModeTarget.BluetoothModule,
     )
     private val otherAlarmModule = alarmModule.copy(id = 4, title = "Pandora Second", systemName = "DX2")
 
@@ -109,14 +109,14 @@ class FirmwareUpdateViewModelTest {
     }
 
     private fun TestScope.viewModel(
-        transport: ConnectionTransport = ConnectionTransport.USB
+        transport: ConnectionTransport = ConnectionTransport.USB,
     ): Pair<FirmwareUpdateViewModel, MutableList<FirmwareUpdateEffect>> {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         session = DeviceSession(
             sessionRepository,
             FakeConnectionRepository(),
             dispatchers,
-            backgroundScope.coroutineContext
+            backgroundScope.coroutineContext,
         )
         session.attach(transport)
         val vm = FirmwareUpdateViewModel(session, repository, updateRepository, requester, picker, dispatchers)
@@ -193,9 +193,9 @@ class FirmwareUpdateViewModelTest {
             Response.Success(
                 BluetoothModule(
                     BluetoothModuleMode.BOOT,
-                    BluetoothManufacturer("1", "BT-DX4G", "DX4G", "1.0", "1.14")
-                )
-            )
+                    BluetoothManufacturer("1", "BT-DX4G", "DX4G", "1.0", "1.14"),
+                ),
+            ),
         )
         prepareMain()
         requester.request(FirmwareBootRequest(2, FirmwareChannel.RELEASE))
@@ -396,9 +396,9 @@ class FirmwareUpdateViewModelTest {
             Response.Success(
                 BluetoothModule(
                     BluetoothModuleMode.BOOT,
-                    BluetoothManufacturer("1", "BT-DX4G", "DX4G", "1.0", "1.14")
-                )
-            )
+                    BluetoothManufacturer("1", "BT-DX4G", "DX4G", "1.0", "1.14"),
+                ),
+            ),
         )
         prepareMain()
         repository.latest[2L to FirmwareChannel.RELEASE] = Response.Success(version("1.20"))
@@ -572,12 +572,12 @@ class FirmwareUpdateViewModelTest {
                         "3.57",
                         "DX4G  77",
                         UpdateProfile.Main,
-                        deviceName = "DX4G"
-                    )
+                        deviceName = "DX4G",
+                    ),
                 ),
-                FirmwareUpdateEffect.OpenSupportChat
+                FirmwareUpdateEffect.OpenSupportChat,
             ),
-            effects
+            effects,
         )
 
         vm.onDisconnect()

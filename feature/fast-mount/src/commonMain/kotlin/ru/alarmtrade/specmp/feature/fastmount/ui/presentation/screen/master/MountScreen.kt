@@ -123,23 +123,23 @@ internal fun MountScreen(state: FastMountState, actions: MasterActions) {
                         icon = CmpIcons.Check,
                         busy = state.master.busy,
                         onClick = actions.onMountDone,
-                        modifier = Modifier.testTag(FAST_MOUNT_MOUNT_DONE_TAG)
+                        modifier = Modifier.testTag(FAST_MOUNT_MOUNT_DONE_TAG),
                     )
-                }
+                },
             )
-        }
+        },
     ) {
         if (wide) {
             WideMount(
                 state,
                 actions,
-                onPhoto = { photo = it }
+                onPhoto = { photo = it },
             )
         } else {
             PhoneMount(
                 state,
                 actions,
-                onPhoto = { photo = it }
+                onPhoto = { photo = it },
             )
         }
     }
@@ -155,13 +155,13 @@ private fun MountLead(withIcon: Boolean) {
         if (withIcon) {
             CmpBox(
                 modifier = Modifier.size(48.dp).background(colors.secondaryContainer, RoundedCornerShape(14.dp)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     CmpIcons.Build,
                     contentDescription = null,
                     tint = colors.onSecondaryContainer,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(26.dp),
                 )
             }
         }
@@ -170,7 +170,7 @@ private fun MountLead(withIcon: Boolean) {
             CmpText(
                 text = stringResource(Strings.string.fastmount_mount_msg_lead),
                 style = CmpTextStyle.BodyLarge,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
         }
     }
@@ -205,7 +205,7 @@ private fun WideMount(state: FastMountState, actions: MasterActions, onPhoto: (I
                     configuration?.fullDescription?.takeIf { it.isNotBlank() }?.let { description ->
                         InfoCard(
                             title = stringResource(Strings.string.fastmount_mount_title_description),
-                            icon = CmpIcons.Description
+                            icon = CmpIcons.Description,
                         ) {
                             CmpText(text = description.stripHtml(), style = CmpTextStyle.BodyLarge)
                         }
@@ -242,7 +242,7 @@ private fun DescriptionCard(description: String, open: Boolean, onToggle: () -> 
             .fillMaxWidth()
             .clip(shape)
             .background(colors.surfaceContainerLow)
-            .border(1.dp, colors.outlineVariant, shape)
+            .border(1.dp, colors.outlineVariant, shape),
     ) {
         CmpRow(
             modifier = Modifier
@@ -251,32 +251,32 @@ private fun DescriptionCard(description: String, open: Boolean, onToggle: () -> 
                 .clickable(onClick = onToggle)
                 .padding(start = 16.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CmpIcon(
                 CmpIcons.Description,
                 contentDescription = null,
                 tint = colors.primary,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size(26.dp),
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_mount_title_description),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             CmpIcon(
                 CmpIcons.KeyboardArrowDown,
                 contentDescription = null,
                 tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(28.dp).rotate(if (open) HALF_TURN else 0f)
+                modifier = Modifier.size(28.dp).rotate(if (open) HALF_TURN else 0f),
             )
         }
         if (open) {
             CmpText(
                 text = description.stripHtml(),
                 style = CmpTextStyle.BodyLarge,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             )
         }
     }
@@ -302,7 +302,7 @@ private fun MapCard(map: MountMapState, actions: MasterActions) {
             .padding(start = 12.dp, end = 14.dp, top = 12.dp, bottom = 12.dp)
             .testTag(FAST_MOUNT_MAP_TAG),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         MapIcon(map, Modifier.size(width = 56.dp, height = 68.dp))
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -310,12 +310,12 @@ private fun MapCard(map: MountMapState, actions: MasterActions) {
                 text = stringResource(mapTitle(error)),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (error) colors.onErrorContainer else colors.onSurface
+                color = if (error) colors.onErrorContainer else colors.onSurface,
             )
             CmpText(
                 text = mapCaption(map),
                 style = CmpTextStyle.Body,
-                color = if (error) colors.onErrorContainer else colors.onSurfaceVariant
+                color = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
             )
         }
         when {
@@ -323,14 +323,14 @@ private fun MapCard(map: MountMapState, actions: MasterActions) {
                 CmpIcons.OpenInNew,
                 contentDescription = null,
                 tint = colors.primary,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(28.dp),
             )
 
             error -> MainButton(
                 text = stringResource(Strings.string.fastmount_common_btn_retry),
                 outlined = true,
                 onClick = actions.onMapRetry,
-                modifier = Modifier.widthIn(max = 160.dp)
+                modifier = Modifier.widthIn(max = 160.dp),
             )
         }
     }
@@ -348,11 +348,11 @@ private fun MapPreview(map: MountMapState, actions: MasterActions) {
             .clip(shape)
             .background(colors.surfaceContainerLow)
             .border(1.dp, colors.outlineVariant, shape)
-            .testTag(FAST_MOUNT_MAP_TAG)
+            .testTag(FAST_MOUNT_MAP_TAG),
     ) {
         CmpBox(
             modifier = Modifier.fillMaxWidth().height(200.dp).background(colors.surfaceContainerHigh),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             MapIcon(map, Modifier.size(width = 96.dp, height = 116.dp))
         }
@@ -362,19 +362,19 @@ private fun MapPreview(map: MountMapState, actions: MasterActions) {
                 .background(if (error) colors.errorContainer else Color.Transparent)
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 CmpText(
                     text = stringResource(mapTitle(error)),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (error) colors.onErrorContainer else colors.onSurface
+                    color = if (error) colors.onErrorContainer else colors.onSurface,
                 )
                 CmpText(
                     text = mapCaption(map),
                     style = CmpTextStyle.Body,
-                    color = if (error) colors.onErrorContainer else colors.onSurfaceVariant
+                    color = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
                 )
             }
             CmpBox(modifier = Modifier.widthIn(max = 280.dp).weight(1f)) {
@@ -383,14 +383,14 @@ private fun MapPreview(map: MountMapState, actions: MasterActions) {
                         text = stringResource(Strings.string.fastmount_common_btn_retry),
                         icon = CmpIcons.Refresh,
                         outlined = true,
-                        onClick = actions.onMapRetry
+                        onClick = actions.onMapRetry,
                     )
                 } else {
                     MainButton(
                         text = stringResource(Strings.string.fastmount_mount_btn_open_map),
                         icon = CmpIcons.OpenInNew,
                         busy = map == MountMapState.Downloading,
-                        onClick = actions.onMapOpen
+                        onClick = actions.onMapOpen,
                     )
                 }
             }
@@ -405,9 +405,9 @@ private fun MapIcon(map: MountMapState, modifier: Modifier) {
     CmpBox(
         modifier = modifier.background(
             if (error) colors.onErrorContainer.copy(alpha = 0.12f) else colors.primaryContainer,
-            RoundedCornerShape(10.dp)
+            RoundedCornerShape(10.dp),
         ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         if (map == MountMapState.Downloading) {
             CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
@@ -416,7 +416,7 @@ private fun MapIcon(map: MountMapState, modifier: Modifier) {
                 icon = if (error) CmpIcons.ErrorOutline else CmpIcons.PictureAsPdf,
                 contentDescription = null,
                 tint = if (error) colors.onErrorContainer else colors.onPrimaryContainer,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp),
             )
         }
     }
@@ -430,7 +430,7 @@ private fun mapCaption(map: MountMapState): String = when (map) {
 
     is MountMapState.Ready -> stringResource(
         Strings.string.fastmount_mount_msg_opens_in,
-        stringResource(Strings.string.fastmount_mount_format_size, formatMegabytes(map.sizeBytes))
+        stringResource(Strings.string.fastmount_mount_format_size, formatMegabytes(map.sizeBytes)),
     )
 
     MountMapState.None -> ""
@@ -452,12 +452,12 @@ private fun PhotosHeader(count: Int) {
             text = stringResource(Strings.string.fastmount_mount_title_photos),
             style = CmpTextStyle.Title,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         CmpText(
             text = stringResource(Strings.string.fastmount_mount_format_photos, count),
             style = CmpTextStyle.Body,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
 }
@@ -501,7 +501,7 @@ private fun PhotoTile(image: MountImage, height: Dp, onClick: () -> Unit, modifi
                 .fillMaxWidth()
                 .height(height)
                 .clip(RoundedCornerShape(16.dp))
-                .background(colors.surfaceContainerHigh)
+                .background(colors.surfaceContainerHigh),
         )
         if (image.title.isNotBlank()) CmpText(text = image.title, style = CmpTextStyle.Body)
     }
@@ -519,45 +519,45 @@ private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Uni
         CmpColumn(modifier = Modifier.fillMaxSize().background(Color(VIEWER_BACKGROUND))) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpIconButton(
                     onClick = onClose,
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.fastmount_mount_a11y_close),
                     tint = white,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(56.dp),
                 )
                 CmpText(
                     text = stringResource(Strings.string.fastmount_mount_title_photos),
                     color = white,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 CmpText(
                     text = "${pager.currentPage + 1} / ${images.size}",
                     color = white,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 12.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
             HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
                 CmpZoomableImage(
                     model = images[page].url,
                     contentDescription = images[page].title,
-                    modifier = Modifier.fillMaxSize().padding(12.dp)
+                    modifier = Modifier.fillMaxSize().padding(12.dp),
                 )
             }
             CmpRow(
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ViewerArrow(
                     CmpIcons.ChevronLeft,
                     Strings.string.fastmount_mount_a11y_prev_photo,
-                    pager.currentPage > 0
+                    pager.currentPage > 0,
                 ) {
                     scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
                 }
@@ -566,12 +566,12 @@ private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Uni
                     text = image.title.ifBlank { image.description },
                     color = white,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 ViewerArrow(
                     CmpIcons.ChevronRight,
                     Strings.string.fastmount_mount_a11y_next_photo,
-                    pager.currentPage < images.lastIndex
+                    pager.currentPage < images.lastIndex,
                 ) {
                     scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                 }
@@ -585,23 +585,23 @@ private fun ViewerArrow(
     icon: CmpIcons,
     label: org.jetbrains.compose.resources.StringResource,
     enabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     CmpBox(
         modifier = Modifier
             .size(MainButtonHeight)
             .background(
                 Color.White.copy(alpha = if (enabled) VIEWER_BUTTON_ALPHA else VIEWER_BUTTON_ALPHA / 2),
-                CircleShape
+                CircleShape,
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpIconButton(
             onClick = onClick,
             icon = icon,
             contentDescription = stringResource(label),
             enabled = enabled,
-            tint = Color.White.copy(alpha = if (enabled) 1f else DISABLED_ALPHA)
+            tint = Color.White.copy(alpha = if (enabled) 1f else DISABLED_ALPHA),
         )
     }
 }
@@ -638,9 +638,9 @@ internal fun SlaveAnimation(modifier: Modifier = Modifier) {
                     srcOffset = IntOffset(index % SLAVE_COLUMNS * cell.width, index / SLAVE_COLUMNS * cell.height),
                     srcSize = cell,
                     dstSize = IntSize(size.width.toInt(), size.height.toInt()),
-                    filterQuality = FilterQuality.Medium
+                    filterQuality = FilterQuality.Medium,
                 )
-            }
+            },
     )
 }
 

@@ -18,7 +18,7 @@ data class CmpDomainColors(
     val busLin: Color,
     val busBean: Color,
     val busImmobilizer: Color,
-    val busUnknown: Color
+    val busUnknown: Color,
 )
 
 private val LightDomainColors = CmpDomainColors(
@@ -29,7 +29,7 @@ private val LightDomainColors = CmpDomainColors(
     busLin = Color(0xFF7B3FA6),
     busBean = Color(0xFFB85C00),
     busImmobilizer = Color(0xFF2E7D32),
-    busUnknown = Color(0xFF6B6B6B)
+    busUnknown = Color(0xFF6B6B6B),
 )
 
 private val DarkDomainColors = CmpDomainColors(
@@ -40,7 +40,7 @@ private val DarkDomainColors = CmpDomainColors(
     busLin = Color(0xFFC79AEB),
     busBean = Color(0xFFF2A55A),
     busImmobilizer = Color(0xFF72C476),
-    busUnknown = Color(0xFF9AA4B8)
+    busUnknown = Color(0xFF9AA4B8),
 )
 
 /** Доменные цвета текущей темы ([LocalThemeIsDark]). */

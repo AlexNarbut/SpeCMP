@@ -52,10 +52,10 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
                         Strings.string.vehicle_select_title_pick
                     } else {
                         Strings.string.vehicle_select_title_view
-                    }
+                    },
                 ),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         },
         subtitle = subtitle?.let { { CmpText(text = it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
@@ -63,7 +63,7 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
             CmpIconButton(
                 onClick = actions.onBack,
                 icon = CmpIcons.ArrowBack,
-                contentDescription = stringResource(Strings.string.vehicle_common_a11y_back)
+                contentDescription = stringResource(Strings.string.vehicle_common_a11y_back),
             )
         },
         actions = {
@@ -72,7 +72,7 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
                 if (wide && mode.typeSelectable && type != null) TypeChip(type = type, onPick = actions.onTypePick)
                 if (mode.filterAvailable) FilterButton(active = state.groups.size, onClick = actions.onFilterOpen)
             }
-        }
+        },
     )
 }
 
@@ -101,7 +101,7 @@ internal fun TypeChip(type: VehicleDeviceType, onPick: (VehicleDeviceType) -> Un
             text = label,
             onClick = { expanded = true },
             icon = if (type == VehicleDeviceType.ALARM) CmpIcons.Security else CmpIcons.Memory,
-            modifier = Modifier.testTag(VehicleTestTags.TYPE_CHIP)
+            modifier = Modifier.testTag(VehicleTestTags.TYPE_CHIP),
         )
         CmpDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             VehicleDeviceType.entries.forEach { option ->
@@ -111,7 +111,7 @@ internal fun TypeChip(type: VehicleDeviceType, onPick: (VehicleDeviceType) -> Un
                     onClick = {
                         expanded = false
                         if (option != type) onPick(option)
-                    }
+                    },
                 )
             }
         }
@@ -129,7 +129,7 @@ private fun FilterButton(active: Int, onClick: () -> Unit) {
             } else {
                 stringResource(Strings.string.vehicle_filter_a11y_open)
             },
-            modifier = Modifier.testTag(VehicleTestTags.FILTER)
+            modifier = Modifier.testTag(VehicleTestTags.FILTER),
         )
         if (active > 0) CmpDot(color = cmpThemeColors().error, modifier = Modifier.offset(x = (-8).dp, y = 8.dp))
     }

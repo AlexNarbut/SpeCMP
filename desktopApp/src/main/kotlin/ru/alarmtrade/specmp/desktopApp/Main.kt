@@ -14,10 +14,10 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(
             width = 1200.dp,
-            height = 800.dp
+            height = 800.dp,
         ),
         title = "SpeCMP",
-        icon = painterResource("icon.png")
+        icon = painterResource("icon.png"),
     ) {
         App(appVersionName = versionName, appVersionCode = versionCode)
     }

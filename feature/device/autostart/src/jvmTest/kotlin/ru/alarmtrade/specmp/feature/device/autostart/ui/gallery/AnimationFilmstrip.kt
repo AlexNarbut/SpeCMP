@@ -68,7 +68,7 @@ class AnimationFilmstrip {
         val gap = 12
         val sheet = Surface.makeRasterN32Premul(
             frames.sumOf { it.width } + gap * (frames.size + 1),
-            frames[0].height + 2 * gap
+            frames[0].height + 2 * gap,
         )
         sheet.canvas.clear(Color.makeRGB(120, 120, 120))
         var x = gap
@@ -76,7 +76,7 @@ class AnimationFilmstrip {
             sheet.canvas.drawImageRect(
                 image,
                 Rect.makeXYWH(x.toFloat(), gap.toFloat(), image.width.toFloat(), image.height.toFloat()),
-                Paint()
+                Paint(),
             )
             x += image.width + gap
         }
@@ -90,9 +90,9 @@ class AnimationFilmstrip {
             "anim_01_step_in_0_96_160_320ms",
             running(BypassStepKind.ACTION, BypassSubject.IGNITION_ON),
             running(BypassStepKind.ACCEPTED, BypassSubject.IGNITION_ON),
-            listOf(0, 96, 160, 320)
+            listOf(0, 96, 160, 320),
         ),
-        "new step must animate in"
+        "new step must animate in",
     )
 
     @Test
@@ -101,9 +101,9 @@ class AnimationFilmstrip {
             "anim_02_status_out_0_160_240_400ms",
             running(BypassStepKind.WAIT, BypassSubject.ECU_EXCHANGE),
             base.copy(phase = BypassPhase.Finished(BypassResult.Success)),
-            listOf(0, 160, 240, 400)
+            listOf(0, 160, 240, 400),
         ),
-        "status strip must fade out"
+        "status strip must fade out",
     )
 
     @Test
@@ -112,9 +112,9 @@ class AnimationFilmstrip {
             "anim_03_pulse_320_640_960_1280ms",
             base,
             running(BypassStepKind.ACTION, BypassSubject.ENGINE_START),
-            listOf(320, 640, 960, 1280)
+            listOf(320, 640, 960, 1280),
         ),
-        "request ring must pulse"
+        "request ring must pulse",
     )
 
     private companion object {

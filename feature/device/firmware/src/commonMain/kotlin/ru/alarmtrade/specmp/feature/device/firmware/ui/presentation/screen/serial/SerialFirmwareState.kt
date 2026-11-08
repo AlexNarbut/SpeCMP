@@ -22,7 +22,7 @@ sealed interface SerialPhase {
         val path: String,
         val fileVersion: String?,
         val older: Boolean,
-        val nameMismatch: SystemNameMismatch? = null
+        val nameMismatch: SystemNameMismatch? = null,
     ) : SerialPhase
 
     /** SDK шлёт GOBOOT: пользователь перезагружает блок по питанию. */
@@ -60,7 +60,7 @@ data class SerialFirmwareState(
     val phase: SerialPhase = SerialPhase.Ready,
     /** Выбранный файл не удалось взять (баннер на шаге «Обновить из файла»). */
     val fileError: FileError? = null,
-    val fileProblem: SerialFileProblem? = null
+    val fileProblem: SerialFileProblem? = null,
 ) {
     /** Подзаголовок «имя  systemId». */
     val deviceTitle: String? get() = device?.title
@@ -74,12 +74,14 @@ data class SerialFirmwareState(
             SerialPhase.CheckingBoot,
             is SerialPhase.Transfer,
             SerialPhase.Verify,
-            SerialPhase.Apply -> true
+            SerialPhase.Apply,
+            -> true
 
             SerialPhase.Ready,
             is SerialPhase.Confirm,
             is SerialPhase.Success,
-            is SerialPhase.Error -> false
+            is SerialPhase.Error,
+            -> false
         }
 }
 
@@ -89,7 +91,7 @@ class SerialFirmwareActions(
     val onFileClick: () -> Unit = {},
     val onConfirmUpdate: () -> Unit = {},
     val onCancelConfirm: () -> Unit = {},
-    val onResultOk: () -> Unit = {}
+    val onResultOk: () -> Unit = {},
 )
 
 /** Одноразовые события экрана прошивки по COM. */

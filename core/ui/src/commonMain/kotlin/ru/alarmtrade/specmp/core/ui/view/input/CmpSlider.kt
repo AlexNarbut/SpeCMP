@@ -13,7 +13,7 @@ fun CmpSlider(
     enabled: Boolean = true,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
-    onValueChangeFinished: (() -> Unit)? = null
+    onValueChangeFinished: (() -> Unit)? = null,
 ) {
     Slider(
         value = value,
@@ -22,7 +22,7 @@ fun CmpSlider(
         enabled = enabled,
         valueRange = valueRange,
         steps = steps,
-        onValueChangeFinished = onValueChangeFinished
+        onValueChangeFinished = onValueChangeFinished,
     )
 }
 
@@ -34,7 +34,7 @@ fun CmpRangeSlider(
     enabled: Boolean = true,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
-    onValueChangeFinished: (() -> Unit)? = null
+    onValueChangeFinished: (() -> Unit)? = null,
 ) {
     RangeSlider(
         value = value,
@@ -43,6 +43,6 @@ fun CmpRangeSlider(
         enabled = enabled,
         valueRange = valueRange,
         steps = steps,
-        onValueChangeFinished = onValueChangeFinished
+        onValueChangeFinished = onValueChangeFinished,
     )
 }

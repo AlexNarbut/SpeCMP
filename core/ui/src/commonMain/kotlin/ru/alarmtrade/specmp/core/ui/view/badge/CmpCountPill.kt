@@ -39,14 +39,14 @@ fun CmpCountPill(count: Int, modifier: Modifier = Modifier) {
             .background(colors.tertiaryContainer, CircleShape)
             .padding(horizontal = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpDot(size = 8.dp)
         Text(
             text = count.toString(),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
-            color = colors.onTertiaryContainer
+            color = colors.onTertiaryContainer,
         )
     }
 }

@@ -41,7 +41,7 @@ fun CmpBreadcrumbs(
     items: List<CmpBreadcrumb>,
     onItemClick: (index: Int) -> Unit,
     modifier: Modifier = Modifier,
-    maxVisible: Int = 3
+    maxVisible: Int = 3,
 ) {
     val collapsed = items.size > maxVisible
     val firstShown = if (collapsed) items.size - (maxVisible - 1) else 0
@@ -50,7 +50,7 @@ fun CmpBreadcrumbs(
 
     Row(
         modifier = modifier.horizontalScroll(scroll),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (collapsed) {
             Crumb(text = COLLAPSED_MARK, current = false, marked = false, onClick = null)
@@ -63,7 +63,7 @@ fun CmpBreadcrumbs(
                 text = item.label,
                 current = current,
                 marked = item.marked,
-                onClick = if (current) null else ({ onItemClick(index) })
+                onClick = if (current) null else ({ onItemClick(index) }),
             )
         }
     }
@@ -75,7 +75,7 @@ private fun Chevron() {
         icon = CmpIcons.ChevronRight,
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.size(20.dp)
+        modifier = Modifier.size(20.dp),
     )
 }
 
@@ -90,14 +90,14 @@ private fun Crumb(text: String, current: Boolean, marked: Boolean, onClick: (() 
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = if (current) FontWeight.SemiBold else FontWeight.Medium,
             color = if (current || onClick == null) colors.onSurface else colors.primary,
-            maxLines = 1
+            maxLines = 1,
         )
         if (marked) CmpDot(size = 8.dp)
     }

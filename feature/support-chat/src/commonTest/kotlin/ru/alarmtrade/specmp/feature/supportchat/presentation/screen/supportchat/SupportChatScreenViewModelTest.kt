@@ -62,7 +62,7 @@ class SupportChatScreenViewModelTest {
         dispatchers = AppDispatchers(
             main = testDispatcher,
             io = testDispatcher,
-            default = testDispatcher
+            default = testDispatcher,
         )
     }
 
@@ -97,7 +97,7 @@ class SupportChatScreenViewModelTest {
         repository.historyPageOnLoad = listOf(
             incomingMessageAt(id = 3, minute = 12, text = "Third"),
             incomingMessageAt(id = 2, minute = 9, text = "Second"),
-            incomingMessageAt(id = 1, minute = 5, text = "First")
+            incomingMessageAt(id = 1, minute = 5, text = "First"),
         )
         val viewModel = createViewModel()
 
@@ -108,7 +108,7 @@ class SupportChatScreenViewModelTest {
     fun `live message is placed after older history page`() = runChatTest {
         repository.historyPageOnLoad = listOf(
             incomingMessageAt(id = 2, minute = 9, text = "Second"),
-            incomingMessageAt(id = 1, minute = 5, text = "First")
+            incomingMessageAt(id = 1, minute = 5, text = "First"),
         )
         val viewModel = createViewModel()
 
@@ -472,7 +472,7 @@ class SupportChatScreenViewModelTest {
         listOf(
             SupportChatConnectionState.Reconnecting,
             SupportChatConnectionState.WaitingForNetwork,
-            SupportChatConnectionState.Reconnecting
+            SupportChatConnectionState.Reconnecting,
         ).forEach { state ->
             repository.disconnect(state)
             runCurrent()
@@ -635,7 +635,7 @@ class SupportChatScreenViewModelTest {
         runCurrent()
 
         repository.emitEvent(
-            SupportChatEvent.MessageReceived(ownImageEcho(id = 100, attachmentName = "server-renamed.png"))
+            SupportChatEvent.MessageReceived(ownImageEcho(id = 100, attachmentName = "server-renamed.png")),
         )
         advanceUntilIdle()
 
@@ -716,8 +716,8 @@ class SupportChatScreenViewModelTest {
                 name = "scheme.pdf",
                 path = "/tmp/scheme.pdf",
                 mimeType = "application/pdf",
-                sizeBytes = 2_048
-            )
+                sizeBytes = 2_048,
+            ),
         )
         viewModel.onSend("See attachments")
         advanceUntilIdle()
@@ -798,7 +798,7 @@ class SupportChatScreenViewModelTest {
         val restored = ownOptimistic(text = "Delivered", status = SupportChatMessageStatus.Pending)
         outbox.enqueue(restored)
         repository.historyPageOnLoad = listOf(
-            ownTextEcho(id = 400, text = "Delivered").copy(time = restored.time)
+            ownTextEcho(id = 400, text = "Delivered").copy(time = restored.time),
         )
 
         val viewModel = createViewModel()
@@ -918,9 +918,9 @@ class SupportChatScreenViewModelTest {
         assertEquals(
             listOf<SupportChatEffect>(
                 SupportChatEffect.AttachmentOpenFailed(noApp = true),
-                SupportChatEffect.AttachmentOpenFailed(noApp = false)
+                SupportChatEffect.AttachmentOpenFailed(noApp = false),
             ),
-            effects
+            effects,
         )
         assertEquals(1, fileOpener.openedBytes.size)
     }
@@ -982,7 +982,7 @@ class SupportChatScreenViewModelTest {
         assertEquals(1, repository.releasedSessionCount)
         assertEquals(
             listOf(FakeSupportChatRepository.ACQUIRE_CALL, FakeSupportChatRepository.RELEASE_CALL),
-            repository.connectionCalls
+            repository.connectionCalls,
         )
     }
 
@@ -1003,9 +1003,9 @@ class SupportChatScreenViewModelTest {
             listOf(
                 FakeSupportChatRepository.ACQUIRE_CALL,
                 FakeSupportChatRepository.RELEASE_CALL,
-                FakeSupportChatRepository.ACQUIRE_CALL
+                FakeSupportChatRepository.ACQUIRE_CALL,
             ),
-            repository.connectionCalls
+            repository.connectionCalls,
         )
     }
 
@@ -1046,7 +1046,7 @@ class SupportChatScreenViewModelTest {
             fileSaver = saver,
             attachmentFiles = attachmentFiles,
             fileOpener = fileOpener,
-            outbox = outbox
+            outbox = outbox,
         )
         createdViewModels += viewModel
         // Экран подписан на state — с этого стартует работа VM (launchOnFirstStart).
@@ -1073,12 +1073,12 @@ class SupportChatScreenViewModelTest {
         time = Clock.System.now(),
         isMine = false,
         authorEmail = "agent@example.com",
-        status = SupportChatMessageStatus.Sent
+        status = SupportChatMessageStatus.Sent,
     )
 
     private fun incomingMessageAt(id: Long, minute: Int, text: String): SupportChatMessage =
         incomingMessage(id = id, text = text).copy(
-            time = LocalDateTime(2026, 1, 15, 10, minute).toInstant(TimeZone.UTC)
+            time = LocalDateTime(2026, 1, 15, 10, minute).toInstant(TimeZone.UTC),
         )
 
     private fun ownOptimistic(text: String, status: SupportChatMessageStatus): SupportChatMessage = SupportChatMessage(
@@ -1089,7 +1089,7 @@ class SupportChatScreenViewModelTest {
         time = Clock.System.now(),
         isMine = true,
         authorEmail = null,
-        status = status
+        status = status,
     )
 
     private fun ownTextEcho(id: Long, text: String): SupportChatMessage =
@@ -1101,10 +1101,10 @@ class SupportChatScreenViewModelTest {
             attachment = SupportChatAttachment.Image(
                 id = "srv-$id",
                 name = attachmentName,
-                url = "https://example.com/files/$id"
+                url = "https://example.com/files/$id",
             ),
             isMine = true,
-            authorEmail = "me@example.com"
+            authorEmail = "me@example.com",
         )
 
     private fun pickedImage(id: String, name: String): SupportChatPickedFile =
@@ -1117,7 +1117,7 @@ class SupportChatScreenViewModelTest {
         url = "https://files/scheme.pdf",
         localPath = null,
         mimeType = "application/pdf",
-        sizeBytes = 1024
+        sizeBytes = 1024,
     )
 
     private fun imageUiAttachment(): SupportChatUiAttachment = SupportChatUiAttachment(
@@ -1127,7 +1127,7 @@ class SupportChatScreenViewModelTest {
         url = "https://files/photo.jpg",
         localPath = null,
         mimeType = null,
-        sizeBytes = null
+        sizeBytes = null,
     )
 
     // endregion

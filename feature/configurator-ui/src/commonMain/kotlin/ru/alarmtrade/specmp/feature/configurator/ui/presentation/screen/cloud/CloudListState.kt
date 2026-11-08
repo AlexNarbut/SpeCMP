@@ -20,7 +20,7 @@ internal data class CloudListState(
     /** Модели в списке — варианты фильтра. Производное — [withLists]. */
     val models: List<String> = emptyList(),
     /** Список после фильтра по модели и сортировки. Производное — [withLists]. */
-    val shown: List<CloudConfigurationSummary> = emptyList()
+    val shown: List<CloudConfigurationSummary> = emptyList(),
 )
 
 /** Производные списки — во VM в `combine` на `default`, а не геттером на каждую рекомпозицию на Main. */
@@ -28,6 +28,6 @@ internal fun CloudListState.withLists(): CloudListState {
     val all = list.content.orEmpty()
     return copy(
         models = all.modelOptions { it.deviceName },
-        shown = all.filter { matchesModel(it.deviceName, modelFilter) }.sortedBy(order)
+        shown = all.filter { matchesModel(it.deviceName, modelFilter) }.sortedBy(order),
     )
 }

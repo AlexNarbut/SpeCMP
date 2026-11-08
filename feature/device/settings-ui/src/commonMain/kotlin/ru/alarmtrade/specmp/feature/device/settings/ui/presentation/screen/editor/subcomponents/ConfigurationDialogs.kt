@@ -73,41 +73,41 @@ internal fun LoadSourcesPanel(
     deviceName: String,
     wide: Boolean,
     onPick: (LoadSourceKind) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     ConfigurationOptionsPanel(
         title = stringResource(Strings.string.settings_load_title),
         wide = wide,
         onDismiss = onDismiss,
-        footer = stringResource(Strings.string.settings_load_hint)
+        footer = stringResource(Strings.string.settings_load_hint),
     ) {
         ConfigurationOptionRow(
             icon = CmpIcons.Inventory2,
             title = stringResource(Strings.string.settings_common_value_source_mine),
             subtitle = stringResource(Strings.string.settings_load_subtitle_mine, deviceName),
             onClick = { onPick(LoadSourceKind.MINE) },
-            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.MINE))
+            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.MINE)),
         )
         ConfigurationOptionRow(
             icon = CmpIcons.Cloud,
             title = stringResource(Strings.string.settings_common_value_source_cloud),
             subtitle = stringResource(Strings.string.settings_load_subtitle_cloud),
             onClick = { onPick(LoadSourceKind.CLOUD) },
-            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.CLOUD))
+            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.CLOUD)),
         )
         ConfigurationOptionRow(
             icon = CmpIcons.Description,
             title = stringResource(Strings.string.settings_common_value_source_file),
             subtitle = stringResource(Strings.string.settings_load_subtitle_file),
             onClick = { onPick(LoadSourceKind.FILE) },
-            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.FILE))
+            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.FILE)),
         )
         ConfigurationOptionRow(
             icon = CmpIcons.Factory,
             title = stringResource(Strings.string.settings_load_title_defaults),
             subtitle = stringResource(Strings.string.settings_load_subtitle_defaults, deviceName),
             onClick = { onPick(LoadSourceKind.DEFAULTS) },
-            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.DEFAULTS))
+            modifier = Modifier.testTag(SettingsTestTags.loadSource(LoadSourceKind.DEFAULTS)),
         )
     }
 }
@@ -118,21 +118,21 @@ internal fun SaveTargetsPanel(deviceName: String, wide: Boolean, onPick: (SaveTa
     ConfigurationOptionsPanel(
         title = stringResource(Strings.string.settings_save_title),
         wide = wide,
-        onDismiss = onDismiss
+        onDismiss = onDismiss,
     ) {
         ConfigurationOptionRow(
             icon = CmpIcons.Inventory2,
             title = stringResource(Strings.string.settings_common_value_source_mine),
             subtitle = stringResource(Strings.string.settings_save_subtitle_mine, deviceName),
             onClick = { onPick(SaveTarget.MINE) },
-            modifier = Modifier.testTag(SettingsTestTags.saveTarget(SaveTarget.MINE))
+            modifier = Modifier.testTag(SettingsTestTags.saveTarget(SaveTarget.MINE)),
         )
         ConfigurationOptionRow(
             icon = CmpIcons.Description,
             title = stringResource(Strings.string.settings_common_value_source_file),
             subtitle = stringResource(Strings.string.settings_save_subtitle_file),
             onClick = { onPick(SaveTarget.FILE) },
-            modifier = Modifier.testTag(SettingsTestTags.saveTarget(SaveTarget.FILE))
+            modifier = Modifier.testTag(SettingsTestTags.saveTarget(SaveTarget.FILE)),
         )
     }
 }
@@ -146,7 +146,7 @@ internal fun SaveFormDialog(form: SaveForm, actions: TransferActions) {
         deviceName = form.deviceName,
         onChange = actions.onSaveFormChange,
         onConfirm = actions.onSaveFormSubmit,
-        onDismiss = actions.onSaveFormDismiss
+        onDismiss = actions.onSaveFormDismiss,
     )
 }
 
@@ -156,7 +156,7 @@ internal fun ModelMismatchDialog(
     sourceDeviceName: String,
     deviceName: String,
     onContinue: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     CmpDialog(
         onDismissRequest = onDismiss,
@@ -166,12 +166,12 @@ internal fun ModelMismatchDialog(
             CmpButton(
                 text = stringResource(Strings.string.settings_mismatch_btn_continue),
                 onClick = onContinue,
-                modifier = Modifier.testTag(SettingsTestTags.MISMATCH_CONTINUE)
+                modifier = Modifier.testTag(SettingsTestTags.MISMATCH_CONTINUE),
             )
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -197,7 +197,7 @@ internal fun LoadErrorDialog(kind: LoadErrorKind, onOtherSource: () -> Unit, onD
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -212,7 +212,7 @@ internal fun SaveErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -227,12 +227,12 @@ internal fun OverwriteDialog(fileName: String, onConfirm: () -> Unit, onDismiss:
             CmpButton(
                 text = stringResource(Strings.string.settings_overwrite_btn),
                 onClick = onConfirm,
-                modifier = Modifier.testTag(SettingsTestTags.OVERWRITE_CONFIRM)
+                modifier = Modifier.testTag(SettingsTestTags.OVERWRITE_CONFIRM),
             )
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -243,7 +243,7 @@ internal fun ExitSaveDialog(
     saveAs: Boolean,
     onSave: () -> Unit,
     onDiscard: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     CmpDialog(
         onDismissRequest = onDismiss,
@@ -252,15 +252,15 @@ internal fun ExitSaveDialog(
             CmpText(
                 text = stringResource(
                     if (saveAs) Strings.string.settings_exit_msg_save_as else Strings.string.settings_exit_msg_save,
-                    changed
-                )
+                    changed,
+                ),
             )
         },
         confirmButton = {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpButton(
                     text = stringResource(
@@ -268,19 +268,19 @@ internal fun ExitSaveDialog(
                             Strings.string.settings_editor_btn_save_as
                         } else {
                             Strings.string.settings_editor_btn_save
-                        }
+                        },
                     ),
                     onClick = onSave,
-                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_SAVE)
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_SAVE),
                 )
                 CmpOutlinedButton(
                     text = stringResource(Strings.string.settings_exit_btn_dont_save),
                     onClick = onDiscard,
-                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD)
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD),
                 )
                 CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
             }
-        }
+        },
     )
 }
 
@@ -292,8 +292,8 @@ internal fun TransferProgressDialog(applying: Boolean) {
         title = {
             CmpText(
                 text = stringResource(
-                    if (applying) Strings.string.settings_apply_title else Strings.string.settings_saving_title
-                )
+                    if (applying) Strings.string.settings_apply_title else Strings.string.settings_saving_title,
+                ),
             )
         },
         text = {
@@ -302,6 +302,6 @@ internal fun TransferProgressDialog(applying: Boolean) {
                 if (applying) CmpText(text = stringResource(Strings.string.settings_apply_msg))
             }
         },
-        confirmButton = {}
+        confirmButton = {},
     )
 }

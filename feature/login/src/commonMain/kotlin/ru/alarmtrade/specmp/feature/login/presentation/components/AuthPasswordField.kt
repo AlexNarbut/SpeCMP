@@ -29,7 +29,7 @@ fun AuthPasswordField(
     isError: Boolean = false,
     supportingText: (@Composable () -> Unit)? = null,
     imeAction: ImeAction = ImeAction.Done,
-    keyboardActions: KeyboardActions = KeyboardActions.Default
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     CmpTextField(
         value = value,
@@ -47,13 +47,13 @@ fun AuthPasswordField(
         },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
-            imeAction = imeAction
+            imeAction = imeAction,
         ),
         keyboardActions = keyboardActions,
         leadingIcon = {
             CmpIcon(
                 icon = CmpIcons.Lock,
-                contentDescription = null
+                contentDescription = null,
             )
         },
         trailingIcon = {
@@ -65,8 +65,8 @@ fun AuthPasswordField(
                 } else {
                     stringResource(Strings.string.login_common_a11y_show_password)
                 },
-                enabled = enabled
+                enabled = enabled,
             )
-        }
+        },
     )
 }

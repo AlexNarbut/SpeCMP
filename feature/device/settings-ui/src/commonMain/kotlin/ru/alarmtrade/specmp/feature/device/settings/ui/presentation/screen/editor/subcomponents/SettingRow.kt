@@ -61,7 +61,7 @@ internal class SettingRowActions(
     val onOpenSection: (sectionId: Int) -> Unit,
     val onEdit: (settingId: Int) -> Unit,
     val onValueChange: (settingId: Int, value: SettingValue) -> Unit,
-    val onDescription: (nodeId: Int) -> Unit
+    val onDescription: (nodeId: Int) -> Unit,
 )
 
 /**
@@ -81,7 +81,7 @@ internal fun SettingNodeRow(
     modifier: Modifier = Modifier,
     path: String? = null,
     /** Подпись к значению (автомобиль у CAN-кода). */
-    note: String? = null
+    note: String? = null,
 ) {
     when (node) {
         is SettingsSection -> SectionRow(node, sectionChanges, path, actions, modifier)
@@ -95,7 +95,7 @@ internal fun SettingNodeRow(
                 infoButton = {
                     InfoButton(enabled = node.description != null, onClick = { actions.onDescription(node.id) })
                 },
-                modifier = modifier
+                modifier = modifier,
             )
         } else {
             LeafRow(node, changed, wide, path, note, actions, modifier)
@@ -109,7 +109,7 @@ private fun SectionRow(
     changes: Int,
     path: String?,
     actions: SettingRowActions,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     // Пустой раздел без номера — связка между условиями («И», «ИЛИ»): разделитель с подписью.
     if (section.children.isEmpty() && section.number.isEmpty()) {
@@ -130,11 +130,11 @@ private fun SectionRow(
                     }
                 } else {
                     Modifier
-                }
+                },
             )
             .padding(start = 16.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CmpColumn(modifier = Modifier.weight(1f)) {
             Title(number = section.number, name = section.name, changed = false, bold = true, dimmed = !enterable)
@@ -156,7 +156,7 @@ private fun LeafRow(
     path: String?,
     note: String?,
     actions: SettingRowActions,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     val colors = cmpThemeColors()
     val segmented = (setting as? OptionSetting)?.takeIf { it.isSegmented }
@@ -181,12 +181,12 @@ private fun LeafRow(
             .heightIn(min = 56.dp)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(start = 0.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         InfoButton(enabled = setting.description != null, onClick = { actions.onDescription(setting.id) })
         CmpColumn(
             modifier = Modifier.weight(1f).padding(vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Title(number = setting.number, name = setting.name, changed = changed, bold = false)
             when {
@@ -207,7 +207,7 @@ private fun LeafRow(
         when {
             toggle != null -> CmpBox(
                 Modifier.size(width = 64.dp, height = 48.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpSwitch(checked = !toggle.first, onCheckedChange = null)
             }
@@ -222,14 +222,14 @@ private fun LeafRow(
                     colors.onSurfaceVariant
                 } else {
                     colors.onSurfaceVariant.copy(
-                        alpha = DISABLED_ALPHA
+                        alpha = DISABLED_ALPHA,
                     )
                 }
                 CmpIcon(
                     icon = CmpIcons.ChevronRight,
                     contentDescription = null,
                     tint = chevronTint,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
         }
@@ -249,7 +249,7 @@ private fun Segments(setting: OptionSetting, actions: SettingRowActions, modifie
         options = setting.options,
         selectedIndex = setting.value.index,
         onSelect = { index -> actions.onValueChange(setting.id, SettingValue.Option(index)) },
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -262,7 +262,7 @@ private fun InfoButton(enabled: Boolean, onClick: () -> Unit) {
         contentDescription = stringResource(Strings.string.settings_common_a11y_description),
         enabled = enabled,
         tint = if (enabled) colors.primary else colors.outline.copy(alpha = DISABLED_ALPHA),
-        modifier = Modifier.size(48.dp)
+        modifier = Modifier.size(48.dp),
     )
 }
 
@@ -277,7 +277,7 @@ private fun Title(number: String, name: String, changed: Boolean, bold: Boolean,
             color = if (dimmed) colors.onSurfaceVariant else colors.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false)
+            modifier = Modifier.weight(1f, fill = false),
         )
         if (changed) CmpDot()
     }
@@ -290,7 +290,7 @@ private fun Subtitle(text: String) {
         style = CmpTextStyle.Body,
         color = cmpThemeColors().onSurfaceVariant,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -303,7 +303,7 @@ private fun ValueLabel(text: String, maxLines: Int, modifier: Modifier = Modifie
         color = cmpThemeColors().primary,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -314,14 +314,14 @@ private fun LinkSeparator(text: String, modifier: Modifier) {
     CmpRow(
         modifier = modifier.fillMaxWidth().heightIn(min = 36.dp).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)
         CmpText(
             text = text,
             style = CmpTextStyle.Caption,
             fontWeight = FontWeight.SemiBold,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
         CmpDivider(modifier = Modifier.weight(1f), color = colors.outlineVariant)
     }

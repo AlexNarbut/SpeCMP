@@ -45,7 +45,7 @@ internal class FakeFirmwareRepository : FirmwareRepository {
     override suspend fun latest(
         moduleId: Long,
         channel: FirmwareChannel,
-        can: FirmwareCan?
+        can: FirmwareCan?,
     ): Response<FirmwareVersion> {
         latestCalls += moduleId to channel
         latestCans += can
@@ -106,7 +106,7 @@ internal class FakeFirmwareRepository : FirmwareRepository {
         channel: FirmwareChannel,
         page: Int,
         pageSize: Int,
-        can: FirmwareCan?
+        can: FirmwareCan?,
     ): Response<FirmwareVersionPage> {
         archiveCalls += page
         archiveRequests += Triple(moduleId, page, can?.code)
@@ -124,9 +124,9 @@ internal class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRep
         Response.Success(
             BluetoothModule(
                 BluetoothModuleMode.MAIN,
-                BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14")
-            )
-        )
+                BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14"),
+            ),
+        ),
     )
     var bluetoothReads = 0
 
@@ -197,7 +197,7 @@ internal class FakeUpdateRepository : FirmwareUpdateRepository {
 internal class FakeFileExporter(
     override val target: FirmwareSaveTarget = FirmwareSaveTarget.Downloads,
     override val canShare: Boolean = true,
-    override val canOpenFolder: Boolean = false
+    override val canOpenFolder: Boolean = false,
 ) : FirmwareFileExporter {
     var saveResult: FirmwareSaveResult? = null
     var shareResult: Boolean = true

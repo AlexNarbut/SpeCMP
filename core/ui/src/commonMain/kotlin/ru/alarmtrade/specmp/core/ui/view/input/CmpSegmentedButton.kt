@@ -22,7 +22,7 @@ fun CmpSegmentedButton(
     onSelect: (index: Int) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    minHeight: Dp = 48.dp
+    minHeight: Dp = 48.dp,
 ) {
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
         options.forEachIndexed { index, label ->
@@ -32,7 +32,7 @@ fun CmpSegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
                 enabled = enabled,
                 modifier = Modifier.weight(1f).heightIn(min = minHeight),
-                label = { Text(text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                label = { Text(text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             )
         }
     }

@@ -48,11 +48,11 @@ private class IosSettingsFilePicker(private val viewController: UIViewController
     override fun launch() {
         val picker = UIDocumentPickerViewController(
             documentTypes = listOf(DATA_UTI),
-            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen
+            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen,
         ).apply { allowsMultipleSelection = false }
         val delegate = SettingsPickerDelegate(
             onPicked = { channel.trySend(it) },
-            onFinished = { activeDelegate = null }
+            onFinished = { activeDelegate = null },
         )
         activeDelegate = delegate
         picker.delegate = delegate
@@ -62,7 +62,7 @@ private class IosSettingsFilePicker(private val viewController: UIViewController
 
 private class SettingsPickerDelegate(
     private val onPicked: (SettingsFilePickResult) -> Unit,
-    private val onFinished: () -> Unit
+    private val onFinished: () -> Unit,
 ) : NSObject(),
     UIDocumentPickerDelegateProtocol {
 
@@ -103,7 +103,7 @@ private fun NSURL.copySettingsToTemporary(): SettingsFilePickResult {
             path = directory,
             withIntermediateDirectories = true,
             attributes = null,
-            error = null
+            error = null,
         )
         if (!created || !fileManager.copyItemAtURL(this, NSURL.fileURLWithPath(destination), error = null)) {
             fileManager.removeItemAtPath(root, error = null)
@@ -126,7 +126,7 @@ private class IosSettingsFileSaver : SettingsFileSaver {
             path = directory,
             withIntermediateDirectories = true,
             attributes = null,
-            error = null
+            error = null,
         ) && fileManager.copyItemAtPath(sourcePath, toPath = target, error = null)
         if (!prepared) {
             fileManager.removeItemAtPath(directory, error = null)

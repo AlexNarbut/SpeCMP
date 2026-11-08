@@ -131,7 +131,7 @@ internal data class BypassActions(
     val onPinSubmit: (String) -> Unit = {},
     val onExitConfirm: () -> Unit = {},
     val onOpenClone: () -> Unit = {},
-    val onOpenSupportChat: () -> Unit = {}
+    val onOpenSupportChat: () -> Unit = {},
 )
 
 /**
@@ -154,7 +154,7 @@ fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSuppo
                 onBack()
             },
             onOpenClone = onOpenClone,
-            onOpenSupportChat = onOpenSupportChat
+            onOpenSupportChat = onOpenSupportChat,
         )
     }
     BypassContent(state = state, actions = actions)
@@ -173,7 +173,7 @@ fun BypassLearningStep(
     next: AutostartStepNext,
     onNext: (cloneRequired: Boolean) -> Unit,
     onBack: () -> Unit,
-    onOpenSupportChat: () -> Unit
+    onOpenSupportChat: () -> Unit,
 ) {
     val viewModel = koinViewModel<BypassLearningViewModel>(key = key)
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -185,17 +185,17 @@ fun BypassLearningStep(
             onDialogDismiss = viewModel::onDialogDismiss,
             onPinSubmit = viewModel::onPinSubmit,
             onExitConfirm = viewModel::onExitConfirm,
-            onOpenSupportChat = onOpenSupportChat
+            onOpenSupportChat = onOpenSupportChat,
         )
     }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = actions.onBack
+        onBackCompleted = actions.onBack,
     )
     BypassContent(
         state = state.copy(cloneAvailable = false),
         actions = actions,
-        stepMode = BypassStepMode(chrome, next, onNext)
+        stepMode = BypassStepMode(chrome, next, onNext),
     )
 }
 
@@ -203,7 +203,7 @@ fun BypassLearningStep(
 internal class BypassStepMode(
     val chrome: AutostartStepChrome,
     val next: AutostartStepNext,
-    val onNext: (cloneRequired: Boolean) -> Unit
+    val onNext: (cloneRequired: Boolean) -> Unit,
 )
 
 /** Stateless-контент: фаза → тело и кнопки; диалоги поверх. [stepMode] — шаг мастера быстрого монтажа. */
@@ -237,7 +237,7 @@ internal fun BypassContent(state: BypassState, actions: BypassActions, stepMode:
         },
         side = if (phase is BypassPhase.Start) ({ HowItWorks(howItems()) }) else null,
         footer = footer(state, actions, stepMode),
-        chrome = stepMode?.chrome
+        chrome = stepMode?.chrome,
     )
     when (state.dialog) {
         is BypassDialog.Pin -> ServicePinDialog(
@@ -245,7 +245,7 @@ internal fun BypassContent(state: BypassState, actions: BypassActions, stepMode:
             state = state.dialog.pin,
             onDismiss = actions.onDialogDismiss,
             onSubmit = actions.onPinSubmit,
-            testTagPrefix = "autostart_pin"
+            testTagPrefix = "autostart_pin",
         )
 
         BypassDialog.Exit -> ExitDialog(onStay = actions.onDialogDismiss, onExit = actions.onExitConfirm)
@@ -265,7 +265,7 @@ private fun BypassStep?.statusText(): StringResource = when (this?.kind) {
 private fun howItems() = listOf(
     CmpIcons.VpnKey to stringResource(txt.autostart_bypass_item_how_key),
     CmpIcons.DirectionsCar to stringResource(txt.autostart_bypass_item_how_steps),
-    CmpIcons.Visibility to stringResource(txt.autostart_bypass_item_how_watch)
+    CmpIcons.Visibility to stringResource(txt.autostart_bypass_item_how_watch),
 )
 
 @Composable
@@ -276,19 +276,19 @@ private fun StartBody(state: BypassState, phase: BypassPhase.Start, layout: Auto
             icon = CmpIcons.LinkOff,
             tone = BannerTone.Error,
             title = stringResource(txt.autostart_common_title_interrupted),
-            text = stringResource(txt.autostart_bypass_msg_interrupted)
+            text = stringResource(txt.autostart_bypass_msg_interrupted),
         )
     }
     Headline(
         title = stringResource(txt.autostart_bypass_title_start),
-        subtitle = stringResource(txt.autostart_bypass_subtitle_start)
+        subtitle = stringResource(txt.autostart_bypass_subtitle_start),
     )
     state.canCode?.let { code ->
         InfoBanner(
             icon = CmpIcons.Memory,
             tone = BannerTone.Info,
             title = stringResource(txt.autostart_bypass_title_can, code),
-            text = stringResource(txt.autostart_bypass_msg_can)
+            text = stringResource(txt.autostart_bypass_msg_can),
         )
     }
     val reboot = stringResource(txt.autostart_bypass_msg_reboot)
@@ -297,7 +297,7 @@ private fun StartBody(state: BypassState, phase: BypassPhase.Start, layout: Auto
         icon = CmpIcons.PowerSettingsNew,
         tone = BannerTone.Warn,
         title = stringResource(txt.autostart_bypass_title_reboot),
-        text = if (state.usb) "$reboot $rebootUsb" else reboot
+        text = if (state.usb) "$reboot $rebootUsb" else reboot,
     )
 }
 
@@ -308,7 +308,7 @@ private fun StepCard(step: BypassStep?, layout: AutostartLayout) {
     IllustrationFrame(
         illustration = step?.illustration() ?: AutostartIllustration.IGNITION_OFF_REQUEST,
         layout = layout,
-        mode = kind.illustrationMode()
+        mode = kind.illustrationMode(),
     )
     val style = stepCardStyle(kind)
     val shape = RoundedCornerShape(24.dp)
@@ -318,7 +318,7 @@ private fun StepCard(step: BypassStep?, layout: AutostartLayout) {
             .background(style.background, shape)
             .border(style.border, shape)
             .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         KindLabel(kind)
         StepCardText(step, kind, style)
@@ -336,21 +336,21 @@ private fun stepCardStyle(kind: BypassStepKind): StepCardStyle {
             colors.primaryContainer,
             colors.onPrimaryContainer,
             colors.onPrimaryContainer,
-            BorderStroke(3.dp, colors.primary)
+            BorderStroke(3.dp, colors.primary),
         )
 
         BypassStepKind.CRITICAL -> StepCardStyle(
             colors.tertiaryContainer,
             colors.onTertiaryContainer,
             colors.onTertiaryContainer,
-            BorderStroke(3.dp, colors.tertiary)
+            BorderStroke(3.dp, colors.tertiary),
         )
 
         else -> StepCardStyle(
             colors.surfaceContainerHigh,
             colors.onSurface,
             colors.onSurfaceVariant,
-            BorderStroke(1.dp, colors.outlineVariant)
+            BorderStroke(1.dp, colors.outlineVariant),
         )
     }
 }
@@ -365,7 +365,7 @@ private fun StepCardText(step: BypassStep?, kind: BypassStepKind, style: StepCar
                 text = stringResource(txt.autostart_bypass_title_critical),
                 color = style.content,
                 fontSize = 30.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
 
@@ -399,7 +399,7 @@ private fun KindLabel(kind: BypassStepKind) {
     CmpRow(
         modifier = Modifier.height(36.dp).background(bg, RoundedCornerShape(999.dp)).padding(horizontal = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(20.dp))
         CmpText(text = stringResource(text), color = fg, fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -414,7 +414,7 @@ private fun InstructionBody(step: BypassStep, instruction: Instruction, layout: 
         icon = CmpIcons.MenuBook,
         tone = BannerTone.Info,
         title = stringResource(instruction.title),
-        text = stringResource(instruction.lead)
+        text = stringResource(instruction.lead),
     )
     CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         instruction.items.forEachIndexed { index, item -> InstructionRow(index + 1, item) }
@@ -431,24 +431,24 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
             .background(colors.surfaceContainerLow, shape)
             .border(1.dp, colors.outlineVariant, shape)
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         CmpBox(
             modifier = Modifier
                 .size(40.dp)
                 .background(if (item.wait) colors.surfaceContainerHighest else colors.primary, CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpText(
                 text = number.toString(),
                 color = if (item.wait) colors.onSurface else colors.onPrimary,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
         CmpColumn(
             modifier = Modifier.weight(1f).padding(top = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item.action?.let { action ->
                 val count = item.count?.let { stringResource(it) }
@@ -456,7 +456,7 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
                 CmpText(
                     text = if (count != null) "$text — $count" else text,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
             item.forbidden?.let {
@@ -471,7 +471,7 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
                         txt.autostart_instruction_label_response
                     },
                     text = response,
-                    color = colors.onSurfaceVariant
+                    color = colors.onSurfaceVariant,
                 )
             }
             item.then?.let { CmpText(text = stringResource(it), fontSize = 18.sp, fontWeight = FontWeight.SemiBold) }
@@ -480,7 +480,7 @@ private fun InstructionRow(number: Int, item: InstructionItem) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(colors.errorContainer, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
                 ) {
                     LabeledLine(CmpIcons.Replay, txt.autostart_instruction_label_fail, fail, colors.onErrorContainer)
                 }
@@ -508,16 +508,16 @@ private fun KeyTag(key: InstructionKey) {
             .background(if (red) KeyRed else KeyBlack, RoundedCornerShape(999.dp))
             .padding(horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpIcon(icon = CmpIcons.VpnKey, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
         CmpText(
             text = stringResource(
-                if (red) txt.autostart_instruction_label_key_red else txt.autostart_instruction_label_key_black
+                if (red) txt.autostart_instruction_label_key_red else txt.autostart_instruction_label_key_black,
             ),
             color = Color.White,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp
+            fontSize = 14.sp,
         )
     }
 }
@@ -527,7 +527,7 @@ private fun ResultBody(state: BypassState, result: BypassResult, layout: Autosta
     IllustrationFrame(
         if (result is BypassResult.Success) AutostartIllustration.RESULT_SUCCESS else AutostartIllustration.RESULT_FAIL,
         layout,
-        modifier = Modifier.testTag(BYPASS_RESULT_TAG)
+        modifier = Modifier.testTag(BYPASS_RESULT_TAG),
     )
     when (result) {
         BypassResult.Success -> Headline(
@@ -537,20 +537,20 @@ private fun ResultBody(state: BypassState, result: BypassResult, layout: Autosta
                     txt.autostart_bypass_subtitle_success_clone
                 } else {
                     txt.autostart_bypass_subtitle_success
-                }
-            )
+                },
+            ),
         )
 
         BypassResult.CloneRequired -> Headline(
             title = stringResource(txt.autostart_bypass_title_clone_required),
             subtitle = stringResource(
-                if (inStep) txt.autostart_bypass_subtitle_clone_next else txt.autostart_bypass_subtitle_clone_required
-            )
+                if (inStep) txt.autostart_bypass_subtitle_clone_next else txt.autostart_bypass_subtitle_clone_required,
+            ),
         )
 
         BypassResult.NotSupported -> Headline(
             title = stringResource(txt.autostart_bypass_title_not_supported),
-            subtitle = stringResource(txt.autostart_bypass_subtitle_not_supported)
+            subtitle = stringResource(txt.autostart_bypass_subtitle_not_supported),
         )
 
         is BypassResult.Error -> {
@@ -577,7 +577,7 @@ private fun ErrorBlock(error: BypassResult.Error) {
                 txt.autostart_bypass_label_what,
                 it,
                 colors.errorContainer,
-                colors.onErrorContainer
+                colors.onErrorContainer,
             )
         }
         texts.check?.let {
@@ -586,7 +586,7 @@ private fun ErrorBlock(error: BypassResult.Error) {
                 txt.autostart_bypass_label_check,
                 stringResource(it),
                 colors.surfaceContainerHigh,
-                colors.onSurface
+                colors.onSurface,
             )
         }
     }
@@ -597,9 +597,9 @@ private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: C
     CmpRow(
         modifier = Modifier.fillMaxWidth().background(
             bg,
-            RoundedCornerShape(18.dp)
+            RoundedCornerShape(18.dp),
         ).padding(horizontal = 18.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = fg, modifier = Modifier.size(26.dp))
         CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -613,14 +613,14 @@ private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: C
 private fun footer(
     state: BypassState,
     actions: BypassActions,
-    step: BypassStepMode?
+    step: BypassStepMode?,
 ): (@Composable ColumnScope.() -> Unit)? = when (val phase = state.phase) {
     is BypassPhase.Start -> {
         {
             AutostartPrimaryButton(
                 txt.autostart_bypass_btn_start,
                 actions.onStart,
-                Modifier.testTag(BYPASS_START_TAG)
+                Modifier.testTag(BYPASS_START_TAG),
             )
         }
     }
@@ -634,7 +634,7 @@ private fun footer(
                 StepNextButton(
                     next = step.next,
                     onClick = { step.onNext(phase.result == BypassResult.CloneRequired) },
-                    modifier = Modifier.testTag(BYPASS_STEP_NEXT_TAG)
+                    modifier = Modifier.testTag(BYPASS_STEP_NEXT_TAG),
                 )
             } else {
                 when (phase.result) {
@@ -644,7 +644,7 @@ private fun footer(
                             AutostartSecondaryButton(
                                 txt.autostart_common_btn_open_clone,
                                 actions.onOpenClone,
-                                modifier = Modifier.testTag(BYPASS_OPEN_CLONE_TAG)
+                                modifier = Modifier.testTag(BYPASS_OPEN_CLONE_TAG),
                             )
                         }
                     }
@@ -653,7 +653,7 @@ private fun footer(
                         AutostartPrimaryButton(
                             txt.autostart_common_btn_open_clone,
                             actions.onOpenClone,
-                            Modifier.testTag(BYPASS_OPEN_CLONE_TAG)
+                            Modifier.testTag(BYPASS_OPEN_CLONE_TAG),
                         )
                         AutostartSecondaryButton(txt.autostart_common_btn_close, actions.onClose)
                     }

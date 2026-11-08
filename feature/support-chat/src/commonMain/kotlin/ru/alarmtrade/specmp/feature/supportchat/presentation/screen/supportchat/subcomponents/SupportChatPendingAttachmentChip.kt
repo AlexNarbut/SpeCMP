@@ -27,18 +27,18 @@ internal fun SupportChatPendingAttachmentChip(
     attachment: SupportChatUiAttachment,
     onRemove: () -> Unit,
     colors: CmpThemeColors,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpSurface(
         modifier = modifier,
         shape = RoundedCornerShape(percent = 50),
         color = colors.surfaceVariant,
-        contentColor = colors.onSurface
+        contentColor = colors.onSurface,
     ) {
         CmpRow(
             modifier = Modifier.padding(start = 12.dp, top = 6.dp, bottom = 6.dp, end = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(
                 icon = when (attachment.kind) {
@@ -47,7 +47,7 @@ internal fun SupportChatPendingAttachmentChip(
                 },
                 contentDescription = null,
                 tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
 
             // Не weight: в элементе LazyRow ширина не ограничена, и weight(fill = false)
@@ -56,13 +56,13 @@ internal fun SupportChatPendingAttachmentChip(
                 text = attachment.name,
                 modifier = Modifier.widthIn(max = CHIP_NAME_MAX_WIDTH),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
 
             CmpIconButton(
                 onClick = onRemove,
                 icon = CmpIcons.Close,
-                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_remove_attachment)
+                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_remove_attachment),
             )
         }
     }

@@ -36,7 +36,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceSca
 class SpecialistDeviceScanRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
     private val usbConnectorInteractor: () -> UsbConnectorInteractor,
-    private val serialConnectorInteractor: () -> SerialConnectorInteractor
+    private val serialConnectorInteractor: () -> SerialConnectorInteractor,
 ) : DeviceScanRepository {
 
     private val connectionTypes: Set<DeviceConnectionType> = supportedConnectionTypes()
@@ -65,7 +65,7 @@ class SpecialistDeviceScanRepository(
             safeFlowRun {
                 interactor.scanBluetoothDevicesUseCase.execute()
                     .map { response -> response.toResponse().map { devices -> devices.map { it.toDomain() } } }
-            }
+            },
         )
     }
 
@@ -83,7 +83,7 @@ class SpecialistDeviceScanRepository(
             safeFlowRun {
                 interactor.scanUsbDevicesUseCase.execute()
                     .map { response -> response.toResponse().map { devices -> devices.map { it.toDomain() } } }
-            }
+            },
         )
     }
 
@@ -101,7 +101,7 @@ class SpecialistDeviceScanRepository(
             safeFlowRun {
                 interactor.scanSerialPortDevicesUseCase.execute()
                     .map { response -> response.toResponse().map { ports -> ports.map { it.toDomain() } } }
-            }
+            },
         )
     }
 
@@ -113,7 +113,7 @@ class SpecialistDeviceScanRepository(
         rssi = rssi,
         hasDeviceBond = hasDeviceBond,
         // На iOS SDK не знает о сопряжении с телефоном (isBonded всегда false).
-        hasPhoneBond = hasPhoneBond.takeIf { platformType() == PlatformType.ANDROID }
+        hasPhoneBond = hasPhoneBond.takeIf { platformType() == PlatformType.ANDROID },
     )
 
     private fun AttachedUsbDeviceInformation.toDomain(): ScannedDevice.Usb = ScannedDevice.Usb(
@@ -125,14 +125,14 @@ class SpecialistDeviceScanRepository(
         // После опроса блока SDK кладёт в id его systemId (до опроса — путь устройства).
         systemId = id.toLongOrNull(),
         firmwareVersion = firmwareVersion?.takeIf { it.isNotBlank() },
-        isBootMode = isBootMode
+        isBootMode = isBootMode,
     )
 
     private fun ConnectedSerialPortInformation.toDomain(): ScannedDevice.Serial = ScannedDevice.Serial(
         id = id,
         name = name.ifBlank { id },
         vendorId = vid,
-        productId = pid
+        productId = pid,
     )
 
     // По имени, а не по enum SDK: набор типов растёт, неизвестные уходят в OTHER.

@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRep
 
 class SpecialistSupportChatRepository(
     private val chatInteractor: ChatInteractor,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
 ) : SupportChatRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
@@ -81,8 +81,8 @@ class SpecialistSupportChatRepository(
             is SpecialistResponse.Success -> Response.Success(
                 SupportChatHistoryPage(
                     messages = response.value.messages.mapNotNull { messageMapper.map(it, profile.email) },
-                    nextCursor = response.value.nextCursor?.let { SupportChatHistoryCursor(it.token) }
-                )
+                    nextCursor = response.value.nextCursor?.let { SupportChatHistoryCursor(it.token) },
+                ),
             )
 
             is SpecialistResponse.Error -> response.toResponse()
@@ -101,7 +101,7 @@ class SpecialistSupportChatRepository(
     override suspend fun downloadFile(url: String): Response<ByteArray> {
         // Лимит размера (20 МБ) проверяет SDK.
         return chatInteractor.downloadChatFileUseCase.execute(
-            DownloadChatFileRequest(url)
+            DownloadChatFileRequest(url),
         ).toResponse().also { response ->
             if (response is Response.Error) logger.d(response.exception) { "Failed to download chat file" }
         }

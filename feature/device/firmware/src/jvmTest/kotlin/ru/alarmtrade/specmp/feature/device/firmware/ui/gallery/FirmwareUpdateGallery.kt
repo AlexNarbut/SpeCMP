@@ -28,7 +28,7 @@ class FirmwareUpdateGallery {
         deviceTitle = "Pandora DX-4GS  107131",
         moduleTitles = listOf("Pandora DX 4G (DX4G)"),
         currentVersion = "3.57",
-        confirm = ConfirmUi("3.57", "3.61", notes, older = false)
+        confirm = ConfirmUi("3.57", "3.61", notes, older = false),
     )
 
     private fun render(name: String, state: FirmwareUpdateState) =
@@ -51,8 +51,8 @@ class FirmwareUpdateGallery {
         base.copy(
             moduleTitles = listOf("Pandora DX 4G (DX4G)", "Pandora Main (MAIN)", "CAN-модуль (CAN2)"),
             selectedModule = 1,
-            channel = FirmwareChannel.BETA
-        )
+            channel = FirmwareChannel.BETA,
+        ),
     )
 
     @Test
@@ -63,8 +63,8 @@ class FirmwareUpdateGallery {
             deviceTitle = "Pandora BT (BTM2)",
             moduleTitles = listOf("Pandora BT (BTM2)"),
             currentVersion = "1.14",
-            sourceError = FirmwareError.Common(ApiError.Timeout)
-        )
+            sourceError = FirmwareError.Common(ApiError.Timeout),
+        ),
     )
 
     @Test
@@ -82,8 +82,8 @@ class FirmwareUpdateGallery {
         base.copy(
             phase = UpdatePhase.Confirm,
             channel = FirmwareChannel.BETA,
-            confirm = ConfirmUi("3.57", "3.55", "", older = true)
-        )
+            confirm = ConfirmUi("3.57", "3.55", "", older = true),
+        ),
     )
 
     @Test
@@ -148,8 +148,8 @@ class FirmwareUpdateGallery {
         "24_confirm_can_same",
         withCan.copy(
             phase = UpdatePhase.Confirm,
-            confirm = base.confirm?.copy(can = ConfirmCanUi("2154", "2154", "1.03"))
-        )
+            confirm = base.confirm?.copy(can = ConfirmCanUi("2154", "2154", "1.03")),
+        ),
     )
 
     @Test
@@ -157,7 +157,7 @@ class FirmwareUpdateGallery {
         "25_confirm_can_other",
         withCan.copy(
             phase = UpdatePhase.Confirm,
-            confirm = base.confirm?.copy(can = ConfirmCanUi("2154", "3312", "1.01"))
-        )
+            confirm = base.confirm?.copy(can = ConfirmCanUi("2154", "3312", "1.01")),
+        ),
     )
 }

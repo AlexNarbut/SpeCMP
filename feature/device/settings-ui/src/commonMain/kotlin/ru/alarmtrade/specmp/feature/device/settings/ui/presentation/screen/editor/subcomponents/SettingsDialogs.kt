@@ -50,13 +50,13 @@ internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
         title = {
             DialogTitle(
                 text = if (node.number.isEmpty()) node.name else "${node.number} ${node.name}",
-                onClose = onDismiss
+                onClose = onDismiss,
             )
         },
         text = { CmpText(text = node.description.orEmpty()) },
         confirmButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_ok), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -73,21 +73,21 @@ internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit
             CmpColumn(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpButton(
                     text = stringResource(Strings.string.settings_exit_btn_write),
                     onClick = onWrite,
-                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_WRITE)
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_WRITE),
                 )
                 CmpOutlinedButton(
                     text = stringResource(Strings.string.settings_exit_btn_discard),
                     onClick = onDiscard,
-                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD)
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD),
                 )
                 CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
             }
-        }
+        },
     )
 }
 
@@ -103,7 +103,7 @@ internal fun WriteProgressDialog() {
                 CmpText(text = stringResource(Strings.string.settings_write_msg_progress))
             }
         },
-        confirmButton = {}
+        confirmButton = {},
     )
 }
 
@@ -118,7 +118,7 @@ internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -136,19 +136,19 @@ internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: 
                     stringResource(Strings.string.settings_reset_msg_confirm_changes, changed)
                 } else {
                     stringResource(Strings.string.settings_reset_msg_confirm)
-                }
+                },
             )
         },
         confirmButton = {
             CmpButton(
                 text = stringResource(Strings.string.settings_reset_btn_confirm),
                 onClick = onConfirm,
-                modifier = Modifier.testTag(SettingsTestTags.RESET_CONFIRM)
+                modifier = Modifier.testTag(SettingsTestTags.RESET_CONFIRM),
             )
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -164,7 +164,7 @@ internal fun ResetProgressDialog() {
                 CmpText(text = stringResource(Strings.string.settings_reset_msg_progress))
             }
         },
-        confirmButton = {}
+        confirmButton = {},
     )
 }
 
@@ -179,7 +179,7 @@ internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
-        }
+        },
     )
 }
 
@@ -194,11 +194,11 @@ internal fun SingleCanFirmwareDialog(canCode: String, onUpdate: () -> Unit, onDi
             CmpButton(
                 text = stringResource(Strings.string.settings_can_btn_single_update),
                 onClick = onUpdate,
-                modifier = Modifier.testTag(SettingsTestTags.CAN_SINGLE_UPDATE)
+                modifier = Modifier.testTag(SettingsTestTags.CAN_SINGLE_UPDATE),
             )
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
-        }
+        },
     )
 }

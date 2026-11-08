@@ -16,7 +16,7 @@ fun CmpCircularProgressIndicator(
     progress: Float? = null,
     strokeWidth: Dp = 4.dp,
     color: Color = Color.Unspecified,
-    trackColor: Color = Color.Unspecified
+    trackColor: Color = Color.Unspecified,
 ) {
     if (progress != null) {
         CircularProgressIndicator(
@@ -32,7 +32,7 @@ fun CmpCircularProgressIndicator(
                 trackColor
             } else {
                 androidx.compose.material3.ProgressIndicatorDefaults.circularTrackColor
-            }
+            },
         )
     } else {
         CircularProgressIndicator(
@@ -47,7 +47,7 @@ fun CmpCircularProgressIndicator(
                 trackColor
             } else {
                 androidx.compose.material3.ProgressIndicatorDefaults.circularTrackColor
-            }
+            },
         )
     }
 }

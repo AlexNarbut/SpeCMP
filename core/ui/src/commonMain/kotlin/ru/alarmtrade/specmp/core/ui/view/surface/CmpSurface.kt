@@ -21,7 +21,7 @@ fun CmpSurface(
     tonalElevation: Dp = 0.dp,
     shadowElevation: Dp = 0.dp,
     border: BorderStroke? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Surface(
         modifier = modifier,
@@ -39,7 +39,7 @@ fun CmpSurface(
         tonalElevation = tonalElevation,
         shadowElevation = shadowElevation,
         border = border,
-        content = content
+        content = content,
     )
 }
 
@@ -58,7 +58,7 @@ fun CmpClickableSurface(
     // Использовать только для плотных составных контролов (segmented control и т.п.),
     // где размер таргета задаёт сам контрол.
     enforceMinimumTouchTarget: Boolean = true,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val surface: @Composable () -> Unit = {
         Surface(
@@ -79,7 +79,7 @@ fun CmpClickableSurface(
             tonalElevation = tonalElevation,
             shadowElevation = shadowElevation,
             border = border,
-            content = content
+            content = content,
         )
     }
 
@@ -88,7 +88,7 @@ fun CmpClickableSurface(
     } else {
         CompositionLocalProvider(
             LocalMinimumInteractiveComponentSize provides Dp.Unspecified,
-            content = surface
+            content = surface,
         )
     }
 }

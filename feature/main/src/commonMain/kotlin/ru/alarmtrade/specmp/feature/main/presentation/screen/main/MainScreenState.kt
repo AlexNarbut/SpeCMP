@@ -28,7 +28,7 @@ data class MainScreenState(
     val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
     /** Карточки главной по фичам пользователя, коммерции и доступности чата — считаются во VM (`withActions`). */
     val visibleActions: List<MainHomeAction> = MainHomeAction.visibleActions(),
-    val logoutState: LCEState<Unit, MainError> = LCEState.None
+    val logoutState: LCEState<Unit, MainError> = LCEState.None,
 ) {
     val logoutError: MainError? get() = (logoutState as? LCEState.Error)?.error
 
@@ -55,7 +55,7 @@ data class MainScreenState(
                 is MainDatabaseSyncStatus.Finished.NotCompatible -> MainDatabaseSyncBadge.AppUpdateRequired
 
                 is MainDatabaseSyncStatus.Finished.Success,
-                MainDatabaseSyncStatus.Finished.NoUpdates
+                MainDatabaseSyncStatus.Finished.NoUpdates,
                 -> MainDatabaseSyncBadge.Updated
 
                 null -> if (databaseSyncState is LCEState.Loading) {
@@ -90,6 +90,6 @@ internal fun MainScreenState.withActions(): MainScreenState = copy(
     visibleActions = MainHomeAction.visibleActions(
         features = appFeatures,
         commercial = userCommercial,
-        showChat = chatAvailability
-    )
+        showChat = chatAvailability,
+    ),
 )

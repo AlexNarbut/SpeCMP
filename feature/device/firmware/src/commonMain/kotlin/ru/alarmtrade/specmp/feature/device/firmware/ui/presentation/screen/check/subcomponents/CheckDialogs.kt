@@ -58,24 +58,24 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CmpText(
                         text = stringResource(Strings.string.firmware_common_label_version),
-                        color = colors.onSurfaceVariant
+                        color = colors.onSurfaceVariant,
                     )
                     VersionText(dialog.version)
                 }
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 CmpText(
                     text = dialog.description.ifBlank {
                         stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
                     color = colors.onSurfaceVariant,
-                    style = CmpTextStyle.Body
+                    style = CmpTextStyle.Body,
                 )
             }
         },
@@ -83,16 +83,16 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
         },
         confirmButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_check_btn_update),
                 onClick = onUpdate,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
-        }
+        },
     )
 }
 
@@ -112,7 +112,7 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
                 text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
                 enabled = !dialog.sending,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
         },
         confirmButton = {
@@ -121,9 +121,9 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
                 sending = dialog.sending,
                 enabled = !dialog.sending,
                 onClick = onConfirm,
-                modifier = Modifier.testTag(ENTER_CONFIRM_TAG)
+                modifier = Modifier.testTag(ENTER_CONFIRM_TAG),
             )
-        }
+        },
     )
 }
 
@@ -138,11 +138,11 @@ internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit:
             sending = dialog.sending,
             wrong = dialog.wrong,
             wrongCount = dialog.wrongCount,
-            lockedFor = dialog.lockedFor
+            lockedFor = dialog.lockedFor,
         ),
         onDismiss = onDismiss,
         onSubmit = onSubmit,
-        testTagPrefix = PIN_TAG_PREFIX
+        testTagPrefix = PIN_TAG_PREFIX,
     )
 }
 

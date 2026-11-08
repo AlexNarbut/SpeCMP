@@ -10,7 +10,8 @@ enum class CloneStage(val locked: Boolean = false) {
     READING,
     CALCULATING,
     WRITING(locked = true),
-    VERIFYING(locked = true);
+    VERIFYING(locked = true),
+    ;
 
     /** Номер этапа с 1. */
     val number: Int get() = ordinal + 1
@@ -44,7 +45,7 @@ enum class CloneFailure(val retryable: Boolean = true) {
     UNSUPPORTED(retryable = false),
     WRONG_DEVICE_ID(retryable = false),
     ATTEMPTS_EXCEEDED(retryable = false),
-    DEVICE_DENIED(retryable = false)
+    DEVICE_DENIED(retryable = false),
 }
 
 /** Итог процедуры Clone. */

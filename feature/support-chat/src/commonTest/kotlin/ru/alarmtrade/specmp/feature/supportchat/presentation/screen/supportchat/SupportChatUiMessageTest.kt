@@ -49,6 +49,6 @@ class SupportChatUiMessageTest {
             time = Instant.fromEpochSeconds(0),
             isMine = true,
             authorEmail = null,
-            status = SupportChatMessageStatus.Failed
+            status = SupportChatMessageStatus.Failed,
         )
 }

@@ -108,7 +108,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         description,
         SettingValue.Switch(value),
         onTitle = onTitle,
-        offTitle = offTitle
+        offTitle = offTitle,
     )
 
     is SdkOptionSetting -> OptionSetting(id, number, name, description, SettingValue.Option(value), options)
@@ -118,7 +118,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         range = minValue..maxValue,
         units = units,
         minValueText = minValueText,
-        maxValueText = maxValueText
+        maxValueText = maxValueText,
     )
 
     is SdkFloatSetting -> DecimalSetting(
@@ -128,7 +128,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         step = step ?: DEFAULT_DECIMAL_STEP,
         units = units,
         minValueText = minValueText,
-        maxValueText = maxValueText
+        maxValueText = maxValueText,
     )
 
     is SdkTextSetting -> TextSetting(
@@ -136,7 +136,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         maxLength = maxLength,
         inputType = inputType.toDomain(),
         validationPattern = validationPattern,
-        validationErrorText = validationErrorText
+        validationErrorText = validationErrorText,
     )
 
     is SdkTimeSetting -> TimeSetting(id, number, name, description, SettingValue.Time(value.toDomain()))
@@ -147,7 +147,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         name,
         description,
         SettingValue.AutoStart(value.toDomain()),
-        dayOfWeek.toDomain()
+        dayOfWeek.toDomain(),
     )
 
     is SdkSirenRingtoneSetting -> SirenSetting(
@@ -158,7 +158,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         SettingValue.Siren(value.toDomain()),
         range = minValue..maxValue,
         units = units,
-        event = ringtoneEvent.toDomain()
+        event = ringtoneEvent.toDomain(),
     )
 
     is SdkCanCodeSetting -> CanCodeSetting(id, number, name, description, SettingValue.Can(value.toDomain()))
@@ -168,7 +168,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         channel = Channel(channelNumber, channelName, wires.toDomain()),
         defaultPolarity = defaultPolarity.toDomain(),
         availableLogics = availableLogics.map { it.toDomain() },
-        enabledLogics = enabledLogics.map { it.toDomain() }
+        enabledLogics = enabledLogics.map { it.toDomain() },
     )
 
     is SdkOutputSetting -> OutputSetting(
@@ -177,7 +177,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         canEditPolarity = canEditPolarity,
         defaultPolarity = defaultPolarity.toDomain(),
         availableLogics = availableLogics.map { it.toDomain() },
-        enabledLogics = enabledLogics.map { it.toDomain() }
+        enabledLogics = enabledLogics.map { it.toDomain() },
     )
 
     is SdkSwitchOutputSetting -> SwitchOutputSetting(
@@ -188,7 +188,7 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
         SettingValue.SwitchOutput(value),
         channel = Channel(channelNumber, channelName, wires.toDomain()),
         polarity = polarity.toDomain(),
-        enabledLogics = enabledLogics.map { it.toDomain() }
+        enabledLogics = enabledLogics.map { it.toDomain() },
     )
 }
 
@@ -222,14 +222,14 @@ private fun SdkAutoStartSchedule.toDomain() = AutoStartSchedule(
     isMorningStartEnabled = isMorningStartEnabled,
     morningStartTime = morningStartTime.toDomain(),
     isEveningStartEnabled = isEveningStartEnabled,
-    eveningStartTime = eveningStartTime.toDomain()
+    eveningStartTime = eveningStartTime.toDomain(),
 )
 
 private fun AutoStartSchedule.toSdk() = SdkAutoStartSchedule(
     isMorningStartEnabled = isMorningStartEnabled,
     morningStartTime = morningStartTime.toSdk(),
     isEveningStartEnabled = isEveningStartEnabled,
-    eveningStartTime = eveningStartTime.toSdk()
+    eveningStartTime = eveningStartTime.toSdk(),
 )
 
 private fun DayOfWeek.toDomain(): Weekday = when (this) {
@@ -247,7 +247,7 @@ private fun SirenRingtoneValue.toDomain() = SirenTone(
         SirenRingtoneType.TONE -> SirenToneType.TONE
         SirenRingtoneType.MELODY -> SirenToneType.MELODY
     },
-    number = value
+    number = value,
 )
 
 private fun SirenTone.toSdk() = SirenRingtoneValue(
@@ -255,7 +255,7 @@ private fun SirenTone.toSdk() = SirenRingtoneValue(
         SirenToneType.TONE -> SirenRingtoneType.TONE
         SirenToneType.MELODY -> SirenRingtoneType.MELODY
     },
-    value = number
+    value = number,
 )
 
 private fun SirenRingtoneEvent.toDomain(): SirenEvent = when (this) {

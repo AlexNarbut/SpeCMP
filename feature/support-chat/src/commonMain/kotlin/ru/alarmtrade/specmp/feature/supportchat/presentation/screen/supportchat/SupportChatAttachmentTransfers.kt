@@ -20,7 +20,7 @@ internal class SupportChatAttachmentTransfers(
     private val repository: SupportChatRepository,
     private val fileSaver: SupportChatFileSaver,
     private val fileOpener: SupportChatFileOpener,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) {
     private val logger = Logger.withTag("SupportChatAttachmentTransfers")
 

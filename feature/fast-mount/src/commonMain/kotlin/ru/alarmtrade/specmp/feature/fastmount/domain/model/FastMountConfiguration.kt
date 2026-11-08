@@ -21,7 +21,7 @@ data class FastMountConfiguration(
     val images: List<MountImage>,
     val keyBypass: Boolean,
     val slave: Boolean,
-    val questions: List<MountQuestion>
+    val questions: List<MountQuestion>,
 )
 
 data class MountFile(val name: String, val url: String)

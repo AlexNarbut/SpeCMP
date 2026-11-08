@@ -40,7 +40,7 @@ class BypassLearningViewModel(
     private val repository: BypassLearningRepository,
     private val programMode: ProgramModeEntry,
     pinCooldown: ServicePinCooldown,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(BypassState())
@@ -73,7 +73,7 @@ class BypassLearningViewModel(
                 deviceId = device.systemId,
                 usb = deviceSession.transport.value != ConnectionTransport.BLE,
                 canCode = device.can?.code,
-                cloneAvailable = device.features?.contains(DeviceFeature.CLONE) == true
+                cloneAvailable = device.features?.contains(DeviceFeature.CLONE) == true,
             )
         }
     }
@@ -83,7 +83,7 @@ class BypassLearningViewModel(
             if (state.phase is BypassPhase.Running) {
                 state.copy(
                     phase = BypassPhase.Start(interrupted = true),
-                    dialog = null
+                    dialog = null,
                 )
             } else {
                 state
@@ -157,7 +157,7 @@ class BypassLearningViewModel(
         _state.update {
             it.copy(
                 phase = BypassPhase.Start(),
-                dialog = BypassDialog.Pin(ServicePinDialogState(wrong = wrong, wrongCount = count))
+                dialog = BypassDialog.Pin(ServicePinDialogState(wrong = wrong, wrongCount = count)),
             )
         }
     }

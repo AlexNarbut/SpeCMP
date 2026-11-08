@@ -39,6 +39,6 @@ interface FirmwareRepository {
         channel: FirmwareChannel,
         page: Int,
         pageSize: Int,
-        can: FirmwareCan? = null
+        can: FirmwareCan? = null,
     ): Response<FirmwareVersionPage>
 }

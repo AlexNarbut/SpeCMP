@@ -21,7 +21,7 @@ data class FirmwareFileState(
     /** Диалоги входа в загрузчик — те же, что на экране проверки ([CheckDialog.ConfirmBoot], [CheckDialog.Pin]). */
     val dialog: CheckDialog? = null,
     /** Команда входа в загрузчик не удалась — баннер. */
-    val bootFailed: Boolean = false
+    val bootFailed: Boolean = false,
 )
 
 /** Действия экрана «Обновить из файла» (stateless-контент получает их от VM или заглушки в галерее состояний). */
@@ -31,5 +31,5 @@ class FirmwareFileActions(
     val onUpdateClick: () -> Unit = {},
     val onDialogDismiss: () -> Unit = {},
     val onConfirmBoot: () -> Unit = {},
-    val onPinSubmit: (String) -> Unit = {}
+    val onPinSubmit: (String) -> Unit = {},
 )

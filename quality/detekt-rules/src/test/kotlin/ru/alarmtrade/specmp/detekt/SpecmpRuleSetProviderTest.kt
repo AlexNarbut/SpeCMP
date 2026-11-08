@@ -33,9 +33,9 @@ class SpecmpRuleSetProviderTest {
                 "ResponseGetOrThrow",
                 "ResponseIgnored",
                 "DirectClockUsage",
-                "ThrowInRepository"
+                "ThrowInRepository",
             ),
-            ruleSet.rules.keys.map { it.value }.toSet()
+            ruleSet.rules.keys.map { it.value }.toSet(),
         )
     }
 

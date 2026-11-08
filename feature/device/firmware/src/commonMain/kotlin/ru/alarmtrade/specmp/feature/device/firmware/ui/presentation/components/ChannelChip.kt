@@ -69,7 +69,7 @@ private fun FirmwareChannel.longLabel(): StringResource = when (this) {
 internal fun ChannelChip(
     selected: FirmwareChannel,
     onSelect: (FirmwareChannel) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     var open by remember { mutableStateOf(false) }
@@ -89,27 +89,27 @@ internal fun ChannelChip(
             color = if (test) colors.tertiaryContainer else Color.Transparent,
             contentColor = if (test) colors.onTertiaryContainer else colors.onSurfaceVariant,
             border = if (test) null else BorderStroke(1.dp, colors.outline),
-            enforceMinimumTouchTarget = false
+            enforceMinimumTouchTarget = false,
         ) {
             CmpRow(
                 modifier = Modifier.padding(start = 14.dp, end = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (test) CmpIcon(icon = CmpIcons.Warning, contentDescription = null, modifier = Modifier.size(18.dp))
                 CmpText(
                     text = stringResource(
                         Strings.string.firmware_check_label_channel,
-                        stringResource(selected.shortLabel())
+                        stringResource(selected.shortLabel()),
                     ),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
+                    maxLines = 1,
                 )
                 CmpIcon(
                     icon = if (open) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -122,7 +122,7 @@ internal fun ChannelChip(
                         open = false
                         if (channel != selected) onSelect(channel)
                     },
-                    modifier = Modifier.testTag(channelTag(channel))
+                    modifier = Modifier.testTag(channelTag(channel)),
                 )
             }
         }

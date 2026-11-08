@@ -31,7 +31,7 @@ internal class VehicleSelectActions(
     val onFilterDismiss: () -> Unit,
     val onFilterClear: () -> Unit,
     val onPick: (Int) -> Unit,
-    val card: CardActions
+    val card: CardActions,
 )
 
 /** Действия карточки автомобиля. */
@@ -51,7 +51,7 @@ internal class CardActions(
     val onOpenFirmwareArchive: ((String) -> Unit)?,
     val onOpenUserManual: ((Int) -> Unit)?,
     val onDialogDismiss: () -> Unit,
-    val onMismatchConfirm: () -> Unit
+    val onMismatchConfirm: () -> Unit,
 )
 
 /** Куда ведёт крошка. */

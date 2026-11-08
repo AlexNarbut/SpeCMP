@@ -54,8 +54,8 @@ class StateFlowValueMutation(config: Config) :
                 Finding(
                     Entity.from(expression),
                     "`${qualified.text} $operation` пишет в MutableStateFlow.value в обход атомарного " +
-                        "update { } (docs/patterns.md)."
-                )
+                        "update { } (docs/patterns.md).",
+                ),
             )
         }
     }
@@ -69,7 +69,7 @@ class StateFlowValueMutation(config: Config) :
             KtTokens.MINUSEQ,
             KtTokens.MULTEQ,
             KtTokens.DIVEQ,
-            KtTokens.PERCEQ
+            KtTokens.PERCEQ,
         )
         val INCREMENTS = setOf(KtTokens.PLUSPLUS, KtTokens.MINUSMINUS)
     }

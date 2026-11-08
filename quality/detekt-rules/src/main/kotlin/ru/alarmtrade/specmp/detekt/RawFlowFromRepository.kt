@@ -48,8 +48,8 @@ class RawFlowFromRepository(config: Config) :
                         Entity.atName(declaration),
                         "`${declaration.name}` в ${classOrObject.name ?: "репозитории"} отдаёт поток без Response: " +
                             "оберните источник в asResponseFlow()/asResponseStateFlow() " +
-                            "(docs/patterns.md, «Слой данных → Контракт результата»)."
-                    )
+                            "(docs/patterns.md, «Слой данных → Контракт результата»).",
+                    ),
                 )
             }
     }

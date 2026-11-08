@@ -27,7 +27,7 @@ import specmp.feature.login.generated.resources.app_icon
 fun AuthBrandLockup(
     layoutMode: AuthLayoutMode,
     modifier: Modifier = Modifier,
-    colors: CmpThemeColors = cmpThemeColors()
+    colors: CmpThemeColors = cmpThemeColors(),
 ) {
     val isExpanded = layoutMode == AuthLayoutMode.Expanded
     val iconSize = if (isExpanded) 84.dp else 60.dp
@@ -37,7 +37,7 @@ fun AuthBrandLockup(
     CmpColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(gap)
+        verticalArrangement = Arrangement.spacedBy(gap),
     ) {
         CmpImage(
             painter = painterResource(Res.drawable.app_icon),
@@ -47,27 +47,27 @@ fun AuthBrandLockup(
                 .shadow(
                     elevation = 10.dp,
                     ambientColor = colors.primary.copy(alpha = 0.25f),
-                    spotColor = colors.primary.copy(alpha = 0.35f)
-                )
+                    spotColor = colors.primary.copy(alpha = 0.35f),
+                ),
         )
 
         CmpColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             CmpText(
                 text = stringResource(Strings.string.login_authroot_title_brand),
                 fontSize = titleSize,
                 fontWeight = FontWeight.Bold,
                 color = colors.onBackground,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             CmpText(
                 text = stringResource(Strings.string.login_authroot_subtitle_specialist),
                 fontSize = 16.sp,
                 color = colors.onBackground.copy(alpha = 0.72f),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }

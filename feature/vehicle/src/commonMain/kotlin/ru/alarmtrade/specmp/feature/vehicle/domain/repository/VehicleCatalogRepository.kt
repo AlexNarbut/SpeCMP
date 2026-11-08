@@ -29,7 +29,7 @@ interface VehicleCatalogRepository {
     suspend fun findByCanCode(
         canCode: String,
         device: VehicleDeviceFilter?,
-        groups: Set<CarFeatureGroup> = emptySet()
+        groups: Set<CarFeatureGroup> = emptySet(),
     ): Response<List<CarSummary>>
 
     /** Автомобиль одной строкой по id (подпись CAN-кода). */

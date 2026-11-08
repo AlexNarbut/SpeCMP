@@ -33,7 +33,7 @@ fun CmpZoomableImage(model: Any?, contentDescription: String?, modifier: Modifie
                     onDoubleTap = {
                         scale = if (scale > 1f) 1f else DOUBLE_TAP_ZOOM
                         offset = Offset.Zero
-                    }
+                    },
                 )
             }
             .pointerInput(model) {
@@ -41,7 +41,7 @@ fun CmpZoomableImage(model: Any?, contentDescription: String?, modifier: Modifie
                     scale = (scale * zoom).coerceIn(1f, MAX_ZOOM)
                     offset = if (scale == 1f) Offset.Zero else offset + pan
                 }
-            }
+            },
     ) {
         CmpAsyncImage(
             model = model,
@@ -52,7 +52,7 @@ fun CmpZoomableImage(model: Any?, contentDescription: String?, modifier: Modifie
                 scaleY = scale
                 translationX = offset.x
                 translationY = offset.y
-            }
+            },
         )
     }
 }

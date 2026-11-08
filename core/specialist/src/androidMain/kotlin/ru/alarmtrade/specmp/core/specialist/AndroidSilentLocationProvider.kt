@@ -27,6 +27,6 @@ class AndroidSilentLocationProvider(private val context: Context) : SilentLocati
 
     private fun granted(): Boolean = listOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
     ).any { context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
 }

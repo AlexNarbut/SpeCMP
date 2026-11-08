@@ -67,13 +67,13 @@ internal fun SectionPane(section: SettingsSection, marks: RowMarks, wide: Boolea
         EmptyMessage(
             icon = CmpIcons.List,
             title = stringResource(Strings.string.settings_editor_msg_empty_section),
-            hint = stringResource(Strings.string.settings_editor_msg_empty_section_hint)
+            hint = stringResource(Strings.string.settings_editor_msg_empty_section_hint),
         )
         return
     }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 16.dp) else PaddingValues(0.dp)
+        contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 16.dp) else PaddingValues(0.dp),
     ) {
         if (wide) {
             item(key = "header") {
@@ -89,13 +89,13 @@ private fun SectionHeader(section: SettingsSection, changes: Int) {
     CmpRow(
         modifier = Modifier.widthIn(max = ContentMaxWidth).fillMaxWidth().padding(start = 4.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpText(
             text = if (section.number.isEmpty()) section.name else "${section.number}  ${section.name}",
             style = CmpTextStyle.Title,
             maxLines = 1,
-            modifier = Modifier.weight(1f, fill = false)
+            modifier = Modifier.weight(1f, fill = false),
         )
         if (changes > 0) CmpCountPill(count = changes)
     }
@@ -112,7 +112,7 @@ internal fun SearchPane(
     marks: RowMarks,
     wide: Boolean,
     onQueryChange: (String) -> Unit,
-    actions: SettingRowActions
+    actions: SettingRowActions,
 ) {
     var text by rememberSaveable { mutableStateOf(query) }
     CmpColumn(modifier = Modifier.fillMaxSize()) {
@@ -128,13 +128,13 @@ internal fun SearchPane(
                 .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
-                .testTag(SettingsTestTags.SEARCH_FIELD)
+                .testTag(SettingsTestTags.SEARCH_FIELD),
         )
         when {
             text.isBlank() -> EmptyMessage(
                 icon = CmpIcons.Search,
                 title = stringResource(Strings.string.settings_search_msg_prompt),
-                hint = null
+                hint = null,
             )
 
             // Текст набран, результат ещё считается (debounce).
@@ -143,12 +143,12 @@ internal fun SearchPane(
             hits.isEmpty() -> EmptyMessage(
                 icon = CmpIcons.Search,
                 title = stringResource(Strings.string.settings_search_msg_empty, query.trim()),
-                hint = stringResource(Strings.string.settings_search_msg_empty_hint)
+                hint = stringResource(Strings.string.settings_search_msg_empty_hint),
             )
 
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 8.dp) else PaddingValues(0.dp)
+                contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 8.dp) else PaddingValues(0.dp),
             ) {
                 rows(
                     nodes = hits.map { it.node },
@@ -159,7 +159,7 @@ internal fun SearchPane(
                         hit.path.joinToString(" › ") { section ->
                             if (section.number.isEmpty()) section.name else "${section.number} ${section.name}"
                         }
-                    }
+                    },
                 )
             }
         }
@@ -175,7 +175,7 @@ private fun LazyListScope.rows(
     marks: RowMarks,
     wide: Boolean,
     actions: SettingRowActions,
-    paths: List<String>?
+    paths: List<String>?,
 ) {
     itemsIndexed(nodes, key = { _, node -> node.id }) { index, node ->
         val last = index == nodes.lastIndex
@@ -188,8 +188,8 @@ private fun LazyListScope.rows(
                         first = index == 0,
                         last = last,
                         color = cmpThemeColors().surface,
-                        borderColor = cmpThemeColors().outlineVariant
-                    )
+                        borderColor = cmpThemeColors().outlineVariant,
+                    ),
             ) {
                 CmpColumn { NodeRow(node, last, marks, wide = true, actions, paths?.getOrNull(index)) }
             }
@@ -220,7 +220,7 @@ private fun Modifier.cardSegment(first: Boolean, last: Boolean, color: Color, bo
                 topLeft = Offset(stroke / 2, y0),
                 size = Size(size.width - stroke, y1 - y0),
                 cornerRadius = CornerRadius(radius - stroke / 2),
-                style = Stroke(stroke)
+                style = Stroke(stroke),
             )
         }
 }
@@ -232,7 +232,7 @@ private fun NodeRow(
     marks: RowMarks,
     wide: Boolean,
     actions: SettingRowActions,
-    path: String?
+    path: String?,
 ) {
     SettingNodeRow(
         node = node,
@@ -241,7 +241,7 @@ private fun NodeRow(
         wide = wide,
         actions = actions,
         path = path?.takeIf { it.isNotEmpty() },
-        note = (node as? CanCodeSetting)?.value?.value?.carId?.let(marks.cars::get)?.let { carLabel(it) }
+        note = (node as? CanCodeSetting)?.value?.value?.carId?.let(marks.cars::get)?.let { carLabel(it) },
     )
     if (!last) CmpDivider(color = cmpThemeColors().outlineVariant)
 }

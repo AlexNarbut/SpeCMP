@@ -76,7 +76,7 @@ internal fun LazyListScope.featureItems(
     collapsed: Set<CarFeatureGroup>,
     wide: Boolean,
     padding: Dp,
-    onGroupToggle: (CarFeatureGroup) -> Unit
+    onGroupToggle: (CarFeatureGroup) -> Unit,
 ) {
     // Отступ между элементами вкладки — как у прежней колонки (spacedBy 10).
     val itemPadding = Modifier.padding(start = padding, end = padding, top = 10.dp)
@@ -94,7 +94,7 @@ internal fun LazyListScope.featureItems(
                 count = inGroup.size,
                 open = open,
                 onToggle = { onGroupToggle(group) },
-                modifier = itemPadding
+                modifier = itemPadding,
             )
         }
         if (open) {
@@ -114,7 +114,7 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
         CmpText(
             text = stringResource(Strings.string.vehicle_features_msg_legend),
             style = CmpTextStyle.Body,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
         if (filtered) {
             CmpRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -122,12 +122,12 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
                     icon = CmpIcons.FilterAlt,
                     contentDescription = null,
                     tint = colors.primary,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 CmpText(
                     text = stringResource(Strings.string.vehicle_features_msg_filtered, shown, total),
                     style = CmpTextStyle.Body,
-                    color = colors.primary
+                    color = colors.primary,
                 )
             }
         }
@@ -135,7 +135,7 @@ private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
             CmpStateBox(
                 icon = CmpIcons.FilterAltOff,
                 title = stringResource(Strings.string.vehicle_features_msg_filtered_none),
-                compact = true
+                compact = true,
             )
         }
     }
@@ -150,7 +150,7 @@ private fun FeaturesWarning(modifier: Modifier = Modifier) {
             .padding(top = 8.dp)
             .background(colors.surfaceContainerHigh, RoundedCornerShape(14.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onSurfaceVariant)
         CmpText(text = stringResource(Strings.string.vehicle_features_msg_warning), style = CmpTextStyle.Body)
@@ -163,7 +163,7 @@ private fun GroupHeader(
     count: Int,
     open: Boolean,
     onToggle: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     CmpRow(
@@ -176,19 +176,19 @@ private fun GroupHeader(
             .heightIn(min = 52.dp)
             .padding(start = 12.dp, end = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpText(
             text = groupLabel(group),
             style = CmpTextStyle.BodyLarge,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         CmpText(text = count.toString(), style = CmpTextStyle.Body, color = colors.onSurfaceVariant)
         CmpIcon(
             icon = if (open) CmpIcons.KeyboardArrowUp else CmpIcons.KeyboardArrowDown,
             contentDescription = null,
-            tint = colors.onSurfaceVariant
+            tint = colors.onSurfaceVariant,
         )
     }
 }
@@ -205,7 +205,7 @@ private fun FeatureRow(feature: CarFeature, wide: Boolean, modifier: Modifier = 
     if (wide) {
         CmpRow(
             modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CmpBox(modifier = Modifier.weight(FEATURE_NAME_WEIGHT)) { name() }
             BusList(label = null, buses = feature.reads, modifier = Modifier.weight(1f))
@@ -214,7 +214,7 @@ private fun FeatureRow(feature: CarFeature, wide: Boolean, modifier: Modifier = 
     } else {
         CmpColumn(
             modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             name()
             // Подписи — только на узком окне: на широком они в заголовке столбцов.
@@ -232,21 +232,21 @@ private fun BusList(label: String?, buses: List<CarBus>, modifier: Modifier = Mo
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        itemVerticalAlignment = Alignment.CenterVertically
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         label?.let {
             CmpText(
                 text = it,
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant,
-                modifier = Modifier.width(110.dp)
+                modifier = Modifier.width(110.dp),
             )
         }
         if (buses.isEmpty()) {
             CmpText(
                 text = stringResource(Strings.string.vehicle_features_label_none),
                 style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
         } else {
             buses.forEach { BusChip(it) }
@@ -260,7 +260,7 @@ internal fun FeaturesColumnsHeader() {
     val colors = cmpThemeColors()
     CmpRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpBox(modifier = Modifier.weight(FEATURE_NAME_WEIGHT))
         CmpText(
@@ -268,14 +268,14 @@ internal fun FeaturesColumnsHeader() {
             style = CmpTextStyle.Body,
             fontWeight = FontWeight.SemiBold,
             color = colors.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         CmpText(
             text = stringResource(Strings.string.vehicle_features_label_control),
             style = CmpTextStyle.Body,
             fontWeight = FontWeight.SemiBold,
             color = colors.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -285,7 +285,7 @@ internal fun FeaturesColumnsHeader() {
 internal fun TileIcon(icon: CmpIcons, background: Color, tint: Color) {
     CmpBox(
         modifier = Modifier.size(48.dp).background(background, RoundedCornerShape(12.dp)),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpIcon(icon = icon, contentDescription = null, tint = tint)
     }
@@ -306,7 +306,7 @@ internal fun MountPointsList(points: List<MountPoint>, onOpen: (Int) -> Unit) {
                 },
                 onClick = { onOpen(index) },
                 lead = { TileIcon(CmpIcons.Cable, colors.secondaryContainer, colors.onSecondaryContainer) },
-                modifier = Modifier.testTag(VehicleTestTags.point(index))
+                modifier = Modifier.testTag(VehicleTestTags.point(index)),
             )
         }
     }
@@ -325,7 +325,9 @@ internal fun DocumentsList(documents: List<CarDocument>, onOpen: (String) -> Uni
                 onClick = { onOpen(document.url) },
                 chevron = false,
                 lead = { TileIcon(CmpIcons.PictureAsPdf, colors.errorContainer, colors.onErrorContainer) },
-                trailing = { CmpIcon(icon = CmpIcons.OpenInNew, contentDescription = openLabel, tint = colors.primary) }
+                trailing = {
+                    CmpIcon(icon = CmpIcons.OpenInNew, contentDescription = openLabel, tint = colors.primary)
+                },
             )
         }
     }
@@ -342,7 +344,7 @@ internal fun UserManualsList(manuals: List<UserManualRef>, onOpen: ((Int) -> Uni
                 subtitle = manual.description,
                 onClick = { onOpen?.invoke(manual.id) },
                 chevron = onOpen != null,
-                lead = { TileIcon(CmpIcons.Groups, colors.secondaryContainer, colors.onSecondaryContainer) }
+                lead = { TileIcon(CmpIcons.Groups, colors.secondaryContainer, colors.onSecondaryContainer) },
             )
         }
     }

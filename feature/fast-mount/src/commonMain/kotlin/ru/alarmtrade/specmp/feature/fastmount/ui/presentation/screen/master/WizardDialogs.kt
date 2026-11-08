@@ -47,7 +47,7 @@ private class DialogTexts(
     val text: StringResource,
     val confirm: StringResource,
     val dismiss: StringResource,
-    val primaryConfirm: Boolean
+    val primaryConfirm: Boolean,
 )
 
 private fun WizardDialog.texts(): DialogTexts = when (this) {
@@ -57,7 +57,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_exit,
         Strings.string.fastmount_dialog_btn_exit,
         Strings.string.fastmount_dialog_btn_continue_mount,
-        primaryConfirm = false
+        primaryConfirm = false,
     )
 
     WizardDialog.TO_MOUNT -> DialogTexts(
@@ -66,7 +66,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_to_mount,
         Strings.string.fastmount_dialog_btn_to_mount,
         Strings.string.fastmount_dialog_btn_stay,
-        primaryConfirm = false
+        primaryConfirm = false,
     )
 
     WizardDialog.TO_MOUNT_CLONE -> DialogTexts(
@@ -75,7 +75,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_to_mount_clone,
         Strings.string.fastmount_dialog_btn_to_mount,
         Strings.string.fastmount_dialog_btn_stay,
-        primaryConfirm = false
+        primaryConfirm = false,
     )
 
     WizardDialog.MOUNT_DONE -> DialogTexts(
@@ -84,7 +84,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_mount_done,
         Strings.string.fastmount_dialog_btn_mount_done,
         Strings.string.fastmount_dialog_btn_cancel,
-        primaryConfirm = true
+        primaryConfirm = true,
     )
 
     WizardDialog.SLAVE_DONE -> DialogTexts(
@@ -93,7 +93,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_slave_done,
         Strings.string.fastmount_dialog_btn_slave_done,
         Strings.string.fastmount_dialog_btn_cancel,
-        primaryConfirm = true
+        primaryConfirm = true,
     )
 }
 
@@ -106,7 +106,7 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
             text = stringResource(texts.confirm),
             outlined = !texts.primaryConfirm,
             onClick = onConfirm,
-            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_CONFIRM_TAG)
+            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_CONFIRM_TAG),
         )
     }
     val dismiss: @Composable () -> Unit = {
@@ -114,7 +114,7 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
             text = stringResource(texts.dismiss),
             outlined = texts.primaryConfirm,
             onClick = onDismiss,
-            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_DISMISS_TAG)
+            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_DISMISS_TAG),
         )
     }
     CmpDialog(
@@ -126,7 +126,7 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
                 text = stringResource(texts.text),
                 style = CmpTextStyle.BodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         },
         confirmButton = {
@@ -139,6 +139,6 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
                     confirm()
                 }
             }
-        }
+        },
     )
 }

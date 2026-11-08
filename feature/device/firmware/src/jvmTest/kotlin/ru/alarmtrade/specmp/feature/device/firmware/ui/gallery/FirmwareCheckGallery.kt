@@ -29,26 +29,26 @@ class FirmwareCheckGallery {
         kind = FirmwareModuleKind.AlarmMain,
         title = "Pandora DX 4G (DX4G)",
         currentVersion = CurrentVersionUi.Known("3.57"),
-        status = CardStatusUi.UpdateAvailable("3.61", notes)
+        status = CardStatusUi.UpdateAvailable("3.61", notes),
     )
     private val actual = ModuleCardUi(
         id = 2,
         kind = FirmwareModuleKind.BluetoothModule,
         title = "Pandora BT (BTM2)",
         currentVersion = CurrentVersionUi.Known("1.14"),
-        status = CardStatusUi.Actual("1.14")
+        status = CardStatusUi.Actual("1.14"),
     )
     private val unsupported = ModuleCardUi(
         id = 3,
         kind = FirmwareModuleKind.WatchMain,
         title = "Pandora Watch (PW2)",
         currentVersion = CurrentVersionUi.Known("2.03"),
-        status = CardStatusUi.NotSupported
+        status = CardStatusUi.NotSupported,
     )
     private val base = FirmwareCheckState(
         deviceName = "Pandora DX-4GS",
         deviceId = 107131,
-        content = LCEState.Content(listOf(update, actual, unsupported))
+        content = LCEState.Content(listOf(update, actual, unsupported)),
     )
 
     private fun render(name: String, state: FirmwareCheckState) =
@@ -75,11 +75,11 @@ class FirmwareCheckGallery {
                         kind = FirmwareModuleKind.GpsTracker,
                         title = "Pandora GPS (GPS2)",
                         currentVersion = CurrentVersionUi.Absent,
-                        status = CardStatusUi.Failed(FirmwareError.Common(ApiError.NoConnection))
-                    )
-                )
-            )
-        )
+                        status = CardStatusUi.Failed(FirmwareError.Common(ApiError.NoConnection)),
+                    ),
+                ),
+            ),
+        ),
     )
 
     @Test
@@ -91,13 +91,13 @@ class FirmwareCheckGallery {
     @Test
     fun descriptionDialog() = render(
         "07_dialog_description",
-        base.copy(dialog = CheckDialog.Description(1, "3.61", notes))
+        base.copy(dialog = CheckDialog.Description(1, "3.61", notes)),
     )
 
     @Test
     fun descriptionDialogEmpty() = render(
         "08_dialog_description_empty",
-        base.copy(dialog = CheckDialog.Description(1, "3.61", ""))
+        base.copy(dialog = CheckDialog.Description(1, "3.61", "")),
     )
 
     @Test
@@ -113,7 +113,7 @@ class FirmwareCheckGallery {
     @Test
     fun pinDialogLocked() = render(
         "12_dialog_pin_locked",
-        base.copy(dialog = CheckDialog.Pin(2, wrong = true, wrongCount = 1, lockedFor = 14.seconds))
+        base.copy(dialog = CheckDialog.Pin(2, wrong = true, wrongCount = 1, lockedFor = 14.seconds)),
     )
 
     @Test
@@ -128,9 +128,9 @@ class FirmwareCheckGallery {
                 listOf(
                     update.copy(title = "Pandora DX 4G Premium Long (DX4G-LX)"),
                     actual.copy(title = "Pandora Bluetooth Module Long (BTM2-LNG)"),
-                    unsupported.copy(title = "Pandora Watch Ultra Long Edition (PW2-X)")
-                )
-            )
-        )
+                    unsupported.copy(title = "Pandora Watch Ultra Long Edition (PW2-X)"),
+                ),
+            ),
+        ),
     )
 }

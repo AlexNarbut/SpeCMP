@@ -75,7 +75,7 @@ class DeviceStateMappersTest {
     fun `ev group appears when charging or battery is known`() {
         val ev = EvState.Undef.copy(
             chargingState = EvState.ChargingState.SLOW_CHARGING,
-            batteryStateOfCharge = 78f
+            batteryStateOfCharge = 78f,
         ).toEv()
         assertNotNull(ev)
         assertEquals(EvCharging.SLOW, ev.charging)
@@ -86,7 +86,7 @@ class DeviceStateMappersTest {
     fun `heater appears when it reports anything`() {
         val heater = HeaterState.Undef.copy(
             heaterType = HeaterType.WEBASTO,
-            heaterStatus = ServiceZoneStatus.OPEN
+            heaterStatus = ServiceZoneStatus.OPEN,
         ).toHeater()
         assertNotNull(heater)
         assertEquals(true, heater.on)

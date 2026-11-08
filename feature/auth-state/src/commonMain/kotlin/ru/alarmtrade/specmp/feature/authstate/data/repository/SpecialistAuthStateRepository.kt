@@ -27,7 +27,7 @@ class SpecialistAuthStateRepository(private val authInteractor: AuthInteractor) 
 
                     is SpecialistResponse.Error -> response.toResponse()
                 }
-            }
+            },
         )
     }
 

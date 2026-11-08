@@ -31,7 +31,7 @@ internal val testDevice = AlarmDevice(
     firmwareVersion = "VER3.57",
     mode = DeviceOperationMode.MAIN,
     features = emptySet(),
-    can = null
+    can = null,
 )
 
 internal class FakeSessionRepository(var device: AlarmDevice = testDevice) : DeviceSessionRepository {
@@ -40,7 +40,7 @@ internal class FakeSessionRepository(var device: AlarmDevice = testDevice) : Dev
 
     override fun linkState(): Flow<DeviceLinkState> = link
     override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Success(
-        BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14"))
+        BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14")),
     )
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
     override suspend fun readImei(): Response<String> = Response.Success("")

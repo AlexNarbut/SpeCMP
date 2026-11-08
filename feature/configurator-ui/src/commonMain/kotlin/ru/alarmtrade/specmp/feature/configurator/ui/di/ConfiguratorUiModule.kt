@@ -18,7 +18,7 @@ val configuratorUiModule = module {
             settings = get(),
             deviceSession = get(),
             appScope = get(appScopeQualifier),
-            dispatchers = get()
+            dispatchers = get(),
         )
     }
     viewModel { (file: SourceKey.File?) ->
@@ -35,7 +35,7 @@ val configuratorUiModule = module {
             settings = get(),
             configurations = get(),
             deviceSession = get(),
-            dispatchers = get()
+            dispatchers = get(),
         )
     }
 }

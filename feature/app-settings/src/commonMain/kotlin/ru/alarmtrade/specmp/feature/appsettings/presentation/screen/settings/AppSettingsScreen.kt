@@ -59,33 +59,33 @@ internal fun AppSettingsScreen(state: AppSettingsState, actions: AppSettingsActi
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.appsettings_main_a11y_back)
+                        contentDescription = stringResource(Strings.string.appsettings_main_a11y_back),
                     )
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         CmpColumn(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpText(
                 text = stringResource(Strings.string.appsettings_main_label_language),
                 style = CmpTextStyle.Title,
-                color = cmpThemeColors().onSurfaceVariant
+                color = cmpThemeColors().onSurfaceVariant,
             )
             AppLocale.entries.forEach { locale ->
                 LanguageRow(
                     name = localeName(locale),
                     selected = locale == state.selected,
-                    onClick = { actions.onLocaleSelect(locale) }
+                    onClick = { actions.onLocaleSelect(locale) },
                 )
             }
             CmpButton(
                 text = stringResource(Strings.string.appsettings_main_btn_apply),
                 onClick = actions.onApply,
                 enabled = state.canApply,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
             CmpDivider(modifier = Modifier.padding(vertical = 16.dp))
             ConfigurationLanguageSection(state, actions.onConfigurationLanguageSelect)
@@ -102,7 +102,7 @@ private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit, mo
             .heightIn(min = 56.dp)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpRadioButton(selected = selected, onClick = null)
         CmpText(text = name, style = CmpTextStyle.BodyLarge)
@@ -115,26 +115,26 @@ private fun ConfigurationLanguageSection(state: AppSettingsState, onSelect: (Con
     CmpText(
         text = stringResource(Strings.string.appsettings_main_label_conf_language),
         style = CmpTextStyle.Title,
-        color = cmpThemeColors().onSurfaceVariant
+        color = cmpThemeColors().onSurfaceVariant,
     )
     CmpText(
         text = stringResource(Strings.string.appsettings_main_hint_conf_language),
         style = CmpTextStyle.Body,
-        color = cmpThemeColors().onSurfaceVariant
+        color = cmpThemeColors().onSurfaceVariant,
     )
     ConfigurationLanguage.entries.forEach { language ->
         LanguageRow(
             name = languageName(language),
             selected = language == state.configurationLanguage,
             onClick = { onSelect(language) },
-            modifier = Modifier.testTag("appsettings_conf_language_${language.name.lowercase()}")
+            modifier = Modifier.testTag("appsettings_conf_language_${language.name.lowercase()}"),
         )
     }
     if (state.configurationLanguageError) {
         CmpText(
             text = stringResource(Strings.string.appsettings_main_error_conf_language),
             style = CmpTextStyle.Body,
-            color = cmpThemeColors().error
+            color = cmpThemeColors().error,
         )
     }
 }
@@ -145,7 +145,7 @@ private fun localeName(locale: AppLocale): String = stringResource(
     when (locale) {
         AppLocale.English -> Strings.string.appsettings_main_value_language_en
         AppLocale.Russian -> Strings.string.appsettings_main_value_language_ru
-    }
+    },
 )
 
 @Composable
@@ -153,7 +153,7 @@ private fun languageName(language: ConfigurationLanguage): String = stringResour
     when (language) {
         ConfigurationLanguage.EN -> Strings.string.appsettings_main_value_language_en
         ConfigurationLanguage.RU -> Strings.string.appsettings_main_value_language_ru
-    }
+    },
 )
 
 @Composable
@@ -168,15 +168,15 @@ private fun AppSettingsDialogs(dialog: AppSettingsDialog?, actions: AppSettingsA
             confirmButton = {
                 CmpTextButton(
                     text = stringResource(Strings.string.appsettings_main_btn_change),
-                    onClick = actions.onConfirm
+                    onClick = actions.onConfirm,
                 )
             },
             dismissButton = {
                 CmpTextButton(
                     text = stringResource(Strings.string.appsettings_main_btn_cancel),
-                    onClick = actions.onDialogDismiss
+                    onClick = actions.onDialogDismiss,
                 )
-            }
+            },
         )
 
         AppSettingsDialog.RESTART_MANUALLY -> CmpDialog(
@@ -186,9 +186,9 @@ private fun AppSettingsDialogs(dialog: AppSettingsDialog?, actions: AppSettingsA
             confirmButton = {
                 CmpTextButton(
                     text = stringResource(Strings.string.appsettings_main_btn_ok),
-                    onClick = actions.onDialogDismiss
+                    onClick = actions.onDialogDismiss,
                 )
-            }
+            },
         )
     }
 }

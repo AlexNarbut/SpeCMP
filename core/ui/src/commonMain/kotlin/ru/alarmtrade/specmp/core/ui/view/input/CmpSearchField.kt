@@ -16,7 +16,7 @@ fun CmpSearchField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     clearContentDescription: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpTextField(
         value = value,
@@ -29,12 +29,12 @@ fun CmpSearchField(
                 CmpIconButton(
                     onClick = { onValueChange("") },
                     icon = CmpIcons.Close,
-                    contentDescription = clearContentDescription
+                    contentDescription = clearContentDescription,
                 )
             }
         } else {
             null
         },
-        modifier = modifier
+        modifier = modifier,
     )
 }

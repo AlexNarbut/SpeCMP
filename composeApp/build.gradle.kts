@@ -120,6 +120,6 @@ val copyMokoBundlesToXcode by tasks.registering(Copy::class) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     into(
         providers.environmentVariable("TARGET_BUILD_DIR")
-            .zip(providers.environmentVariable("UNLOCALIZED_RESOURCES_FOLDER_PATH")) { dir, path -> "$dir/$path" }
+            .zip(providers.environmentVariable("UNLOCALIZED_RESOURCES_FOLDER_PATH")) { dir, path -> "$dir/$path" },
     )
 }

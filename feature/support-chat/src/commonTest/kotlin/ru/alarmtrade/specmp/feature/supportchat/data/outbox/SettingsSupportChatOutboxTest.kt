@@ -27,8 +27,8 @@ class SettingsSupportChatOutboxTest {
                 name = "scheme.pdf",
                 localPath = "/files/scheme.pdf",
                 mimeType = "application/pdf",
-                sizeBytes = 42
-            )
+                sizeBytes = 42,
+            ),
         )
 
         outbox.enqueue(message)
@@ -98,6 +98,6 @@ class SettingsSupportChatOutboxTest {
         time = Instant.fromEpochMilliseconds(1_000),
         isMine = true,
         authorEmail = null,
-        status = SupportChatMessageStatus.Pending
+        status = SupportChatMessageStatus.Pending,
     )
 }

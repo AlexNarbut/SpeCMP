@@ -261,7 +261,7 @@ internal data class InstructionItem(
     val wait: Boolean = false,
     val fail: StringResource? = null,
     val then: StringResource? = null,
-    val key: InstructionKey? = null
+    val key: InstructionKey? = null,
 )
 
 internal data class Instruction(val title: StringResource, val lead: StringResource, val items: List<InstructionItem>)
@@ -281,37 +281,37 @@ private val LadaInstruction = Instruction(
         InstructionItem(
             action = txt.autostart_lada_item_2_action,
             response = txt.autostart_lada_item_2_response,
-            key = InstructionKey.RED
+            key = InstructionKey.RED,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_3_action,
             response = txt.autostart_lada_item_3_response,
-            key = InstructionKey.BLACK
+            key = InstructionKey.BLACK,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_4_action,
             response = txt.autostart_lada_item_4_response,
-            key = InstructionKey.BLACK
+            key = InstructionKey.BLACK,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_5_action,
             response = txt.autostart_lada_item_5_response,
-            key = InstructionKey.RED
+            key = InstructionKey.RED,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_6_action,
             forbidden = txt.autostart_lada_item_6_forbidden,
             response = txt.autostart_lada_item_6_response,
             fail = txt.autostart_lada_item_6_fail,
-            key = InstructionKey.RED
+            key = InstructionKey.RED,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_7_action,
             response = txt.autostart_lada_item_7_response,
             then = txt.autostart_lada_item_7_then,
-            key = InstructionKey.RED
-        )
-    )
+            key = InstructionKey.RED,
+        ),
+    ),
 )
 
 private val ToyotaInstruction = Instruction(
@@ -324,8 +324,8 @@ private val ToyotaInstruction = Instruction(
         InstructionItem(
             action = txt.autostart_toyota_item_4_action,
             count = txt.autostart_toyota_item_4_count,
-            then = txt.autostart_toyota_item_4_then
+            then = txt.autostart_toyota_item_4_then,
         ),
-        InstructionItem(response = txt.autostart_toyota_item_5_response, wait = true)
-    )
+        InstructionItem(response = txt.autostart_toyota_item_5_response, wait = true),
+    ),
 )

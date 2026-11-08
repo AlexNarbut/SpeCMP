@@ -51,7 +51,7 @@ internal class MineViewModel(
     private val settings: DeviceSettingsRepository,
     deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(MineState(modelFilter = pickDeviceName, pickMode = pickDeviceName != null))
@@ -87,7 +87,7 @@ internal class MineViewModel(
                 val items = response.value.reusing(state.list.content) { it.id }
                 state.copy(
                     list = LCEState.Content(items),
-                    selectedId = state.selectedId?.takeIf { id -> items.any { it.id == id } }
+                    selectedId = state.selectedId?.takeIf { id -> items.any { it.id == id } },
                 )
             }
         }
@@ -143,7 +143,7 @@ internal class MineViewModel(
                     name.take(LocalConfiguration.NAME_MAX_LENGTH),
                     item.description,
                     item.deviceName,
-                    from = source
+                    from = source,
                 )
             } finally {
                 settings.close(source)
@@ -189,7 +189,7 @@ internal class MineViewModel(
             is Response.Success -> {
                 export.update { response.value }
                 _effect.tryEmit(
-                    MineEffect.ExportFile(response.value.path, settingsFileName(item.deviceName, item.name))
+                    MineEffect.ExportFile(response.value.path, settingsFileName(item.deviceName, item.name)),
                 )
             }
         }
@@ -233,7 +233,7 @@ internal class MineViewModel(
                             MineEffect.Copied(created)
                         } else {
                             MineEffect.Message(success)
-                        }
+                        },
                     )
                 }
             }

@@ -67,7 +67,7 @@ internal class EditorActions(
     val onDismiss: () -> Unit,
     val onCarSearch: () -> Unit,
     val onCarPick: (carId: Int) -> Unit,
-    val onPickFromCatalog: () -> Unit
+    val onPickFromCatalog: () -> Unit,
 )
 
 /**
@@ -82,13 +82,13 @@ internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, CarSummary>, wi
             width = EditorDialogWidth,
             title = { EditorHeader(editing, actions.onDraftChange, actions.onDismiss) },
             text = { EditorBody(editing, cars, wide, actions) },
-            confirmButton = { EditorButtons(editing, actions) }
+            confirmButton = { EditorButtons(editing, actions) },
         )
     } else {
         CmpBottomSheet(onDismissRequest = actions.onDismiss) {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 EditorHeader(editing, actions.onDraftChange, actions.onDismiss)
                 EditorBody(editing, cars, wide, actions)
@@ -111,7 +111,7 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
                 draft = editing.draft,
                 editablePolarity = editablePolarity,
                 onDraftChange = onDraftChange,
-                onClose = onClose
+                onClose = onClose,
             )
             setting.description?.let { ChannelDescription(setting.id, it) }
             WasChip(editing)
@@ -136,8 +136,8 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
                             Strings.string.settings_edit_a11y_collapse_description
                         } else {
                             Strings.string.settings_edit_a11y_expand_description
-                        }
-                    )
+                        },
+                    ),
                 )
             }
             CloseButton(onClose)
@@ -148,7 +148,7 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant,
                 maxLines = if (expanded) Int.MAX_VALUE else 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
         WasChip(editing)
@@ -165,7 +165,7 @@ private fun ChannelDescription(settingId: Int, text: String) {
         color = cmpThemeColors().onSurfaceVariant,
         maxLines = if (expanded) Int.MAX_VALUE else 2,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.clickable(role = Role.Button) { expanded = !expanded }
+        modifier = Modifier.clickable(role = Role.Button) { expanded = !expanded },
     )
 }
 
@@ -182,7 +182,7 @@ private fun WasChip(editing: EditingSetting) {
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .background(if (differs) colors.tertiaryContainer else colors.surfaceVariant, CircleShape)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
     )
 }
 
@@ -222,7 +222,7 @@ private fun EditorBody(editing: EditingSetting, cars: Map<Int, CarSummary>, wide
                 onCodeChange = { code -> onDraftChange(SettingValue.Can(CanCode(code, carId = null))) },
                 onSearch = actions.onCarSearch,
                 onPick = actions.onCarPick,
-                onPickFromCatalog = actions.onPickFromCatalog
+                onPickFromCatalog = actions.onPickFromCatalog,
             )
 
             setting is InputSetting && draft is SettingValue.Input ->
@@ -247,13 +247,13 @@ private fun EditorButtons(editing: EditingSetting, actions: EditorActions) {
             text = stringResource(Strings.string.settings_edit_btn_reset),
             onClick = actions.onReset,
             enabled = editing.draft != editing.original,
-            modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_RESET)
+            modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_RESET),
         )
         CmpButton(
             text = stringResource(Strings.string.settings_edit_btn_done),
             onClick = actions.onApply,
             enabled = editing.canApply,
-            modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_DONE)
+            modifier = Modifier.weight(1f).heightIn(min = 52.dp).testTag(SettingsTestTags.EDIT_DONE),
         )
     }
 }

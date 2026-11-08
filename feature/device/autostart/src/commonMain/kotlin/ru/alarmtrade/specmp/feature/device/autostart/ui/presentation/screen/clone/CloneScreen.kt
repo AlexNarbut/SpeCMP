@@ -128,7 +128,7 @@ internal data class CloneActions(
     val onDialogDismiss: () -> Unit = {},
     val onPinSubmit: (String) -> Unit = {},
     val onExitConfirm: () -> Unit = {},
-    val onOpenSupportChat: () -> Unit = {}
+    val onOpenSupportChat: () -> Unit = {},
 )
 
 /**
@@ -152,7 +152,7 @@ fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () ->
                 viewModel.onExitConfirm()
                 onBack()
             },
-            onOpenSupportChat = onOpenSupportChat
+            onOpenSupportChat = onOpenSupportChat,
         )
     }
     CloneContent(state = state, actions = actions, onClose = onBack)
@@ -171,7 +171,7 @@ fun CloneStep(
     next: AutostartStepNext,
     onNext: () -> Unit,
     onBack: () -> Unit,
-    onOpenSupportChat: () -> Unit
+    onOpenSupportChat: () -> Unit,
 ) {
     val viewModel = koinViewModel<CloneViewModel>(key = key) { parametersOf(false) }
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -183,12 +183,12 @@ fun CloneStep(
             onDialogDismiss = viewModel::onDialogDismiss,
             onPinSubmit = viewModel::onPinSubmit,
             onExitConfirm = viewModel::onExitConfirm,
-            onOpenSupportChat = onOpenSupportChat
+            onOpenSupportChat = onOpenSupportChat,
         )
     }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = actions.onBack
+        onBackCompleted = actions.onBack,
     )
     CloneContent(state = state, actions = actions, step = CloneStepMode(chrome, next, onNext))
 }
@@ -202,7 +202,7 @@ internal fun CloneContent(
     state: CloneState,
     actions: CloneActions,
     onClose: () -> Unit = actions.onBack,
-    step: CloneStepMode? = null
+    step: CloneStepMode? = null,
 ) {
     val phase = state.phase
     val subtitle = state.deviceId?.let { id -> deviceTitle(state.deviceName.orEmpty(), id) }
@@ -216,7 +216,7 @@ internal fun CloneContent(
                 val stage = running.stage.number
                 StatusRow(
                     text = stringResource(Strings.string.autostart_status_format_clone, stage, CloneStage.COUNT),
-                    key = running.stage to running.inQueue
+                    key = running.stage to running.inQueue,
                 )
             }
         },
@@ -237,7 +237,7 @@ internal fun CloneContent(
                     IllustrationFrame(
                         if (success) AutostartIllustration.RESULT_SUCCESS else AutostartIllustration.RESULT_FAIL,
                         layout,
-                        modifier = Modifier.testTag(CLONE_RESULT_TAG)
+                        modifier = Modifier.testTag(CLONE_RESULT_TAG),
                     )
                     ResultBody(state, phase.result)
                 }
@@ -245,7 +245,7 @@ internal fun CloneContent(
         },
         side = if (phase is ClonePhase.Start) ({ HowItWorks(howItems()) }) else null,
         footer = footer(state, actions, onClose, step),
-        chrome = step?.chrome
+        chrome = step?.chrome,
     )
     CloneDialogHost(state, actions)
 }
@@ -254,7 +254,7 @@ internal fun CloneContent(
 private fun howItems() = listOf(
     CmpIcons.Cloud to stringResource(Strings.string.autostart_clone_item_how_server),
     CmpIcons.Schedule to stringResource(Strings.string.autostart_clone_item_how_queue),
-    CmpIcons.Lock to stringResource(Strings.string.autostart_clone_item_how_lock)
+    CmpIcons.Lock to stringResource(Strings.string.autostart_clone_item_how_lock),
 )
 
 @Composable
@@ -269,13 +269,13 @@ private fun StartBody(state: CloneState, phase: ClonePhase.Start) {
                     Strings.string.autostart_clone_msg_interrupted_kept
                 } else {
                     Strings.string.autostart_clone_msg_interrupted_check
-                }
-            )
+                },
+            ),
         )
     }
     Headline(
         title = stringResource(Strings.string.autostart_clone_title_screen),
-        subtitle = stringResource(Strings.string.autostart_clone_subtitle_start)
+        subtitle = stringResource(Strings.string.autostart_clone_subtitle_start),
     )
     AttemptsBlock(state.attempts, large = true)
 }
@@ -289,14 +289,14 @@ private fun AttemptsBlock(attempts: CloneAttempts, large: Boolean) {
         CloneAttempts.Unknown -> InfoBanner(
             icon = CmpIcons.CloudOff,
             tone = BannerTone.Info,
-            text = stringResource(Strings.string.autostart_clone_msg_attempts_unknown)
+            text = stringResource(Strings.string.autostart_clone_msg_attempts_unknown),
         )
 
         is CloneAttempts.Known -> if (attempts.count == 0 && large) {
             InfoBanner(
                 icon = CmpIcons.Block,
                 tone = BannerTone.Error,
-                text = stringResource(Strings.string.autostart_clone_msg_attempts_zero)
+                text = stringResource(Strings.string.autostart_clone_msg_attempts_zero),
             )
         } else {
             val shape = RoundedCornerShape(18.dp)
@@ -310,22 +310,22 @@ private fun AttemptsBlock(attempts: CloneAttempts, large: Boolean) {
                                 .border(1.dp, colors.outlineVariant, shape)
                         } else {
                             Modifier
-                        }
+                        },
                     )
                     .padding(horizontal = if (large) 18.dp else 4.dp, vertical = if (large) 14.dp else 0.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(
                     text = stringResource(Strings.string.autostart_clone_label_attempts),
                     style = CmpTextStyle.Body,
                     color = colors.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 CmpText(
                     text = attempts.count.toString(),
                     fontSize = if (large) 32.sp else 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (attempts.count == 1 && large) colors.error else colors.primary
+                    color = if (attempts.count == 1 && large) colors.error else colors.primary,
                 )
             }
         }
@@ -346,14 +346,14 @@ private fun RunningBody(phase: ClonePhase.Running) {
             stringResource(hint)
         } else {
             null
-        }
+        },
     )
     if (phase.stage.locked) {
         InfoBanner(
             icon = CmpIcons.Lock,
             tone = BannerTone.Warn,
             title = stringResource(Strings.string.autostart_clone_title_locked),
-            text = stringResource(Strings.string.autostart_clone_msg_locked)
+            text = stringResource(Strings.string.autostart_clone_msg_locked),
         )
     }
 }
@@ -380,18 +380,18 @@ private fun ColumnScope.ResultBody(state: CloneState, result: CloneResult) {
         is CloneResult.Completed -> if (result.already) {
             Headline(
                 title = stringResource(Strings.string.autostart_clone_title_already),
-                subtitle = stringResource(Strings.string.autostart_clone_subtitle_already)
+                subtitle = stringResource(Strings.string.autostart_clone_subtitle_already),
             )
         } else {
             Headline(
                 title = stringResource(Strings.string.autostart_clone_title_success),
-                subtitle = stringResource(Strings.string.autostart_clone_subtitle_success)
+                subtitle = stringResource(Strings.string.autostart_clone_subtitle_success),
             )
         }
 
         CloneResult.NotSupported -> Headline(
             title = stringResource(Strings.string.autostart_clone_title_not_supported),
-            subtitle = stringResource(Strings.string.autostart_clone_subtitle_not_supported)
+            subtitle = stringResource(Strings.string.autostart_clone_subtitle_not_supported),
         )
 
         is CloneResult.Failed -> {
@@ -413,7 +413,7 @@ private fun Tips(tips: List<String>) {
             .background(colors.surfaceContainerLow, shape)
             .border(1.dp, colors.outlineVariant, shape)
             .padding(horizontal = 18.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CmpText(text = stringResource(Strings.string.autostart_clone_title_tips), fontWeight = FontWeight.SemiBold)
         tips.forEach { tip -> CmpText(text = "•  $tip", style = CmpTextStyle.Body) }
@@ -446,7 +446,7 @@ private fun footer(
     state: CloneState,
     actions: CloneActions,
     onClose: () -> Unit,
-    step: CloneStepMode?
+    step: CloneStepMode?,
 ): (@Composable ColumnScope.() -> Unit)? = when (val phase = state.phase) {
     is ClonePhase.Start -> {
         {
@@ -454,7 +454,7 @@ private fun footer(
                 AutostartPrimaryButton(
                     text = Strings.string.autostart_clone_btn_start,
                     onClick = actions.onStart,
-                    modifier = Modifier.testTag(CLONE_START_TAG)
+                    modifier = Modifier.testTag(CLONE_START_TAG),
                 )
             } else {
                 AutostartPrimaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
@@ -477,14 +477,14 @@ private fun footer(
                 result is CloneResult.Completed && step != null -> StepNextButton(
                     next = step.next,
                     onClick = step.onNext,
-                    modifier = Modifier.testTag(CLONE_STEP_NEXT_TAG)
+                    modifier = Modifier.testTag(CLONE_STEP_NEXT_TAG),
                 )
 
                 result is CloneResult.Completed -> AutostartPrimaryButton(closeText, onClose)
 
                 result is CloneResult.NotSupported -> AutostartPrimaryButton(
                     Strings.string.autostart_common_btn_close,
-                    onClose
+                    onClose,
                 )
 
                 // D3: повтор — только там, где он может помочь, и пока есть попытки.
@@ -518,23 +518,23 @@ private fun CloneDialogHost(state: CloneState, actions: CloneActions) {
                         } else {
                             stringResource(Strings.string.autostart_clone_msg_confirm_unknown)
                         },
-                        style = CmpTextStyle.Body
+                        style = CmpTextStyle.Body,
                     )
                 },
                 dismissButton = {
                     CmpTextButton(
                         text = stringResource(Strings.string.autostart_clone_btn_cancel),
                         onClick = actions.onDialogDismiss,
-                        modifier = Modifier.height(48.dp)
+                        modifier = Modifier.height(48.dp),
                     )
                 },
                 confirmButton = {
                     CmpButton(
                         text = stringResource(Strings.string.autostart_clone_btn_confirm),
                         onClick = actions.onConfirm,
-                        modifier = Modifier.height(48.dp).testTag(CLONE_CONFIRM_TAG)
+                        modifier = Modifier.height(48.dp).testTag(CLONE_CONFIRM_TAG),
                     )
-                }
+                },
             )
         }
 
@@ -543,7 +543,7 @@ private fun CloneDialogHost(state: CloneState, actions: CloneActions) {
             state = dialog.pin,
             onDismiss = actions.onDialogDismiss,
             onSubmit = actions.onPinSubmit,
-            testTagPrefix = "autostart_pin"
+            testTagPrefix = "autostart_pin",
         )
 
         CloneDialog.Exit -> ExitDialog(onStay = actions.onDialogDismiss, onExit = actions.onExitConfirm)

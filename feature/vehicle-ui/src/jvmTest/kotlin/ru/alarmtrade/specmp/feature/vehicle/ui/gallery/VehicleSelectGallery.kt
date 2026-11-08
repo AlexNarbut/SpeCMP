@@ -55,14 +55,14 @@ class VehicleSelectGallery {
         CarBrand(10, "Land Rover", null),
         CarBrand(11, "Mercedes-Benz", null),
         toyota,
-        CarBrand(12, "Volkswagen", null)
+        CarBrand(12, "Volkswagen", null),
     )
     private val camry = CarModel(21, "Camry", null, 2017..2023)
     private val models = listOf(
         camry,
         CarModel(22, "Corolla", null, 2018..2022),
         CarModel(23, "Land Cruiser 300", null, 2021..2025),
-        CarModel(24, "RAV4", null, 2019..2019)
+        CarModel(24, "RAV4", null, 2019..2019),
     )
     private val trims = listOf(CarTrim(31, "2.5 AT"), CarTrim(32, "3.5 AT"), CarTrim(33, "XV70 Hybrid"))
     private val summary = CarSummary(31, "Toyota", "Camry", "2.5 AT", 2017..2023, "2154", null)
@@ -74,7 +74,7 @@ class VehicleSelectGallery {
         notes = listOf(
             "<p>Для автозапуска нужен <b>обходчик</b> штатного иммобилайзера. Перед монтажом проверьте версию " +
                 "прошивки и наличие штатной охранной системы.</p>",
-            "<ul><li>Снимите пломбу</li><li>Подключите CAN-H</li></ul>"
+            "<ul><li>Снимите пломбу</li><li>Подключите CAN-H</li></ul>",
         ),
         features = listOf(
             CarFeature(
@@ -82,7 +82,7 @@ class VehicleSelectGallery {
                 "Открытие водительской и пассажирских",
                 CarFeatureGroup.MAIN,
                 listOf(CarBus.CAN1),
-                listOf(CarBus.CAN1)
+                listOf(CarBus.CAN1),
             ),
             CarFeature("Зажигание", null, CarFeatureGroup.MAIN, listOf(CarBus.CAN2, CarBus.LIN), emptyList()),
             CarFeature("Обогрев руля", null, CarFeatureGroup.EXTENDED, emptyList(), listOf(CarBus.CAN_FD1_OR_CAN_FD3)),
@@ -91,32 +91,32 @@ class VehicleSelectGallery {
                 null,
                 CarFeatureGroup.EXTENDED,
                 listOf(CarBus.IMO_KEY1_PLUS_IMO_KEY2),
-                listOf(CarBus.BEAN)
+                listOf(CarBus.BEAN),
             ),
             CarFeature(
                 "Заряд батареи",
                 null,
                 CarFeatureGroup.ELECTRIC,
                 listOf(CarBus.CAN3_FD, CarBus.UNKNOWN),
-                listOf(CarBus.LIN_IN_OUT)
+                listOf(CarBus.LIN_IN_OUT),
             ),
-            CarFeature("Прицеп", null, CarFeatureGroup.TRAILER, listOf(CarBus.CAN4, CarBus.IMO_KEY2), emptyList())
+            CarFeature("Прицеп", null, CarFeatureGroup.TRAILER, listOf(CarBus.CAN4, CarBus.IMO_KEY2), emptyList()),
         ),
         mountPoints = listOf(
             MountPoint(
                 "Замок зажигания",
                 "Зажигание",
                 "Разъём за панелью",
-                listOf(MountPhoto("1", "u1"), MountPhoto("2", "u2"))
+                listOf(MountPhoto("1", "u1"), MountPhoto("2", "u2")),
             ),
-            MountPoint("Блок BCM", "CAN", null, emptyList())
+            MountPoint("Блок BCM", "CAN", null, emptyList()),
         ),
         schemes = listOf(CarDocument("Схема подключения", "Основной жгут", "https://x/a.pdf")),
         mountingMaps = listOf(CarDocument("Карта монтажа", null, "https://x/b.pdf")),
         userManuals = listOf(
-            UserManualRef(1, "Монтаж без обходчика", "Опыт установщика: где взять CAN и как снять панель")
+            UserManualRef(1, "Монтаж без обходчика", "Опыт установщика: где взять CAN и как снять панель"),
         ),
-        hasUserManuals = true
+        hasUserManuals = true,
     )
 
     private fun state(pick: Boolean = false, typeSelectable: Boolean = true) = VehicleSelectState(
@@ -125,11 +125,11 @@ class VehicleSelectGallery {
             configurationsOnly = false,
             typeSelectable = typeSelectable,
             deviceName = if (typeSelectable) null else "DX-9X",
-            firmwareCanCode = if (typeSelectable) null else "2154"
+            firmwareCanCode = if (typeSelectable) null else "2154",
         ),
         deviceType = VehicleDeviceType.ALARM,
         brands = LCEState.Content(brands),
-        recent = recent
+        recent = recent,
     )
 
     private fun render(name: String, state: VehicleSelectState) = StateGallery.render(out, name) {
@@ -139,7 +139,7 @@ class VehicleSelectGallery {
                 layout = vehicleLayoutOf(maxWidth),
                 windowWidth = maxWidth,
                 actions = noActions,
-                snackbarHostState = rememberCmpSnackbarHostState()
+                snackbarHostState = rememberCmpSnackbarHostState(),
             )
         }
     }
@@ -159,7 +159,7 @@ class VehicleSelectGallery {
     @Test
     fun `04 brands offline`() = render(
         "04-brands-offline",
-        state().copy(brands = LCEState.Error(CatalogError.Common(ApiError.NoConnection)))
+        state().copy(brands = LCEState.Error(CatalogError.Common(ApiError.NoConnection))),
     )
 
     @Test
@@ -168,7 +168,7 @@ class VehicleSelectGallery {
     @Test
     fun `06 search combo`() = render(
         "06-combo",
-        state().copy(query = "toyota cam", combo = ComboSearch(toyota, "cam"), comboModels = LCEState.Content(models))
+        state().copy(query = "toyota cam", combo = ComboSearch(toyota, "cam"), comboModels = LCEState.Content(models)),
     )
 
     @Test
@@ -180,13 +180,13 @@ class VehicleSelectGallery {
     @Test
     fun `09 filter emptied brands`() = render(
         "09-filter-empty",
-        state().copy(brands = LCEState.Content(emptyList()), groups = setOf(CarFeatureGroup.TRAILER))
+        state().copy(brands = LCEState.Content(emptyList()), groups = setOf(CarFeatureGroup.TRAILER)),
     )
 
     @Test
     fun `10 models`() = render(
         "10-models",
-        state().copy(selection = CatalogSelection(brand = toyota), models = LCEState.Content(models))
+        state().copy(selection = CatalogSelection(brand = toyota), models = LCEState.Content(models)),
     )
 
     @Test
@@ -195,8 +195,8 @@ class VehicleSelectGallery {
         state(pick = true).copy(
             selection = CatalogSelection(brand = toyota, model = camry),
             models = LCEState.Content(models),
-            trims = LCEState.Content(trims)
-        )
+            trims = LCEState.Content(trims),
+        ),
     )
 
     @Test
@@ -205,19 +205,23 @@ class VehicleSelectGallery {
     @Test
     fun `13 can results pick`() = render(
         "13-can-results",
-        state(pick = true).copy(searchMode = SearchMode.CAN, canCode = "2154", canResults = LCEState.Content(recent))
+        state(pick = true).copy(searchMode = SearchMode.CAN, canCode = "2154", canResults = LCEState.Content(recent)),
     )
 
     @Test
     fun `14 can none`() = render(
         "14-can-none",
-        state().copy(searchMode = SearchMode.CAN, canCode = "9999", canResults = LCEState.Content(emptyList()))
+        state().copy(searchMode = SearchMode.CAN, canCode = "9999", canResults = LCEState.Content(emptyList())),
     )
 
     @Test
     fun `15 can prefilled from device`() = render(
         "15-can-device",
-        state(typeSelectable = false).copy(searchMode = SearchMode.CAN, canCode = "2154", canResults = LCEState.Loading)
+        state(typeSelectable = false).copy(
+            searchMode = SearchMode.CAN,
+            canCode = "2154",
+            canResults = LCEState.Loading,
+        ),
     )
 
     private fun cardState(ui: CardUi = CardUi(tab = CardTab.FEATURES), pick: Boolean = false) = state(pick = pick).copy(
@@ -225,12 +229,12 @@ class VehicleSelectGallery {
             brand = toyota,
             model = camry,
             carId = summary.id,
-            cardSource = CardSource.CATALOG
+            cardSource = CardSource.CATALOG,
         ),
         models = LCEState.Content(models),
         trims = LCEState.Content(trims),
         card = LCEState.Content(card),
-        cardUi = ui
+        cardUi = ui,
     )
 
     @Test
@@ -239,7 +243,7 @@ class VehicleSelectGallery {
     @Test
     fun `21 card notes expanded pick`() = render(
         "21-card-notes",
-        cardState(ui = CardUi(tab = CardTab.FEATURES, notesExpanded = true), pick = true)
+        cardState(ui = CardUi(tab = CardTab.FEATURES, notesExpanded = true), pick = true),
     )
 
     @Test
@@ -277,10 +281,10 @@ class VehicleSelectGallery {
                     mountingMaps = emptyList(),
                     userManuals = emptyList(),
                     engineBlockByCan = CarCapability.NoData,
-                    keylessBypass = CarCapability.NoData
-                )
-            )
-        )
+                    keylessBypass = CarCapability.NoData,
+                ),
+            ),
+        ),
     )
 
     @Test
@@ -289,13 +293,13 @@ class VehicleSelectGallery {
     @Test
     fun `31 capability note`() = render(
         "31-note",
-        cardState().copy(dialog = VehicleDialog.CapabilityNote(CapabilityKind.ENGINE_BLOCK, card.engineBlockByCan))
+        cardState().copy(dialog = VehicleDialog.CapabilityNote(CapabilityKind.ENGINE_BLOCK, card.engineBlockByCan)),
     )
 
     @Test
     fun `32 can mismatch`() = render(
         "32-mismatch",
-        cardState(pick = true).copy(dialog = VehicleDialog.CanMismatch(summary.copy(canCode = "1032"), "2154"))
+        cardState(pick = true).copy(dialog = VehicleDialog.CanMismatch(summary.copy(canCode = "1032"), "2154")),
     )
 
     private companion object {
@@ -314,7 +318,7 @@ class VehicleSelectGallery {
             onOpenFirmwareArchive = {},
             onOpenUserManual = {},
             onDialogDismiss = {},
-            onMismatchConfirm = {}
+            onMismatchConfirm = {},
         )
         val noActions = VehicleSelectActions(
             onBack = {},
@@ -338,7 +342,7 @@ class VehicleSelectGallery {
             onFilterDismiss = {},
             onFilterClear = {},
             onPick = {},
-            card = noCard
+            card = noCard,
         )
     }
 }

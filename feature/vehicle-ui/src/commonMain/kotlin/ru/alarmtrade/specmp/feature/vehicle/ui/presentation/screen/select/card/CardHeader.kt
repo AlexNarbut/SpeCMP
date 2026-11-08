@@ -64,7 +64,7 @@ internal fun CardHeader(
     wide: Boolean,
     notesExpanded: Boolean,
     actions: CardActions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val summary = card.summary
     val colors = cmpThemeColors()
@@ -73,23 +73,23 @@ internal fun CardHeader(
             CarPhoto(
                 url = summary.imageUrl,
                 radius = 14.dp,
-                modifier = Modifier.width(if (wide) 200.dp else 120.dp).aspectRatio(PHOTO_RATIO)
+                modifier = Modifier.width(if (wide) 200.dp else 120.dp).aspectRatio(PHOTO_RATIO),
             )
             CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 CmpText(
                     text = "${summary.brand} ${summary.model}",
                     fontSize = if (wide) 26.sp else 24.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface
+                    color = colors.onSurface,
                 )
                 CmpText(
                     text = stringResource(
                         Strings.string.vehicle_card_label_years_trim,
                         yearsText(summary.years),
-                        summary.name
+                        summary.name,
                     ),
                     style = CmpTextStyle.BodyLarge,
-                    color = colors.onSurfaceVariant
+                    color = colors.onSurfaceVariant,
                 )
             }
         }
@@ -101,21 +101,21 @@ internal fun CardHeader(
                     code = summary.canCode,
                     tile = true,
                     onCopy = actions.onCopyCanCode,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 CapBadge(
                     label = engine,
                     capability = card.engineBlockByCan,
                     onNote = { actions.onCapabilityNote(CapabilityKind.ENGINE_BLOCK) },
                     tile = true,
-                    modifier = Modifier.weight(1f).testTag(VehicleTestTags.capability("lock"))
+                    modifier = Modifier.weight(1f).testTag(VehicleTestTags.capability("lock")),
                 )
                 CapBadge(
                     label = keyless,
                     capability = card.keylessBypass,
                     onNote = { actions.onCapabilityNote(CapabilityKind.KEYLESS_BYPASS) },
                     tile = true,
-                    modifier = Modifier.weight(1f).testTag(VehicleTestTags.capability("keyless"))
+                    modifier = Modifier.weight(1f).testTag(VehicleTestTags.capability("keyless")),
                 )
             }
         } else {
@@ -124,19 +124,19 @@ internal fun CardHeader(
                     code = summary.canCode,
                     tile = false,
                     onCopy = actions.onCopyCanCode,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 CapBadge(
                     label = engine,
                     capability = card.engineBlockByCan,
                     onNote = { actions.onCapabilityNote(CapabilityKind.ENGINE_BLOCK) },
-                    modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.capability("lock"))
+                    modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.capability("lock")),
                 )
                 CapBadge(
                     label = keyless,
                     capability = card.keylessBypass,
                     onNote = { actions.onCapabilityNote(CapabilityKind.KEYLESS_BYPASS) },
-                    modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.capability("keyless"))
+                    modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.capability("keyless")),
                 )
             }
         }
@@ -145,7 +145,7 @@ internal fun CardHeader(
                 CmpIcon(icon = CmpIcons.History, contentDescription = null, modifier = Modifier.size(20.dp))
                 CmpText(
                     text = stringResource(Strings.string.vehicle_card_btn_archive, summary.canCode),
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 8.dp),
                 )
             }
         }
@@ -153,7 +153,7 @@ internal fun CardHeader(
             Notes(
                 notes = card.notes,
                 expanded = notesExpanded,
-                onToggle = actions.onNotesToggle
+                onToggle = actions.onNotesToggle,
             )
         }
     }
@@ -172,7 +172,7 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
             icon = CmpIcons.ContentCopy,
             contentDescription = stringResource(Strings.string.vehicle_card_a11y_copy, code),
             tint = colors.onPrimaryContainer,
-            modifier = Modifier.testTag(VehicleTestTags.CAN_COPY)
+            modifier = Modifier.testTag(VehicleTestTags.CAN_COPY),
         )
     }
     val shape = RoundedCornerShape(14.dp)
@@ -180,13 +180,13 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
         CmpBox(modifier = modifier.heightIn(min = 112.dp).background(colors.primaryContainer, shape)) {
             CmpColumn(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpText(
                     text = label,
                     style = CmpTextStyle.Caption,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.onPrimaryContainer
+                    color = colors.onPrimaryContainer,
                 )
                 CmpText(text = codeText, fontWeight = FontWeight.Bold, color = colors.onPrimaryContainer)
             }
@@ -195,22 +195,22 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
     } else {
         CmpRow(
             modifier = modifier.heightIn(
-                min = 64.dp
+                min = 64.dp,
             ).background(colors.primaryContainer, shape).padding(start = 16.dp, end = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpText(
                 text = label,
                 style = CmpTextStyle.Caption,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.onPrimaryContainer
+                color = colors.onPrimaryContainer,
             )
             CmpText(
                 text = codeText,
                 fontWeight = FontWeight.Bold,
                 color = colors.onPrimaryContainer,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             copy()
         }
@@ -227,7 +227,7 @@ private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) 
             .fillMaxWidth()
             .background(colors.tertiaryContainer, RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             CmpIcon(icon = CmpIcons.PriorityHigh, contentDescription = null, tint = colors.onTertiaryContainer)
@@ -235,7 +235,7 @@ private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) 
                 text = stringResource(Strings.string.vehicle_notes_title_important),
                 style = CmpTextStyle.BodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.onTertiaryContainer
+                color = colors.onTertiaryContainer,
             )
         }
         if (expanded || !collapsible) {
@@ -251,7 +251,7 @@ private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) 
                     else -> stringResource(Strings.string.vehicle_notes_btn_expand)
                 },
                 onClick = onToggle,
-                modifier = Modifier.heightIn(min = 48.dp).testTag(VehicleTestTags.NOTES_TOGGLE)
+                modifier = Modifier.heightIn(min = 48.dp).testTag(VehicleTestTags.NOTES_TOGGLE),
             )
         }
     }

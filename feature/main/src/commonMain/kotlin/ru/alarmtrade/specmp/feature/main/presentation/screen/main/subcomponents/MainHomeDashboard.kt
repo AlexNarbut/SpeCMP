@@ -45,7 +45,7 @@ internal fun MainHomeDashboard(
     startContentPadding: Dp = 0.dp,
     endContentPadding: Dp = 0.dp,
     bottomContentPadding: Dp = 0.dp,
-    colors: CmpThemeColors = cmpThemeColors()
+    colors: CmpThemeColors = cmpThemeColors(),
 ) {
     val contentPadding = mode.contentPadding
     val primaryActions = actions.filter { it.group == MainHomeActionGroup.Primary }
@@ -61,7 +61,7 @@ internal fun MainHomeDashboard(
 
     Box(
         modifier = modifier.verticalScroll(rememberScrollState()),
-        contentAlignment = Alignment.TopCenter
+        contentAlignment = Alignment.TopCenter,
     ) {
         Column(
             modifier = Modifier
@@ -70,21 +70,21 @@ internal fun MainHomeDashboard(
                     start = contentPadding + startContentPadding,
                     top = contentPadding,
                     end = contentPadding + endContentPadding,
-                    bottom = contentPadding + bottomContentPadding
+                    bottom = contentPadding + bottomContentPadding,
                 ),
-            verticalArrangement = Arrangement.spacedBy(if (mode == MainHomeMode.Compact) 16.dp else 24.dp)
+            verticalArrangement = Arrangement.spacedBy(if (mode == MainHomeMode.Compact) 16.dp else 24.dp),
         ) {
             MainHomeGrid(
                 columns = mainColumns,
                 gap = if (mode == MainHomeMode.Compact) 12.dp else 16.dp,
                 itemHeight = { itemWidth -> mainHomePrimaryCardHeight(mode, itemWidth) },
-                items = primaryActions
+                items = primaryActions,
             ) { item, itemModifier ->
                 MainActionCard(
                     item = item,
                     colors = colors,
                     onClick = { onHomeActionClick(item) },
-                    modifier = itemModifier
+                    modifier = itemModifier,
                 )
             }
 
@@ -92,14 +92,14 @@ internal fun MainHomeDashboard(
                 columns = toolColumns,
                 gap = 12.dp,
                 itemHeight = { itemWidth -> mainHomeToolCardHeight(mode, itemWidth) },
-                items = toolActions
+                items = toolActions,
             ) { item, itemModifier ->
                 ToolCard(
                     item = item,
                     layout = toolLayout,
                     colors = colors,
                     onClick = { onHomeActionClick(item) },
-                    modifier = itemModifier
+                    modifier = itemModifier,
                 )
             }
         }
@@ -111,7 +111,7 @@ private fun MainActionCard(
     item: MainHomeAction,
     colors: CmpThemeColors,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpClickableSurface(
         onClick = onClick,
@@ -119,26 +119,26 @@ private fun MainActionCard(
         shape = RoundedCornerShape(MainHomeTokens.PrimaryCardRadius),
         color = colors.surfaceContainerLow,
         contentColor = colors.onSurface,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         ) {
             MainHomeIconTile(
                 painter = painterResource(item.icon),
                 size = 64.dp,
                 isPrimary = true,
-                colors = colors
+                colors = colors,
             )
             MainActionText(
                 item = item,
                 colors = colors,
                 textAlign = TextAlign.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             )
         }
     }
@@ -150,12 +150,12 @@ private fun MainActionText(
     colors: CmpThemeColors,
     textAlign: TextAlign,
     horizontalAlignment: Alignment.Horizontal,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         CmpText(
             text = stringResource(item.title),
@@ -163,14 +163,14 @@ private fun MainActionText(
             fontWeight = FontWeight.SemiBold,
             color = colors.onSurface,
             textAlign = textAlign,
-            maxLines = 2
+            maxLines = 2,
         )
         CmpText(
             text = stringResource(item.description),
             fontSize = 14.sp,
             color = colors.onSurfaceVariant,
             textAlign = textAlign,
-            maxLines = 3
+            maxLines = 3,
         )
     }
 }
@@ -181,7 +181,7 @@ private fun ToolCard(
     layout: ToolCardLayout,
     colors: CmpThemeColors,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val isRow = layout == ToolCardLayout.Row
 
@@ -191,7 +191,7 @@ private fun ToolCard(
         shape = RoundedCornerShape(MainHomeTokens.CardRadius),
         color = colors.surface,
         contentColor = colors.onSurface,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         if (isRow) {
             Row(
@@ -199,20 +199,20 @@ private fun ToolCard(
                     .fillMaxSize()
                     .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 MainHomeIconTile(
                     painter = painterResource(item.icon),
                     size = 48.dp,
                     isPrimary = false,
-                    colors = colors
+                    colors = colors,
                 )
                 ToolText(
                     item = item,
                     colors = colors,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Start,
-                    horizontalAlignment = Alignment.Start
+                    horizontalAlignment = Alignment.Start,
                 )
             }
         } else {
@@ -221,19 +221,19 @@ private fun ToolCard(
                     .fillMaxSize()
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
             ) {
                 MainHomeIconTile(
                     painter = painterResource(item.icon),
                     size = 48.dp,
                     isPrimary = false,
-                    colors = colors
+                    colors = colors,
                 )
                 ToolText(
                     item = item,
                     colors = colors,
                     textAlign = TextAlign.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 )
             }
         }
@@ -246,12 +246,12 @@ private fun ToolText(
     colors: CmpThemeColors,
     textAlign: TextAlign,
     horizontalAlignment: Alignment.Horizontal,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         CmpText(
             text = stringResource(item.title),
@@ -259,14 +259,14 @@ private fun ToolText(
             fontWeight = FontWeight.Medium,
             color = colors.onSurface,
             textAlign = textAlign,
-            maxLines = 2
+            maxLines = 2,
         )
         CmpText(
             text = stringResource(item.description),
             fontSize = 12.sp,
             color = colors.onSurfaceVariant,
             textAlign = textAlign,
-            maxLines = 3
+            maxLines = 3,
         )
     }
 }
@@ -278,13 +278,13 @@ private fun MainHomeIconTile(
     isPrimary: Boolean,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
-    iconPadding: Dp = 6.dp
+    iconPadding: Dp = 6.dp,
 ) {
     CmpSurface(
         modifier = modifier.size(size),
         shape = RoundedCornerShape(MainHomeTokens.CardRadius),
         color = if (isPrimary) colors.primaryContainer else colors.surfaceVariant,
-        contentColor = if (isPrimary) colors.onPrimaryContainer else colors.onSurfaceVariant
+        contentColor = if (isPrimary) colors.onPrimaryContainer else colors.onSurfaceVariant,
     ) {
         Box(contentAlignment = Alignment.Center) {
             CmpIcon(
@@ -293,7 +293,7 @@ private fun MainHomeIconTile(
                 modifier = Modifier
                     .padding(iconPadding)
                     .fillMaxSize(),
-                tint = if (isPrimary) colors.onPrimaryContainer else colors.onSurfaceVariant
+                tint = if (isPrimary) colors.onPrimaryContainer else colors.onSurfaceVariant,
             )
         }
     }
@@ -305,30 +305,30 @@ private fun <T> MainHomeGrid(
     gap: Dp,
     itemHeight: (itemWidth: Dp) -> Dp,
     items: List<T>,
-    itemContent: @Composable (T, Modifier) -> Unit
+    itemContent: @Composable (T, Modifier) -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val itemWidth = mainHomeGridItemWidth(
             containerWidth = maxWidth,
             columns = columns,
-            gap = gap
+            gap = gap,
         )
         val resolvedItemHeight = itemHeight(itemWidth)
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(gap)
+            verticalArrangement = Arrangement.spacedBy(gap),
         ) {
             items.chunked(columns).forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(gap)
+                    horizontalArrangement = Arrangement.spacedBy(gap),
                 ) {
                     rowItems.forEach { item ->
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(resolvedItemHeight)
+                                .height(resolvedItemHeight),
                         ) {
                             itemContent(item, Modifier.fillMaxSize())
                         }
@@ -355,5 +355,5 @@ private fun Modifier.mainHomeContentWidth(maxWidth: Dp): Modifier = if (maxWidth
 
 private enum class ToolCardLayout {
     Grid,
-    Row
+    Row,
 }
