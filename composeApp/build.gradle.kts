@@ -1,29 +1,14 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.android.kmp.library)
+    id("specmp.kmp.compose")
     alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
-    val jvmTargetVersion = JvmTarget.JVM_17
-
-    jvm {
-        compilerOptions { jvmTarget.set(jvmTargetVersion) }
-    }
-
     android {
         namespace = "ru.alarmtrade.specmp"
-        compileSdk = libs.versions.android.targetSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        compilerOptions { jvmTargetVersion }
     }
-
-    iosArm64()
 
     sourceSets {
         commonMain.dependencies {
@@ -69,7 +54,6 @@ kotlin {
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
-            implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
             // Navigation
             implementation(libs.compose.nav3)
@@ -90,11 +74,6 @@ kotlin {
 
             // Serialization (for nav3 routes)
             implementation(libs.kotlinx.serialization.json)
-        }
-
-        iosMain.dependencies {
-            // Дублирование логов в stdout в отладочной сборке (MainViewController)
-            implementation(libs.kermit)
         }
 
         iosMain.dependencies {

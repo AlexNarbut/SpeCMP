@@ -1,27 +1,14 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 // Composition root приложения прошивки: логин → поиск (BLE / USB / COM) → «Обновить из файла».
 // Только Android и desktop: COM-порта на iOS в SDK нет.
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.android.kmp.library)
+    id("specmp.kmp.android-jvm")
+    id("specmp.kmp.compose")
     alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
-    val jvmTargetVersion = JvmTarget.JVM_17
-
-    jvm {
-        compilerOptions { jvmTarget.set(jvmTargetVersion) }
-    }
-
     android {
         namespace = "ru.alarmtrade.specmp.flasher"
-        compileSdk = libs.versions.android.targetSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        compilerOptions { jvmTarget.set(jvmTargetVersion) }
     }
 
     sourceSets {

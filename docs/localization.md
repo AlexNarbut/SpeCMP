@@ -22,8 +22,8 @@ core/localization/src/commonMain/composeResources/
 
 - **Файл фичи = префикс её ключей** (`login.xml` → только `login_*`). Языки добавляются папками
   `values-<lang>/` с тем же набором файлов и ключей.
-- В фиче — **только картинки** (`composeResources/drawable/`, свой `Res`). Блок `compose.resources` и
-  `androidResources.enable = true` в `build.gradle.kts` фичи нужны **только если у неё есть свои картинки**;
+- В фиче — **только картинки** (`composeResources/drawable/`, свой `Res`). Блок `compose.resources` в
+  `build.gradle.kts` фичи нужен **только если у неё есть свои картинки** (`androidResources` включает конвенция);
   ради строк модуль ничего не настраивает — достаточно зависимости `implementation(project(":core:localization"))`.
 
 ### Реестр префиксов
@@ -304,5 +304,5 @@ CMP-парсер обрабатывает **только** эти последо
    наборы — `<string-array>` (п. 8).
 3. В Kotlin-коде нет захардкоженных строк (кроме технических: log tags, debug); технические строки — в
    `private const val`, UI-текст не собирается конкатенацией (п. 6, 7).
-4. Модуль зависит от `:core:localization`; `compose.resources` и `androidResources.enable = true` — только если у
+4. Модуль зависит от `:core:localization`; `compose.resources` — только если у
    фичи есть свои картинки (`docs/build.md`, «Ресурсы»).

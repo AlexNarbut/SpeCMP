@@ -101,15 +101,17 @@ iosMain.dependencies {
 
 | Плагин | Что делает |
 |---|---|
-| `specmp.kmp.library` | KMP + `com.android.kotlin.multiplatform.library`; таргеты android, `jvm()`, `iosArm64()`; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`) |
-| `specmp.kmp.compose` | `specmp.kmp.library` + `org.jetbrains.compose` + Compose-компилятор; `androidResources.enable = true`, если у модуля есть `src/commonMain/composeResources` |
+| `specmp.kmp.android-jvm` | KMP + `com.android.kotlin.multiplatform.library`; таргеты android и `jvm()`, без iOS; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля без дефисов (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`). Напрямую — только модулям без iOS (`flasherApp`) |
+| `specmp.kmp.library` | `specmp.kmp.android-jvm` + `iosArm64()` |
+| `specmp.kmp.compose` | `org.jetbrains.compose` + Compose-компилятор поверх `specmp.kmp.library` (или поверх `specmp.kmp.android-jvm`, если он объявлен раньше); `androidResources.enable = true`, если у модуля есть `src/commonMain/composeResources` |
 | `specmp.detekt` | detekt и задача `detektCheck` модуля ([`code-quality.md`](code-quality.md)); применяется из корня, в модулях не указывается |
 
 Модуль на конвенции объявляет только своё: `plugins { id("specmp.kmp.compose") }`, при необходимости другой
 `namespace` (`kotlin { android { namespace = … } }`), iOS-framework (`kotlin { iosArm64 { binaries.framework { … } } }`),
 `compose.resources` и зависимости. Плагины AGP/KGP в `build-logic` — `compileOnly`: их классы приходят из корневого
 `build.gradle.kts` (`alias(...).apply(false)`), поэтому новые плагины, которые применяет конвенция, тоже объявляются
-там. На конвенциях — `core/*`.
+там. На конвенциях — все KMP-модули: `core/*`, `feature/*`, `composeApp`, `flasherApp` (`plugins { id("specmp.kmp.android-jvm");
+id("specmp.kmp.compose") }`). Явный `namespace` — у `composeApp`, `flasherApp` и `-ui`-модулей (`…feature.vehicle.ui`).
 
 ## Compose-компилятор: конфиг стабильности
 
@@ -130,8 +132,8 @@ painterResource(Res.drawable.ic_logo)                      // ресурс мо�
 
 ### Модуль со своими ресурсами (картинки)
 
-- В блоке `android { … }` — `androidResources.enable = true`, иначе ресурсы не попадут в Android APK (модулям на
-  `specmp.kmp.compose` — не нужно: включается по наличию `composeResources/`).
+- `androidResources.enable = true` включает `specmp.kmp.compose` по наличию `src/commonMain/composeResources/`, руками
+  не задаётся; без него ресурсы не попадут в Android APK.
 - Блок `compose.resources`:
 
   ```kotlin
@@ -145,7 +147,7 @@ painterResource(Res.drawable.ic_logo)                      // ресурс мо�
 - Пакет `Res`-класса формируется из `rootProject.name` + путь модуля: `feature/login` →
   `specmp.feature.login.generated.resources`. У `core/localization` пакет и имя заданы явно:
   `ru.alarmtrade.specmp.core.localization.resources.Strings` (`packageOfResClass`, `nameOfResClass`).
-- Модулю без своих ресурсов ни блок, ни `androidResources.enable` не нужны.
+- Модулю без своих ресурсов блок `compose.resources` не нужен.
 
 ---
 

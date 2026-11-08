@@ -5,10 +5,11 @@ import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-// specmp.kmp.library + Compose Multiplatform. Конфиг стабильности подключает корневой build.gradle.kts.
+// Compose Multiplatform поверх specmp.kmp.library; модуль без iOS ставит specmp.kmp.android-jvm перед этим плагином.
+// Конфиг стабильности подключает корневой build.gradle.kts.
 class KmpComposeConventionPlugin : Plugin<Project> {
     override fun apply(target: Project): Unit = with(target) {
-        pluginManager.apply("specmp.kmp.library")
+        if (!pluginManager.hasPlugin("specmp.kmp.android-jvm")) pluginManager.apply("specmp.kmp.library")
         pluginManager.apply("org.jetbrains.compose")
         pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 

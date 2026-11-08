@@ -134,9 +134,8 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - `composeApp/src/iosMain/kotlin/.../MainViewController.kt` — iOS entry point, создаёт `ComposeUIViewController`
 
 ### Все KMP-модули (core/*, feature/* и composeApp)
-- `core/*` — на convention-плагинах `specmp.kmp.library` / `specmp.kmp.compose` (`build-logic`, `docs/build.md`):
-  таргеты, JVM, SDK и namespace задаёт конвенция
-- Плагин: `alias(libs.plugins.android.kmp.library)`
+- На convention-плагинах `specmp.kmp.library` / `specmp.kmp.compose` (`build-logic`, `docs/build.md`): таргеты, JVM,
+  SDK, namespace и `androidResources` задаёт конвенция; `flasherApp` без iOS — `specmp.kmp.android-jvm`
 - Android-конфигурация внутри `kotlin { android { } }` — НЕ в top-level `android { }`
 - Нет `androidTarget { }` — заменён на `android { }` внутри `kotlin { }`
 - JVM target используется платформенной обёрткой `desktopApp`
@@ -224,18 +223,16 @@ Feature-модули:
 
 ```kotlin
 // Feature с UI и compose resources
+plugins {
+    id("specmp.kmp.compose")
+}
+
 compose.resources {
     publicResClass = false
     generateResClass = always
 }
 
 kotlin {
-    android {
-        namespace = "ru.alarmtrade.specmp.feature.<name>"
-        // ...
-        androidResources.enable = true  // обязательно если есть composeResources/
-    }
-    // ...
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))  // Response, AppDispatchers — обязательно
@@ -250,7 +247,7 @@ commonMain.dependencies {
 }
 ```
 
-> **Важно:** Если feature-модуль содержит `composeResources/`, в `kotlin { android { } }` необходимо добавить `androidResources.enable = true`. Без этого ресурсы не будут упакованы в Android APK и приложение упадёт с `MissingResourceException` в runtime.
+> **Важно:** `androidResources.enable = true` для модуля с `composeResources/` ставит `specmp.kmp.compose`. Без него ресурсы не будут упакованы в Android APK и приложение упадёт с `MissingResourceException` в runtime.
 
 > **Примечание:** `core:ui` зависит от `core:common` через `implementation`, поэтому `Response` и `AppDispatchers` **не** доступны транзитивно. Feature-модули **обязаны** явно подключать `:core:common`.
 

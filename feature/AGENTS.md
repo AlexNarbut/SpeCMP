@@ -7,6 +7,7 @@
 - Перед изменениями читай `docs/architecture.md` и `docs/patterns.md`.
 - Перед созданием новой фичи классифицируй её тип — логическая / обособленная / экранная / пара `<name>` + `<name>-ui` (см. `docs/architecture.md`, «Типы feature-модулей»). Межфичевое переиспользование — только через логические модули; чужой presentation фича не подключает.
 - При планировании фичи **спроси владельца**, будет ли логика (`domain` + `data`) переиспользоваться другими фичами. Нет — один обособленный модуль (`domain` + `data` + `presentation`), без пары `<name>` + `<name>-ui`; да — пара. Правило — `docs/patterns.md`, «Планирование фичи: один модуль или пара».
+- Сборка модуля — `id("specmp.kmp.library")` (без UI) или `id("specmp.kmp.compose")`; таргеты, SDK, namespace из пути и `androidResources` задаёт конвенция, явный `namespace` — только у `-ui`-модулей (`docs/build.md` → «Convention-плагины»).
 - Для интеграции экранов и маршрутов переходи в `composeApp/AGENTS.md`; для UI-компонентов — в `core/ui/AGENTS.md`.
 - Не размещай в feature app-level инфраструктуру: глобальную локаль, SDK/application-контейнеры, инициализацию сторонних SDK, root DI/navigation, общие settings. Если нужно переиспользование или состояние всего приложения — сначала добавь/расширь профильный `core/*` API.
 - В feature-классах используй узкие зависимости (`Repository`, `Interactor`, `DataSource`, provider), а не цельные SDK/application-контейнеры. Не добавляй use case, если он только прокидывает один вызов в repository.
