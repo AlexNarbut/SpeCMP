@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
@@ -28,7 +28,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  *
  * Необработанные исключения работы с блоком логируются, как у `safeLaunch`, а не роняют приложение.
  */
-abstract class BaseDeviceViewModel(protected val deviceSession: DeviceSession) : BaseViewModel() {
+abstract class LegacyBaseDeviceViewModel(protected val deviceSession: DeviceSession) : LegacyBaseViewModel() {
 
     protected val connectedDevice: Flow<AlarmDevice?> = deviceSession.state
         .map { it.readyDevice() }

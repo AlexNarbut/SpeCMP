@@ -14,7 +14,7 @@ import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.AppLocaleStore
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 
 /**
  * Настройки приложения.
@@ -29,7 +29,7 @@ internal class AppSettingsViewModel(
     private val restarter: AppRestarter,
     private val configurationLanguages: ConfigurationLanguageStore,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private val _state = MutableStateFlow(AppSettingsState(current = localeStore.current()))
     val state: StateFlow<AppSettingsState> = _state

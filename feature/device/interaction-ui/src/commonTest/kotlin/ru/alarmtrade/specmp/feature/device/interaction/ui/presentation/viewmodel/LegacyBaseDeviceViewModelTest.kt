@@ -33,7 +33,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceC
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
-class BaseDeviceViewModelTest {
+class LegacyBaseDeviceViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val device = AlarmDevice(1, "DX4G", "3.57", DeviceOperationMode.MAIN, emptySet(), can = null)
@@ -61,7 +61,7 @@ class BaseDeviceViewModelTest {
         override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
     }
 
-    private class TestViewModel(deviceSession: DeviceSession) : BaseDeviceViewModel(deviceSession) {
+    private class TestViewModel(deviceSession: DeviceSession) : LegacyBaseDeviceViewModel(deviceSession) {
         val readyCalls = mutableListOf<Long>()
 
         init {

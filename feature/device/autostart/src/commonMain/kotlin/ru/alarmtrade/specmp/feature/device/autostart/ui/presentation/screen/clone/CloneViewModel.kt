@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 
 /**
  * Экран «Процедура Clone»: попытки → подтверждение → [CloneRepository.run] по этапам → итог.
@@ -42,7 +42,7 @@ class CloneViewModel(
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
     fromBypass: Boolean,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(CloneState(fromBypass = fromBypass))
 

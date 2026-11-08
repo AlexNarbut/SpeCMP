@@ -34,7 +34,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 
 /**
  * «Обновить из файла» (приложение прошивки, BLE/USB): блок в рабочем режиме, одна кнопка — переход основной программы
@@ -51,7 +51,7 @@ class FirmwareFileViewModel(
     bootRequester: FirmwareBootRequester,
     pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
 

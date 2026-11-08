@@ -520,7 +520,7 @@ class ScanDeviceViewModelTest {
         }
     }
 
-    /** BaseViewModel берёт AppLifecycle из Koin: поднимаем Koin с фейком на время теста. */
+    /** LegacyBaseViewModel берёт AppLifecycle из Koin: поднимаем Koin с фейком на время теста. */
     private fun withAppLifecycle(block: (MutableSharedFlow<AppLifecycleEvent>) -> Unit) {
         val events = MutableSharedFlow<AppLifecycleEvent>()
         startKoin {

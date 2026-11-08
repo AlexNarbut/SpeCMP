@@ -23,7 +23,7 @@ import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
@@ -56,7 +56,7 @@ internal class VehicleSelectViewModel(
     private val repository: VehicleCatalogRepository,
     private val recentStore: RecentVehiclesStore,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private val configurationsOnly = request.catalog == VehicleCatalog.WITH_CONFIGURATIONS
 

@@ -29,7 +29,7 @@ import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.mapContent
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
@@ -43,7 +43,7 @@ class MainScreenViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private val isAppUpdateSupported = isMainAppUpdateSupported()
     private val _state = MutableStateFlow(

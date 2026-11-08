@@ -41,7 +41,7 @@ kotlin {
         }
 
         commonTest.dependencies {
-            // Фейковый жизненный цикл приложения для BaseViewModel (Koin)
+            // Фейковый жизненный цикл приложения для LegacyBaseViewModel (Koin)
             implementation(project(":core:lifecycle"))
             implementation(libs.koin.core)
             implementation(libs.kotlin.test)

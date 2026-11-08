@@ -19,7 +19,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
@@ -62,7 +62,7 @@ class FirmwareArchiveViewModel(
     private val repository: FirmwareRepository,
     private val dispatchers: AppDispatchers,
     private val exporter: FirmwareFileExporter? = null,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private data class Core(
         /** Первая страница: `Content(Unit)` — загружена (строки — в [items]). */

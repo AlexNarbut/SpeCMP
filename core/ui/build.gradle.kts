@@ -14,7 +14,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
-            // Жизненный цикл приложения для BaseViewModel (onAppForeground / onAppBackground)
+            // Жизненный цикл приложения для LegacyBaseViewModel (onAppForeground / onAppBackground)
             implementation(project(":core:lifecycle"))
             // Сохранённая тема приложения (AppThemeStore)
             implementation(libs.multiplatformSettings)
@@ -65,6 +65,7 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
 
         // Галерея компонентов кита (PNG без окна) — см. KitGalleryTest

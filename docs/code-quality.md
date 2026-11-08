@@ -265,7 +265,10 @@ ViewModel через несколько composable, эффекты читают 
 регистрация — `SpecmpRuleSetProvider` (+ `META-INF/services`), конфиг — раздел `specmp:` в `detekt.yml`.
 `SpecmpRuleSetProviderTest` проверяет, что каждое правило зарегистрировано и есть в `detekt.yml`. Новое правило:
 класс + тест на `detekt-test` → строка в провайдере и в тесте провайдера → раздел в `detekt.yml` → проверка на
-временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel, `Response`, данных и времени
+временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel (`ViewModel*`,
+`SafeRunInViewModel`) включены; на время миграции VM они пропускают прежние базы `LegacyBaseViewModel`/
+`LegacyBaseDeviceViewModel` и их прямых наследников (`LegacyViewModels.kt`; `ViewModelPublicApi` и
+`ViewModelContractNames` смотрят только на `BaseViewModel` и Legacy не видят). Правила `Response`, данных и времени
 перенесены, но выключены (`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
@@ -308,8 +311,12 @@ ViewModel через несколько composable, эффекты читают 
 | `forbidden-suffix` | `*Helper`/`*Utils` запрещены; `*Manager` — только в `androidMain`/`iosMain`/`jvmMain` |
 | `top-level-init-order` | верхнеуровневое свойство не читает свойство, объявленное ниже в файле |
 | `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
+| `view-model` | ViewModel наследует `BaseViewModel` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — пакет `presentation` |
+| `view-model-owns-no-flows` | у наследника `BaseViewModel` нет своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`sideEffectFlow`/`mutableStateOf` |
+| `view-model-dependencies` | параметры конструктора VM — domain/presentation фич, `AppDispatchers` (до переноса main-safety), `AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `TimeSource`, `Logger`, типы Kotlin; без функциональных типов и `CoroutineScope` |
 
-Остальные правила BabySteps (ViewModel, контракт репозиториев, видимость `*Impl`, `koin-module`,
+Правила `view-model*` на время миграции пропускают `LegacyBaseViewModel`/`LegacyBaseDeviceViewModel` и их прямых
+наследников. Остальные правила BabySteps (контракт репозиториев, видимость `*Impl`, `koin-module`,
 `mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
 Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
 Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.

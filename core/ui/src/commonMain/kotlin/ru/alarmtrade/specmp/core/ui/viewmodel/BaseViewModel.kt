@@ -4,31 +4,36 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.jvm.JvmName
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.koin.mp.KoinPlatformTools
-import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
-import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleEvent
+import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 
-/**
- * Базовый класс всех ViewModel проекта.
- *
- * Feature-модули наследуются от него, а не от androidx [ViewModel] напрямую:
- * - [logger] с тегом по имени конкретного класса.
- * - Корутины запускаются через [safeLaunch] вместо `viewModelScope.launch`:
- *   в контекст добавлен [CoroutineExceptionHandler], который логирует необработанные
- *   исключения. Ожидаемые ошибки сюда не попадают — они возвращаются как
- *   `Response.Error` и живут в state; handler ловит именно сбои контракта.
- * - Жизненный цикл приложения — колбэки [onAppForeground] / [onAppBackground] (модуль `core:lifecycle`).
- */
-abstract class BaseViewModel : ViewModel() {
+/** Контракт и правила использования — docs/patterns.md, «BaseViewModel». */
+abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
 
     protected val logger: Logger = Logger.withTag(this::class.simpleName ?: DEFAULT_LOG_TAG)
 
@@ -38,29 +43,39 @@ abstract class BaseViewModel : ViewModel() {
 
     private val proceedMutex = Mutex()
 
-    init {
-        // Жизненный цикл приложения (core:lifecycle) из Koin; без DI (unit-тесты) — без событий.
-        // Подписка приостанавливается сразу, колбэки не вызываются до конца конструктора наследника.
-        KoinPlatformTools.defaultContext().getOrNull()?.getOrNull<AppLifecycle>()?.let { appLifecycle ->
-            viewModelScope.launch(exceptionHandler) {
-                appLifecycle.events.collect { event ->
-                    when (event) {
-                        AppLifecycleEvent.FOREGROUND -> onAppForeground()
-                        AppLifecycleEvent.BACKGROUND -> onAppBackground()
-                    }
-                }
-            }
-        }
+    private val keyedJobs = MutableStateFlow<Map<Any, Job>>(emptyMap())
+
+    // Стартовая работа — своей корутиной (LAZY, `start()` идемпотентен): цепочка state не ждёт её конца, и повторный
+    // старт `WhileSubscribed` после возврата на экран её не перезапускает.
+    private val startJob = viewModelScope.launch(exceptionHandler, start = CoroutineStart.LAZY) { onStart() }
+
+    private val _state = MutableStateFlow(initialState)
+    private val isSubscribed = MutableStateFlow(false)
+    private val reloadRequests = MutableStateFlow(0)
+    private val _sideEffect = sideEffectFlow<E>()
+
+    val state: StateFlow<S> = _state
+        .onStart { isSubscribed.update { true } }
+        .onCompletion { isSubscribed.update { false } }
+        .onStart { startJob.start() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), initialState)
+
+    val sideEffect: SharedFlow<E> = _sideEffect.asSharedFlow()
+
+    protected val currentState: S get() = _state.value
+
+    /** Стартует на Main: вызываемые функции сами переключают dispatcher (`withContext(dispatchers.io)`). */
+    protected open suspend fun onStart() = Unit
+
+    protected fun reduce(transform: S.() -> S) {
+        _state.update(transform)
     }
 
-    /**
-     * Приложение вернулось на передний план (из системных настроек, другого приложения, после блокировки).
-     * Не вызывается при открытии экрана и при возврате с другого экрана приложения.
-     */
-    protected open fun onAppForeground() = Unit
+    protected fun postSideEffect(effect: E) {
+        _sideEffect.tryEmit(effect)
+    }
 
-    /** Приложение ушло в фон. */
-    protected open fun onAppBackground() = Unit
+    protected fun intent(block: suspend CoroutineScope.() -> Unit): Job = safeLaunch(block)
 
     protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job =
         viewModelScope.launch(exceptionHandler, block = block)
@@ -68,38 +83,29 @@ abstract class BaseViewModel : ViewModel() {
     protected fun safeLaunch(coroutineContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit): Job =
         viewModelScope.launch(coroutineContext + exceptionHandler, block = block)
 
-    /**
-     * Стартовая работа экрана: [block] запускается отдельной корутиной VM при первом старте этого flow — первой
-     * подписке UI на state, — и ровно один раз за жизнь VM. Ставится на цепочку state перед `stateIn`:
-     * `combine(...).launchOnFirstStart { load() }.flowOn(...).stateIn(WhileSubscribed(...))`.
-     *
-     * Почему не голый `onStart { load() }`: он (а) блокирует цепочку до конца загрузки — `combine` ещё не собирает,
-     * и `Loading`, записанный в state, экран не увидит; (б) повторяется на каждый перезапуск `WhileSubscribed`
-     * (возврат на экран после stopTimeout). Здесь работа — в своей корутине (`Job` с `LAZY`, `start()` идемпотентен),
-     * а повторы и перезагрузки — интенты или потоки внутри [block] (`retries.collectLatest { load() }`).
-     */
-    protected fun <T> Flow<T>.launchOnFirstStart(block: suspend CoroutineScope.() -> Unit): Flow<T> {
-        val job = viewModelScope.launch(exceptionHandler, start = CoroutineStart.LAZY, block = block)
-        return onStart { job.start() }
+    /** Отменяет предыдущую корутину с тем же [key]; завершившаяся снимает себя с ключа, не трогая заменившую. */
+    protected fun launchReplacing(
+        key: Any,
+        coroutineContext: CoroutineContext = EmptyCoroutineContext,
+        block: suspend CoroutineScope.() -> Unit,
+    ): Job {
+        // LAZY: на Main.immediate тело стартует синхронно — ключ должен указывать на job до первой строки тела.
+        val job = viewModelScope.launch(coroutineContext + exceptionHandler, start = CoroutineStart.LAZY, block = block)
+        keyedJobs.getAndUpdate { it + (key to job) }[key]?.cancel()
+        job.invokeOnCompletion { keyedJobs.update { jobs -> if (jobs[key] === job) jobs - key else jobs } }
+        job.start()
+        return job
     }
 
-    /**
-     * Выполняет [block] под общим для этой ViewModel mutex'ом (один lock на все вызовы
-     * внутри одного VM — операции, обёрнутые в этот хелпер, не выполняются параллельно).
-     *
-     * - [needSkipAnother] = true (по умолчанию): если другой block уже выполняется,
-     *   новый вызов молча пропускается — защита от дублей (двойной клик, повторный интент).
-     * - [needSkipAnother] = false: вызов дожидается освобождения mutex'а и выполняется
-     *   следом — сериализация операций.
-     *
-     * От отмены mutex НЕ защищает: block выполняется в корутине вызывающего и отменится
-     * вместе с ней (например, при очистке viewModelScope). Работа, которая должна пережить
-     * экран, выносится в app-scoped singleton (см. docs/patterns.md).
-     */
+    protected fun cancelLaunched(key: Any) {
+        keyedJobs.getAndUpdate { it - key }[key]?.cancel()
+    }
+
+    // [needSkipAnother] = true — вызов во время другого block молча пропускается (двойной клик), false — ждёт
+    // и выполняется следом. От отмены не защищает.
     protected suspend fun executeWithProceedLock(needSkipAnother: Boolean = true, block: suspend () -> Unit) {
         if (needSkipAnother) {
-            // tryLock атомарен: проверка isLocked + withLock допускала бы гонку,
-            // при которой оба конкурентных вызова выполнились бы последовательно.
+            // tryLock атомарен: проверка isLocked + withLock пропустила бы оба конкурентных вызова по очереди.
             if (!proceedMutex.tryLock()) return
             try {
                 block()
@@ -107,13 +113,51 @@ abstract class BaseViewModel : ViewModel() {
                 proceedMutex.unlock()
             }
         } else {
-            proceedMutex.withLock {
-                block()
+            proceedMutex.withLock { block() }
+        }
+    }
+
+    // Поток, отдающий state целиком, должен быть единственным источником state; иначе — `copy(...)` только своих полей.
+    protected fun <T> Flow<T>.collectIntoState(reducer: S.(T) -> S): Job =
+        bind(this) { value -> reduce { reducer(value) } }
+
+    /** После `Error` поток от `asResponseFlow` завершён; «Повторить» — [reload]. */
+    protected fun <T> Flow<Response<T>>.collectIntoState(onError: S.(Throwable) -> S, reducer: S.(T) -> S): Job =
+        bind(this) { response ->
+            when (response) {
+                is Response.Success -> reduce { reducer(response.value) }
+                is Response.Error -> reduce { onError(response.exception) }
             }
         }
+
+    /** Не даёт привязке без `onError` молча принять `Flow<Response<T>>` и отдать в reducer сырой `Response`. */
+    @Deprecated(
+        message = "Flow<Response<T>> привязывается с явным onError: collectIntoState(onError = { … }) { value -> … }",
+        level = DeprecationLevel.ERROR,
+    )
+    @JvmName("collectResponseIntoStateWithoutOnError")
+    protected fun <T> Flow<Response<T>>.collectIntoState(reducer: S.(Response<T>) -> S): Job =
+        bind(this) { value -> reduce { reducer(value) } }
+
+    /** Пример: `select { query }.flatMapLatest { … }.collectIntoState { … }`; перезапускается вместе с привязкой. */
+    protected fun <T> select(selector: S.() -> T): Flow<T> = _state.map { it.selector() }.distinctUntilChanged()
+
+    /** Переподписывает все привязки [collectIntoState]. */
+    protected fun reload() {
+        reloadRequests.update { it + 1 }
+    }
+
+    private fun <T> bind(flow: Flow<T>, onValue: (T) -> Unit): Job = safeLaunch {
+        repeatOnSubscription { reloadRequests.collectLatest { flow.collect { value -> onValue(value) } } }
+    }
+
+    /** Отменяет [block], когда у [state] не остаётся подписчиков, и запускает заново при следующей подписке. */
+    protected suspend fun repeatOnSubscription(block: suspend () -> Unit) {
+        isSubscribed.collectLatest { subscribed -> if (subscribed) block() }
     }
 
     private companion object {
         const val DEFAULT_LOG_TAG = "BaseViewModel"
+        val STOP_TIMEOUT = 5.seconds
     }
 }

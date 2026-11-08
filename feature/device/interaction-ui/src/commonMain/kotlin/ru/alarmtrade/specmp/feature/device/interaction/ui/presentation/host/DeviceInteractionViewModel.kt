@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
@@ -19,7 +19,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  * (по нему остаётся в композиции дочерний flow, пока связь потеряна; загрузчик его сбрасывает), признак
  * «был загрузчик», ожидаемая перезагрузка и выход из flow.
  */
-class DeviceInteractionViewModel(private val deviceSession: DeviceSession) : BaseViewModel() {
+class DeviceInteractionViewModel(private val deviceSession: DeviceSession) : LegacyBaseViewModel() {
 
     val state: StateFlow<DeviceInteractionState> = deviceSession.state
         .runningFold(DeviceInteractionState()) { previous, session ->

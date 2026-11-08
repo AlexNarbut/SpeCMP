@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 
-class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispatchers) : BaseViewModel() {
+class AuthStateViewModel(repository: AuthStateRepository, dispatchers: AppDispatchers) : LegacyBaseViewModel() {
 
     private val retryTrigger = MutableStateFlow(0)
 

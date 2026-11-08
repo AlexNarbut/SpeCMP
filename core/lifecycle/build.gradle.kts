@@ -10,6 +10,11 @@ kotlin {
             implementation(libs.koin.core)
         }
 
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+        }
+
         androidMain.dependencies {
             // ProcessLifecycleOwner — жизненный цикл всего приложения
             implementation(libs.androidx.lifecycle.process)

@@ -20,7 +20,7 @@ kotlin {
 
             // Сессия устройства: связь, транспорт, режим программирования (PIN)
             implementation(project(":feature:device:interaction"))
-            // BaseDeviceViewModel, ServicePinDialog
+            // LegacyBaseDeviceViewModel, ServicePinDialog
             implementation(project(":feature:device:interaction-ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)

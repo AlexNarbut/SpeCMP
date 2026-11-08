@@ -36,7 +36,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -95,7 +95,7 @@ internal class DeviceSettingsViewModel(
     deviceSession: DeviceSession,
     private val appScope: CoroutineScope,
     private val dispatchers: AppDispatchers,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val followsDevice = source.capabilities.followsDeviceConnection
 

@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.AutoTaskKind
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
@@ -58,7 +58,7 @@ class FastMountViewModel(
     private val repository: FastMountRepository,
     private val programMode: ProgramModeRepository,
     private val dispatchers: AppDispatchers,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(FastMountState())
     val state: StateFlow<FastMountState> = _state

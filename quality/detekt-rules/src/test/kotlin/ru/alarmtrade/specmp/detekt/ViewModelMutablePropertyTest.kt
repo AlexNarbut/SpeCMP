@@ -86,4 +86,18 @@ class ViewModelMutablePropertyTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `skips direct subclasses of legacy bases`() {
+        val code = """
+            class FooViewModel : LegacyBaseViewModel() {
+                private var job: Job? = null
+            }
+            class BarViewModel : LegacyBaseDeviceViewModel(session) {
+                private val ids = mutableListOf<String>()
+            }
+        """.trimIndent()
+
+        assertEquals(0, rule.lint(code).size)
+    }
 }

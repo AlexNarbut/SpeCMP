@@ -39,7 +39,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramMod
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntryResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CommandReply
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
@@ -66,7 +66,7 @@ class CheckStateViewModel(
     private val dispatchers: AppDispatchers,
     private val fastMount: Boolean,
     private val timeSource: TimeSource = TimeSource.Monotonic,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val _state =
         MutableStateFlow(CheckStateState(fastMount = fastMount, commands = commandsFor(null, fastMount)))

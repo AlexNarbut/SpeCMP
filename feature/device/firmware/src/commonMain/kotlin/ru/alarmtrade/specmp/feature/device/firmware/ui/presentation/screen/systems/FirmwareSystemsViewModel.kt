@@ -15,7 +15,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSubsystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareArchivePreferences
@@ -44,7 +44,7 @@ class FirmwareSystemsViewModel(
     private val repository: FirmwareRepository,
     private val preferences: FirmwareArchivePreferences,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private data class Core(
         val load: LCEState<List<FirmwareSystem>, FirmwareError> = LCEState.Loading,

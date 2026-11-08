@@ -5,12 +5,14 @@ import dev.detekt.api.Entity
 import dev.detekt.api.Finding
 import dev.detekt.api.Rule
 import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtParenthesizedExpression
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.KtThisExpression
+import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
  * Запуск корутины прямо в `viewModelScope` мимо `BaseViewModel.safeLaunch`: `viewModelScope.launch { }`,
@@ -30,6 +32,7 @@ class ViewModelScopeLaunch(config: Config) :
 
     override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
+        if (expression.parents.any { it is KtClassOrObject && it.isLegacyViewModel() }) return
         when (expression.calleeExpression?.text) {
             in BUILDERS -> {
                 val qualified = expression.parent as? KtQualifiedExpression ?: return

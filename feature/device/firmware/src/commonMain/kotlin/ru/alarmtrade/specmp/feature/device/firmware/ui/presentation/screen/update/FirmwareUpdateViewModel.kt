@@ -24,7 +24,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
@@ -72,7 +72,7 @@ class FirmwareUpdateViewModel(
     bootRequester: FirmwareBootRequester,
     archivePicker: FirmwareArchivePicker,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     // Начальное состояние — из запроса входа в загрузчик (модуль и канал), при создании VM.
     private val core: MutableStateFlow<Core> = bootRequester.take().let { request ->

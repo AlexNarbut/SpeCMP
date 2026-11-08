@@ -29,7 +29,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
@@ -73,7 +73,7 @@ class SupportChatScreenViewModel(
     private val attachmentFiles: SupportChatAttachmentFiles,
     fileOpener: SupportChatFileOpener,
     private val outbox: SupportChatOutbox,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private val _state = MutableStateFlow(SupportChatScreenState())
 

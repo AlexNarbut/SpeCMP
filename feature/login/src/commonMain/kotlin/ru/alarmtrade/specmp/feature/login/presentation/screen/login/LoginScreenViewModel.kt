@@ -10,14 +10,14 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.dismissError
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 
 class LoginScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
-    BaseViewModel() {
+    LegacyBaseViewModel() {
 
     private val _state = MutableStateFlow(LoginScreenState())
     val state: StateFlow<LoginScreenState> = _state.asStateFlow()

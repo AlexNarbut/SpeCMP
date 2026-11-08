@@ -103,4 +103,15 @@ class SafeRunInViewModelTest {
 
         assertEquals(0, rule.lint(code).size)
     }
+
+    @Test
+    fun `skips direct subclasses of legacy bases`() {
+        val code = """
+            class FooViewModel(private val repo: Repo) : LegacyBaseViewModel() {
+                fun load() { safeRun { repo.load() } }
+            }
+        """.trimIndent()
+
+        assertEquals(0, rule.lint(code).size)
+    }
 }

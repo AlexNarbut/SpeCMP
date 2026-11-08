@@ -15,7 +15,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.updateIf
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
@@ -42,7 +42,7 @@ class SerialFirmwareViewModel(
     private val repository: SerialFirmwareRepository,
     private val deviceSession: DeviceSession,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     // Фазы экрана и баннеры выбора файла; блок добавляет state из сессии.
     private val screen = MutableStateFlow(SerialFirmwareState())

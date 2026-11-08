@@ -13,7 +13,7 @@ kotlin {
 
             // Сессия и подключённый блок (DeviceScope, AlarmDevice)
             implementation(project(":feature:device:interaction"))
-            // BaseDeviceViewModel
+            // LegacyBaseDeviceViewModel
             implementation(project(":feature:device:interaction-ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)

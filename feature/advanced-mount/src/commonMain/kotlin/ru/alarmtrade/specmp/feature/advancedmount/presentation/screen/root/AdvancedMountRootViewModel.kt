@@ -36,7 +36,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 
 /**
  * Корень расширенного монтажа: шапка блока и разделы.
@@ -44,13 +44,13 @@ import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel
  * На каждом подключении блока: IMEI; для нового блока — проверка на сервере → разделы по возможностям
  * и подписка на удалённый монтаж. После переподключения того же блока разделы не перезагружаются
  * (пользователь возвращается туда, где был). Непрочитанные в чате опрашивает репозиторий, пока экран на виду.
- * Работа с блоком — через [BaseDeviceViewModel] (отменяется при потере связи).
+ * Работа с блоком — через [LegacyBaseDeviceViewModel] (отменяется при потере связи).
  */
 class AdvancedMountRootViewModel(
     deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
     private val dispatchers: AppDispatchers,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(AdvancedMountRootState())
 

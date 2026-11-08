@@ -9,13 +9,13 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.dismissError
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 
 class ForgotPasswordScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
-    BaseViewModel() {
+    LegacyBaseViewModel() {
 
     private val _state = MutableStateFlow(ForgotPasswordScreenState())
     val state: StateFlow<ForgotPasswordScreenState> = _state.asStateFlow()

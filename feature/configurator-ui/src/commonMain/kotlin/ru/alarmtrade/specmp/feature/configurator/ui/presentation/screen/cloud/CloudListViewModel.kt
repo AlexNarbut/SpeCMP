@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationOrder
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
@@ -33,7 +33,7 @@ internal class CloudListViewModel(
     private val deviceName: String,
     private val cloud: CloudConfigurationsRepository,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private val _state = MutableStateFlow(CloudListState(modelFilter = deviceName.ifEmpty { null }))
 

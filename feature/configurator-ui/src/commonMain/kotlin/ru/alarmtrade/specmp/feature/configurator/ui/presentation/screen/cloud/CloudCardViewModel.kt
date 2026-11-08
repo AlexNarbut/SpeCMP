@@ -30,7 +30,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigur
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
@@ -47,7 +47,7 @@ internal class CloudCardViewModel(
     private val configurations: LocalConfigurationsRepository,
     deviceSession: DeviceSession,
     private val dispatchers: AppDispatchers,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(CloudCardState(firmwareCanCode = firmwareCanCode))
 

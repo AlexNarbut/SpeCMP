@@ -15,20 +15,30 @@ specmp:
   StateFlowValueMutation:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Правила ViewModel (docs/patterns.md, «BaseViewModel»): прежние базы LegacyBaseViewModel/LegacyBaseDeviceViewModel
+  # и их прямые наследники пропускаются (quality/detekt-rules, LegacyViewModels.kt) до подэтапа 2n.
+  # Корутины ViewModel — только intent/safeLaunch; сами они живут в BaseViewModel.
   ViewModelScopeLaunch:
-    active: false
+    active: true
     excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt']
+  # Стартовая работа VM — onStart() из BaseViewModel, не init.
   ViewModelInitBlock:
-    active: false
+    active: true
+  # Файл ViewModel содержит только ViewModel: State/Effect/модели — в своих файлах, private-хелперы — вложенные.
   ViewModelFileContents:
-    active: false
+    active: true
     excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt']
+  # Контракт экрана в именах: BaseViewModel<…State, …Effect | Nothing>.
   ViewModelContractNames:
-    active: false
+    active: true
+  # Публичный API наследника BaseViewModel — state, sideEffect и интенты с результатом Unit; требует type resolution.
   ViewModelPublicApi:
-    active: false
+    active: true
+  # Нет var-свойств и изменяемых коллекций: служебное — поле state, перезапускаемая корутина — launchReplacing.
+  # ViewModelScope.kt — не экранная VM, а держатель ViewModelStore навигации на androidx ViewModel.
   ViewModelMutableProperty:
-    active: false
+    active: true
+    excludes: ['**/core/ui/**/navigation/ViewModelScope.kt']
   RepositoryWithContext:
     active: false
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
@@ -38,8 +48,9 @@ specmp:
   SettingsInstantiation:
     active: false
     excludes: ['**/core/common/**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # safeRun/safeResponseRun — граница с бросающим кодом в data; ViewModel ветвится по Response.
   SafeRunInViewModel:
-    active: false
+    active: true
     excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
   RawFlowFromRepository:
     active: false

@@ -28,7 +28,7 @@ import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
@@ -66,7 +66,7 @@ class ScanDeviceViewModel(
     serialEnabled: Boolean = false,
     /** Поиск для быстрого монтажа: BLE-устройства, которые не сигнализации, видны, но недоступны. */
     private val alarmsOnly: Boolean = false,
-) : BaseViewModel() {
+) : LegacyBaseViewModel() {
 
     private val requirements = permissionsProvider.deviceAccessRequirements()
     private val supportedTransports = scanRepository.supportedTransports()

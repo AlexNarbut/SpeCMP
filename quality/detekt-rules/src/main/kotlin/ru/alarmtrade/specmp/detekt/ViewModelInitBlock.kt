@@ -24,7 +24,7 @@ class ViewModelInitBlock(config: Config) :
     override fun visitAnonymousInitializer(initializer: KtAnonymousInitializer) {
         super.visitAnonymousInitializer(initializer)
         val klass = (initializer.parent as? KtClassBody)?.parent as? KtClass ?: return
-        if (klass.isViewModel()) report(Finding(Entity.from(initializer), MESSAGE))
+        if (klass.isViewModel() && !klass.isLegacyViewModel()) report(Finding(Entity.from(initializer), MESSAGE))
     }
 
     private fun KtClass.isViewModel(): Boolean = name.isViewModelName() || superTypeListEntries.any { entry ->

@@ -24,7 +24,7 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.Configura
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.toSource
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
 /**
@@ -38,7 +38,7 @@ internal class ModelsViewModel(
     private val settings: DeviceSettingsRepository,
     deviceSession: DeviceSession,
     private val dispatchers: AppDispatchers,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(ModelsState(fileName = file?.name))
 

@@ -9,7 +9,7 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.dismissError
-import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpValidationError
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
@@ -17,7 +17,7 @@ import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldError
 
 class RegistrationScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
-    BaseViewModel() {
+    LegacyBaseViewModel() {
 
     private val _state = MutableStateFlow(RegistrationScreenState())
     val state: StateFlow<RegistrationScreenState> = _state.asStateFlow()

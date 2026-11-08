@@ -26,7 +26,7 @@ class ViewModelMutableProperty(config: Config) :
 
     override fun visitClass(klass: KtClass) {
         super.visitClass(klass)
-        if (!klass.extendsViewModel()) return
+        if (!klass.extendsViewModel() || klass.isLegacyViewModel()) return
         klass.collectDescendantsOfType<KtProperty> { !it.isLocal }.forEach { property ->
             when {
                 property.isVar -> reportVar(property)

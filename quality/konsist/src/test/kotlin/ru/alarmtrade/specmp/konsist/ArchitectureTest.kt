@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.konsist
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.declaration.KoInterfaceDeclaration
 import com.lemonappdev.konsist.api.declaration.combined.KoClassAndInterfaceAndObjectDeclaration
@@ -240,8 +241,74 @@ class ArchitectureTest {
             ) { it.type.text.baseTypeName().isDataSourceName() }
     }
 
+    @Test
+    fun `view models extend BaseViewModel, are named ViewModel and live in presentation`() {
+        classes.filter { it.name.endsWith(VIEW_MODEL) || it.extendsViewModelBase() }
+            .filterNot { it.name == BASE_VIEW_MODEL || it.isLegacyViewModel() }
+            .assertTrue(
+                testName = "view-model",
+                additionalMessage =
+                    "ViewModel наследует BaseViewModel (напрямую или через BaseDeviceViewModel), называется " +
+                        "*ViewModel, в feature-модуле лежит в presentation. docs/patterns.md, «BaseViewModel»",
+            ) {
+                it.extendsViewModelBase() &&
+                    it.name.endsWith(VIEW_MODEL) &&
+                    (!it.containingFile.isFeature || it.resideInPackage("..presentation.."))
+            }
+    }
+
+    @Test
+    fun `view models own no flows - state only through reduce, effects through postSideEffect`() {
+        classes.filter { it.extendsViewModelBase() }
+            .assertFalse(
+                testName = "view-model-owns-no-flows",
+                additionalMessage = "ViewModel не держит своих MutableStateFlow/MutableSharedFlow/Channel/" +
+                    "mutableStateOf (ни свойством, ни во вложенном классе): state — только reduce, эффекты — " +
+                    "postSideEffect. Вход подписки (запрос, фильтр) — поле state + select { }, «Повторить» — " +
+                    "reload(). docs/patterns.md, «BaseViewModel»",
+            ) { viewModel ->
+                OWNED_FLOW.containsMatchIn(viewModel.text.stripCommentsAndStrings()) ||
+                    viewModel.properties(includeNested = true).any { it.type?.name?.startsWith("Mutable") == true }
+            }
+    }
+
+    @Test
+    fun `view models depend only on domain contracts, presentation helpers and approved infrastructure`() {
+        classes.filter { it.extendsViewModelBase() }
+            .flatMap { it.primaryConstructor?.parameters.orEmpty() }
+            .assertTrue(
+                testName = "view-model-dependencies",
+                additionalMessage = "Тип параметра конструктора ViewModel (и аргументы его дженериков) — из " +
+                    "разрешённого списка: domain фич (*Repository, *UseCase, доменные сервисы и модели), " +
+                    "presentation (аргументы маршрута, порты presentation/platform), core: AppDispatchers " +
+                    "(до переноса main-safety в репозитории), AppRestarter, AppForegroundProvider, " +
+                    "PermissionsProvider, AppLocaleStore; Kotlin: примитивы, коллекции, TimeSource; Logger. " +
+                    "Нельзя: data, SDK, Flow, CoroutineScope, функциональные типы. docs/patterns.md, «BaseViewModel»",
+            ) { parameter ->
+                val type = parameter.type.text
+                "->" !in type && TYPE_REFERENCE.findAll(type)
+                    .all { parameter.containingFile.qualifiedTypeName(it.value).isAllowedViewModelDependency() }
+            }
+    }
+
+    // Имя родителя у Konsist включает аргументы типа: `BaseViewModel<S, E>`; наследники BaseDeviceViewModel — тоже VM.
+    private fun KoClassDeclaration.extendsViewModelBase(): Boolean =
+        parents(indirectParents = true).any { it.name.substringBefore('<') == BASE_VIEW_MODEL }
+
+    // Миграция ViewModel (этап 2): прежние базы и их прямые наследники пропускаются до подэтапа 2n.
+    private fun KoClassDeclaration.isLegacyViewModel(): Boolean = name in LEGACY_VIEW_MODEL_BASES ||
+        parents().any { it.name.substringBefore('<') in LEGACY_VIEW_MODEL_BASES }
+
     private companion object {
         const val MANAGER = "Manager"
+        const val VIEW_MODEL = "ViewModel"
+        const val BASE_VIEW_MODEL = "BaseViewModel"
+        val LEGACY_VIEW_MODEL_BASES = setOf("LegacyBaseViewModel", "LegacyBaseDeviceViewModel")
+        val OWNED_FLOW = Regex(
+            """\b(MutableStateFlow|MutableSharedFlow|Channel|sideEffectFlow|mutableStateOf|mutableStateListOf|""" +
+                """mutableStateMapOf|mutableIntStateOf|mutableLongStateOf|mutableFloatStateOf|mutableDoubleStateOf)""" +
+                """\s*(<[^()]*>)?\s*\(""",
+        )
         val VAGUE_SUFFIXES = listOf("Helper", "Helpers", "Util", "Utils")
         val PLATFORM_SOURCE_SETS = setOf("androidMain", "iosMain", "jvmMain")
         val GETTER = Regex("""\bget\(\)\s*=""")
@@ -394,4 +461,46 @@ private fun String.stringLiteralEnd(start: Int): Int {
     var i = start + 1
     while (i < length && this[i] != '"' && this[i] != '\n') i += if (this[i] == '\\') 2 else 1
     return minOf(i + 1, length)
+}
+
+private val TYPE_REFERENCE = Regex("""\b(?:[a-z_]\w*\.)*[A-Z]\w*(?:\.[A-Z]\w*)*""")
+
+// Типы, видимые без импорта (пакеты kotlin, kotlin.collections).
+private val KOTLIN_DEFAULT_TYPES = setOf(
+    "Any", "Boolean", "Byte", "Char", "Double", "Float", "Int", "Long", "Number", "Short", "String", "Unit",
+    "Array", "Collection", "Iterable", "List", "Map", "Pair", "Sequence", "Set", "Triple",
+)
+
+// Полное имя типа по ссылке из файла: полное имя в коде, импорт (с алиасом), тип Kotlin по умолчанию,
+// иначе — тип из пакета файла (в том числе вложенный в класс этого файла).
+private fun KoFileDeclaration.qualifiedTypeName(reference: String): String {
+    if (reference.first().isLowerCase()) return reference
+    val simple = reference.substringBefore('.')
+    val nested = reference.removePrefix(simple)
+    val import = imports.firstOrNull {
+        !it.name.endsWith(".*") && (it.alias?.name ?: it.name.substringAfterLast('.')) == simple
+    }
+    return when {
+        import != null -> import.name + nested
+        simple in KOTLIN_DEFAULT_TYPES -> "kotlin.$reference"
+        else -> listOfNotNull(packagee?.name, reference).joinToString(".")
+    }
+}
+
+// Зависимости ViewModel вне domain/presentation фич: инфраструктура, которую VM получает из DI напрямую.
+private val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
+    "$ROOT.core.common.AppDispatchers",
+    "$ROOT.core.common.AppRestarter",
+    "$ROOT.core.lifecycle.AppForegroundProvider",
+    "$ROOT.core.permissions.PermissionsProvider",
+    "$ROOT.core.localization.AppLocaleStore",
+    "kotlin.time.TimeSource",
+    "co.touchlab.kermit.Logger",
+)
+
+private fun String.isAllowedViewModelDependency(): Boolean {
+    val segments = split('.')
+    val pkg = segments.takeWhile { it.first().isLowerCase() }.joinToString(".")
+    val featureLayer = pkg.startsWith("$ROOT.feature.") && ("domain" in segments || "presentation" in segments)
+    return this in VIEW_MODEL_DEPENDENCY_TYPES || pkg == "kotlin" || featureLayer
 }

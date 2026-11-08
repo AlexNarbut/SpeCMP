@@ -28,7 +28,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramMod
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntryResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.BaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
 
 /**
  * Экран «Бесключевой обход»: вход в режим программирования ([ProgramModeEntry], PIN по BLE) → шаги
@@ -41,7 +41,7 @@ class BypassLearningViewModel(
     private val programMode: ProgramModeEntry,
     pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
-) : BaseDeviceViewModel(deviceSession) {
+) : LegacyBaseDeviceViewModel(deviceSession) {
 
     private val _state = MutableStateFlow(BypassState())
 
