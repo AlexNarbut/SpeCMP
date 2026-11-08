@@ -1,6 +1,8 @@
 rootProject.name = "SpeCMP"
 
 pluginManagement {
+    // Convention-плагины (specmp.kmp.library, specmp.kmp.compose, specmp.detekt): build-logic/src/main/kotlin.
+    includeBuild("build-logic")
     repositories {
         google {
             content {

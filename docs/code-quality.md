@@ -40,7 +40,8 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check
 
 | Файл | Роль |
 |---|---|
-| [`build.gradle.kts`](../build.gradle.kts) | блок `spotless { … }` (один корневой на весь репозиторий): цели, версии ktlint/compose-rules, ratchet; блок `subprojects { … }`: подключение detekt ко всем подпроектам, конфиг, исключение `build/`, агрегирующая задача `detektCheck` |
+| [`build.gradle.kts`](../build.gradle.kts) | блок `spotless { … }` (один корневой на весь репозиторий): цели, версии ktlint/compose-rules, ratchet; блок `subprojects { … }`: применение `specmp.detekt` ко всем Kotlin-модулям |
+| [`build-logic/.../DetektConventionPlugin.kt`](../build-logic/src/main/kotlin/DetektConventionPlugin.kt) | convention `specmp.detekt`: конфиг, исключение `build/`, отвязка от `check`, задача `detektCheck` модуля |
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`; плагины `detekt`, `spotless` |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt |
@@ -56,9 +57,9 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check
   Файлы для обхода задаются через `fileTree` с исключением `build/`, `generated/`, `.gradle/`, `.kotlin/`: иначе
   Spotless заходит в build-выходы (в том числе `iosApp/build`) и сгенерированные `Res`. `kotlinGradle` охватывает
   `*.gradle.kts` до трёх уровней вложенности (`feature/device/<module>/build.gradle.kts`).
-- **detekt из корневого `build.gradle.kts`, без `build-logic`.** Он нужен в каждом модуле (свои source set'ы и type
-  resolution), поэтому плагин объявлен в корне с `apply false` и применяется в `subprojects { apply(plugin = "dev.detekt") }`.
-  Отдельный included build ради одного плагина не заводим.
+- **detekt — convention `specmp.detekt` из `build-logic`, применяется из корня.** Он нужен в каждом модуле (свои
+  source set'ы и type resolution), поэтому корневой `build.gradle.kts` вешает его на все модули с плагином KMP,
+  `kotlin("android")`, `kotlin("jvm")` или `com.android.application` — в build-файлах модулей detekt не упоминается.
 - **`detektCheck` — своя задача.** Голая `detekt` в KMP ничего не запускает. `detektCheck` в каждом подпроекте
   собирает задачи с type resolution:
 
@@ -216,7 +217,7 @@ ViewModel через несколько composable, эффекты читают 
   работает. Обновление Kotlin выше версии сборки detekt может ломать анализ: при апгрейде Kotlin прогнать
   `detektCheck` и при необходимости поднять detekt.
 - Состав `detektCheck` — фиксированный список имён задач. Новые source set'ы (`androidHostTest`, `iosTest`,
-  `appleMain` и т. п.) сами в анализ не попадут: добавить их задачи в список в корневом `build.gradle.kts`.
+  `appleMain` и т. п.) сами в анализ не попадут: добавить их задачи в список в `build-logic/src/main/kotlin/DetektConventionPlugin.kt`.
 - Хук для агентов и `spotlessCheck` в pre-commit показывают нарушения всех файлов, изменённых с `HEAD`, поэтому
   чужая незакоммиченная работа с нарушениями будет мешать, пока не будет исправлена.
 

@@ -94,6 +94,23 @@ iosMain.dependencies {
 
 ---
 
+## Convention-плагины (`build-logic`)
+
+`build-logic` — included build (`settings.gradle.kts` → `pluginManagement { includeBuild("build-logic") }`) с
+плагинами в `build-logic/src/main/kotlin`; версии — из общего `gradle/libs.versions.toml`.
+
+| Плагин | Что делает |
+|---|---|
+| `specmp.kmp.library` | KMP + `com.android.kotlin.multiplatform.library`; таргеты android, `jvm()`, `iosArm64()`; JVM 17; `compileSdk`/`minSdk` из каталога; `namespace` по умолчанию из пути модуля (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`) |
+| `specmp.kmp.compose` | `specmp.kmp.library` + `org.jetbrains.compose` + Compose-компилятор; `androidResources.enable = true`, если у модуля есть `src/commonMain/composeResources` |
+| `specmp.detekt` | detekt и задача `detektCheck` модуля ([`code-quality.md`](code-quality.md)); применяется из корня, в модулях не указывается |
+
+Модуль на конвенции объявляет только своё: `plugins { id("specmp.kmp.compose") }`, при необходимости другой
+`namespace` (`kotlin { android { namespace = … } }`), iOS-framework (`kotlin { iosArm64 { binaries.framework { … } } }`),
+`compose.resources` и зависимости. Плагины AGP/KGP в `build-logic` — `compileOnly`: их классы приходят из корневого
+`build.gradle.kts` (`alias(...).apply(false)`), поэтому новые плагины, которые применяет конвенция, тоже объявляются
+там. На конвенциях — `core/*`.
+
 ## Compose-компилятор: конфиг стабильности
 
 Корневой `build.gradle.kts` подключает `config/compose/stability.conf` ко всем модулям с плагином Compose-компилятора
@@ -113,7 +130,8 @@ painterResource(Res.drawable.ic_logo)                      // ресурс мо�
 
 ### Модуль со своими ресурсами (картинки)
 
-- В блоке `android { … }` — `androidResources.enable = true`, иначе ресурсы не попадут в Android APK.
+- В блоке `android { … }` — `androidResources.enable = true`, иначе ресурсы не попадут в Android APK (модулям на
+  `specmp.kmp.compose` — не нужно: включается по наличию `composeResources/`).
 - Блок `compose.resources`:
 
   ```kotlin

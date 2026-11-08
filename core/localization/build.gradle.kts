@@ -1,34 +1,10 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kmp.library)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.compose.compiler)
+    id("specmp.kmp.compose")
 }
 
 kotlin {
-    jvm {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
-
-    android {
-        namespace = "ru.alarmtrade.specmp.core.localization"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-        // обязательно для модулей с compose resources (см. docs/build.md)
-        androidResources.enable = true
-    }
-
-    listOf(
-        iosArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+    iosArm64 {
+        binaries.framework {
             baseName = "CoreLocalization"
             isStatic = true
         }

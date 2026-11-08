@@ -25,6 +25,7 @@
 - `composeApp` — composition root, навигация и интеграция фич.
 - `androidApp`, `desktopApp`, `iosApp` — платформенные обёртки.
 - `flasherApp` (+ обёртки `flasherAndroidApp`, `flasherDesktopApp`) — отдельное мини-приложение прошивки (ветка `feature/flasher-app`): свой composition root поверх тех же `core/*` и `feature/device/*`.
+- `build-logic/` — included build с convention-плагинами (`specmp.kmp.library`, `specmp.kmp.compose`, `specmp.detekt`), см. `docs/build.md`.
 - `docs/` — тематические правила и справка по архитектуре, UI, навигации и сборке.
 
 ## Read Before Editing

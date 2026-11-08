@@ -134,6 +134,8 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - `composeApp/src/iosMain/kotlin/.../MainViewController.kt` — iOS entry point, создаёт `ComposeUIViewController`
 
 ### Все KMP-модули (core/*, feature/* и composeApp)
+- `core/*` — на convention-плагинах `specmp.kmp.library` / `specmp.kmp.compose` (`build-logic`, `docs/build.md`):
+  таргеты, JVM, SDK и namespace задаёт конвенция
 - Плагин: `alias(libs.plugins.android.kmp.library)`
 - Android-конфигурация внутри `kotlin { android { } }` — НЕ в top-level `android { }`
 - Нет `androidTarget { }` — заменён на `android { }` внутри `kotlin { }`
