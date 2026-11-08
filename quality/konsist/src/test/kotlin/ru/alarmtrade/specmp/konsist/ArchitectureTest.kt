@@ -40,7 +40,8 @@ class ArchitectureTest {
         libraryFiles.assertTrue(
             testName = "module-package",
             additionalMessage = "Пакет файла начинается с базового пакета модуля: feature/auth-state → " +
-                "$ROOT.feature.authstate, feature/device/settings-ui → $ROOT.feature.device.settings.ui. " +
+                "$ROOT.feature.authstate, feature/device/settings-ui → $ROOT.feature.device.settings.ui, " +
+                "feature/device/presentation-core → $ROOT.feature.device.presentation.core. " +
                 "docs/architecture.md, «Пространства имён»",
         ) { file ->
             val pkg = file.packagee?.name.orEmpty()
@@ -331,9 +332,10 @@ private val APP_MODULES = setOf(
 private val KoFileDeclaration.isCore get() = moduleName.startsWith("core/")
 private val KoFileDeclaration.isFeature get() = moduleName.startsWith("feature/")
 
-// feature/auth-state → …feature.authstate; суффикс модуля -ui — подпакет: feature/device/settings-ui → …settings.ui
+// feature/auth-state → …feature.authstate; суффиксы модуля -ui и -core — подпакет: feature/device/settings-ui →
+// …settings.ui, feature/device/presentation-core → …presentation.core
 private val KoFileDeclaration.basePackage
-    get() = "$ROOT." + moduleName.replace('/', '.').replace(Regex("-ui$"), ".ui").replace("-", "")
+    get() = "$ROOT." + moduleName.replace('/', '.').replace(Regex("-(ui|core)$"), ".$1").replace("-", "")
 
 private fun KoFileDeclaration.inLayer(layer: String) = ".$layer." in ".${packagee?.name}."
 

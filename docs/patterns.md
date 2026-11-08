@@ -13,7 +13,7 @@
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
 - **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
 - **ViewModel — только через `BaseViewModel`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`), корутины — через `safeLaunch` — см. «BaseViewModel».
-- **VM, работающая с подключённым блоком, — от `LegacyBaseDeviceViewModel`** (`feature/device/interaction-ui`; на время миграции VM): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/AGENTS.md`).
+- **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`; до переноса VM — `LegacyBaseDeviceViewModel` там же): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
@@ -577,7 +577,7 @@ presentation/screen/<screen>/
 > **Миграция (этап 2).** Новая база — `BaseViewModel<S, E>(initialState)` (`state`/`sideEffect`, `onStart()`,
 > `reduce`, `postSideEffect`, `intent`, `launchReplacing`/`cancelLaunched`, `collectIntoState`, `select`, `reload`);
 > на ней действуют правила detekt `ViewModel*`/`SafeRunInViewModel` и Konsist `view-model*`. Описанное ниже — прежняя
-> база, переименованная в `LegacyBaseViewModel` (и `LegacyBaseDeviceViewModel` в `interaction-ui`): VM переносятся
+> база, переименованная в `LegacyBaseViewModel` (и `LegacyBaseDeviceViewModel` в `device/presentation-core`; новая база блока — `BaseDeviceViewModel<S, E>` там же): VM переносятся
 > по подэтапам, после чего раздел переписывается под новую базу. Возвраты приложения на передний план для новых VM —
 > порт `AppForegroundProvider` (`core/lifecycle`) в конструкторе, а не `onAppForeground()`.
 

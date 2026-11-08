@@ -3,7 +3,7 @@ package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.byp
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 /** Фаза экрана: старт → шаги → итог. */
 sealed interface BypassPhase {

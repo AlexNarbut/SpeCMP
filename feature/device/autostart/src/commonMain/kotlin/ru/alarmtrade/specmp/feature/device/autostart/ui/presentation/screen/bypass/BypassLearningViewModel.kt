@@ -27,8 +27,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntryResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.LegacyBaseDeviceViewModel
 
 /**
  * Экран «Бесключевой обход»: вход в режим программирования ([ProgramModeEntry], PIN по BLE) → шаги

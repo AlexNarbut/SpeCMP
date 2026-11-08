@@ -111,7 +111,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
 
 /** Короткий доступ к строкам фичи (ключи длинные). */
 private val txt = Strings.string

@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.EngineStatus
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand

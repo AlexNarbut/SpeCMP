@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.LegacyBaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.AutoTaskKind
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep

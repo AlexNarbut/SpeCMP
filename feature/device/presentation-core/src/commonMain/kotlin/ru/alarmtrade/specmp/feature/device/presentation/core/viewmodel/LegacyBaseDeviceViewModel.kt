@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel
+package ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler

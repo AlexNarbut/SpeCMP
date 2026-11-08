@@ -3,7 +3,7 @@ package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clo
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 /** Оставшиеся попытки Clone. */
 sealed interface CloneAttempts {

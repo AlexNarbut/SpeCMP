@@ -12,7 +12,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clon
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneInterruption
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.ClonePhase
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneState
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 /** Все состояния экрана «Процедура Clone» (макет C1–C6, X1–X3); PNG — в `build/state-gallery/autostart`. */
 class CloneGallery {

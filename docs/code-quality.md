@@ -268,7 +268,8 @@ ViewModel через несколько composable, эффекты читают 
 временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel (`ViewModel*`,
 `SafeRunInViewModel`) включены; на время миграции VM они пропускают прежние базы `LegacyBaseViewModel`/
 `LegacyBaseDeviceViewModel` и их прямых наследников (`LegacyViewModels.kt`; `ViewModelPublicApi` и
-`ViewModelContractNames` смотрят только на `BaseViewModel` и Legacy не видят). Правила `Response`, данных и времени
+`ViewModelContractNames` смотрят только на `BaseViewModel`/`BaseDeviceViewModel` и Legacy не видят;
+`ViewModelContractNames` пропускает собственные параметры типа промежуточной базы). Правила `Response`, данных и времени
 перенесены, но выключены (`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
@@ -296,7 +297,7 @@ ViewModel через несколько composable, эффекты читают 
 | id | Что проверяет |
 |---|---|
 | `module-direction` | `core/*` импортирует только `core/*`, `feature/*` — `core/*` и `feature/*`; пакеты приложений не импортируются |
-| `module-package` | пакет = базовый пакет модуля (`feature/auth-state` → `…feature.authstate`, суффикс `-ui` → `.ui`) |
+| `module-package` | пакет = базовый пакет модуля (`feature/auth-state` → `…feature.authstate`, суффиксы `-ui`/`-core` → `.ui`/`.core`) |
 | `domain-isolation` | `domain` без data/presentation/di, Compose, ресурсов, `core.ui`, multiplatform-settings, сериализации и SDK |
 | `presentation-isolation` | пакеты `..data..` видят только data/di фичи, не-presentation core и di приложений |
 | `data-isolation` | `data` не импортирует presentation и di |
@@ -349,9 +350,9 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | `.* -X> :quality:.*`, `:quality:.* -X> :(core\|feature):.*` | инструменты проверок отделены от продукта |
 | `:feature:.* -X> :feature:.*-ui` | от `*-ui` зависят только composition roots |
 
-Временный allowlist последнего правила (в регэкспе, снимается в подэтапе, где ребро убрано): `advanced-mount`,
-`fast-mount`, `configurator-ui`, `device:{autostart,firmware,state,settings-ui}` → `device:interaction-ui`
-(уходит с `presentation-core`); `configurator-ui` → `device:settings-ui`. Регэксп матчит всю строку
+Общий presentation фич устройства — не `-ui`, а `device:presentation-core`: на него правило не распространяется.
+Временный allowlist последнего правила (в регэкспе, снимается в подэтапе, где ребро убрано): `configurator-ui` →
+`device:settings-ui`. Регэксп матчит всю строку
 `"<from> -X> <to>"`, поэтому конец имени модуля слева в негативном lookahead — пробел, а не `$`.
 
 ---

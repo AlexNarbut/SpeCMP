@@ -36,7 +36,7 @@ core/localization/src/commonMain/composeResources/
 | `advancedmount` | `feature/advanced-mount` |
 | `vehicle`, `configurator` | `feature/vehicle-ui`, `feature/configurator-ui` |
 | `firmware`, `settings` | `feature/device/firmware`, `feature/device/settings-ui` |
-| `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui` |
+| `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui`, `feature/device/presentation-core` |
 | `autostart` | `feature/device/autostart` (бесключевой обход, процедура Clone) |
 | `devicestate` | `feature/device/state` (проверка состояния) |
 | `fastmount` | `feature/fast-mount` (мастер быстрого монтажа) |

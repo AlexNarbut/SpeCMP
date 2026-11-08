@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin
+package ru.alarmtrade.specmp.feature.device.presentation.core.pin
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement

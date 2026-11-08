@@ -32,7 +32,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigur
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.viewmodel.LegacyBaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.LegacyBaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult

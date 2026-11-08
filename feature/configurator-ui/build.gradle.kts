@@ -20,8 +20,8 @@ kotlin {
             implementation(project(":feature:device:settings-ui"))
             // Подключён ли блок — «Записать в блок» только при связи
             implementation(project(":feature:device:interaction"))
-            // LegacyBaseDeviceViewModel
-            implementation(project(":feature:device:interaction-ui"))
+            // Общий presentation устройства: база VM блока, диалог PIN
+            implementation(project(":feature:device:presentation-core"))
             // Автомобиль облачной конфигурации (CarSummary из каталога)
             implementation(project(":feature:vehicle"))
 

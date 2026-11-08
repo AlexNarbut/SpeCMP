@@ -38,8 +38,8 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 private val ButtonHeight = 48.dp
 

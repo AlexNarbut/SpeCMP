@@ -55,6 +55,20 @@ class ViewModelContractNamesTest {
     }
 
     @Test
+    fun `checks BaseDeviceViewModel generics too`() {
+        val code = "class FooViewModel(session: DeviceSession) : BaseDeviceViewModel<Foo, FooEffect>(session, initial)"
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
+    fun `skips own type parameters of an intermediate base`() {
+        val code = "abstract class BaseDeviceViewModel<S : Any, E : Any>(initial: S) : BaseViewModel<S, E>(initial)"
+
+        assertEquals(0, rule.lint(code).size)
+    }
+
+    @Test
     fun `does not check other bases`() {
         assertEquals(0, rule.lint("class FooViewModel : ViewModel()").size)
     }

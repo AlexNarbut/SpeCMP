@@ -13,8 +13,8 @@ kotlin {
 
             // Сессия и подключённый блок (DeviceScope, AlarmDevice)
             implementation(project(":feature:device:interaction"))
-            // LegacyBaseDeviceViewModel
-            implementation(project(":feature:device:interaction-ui"))
+            // Общий presentation устройства: база VM блока, диалог PIN
+            implementation(project(":feature:device:presentation-core"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 

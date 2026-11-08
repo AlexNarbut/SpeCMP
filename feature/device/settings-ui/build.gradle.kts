@@ -18,8 +18,8 @@ kotlin {
             implementation(project(":feature:device:settings"))
             implementation(project(":feature:vehicle"))
             implementation(project(":feature:device:interaction"))
-            // LegacyBaseDeviceViewModel
-            implementation(project(":feature:device:interaction-ui"))
+            // Общий presentation устройства: база VM блока, диалог PIN
+            implementation(project(":feature:device:presentation-core"))
             // «Мои конфигурации»: «Сохранить в…» из редактора
             implementation(project(":feature:configurator"))
 

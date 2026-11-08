@@ -126,14 +126,10 @@ moduleGraphAssert {
         ".* -X> :(androidApp|desktopApp|flasherAndroidApp|flasherDesktopApp)",
         ".* -X> :quality:.*",
         ":quality:.* -X> :(core|feature):.*",
-        // От *-ui зависят только composition roots. Временно разрешены рёбра на interaction-ui (уходят в 2b,
-        // presentation-core) и configurator-ui → settings-ui (уходит в 4a). Регэксп матчит всю строку
-        // «from -X> to», поэтому конец имени модуля слева — пробел, а не $.
-        ":feature:(?!(advanced-mount|fast-mount|configurator-ui|device:(autostart|firmware|state|settings-ui)) ).* " +
-            "-X> :feature:.*-ui",
-        ":feature:(advanced-mount|fast-mount|device:(autostart|firmware|state|settings-ui)) " +
-            "-X> :feature:(?!device:interaction-ui$).*-ui",
-        ":feature:configurator-ui -X> :feature:(?!device:(interaction-ui|settings-ui)$).*-ui",
+        // От *-ui зависят только composition roots. Временно разрешено configurator-ui → settings-ui (уходит в 4a).
+        // Регэксп матчит всю строку «from -X> to», поэтому конец имени модуля слева — пробел, а не $.
+        ":feature:(?!configurator-ui ).* -X> :feature:.*-ui",
+        ":feature:configurator-ui -X> :feature:(?!device:settings-ui$).*-ui",
     )
     configurations = setOf(
         "api",

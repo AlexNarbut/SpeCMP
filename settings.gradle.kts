@@ -70,6 +70,7 @@ include(":feature:device:firmware")
 include(":feature:device:autostart")
 include(":feature:device:state")
 include(":feature:device:settings")
+include(":feature:device:presentation-core")
 include(":feature:device:interaction-ui")
 include(":feature:device:settings-ui")
 

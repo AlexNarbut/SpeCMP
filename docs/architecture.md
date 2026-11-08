@@ -57,6 +57,8 @@ core/common ──┬── core/network
   (`*-ui`, экраны, ViewModel) фича не подключает никогда: экраны интегрирует `composeApp`
   через навигацию, логику — ViewModel через узкий API (см. «Правило границ feature-модулей»
   выше).
+- Исключение — общий presentation фич устройства `feature/device/presentation-core` (база VM блока
+  `BaseDeviceViewModel`, диалог PIN): его подключают фичи устройства; сам он `*-ui` не подключает, экранов и DI в нём нет.
 - «Только UI-компоненты» — это не фича: доменно-нейтральные компоненты живут в `core/ui`.
   Feature-модулю принадлежат лишь доменные UI-блоки (виджет конкретной бизнес-сущности) —
   и тогда это `presentation` соответствующей фичи или её `-ui` модуль.
@@ -263,6 +265,7 @@ commonMain.dependencies {
 | core/specialist   | `ru.alarmtrade.specmp.core.specialist`    |
 | core/ui           | `ru.alarmtrade.specmp.core.ui`            |
 | feature/`<name>`  | `ru.alarmtrade.specmp.feature.<name>` (дефис в имени модуля схлопывается: `auth-state` → `authstate`) |
+| feature/device/presentation-core | `ru.alarmtrade.specmp.feature.device.presentation.core` (суффиксы `-ui`/`-core` — подпакет) |
 | composeApp        | `ru.alarmtrade.specmp`                    |
 | androidApp        | `ru.alarmtrade.specmp.androidApp`         |
 

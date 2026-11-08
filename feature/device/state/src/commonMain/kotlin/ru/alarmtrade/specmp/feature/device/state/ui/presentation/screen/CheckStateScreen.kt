@@ -108,7 +108,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
 import ru.alarmtrade.specmp.feature.device.state.domain.model.HandsFreeMode
 import ru.alarmtrade.specmp.feature.device.state.domain.model.SirenMode
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
