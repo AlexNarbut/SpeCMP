@@ -45,7 +45,7 @@ class AppSettingsViewModelTest {
     }
     private var restarts = 0
 
-    // Экран подписан на state — с этого стартует чтение языка конфигураций (launchOnFirstStart).
+    // Экран подписан на state — с этого стартует чтение языка конфигураций (onStart).
     private fun TestScope.viewModel(restartSupported: Boolean = true) = AppSettingsViewModel(
         store,
         AppRestarter {

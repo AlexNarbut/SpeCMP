@@ -39,7 +39,7 @@ fun AuthStateNavGraph(
             // Сессия — из target анимации: уходящая при выходе зона дорисовывается со своим хранилищем VM.
             AuthState.AUTHED -> ViewModelScope(name = AUTHED_SCOPE, scopeKey = current.session) { authedState() }
 
-            AuthState.CHECK_FAILED -> errorState(viewModel::retry)
+            AuthState.CHECK_FAILED -> errorState(viewModel::onRetry)
         }
     }
 }

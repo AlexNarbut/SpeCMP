@@ -85,7 +85,7 @@ data class MainScreenState(
         get() = logoutState is LCEState.Loading
 }
 
-/** Производное: видимые карточки — во VM в `combine` на `default`, а не в теле composable. */
+/** Производное: видимые карточки — во VM при смене фич, коммерции и доступности чата, а не в теле composable. */
 internal fun MainScreenState.withActions(): MainScreenState = copy(
     visibleActions = MainHomeAction.visibleActions(
         features = appFeatures,

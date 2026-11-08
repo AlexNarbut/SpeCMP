@@ -1,68 +1,61 @@
 package ru.alarmtrade.specmp.feature.login.presentation.screen.login
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.dismissError
-import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 
 class LoginScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
-    LegacyBaseViewModel() {
-
-    private val _state = MutableStateFlow(LoginScreenState())
-    val state: StateFlow<LoginScreenState> = _state.asStateFlow()
+    BaseViewModel<LoginScreenState, Nothing>(LoginScreenState()) {
 
     fun onLoginChanged(value: String) {
-        _state.update {
-            it.copy(
+        reduce {
+            copy(
                 login = value,
-                authState = it.authState.dismissError(),
+                authState = authState.dismissError(),
                 activationResendState = LCEState.None,
             )
         }
     }
 
     fun onPasswordChanged(value: String) {
-        _state.update {
-            it.copy(
+        reduce {
+            copy(
                 password = value,
-                authState = it.authState.dismissError(),
+                authState = authState.dismissError(),
                 activationResendState = LCEState.None,
             )
         }
     }
 
     fun onPasswordVisibilityChanged() {
-        _state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+        reduce { copy(isPasswordVisible = !isPasswordVisible) }
     }
 
-    fun resetLoginForm() {
-        _state.update { LoginScreenState() }
+    fun onResetForm() {
+        reduce { LoginScreenState() }
     }
 
-    fun submit() {
+    fun onSubmit() {
         // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
-        if (_state.value.authState is LCEState.Loading) return
-        val credentials = _state.value.toCredentials()
+        if (currentState.authState is LCEState.Loading) return
+        val credentials = currentState.toCredentials()
         // Пустые поля — ошибка формы до запроса, а не «сервер отклонил».
         if (!credentials.isValid()) {
-            _state.update { it.copy(authState = LCEState.Error(AuthFormError.RequiredFields)) }
+            reduce { copy(authState = LCEState.Error(AuthFormError.RequiredFields)) }
             return
         }
 
-        safeLaunch {
-            _state.update {
-                it.copy(
+        intent {
+            reduce {
+                copy(
                     authState = LCEState.Loading,
                     activationResendState = LCEState.None,
                 )
@@ -71,34 +64,32 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
             when (val response = withContext(dispatchers.io) { repository.login(credentials) }) {
                 is Response.Success -> handleLoginResult(response.value)
 
-                is Response.Error -> _state.update {
-                    it.copy(
-                        authState = LCEState.Error(AuthFormError.from(response.exception)),
-                    )
+                is Response.Error -> reduce {
+                    copy(authState = LCEState.Error(AuthFormError.from(response.exception)))
                 }
             }
         }
     }
 
-    fun resendActivationEmail() {
+    fun onResendActivationEmail() {
         // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
-        if (_state.value.activationResendState is LCEState.Loading) return
-        val credentials = _state.value.toCredentials()
+        if (currentState.activationResendState is LCEState.Loading) return
+        val credentials = currentState.toCredentials()
         if (!credentials.isValid()) {
-            _state.update { it.copy(activationResendState = LCEState.Error(AuthFormError.RequiredFields)) }
+            reduce { copy(activationResendState = LCEState.Error(AuthFormError.RequiredFields)) }
             return
         }
 
-        safeLaunch {
-            _state.update { it.copy(activationResendState = LCEState.Loading) }
+        intent {
+            reduce { copy(activationResendState = LCEState.Loading) }
             val response = withContext(dispatchers.io) { repository.resendActivationEmail(credentials) }
-            _state.update { it.copy(activationResendState = response.asLCEState(AuthFormError::from)) }
+            reduce { copy(activationResendState = response.asLCEState(AuthFormError::from)) }
         }
     }
 
-    fun dismissActivationRequest() {
-        _state.update {
-            it.copy(
+    fun onDismissActivationRequest() {
+        reduce {
+            copy(
                 authState = LCEState.None,
                 activationResendState = LCEState.None,
             )
@@ -109,11 +100,9 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
         when (result) {
             // Переключение на авторизованную зону выполняет feature/auth-state,
             // здесь достаточно вернуть форму в исходное состояние.
-            LoginResult.Authorized -> _state.update { LoginScreenState() }
+            LoginResult.Authorized -> reduce { LoginScreenState() }
 
-            LoginResult.ActivationRequired -> {
-                _state.update { it.copy(authState = LCEState.Content(result)) }
-            }
+            LoginResult.ActivationRequired -> reduce { copy(authState = LCEState.Content(result)) }
         }
     }
 

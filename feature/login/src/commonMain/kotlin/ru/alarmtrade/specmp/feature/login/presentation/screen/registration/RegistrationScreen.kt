@@ -88,7 +88,7 @@ fun RegistrationScreen(
                 onPasswordChange = viewModel::onPasswordChanged,
                 onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
                 onInstallerConfirmedChange = viewModel::onInstallerConfirmedChanged,
-                onSubmit = viewModel::submit,
+                onSubmit = viewModel::onSubmit,
                 onBackToLogin = onBackToLogin,
             )
         }

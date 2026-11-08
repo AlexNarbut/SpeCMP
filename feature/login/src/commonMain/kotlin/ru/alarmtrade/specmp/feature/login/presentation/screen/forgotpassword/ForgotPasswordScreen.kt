@@ -73,7 +73,7 @@ fun ForgotPasswordScreen(
                 state = state,
                 colors = colors,
                 onEmailChange = viewModel::onEmailChanged,
-                onSubmit = viewModel::submit,
+                onSubmit = viewModel::onSubmit,
                 onBackToLogin = onBackToLogin,
             )
         }

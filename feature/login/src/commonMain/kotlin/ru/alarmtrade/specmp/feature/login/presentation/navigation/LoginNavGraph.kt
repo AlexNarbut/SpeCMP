@@ -139,17 +139,17 @@ private fun LoginNavDisplay(
                         onLoginChange = viewModel::onLoginChanged,
                         onPasswordChange = viewModel::onPasswordChanged,
                         onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
-                        onSubmit = viewModel::submit,
+                        onSubmit = viewModel::onSubmit,
                         onOpenRegistration = {
-                            viewModel.resetLoginForm()
+                            viewModel.onResetForm()
                             backStack.navigateSafe(RegistrationRoute)
                         },
                         onOpenForgotPassword = {
-                            viewModel.resetLoginForm()
+                            viewModel.onResetForm()
                             backStack.navigateSafe(ForgotPasswordRoute)
                         },
-                        onResendActivationEmail = viewModel::resendActivationEmail,
-                        onDismissActivationRequest = viewModel::dismissActivationRequest,
+                        onResendActivationEmail = viewModel::onResendActivationEmail,
+                        onDismissActivationRequest = viewModel::onDismissActivationRequest,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

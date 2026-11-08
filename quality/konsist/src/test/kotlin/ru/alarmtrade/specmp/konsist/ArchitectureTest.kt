@@ -283,7 +283,8 @@ class ArchitectureTest {
                     "разрешённого списка: domain фич (*Repository, *UseCase, доменные сервисы и модели), " +
                     "presentation (аргументы маршрута, порты presentation/platform), core: AppDispatchers " +
                     "(до переноса main-safety в репозитории), AppRestarter, AppForegroundProvider, " +
-                    "PermissionsProvider, AppLocaleStore; Kotlin: примитивы, коллекции, TimeSource; Logger. " +
+                    "PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore; Kotlin: примитивы, коллекции, " +
+                    "TimeSource; Logger. " +
                     "Нельзя: data, SDK, Flow, CoroutineScope, функциональные типы. docs/patterns.md, «BaseViewModel»",
             ) { parameter ->
                 val type = parameter.type.text
@@ -496,6 +497,8 @@ private val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.lifecycle.AppForegroundProvider",
     "$ROOT.core.permissions.PermissionsProvider",
     "$ROOT.core.localization.AppLocaleStore",
+    // Как AppLocaleStore: настройка приложения из core/common, реализация — core/specialist; доменной обёртки нет.
+    "$ROOT.core.common.ConfigurationLanguageStore",
     "kotlin.time.TimeSource",
     "co.touchlab.kermit.Logger",
 )
