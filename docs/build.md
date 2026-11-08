@@ -16,14 +16,18 @@
 
 | Задача | Команда |
 |---|---|
-| Собрать всё | `./gradlew build` |
-| Android debug APK | `./gradlew :androidApp:assembleDebug` |
+| Сборка для проверки изменений (оба composition root, Android + desktop) | `./gradlew :androidApp:assembleDebug :flasherAndroidApp:assembleDebug :desktopApp:compileKotlin :flasherDesktopApp:compileKotlin` |
+| Собрать всё (вкл. iOS, долго) | `./gradlew build` |
+| Android debug APK | `./gradlew :androidApp:assembleDebug` (flasher — `:flasherAndroidApp:assembleDebug`) |
+| Компиляция iOS (правки `iosMain`, `expect`/`actual`, перед PR) | `./gradlew :composeApp:compileKotlinIosArm64` |
 | iOS framework | `./gradlew :composeApp:embedAndSignAppleFrameworkForXcode` |
 | Запустить Desktop | `./gradlew :desktopApp:run` |
 | Собрать Desktop пакет | `./gradlew :desktopApp:packageDistributionForCurrentOS` |
-| Тесты | `./gradlew test` |
+| Тесты (commonTest + jvmTest на JVM) | `./gradlew jvmTest` / модуля — `./gradlew :feature:login:jvmTest`; `allTests`/`test` не использовать — гоняют iOS, Android host-тестов нет |
 | Стиль и импорты (ktlint + compose-rules) | `./gradlew spotlessCheck` / автофикс — `./gradlew spotlessApply` ([`code-quality.md`](code-quality.md)) |
-| Смысловой анализ (detekt) | `./gradlew detektCheck` / модуля — `./gradlew :feature:login:detektCheck` |
+| Смысловой анализ (detekt) | `./gradlew detektCheck --continue` / модуля — `./gradlew :feature:login:detektCheck` |
+| Архитектура (Konsist) / свои правила detekt | `./gradlew :quality:konsist:test` / `./gradlew :quality:detekt-rules:test` |
+| Скопированный код (CPD) / граф модулей | `./gradlew cpdCheck` / `./gradlew assertModuleGraph` |
 | Очистить | `./gradlew clean` |
 | Очистить Konan-кеш | `rm -rf ~/.konan/cache` |
 
@@ -35,21 +39,25 @@ Desktop-пакет: `desktopApp/build/compose/binaries/main/`
 
 Изменение кода считается готовым, когда:
 
-1. **Сборка проходит:** `./gradlew :androidApp:assembleDebug` (точечные правки — таргетными compile-задачами
-   затронутых модулей).
+1. **Сборка проходит** — оба composition root (`composeApp` и `flasherApp` на тех же `feature/device/*`), Android и
+   desktop:
+
+   ```bash
+   ./gradlew :androidApp:assembleDebug :flasherAndroidApp:assembleDebug :desktopApp:compileKotlin :flasherDesktopApp:compileKotlin
+   ```
+
+   Правки `iosMain` или `expect`/`actual` — ещё `./gradlew :composeApp:compileKotlinIosArm64`; перед PR — всегда.
 2. **Качество кода ⚠️ ОБЯЗАТЕЛЬНАЯ СТАДИЯ:**
 
    ```bash
-   ./gradlew spotlessApply   # автофикс стиля и импортов
-   ./gradlew spotlessCheck
-   ./gradlew detektCheck
+   ./gradlew spotlessApply   # автофикс стиля и импортов (всё дерево)
+   ./gradlew spotlessCheck detektCheck cpdCheck assertModuleGraph :quality:konsist:test :quality:detekt-rules:test --continue
    ```
 
-   Оба прогона должны проходить без замечаний: неиспользуемые импорты, имена, небезопасный код и ошибки Compose
-   ловятся здесь. Что именно проверяется, как это устроено и как подавлять — [`code-quality.md`](code-quality.md).
-   `spotlessCheck` запускается git-хуком pre-commit, `detektCheck` — pre-push (активация:
-   `pre-commit install --hook-type pre-commit --hook-type pre-push`).
-3. **Тесты затронутых модулей зелёные:** `./gradlew jvmTest` (или `:<module>:jvmTest`).
+   Все прогоны должны проходить без замечаний: стиль, небезопасный код, ошибки Compose, архитектура слоёв и модулей,
+   копии кода. Что именно проверяется, как это устроено и как подавлять — [`code-quality.md`](code-quality.md).
+   `spotlessCheck` запускается git-хуком pre-commit, `detektCheck` — pre-push (активация: `pre-commit install`).
+3. **Тесты затронутых модулей зелёные:** `./gradlew :<module>:jvmTest` (все — `./gradlew jvmTest`).
 
 **Desktop + USB на macOS (Apple Silicon).** USB-слой SDK на JVM (`usb4java` 1.3.0) содержит нативную библиотеку
 только для `darwin-x86-64`: на arm64-JDK USB-устройства молча не находятся. Запускать на x86_64-JDK через

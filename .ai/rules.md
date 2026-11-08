@@ -24,6 +24,7 @@
 - `flasherApp` (+ обёртки `flasherAndroidApp`, `flasherDesktopApp`) — отдельное мини-приложение прошивки (ветка `feature/flasher-app`): свой composition root поверх тех же `core/*` и `feature/device/*`.
 - `build-logic/` — included build с convention-плагинами (`specmp.kmp.android-jvm`, `specmp.kmp.library`, `specmp.kmp.compose`, `specmp.detekt`), см. `docs/build.md`.
 - `quality/` — инструменты проверок кода: `quality/detekt-rules` (свои правила detekt, набор `specmp`), `quality/konsist` (архитектурные тесты Konsist), см. `docs/code-quality.md`.
+- `scripts/agent-hooks/` — хуки агентов: `kotlin-quality.sh` (Spotless по правленому `.kt`/`.kts`), `protect-main.sh` (защита `main`/`master`); регистрация — `.ai/hooks/*` → `.ai/generate.sh`, см. `docs/code-quality.md` → «Хуки агентов».
 - `docs/` — тематические правила и справка по архитектуре, UI, навигации и сборке.
 
 ## Read Before Editing
@@ -47,8 +48,15 @@
 
 ## Validation
 
-- После изменений кода запускай `./gradlew build`; для чисто документационных и agent-config правок это не требуется.
-- Качество кода (обязательная стадия, перед коммитом): `./gradlew spotlessApply && ./gradlew spotlessCheck && ./gradlew detektCheck` — без замечаний. Подробности — `docs/code-quality.md`.
+- После изменений кода собирай оба composition root на Android и desktop: `./gradlew :androidApp:assembleDebug :flasherAndroidApp:assembleDebug :desktopApp:compileKotlin :flasherDesktopApp:compileKotlin` (не `./gradlew build`: он тянет iOS); для чисто документационных и agent-config правок сборка не требуется. Правки `iosMain` или `expect`/`actual` — ещё `./gradlew :composeApp:compileKotlinIosArm64`. См. `docs/build.md` → «Протокол верификации».
+- После изменений кода запускай тесты затронутых модулей: `./gradlew :<модуль>:jvmTest` (все — `./gradlew jvmTest`; `allTests`/`test` не использовать — гоняют iOS), см. `docs/build.md`.
+- После изменений кода запускай `./gradlew spotlessCheck` (автофикс — `./gradlew spotlessApply`, переписывает всё дерево), см. `docs/code-quality.md`.
+- После изменений кода запускай `./gradlew detektCheck --continue` (без автофикса), см. `docs/code-quality.md` → «detekt».
+- После изменений кода запускай `./gradlew cpdCheck` (поиск скопированного кода, порог 100 токенов): находку выноси в общий код, а не исключай, см. `docs/code-quality.md` → «CPD».
+- После правок `*.gradle.kts`, `build-logic/` или `gradle/libs.versions.toml` запускай `./gradlew assertModuleGraph` (направления зависимостей между модулями: `core` ↛ `feature`, `core`/`feature` ↛ `composeApp`/`flasherApp`, никто ↛ платформенные обёртки и `quality`, от `*-ui` зависят только composition roots); нарушение исправляй переносом кода, а не исключением, см. `docs/code-quality.md` → «graph-assert».
+- После структурных изменений (новые классы/файлы, перенос пакетов, ViewModel, репозитории, Koin-модули, импорты между слоями и модулями) запускай `./gradlew :quality:konsist:test`, см. `docs/code-quality.md` → «Konsist». После правки своих правил detekt — `./gradlew :quality:detekt-rules:test`.
+- После правки `*.kt`/`*.kts`, если твой агент не запускает хук автоматически (Claude Code, Codex, Gemini CLI — запускают), выполни `scripts/agent-hooks/kotlin-quality.sh <изменённые файлы>` и исправь замечания до завершения задачи.
+- Всё одной строкой перед коммитом: `./gradlew spotlessApply && ./gradlew :androidApp:assembleDebug :flasherAndroidApp:assembleDebug :desktopApp:compileKotlin :flasherDesktopApp:compileKotlin <:модуль:jvmTest…> spotlessCheck detektCheck cpdCheck assertModuleGraph :quality:konsist:test :quality:detekt-rules:test --continue`.
 - Производительность (скилл `perf-bench`, `B=.agents/skills/perf-bench/scripts/bench.sh`) — **не обязательна**:
   по просьбе пользователя и для задач, где важна производительность (старт, списки, тяжёлые экраны, память,
   оптимизации). В остальных задачах не запускать.
@@ -62,3 +70,10 @@
   `composeApp`. Вердикт, причины и путь к отчёту из `report.md` — в итог задачи (и в её файл в `.claude/tasks/`, если
   он есть); ❌ в отчёте — задача не завершена, пока регресс не объяснён пользователю. Правила и метрики —
   `docs/test/perf-bench.md`.
+
+## Instruction Maintenance
+
+- Обновляй `.ai/rules.md`, если меняются маршрутизация инструкций, структура проекта, обязательные документы для чтения или команды валидации.
+- Обновляй `.ai/agents/**`, если меняются границы подсистемы или локальные правила для конкретной директории.
+- После изменений в `.ai/rules.md`, `.ai/agents/**`, `.ai/skills/**` или `.ai/hooks/*` (хуки агентов, см. `docs/code-quality.md` → «Хуки агентов») запускай `.ai/generate.sh` и коммить результат вместе с источником (`.claude/settings.json`, `.gemini/settings.json`, `.codex/hooks.json` версионируются). Сверка — `.ai/generate.sh --check` (pre-commit хук `ai-generate`).
+- Новая проверка (правило detekt/Konsist, ребро графа, исключение CPD) — описывай её в `docs/code-quality.md` в том же изменении.

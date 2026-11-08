@@ -111,36 +111,104 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | Проверить стиль всего дерева | `./gradlew spotlessCheck` |
 | Исправить стиль и импорты автоматически | `./gradlew spotlessApply` |
 | Проверить стиль относительно ветки | `./gradlew spotlessCheck -PspotlessRatchetFrom=origin/develop` |
-| Смысловая проверка всего проекта | `./gradlew detektCheck` |
+| Автофикс одного файла, не трогая остальные | `./gradlew spotlessApply -PspotlessIdeHook=<абсолютный путь>` |
+| Проверка правленых файлов (как хук агентов) | `scripts/agent-hooks/kotlin-quality.sh <файлы>` |
+| Смысловая проверка всего проекта | `./gradlew detektCheck --continue` |
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
 | Тесты своих правил detekt | `./gradlew :quality:detekt-rules:test` |
 | Архитектурные правила (Konsist) | `./gradlew :quality:konsist:test` |
 | Скопированный код (CPD) | `./gradlew cpdCheck` |
 | Направления зависимостей модулей | `./gradlew assertModuleGraph` |
+| Граф модулей: статистика / Graphviz | `./gradlew generateModulesGraphStatistics` / `./gradlew generateModulesGraphvizText -Pmodules.graph.output.gv=<файл>` |
+| Сверка сгенерированных агентских конфигов | `.ai/generate.sh --check` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
 | Строки и ключи локализации | `config/hooks/check-strings.py` |
 
 Порядок перед коммитом:
 
 ```bash
-./gradlew spotlessApply                  # автофикс стиля и импортов
-./gradlew spotlessCheck                  # убедиться, что чисто
-./gradlew detektCheck                    # смысловые замечания — чинить руками
-./gradlew :androidApp:assembleDebug      # сборка (см. build.md)
+./gradlew spotlessApply && ./gradlew spotlessCheck
+./gradlew :androidApp:assembleDebug :flasherAndroidApp:assembleDebug \
+    :desktopApp:compileKotlin :flasherDesktopApp:compileKotlin        # сборка (см. build.md)
+./gradlew :<модуль>:jvmTest                # тесты затронутых модулей
+./gradlew detektCheck --continue           # смысловые замечания — чинить руками
+./gradlew :quality:konsist:test            # если менялась структура: классы, пакеты, импорты между слоями/модулями
+./gradlew cpdCheck
+./gradlew assertModuleGraph                # если менялись *.gradle.kts, build-logic или libs.versions.toml
+./gradlew :quality:detekt-rules:test       # если менялись свои правила detekt
 ```
 
 Особенности `spotlessApply`:
 
-- Падает, если в изменённых файлах есть нарушения, которые нельзя исправить автоматически (wildcard-импорт,
-  нарушение compose-правила): выводит список, чинить надо вручную, после этого повторить.
-- Переписывает **все** файлы, изменённые с `HEAD`, в том числе чужие незакоммиченные. Запускать, когда в дереве
-  только то, что вы собираетесь коммитить.
+- Без ratchet переписывает **все** файлы репозитория, с `-PspotlessRatchetFrom=<ref>` — все изменённые
+  относительно ref, включая чужие незакоммиченные. Если в дереве не только своё — автофикс по одному файлу
+  (`-PspotlessIdeHook=<путь>`).
+- Ratchet проверяет только изменённые файлы, но **файл целиком**: тронул старый файл — он проверяется весь.
+- Файл с неавтофиксимым нарушением (wildcard-импорт, compose-правило) Spotless не форматирует вообще и показывает
+  только первое нарушение в нём. Исправь его и снова запусти `spotlessApply` — всплывут следующие.
+- После правки своих правил detekt или `.editorconfig` — `./gradlew --stop`: daemon держит старые классы и конфиг.
 
 Git-хуки активируются один раз на клон (нужен `pre-commit`, например `brew install pre-commit`):
 
 ```bash
 pre-commit install   # типы хуков (pre-commit, pre-push, pre-merge-commit) — default_install_hook_types в конфиге
 ```
+
+---
+
+## Хуки агентов
+
+[`scripts/agent-hooks/kotlin-quality.sh`](../scripts/agent-hooks/kotlin-quality.sh) проверяет **только переданные
+`.kt`/`.kts`** (прочие файлы — мгновенный выход 0) и не зависит от агента:
+
+- **Spotless** — через `spotlessApply -PspotlessIdeHook=<файл> -PspotlessIdeHookUseStdOut`: файл не переписывается,
+  git и чужие незакоммиченные файлы не влияют. Неавтофиксимое нарушение показывается первым (как и в
+  `spotlessCheck`), автофиксимое — диффом «как должно быть» и командой автофикса этого файла.
+- detekt, Konsist, CPD хук не запускает (медленно) — они на pre-push и в ручном прогоне перед коммитом.
+- Отчёт — по каждому файлу с замечаниями (до 60 строк на файл).
+
+Вход и выход:
+
+| Кто | Вход | `--format` | Ответ при замечаниях |
+|---|---|---|---|
+| Человек / агент без хуков | пути аргументами | `plain` (по умолчанию) | отчёт в stdout, exit 1 |
+| Claude Code, `PostToolUse` `Edit\|Write` | stdin: `tool_input.file_path` | `claude` | stderr + exit 2 |
+| Gemini CLI, `AfterTool` `write_file\|replace` | stdin: `tool_input.file_path` (относительный — от `cwd`) | `gemini` | exit 0 + JSON `hookSpecificOutput.additionalContext` |
+| Codex CLI, `PostToolUse` `apply_patch\|Edit\|Write` | stdin: патч в `tool_input.command`, пути из `*** Update File:` / `*** Add File:` / `*** Move to:` | `codex` | exit 0 + JSON `{"decision":"block","reason":…}` |
+
+Без `--format` формат stdin определяется по payload: `hook_event_name: AfterTool` → gemini; `tool_name:
+apply_patch` или поле `turn_id` → codex; иначе claude. Правка к моменту хука уже применена — агент чинит следующим
+шагом. Без `python3` разбирается только `file_path`, ответ — как у claude.
+
+```bash
+scripts/agent-hooks/kotlin-quality.sh feature/x/src/.../A.kt feature/x/src/.../B.kt   # вручную
+printf '{"tool_input":{"file_path":"%s"}}' "$PWD/<путь>.kt" | scripts/agent-hooks/kotlin-quality.sh --format claude
+```
+
+[`scripts/agent-hooks/protect-main.sh`](../scripts/agent-hooks/protect-main.sh) — `PreToolUse` `Bash` у Claude:
+блокирует (exit 2) пуш в `main`/`master`, слияние в них и любые изменения истории, пока `HEAD` на `main`/`master`
+(правило веток — `.ai/rules.md`). Для людей — `config/hooks/check-master-from-develop.sh` (pre-push и pre-merge-commit).
+
+Регистрация — версионируемые фрагменты в [`.ai/hooks/`](../.ai/hooks/): `claude-settings.json` →
+`.claude/settings.json`, `gemini-settings.json` → `.gemini/settings.json`, `codex-hooks.json` → `.codex/hooks.json`.
+После изменения фрагмента запусти `.ai/generate.sh`: он вмерживает фрагменты, сохраняя остальные ключи и заменяя
+запись с той же `command` или тем же скриптом; `.claude/settings.local.json` не трогается. Результат коммитится
+вместе с фрагментом — `.ai/generate.sh --check` (pre-commit `ai-generate`) ловит расхождение и неотслеживаемые
+сгенерированные файлы. Особенности:
+
+- **Gemini CLI** и **Codex** запускают проектные хуки только после доверия: Gemini — fingerprint хука (изменённая
+  команда снова недоверенная), Codex — доверенный слой `.codex/` и ревью хука через `/hooks`.
+- Остальные агенты (Cursor, Kimi Code и пр.) хук не подключают — для них правило в `.ai/rules.md` → «Validation»:
+  запусти скрипт вручную по изменённым файлам.
+
+Когда что запускается:
+
+| Момент | Что | Объём |
+|---|---|---|
+| Правка файла агентом (или вручную) | `kotlin-quality.sh`: Spotless (ideHook) | правленые `.kt`/`.kts` |
+| `git commit` (pre-commit) | `spotlessCheck`, `check-serial-name.sh`, `check-strings.py`, `.ai/generate.sh --check` | Spotless — всё дерево (неиндексированное pre-commit прячет), если в коммите есть `.kt`/`.kts` |
+| `git push` (pre-push) | `detektCheck`, `check-master-from-develop.sh push` | весь проект |
+| Перед коммитом, руками | сборка, `jvmTest`, `cpdCheck`, `:quality:konsist:test`, `assertModuleGraph` | см. «Команды» |
 
 ---
 
@@ -306,8 +374,8 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
   `detektCheck` и при необходимости поднять detekt.
 - Состав `detektCheck` — фиксированный список имён задач. Новые source set'ы (`androidHostTest`, `iosTest`,
   `appleMain` и т. п.) сами в анализ не попадут: добавить их задачи в список в `build-logic/src/main/kotlin/DetektConventionPlugin.kt`.
-- Хук для агентов и `spotlessCheck` в pre-commit показывают нарушения всего дерева, поэтому чужая
-  незакоммиченная работа с нарушениями будет мешать, пока не будет исправлена.
+- `spotlessCheck` в pre-commit проверяет всё дерево: чужая проиндексированная работа с нарушениями остановит
+  коммит, пока не будет исправлена. Хук агентов смотрит только правленый файл.
 
 ---
 
