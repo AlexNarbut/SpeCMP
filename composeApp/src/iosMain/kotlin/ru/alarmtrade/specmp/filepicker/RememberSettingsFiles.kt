@@ -22,6 +22,7 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult

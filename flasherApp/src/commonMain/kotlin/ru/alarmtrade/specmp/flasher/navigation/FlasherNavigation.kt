@@ -25,6 +25,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file.FirmwareFileScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.serial.SerialFirmwareScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareSources
@@ -33,7 +34,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
-import ru.alarmtrade.specmp.flasher.filepicker.rememberFirmwareFilePicker
 
 /** Поиск устройства — корень авторизованной зоны. */
 @Serializable

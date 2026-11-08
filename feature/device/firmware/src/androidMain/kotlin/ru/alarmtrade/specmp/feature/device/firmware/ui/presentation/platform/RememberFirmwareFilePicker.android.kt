@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.flasher.filepicker
+package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform
 
 import android.content.Context
 import android.net.Uri
@@ -17,9 +17,9 @@ import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileLimits
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
+import ru.alarmtrade.specmp.core.common.file.copyToCache
+import ru.alarmtrade.specmp.core.common.file.queryNameAndSize
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 
 /**
  * Буфер результатов — на уровне процесса: пока открыт системный пикер, процесс могут убить, и registry доставит
@@ -68,7 +68,7 @@ private fun Uri.copyToCache(context: Context): FirmwareFilePickResult {
     val meta = context.contentResolver.queryNameAndSize(this)
     if ((meta.sizeBytes ?: 0L) > FirmwareFileLimits.MAX_BYTES) return FirmwareFilePickResult.TooLarge
 
-    val fileName = safeFileName(meta.name ?: DEFAULT_NAME)
+    val fileName = safeFileName(meta.name ?: DEFAULT_NAME, fallback = DEFAULT_NAME)
     return try {
         val copy = context.copyToCache(this, FIRMWARE_DIR, fileName)
         when {

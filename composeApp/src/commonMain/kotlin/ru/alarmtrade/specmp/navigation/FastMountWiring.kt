@@ -19,6 +19,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clon
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
@@ -49,7 +50,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
-import ru.alarmtrade.specmp.filepicker.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 
 /** Куда уйти после закрытия сессии блока. */

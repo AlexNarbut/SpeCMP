@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import java.io.File
 import java.util.UUID
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 

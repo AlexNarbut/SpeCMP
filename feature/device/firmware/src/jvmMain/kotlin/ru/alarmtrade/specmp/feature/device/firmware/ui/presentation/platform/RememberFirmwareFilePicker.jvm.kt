@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.flasher.filepicker
+package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -9,9 +9,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_file
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileLimits
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
 
 @Composable
 actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {

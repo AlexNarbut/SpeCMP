@@ -9,19 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
-import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.lifecycle.appLifecycleModule
-import ru.alarmtrade.specmp.core.localization.AppLocaleStore
-import ru.alarmtrade.specmp.core.localization.DefaultAppLocaleStore
+import ru.alarmtrade.specmp.core.localization.di.localizationModule
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
-import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
-import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
-import ru.alarmtrade.specmp.core.specialist.specialistModule
+import ru.alarmtrade.specmp.core.specialist.specialistModules
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
@@ -42,11 +38,6 @@ import ru.alarmtrade.specmp.flasher.navigation.FlasherNavigation
 fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable (isDark: Boolean) -> Unit = {}) {
     val appLocale = remember { prepareAppLocale() }
 
-    val appVersionModule = remember(appVersionName, appVersionCode) {
-        val version = SpecialistAppVersion(name = appVersionName, code = appVersionCode)
-        module { single<SpecialistAppVersionProvider> { SpecialistAppVersionProvider { version } } }
-    }
-
     val platformModules = rememberPlatformKoinModules()
 
     KoinApplication(application = {
@@ -54,9 +45,8 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
             buildList {
                 addAll(platformModules)
                 add(commonModule)
-                add(specialistModule)
-                add(appVersionModule)
-                add(module { single<AppLocaleStore> { DefaultAppLocaleStore } })
+                addAll(specialistModules(appVersionName, appVersionCode))
+                add(localizationModule)
                 add(permissionsModule())
                 add(appLifecycleModule)
                 add(authStateModule)

@@ -13,7 +13,7 @@ import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 
-/** [SpecialistAppVersionProvider] регистрирует composition root (`App(appVersion)`): версию знает платформа. */
+/** [SpecialistAppVersionProvider] добавляет [specialistModules]: версию знает только платформа. */
 val specialistModule = module {
     single {
         val dispatchers: AppDispatchers = get()

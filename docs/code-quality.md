@@ -19,6 +19,8 @@
 | **Spotless** | 8.10.4 | Gradle-обёртка над ktlint + compose-rules: `spotlessCheck` / `spotlessApply`, работа только по изменённым файлам | да (через ktlint) |
 | **detekt** | 2.0.0-alpha.6 | смысл кода: мёртвый код, `!!`, исключения, неверный пакет, запрещённые вызовы, сложность и длина, магические числа | нет |
 | **Konsist** | 0.18.1 | архитектура: направление импортов между модулями и слоями, пакет = модуль, раскладка ролей, граница SDK | нет |
+| **PMD CPD** | 7.29.0 | скопированный код: одинаковые последовательности ≥ 100 токенов Kotlin | нет |
+| **modules-graph-assert** | 2.9.1 | направления зависимостей между Gradle-модулями (объявленные `project(…)`) | нет |
 
 Разделение труда: **Spotless — стиль и автофикс, detekt — смысловые замечания без автофикса**. Правила не
 дублируются: форматирование, импорты и wildcard проверяет ktlint (`detekt-formatting` не подключён,
@@ -44,6 +46,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | [`build-logic/.../DetektConventionPlugin.kt`](../build-logic/src/main/kotlin/DetektConventionPlugin.kt) | convention `specmp.detekt`: конфиг, свой набор правил (`detektPlugins`), исключение `build/`, отвязка от `check`, задача `detektCheck` модуля |
 | [`quality/konsist`](../quality/konsist) | архитектурные тесты Konsist (`ArchitectureTest`): читают исходники как текст, к сборке не относятся |
 | [`quality/detekt-rules`](../quality/detekt-rules) | свои правила detekt (набор `specmp`, `SpecmpRuleSetProvider`) и их тесты; сам модуль detekt не проверяет |
+| [`build.gradle.kts`](../build.gradle.kts) | задача `cpdCheck` (конфигурация `cpd`: PMD CLI + `pmd-kotlin`); плагин `module-graph-assert` и блок `moduleGraphAssert { … }` — задача `assertModuleGraph` |
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`, `junit`; плагины `detekt`, `spotless`; `detekt-api`/`detekt-test` для своих правил |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt и раздел `specmp:` своих правил |
@@ -109,6 +112,8 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
 | Тесты своих правил detekt | `./gradlew :quality:detekt-rules:test` |
 | Архитектурные правила (Konsist) | `./gradlew :quality:konsist:test` |
+| Скопированный код (CPD) | `./gradlew cpdCheck` |
+| Направления зависимостей модулей | `./gradlew assertModuleGraph` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
 | Строки и ключи локализации | `config/hooks/check-strings.py` |
 
@@ -237,6 +242,39 @@ ViewModel через несколько composable, эффекты читают 
 `mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
 Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
 Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.
+
+### CPD (`cpdCheck`)
+
+Корневая задача `cpdCheck` (`JavaExec` над CLI PMD 7, язык `kotlin`) падает на любой последовательности от **100**
+одинаковых токенов. Baseline нет. Проверяются `src/**/*.kt` модулей `core/*`, `feature/*`, `composeApp`, `flasherApp`,
+`quality/*` (все продакшен-source set'ы, iOS читается как текст); исключены `build/`, `generated/` и тестовые source
+set'ы (`src/test`, `src/*Test`) — фикстуры тестов повторяются намеренно. `--ignore-identifiers`/`--ignore-literals` не
+используются. В `check`/`build` задача не входит.
+
+**Нашлась копия — вынеси общее, а не исключай:** внутри фичи — `internal`-функция/composable (`FirmwareCenteredBody`,
+`FirmwareLoadError`, `CheckDialogTransitions.kt` в `feature:device:firmware`); общее двух корней (`composeApp`,
+`flasherApp`) — в фичу или `core/*` (`rememberFirmwareFilePicker()` в `feature:device:firmware`, `core/common/file`,
+`specialistModules()`, `localizationModule`), корни друг от друга не зависят. Исключение по пути — только для повторов
+по построению, с комментарием-причиной рядом с путём в `cpdCheck`.
+
+### graph-assert (`assertModuleGraph`)
+
+Плагин `com.jraska.module.graph.assertion` подключён к корневому проекту и строит граф по объявленным `project(…)` в
+конфигурациях из `moduleGraphAssert.configurations` (`api`/`implementation`, KMP `commonMain`/`androidMain`/`iosMain`/
+`jvmMain`, `commonTestImplementation`, `jvmTestImplementation`). Импорты в коде проверяет Konsist (`module-direction`).
+
+| Правило | Смысл |
+|---|---|
+| `:core:.* -X> :feature:.*` | core не зависит от фич |
+| `:(core\|feature):.* -X> :(composeApp\|flasherApp)` | composition roots — листья для core и фич |
+| `.* -X> :(androidApp\|desktopApp\|flasherAndroidApp\|flasherDesktopApp)` | от платформенных обёрток не зависит никто |
+| `.* -X> :quality:.*`, `:quality:.* -X> :(core\|feature):.*` | инструменты проверок отделены от продукта |
+| `:feature:.* -X> :feature:.*-ui` | от `*-ui` зависят только composition roots |
+
+Временный allowlist последнего правила (в регэкспе, снимается в подэтапе, где ребро убрано): `advanced-mount`,
+`fast-mount`, `configurator-ui`, `device:{autostart,firmware,state,settings-ui}` → `device:interaction-ui`
+(уходит с `presentation-core`); `configurator-ui` → `device:settings-ui`. Регэксп матчит всю строку
+`"<from> -X> <to>"`, поэтому конец имени модуля слева в негативном lookahead — пробел, а не `$`.
 
 ---
 

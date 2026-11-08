@@ -74,8 +74,7 @@ class FirmwareCheckViewModel(
         pinCooldown.lockedFor(_state.map { state -> state.deviceId.takeIf { state.dialog is CheckDialog.Pin } })
 
     val state: StateFlow<FirmwareCheckState> = combine(_state, pinLock) { state, lock ->
-        val dialog = state.dialog
-        if (dialog is CheckDialog.Pin) state.copy(dialog = dialog.copy(lockedFor = lock)) else state
+        state.copy(dialog = state.dialog.withPinLock(lock))
     }
         .launchOnFirstStart { onEachDeviceReady(::onDeviceReady) }
         .flowOn(dispatchers.default)
@@ -251,22 +250,8 @@ class FirmwareCheckViewModel(
     }
 
     private fun showPin(moduleId: Long, wrongPin: Boolean = false) {
-        _state.update { state ->
-            val previous = state.dialog as? CheckDialog.Pin
-            val wrongCount = (previous?.wrongCount ?: 0) + if (wrongPin) 1 else 0
-            state.copy(dialog = CheckDialog.Pin(moduleId, wrong = wrongPin, wrongCount = wrongCount))
-        }
+        _state.update { state -> state.copy(dialog = state.dialog.nextPin(moduleId, wrongPin)) }
     }
-
-    private fun CheckDialog?.sending(moduleId: Long, withPin: Boolean): CheckDialog = if (withPin) {
-        val previous = this as? CheckDialog.Pin
-        CheckDialog.Pin(moduleId, sending = true, wrongCount = previous?.wrongCount ?: 0)
-    } else {
-        CheckDialog.ConfirmBoot(moduleId, sending = true)
-    }
-
-    private fun CheckDialog?.isSending(): Boolean = (this as? CheckDialog.ConfirmBoot)?.sending == true ||
-        (this as? CheckDialog.Pin)?.sending == true
 
     private fun cards(): List<ModuleCardUi> = _state.value.content.content.orEmpty()
 

@@ -22,6 +22,7 @@ import platform.UIKit.UIWindowScene
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 

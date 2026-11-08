@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.flasher.filepicker
+package ru.alarmtrade.specmp.core.common.file
 
 import android.content.ContentResolver
 import android.content.Context
@@ -8,9 +8,9 @@ import java.io.File
 import java.util.UUID
 
 /** Имя и размер документа от провайдера; любое может отсутствовать. */
-internal data class DocumentMeta(val name: String? = null, val sizeBytes: Long? = null)
+data class DocumentMeta(val name: String? = null, val sizeBytes: Long? = null)
 
-internal fun ContentResolver.queryNameAndSize(uri: Uri): DocumentMeta {
+fun ContentResolver.queryNameAndSize(uri: Uri): DocumentMeta {
     val cursor = query(uri, null, null, null, null) ?: return DocumentMeta()
     return cursor.use {
         if (!it.moveToFirst()) return@use DocumentMeta()
@@ -24,7 +24,7 @@ internal fun ContentResolver.queryNameAndSize(uri: Uri): DocumentMeta {
 }
 
 /** Копия документа во временном каталоге и её фактический размер. */
-internal class CachedCopy(val file: File, val bytes: Long)
+class CachedCopy(val file: File, val bytes: Long)
 
 /**
  * Копия документа в `cacheDir/<dirName>/<uuid>/<fileName>`: прошлые копии каталога стираются (SDK нужен путь только на
@@ -33,7 +33,7 @@ internal class CachedCopy(val file: File, val bytes: Long)
  */
 // Граница платформенного I/O: любой сбой (I/O, SecurityException провайдера) — каталог копии удаляется, ошибка дальше
 @Suppress("TooGenericExceptionCaught")
-internal fun Context.copyToCache(uri: Uri, dirName: String, fileName: String): CachedCopy? {
+fun Context.copyToCache(uri: Uri, dirName: String, fileName: String): CachedCopy? {
     val root = File(cacheDir, dirName)
     val directory = File(root, UUID.randomUUID().toString())
     try {
@@ -50,30 +50,3 @@ internal fun Context.copyToCache(uri: Uri, dirName: String, fileName: String): C
         throw e
     }
 }
-
-/**
- * Имена выбранных файлов приходят извне (системный пикер) и
- * используются в путях файловой системы — поэтому перед записью:
- * - только basename: `../`, абсолютные пути и разделители каталогов срезаются;
- * - запрещённые в Windows/Android/iOS символы и управляющие коды → `_`;
- * - пустое/точечное имя → [FALLBACK_NAME]; длина ограничена [MAX_NAME_LENGTH].
- */
-internal fun safeFileName(name: String): String {
-    val baseName = name.substringAfterLast('/').substringAfterLast('\\')
-    val cleaned = buildString {
-        baseName.forEach { char ->
-            append(if (char in FORBIDDEN_CHARS || char.code < 0x20) '_' else char)
-        }
-    }.trim().trim('.')
-    if (cleaned.isEmpty()) return FALLBACK_NAME
-    if (cleaned.length <= MAX_NAME_LENGTH) return cleaned
-
-    val extension = cleaned.substringAfterLast('.', "").take(MAX_EXTENSION_LENGTH)
-    val stem = cleaned.removeSuffix(".$extension").take(MAX_NAME_LENGTH - extension.length - 1)
-    return if (extension.isEmpty()) cleaned.take(MAX_NAME_LENGTH) else "$stem.$extension"
-}
-
-private const val FALLBACK_NAME = "firmware"
-private const val MAX_NAME_LENGTH = 120
-private const val MAX_EXTENSION_LENGTH = 16
-private val FORBIDDEN_CHARS = setOf('/', '\\', ':', '*', '?', '"', '<', '>', '|')

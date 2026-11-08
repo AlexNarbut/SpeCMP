@@ -226,7 +226,10 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
         ConfigurationTopBar(state, location, actions)
         return
     }
-    CmpTopAppBar(
+    SettingsTopBar(
+        state = state,
+        location = location,
+        actions = actions,
         title = { CmpText(text = stringResource(Strings.string.settings_editor_title_screen)) },
         subtitle = header?.let { device ->
             {
@@ -247,24 +250,6 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
                     device.singleCanCode?.let { code -> CanBadge(code) }
                 }
             }
-        },
-        navigationIcon = {
-            CmpIconButton(
-                onClick = actions.onBack,
-                icon = CmpIcons.ArrowBack,
-                contentDescription = stringResource(Strings.string.settings_common_a11y_back)
-            )
-        },
-        actions = {
-            if (!location.isSearch && state.menu is LCEState.Content) {
-                CmpIconButton(
-                    onClick = actions.onSearch,
-                    modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),
-                    icon = CmpIcons.Search,
-                    contentDescription = stringResource(Strings.string.settings_common_a11y_search)
-                )
-                MoreMenu(state, actions)
-            }
         }
     )
 }
@@ -277,7 +262,10 @@ private fun ConfigurationTopBar(
     actions: DeviceSettingsActions
 ) {
     val source = state.source
-    CmpTopAppBar(
+    SettingsTopBar(
+        state = state,
+        location = location,
+        actions = actions,
         title = {
             CmpText(
                 text = source.title.ifEmpty { stringResource(Strings.string.settings_source_title_defaults) },
@@ -306,7 +294,22 @@ private fun ConfigurationTopBar(
                 CmpText(text = source.deviceName, style = CmpTextStyle.Caption, maxLines = 1)
                 if (source.isReadOnly) ReadOnlyBadge()
             }
-        },
+        }
+    )
+}
+
+/** Шапка редактора: «Назад», а вне поиска с загруженным меню — поиск и меню «⋯». */
+@Composable
+private fun SettingsTopBar(
+    state: DeviceSettingsState,
+    location: SettingsLocation,
+    actions: DeviceSettingsActions,
+    title: @Composable () -> Unit,
+    subtitle: (@Composable () -> Unit)?
+) {
+    CmpTopAppBar(
+        title = title,
+        subtitle = subtitle,
         navigationIcon = {
             CmpIconButton(
                 onClick = actions.onBack,

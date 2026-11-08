@@ -39,6 +39,11 @@ kotlin {
             implementation(libs.kermit)
         }
 
+        // rememberFirmwareFilePicker: SAF-лаунчер (rememberLauncherForActivityResult)
+        androidMain.dependencies {
+            implementation(libs.androidx.activityCompose)
+        }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)

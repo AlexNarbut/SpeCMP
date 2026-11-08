@@ -1,6 +1,6 @@
 @file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 
-package ru.alarmtrade.specmp.filepicker
+package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -23,9 +23,7 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileLimits
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 
 @Composable
 actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {
@@ -99,7 +97,7 @@ private fun NSURL.copyToTemporary(): FirmwareFilePickResult {
         }
         if ((sourceSize ?: 0L) > FirmwareFileLimits.MAX_BYTES) return FirmwareFilePickResult.TooLarge
 
-        val name = safeFileName(lastPathComponent ?: DEFAULT_NAME)
+        val name = safeFileName(lastPathComponent ?: DEFAULT_NAME, fallback = DEFAULT_NAME)
         val root = NSTemporaryDirectory().trimEnd('/') + "/" + FIRMWARE_DIR
         fileManager.removeItemAtPath(root, error = null)
         val directory = "$root/${NSUUID().UUIDString}"

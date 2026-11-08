@@ -4,16 +4,8 @@ package ru.alarmtrade.specmp.filepicker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.suspendCancellableCoroutine
-import platform.Foundation.NSData
-import platform.Foundation.NSFileManager
-import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
-import platform.Foundation.NSUUID
-import platform.Foundation.create
-import platform.Foundation.writeToURL
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.popoverPresentationController
 import platform.darwin.dispatch_async
@@ -39,7 +31,7 @@ actual fun rememberFirmwareFileExporter(): FirmwareFileExporter {
                 saver.saveToDownloads(fileName, bytes).toFirmware { null }
 
             override suspend fun share(fileName: String, bytes: ByteArray): Boolean {
-                val url = writeShareFile(fileName, bytes) ?: return false
+                val url = writeTempFile(SHARE_DIR, fileName, bytes) ?: return false
                 return presentShare(url)
             }
 
@@ -61,20 +53,6 @@ private suspend fun presentShare(url: NSURL): Boolean = suspendCancellableCorout
         presenter.presentViewController(controller, animated = true, completion = null)
         cont.resumeWith(Result.success(true))
     }
-}
-
-private fun writeShareFile(fileName: String, bytes: ByteArray): NSURL? {
-    val directory = "${NSTemporaryDirectory()}$SHARE_DIR/${NSUUID().UUIDString}"
-    val created = NSFileManager.defaultManager.createDirectoryAtPath(
-        path = directory,
-        withIntermediateDirectories = true,
-        attributes = null,
-        error = null
-    )
-    if (!created) return null
-    val url = NSURL.fileURLWithPath("$directory/${safeFileName(fileName)}")
-    val data = bytes.usePinned { NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()) }
-    return if (data.writeToURL(url, atomically = true)) url else null
 }
 
 private const val SHARE_DIR = "firmware-share"

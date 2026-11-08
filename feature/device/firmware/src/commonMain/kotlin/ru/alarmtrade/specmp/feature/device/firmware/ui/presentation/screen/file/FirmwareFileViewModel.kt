@@ -24,6 +24,10 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootR
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.isSending
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.nextPin
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.sending
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.withPinLock
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
@@ -61,8 +65,7 @@ class FirmwareFileViewModel(
         pinCooldown.lockedFor(_state.map { state -> state.deviceId.takeIf { state.dialog is CheckDialog.Pin } })
 
     val state: StateFlow<FirmwareFileState> = combine(_state, pinLock) { state, lock ->
-        val dialog = state.dialog
-        if (dialog is CheckDialog.Pin) state.copy(dialog = dialog.copy(lockedFor = lock)) else state
+        state.copy(dialog = state.dialog.withPinLock(lock))
     }
         .launchOnFirstStart { onEachDeviceReady(::onDeviceReady) }
         .flowOn(dispatchers.default)
@@ -149,22 +152,8 @@ class FirmwareFileViewModel(
     }
 
     private fun showPin(moduleId: Long, wrongPin: Boolean = false) {
-        _state.update { state ->
-            val previous = state.dialog as? CheckDialog.Pin
-            val wrongCount = (previous?.wrongCount ?: 0) + if (wrongPin) 1 else 0
-            state.copy(dialog = CheckDialog.Pin(moduleId, wrong = wrongPin, wrongCount = wrongCount))
-        }
+        _state.update { state -> state.copy(dialog = state.dialog.nextPin(moduleId, wrongPin)) }
     }
-
-    private fun CheckDialog?.sending(moduleId: Long, withPin: Boolean): CheckDialog = if (withPin) {
-        val previous = this as? CheckDialog.Pin
-        CheckDialog.Pin(moduleId, sending = true, wrongCount = previous?.wrongCount ?: 0)
-    } else {
-        CheckDialog.ConfirmBoot(moduleId, sending = true)
-    }
-
-    private fun CheckDialog?.isSending(): Boolean = (this as? CheckDialog.ConfirmBoot)?.sending == true ||
-        (this as? CheckDialog.Pin)?.sending == true
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

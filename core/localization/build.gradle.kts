@@ -13,6 +13,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.multiplatformSettings)
+            implementation(libs.koin.core)
 
             api(libs.compose.runtime)
             // api: Strings — публичный класс строк всех фич (docs/localization.md)

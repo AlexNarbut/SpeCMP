@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.arch
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -65,7 +64,6 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
@@ -73,7 +71,9 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareCenteredBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLoadError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
@@ -84,7 +84,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.CanFilterUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.RollbackUi
 
-private val CenterMaxWidth = 440.dp
 private val ButtonHeight = 48.dp
 private val DetailDescriptionMaxHeight = 300.dp
 
@@ -94,7 +93,7 @@ internal const val ARCHIVE_REFRESH_TAG = "firmware_archive_refresh"
 
 @Composable
 internal fun ArchiveLoading() {
-    CenteredBody {
+    FirmwareCenteredBody {
         CmpCircularProgressIndicator()
         CmpText(
             text = stringResource(Strings.string.firmware_archive_loading),
@@ -118,7 +117,7 @@ internal fun ArchiveEmpty(
     onResetToDevice: () -> Unit = {}
 ) {
     val canCode = filter?.applied
-    CenteredBody {
+    FirmwareCenteredBody {
         FirmwareHero(
             icon = if (canCode != null) CmpIcons.SearchOff else CmpIcons.Inventory2,
             tone = HeroTone.Neutral,
@@ -136,7 +135,7 @@ internal fun ArchiveEmpty(
                 onClick = onRefresh,
                 modifier = Modifier.fillMaxWidth().height(52.dp)
             )
-            return@CenteredBody
+            return@FirmwareCenteredBody
         }
         val carTitle = filter.carTitle
         CmpText(
@@ -171,42 +170,12 @@ internal fun ArchiveEmpty(
 
 @Composable
 internal fun ArchiveError(error: FirmwareError, onRetry: () -> Unit) {
-    CenteredBody {
-        FirmwareHero(icon = CmpIcons.CloudOff, tone = HeroTone.Neutral, size = 88.dp)
-        CmpText(
-            text = error.text(Strings.string.firmware_archive_error_title),
-            style = CmpTextStyle.Title,
-            textAlign = TextAlign.Center
-        )
-        CmpText(
-            text = stringResource(Strings.string.firmware_archive_error_msg),
-            color = cmpThemeColors().onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        CmpButton(
-            text = stringResource(Strings.string.firmware_common_btn_retry),
-            onClick = onRetry,
-            modifier = Modifier.fillMaxWidth().height(52.dp)
-        )
-    }
-}
-
-@Composable
-private fun CenteredBody(content: @Composable () -> Unit) {
-    CmpBox(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        contentAlignment = Alignment.Center
-    ) {
-        CmpColumn(
-            modifier = Modifier.widthIn(
-                max = CenterMaxWidth
-            ).fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            content()
-        }
-    }
+    FirmwareLoadError(
+        icon = CmpIcons.CloudOff,
+        title = error.text(Strings.string.firmware_archive_error_title),
+        message = stringResource(Strings.string.firmware_archive_error_msg),
+        onRetry = onRetry
+    )
 }
 
 /** Подвал списка: индикатор догрузки или ошибка догрузки (список выше остаётся). */

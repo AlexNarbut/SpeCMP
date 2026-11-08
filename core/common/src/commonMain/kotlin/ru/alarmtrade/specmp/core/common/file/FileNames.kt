@@ -1,20 +1,20 @@
-package ru.alarmtrade.specmp.filepicker
+package ru.alarmtrade.specmp.core.common.file
 
 /**
- * Имена файлов вложений чата приходят извне (сервер, системный пикер) и
- * используются в путях файловой системы — поэтому перед записью:
+ * Имена файлов приходят извне (сервер, системный пикер) и используются в путях файловой системы — поэтому перед
+ * записью:
  * - только basename: `../`, абсолютные пути и разделители каталогов срезаются;
  * - запрещённые в Windows/Android/iOS символы и управляющие коды → `_`;
- * - пустое/точечное имя → [FALLBACK_NAME]; длина ограничена [MAX_NAME_LENGTH].
+ * - пустое/точечное имя → [fallback]; длина ограничена [MAX_NAME_LENGTH].
  */
-internal fun safeFileName(name: String): String {
+fun safeFileName(name: String, fallback: String = DEFAULT_FALLBACK_NAME): String {
     val baseName = name.substringAfterLast('/').substringAfterLast('\\')
     val cleaned = buildString {
         baseName.forEach { char ->
             append(if (char in FORBIDDEN_CHARS || char.code < 0x20) '_' else char)
         }
     }.trim().trim('.')
-    if (cleaned.isEmpty()) return FALLBACK_NAME
+    if (cleaned.isEmpty()) return fallback
     if (cleaned.length <= MAX_NAME_LENGTH) return cleaned
 
     val extension = cleaned.substringAfterLast('.', "").take(MAX_EXTENSION_LENGTH)
@@ -26,7 +26,7 @@ internal fun safeFileName(name: String): String {
  * Имя, не занятое в целевом каталоге: `report.pdf` → `report (1).pdf` → …
  * Существующий файл пользователя не перезаписывается молча.
  */
-internal fun uniqueFileName(name: String, exists: (String) -> Boolean): String {
+fun uniqueFileName(name: String, exists: (String) -> Boolean): String {
     if (!exists(name)) return name
     val extension = name.substringAfterLast('.', "")
     val stem = if (extension.isEmpty()) name else name.removeSuffix(".$extension")
@@ -38,7 +38,7 @@ internal fun uniqueFileName(name: String, exists: (String) -> Boolean): String {
     }
 }
 
-private const val FALLBACK_NAME = "attachment"
+private const val DEFAULT_FALLBACK_NAME = "attachment"
 private const val MAX_NAME_LENGTH = 120
 private const val MAX_EXTENSION_LENGTH = 16
 private val FORBIDDEN_CHARS = setOf('/', '\\', ':', '*', '?', '"', '<', '>', '|')

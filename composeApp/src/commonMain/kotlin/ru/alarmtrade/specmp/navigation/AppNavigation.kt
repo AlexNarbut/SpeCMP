@@ -41,6 +41,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypa
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRoute
@@ -72,7 +73,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRoute
-import ru.alarmtrade.specmp.filepicker.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSettingsFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSettingsFileSaver
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles

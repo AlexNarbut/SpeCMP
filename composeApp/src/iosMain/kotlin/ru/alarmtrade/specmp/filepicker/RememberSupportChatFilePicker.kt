@@ -30,6 +30,7 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker

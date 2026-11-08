@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.buildConfig).apply(false)
     id("specmp.detekt").apply(false)
     alias(libs.plugins.spotless)
+    alias(libs.plugins.module.graph.assert)
 }
 
 var giteaUsername = System.getenv("GITEA_USERNAME")
@@ -70,6 +71,85 @@ buildscript {
         mavenCentral()
         google()
     }
+}
+
+// Поиск скопированного кода (PMD CPD): дубли длиннее 100 токенов Kotlin роняют задачу. Корневая задача без
+// плагина: CLI PMD в отдельной конфигурации, исходники — объявленный input (совместимо с configuration cache).
+// Исключения — только повторы по построению, у каждого причина; подробно в docs/code-quality.md → «CPD».
+val cpd: Configuration by configurations.creating
+
+dependencies {
+    cpd(libs.pmd.cli)
+    cpd(libs.pmd.kotlin)
+}
+
+tasks.register<JavaExec>("cpdCheck") {
+    group = "verification"
+    description = "Дубли Kotlin-кода длиннее 100 токенов (PMD CPD)"
+    val sources = fileTree(rootDir) {
+        include(
+            "core/**/src/**/*.kt",
+            "feature/**/src/**/*.kt",
+            "composeApp/src/**/*.kt",
+            "flasherApp/src/**/*.kt",
+            "quality/**/src/**/*.kt"
+        )
+        exclude(
+            "**/build/**",
+            "**/generated/**",
+            // Тесты: фикстуры и arrange-блоки повторяются намеренно — читаемость теста важнее DRY.
+            "**/src/test/**",
+            "**/src/*Test/**"
+        )
+    }
+    val fileList = layout.buildDirectory.file("cpd/files.txt")
+    inputs.files(sources).withPathSensitivity(PathSensitivity.RELATIVE)
+    classpath = cpd
+    mainClass = "net.sourceforge.pmd.cli.PmdCli"
+    args("cpd", "--language", "kotlin", "--minimum-tokens", "100", "--format", "text")
+    argumentProviders.add(CommandLineArgumentProvider { listOf("--file-list", fileList.get().asFile.path) })
+    doFirst {
+        fileList.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(sources.files.sorted().joinToString("\n"))
+        }
+    }
+}
+
+// Направления зависимостей между Gradle-модулями (modules-graph-assert): задача assertModuleGraph. Плагин в корне
+// строит граф по всем подпроектам при настройке задачи. Импорты в коде проверяет Konsist (module-direction);
+// правила — docs/code-quality.md → «graph-assert».
+moduleGraphAssert {
+    restricted = arrayOf(
+        ":core:.* -X> :feature:.*",
+        ":(core|feature):.* -X> :(composeApp|flasherApp)",
+        ".* -X> :(androidApp|desktopApp|flasherAndroidApp|flasherDesktopApp)",
+        ".* -X> :quality:.*",
+        ":quality:.* -X> :(core|feature):.*",
+        // От *-ui зависят только composition roots. Временно разрешены рёбра на interaction-ui (уходят в 2b,
+        // presentation-core) и configurator-ui → settings-ui (уходит в 4a). Регэксп матчит всю строку
+        // «from -X> to», поэтому конец имени модуля слева — пробел, а не $.
+        ":feature:(?!(advanced-mount|fast-mount|configurator-ui|device:(autostart|firmware|state|settings-ui)) ).* " +
+            "-X> :feature:.*-ui",
+        ":feature:(advanced-mount|fast-mount|device:(autostart|firmware|state|settings-ui)) " +
+            "-X> :feature:(?!device:interaction-ui$).*-ui",
+        ":feature:configurator-ui -X> :feature:(?!device:(interaction-ui|settings-ui)$).*-ui"
+    )
+    configurations = setOf(
+        "api",
+        "implementation",
+        "testImplementation",
+        "commonMainApi",
+        "commonMainImplementation",
+        "commonTestImplementation",
+        "androidMainApi",
+        "androidMainImplementation",
+        "iosMainApi",
+        "iosMainImplementation",
+        "jvmMainApi",
+        "jvmMainImplementation",
+        "jvmTestImplementation"
+    )
 }
 
 // Качество кода: docs/code-quality.md.

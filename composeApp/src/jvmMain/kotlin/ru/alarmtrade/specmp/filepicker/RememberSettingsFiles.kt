@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_file
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
