@@ -3,6 +3,60 @@
 # дополнительно как страховка.
 # Описание и принятые решения — docs/code-quality.md.
 
+# Свой набор правил `specmp` (quality/detekt-rules, docs/code-quality.md → «Свои правила»). Правила с active: false
+# включаются в подэтапах миграции архитектуры вместе с устранением нарушений.
+specmp:
+  # runCatching ловит CancellationException — граница с бросающим кодом только safeRun/safeResponseRun (ResponseExt.kt).
+  ForbiddenRunCatching:
+    active: true
+  ForbiddenPrintln:
+    active: true
+  # Только update { }; требует type resolution (молчит в iosMain). Тестовые фейки пишут .value напрямую.
+  StateFlowValueMutation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  ViewModelScopeLaunch:
+    active: false
+    excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt']
+  ViewModelInitBlock:
+    active: false
+  ViewModelFileContents:
+    active: false
+    excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt']
+  ViewModelContractNames:
+    active: false
+  ViewModelPublicApi:
+    active: false
+  ViewModelMutableProperty:
+    active: false
+  RepositoryWithContext:
+    active: false
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  RedundantSafeRun:
+    active: false
+  # Корневой Settings() создаёт только DI core/common для AppSettingsFactory.
+  SettingsInstantiation:
+    active: false
+    excludes: ['**/core/common/**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  SafeRunInViewModel:
+    active: false
+    excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  RawFlowFromRepository:
+    active: false
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  ResponseGetOrThrow:
+    active: false
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  ResponseIgnored:
+    active: false
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  DirectClockUsage:
+    active: false
+    excludes: ['**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  ThrowInRepository:
+    active: false
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+
 complexity:
   LongMethod:
     active: true
@@ -70,21 +124,14 @@ style:
     forbiddenImports:
       - reason: 'ViewModel фичи наследуется от BaseViewModel (core/ui), а не от androidx ViewModel'
         value: 'androidx.lifecycle.ViewModel'
+      # ui-kit (docs/ui-kit.md): фичи берут компоненты Cmp* из core/ui, material3 напрямую не импортируют.
+      - reason: 'Компоненты дизайн-системы — из core/ui (docs/ui-kit.md), не material3 напрямую'
+        value: 'androidx.compose.material3.*'
   ForbiddenComment:
     active: true
     comments:
       - value: 'FIXME:'
       - value: 'STOPSHIP:'
-  # Тестовые фейки пишут MutableStateFlow.value напрямую (docs/patterns.md), поэтому тесты исключены
+  # runCatching, println/print и запись MutableStateFlow.value — свои правила набора `specmp` (выше).
   ForbiddenMethodCall:
-    active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
-    methods:
-      - reason: 'Используйте safeRun (docs/patterns.md)'
-        value: 'kotlin.runCatching'
-      - reason: 'Используйте логгер (Kermit)'
-        value: 'kotlin.io.println'
-      - reason: 'Используйте логгер (Kermit)'
-        value: 'kotlin.io.print'
-      - reason: 'Пишите состояние через MutableStateFlow.update { } (docs/patterns.md)'
-        value: 'kotlinx.coroutines.flow.MutableStateFlow.value'
+    active: false

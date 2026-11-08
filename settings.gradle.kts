@@ -72,3 +72,6 @@ include(":feature:device:state")
 include(":feature:device:settings")
 include(":feature:device:interaction-ui")
 include(":feature:device:settings-ui")
+
+// Свой набор правил detekt `specmp` (docs/code-quality.md → «detekt»): ./gradlew :quality:detekt-rules:test
+include(":quality:detekt-rules")

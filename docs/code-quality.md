@@ -30,22 +30,22 @@
 ```
 git commit ──► pre-commit ──► ./gradlew spotlessCheck        (стиль, только файлы изменённые с HEAD)
                           ├─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
-                          ├─► config/hooks/check-stateflow-value.py (MutableStateFlow только через update, .kt)
                           └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
 git push   ──► pre-push   ──► ./gradlew detektCheck          (смысл, весь проект, с type resolution)
                           └─► config/hooks/check-master-from-develop.sh push  (в main/master — только коммиты из develop)
 git merge  ──► pre-merge-commit ──► config/hooks/check-master-from-develop.sh merge (в main/master вливается только develop)
-Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check-stateflow-value.py + spotlessCheck (по файлу)
+Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotlessCheck (по файлу)
 ```
 
 | Файл | Роль |
 |---|---|
 | [`build.gradle.kts`](../build.gradle.kts) | блок `spotless { … }` (один корневой на весь репозиторий): цели, версии ktlint/compose-rules, ratchet; блок `subprojects { … }`: применение `specmp.detekt` ко всем Kotlin-модулям |
-| [`build-logic/.../DetektConventionPlugin.kt`](../build-logic/src/main/kotlin/DetektConventionPlugin.kt) | convention `specmp.detekt`: конфиг, исключение `build/`, отвязка от `check`, задача `detektCheck` модуля |
-| [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`; плагины `detekt`, `spotless` |
+| [`build-logic/.../DetektConventionPlugin.kt`](../build-logic/src/main/kotlin/DetektConventionPlugin.kt) | convention `specmp.detekt`: конфиг, свой набор правил (`detektPlugins`), исключение `build/`, отвязка от `check`, задача `detektCheck` модуля |
+| [`quality/detekt-rules`](../quality/detekt-rules) | свои правила detekt (набор `specmp`, `SpecmpRuleSetProvider`) и их тесты; сам модуль detekt не проверяет |
+| [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`, `junit`; плагины `detekt`, `spotless`; `detekt-api`/`detekt-test` для своих правил |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
-| [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt |
-| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `serial-name-check`, `stateflow-value-check`, `strings-check` (pre-commit), `detekt-check`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
+| [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt и раздел `specmp:` своих правил |
+| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `serial-name-check`, `strings-check` (pre-commit), `detekt-check`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
 | [`config/hooks/check-master-from-develop.sh`](../config/hooks/check-master-from-develop.sh) | в `main`/`master` — только `develop`: `merge` проверяет вливаемую ветку, `push` — что каждый новый коммит достижим из `develop` (или это merge-коммит `develop` → `master`); fast-forward чужой ветки ловит `push` |
 | [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
@@ -59,7 +59,8 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check
   `*.gradle.kts` до трёх уровней вложенности (`feature/device/<module>/build.gradle.kts`).
 - **detekt — convention `specmp.detekt` из `build-logic`, применяется из корня.** Он нужен в каждом модуле (свои
   source set'ы и type resolution), поэтому корневой `build.gradle.kts` вешает его на все модули с плагином KMP,
-  `kotlin("android")`, `kotlin("jvm")` или `com.android.application` — в build-файлах модулей detekt не упоминается.
+  `kotlin("android")`, `kotlin("jvm")` или `com.android.application` (кроме `quality/*`) — в build-файлах модулей
+  detekt не упоминается.
 - **`detektCheck` — своя задача.** Голая `detekt` в KMP ничего не запускает. `detektCheck` в каждом подпроекте
   собирает задачи с type resolution:
 
@@ -104,9 +105,9 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► check
 | Проверить стиль относительно ветки | `./gradlew spotlessCheck -PspotlessRatchetFrom=origin/develop` |
 | Смысловая проверка всего проекта | `./gradlew detektCheck` |
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
+| Тесты своих правил detekt | `./gradlew :quality:detekt-rules:test` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
 | Строки и ключи локализации | `config/hooks/check-strings.py` |
-| `MutableStateFlow` без `.value =` | `config/hooks/check-stateflow-value.py` (без аргументов — весь репозиторий) |
 
 Порядок перед коммитом:
 
@@ -168,14 +169,26 @@ ViewModel через несколько composable, эффекты читают 
 
 | Что | Чем заменить |
 |---|---|
-| `kotlin.runCatching` | `safeRun` / `safeResponseRun` из `core/common/.../ResponseExt.kt` ([`patterns.md`](patterns.md)) |
-| `println` / `print` | логгер Kermit |
-| `MutableStateFlow.value = …` (запись) | `flow.update { … }` ([`patterns.md`](patterns.md#корутины-и-flow)); чтение `.value` разрешено |
+| `runCatching` (`specmp:ForbiddenRunCatching`) | `safeRun` / `safeResponseRun` из `core/common/.../ResponseExt.kt` ([`patterns.md`](patterns.md)) |
+| `println` / `print` (`specmp:ForbiddenPrintln`) | логгер Kermit |
+| `MutableStateFlow.value = …`, `+=`, `++` (`specmp:StateFlowValueMutation`) | `flow.update { … }` ([`patterns.md`](patterns.md#корутины-и-flow)); чтение `.value` разрешено |
 | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита (обычные `TODO` разрешены) |
 | импорт `androidx.lifecycle.ViewModel` вне `core/ui` (`ForbiddenImport`) | наследоваться от `BaseViewModel` ([`patterns.md`](patterns.md), «BaseViewModel») |
+| импорт `androidx.compose.material3.*` вне `core/ui` (`ForbiddenImport`) | компоненты `Cmp*` из `core/ui` ([`ui-kit.md`](ui-kit.md)) |
 
-`ForbiddenMethodCall` не проверяет тестовые source set'ы: тестовые фейки по [`patterns.md`](patterns.md#корутины-и-flow)
-могут писать `MutableStateFlow.value` напрямую.
+`StateFlowValueMutation` не проверяет тестовые source set'ы: тестовые фейки по [`patterns.md`](patterns.md#корутины-и-flow)
+могут писать `MutableStateFlow.value` напрямую. Правило берёт тип ресивера из Analysis API (Compose `MutableState`
+не попадает) и молчит без type resolution — в `iosMain`.
+
+#### Свои правила (`quality/detekt-rules`, набор `specmp`)
+
+Набор из BabySteps (тот же detekt 2.0.0-alpha.6): правила — в `quality/detekt-rules/src/main/kotlin/.../detekt`,
+регистрация — `SpecmpRuleSetProvider` (+ `META-INF/services`), конфиг — раздел `specmp:` в `detekt.yml`.
+`SpecmpRuleSetProviderTest` проверяет, что каждое правило зарегистрировано и есть в `detekt.yml`. Новое правило:
+класс + тест на `detekt-test` → строка в провайдере и в тесте провайдера → раздел в `detekt.yml` → проверка на
+временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel, `Response`, данных и времени
+перенесены, но выключены (`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
+правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
 Осознанно выключено или смягчено: `LongParameterList`, `TooManyFunctions`, `NestedBlockDepth`, `LargeClass`,
 `ReturnCount`, `InjectDispatcher`, `AbstractClassCanBeInterface`, `AbstractClassCanBeConcreteClass`, `UseOrEmpty`.

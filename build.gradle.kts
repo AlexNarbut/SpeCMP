@@ -101,7 +101,9 @@ spotless {
 }
 
 // detekt (build-logic, specmp.detekt) — всем Kotlin-модулям: KMP-библиотекам, composition roots и обёрткам.
+// quality/* — инструменты проверок, сами detekt не проходят (detekt-rules подключается к остальным как плагин).
 subprojects {
+    if (path.startsWith(":quality:")) return@subprojects
     listOf(
         "org.jetbrains.kotlin.multiplatform",
         "org.jetbrains.kotlin.android",

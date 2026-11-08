@@ -30,12 +30,6 @@ repos:
         language: script
         files: \.kt$
         stages: [pre-commit]
-      - id: stateflow-value-check
-        name: "MutableStateFlow only via update { } (docs/patterns.md)"
-        entry: config/hooks/check-stateflow-value.py
-        language: script
-        files: \.kt$
-        stages: [pre-commit]
       - id: strings-check
         name: "strings in core/localization, key format, same keys in every language (docs/localization.md)"
         entry: config/hooks/check-strings.py

@@ -32,6 +32,8 @@ private fun enableDebugConsoleLogs() {
 }
 
 /** Логгер SDK в stdout (только отладка). */
+// stdout здесь и есть цель (см. enableDebugConsoleLogs): PlatformLogger SDK уже пишет в системный журнал.
+@Suppress("ForbiddenPrintln")
 private object ConsoleSdkLogger : SdkLogger, LogLevelController by FixedLogLevel(true) {
     override fun verbose(tag: String, msg: String) = println("SDK V/$tag: $msg")
 

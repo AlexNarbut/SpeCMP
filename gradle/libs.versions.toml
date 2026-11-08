@@ -30,6 +30,7 @@ koin = "4.2.2"
 
 # Качество кода: docs/code-quality.md
 detekt = "2.0.0-alpha.6"
+junit = "5.14.4"
 spotless = "8.10.4"
 ktlint = "1.8.0"
 composeRules = "0.6.7"
@@ -91,6 +92,11 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 detekt-gradlePlugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+detekt-api = { module = "dev.detekt:detekt-api", version.ref = "detekt" }
+detekt-test = { module = "dev.detekt:detekt-test", version.ref = "detekt" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 alarmtrade-specialist = { module = "ru.alarmtrade.common:specialist", version.ref = "alarmtrade-common-specialist" }
 alarmtrade-usb-common = { module = "ru.alarmtrade.common:usb-common", version.ref = "alarmtrade-common" }
