@@ -101,11 +101,10 @@ replay_pid*
 # Profiler
 *.hprof
 
-# Claude Code: в git только skills, agents и общий хук качества кода (задачи, локальные настройки — нет)
+# Claude Code: в git только skills, agents и settings.json — их генерирует .ai/generate.sh (задачи, локальные настройки — нет)
 /.claude/*
 !/.claude/skills/
 !/.claude/agents/
-!/.claude/hooks/
 !/.claude/settings.json
 
 # UI-тесты: локальные креды скилла ui-test (шаблон — credentials.properties.example) и результаты прогонов

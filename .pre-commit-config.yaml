@@ -11,7 +11,7 @@ repos:
         name: ai configs (.ai/generate.sh)
         entry: .ai/generate.sh --check
         language: system
-        files: ^(\.ai/|\.claude/(skills|agents)/|\.agents/|\.codex/|\.gemini/|\.grok/|CLAUDE\.md$|AGENTS\.md$|GEMINI\.md$|.*/AGENTS\.md$)
+        files: ^(\.ai/|\.claude/(skills|agents)/|\.claude/settings\.json$|scripts/agent-hooks/|\.agents/|\.codex/|\.gemini/|\.grok/|CLAUDE\.md$|AGENTS\.md$|GEMINI\.md$|.*/AGENTS\.md$)
         pass_filenames: false
         stages: [pre-commit]
 
