@@ -75,3 +75,6 @@ include(":feature:device:settings-ui")
 
 // Свой набор правил detekt `specmp` (docs/code-quality.md → «detekt»): ./gradlew :quality:detekt-rules:test
 include(":quality:detekt-rules")
+
+// Архитектурные тесты Konsist (docs/code-quality.md → «Konsist»): ./gradlew :quality:konsist:test
+include(":quality:konsist")

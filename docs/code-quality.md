@@ -18,6 +18,7 @@
 | **compose-rules** | 0.6.7 (плагин ktlint) | правила Compose: `modifier`, `remember`, порядок и имена параметров, ViewModel в composable, эффекты | частично |
 | **Spotless** | 8.10.4 | Gradle-обёртка над ktlint + compose-rules: `spotlessCheck` / `spotlessApply`, работа только по изменённым файлам | да (через ktlint) |
 | **detekt** | 2.0.0-alpha.6 | смысл кода: мёртвый код, `!!`, исключения, неверный пакет, запрещённые вызовы, сложность и длина, магические числа | нет |
+| **Konsist** | 0.18.1 | архитектура: направление импортов между модулями и слоями, пакет = модуль, раскладка ролей, граница SDK | нет |
 
 Разделение труда: **Spotless — стиль и автофикс, detekt — смысловые замечания без автофикса**. Правила не
 дублируются: форматирование, импорты и wildcard проверяет ktlint (`detekt-formatting` не подключён,
@@ -41,6 +42,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 |---|---|
 | [`build.gradle.kts`](../build.gradle.kts) | блок `spotless { … }` (один корневой на весь репозиторий): цели, версии ktlint/compose-rules, ratchet; блок `subprojects { … }`: применение `specmp.detekt` ко всем Kotlin-модулям |
 | [`build-logic/.../DetektConventionPlugin.kt`](../build-logic/src/main/kotlin/DetektConventionPlugin.kt) | convention `specmp.detekt`: конфиг, свой набор правил (`detektPlugins`), исключение `build/`, отвязка от `check`, задача `detektCheck` модуля |
+| [`quality/konsist`](../quality/konsist) | архитектурные тесты Konsist (`ArchitectureTest`): читают исходники как текст, к сборке не относятся |
 | [`quality/detekt-rules`](../quality/detekt-rules) | свои правила detekt (набор `specmp`, `SpecmpRuleSetProvider`) и их тесты; сам модуль detekt не проверяет |
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`, `junit`; плагины `detekt`, `spotless`; `detekt-api`/`detekt-test` для своих правил |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
@@ -106,6 +108,7 @@ Claude Edit/Write *.kt ──► .claude/hooks/kotlin-quality.sh ──► spotl
 | Смысловая проверка всего проекта | `./gradlew detektCheck` |
 | Смысловая проверка одного модуля | `./gradlew :feature:login:detektCheck` |
 | Тесты своих правил detekt | `./gradlew :quality:detekt-rules:test` |
+| Архитектурные правила (Konsist) | `./gradlew :quality:konsist:test` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
 | Строки и ключи локализации | `config/hooks/check-strings.py` |
 
@@ -205,6 +208,36 @@ ViewModel через несколько composable, эффекты читают 
 Сгенерированный код (`build/`, `generated/`) исключён. **Baseline не используется**: замечаний ноль, новые
 нарушения блокируют сразу.
 
+### Konsist (`quality/konsist`)
+
+`ArchitectureTest` (JUnit 5) — порт из BabySteps: Konsist разбирает исходники `core/*`, `feature/*`, composition roots
+(`composeApp`, `flasherApp`) и обёрток без тестовых source set'ов. Имя модуля Konsist — путь до `src/`
+(`feature/device/settings-ui`). `testName` правила — его id; сообщение правила ссылается на раздел доков.
+
+| id | Что проверяет |
+|---|---|
+| `module-direction` | `core/*` импортирует только `core/*`, `feature/*` — `core/*` и `feature/*`; пакеты приложений не импортируются |
+| `module-package` | пакет = базовый пакет модуля (`feature/auth-state` → `…feature.authstate`, суффикс `-ui` → `.ui`) |
+| `domain-isolation` | `domain` без data/presentation/di, Compose, ресурсов, `core.ui`, multiplatform-settings, сериализации и SDK |
+| `presentation-isolation` | пакеты `..data..` видят только data/di фичи, не-presentation core и di приложений |
+| `data-isolation` | `data` не импортирует presentation и di |
+| `feature-data-isolation` | фича не импортирует data другой фичи |
+| `layer-placement` | класс `*Repository` (реализация, `Specialist*Repository`) — в `data/repository`; `*DataSource` — `data/datasource`; `*Coordinator`/`*Controller` — интерфейс в `domain/service` |
+| `repository-in-domain` | интерфейс `*Repository` фичи — в `domain` |
+| `domain-model-purity` | `domain/model`: только `val`, read-only коллекции, без `@Serializable` |
+| `serializable-placement` | `@Serializable` — в `..data..`, `..navigation..`, у `NavKey` и типов аргументов маршрутов |
+| `composable-in-presentation` | `@Composable` фичи — только в `presentation` |
+| `sdk-confinement` | типы AlarmTrade SDK (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — data/di фич, `core/specialist`, `core/permissions`, `core/network`, приложения |
+| `no-fakes-in-production` | `Fake*`/`Stub*` — только в тестах |
+| `forbidden-suffix` | `*Helper`/`*Utils` запрещены; `*Manager` — только в `androidMain`/`iosMain`/`jvmMain` |
+| `top-level-init-order` | верхнеуровневое свойство не читает свойство, объявленное ниже в файле |
+| `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
+
+Остальные правила BabySteps (ViewModel, контракт репозиториев, видимость `*Impl`, `koin-module`,
+`mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
+Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
+Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.
+
 ---
 
 ## Подавления
@@ -214,6 +247,7 @@ ViewModel через несколько composable, эффекты читают 
 
 - **detekt:** `@Suppress("LongMethod", "CyclomaticComplexMethod")` на функции; для целого файла —
   `@file:Suppress("MatchingDeclarationName")` перед `package`.
+- **Konsist:** `@Suppress("konsist.<id>")` на декларации, `@file:Suppress("konsist.<id>")` на файле.
 - **compose-rules:** `@Suppress("ktlint:compose:<правило>")`. Для правил `multiple-emitters-check` и
   `lambda-param-in-effect` аннотация на функции **не срабатывает**, работает только файловая:
   `@file:Suppress("ktlint:compose:multiple-emitters-check")`.

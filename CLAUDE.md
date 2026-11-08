@@ -26,7 +26,7 @@
 - `androidApp`, `desktopApp`, `iosApp` — платформенные обёртки.
 - `flasherApp` (+ обёртки `flasherAndroidApp`, `flasherDesktopApp`) — отдельное мини-приложение прошивки (ветка `feature/flasher-app`): свой composition root поверх тех же `core/*` и `feature/device/*`.
 - `build-logic/` — included build с convention-плагинами (`specmp.kmp.android-jvm`, `specmp.kmp.library`, `specmp.kmp.compose`, `specmp.detekt`), см. `docs/build.md`.
-- `quality/` — инструменты проверок кода: `quality/detekt-rules` (свои правила detekt, набор `specmp`), см. `docs/code-quality.md`.
+- `quality/` — инструменты проверок кода: `quality/detekt-rules` (свои правила detekt, набор `specmp`), `quality/konsist` (архитектурные тесты Konsist), см. `docs/code-quality.md`.
 - `docs/` — тематические правила и справка по архитектуре, UI, навигации и сборке.
 
 ## Read Before Editing
