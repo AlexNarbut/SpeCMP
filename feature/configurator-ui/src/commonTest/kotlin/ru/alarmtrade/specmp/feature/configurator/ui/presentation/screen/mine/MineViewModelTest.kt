@@ -20,7 +20,7 @@ import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeLocalConfigurations
+import ru.alarmtrade.specmp.feature.configurator.testing.FakeLocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeSettingsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.localConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDevice
@@ -34,7 +34,7 @@ class MineViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val link = MutableStateFlow(DeviceLinkState.READY)
-    private val configurations = FakeLocalConfigurations()
+    private val configurations = FakeLocalConfigurationsRepository()
     private val settings = FakeSettingsRepository()
     private val niva = localConfiguration(1, "Нива", deviceName = "DX-9X")
     private val camry = localConfiguration(2, "Камри", deviceName = "DX-4GS")

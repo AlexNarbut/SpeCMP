@@ -1,26 +1,16 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui
 
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateException
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
-import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileExporter
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveResult
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 
 internal class FakeFirmwareRepository : FirmwareRepository {
@@ -104,54 +94,5 @@ internal class FakeFirmwareRepository : FirmwareRepository {
         archiveCans += can
         archiveDelayMillis[page]?.let { delay(it) }
         return archivePages[page] ?: Response.Error(IllegalStateException("no page"))
-    }
-}
-
-/** Процесс обновления из тестов: шаги подаются в [progress]; параметры запуска запоминаются. */
-internal class FakeUpdateRepository : FirmwareUpdateRepository {
-    val progress = MutableSharedFlow<Response<FirmwareUpdateProgress>>(extraBufferCapacity = 16)
-    val calls = mutableListOf<Pair<BootModeTarget, FirmwareVersion>>()
-
-    override fun update(target: BootModeTarget, firmware: FirmwareVersion): Flow<Response<FirmwareUpdateProgress>> {
-        calls += target to firmware
-        return progress
-    }
-
-    val fileCalls = mutableListOf<Pair<BootModeTarget, String>>()
-
-    override fun updateFromFile(target: BootModeTarget, path: String): Flow<Response<FirmwareUpdateProgress>> {
-        fileCalls += target to path
-        return progress
-    }
-
-    suspend fun emit(step: FirmwareUpdateProgress) = progress.emit(Response.Success(step))
-
-    suspend fun fail(failure: FirmwareFailure) = progress.emit(Response.Error(FirmwareUpdateException(failure)))
-}
-
-internal class FakeFileExporter(
-    override val target: FirmwareSaveTarget = FirmwareSaveTarget.Downloads,
-    override val canShare: Boolean = true,
-    override val canOpenFolder: Boolean = false,
-) : FirmwareFileExporter {
-    var saveResult: FirmwareSaveResult? = null
-    var shareResult: Boolean = true
-    val saved = mutableListOf<Pair<String, Int>>()
-    val shared = mutableListOf<String>()
-    val openedFolders = mutableListOf<String>()
-
-    override suspend fun save(fileName: String, bytes: ByteArray): FirmwareSaveResult {
-        saved += fileName to bytes.size
-        return saveResult ?: FirmwareSaveResult.Saved("Download/Pandora Spec/$fileName", "Download/Pandora Spec")
-    }
-
-    override suspend fun share(fileName: String, bytes: ByteArray): Boolean {
-        shared += fileName
-        return shareResult
-    }
-
-    override suspend fun openFolder(path: String): Boolean {
-        openedFolders += path
-        return true
     }
 }

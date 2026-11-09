@@ -226,10 +226,12 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 | `DeviceConnectionRepository` | `FakeDeviceConnectionRepository(states, …)` — статусы подключения, счётчики подключений/закрытий | `:feature:device:interaction:testing` |
 | `ProgramModeRepository` | `FakeProgramModeRepository` (`results` по порядку, `calls`/`exits`) | `:feature:device:interaction:testing` |
 | `DeviceSession` | `testDeviceSession(repo, conn, dispatcher, transport)` — настоящая сессия, `start()` и `attach` уже сделаны | `:feature:device:interaction:testing` |
+| `LocalConfigurationsRepository` | `FakeLocalConfigurationsRepository` — `items`/`changes`, `createResult` + `createGate`, записи `createCalls`/`deleted` | `:feature:configurator:testing` |
 
 - Пояс фейка не требует: `TimeZoneSource.fixed(tz)` (`core/common`).
 - Расширять общий фейк параметром/состоянием, а не копировать в тест; поведение одного теста (запись аргументов,
   сценарные ответы) — локальный фейк; неиспользуемые члены локального фейка — `error("not used")`.
+- Локальные фейки — по файлу на класс (`Fake<Контракт>.kt`), фикстуры — `<Фича>Fixtures.kt`; без сборных `TestFakes.kt`.
 - Фейки контрактов фичи — в `feature/<x>/testing` рядом с владельцем. Модули, от которых зависит модуль дублёров
   (`core/common`, `core/lifecycle` для `core/testing`; сама `feature/device/interaction` для своего `testing`), его не
   подключают — цикл через тестовую конфигурацию; у них локальные дублёры.

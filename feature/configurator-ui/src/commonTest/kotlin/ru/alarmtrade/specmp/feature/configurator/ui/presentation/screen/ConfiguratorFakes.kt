@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen
 
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.datetime.LocalDateTime
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
@@ -9,7 +8,6 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationCar
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
-import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
@@ -75,43 +73,6 @@ internal class FakeCloudRepository : CloudConfigurationsRepository {
     }
 
     override suspend fun card(id: Int): Response<CloudConfiguration> = card
-}
-
-internal class FakeLocalConfigurations : LocalConfigurationsRepository {
-    override val changes = MutableSharedFlow<Response<Unit>>(extraBufferCapacity = 1)
-    var items: Response<List<LocalConfiguration>> = Response.Success(emptyList())
-    var allCalls = 0
-    var created: Response<SettingsSource.LocalConfiguration> =
-        Response.Success(SettingsSource.LocalConfiguration(100, "DX-9X", "Новая"))
-    val createCalls = mutableListOf<Pair<String, SettingsSource>>()
-    val deleted = mutableListOf<Long>()
-
-    override suspend fun all(): Response<List<LocalConfiguration>> {
-        allCalls++
-        return items
-    }
-
-    override suspend fun create(
-        name: String,
-        description: String,
-        deviceName: String,
-        from: SettingsSource,
-    ): Response<SettingsSource.LocalConfiguration> {
-        createCalls += name to from
-        return created
-    }
-
-    override suspend fun updateInfo(
-        configuration: LocalConfiguration,
-        name: String,
-        description: String,
-    ): Response<SettingsSource.LocalConfiguration> =
-        Response.Success(SettingsSource.LocalConfiguration(configuration.id + 1000, configuration.deviceName, name))
-
-    override suspend fun delete(id: Long): Response<Unit> {
-        deleted += id
-        return Response.Success(Unit)
-    }
 }
 
 internal class FakeSettingsRepository :

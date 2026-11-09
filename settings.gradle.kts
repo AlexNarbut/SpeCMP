@@ -61,6 +61,7 @@ include(":feature:fast-mount")
 include(":feature:vehicle")
 include(":feature:account")
 include(":feature:configurator")
+include(":feature:configurator:testing")
 include(":feature:configurator-ui")
 include(":feature:vehicle-ui")
 

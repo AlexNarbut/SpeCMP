@@ -49,5 +49,4 @@ class FakePermissionsProvider(
     override fun isLocationEnabled(): Boolean = locationEnabled
     override fun openLocationSettings() = Unit
     override fun openBluetoothSettings() = Unit
-    // observe* методов больше нет в интерфейсе (revert реактивного варианта)
 }

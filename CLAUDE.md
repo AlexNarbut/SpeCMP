@@ -20,7 +20,7 @@
 
 ## Project Map
 
-- `core/*` — общая KMP-инфраструктура; `core/testing` и `feature/<x>/testing` (сейчас `feature/device/interaction/testing`) — модули общих тестовых дублёров, подключаются только в тестовых source set'ах (`docs/patterns.md` → «Тестовые дублёры»).
+- `core/*` — общая KMP-инфраструктура; `core/testing` и `feature/<x>/testing` (сейчас `feature/device/interaction/testing`, `feature/configurator/testing`) — модули общих тестовых дублёров, подключаются только в тестовых source set'ах (`docs/patterns.md` → «Тестовые дублёры»).
 - `feature/*` — feature-модули.
 - `composeApp` — composition root, навигация и интеграция фич.
 - `androidApp`, `desktopApp`, `iosApp` — платформенные обёртки.

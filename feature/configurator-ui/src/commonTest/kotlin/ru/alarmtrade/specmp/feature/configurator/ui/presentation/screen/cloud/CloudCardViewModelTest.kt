@@ -22,8 +22,8 @@ import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationAttachment
+import ru.alarmtrade.specmp.feature.configurator.testing.FakeLocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeCloudRepository
-import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeLocalConfigurations
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeSettingsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloudSummary
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDevice
@@ -42,7 +42,7 @@ class CloudCardViewModelTest {
     private val link = MutableStateFlow(DeviceLinkState.READY)
     private val cloud = FakeCloudRepository()
     private val settings = FakeSettingsRepository()
-    private val configurations = FakeLocalConfigurations()
+    private val configurations = FakeLocalConfigurationsRepository()
     private val image = ConfigurationAttachment("Схема", "https://x/s.png", "https://x/full.png")
     private val pdf = ConfigurationAttachment("Карта", null, "https://x/map.pdf?v=1")
     private val card = CloudConfiguration(cloudSummary(3), "<p>html</p>", null, listOf(image, pdf))
@@ -149,7 +149,7 @@ class CloudCardViewModelTest {
 
     @Test
     fun `failed save reports and blank name is ignored`() = runTest(dispatcher) {
-        configurations.created = Response.Error(IllegalStateException("disk"))
+        configurations.createResult = Response.Error(IllegalStateException("disk"))
         val (vm, effects) = viewModel()
 
         vm.onSaveRequest()

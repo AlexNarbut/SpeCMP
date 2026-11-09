@@ -15,9 +15,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
@@ -33,8 +31,7 @@ import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
-import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
+import ru.alarmtrade.specmp.feature.configurator.testing.FakeLocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
@@ -129,7 +126,7 @@ class DeviceSettingsViewModelTest {
     private val preferences = FakePreferences()
     private val singleCanDevice = device.copy(can = CanInfo(firmwareVersion = "1.0", code = "2154", isFactory = false))
     private val cars = FakeCars()
-    private val local = FakeLocalConfigurations()
+    private val local = FakeLocalConfigurationsRepository()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -302,7 +299,7 @@ class DeviceSettingsViewModelTest {
 
         assertEquals(
             listOf<Pair<String, SettingsSource>>("Нива без автозапуска" to SettingsSource.Device),
-            local.created,
+            local.createCalls,
         )
         assertNull(vm.state.value.saveForm)
     }
@@ -622,13 +619,13 @@ class DeviceSettingsViewModelTest {
         assertEquals(1, effects.count { it is DeviceSettingsEffect.Exit })
 
         val copying = CompletableDeferred<Unit>()
-        local.gate = copying
+        local.createGate = copying
         vm.onCopyRequest("Копия")
         vm.onCopyRequest("Копия")
         assertTrue(vm.state.value.isSaving)
         copying.complete(Unit)
         settle()
-        assertEquals(1, local.created.size)
+        assertEquals(1, local.createCalls.size)
         assertEquals(false, vm.state.value.isSaving)
     }
 
@@ -912,33 +909,6 @@ private class FakeSettingsRepository(private val initial: SettingsSection) :
         if (resetResult is Response.Success) reset()
         return resetResult
     }
-}
-
-private class FakeLocalConfigurations : LocalConfigurationsRepository {
-    val created = mutableListOf<Pair<String, SettingsSource>>()
-
-    /** Пока не завершён — создание «идёт» (проверка повторных нажатий). */
-    var gate: CompletableDeferred<Unit>? = null
-
-    override val changes: Flow<Response<Unit>> = emptyFlow()
-
-    override suspend fun all(): Response<List<LocalConfiguration>> = Response.Success(emptyList())
-
-    override suspend fun create(
-        name: String,
-        description: String,
-        deviceName: String,
-        from: SettingsSource,
-    ): Response<SettingsSource.LocalConfiguration> {
-        created += name to from
-        gate?.await()
-        return Response.Success(SettingsSource.LocalConfiguration(created.size.toLong(), deviceName, name))
-    }
-
-    override suspend fun updateInfo(configuration: LocalConfiguration, name: String, description: String) =
-        Response.Error(IllegalStateException("not used"))
-
-    override suspend fun delete(id: Long): Response<Unit> = Response.Success(Unit)
 }
 
 private class FakePreferences : DeviceSettingsPreferences {
