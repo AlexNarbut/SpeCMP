@@ -21,6 +21,7 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
             implementation(project(":core:permissions"))
+            implementation(project(":core:lifecycle"))
 
             // Сессия устройства (подключение, чтение информации о блоке)
             implementation(project(":feature:device:interaction"))
@@ -41,9 +42,6 @@ kotlin {
         }
 
         commonTest.dependencies {
-            // Фейковый жизненный цикл приложения для LegacyBaseViewModel (Koin)
-            implementation(project(":core:lifecycle"))
-            implementation(libs.koin.core)
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }

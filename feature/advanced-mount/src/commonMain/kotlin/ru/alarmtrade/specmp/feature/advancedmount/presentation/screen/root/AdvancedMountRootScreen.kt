@@ -144,7 +144,7 @@ internal fun AdvancedMountRootScreen(
     val viewModel = koinViewModel<AdvancedMountRootViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         val deviceTitle = viewModel.state.value.device?.title().orEmpty()
         when (effect) {
             is AdvancedMountRootEffect.OpenSection -> onSectionClick(effect.section, deviceTitle)

@@ -1,16 +1,9 @@
 package ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan
 
-import androidx.lifecycle.viewModelScope
 import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -18,17 +11,15 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.lifecycle.AppForegroundProvider
 import ru.alarmtrade.specmp.core.permissions.BlePermissionResult
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
-import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
@@ -50,108 +41,79 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiI
  * Разрешения запрашиваются **самой VM** через инжектированный [PermissionsProvider]
  * (контроллер app-scoped, забинжен в корне приложения) — без промежуточного
  * rationale-экрана. Проверка запускается один раз при первой подписке на state
- * (`launchOnFirstStart`, см. docs/patterns.md — не через `LaunchedEffect`), при возврате в приложение
- * ([onAppForeground]) — заново.
- * Сканирование — реактивный источник (BLE + USB `Flow`, при [serialEnabled] — и COM-порты), активный только на шаге
- * [ScanStep.Scanning]. COM-порт подключается как USB: сессия SDK по порту, дальше —
+ * ([onStart], см. docs/patterns.md — не через `LaunchedEffect`), при возврате в приложение
+ * ([AppForegroundProvider.foregroundReturns]) — заново.
+ * Сканирование — реактивный источник (BLE + USB `Flow`, при `serialEnabled` — и COM-порты), активный только на шаге
+ * [ScanStep.Scanning], пока экран подписан на state. COM-порт подключается как USB: сессия SDK по порту, дальше —
  * `DeviceSession` ([ConnectionTransport.SERIAL]).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScanDeviceViewModel(
-    scanRepository: DeviceScanRepository,
+    private val scanRepository: DeviceScanRepository,
     private val connectionRepository: DeviceConnectionRepository,
     private val deviceSession: DeviceSession,
     private val permissionsProvider: PermissionsProvider,
+    private val foregroundProvider: AppForegroundProvider,
     private val dispatchers: AppDispatchers,
     serialEnabled: Boolean = false,
     /** Поиск для быстрого монтажа: BLE-устройства, которые не сигнализации, видны, но недоступны. */
     private val alarmsOnly: Boolean = false,
-) : LegacyBaseViewModel() {
+) : BaseViewModel<ScanDeviceState, ScanDeviceEffect>(
+    ScanDeviceState(
+        requirements = permissionsProvider.deviceAccessRequirements(),
+        supportedTransports = scanRepository.supportedTransports()
+            .filter { it != DeviceTransport.SERIAL || serialEnabled }
+            .toSet(),
+    ),
+) {
 
-    private val requirements = permissionsProvider.deviceAccessRequirements()
-    private val supportedTransports = scanRepository.supportedTransports()
-        .filterTo(mutableSetOf()) { it != DeviceTransport.SERIAL || serialEnabled }
-
-    private val stepFlow = MutableStateFlow<ScanStep>(ScanStep.PermissionCheck)
-    private val selectedIdFlow = MutableStateFlow<String?>(null)
-
-    // Перезапуск поиска без смены шага (Scanning → Scanning при возврате в приложение):
-    // StateFlow шага одинаковые значения склеивает, поэтому нужен отдельный счётчик.
-    private val scanRestartsFlow = MutableStateFlow(0)
-
-    private val _effect = sideEffectFlow<ScanDeviceEffect>()
-    val effect: SharedFlow<ScanDeviceEffect> = _effect.asSharedFlow()
-
-    // Только подключение (не отмена): по нему «Отмена» прерывает попытку. Пишется и читается на main.
-    private var connectJob: Job? = null
-
-    private val devicesState: Flow<LCEState<List<DeviceUiItem>, ScanError>> = combine(stepFlow, scanRestartsFlow) {
-            step,
-            _,
-        ->
-        step
-    }
-        .flatMapLatest { step ->
-            if (step !is ScanStep.Scanning) {
-                flowOf(LCEState.None)
-            } else {
-                val serial = if (DeviceTransport.SERIAL in supportedTransports) {
-                    scanRepository.scanSerial().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) }
-                } else {
-                    flowOf(Response.Success(emptyList()))
-                }
-                combine(
-                    scanRepository.scanBluetooth().flowOn(dispatchers.io).onStart {
-                        emit(Response.Success(emptyList()))
-                    },
-                    scanRepository.scanUsb().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) },
-                    serial,
-                ) { bleResponse, usbResponse, serialResponse -> mergeDevices(bleResponse, usbResponse, serialResponse) }
+    override suspend fun onStart() {
+        // Поиск перезапускается и без смены шага (Scanning → Scanning при возврате в приложение) — через reload().
+        select { step }
+            .flatMapLatest { step -> if (step is ScanStep.Scanning) scanDevices() else flowOf(LCEState.None) }
+            .flowOn(dispatchers.default)
+            .collectIntoState { devices -> copy(devices = devices) }
+        // Подсказка «пусто» зависит только от шага: reload() поиска её не сбрасывает.
+        safeLaunch {
+            repeatOnSubscription {
+                select { step }
+                    .flatMapLatest { step -> if (step is ScanStep.Scanning) emptyHintTimer() else flowOf(false) }
+                    .collect { searchedLong -> reduce { copy(searchedLongEnough = searchedLong) } }
             }
         }
+        // Возврат в приложение отслеживается всю жизнь VM, а не только пока экран подписан на state.
+        safeLaunch { foregroundProvider.foregroundReturns.collect { recheckOnForeground() } }
+        // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
+        // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
+        deviceSession.close().join()
+        checkPermissionsExclusively()
+    }
 
-    private val searchedLongEnough: Flow<Boolean> = stepFlow.flatMapLatest { step ->
-        if (step is ScanStep.Scanning) {
-            flow {
-                emit(false)
-                delay(EMPTY_HINT_DELAY_MILLIS)
-                emit(true)
-            }
+    private fun scanDevices(): Flow<LCEState<List<DeviceUiItem>, ScanError>> {
+        val supportedTransports = currentState.supportedTransports
+        val serial = if (DeviceTransport.SERIAL in supportedTransports) {
+            scanRepository.scanSerial().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) }
         } else {
-            flowOf(false)
+            flowOf(Response.Success(emptyList()))
         }
+        return combine(
+            scanRepository.scanBluetooth().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) },
+            scanRepository.scanUsb().flowOn(dispatchers.io).onStart { emit(Response.Success(emptyList())) },
+            serial,
+        ) { bleResponse, usbResponse, serialResponse -> mergeDevices(bleResponse, usbResponse, serialResponse) }
     }
 
-    val state: StateFlow<ScanDeviceState> = combine(
-        stepFlow,
-        devicesState,
-        selectedIdFlow,
-        searchedLongEnough,
-    ) { step, devices, selectedId, searchedLong ->
-        ScanDeviceState(
-            step = step,
-            requirements = requirements,
-            supportedTransports = supportedTransports,
-            devices = devices,
-            selectedId = selectedId,
-            searchedLongEnough = searchedLong,
-        )
+    private fun emptyHintTimer(): Flow<Boolean> = flow {
+        emit(false)
+        delay(EMPTY_HINT_DELAY_MILLIS)
+        emit(true)
     }
-        // Старт: при первой подписке на state запросить разрешения и перейти на скан/adapterOff/denied.
-        .launchOnFirstStart {
-            // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
-            // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
-            deviceSession.close().join()
-            checkPermissionsExclusively()
-        }
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), ScanDeviceState())
 
     // --- Интенты: разрешения ---
 
     /** Повтор: заново запросить доступ / перепроверить адаптер и геолокацию. */
     fun onRetry() {
-        safeLaunch { checkPermissionsExclusively() }
+        intent { checkPermissionsExclusively() }
     }
 
     /** Открыть системные настройки Bluetooth (случай выключенного адаптера). */
@@ -168,20 +130,18 @@ class ScanDeviceViewModel(
      * Вернулись в приложение (из системных настроек, шторки на iOS, другого приложения): заново проверяем
      * разрешения, Bluetooth и геолокацию и запускаем поиск. Подключение и системный запрос разрешения не трогаем.
      */
-    override fun onAppForeground() {
-        safeLaunch {
-            executeWithProceedLock {
-                // Подключение и идущая проверка держат lock — сюда не попадут. Остаётся шаг Connecting после
-                // успешного подключения (экран уже ушёл во flow устройства): поиск не перезапускаем.
-                if (stepFlow.value is ScanStep.Connecting) return@executeWithProceedLock
-                checkPermissionAndProceed()
-                scanRestartsFlow.update { it + 1 }
-            }
+    private suspend fun recheckOnForeground() {
+        executeWithProceedLock {
+            // Подключение и идущая проверка держат lock — сюда не попадут. Остаётся шаг Connecting после
+            // успешного подключения (экран уже ушёл во flow устройства): поиск не перезапускаем.
+            if (currentState.step is ScanStep.Connecting) return@executeWithProceedLock
+            checkPermissionAndProceed()
+            reload()
         }
     }
 
     /** Открыть системные настройки приложения (случай «отклонено навсегда»). */
-    fun openAppSettings() {
+    fun onOpenAppSettings() {
         permissionsProvider.openAppSettings()
     }
 
@@ -198,12 +158,12 @@ class ScanDeviceViewModel(
     }
 
     private suspend fun checkPermission(): Boolean {
-        stepFlow.update { ScanStep.PermissionCheck }
+        reduce { copy(step = ScanStep.PermissionCheck) }
         return when (val result = permissionsProvider.requestBlePermissions()) {
             BlePermissionResult.Granted -> true
 
             is BlePermissionResult.Denied -> {
-                stepFlow.update { ScanStep.Denied(canOpenSettings = result.canOpenSettings) }
+                reduce { copy(step = ScanStep.Denied(canOpenSettings = result.canOpenSettings)) }
                 false
             }
         }
@@ -212,14 +172,13 @@ class ScanDeviceViewModel(
     // Preflight после выдачи разрешений: BLE требует включённого адаптера, а на Android < 12 —
     // ещё и включённой службы геолокации (иначе скан молча ничего не находит).
     private fun proceedAfterPermission() {
-        val bluetoothNeeded = requirements.contains(DeviceAccessRequirement.BLUETOOTH)
-        stepFlow.update {
-            when {
-                bluetoothNeeded && !permissionsProvider.isBluetoothEnabled() -> ScanStep.AdapterOff
-                bluetoothNeeded && !permissionsProvider.isLocationEnabled() -> ScanStep.LocationOff
-                else -> ScanStep.Scanning
-            }
+        val bluetoothNeeded = currentState.requirements.contains(DeviceAccessRequirement.BLUETOOTH)
+        val step = when {
+            bluetoothNeeded && !permissionsProvider.isBluetoothEnabled() -> ScanStep.AdapterOff
+            bluetoothNeeded && !permissionsProvider.isLocationEnabled() -> ScanStep.LocationOff
+            else -> ScanStep.Scanning
         }
+        reduce { copy(step = step) }
     }
 
     // --- Интенты: выбор и подключение ---
@@ -228,61 +187,72 @@ class ScanDeviceViewModel(
     fun onDeviceSelected(item: DeviceUiItem, isSplit: Boolean) {
         if (item.restricted) return
         if (isSplit) {
-            selectedIdFlow.update { item.id }
+            reduce { copy(selectedId = item.id) }
         } else {
-            connect(item)
+            onConnect(item)
         }
     }
 
     /** «Подключить» в split-раскладке для выбранного устройства. */
     fun onConnectSelected() {
-        val selected = (state.value.devices as? LCEState.Content)?.content
-            ?.firstOrNull { it.id == selectedIdFlow.value }
+        val selected = (currentState.devices as? LCEState.Content)?.content
+            ?.firstOrNull { it.id == currentState.selectedId }
             ?: return
-        connect(selected)
+        onConnect(selected)
     }
 
     /** «Назад» (системное и в заголовке): во время подключения — отмена, иначе — выход. */
     fun onBack() {
-        if (stepFlow.value is ScanStep.Connecting) {
+        if (currentState.step is ScanStep.Connecting) {
             onCancelConnecting()
         } else {
-            _effect.tryEmit(ScanDeviceEffect.Close)
+            postSideEffect(ScanDeviceEffect.Close)
         }
     }
 
     /** Отмена подключения — назад к списку. */
     fun onCancelConnecting() {
-        connectJob?.cancel()
-        safeLaunch {
+        cancelLaunched(CONNECT_KEY)
+        intent {
             // Дожидаемся, пока отменённое подключение отпустит lock; новое «Подключить» до конца закрытия
             // пропускается. Сначала закрыть сессию, затем вернуться к поиску (он стартует заново).
             executeWithProceedLock(needSkipAnother = false) {
                 deviceSession.close().join()
-                stepFlow.update { ScanStep.Scanning }
+                reduce { copy(step = ScanStep.Scanning) }
             }
         }
     }
 
-    fun connect(item: DeviceUiItem) {
+    fun onConnect(item: DeviceUiItem) {
         // Дубль (двойное нажатие) не отменяет идущую попытку; одновременную проверку разрешений отсекает lock.
-        if (connectJob?.isActive == true) return
-        connectJob = safeLaunch {
-            executeWithProceedLock {
-                stepFlow.update { ScanStep.Connecting(item) }
-                val connection = when (item) {
-                    is DeviceUiItem.Ble -> ConnectionTransport.BLE.takeIf { connectBle(item) }
-                    is DeviceUiItem.Usb -> ConnectionTransport.USB.takeIf { connectUsb(item) }
-                    is DeviceUiItem.Serial -> ConnectionTransport.SERIAL.takeIf { connectSerial(item) }
-                }
-                if (connection != null) {
-                    // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
-                    deviceSession.attach(connection)
-                    _effect.tryEmit(ScanDeviceEffect.SessionCreated)
-                } else {
-                    deviceSession.close().join()
-                    stepFlow.update { ScanStep.Scanning }
-                }
+        if (currentState.connectAttempt) return
+        reduce { copy(connectAttempt = true) }
+        launchReplacing(CONNECT_KEY) {
+            try {
+                connect(item)
+            } finally {
+                reduce { copy(connectAttempt = false) }
+            }
+        }
+    }
+
+    private suspend fun connect(item: DeviceUiItem) {
+        executeWithProceedLock {
+            // На шаге Connecting поиск остановлен и список пуст — режим блока берём из последнего найденного.
+            val scanned = currentState.devices
+            reduce { copy(step = ScanStep.Connecting(item)) }
+            val connection = when (item) {
+                is DeviceUiItem.Ble -> ConnectionTransport.BLE.takeIf { connectBle(item, scanned) }
+                is DeviceUiItem.Usb -> ConnectionTransport.USB.takeIf { connectUsb(item) }
+                is DeviceUiItem.Serial -> ConnectionTransport.SERIAL.takeIf { connectSerial(item) }
+            }
+            if (connection != null) {
+                // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
+                deviceSession.attach(connection)
+                postSideEffect(ScanDeviceEffect.SessionCreated)
+            } else {
+                deviceSession.close().join()
+                reduce { copy(step = ScanStep.Scanning) }
             }
         }
     }
@@ -292,9 +262,9 @@ class ScanDeviceViewModel(
      * блок «забыл» телефон — снимет старое сопряжение и вернёт [DeviceConnectionState.PAIRING_REQUIRED].
      * До подключения отсекаем только блок, привязанный к другому телефону: с этого телефона это не исправить.
      */
-    private suspend fun connectBle(item: DeviceUiItem.Ble): Boolean {
+    private suspend fun connectBle(item: DeviceUiItem.Ble, scanned: LCEState<List<DeviceUiItem>, ScanError>): Boolean {
         if (item.mode != ScannedDeviceMode.BOOT && item.isBoundToAnotherPhone()) {
-            _effect.tryEmit(ScanDeviceEffect.BoundToAnotherPhone)
+            postSideEffect(ScanDeviceEffect.BoundToAnotherPhone)
             return false
         }
         val startedAt = TimeSource.Monotonic.markNow()
@@ -311,11 +281,11 @@ class ScanDeviceViewModel(
             if (result is Response.Success && result.value == DeviceConnectionState.PAIRING_REQUIRED) {
                 // Старое сопряжение снято; если блок уже в режиме сопряжения — повторяем, SDK сопряжётся заново.
                 if (attempt < BLE_CONNECT_ATTEMPTS - 1 &&
-                    scannedMode(item.id) == ScannedDeviceMode.PAIRING
+                    scanned.modeOf(item.id) == ScannedDeviceMode.PAIRING
                 ) {
                     return@repeat
                 }
-                _effect.tryEmit(ScanDeviceEffect.PairingRequired)
+                postSideEffect(ScanDeviceEffect.PairingRequired)
                 return false
             }
             return result.isConnected()
@@ -323,9 +293,8 @@ class ScanDeviceViewModel(
         return false
     }
 
-    /** Режим блока по последним данным поиска. */
-    private fun scannedMode(id: String): ScannedDeviceMode? =
-        ((state.value.devices as? LCEState.Content)?.content?.firstOrNull { it.id == id } as? DeviceUiItem.Ble)?.mode
+    private fun LCEState<List<DeviceUiItem>, ScanError>.modeOf(id: String): ScannedDeviceMode? =
+        ((this as? LCEState.Content)?.content?.firstOrNull { it.id == id } as? DeviceUiItem.Ble)?.mode
 
     private suspend fun connectUsb(item: DeviceUiItem.Usb): Boolean =
         connectionRepository.connectUsb(item.id).flowOn(dispatchers.io).awaitTerminal().isConnected()
@@ -336,7 +305,7 @@ class ScanDeviceViewModel(
 
     private fun Response<DeviceConnectionState>?.isConnected(): Boolean {
         val connected = this is Response.Success && value == DeviceConnectionState.CONNECTED
-        if (!connected) _effect.tryEmit(ScanDeviceEffect.ConnectionFailed)
+        if (!connected) postSideEffect(ScanDeviceEffect.ConnectionFailed)
         return connected
     }
 
@@ -372,7 +341,7 @@ class ScanDeviceViewModel(
     }
 
     private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
+        const val CONNECT_KEY = "connect"
         const val CONNECT_TIMEOUT_MILLIS = 20_000L
 
         /** Повтор BLE-подключения после снятия старого сопряжения, если блок в режиме сопряжения. */

@@ -18,6 +18,8 @@ data class DeviceInteractionState(
     val wasBoot: Boolean = false,
     /** Перезагрузка блока, которую приложение вызвало и ждёт (вход в загрузчик, возврат после прошивки). */
     val reboot: DeviceReboot? = null,
+    /** Выход из flow уже запрошен: повторное нажатие не даёт второго Exit. */
+    val exitRequested: Boolean = false,
 ) {
     /**
      * Показывать экран режима загрузчика (слот хоста), а не рабочий flow и не оверлей «потеря связи»:
@@ -32,9 +34,20 @@ data class DeviceInteractionState(
             session is DeviceSessionState.Ready -> false
             else -> wasBoot
         }
-}
 
-sealed interface DeviceInteractionEffect {
-    /** Сессия закрыта — выйти из flow. */
-    data object Exit : DeviceInteractionEffect
+    fun withSession(session: DeviceSessionState): DeviceInteractionState = copy(
+        session = session,
+        // Рабочий режим — блок для дочернего flow; загрузчик сбрасывает его: дочерний flow уходит из композиции
+        // и после возврата в рабочий режим стартует заново. Обрыв/подключение блок не трогают.
+        device = when (session) {
+            is DeviceSessionState.Ready -> session.device
+            is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> null
+            DeviceSessionState.Connecting, DeviceSessionState.Disconnected -> device
+        },
+        wasBoot = when (session) {
+            is DeviceSessionState.Ready -> false
+            is DeviceSessionState.BluetoothBoot, is DeviceSessionState.FirmwareBoot -> true
+            DeviceSessionState.Connecting, DeviceSessionState.Disconnected -> wasBoot
+        },
+    )
 }

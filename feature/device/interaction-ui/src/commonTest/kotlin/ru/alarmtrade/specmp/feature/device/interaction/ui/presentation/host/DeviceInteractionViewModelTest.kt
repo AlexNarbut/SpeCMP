@@ -75,6 +75,12 @@ class DeviceInteractionViewModelTest {
         backgroundScope.coroutineContext,
     )
 
+    private fun TestScope.viewModel(session: DeviceSession = session()): DeviceInteractionViewModel {
+        val viewModel = DeviceInteractionViewModel(session)
+        backgroundScope.launch { viewModel.state.collect {} }
+        return viewModel
+    }
+
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
 
@@ -83,7 +89,7 @@ class DeviceInteractionViewModelTest {
 
     @Test
     fun `keeps last device while disconnected`() = runTest(dispatcher) {
-        val viewModel = DeviceInteractionViewModel(session())
+        val viewModel = viewModel()
         advanceUntilIdle()
         assertEquals(DeviceSessionState.Ready(device), viewModel.state.value.session)
 
@@ -96,9 +102,9 @@ class DeviceInteractionViewModelTest {
 
     @Test
     fun `exit closes session and emits Exit`() = runTest(dispatcher) {
-        val viewModel = DeviceInteractionViewModel(session())
+        val viewModel = viewModel()
         val effects = mutableListOf<DeviceInteractionEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.sideEffect.collect { effects += it } }
 
         viewModel.onExit()
         viewModel.onExit()
@@ -110,7 +116,7 @@ class DeviceInteractionViewModelTest {
 
     @Test
     fun `bootloader drops the child flow and return to main brings it back`() = runTest(dispatcher) {
-        val viewModel = DeviceInteractionViewModel(session())
+        val viewModel = viewModel()
         advanceUntilIdle()
         assertEquals(device, viewModel.state.value.device)
 
@@ -137,7 +143,7 @@ class DeviceInteractionViewModelTest {
     @Test
     fun `boot content is shown for the bootloader and stays through a link drop until the block is back`() =
         runTest(dispatcher) {
-            val viewModel = DeviceInteractionViewModel(session())
+            val viewModel = viewModel()
             advanceUntilIdle()
             assertFalse(viewModel.state.value.showBootContent)
             assertFalse(viewModel.state.value.wasBoot)
@@ -169,7 +175,7 @@ class DeviceInteractionViewModelTest {
     @Test
     fun `expected reboot to the bootloader shows boot content before the link drops`() = runTest(dispatcher) {
         val session = session()
-        val viewModel = DeviceInteractionViewModel(session)
+        val viewModel = viewModel(session)
         advanceUntilIdle()
 
         session.expectReboot(DeviceReboot.ToBoot)
@@ -188,7 +194,7 @@ class DeviceInteractionViewModelTest {
     fun `reboot to main keeps boot content after the block returns until it is acknowledged`() = runTest(dispatcher) {
         readDevice = device.copy(mode = DeviceOperationMode.BOOT)
         val session = session()
-        val viewModel = DeviceInteractionViewModel(session)
+        val viewModel = viewModel(session)
         advanceUntilIdle()
         assertTrue(viewModel.state.value.showBootContent)
 

@@ -169,7 +169,7 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
     val snackbar = rememberCmpSnackbarHostState()
     val leave = fastMount?.onBack ?: onBack
     val checklist = fastMount?.checklist
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is CheckStateEffect.CommandFinished -> showResult(snackbar, effect, viewModel::onRetry)
             CheckStateEffect.Close -> onBack()
@@ -178,7 +178,7 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
     }
     val actions = remember(viewModel, leave, checklist) {
         CheckStateActions(
-            onBack = { if (viewModel.onBackRequest()) leave() },
+            onBack = viewModel::onBack,
             onCommand = viewModel::onCommand,
             onConfirm = viewModel::onConfirm,
             onDialogDismiss = viewModel::onDialogDismiss,

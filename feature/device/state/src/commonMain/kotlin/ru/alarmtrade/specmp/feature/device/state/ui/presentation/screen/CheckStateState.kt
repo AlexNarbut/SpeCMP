@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.Duration
+import kotlin.time.TimeMark
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.EngineStatus
@@ -19,6 +21,8 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
  * @property statuses состояние кнопок команд (отправка, итог); нет записи — кнопка в покое.
  * @property pending команда в работе: остальные кнопки недоступны (одна команда за раз).
  * @property programExiting быстрый монтаж: приложение само выводит блок из режима программирования.
+ * @property lastSnapshot время последнего снимка (или начала опроса): от него считается «Нет данных N с».
+ * @property resultSeq номер последнего итога команды ([CommandStatus.Finished.seq]).
  */
 @Immutable
 data class CheckStateState(
@@ -35,6 +39,8 @@ data class CheckStateState(
     val pending: StateCommand? = null,
     val programExiting: Boolean = false,
     val dialog: CheckStateDialog? = null,
+    val lastSnapshot: TimeMark? = null,
+    val resultSeq: Int = 0,
 ) {
     val loading: Boolean get() = vehicle == null
 
@@ -42,6 +48,12 @@ data class CheckStateState(
     val alarm: Boolean get() = vehicle?.alarm == true
 
     fun status(command: StateCommand): CommandStatus = statuses[command] ?: CommandStatus.Idle
+
+    /** Блокировка ввода PIN — в открытый диалог PIN; без него не меняется. */
+    fun withPinLock(lock: Duration?): CheckStateState {
+        val pinDialog = dialog as? CheckStateDialog.Pin ?: return this
+        return copy(dialog = pinDialog.copy(pin = pinDialog.pin.copy(lockedFor = lock)))
+    }
 }
 
 /** Кнопка команды. [primary] — в колонке пульта; [danger] — через лист подтверждения с удержанием 2 с. */

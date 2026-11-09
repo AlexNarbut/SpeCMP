@@ -85,7 +85,7 @@ fun DeviceInteractionHost(
     val viewModel = koinViewModel<DeviceInteractionViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             DeviceInteractionEffect.Exit -> onExit()
         }

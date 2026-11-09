@@ -109,7 +109,7 @@ internal fun DeviceSelectionScreen(
     val boundToAnotherPhoneText = stringResource(Strings.string.deviceselect_common_error_bond_remove_device)
     val pairingRequiredText = stringResource(Strings.string.deviceselect_common_error_pairing_required)
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             ScanDeviceEffect.SessionCreated -> onSessionCreate()
             ScanDeviceEffect.Close -> onClose?.invoke()
@@ -130,7 +130,7 @@ internal fun DeviceSelectionScreen(
         actions = DeviceSelectionActions(
             onBack = viewModel::onBack,
             onRetry = viewModel::onRetry,
-            onOpenSettings = viewModel::openAppSettings,
+            onOpenSettings = viewModel::onOpenAppSettings,
             onOpenBluetoothSettings = viewModel::onOpenBluetoothSettings,
             onOpenLocationSettings = viewModel::onOpenLocationSettings,
             onSelect = viewModel::onDeviceSelected,

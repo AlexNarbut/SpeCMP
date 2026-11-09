@@ -82,7 +82,7 @@ class CheckStateViewModelTest {
         val vm = CheckStateViewModel(session, repository, entry, programMode, cooldown, dispatchers, fastMount, time)
             .also { viewModels += it }
         collector = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm
     }
@@ -243,7 +243,7 @@ class CheckStateViewModelTest {
         val vm = viewModel()
         emit(vehicle(serviceMode = true))
 
-        assertEquals(false, vm.onBackRequest())
+        vm.onBack()
         runCurrent()
         assertEquals(CheckStateDialog.Exit(service = true, program = false), vm.state.value.dialog)
 
@@ -257,7 +257,10 @@ class CheckStateViewModelTest {
     fun `back without modes leaves at once`() = test {
         val vm = viewModel()
         emit(vehicle())
-        assertTrue(vm.onBackRequest())
+        vm.onBack()
+        runCurrent()
+        assertNull(vm.state.value.dialog)
+        assertEquals(CheckStateEffect.Close, effects.last())
     }
 
     @Test

@@ -40,6 +40,8 @@ data class ScanDeviceState(
     val selectedId: String? = null,
     /** На стадии Scanning без найденных устройств прошло достаточно времени → показать «пусто». */
     val searchedLongEnough: Boolean = false,
+    /** Идёт попытка подключения: повторное «Подключить» её не прерывает. */
+    val connectAttempt: Boolean = false,
 )
 
 /** Строка деталей «подпись — значение»; [strong] — выделенное значение (режим сопряжения / загрузчика). */

@@ -140,7 +140,7 @@ class AdvancedMountRootViewModelTest {
         val vm = AdvancedMountRootViewModel(session, mountRepository, dispatchers).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<AdvancedMountRootEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm to effects
     }
