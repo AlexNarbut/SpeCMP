@@ -1,5 +1,9 @@
 # cpm_template
 
+## Первым делом (окружение)
+
+- Перед любой работой в клоне проверь и при отсутствии установи: **Python 3** (`python3 --version`; macOS — `brew install python`) и **pre-commit** (`pre-commit --version`; `brew install pre-commit` или `pipx install pre-commit`), затем активируй git-хуки: `pre-commit install` (ставит pre-commit, pre-push и pre-merge-commit — `default_install_hook_types`). Проверка: в `.git/hooks/` есть `pre-commit` и `pre-push`. Без них не коммить: хуки — обязательная часть проверок (`docs/code-quality.md` → «Команды»). Не можешь установить сам (нет прав/сети) — остановись и попроси пользователя.
+
 ## Working Rules
 
 - Изучай затронутую подсистему и предпочитай минимальные локальные изменения.
