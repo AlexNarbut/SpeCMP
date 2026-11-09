@@ -4,15 +4,13 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import ru.alarmtrade.specialist.interactors.localConfigurations.LocalSettingsConfigurationInteractor
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.CreateLocalConfigurationRequest
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationRequest
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationsPageRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.onError
-import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
-import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.configurator.data.datasource.LocalConfigurationsDataSource
 import ru.alarmtrade.specmp.feature.configurator.data.mapper.toDomain
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
@@ -21,14 +19,14 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
 /**
- * [LocalConfigurationsRepository] над `localConfigurationInteractor` (записи хранилища) и сессиями настроек
- * ([DeviceSettingsRepository.copy] — настройки записи). Интерактор — лениво.
+ * [LocalConfigurationsRepository] над `localConfigurationInteractor` (записи хранилища,
+ * [LocalConfigurationsDataSource]) и сессиями настроек ([DeviceSettingsRepository.copy] — настройки записи).
  *
  * SDK создаёт запись с заводскими настройками модели, настройки источника копируются в неё следом; не скопировались —
  * запись удаляется. Страницы SDK идут по id по возрастанию — читаются все и сортируются здесь.
  */
 internal class SpecialistLocalConfigurationsRepository(
-    private val interactor: () -> LocalSettingsConfigurationInteractor,
+    private val dataSource: LocalConfigurationsDataSource,
     private val settings: DeviceSettingsRepository,
 ) : LocalConfigurationsRepository {
 
@@ -38,13 +36,11 @@ internal class SpecialistLocalConfigurationsRepository(
     override val changes: Flow<Response<Unit>> = _changes.asSharedFlow()
 
     override suspend fun all(): Response<List<LocalConfiguration>> {
-        val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
         val result = mutableListOf<LocalConfiguration>()
         var page = 0
         while (true) {
-            val response = sdk.getLocalConfigurationListUseCase
-                .execute(LocalConfigurationsPageRequest(page = page, count = PAGE_SIZE))
-                .toResponse()
+            val response = dataSource.page(LocalConfigurationsPageRequest(page = page, count = PAGE_SIZE))
+                .toResponseOrUnavailable()
             when (response) {
                 is Response.Error -> return response
                 is Response.Success -> result += response.value.map { it.toDomain() }
@@ -61,15 +57,14 @@ internal class SpecialistLocalConfigurationsRepository(
         deviceName: String,
         from: SettingsSource,
     ): Response<SettingsSource.LocalConfiguration> {
-        val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
-        val created = sdk.createLocalConfigurationUseCase
-            .execute(CreateLocalConfigurationRequest(name = name, deviceName = deviceName, description = description))
-            .toResponse()
+        val created = dataSource
+            .create(CreateLocalConfigurationRequest(name = name, deviceName = deviceName, description = description))
+            .toResponseOrUnavailable()
         if (created !is Response.Success) return created as Response.Error
         val target = SettingsSource.LocalConfiguration(id = created.value.long, deviceName = deviceName, title = name)
         return when (val copied = settings.copy(from = from, to = target, saveChanges = true)) {
             is Response.Error -> {
-                sdk.deleteLocalConfigurationUseCase.execute(LocalConfigurationRequest(target.id))
+                dataSource.delete(LocalConfigurationRequest(target.id))
                 copied
             }
 
@@ -101,12 +96,10 @@ internal class SpecialistLocalConfigurationsRepository(
         }
     }
 
-    override suspend fun delete(id: Long): Response<Unit> {
-        val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
-        return sdk.deleteLocalConfigurationUseCase.execute(LocalConfigurationRequest(id)).toResponse().also {
+    override suspend fun delete(id: Long): Response<Unit> =
+        dataSource.delete(LocalConfigurationRequest(id)).toResponseOrUnavailable().also {
             if (it is Response.Success) _changes.tryEmit(Response.Success(Unit))
         }
-    }
 
     private companion object {
         const val PAGE_SIZE = 50

@@ -12,28 +12,17 @@ import kotlinx.datetime.Clock
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.AppServicesStarter
-import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.common.time.TimeZoneSource
-import ru.alarmtrade.specmp.core.lifecycle.di.appLifecycleModule
-import ru.alarmtrade.specmp.core.localization.di.localizationModule
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
-import ru.alarmtrade.specmp.core.permissions.permissionsModule
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
-import ru.alarmtrade.specmp.core.specialist.di.specialistModules
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.time.LocalClock
 import ru.alarmtrade.specmp.core.ui.time.LocalTimeZoneSource
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
-import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
-import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
-import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
-import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
-import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
-import ru.alarmtrade.specmp.feature.login.di.loginModule
-import ru.alarmtrade.specmp.flasher.di.flasherServicesModule
+import ru.alarmtrade.specmp.flasher.di.flasherKoinModules
 import ru.alarmtrade.specmp.flasher.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.flasher.navigation.FlasherNavigation
 
@@ -49,21 +38,7 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
 
     KoinApplication(application = {
         modules(
-            buildList {
-                addAll(platformModules)
-                add(commonModule)
-                addAll(specialistModules(appVersionName, appVersionCode))
-                add(localizationModule)
-                add(permissionsModule())
-                add(appLifecycleModule)
-                add(flasherServicesModule)
-                add(authStateModule)
-                add(loginModule)
-                add(deviceSelectionModule)
-                add(deviceInteractionModule)
-                add(deviceInteractionUiModule)
-                add(deviceFirmwareModule)
-            },
+            platformModules + flasherKoinModules(appVersionName, appVersionCode),
         )
     }) {
         // Привязка PermissionsController к жизненному циклу корневой активити — один раз на приложение.

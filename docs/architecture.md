@@ -125,7 +125,7 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 
 ### core/testing
 - Пакет: `ru.alarmtrade.specmp.core.testing`
-- Общие тестовые дублёры портов `core/*` (`testDispatchers`, `FixedClock`, `FakeAppForegroundProvider`), код в `commonMain`
+- Общие тестовые дублёры портов `core/*` (`testDispatchers`, `FixedClock`, `FakeAppForegroundProvider`, `InMemorySettings`), код в `commonMain`
 - Подключается только в тестовых source set'ах (Konsist `testing-modules-test-only`); см. `docs/patterns.md` → «Тестовые дублёры»
 - Дублёры контрактов фич — в `feature/<x>/testing` рядом с владельцем (`feature/device/interaction/testing`, пакет `ru.alarmtrade.specmp.feature.device.interaction.testing`: фейки репозиториев устройства и `testDeviceSession(…)`; `feature/configurator/testing` — `FakeLocalConfigurationsRepository`)
 

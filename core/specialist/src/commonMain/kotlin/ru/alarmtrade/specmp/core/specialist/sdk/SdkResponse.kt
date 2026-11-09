@@ -29,3 +29,6 @@ fun <T> SpecialistResponse<T>.toResponse(): Response<T> = when (this) {
 /** Ошибка «интерактор SDK недоступен на этой платформе» — результат неудачного [resolveOrNull]. */
 fun interactorUnavailable(): Response.Error =
     Response.Error(IllegalStateException("Specialist SDK interactor is not available on this platform"))
+
+/** [toResponse] ответа источника с ленивым интерактором: `null` — интерактор недоступен ([interactorUnavailable]). */
+fun <T> SpecialistResponse<T>?.toResponseOrUnavailable(): Response<T> = this?.toResponse() ?: interactorUnavailable()

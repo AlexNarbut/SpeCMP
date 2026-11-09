@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.supportchat.data.outbox
+package ru.alarmtrade.specmp.core.testing
 
 import com.russhwolf.settings.Settings
 

@@ -236,8 +236,13 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
   создаются в тесте напрямую. Привязка — в Koin-модуле фичи: `singleOf(::SpecialistLoginDataSource) bind
   LoginDataSource::class`. Эталоны — `SpecialistLoginRepositoryTest`, `SpecialistMainRepositoryTest`,
   `SpecialistAccountRepositoryTest`.
-- **Хранилище настроек** (`Settings*Repository`) — `Settings` в памяти (сейчас `InMemorySettings` в тестах
-  `support-chat`; общий дублёр — в `core:testing`, когда понадобится второму модулю).
+- **Ленивый интерактор** (`() -> Interactor`, недоступный на платформе не должен ронять создание) уходит в источник
+  вместе с провайдером: метод источника — `interactor.resolveOrNull()?.useCase?.execute(request)`, ответ `null` —
+  интерактор недоступен; репозиторий переводит его `toResponseOrUnavailable()` (`core/specialist`: `null` →
+  `interactorUnavailable()`). Тест проверяет и эту ветку (фейк отвечает `null`). Провайдер создаёт Koin-модуль:
+  `single<VehicleCatalogDataSource> { SpecialistVehicleCatalogDataSource(cars = { get() }, …) }`.
+- **Хранилище настроек** (`Settings*Repository`, «недавние» в `Specialist*Repository`) — `InMemorySettings` из
+  `core:testing`; повторное открытие — новый репозиторий над тем же `Settings`, битые данные — `putString` мусора.
 - **Другие репозитории фичи** — общий фейк из `*:testing`, если он есть («Тестовые дублёры»), иначе локальная
   реализация интерфейса в тестовом source set (`FakeAccountRepository` в `feature/main`).
 - **Время, поллинг** — `runTest` с виртуальным временем: интервал опроса проверяется по `currentTime`.
@@ -254,6 +259,7 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 |---|---|---|
 | `AppDispatchers` | `testDispatchers(dispatcher)` — один диспетчер на `io`/`default`/`main` | `:core:testing` |
 | `kotlinx.datetime.Clock` | `FixedClock(instant)` (`instant` — `var`) | `:core:testing` |
+| `com.russhwolf.settings.Settings` | `InMemorySettings` — map в памяти | `:core:testing` |
 | `AppForegroundProvider` | `FakeAppForegroundProvider` (`foregroundReturns` — `MutableSharedFlow`, тест делает `emit(Unit)`) | `:core:testing` |
 | `DeviceSessionRepository` | `FakeDeviceSessionRepository(device, link)` — связь `link`, сценарные ответы списками, счётчики | `:feature:device:interaction:testing` |
 | `DeviceConnectionRepository` | `FakeDeviceConnectionRepository(states, …)` — статусы подключения, счётчики подключений/закрытий | `:feature:device:interaction:testing` |
@@ -1309,7 +1315,7 @@ val text = when (error) {
 ```kotlin
 // composeApp/.../App.kt
 KoinApplication(application = {
-    modules(commonModule, *specialistModules(versionName, versionCode).toTypedArray(), loginModule)
+    modules(platformModules + appKoinModules(versionName, versionCode)) // di/AppKoinModules.kt
 }) {
     AppTheme(onThemeChange) { AppNavigation() }
 }
@@ -1333,6 +1339,12 @@ FirmwareBootGraph(onExit = onExit, onOpenSupportChat = {}, archivePicker = koinI
   фичи получает зависимость параметром из корня, через ViewModel (`koinViewModel` разрешён) или `CompositionLocal`,
   заданный в корне. Платформенному `remember*` фичи нужное для работы (app-scope, диспетчер) передаёт корень
   (`rememberFirmwareFilePicker(appScope, ioDispatcher)`).
+- **Список модулей корня — функция в `di`** (`appKoinModules(versionName, versionCode)` в `composeApp`,
+  `flasherKoinModules(…)` во `flasherApp`; платформенные — `rememberPlatformKoinModules()` отдельно). Граф проверяет
+  JVM-тест корня (`AppKoinModulesTest`, `FlasherKoinModulesTest`: koin-test `Module.verify`): у каждого параметра
+  конструктора определения есть определение. Платформенные типы и значения, собранные в лямбдах модулей, —
+  `extraTypes`; параметры ViewModel из `parametersOf` — `injections` (`definition<Vm>(Param::class)`, internal-классы
+  фич — по имени рефлексией). Новый модуль/параметр `parametersOf` — правка списка или теста в том же изменении.
 - `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
 - **Koin-модуль — `val <name>Module` в пакете `di`** (Konsist `koin-module`), включая `core/*`
   (`core/lifecycle/di/AppLifecycleModule.kt`, `core/specialist/di/SpecialistModule.kt`).

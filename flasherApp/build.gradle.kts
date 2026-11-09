@@ -57,6 +57,12 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
         }
 
+        // Проверка графа Koin composition root (koin-test `verify`, только JVM)
+        jvmTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.koin.test)
+        }
+
         androidMain.dependencies {
             implementation(libs.androidx.activityCompose)
         }

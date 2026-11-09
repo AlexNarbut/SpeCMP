@@ -83,6 +83,12 @@ kotlin {
             implementation(libs.kermit)
         }
 
+        // Проверка графа Koin composition root (koin-test `verify`, только JVM)
+        jvmTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.koin.test)
+        }
+
         androidMain.dependencies {
             implementation(libs.compose.ui.tooling)
             implementation(libs.androidx.activityCompose)

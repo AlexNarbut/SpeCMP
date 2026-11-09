@@ -9,6 +9,7 @@
 - Каталоги: `ALL` — `carsInteractor` (фильтр по подсистемам устройства: для `Device` — подсистемы модели из `deviceInformationInteractor`, для `Type` — `ALARM_MAIN`/`MICROBOT_MAIN`; фильтр групп функций — на сервере, пустой набор = `null`); `WITH_CONFIGURATIONS` — `configurationInteractor` (только автомобили с конфигурациями, фильтр — модель блока, `""` = все модели; группы не поддерживаются). Карточка и поиск по CAN — всегда `carsInteractor`.
 - Модель своя, без типов SDK (`data/mapper/CarMappers.kt`): `CarBus` — все 16 значений `CarBusGroup` + `UNKNOWN`, `family` (CAN / CAN_FD / LIN / BEAN / IMO / UNKNOWN) — цвет чипа; `CarCapability` (`NoData` / `Supported(note)` / `NotSupported(note)`); функции, фото, документы — по `order` сервера; пустые строки (URL картинок, описания, примечания) → `null` / отброшены.
 - Недавние — `RecentVehiclesRepository` (`SettingsRecentVehiclesRepository`, `AppSettingsFactory("vehicles")`, JSON на каталог, до 5, новые первыми, битые данные — пустой список).
+- SDK — через `data/datasource/VehicleCatalogDataSource` (`SpecialistVehicleCatalogDataSource` над тремя ленивыми интеракторами, `null` — недоступен на платформе); тесты — `SpecialistVehicleCatalogRepositoryTest`, `SettingsRecentVehiclesRepositoryTest` (`InMemorySettings`).
 
 ## UI (`vehicle-ui`)
 

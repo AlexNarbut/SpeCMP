@@ -422,6 +422,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | Импорт `androidx.lifecycle.ViewModel` — только `core/ui` (база) | detekt `ForbiddenImport` | ✅ |
 | Koin как сервис-локатор — только `di`, composition roots и обёртки, Android-компоненты | Konsist `no-service-locator` | ✅ |
 | `..data..` и реализации (`*Impl`, `Specialist*Repository`) — `internal`; реализацию создаёт только Koin-модуль; Koin-модули — `val *Module` в `di` | Konsist `data-visibility`, `impl-visibility`, `repository-impl`, `koin-wiring`, `koin-module` | ✅ |
+| Граф Koin корня полон: у параметров конструкторов определений есть определения (или они из `parametersOf`/платформы) | JVM-тесты `composeApp`/`flasherApp` (`AppKoinModulesTest`, `FlasherKoinModulesTest`, koin-test `verify`) | ✅ |
 | `MutableStateFlow` меняется только `update { }` | detekt `StateFlowValueMutation` | ✅ |
 | Граница с бросающим кодом — `safeRun`, не `runCatching`; лог — Kermit, не `println` | detekt `ForbiddenRunCatching`, `ForbiddenPrintln` | ✅ |
 | Направления импортов между модулями, пакет = модуль, слои domain/data/presentation | Konsist `module-direction`, `module-package`, `domain-isolation`, `presentation-isolation`, `data-isolation`, `feature-data-isolation`; graph-assert | ✅ |

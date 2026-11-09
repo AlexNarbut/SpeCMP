@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
+import ru.alarmtrade.specmp.core.testing.InMemorySettings
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus

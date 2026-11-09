@@ -12,6 +12,7 @@
 - `testDispatchers(dispatcher)` — `AppDispatchers` с одним диспетчером на `io`/`default`/`main`.
 - `FixedClock(instant)` — `kotlinx.datetime.Clock`, `instant` — `var`.
 - `FakeAppForegroundProvider` — `foregroundReturns` как `MutableSharedFlow<Unit>`, тест вызывает `emit(Unit)`.
+- `InMemorySettings` — `com.russhwolf.settings.Settings` в памяти (репозитории на `Settings`: outbox чата, «недавние»).
 
 ## Rules
 
