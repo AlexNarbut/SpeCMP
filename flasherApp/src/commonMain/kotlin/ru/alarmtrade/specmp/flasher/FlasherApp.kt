@@ -2,15 +2,18 @@ package ru.alarmtrade.specmp.flasher
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.datetime.Clock
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.AppServicesStarter
 import ru.alarmtrade.specmp.core.common.di.commonModule
+import ru.alarmtrade.specmp.core.common.time.TimeZoneSource
 import ru.alarmtrade.specmp.core.lifecycle.di.appLifecycleModule
 import ru.alarmtrade.specmp.core.localization.di.localizationModule
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
@@ -21,6 +24,8 @@ import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
 import ru.alarmtrade.specmp.core.specialist.di.specialistModules
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
+import ru.alarmtrade.specmp.core.ui.time.LocalClock
+import ru.alarmtrade.specmp.core.ui.time.LocalTimeZoneSource
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.feature.authstate.di.authStateModule
 import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
@@ -73,11 +78,16 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
         LaunchedEffect(Unit) { specialistInitializer.start(appLocale.languageTag) }
         val specialistReady by specialistInitializer.ready.collectAsStateWithLifecycle()
 
-        AppTheme(onThemeChange, themeStore = DefaultAppThemeStore) {
-            if (specialistReady) {
-                FlasherNavigation()
-            } else {
-                CmpSurface(modifier = Modifier.fillMaxSize()) {}
+        CompositionLocalProvider(
+            LocalClock provides koinInject<Clock>(),
+            LocalTimeZoneSource provides koinInject<TimeZoneSource>(),
+        ) {
+            AppTheme(onThemeChange, themeStore = DefaultAppThemeStore) {
+                if (specialistReady) {
+                    FlasherNavigation()
+                } else {
+                    CmpSurface(modifier = Modifier.fillMaxSize()) {}
+                }
             }
         }
     }

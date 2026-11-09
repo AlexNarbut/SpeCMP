@@ -17,6 +17,7 @@ kotlin {
             implementation(libs.koin.core)
             // Settings — публичный тип AppSettingsFactory, поэтому api
             api(libs.multiplatformSettings)
+            api(libs.kotlinx.datetime)
         }
 
         commonTest.dependencies {

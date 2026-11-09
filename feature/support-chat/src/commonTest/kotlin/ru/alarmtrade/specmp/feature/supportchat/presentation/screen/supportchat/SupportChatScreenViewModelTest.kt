@@ -22,7 +22,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -54,6 +53,7 @@ class SupportChatScreenViewModelTest {
     private lateinit var attachmentFiles: FakeSupportChatAttachmentFiles
     private lateinit var fileOpener: FakeSupportChatFileOpener
     private lateinit var dispatchers: AppDispatchers
+    private val clock = FixedClock(LocalDateTime(2026, 1, 15, 12, 0).toInstant(TimeZone.UTC))
 
     @BeforeTest
     fun setup() {
@@ -416,6 +416,17 @@ class SupportChatScreenViewModelTest {
         assertEquals(1, viewModel.state.value.messages.size)
         assertEquals(SupportChatMessageStatus.Sent, viewModel.state.value.messages.first().status)
         assertEquals(listOf("Test message"), repository.sentMessages)
+    }
+
+    @Test
+    fun `optimistic message is stamped with injected clock`() = runChatTest {
+        val viewModel = createViewModel()
+
+        clock.instant = LocalDateTime(2026, 1, 15, 12, 30).toInstant(TimeZone.UTC)
+        viewModel.onSend("Stamped")
+        runCurrent()
+
+        assertEquals(listOf(clock.instant), viewModel.state.value.messages.map { it.time })
     }
 
     @Test
@@ -1138,6 +1149,7 @@ class SupportChatScreenViewModelTest {
             attachmentFiles = attachmentFiles,
             fileOpener = fileOpener,
             outbox = outbox,
+            clock = clock,
         )
         createdViewModels += viewModel
         // Экран подписан на state — с этого стартует работа VM (onStart).
@@ -1164,7 +1176,7 @@ class SupportChatScreenViewModelTest {
         serverId = id,
         text = text,
         attachment = null,
-        time = Clock.System.now(),
+        time = clock.now(),
         isMine = false,
         authorEmail = "agent@example.com",
         status = SupportChatMessageStatus.Sent,
@@ -1180,7 +1192,7 @@ class SupportChatScreenViewModelTest {
         serverId = null,
         text = text,
         attachment = null,
-        time = Clock.System.now(),
+        time = clock.now(),
         isMine = true,
         authorEmail = null,
         status = status,

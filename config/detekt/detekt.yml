@@ -64,9 +64,12 @@ specmp:
   ResponseIgnored:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # «Сейчас» и пояс — из внедрённых Clock/TimeZoneSource, в composable — LocalClock/LocalTimeZoneSource (docs/patterns.md,
+  # «Источник времени»); дефолт допустим только у параметра первичного конструктора. Вне охвата: тесты, di и сами
+  # источники времени — core/common/time и core/ui/time/LocalClock.kt (системные дефолты).
   DirectClockUsage:
-    active: false
-    excludes: ['**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+    active: true
+    excludes: ['**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/core/common/**/time/**', '**/core/ui/**/time/LocalClock.kt']
   # В *Repository/*UseCase бросать — только внутри safeRun/safeResponseRun/asResponseFlow.
   ThrowInRepository:
     active: true

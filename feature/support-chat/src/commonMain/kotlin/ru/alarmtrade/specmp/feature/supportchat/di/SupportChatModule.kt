@@ -28,6 +28,7 @@ val supportChatModule = module {
             attachmentFiles = params.get(),
             fileOpener = params.get(),
             outbox = get(),
+            clock = get(),
         )
     }
 }

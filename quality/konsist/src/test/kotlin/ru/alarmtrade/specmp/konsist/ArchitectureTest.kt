@@ -384,7 +384,7 @@ class ArchitectureTest {
                     "(до переноса main-safety в репозитории), AppRestarter, AppVersionProvider, " +
                     "AppForegroundProvider, PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore; Kotlin: " +
                     "примитивы, коллекции, " +
-                    "TimeSource; Logger. " +
+                    "TimeSource; Clock, TimeZoneSource; Logger. " +
                     "Нельзя: data, SDK, Flow, CoroutineScope, функциональные типы. docs/patterns.md, «BaseViewModel»",
             ) { parameter ->
                 val type = parameter.type.text
@@ -739,6 +739,8 @@ private val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     // Как AppLocaleStore: настройка приложения из core/common, реализация — core/specialist; доменной обёртки нет.
     "$ROOT.core.common.ConfigurationLanguageStore",
     "kotlin.time.TimeSource",
+    "kotlinx.datetime.Clock",
+    "$ROOT.core.common.time.TimeZoneSource",
     "co.touchlab.kermit.Logger",
 )
 

@@ -15,6 +15,7 @@
 - **ViewModel — только через `BaseViewModel<S, E>`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`): наружу `state`, `sideEffect` и интенты `onXxx()`, state меняется только `reduce`, эффекты — `postSideEffect`, корутины — `intent`/`safeLaunch`/`launchReplacing`, стартовая работа — `onStart()` — см. «BaseViewModel».
 - **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
+- **«Сейчас» и часовой пояс — только из внедрённых `Clock`/`TimeZoneSource`, в composable — из `LocalClock`/`LocalTimeZoneSource`** (detekt `DirectClockUsage`, весь production): без `Clock.System`/`TimeZone.currentSystemDefault()` в теле и дефолтах функций — см. «Источник времени».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
 - **Без побочных эффектов в конструкторе** (Konsist `no-constructor-side-effects`): нет `init { }` и корутин в инициализаторах свойств; фоновая работа — идемпотентный `start()` (CAS, `start-once-cas`) доменного сервиса из `AppServicesStarter` — см. «Доменные сервисы».
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
@@ -150,6 +151,32 @@ val testDispatchers = AppDispatchers(
     main = UnconfinedTestDispatcher()
 )
 ```
+
+## Источник времени
+
+«Сейчас» — внедряемый `kotlinx.datetime.Clock`, часовой пояс — `TimeZoneSource` (`core/common/time`). Оба привязаны в
+`commonModule`: `single<Clock> { Clock.System }`, `single<TimeZoneSource> { TimeZoneSource.System }`.
+`kotlin.time.Clock` не используем: SDK закрепляет `kotlinx-datetime` 0.6.2, где модели (`Instant`) —
+`kotlinx.datetime.Instant`, а мостов к `kotlin.time.Instant` нет.
+
+- **Охват detekt `DirectClockUsage` — весь production-код** (domain, data, ViewModel, мапперы/форматтеры
+  presentation, composable, инфраструктура `core/*`, androidMain/iosMain). Запрещены `Clock.System`,
+  `TimeZoneSource.System`, `TimeZone.currentSystemDefault()`, `System.currentTimeMillis()`/`nanoTime()`, `NSDate()`.
+  Вне охвата: тесты, `di`-модули и сами источники времени — `core/common/time` и `core/ui/time/LocalClock.kt`.
+- **Классы** (domain, data, ViewModel, инфраструктура) получают их параметром первичного конструктора —
+  `clock: Clock = Clock.System`, `timeZones: TimeZoneSource = TimeZoneSource.System`; DI передаёт `get()`, тест —
+  фиксированные часы (`FixedClock`) и `TimeZoneSource.fixed(TimeZone.UTC)`. Дефолт допустим только у первичного
+  конструктора; в теле, свойствах и дефолтах обычных функций — `clock.now()`/`timeZones.current()`, чистой функции —
+  параметром (`timeZone: TimeZone`, без дефолта).
+- **Пояс читается на вызов, не внедряется значением**: синглтон с `TimeZone` «замёрз» бы при смене пояса на
+  устройстве.
+- **Один `now` на операцию**: `val now = clock.now()` один раз и дальше — значение (`SupportChatScreenViewModel.onSend`).
+- **Composable** — `LocalClock`/`LocalTimeZoneSource` (`core/ui/time`): `App()`/`FlasherApp()` провайдят их из Koin
+  (`LocalClock provides koinInject<Clock>()`), UI-тест — `CompositionLocalProvider(LocalClock provides fixedClock)`;
+  системный дефолт — только для превью и корней без провайдера. Хелперы: `currentTimeZone()` (пояс на каждую
+  композицию), `currentToday()` («сегодня» на каждую рекомпозицию — `rememberCmpDateLabeler`). Значение пояса,
+  от которого зависит `remember`, — его ключ. Дефолт параметра composable допустим только из `CompositionLocal`.
+- Замер длительностей и таймауты — `TimeSource.Monotonic`, правило его не трогает.
 
 ## Логирование
 
@@ -291,8 +318,8 @@ internal sealed interface SourceKey {
 
 | Модуль | Что даёт фичам |
 |--------|----------------|
-| `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища) |
-| `core/ui` | `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel<S, E>`, `collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
+| `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища), `Clock`/`TimeZoneSource` (`time/`, «Источник времени») |
+| `core/ui` | `LocalClock`/`LocalTimeZoneSource` (`time/`), `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel<S, E>`, `collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
 | `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`AppVersionProvider` из `core/common`, device info) |
 | `core/network` | HTTP-движки Ktor (для SDK и Coil), `NetworkMonitor` |
 | `core/localization` | `AppLocale`, чтение/применение локали |
@@ -712,9 +739,9 @@ internal class AppSettingsViewModel(
 Параметры конструктора VM (и аргументы их дженериков) — только из разрешающего списка (Konsist
 `view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
 (аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
-`AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`;
-Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data, типы SDK, `Flow`, `CoroutineScope`,
-функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
+`AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`,
+`Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
+типы SDK, `Flow`, `CoroutineScope`, функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
 
 #### `BaseDeviceViewModel<S, E>`
 

@@ -55,6 +55,7 @@ import ru.alarmtrade.specmp.core.ui.format.rememberCmpDateLabeler
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.time.currentTimeZone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
@@ -429,6 +430,7 @@ private fun SupportChatMessageList(
 ) {
     val listState = rememberLazyListState()
     val dateLabeler = rememberCmpDateLabeler()
+    val timeZone = currentTimeZone()
     // Узкое чтение state: вложения композера, пагинация, связь ленту не перерисовывают. Набор и скачивание
     // читаются ниже — в построении списка и в элементе, а не в теле функции.
     val messages by remember(state) { derivedStateOf { state.value.messages } }
@@ -436,11 +438,11 @@ private fun SupportChatMessageList(
     val downloadingId by remember(state) { derivedStateOf { state.value.downloadingAttachmentId } }
     // Список мемоизируется только по сообщениям и меткам: индикатор набора —
     // отдельный item (index 0 при reverseLayout) и ленту не инвалидирует.
-    val listItems = remember(messages, dateLabeler) {
+    val listItems = remember(messages, dateLabeler, timeZone) {
         buildListItems(
             messages = messages,
             dateLabeler = dateLabeler,
-            timeZone = TimeZone.currentSystemDefault(),
+            timeZone = timeZone,
         )
     }
 

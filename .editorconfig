@@ -20,4 +20,4 @@ ktlint_compose_modifier-missing-check = disabled
 ktlint_compose_modifier-without-default-check = disabled
 # State<T> передаём осознанно: отложенное чтение без рекомпозиции родителя
 ktlint_compose_state-param-check = disabled
-compose_allowed_composition_locals = LocalCmpImageLoader,LocalThemeIsDark
+compose_allowed_composition_locals = LocalClock,LocalCmpImageLoader,LocalThemeIsDark,LocalTimeZoneSource

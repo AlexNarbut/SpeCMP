@@ -50,6 +50,7 @@ class SupportChatScreenViewModel(
     private val attachmentFiles: SupportChatAttachmentFiles,
     fileOpener: SupportChatFileOpener,
     private val outbox: SupportChatOutbox,
+    private val clock: Clock = Clock.System,
 ) : BaseViewModel<SupportChatScreenState, SupportChatEffect>(SupportChatScreenState()) {
 
     private val transfers = SupportChatAttachmentTransfers(repository, fileSaver, fileOpener, dispatchers)
@@ -98,7 +99,7 @@ class SupportChatScreenViewModel(
 
         // Контент сообщения эксклюзивен (SDK не поддерживает подпись к вложению):
         // каждое вложение и текст — отдельные сообщения.
-        val timestamp = Clock.System.now()
+        val timestamp = clock.now()
         val outgoing = buildList {
             attachments.forEach { add(optimisticMessage(timestamp, attachment = it.toDomain())) }
             if (trimmed.isNotEmpty()) add(optimisticMessage(timestamp, text = trimmed))
