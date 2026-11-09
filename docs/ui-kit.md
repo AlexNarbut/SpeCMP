@@ -8,6 +8,9 @@ Feature-модули и `composeApp` **НИКОГДА не используют*
 (`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`; layout-примитивы, модификаторы и формы `foundation`
 (`Box`/`Column`/`Row`, `padding`, `RoundedCornerShape`, `BorderStroke`, `Lazy*`) фичи используют напрямую.
 
+Обходы (сырые цвета, `.sp`, Material/Coil/`Image`/`Dialog` мимо `Cmp*`) ловит UI-аудит — `./gradlew uiAudit` и хук
+агентов; текущие находки — в baseline, новые роняют проверку ([`code-quality.md`](code-quality.md), «UI-аудит»).
+
 **Зачем:** замена компонента (например, миграция с Material3) требует изменения одного файла в `core/ui`, а не поиска по всему проекту.
 
 ---
@@ -218,7 +221,8 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 `CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`BodyLarge`/`Body`/`Caption` → `titleLarge`/`bodyLarge` 16 sp/`bodyMedium` 14 sp/`bodySmall` 12 sp) с
 маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
-в фичах числами не задаются. Параметр `fontSize` остаётся для исключений.
+в фичах числами не задаются. Параметр `fontSize` остаётся для исключений: новое `.sp` в фиче роняет UI-аудит
+(`./gradlew uiAudit`, хук агентов) — исключение помечается `// ui-audit: ignore raw_sp — причина`.
 
 ---
 
@@ -274,6 +278,9 @@ container-роли (`primaryContainer`, `secondaryContainer`, `tertiaryContainer
 `--success` и `--bus-*` из `design/design-system/tokens/colors.css`, своя пара значений на светлую и тёмную тему):
 `success` («поддерживается») и цвета семейств шин автомобиля (`busCan`, `busCanFd`, `busLin`, `busBean`,
 `busImmobilizer`, `busUnknown`) — цвет = семейство, номер шины пишется текстом.
+
+Сырые цвета в фичах (`Color(0x…)`, `Color.White`/`Black`/…, `Color(r, g, b)`) запрещены (UI-аудит `hex_color`,
+`raw_color`); нет подходящей роли — токен в `core/ui/theme`. `Color.Transparent`/`Unspecified` допустимы.
 
 ```kotlin
 // Прочитать текущую тему

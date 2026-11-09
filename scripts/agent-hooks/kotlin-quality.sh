@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Проверка правленых .kt/.kts через Spotless ideHook (ktlint + compose-rules, ровно эти файлы, без git).
+# Проверка правленых .kt/.kts через Spotless ideHook (ktlint + compose-rules, ровно эти файлы, без git) и UI-аудит
+# (scripts/ui-audit, только feature/composeApp/flasherApp).
 # Остальные файлы пропускаются; detekt не запускается (медленно) — он на pre-push.
 #   Вручную (любой агент или человек): scripts/agent-hooks/kotlin-quality.sh <файл>...  → отчёт, exit 1
 #   Хук агента: JSON в stdin — Claude/Gemini (tool_input.file_path), Codex (apply_patch: tool_input.command)
@@ -9,7 +10,7 @@ set -u
 root=$(cd "$(dirname "$0")/../.." && pwd)
 
 usage() {
-    sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 format=""
@@ -144,6 +145,20 @@ check_file() {
             echo
         } >> "$section"
     fi
+
+    case "$rel" in
+        feature/*.kt | composeApp/*.kt | flasherApp/*.kt)
+            if $has_python && ! python3 -I scripts/ui-audit/ui_audit.py --file "$rel" > "$tmp/ui" 2>&1; then
+                {
+                    echo "UI-аудит, $rel — обход дизайн-системы сверх baseline:"
+                    cat "$tmp/ui"
+                    echo "Чини через core/ui (docs/ui-kit.md); осознанное исключение —"
+                    echo "  // ui-audit: ignore <rule> — причина   (на той же или предыдущей строке)"
+                    echo
+                } >> "$section"
+            fi
+            ;;
+    esac
 
     if [ -s "$section" ]; then
         head -60 "$section" >> "$report"

@@ -21,6 +21,7 @@
 | **Konsist** | 0.18.1 | архитектура: направление импортов между модулями и слоями, пакет = модуль, раскладка ролей, граница SDK | нет |
 | **PMD CPD** | 7.29.0 | скопированный код: одинаковые последовательности ≥ 100 токенов Kotlin | нет |
 | **modules-graph-assert** | 2.9.1 | направления зависимостей между Gradle-модулями (объявленные `project(…)`) | нет |
+| **UI-аудит** | свой скрипт | обходы дизайн-системы `core/ui` в фичах: сырые цвета, `.sp`, Material/Coil/`Image`/`Dialog` мимо `Cmp*` | нет |
 
 Разделение труда: **Spotless — стиль и автофикс, detekt — смысловые замечания без автофикса**. Правила не
 дублируются: форматирование, импорты и wildcard проверяет ktlint (`detekt-formatting` не подключён,
@@ -38,6 +39,7 @@ git push   ──► pre-push   ──► ./gradlew detektCheck          (смы
                           └─► config/hooks/check-master-from-develop.sh push  (в main/master — только коммиты из develop)
 git merge  ──► pre-merge-commit ──► config/hooks/check-master-from-develop.sh merge (в main/master вливается только develop)
 Агент Edit/Write *.kt ──► scripts/agent-hooks/kotlin-quality.sh ──► Spotless ideHook (только этот файл)
+                                                              └─► scripts/ui-audit/ui_audit.py --file (этот файл против baseline)
 Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вливать/пушить в main/master)
 ```
 
@@ -56,6 +58,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
 | [`scripts/agent-hooks/kotlin-quality.sh`](../scripts/agent-hooks/kotlin-quality.sh) | хук агентов (Claude, Gemini, Codex) после правки `.kt`/`.kts`: Spotless `ideHook` по этому файлу, без git; вручную — `scripts/agent-hooks/kotlin-quality.sh <файлы>` (plain-отчёт, exit 1 при замечаниях) |
+| [`scripts/ui-audit/`](../scripts/ui-audit) | `ui_audit.py` — UI-аудит, `baseline.json` — допущенные находки по файлам; корневая задача `uiAudit` в [`build.gradle.kts`](../build.gradle.kts) |
 | [`.ai/hooks/*.json`](../.ai/hooks) | регистрация хуков: `.ai/generate.sh` сливает их в `.claude/settings.json`, `.gemini/settings.json`, `.codex/hooks.json` (остальные ключи сохраняются); руками сгенерированные файлы не править |
 
 Почему так устроено:
@@ -119,6 +122,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | Архитектурные правила (Konsist) | `./gradlew :quality:konsist:test` |
 | Скопированный код (CPD) | `./gradlew cpdCheck` |
 | Направления зависимостей модулей | `./gradlew assertModuleGraph` |
+| Обходы дизайн-системы (UI-аудит) | `./gradlew uiAudit`; подробно по модулю — `python3 scripts/ui-audit/ui_audit.py feature/<x>` |
 | Граф модулей: статистика / Graphviz | `./gradlew generateModulesGraphStatistics` / `./gradlew generateModulesGraphvizText -Pmodules.graph.output.gv=<файл>` |
 | Сверка сгенерированных агентских конфигов | `.ai/generate.sh --check` |
 | `@SerialName` у всех `@Serializable` | `config/hooks/check-serial-name.sh` |
@@ -134,6 +138,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 ./gradlew detektCheck --continue           # смысловые замечания — чинить руками
 ./gradlew :quality:konsist:test            # если менялась структура: классы, пакеты, импорты между слоями/модулями
 ./gradlew cpdCheck
+./gradlew uiAudit                          # если менялся UI фич или composition roots
 ./gradlew assertModuleGraph                # если менялись *.gradle.kts, build-logic или libs.versions.toml
 ./gradlew :quality:detekt-rules:test       # если менялись свои правила detekt
 ```
@@ -164,6 +169,8 @@ pre-commit install   # типы хуков (pre-commit, pre-push, pre-merge-comm
 - **Spotless** — через `spotlessApply -PspotlessIdeHook=<файл> -PspotlessIdeHookUseStdOut`: файл не переписывается,
   git и чужие незакоммиченные файлы не влияют. Неавтофиксимое нарушение показывается первым (как и в
   `spotlessCheck`), автофиксимое — диффом «как должно быть» и командой автофикса этого файла.
+- **UI-аудит** — для `feature/**`, `composeApp/**`, `flasherApp/**`: `ui_audit.py --file`, находки файла сверх его
+  строки в baseline (см. «UI-аудит»). Нет `python3` — аудит пропускается.
 - detekt, Konsist, CPD хук не запускает (медленно) — они на pre-push и в ручном прогоне перед коммитом.
 - Отчёт — по каждому файлу с замечаниями (до 60 строк на файл).
 
@@ -205,10 +212,10 @@ printf '{"tool_input":{"file_path":"%s"}}' "$PWD/<путь>.kt" | scripts/agent-
 
 | Момент | Что | Объём |
 |---|---|---|
-| Правка файла агентом (или вручную) | `kotlin-quality.sh`: Spotless (ideHook) | правленые `.kt`/`.kts` |
+| Правка файла агентом (или вручную) | `kotlin-quality.sh`: Spotless (ideHook), UI-аудит | правленые `.kt`/`.kts` |
 | `git commit` (pre-commit) | `spotlessCheck`, `check-serial-name.sh`, `check-strings.py`, `.ai/generate.sh --check` | Spotless — всё дерево (неиндексированное pre-commit прячет), если в коммите есть `.kt`/`.kts` |
 | `git push` (pre-push) | `detektCheck`, `check-master-from-develop.sh push` | весь проект |
-| Перед коммитом, руками | сборка, `jvmTest`, `cpdCheck`, `:quality:konsist:test`, `assertModuleGraph` | см. «Команды» |
+| Перед коммитом, руками | сборка, `jvmTest`, `cpdCheck`, `uiAudit`, `:quality:konsist:test`, `assertModuleGraph` | см. «Команды» |
 
 ---
 
@@ -378,6 +385,34 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 `specialistModules()`, `localizationModule`), корни друг от друга не зависят. Исключение по пути — только для повторов
 по построению, с комментарием-причиной рядом с путём в `cpdCheck`.
 
+### UI-аудит (`uiAudit`)
+
+[`scripts/ui-audit/ui_audit.py`](../scripts/ui-audit/ui_audit.py) построчно (регэкспами, без разбора Kotlin) ищет
+обходы дизайн-системы из [`ui-kit.md`](ui-kit.md) в `src/**` модулей `feature/*`, `composeApp`, `flasherApp`; тестовые
+source set'ы и модули `*/testing` не проверяются, `core/ui` — тоже (там сами токены и обёртки).
+
+| id | Что ловит | Чем заменить |
+|---|---|---|
+| `hex_color` | `Color(0x…)` | роль `cmpThemeColors()`/`cmpDomainColors()`; нет роли — токен в `core/ui/theme` |
+| `raw_color` | `Color.White`/`Black`/`Red`/… и `Color(r, g, b)`; `Color.Transparent`/`Unspecified` разрешены | то же |
+| `raw_sp` | число `.sp` (кроме `letterSpacing`) | `CmpText(style = CmpTextStyle.*)`; не хватает роли — дополни `CmpTextStyle` |
+| `bare_text_style` | `TextStyle(…)` | роль `CmpTextStyle` |
+| `material_import` | импорт `androidx.compose.material.*`/`material3.*` (в т. ч. `material.icons`) | `Cmp*`, `CmpIcons` |
+| `ui_component_import` | импорт `foundation.Image`, `ui.window.Dialog`/`DialogProperties` | `CmpImage`, `CmpDialog`/`CmpFullScreenDialog` |
+| `coil_import` | импорт `coil`/`coil3` в фиче (корням можно — `ImageLoader`) | `CmpAsyncImage`/`CmpSubcomposeAsyncImage` |
+
+Не проверяются, потому что в `core/ui` нет токенов: отступы и размеры (`.dp`), радиусы (`RoundedCornerShape`),
+толщины рамок, прозрачность (`copy(alpha = …)`), анимации (`tween`/`spring`/easing — нет motion-токенов). Появятся
+токены — правило добавляется в скрипт вместе с переводом нарушений.
+
+Baseline — [`scripts/ui-audit/baseline.json`](../scripts/ui-audit/baseline.json): число находок каждого правила по
+файлам. `./gradlew uiAudit` (`--diff`) сравнивает суммы по модулям:
+рост в модуле — ошибка с перечнем строк в файлах, где находок больше baseline; перенос файла внутри модуля не
+ломает проверку. Хук агентов сравнивает правленый файл с его строкой baseline. Находок стало меньше — зафиксируй
+`python3 scripts/ui-audit/ui_audit.py --write-baseline` в том же изменении; новые находки в baseline не вносятся.
+Осознанное исключение — `// ui-audit: ignore <id> — причина` на той же или предыдущей строке, на весь файл —
+`// ui-audit: ignore-file <id>,<id> — причина`. В `check`/`build` задача не входит; нужен `python3` (3.9+).
+
 ### graph-assert (`assertModuleGraph`)
 
 Плагин `com.jraska.module.graph.assertion` подключён к корневому проекту и строит граф по объявленным `project(…)` в
@@ -450,6 +485,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | Composable не достаёт зависимости из Koin (`koinInject`) — только корни композиции `composeApp`/`flasherApp` | Konsist `composable-injection` | ✅ |
 | UI-state `*State` — `@Immutable`/`@Stable`; `@Composable` фичи — только в `presentation` | Konsist `state-immutable`, `composable-in-presentation` | ✅ |
 | Свой `CompositionLocal` — только из списка `compose_allowed_composition_locals` | compose-rules `compositionlocal-allowlist` | ✅ |
+| Фичи и корни не обходят дизайн-систему: цвета — роли темы, размеры текста — `CmpTextStyle`, визуальные компоненты — `Cmp*` (`ui-kit.md`) | UI-аудит `hex_color`, `raw_color`, `raw_sp`, `bare_text_style`, `material_import`, `ui_component_import`, `coil_import` (baseline) | ✅ |
 
 ---
 

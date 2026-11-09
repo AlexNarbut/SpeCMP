@@ -73,6 +73,15 @@ buildscript {
     }
 }
 
+// UI-аудит: обходы дизайн-системы core/ui в фичах и composition roots сверх baseline роняют задачу;
+// правила и исключения — docs/code-quality.md → «UI-аудит».
+tasks.register<Exec>("uiAudit") {
+    group = "verification"
+    description = "Сравнивает находки scripts/ui-audit/ui_audit.py с baseline; рост → ошибка"
+    workingDir = rootDir
+    commandLine("python3", "-I", "scripts/ui-audit/ui_audit.py", "--diff")
+}
+
 // Поиск скопированного кода (PMD CPD): дубли длиннее 100 токенов Kotlin роняют задачу. Корневая задача без
 // плагина: CLI PMD в отдельной конфигурации, исходники — объявленный input (совместимо с configuration cache).
 // Исключения — только повторы по построению, у каждого причина; подробно в docs/code-quality.md → «CPD».
