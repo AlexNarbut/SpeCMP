@@ -229,9 +229,9 @@ printf '{"tool_input":{"file_path":"%s"}}' "$PWD/<путь>.kt" | scripts/agent-
 | `modifier-missing-check`, `modifier-without-default-check` | относятся к переиспользуемым компонентам, у нас много Screen-функций |
 | `state-param-check` | `State<T>` передаётся сознательно: значение читается в дочернем scope без рекомпозиции родителя ([`compose-best-prac.md`](compose-best-prac.md) §5) |
 
-Разрешены собственные `CompositionLocal` (`compose_allowed_composition_locals`): `LocalCmpImageLoader` и
-`LocalThemeIsDark` (`core/ui`). Новый `CompositionLocal` добавляется
-в этот список.
+Разрешены собственные `CompositionLocal` (`compose_allowed_composition_locals`): `LocalCmpImageLoader`,
+`LocalThemeIsDark`, `LocalClock`, `LocalTimeZoneSource` (`core/ui`) и `LocalWizardWide` (`fast-mount`, ширина окна
+мастера на все его шаги). Новый `CompositionLocal` добавляется в этот список.
 
 Остальные правила включены. Частые требования: имена лямбд событий в настоящем времени (`onClick`, не
 `onClicked`), порядок параметров «обязательные → `modifier` → с дефолтами → контентная лямбда», не прокидывать
@@ -335,6 +335,7 @@ ViewModel через несколько composable, эффекты читают 
 | `domain-model-purity` | `domain/model`: только `val`, read-only коллекции, без `@Serializable` |
 | `serializable-placement` | `@Serializable` — в `..data..`, `..navigation..`, у `NavKey` и типов аргументов маршрутов |
 | `composable-in-presentation` | `@Composable` фичи — только в `presentation` |
+| `state-immutable` | `data class *State` в `presentation` помечен `@Immutable` или `@Stable` |
 | `sdk-confinement` | типы AlarmTrade SDK (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — data/di фич, `core/specialist`, `core/permissions`, `core/network`, приложения |
 | `no-fakes-in-production` | `Fake*`/`Stub*` — только в тестах |
 | `forbidden-suffix` | `*Helper`/`*Utils` запрещены; `*Manager` — только в `androidMain`/`iosMain`/`jvmMain`; `*Store`/`*Storage` в фичах — нет (это `*Repository`) |
@@ -439,6 +440,8 @@ lookahead конец имени модуля слева — пробел, а н�
 | `shareIn`/`stateIn` — только в инициализаторе свойства; `async` дожидаются; без `collect` в `collect` | detekt `SharingInsideFunction`, `UnawaitedAsync`, `NestedCollect` | ✅ |
 | Start-once сервис и место с `Mutex`/`tryLock` покрыты стресс-тестом «32 параллельных вызова → эффект один раз» | ревью (эталон `DeviceSessionImplTest`) | — |
 | Composable не достаёт зависимости из Koin (`koinInject`) — только корни композиции `composeApp`/`flasherApp` | Konsist `composable-injection` | ✅ |
+| UI-state `*State` — `@Immutable`/`@Stable`; `@Composable` фичи — только в `presentation` | Konsist `state-immutable`, `composable-in-presentation` | ✅ |
+| Свой `CompositionLocal` — только из списка `compose_allowed_composition_locals` | compose-rules `compositionlocal-allowlist` | ✅ |
 
 ---
 

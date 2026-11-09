@@ -581,7 +581,7 @@ Compose-код проверяется `./gradlew spotlessCheck` (ktlint + compos
 | `@Preview`-функции `private` | публичное превью | `preview-public-check` |
 | Composable, возвращающий значение, — `camelCase` (`rememberX`); эмитящий UI — `PascalCase`-существительное | Composable-фабрика в `PascalCase`, эмитящий composable в `camelCase` | `naming-check` |
 | Один вызов `content()` в теле | `content()` в нескольких ветках `if/when` | `content-slot-reused` |
-| Новый `CompositionLocal` — сначала подумай о параметре; если нужен, добавь имя в `compose_allowed_composition_locals` в [`.editorconfig`](../.editorconfig) (сейчас: `LocalCmpImageLoader`, `LocalThemeIsDark`) | Создавать `compositionLocalOf` без регистрации | `compositionlocal-allowlist` |
+| Новый `CompositionLocal` — сначала подумай о параметре; если нужен, добавь имя в `compose_allowed_composition_locals` в [`.editorconfig`](../.editorconfig) (сейчас: `LocalCmpImageLoader`, `LocalThemeIsDark`, `LocalClock`, `LocalTimeZoneSource` — `core/ui`; `LocalWizardWide` — `fast-mount`) | Создавать `compositionLocalOf` без регистрации | `compositionlocal-allowlist` |
 
 Исключения (осознанно выключены, не нужно добавлять `modifier` ради правила): `modifier-missing-check`,
 `modifier-without-default-check`, `state-param-check`.

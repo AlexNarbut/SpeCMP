@@ -274,6 +274,16 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `presentation state classes are immutable`() {
+        classes.filter { it.hasDataModifier && it.name.endsWith("State") && it.resideInPackage("..presentation..") }
+            .assertTrue(
+                testName = "state-immutable",
+                additionalMessage = "data class *State в presentation помечается @Immutable или @Stable; коллекции — " +
+                    "поля такого класса или ImmutableList. docs/compose-best-prac.md, §3.2",
+            ) { it.hasAnnotationWithName("Immutable", "Stable") }
+    }
+
+    @Test
     fun `AlarmTrade SDK types stay in data, di and SDK-facing core modules`() {
         val message =
             "Типы AlarmTrade SDK (ru.alarmtrade.common/specialist/devices/permissions/bluetoothControl/…) — " +
