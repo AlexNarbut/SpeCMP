@@ -25,6 +25,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.Program
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountFile
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountQuestion
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionAnswer
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
@@ -92,6 +93,7 @@ internal fun question(id: Int, automatic: Boolean = false) = MountQuestion(
 internal fun testConfiguration(
     keyBypass: Boolean = true,
     slave: Boolean = true,
+    mountingMap: MountFile? = null,
     questions: List<MountQuestion> = listOf(question(5, automatic = true), question(100), question(101)),
 ) = FastMountConfiguration(
     id = 42,
@@ -101,7 +103,7 @@ internal fun testConfiguration(
     deviceName = "DX-9X",
     author = "Автор",
     rating = 5,
-    mountingMap = null,
+    mountingMap = mountingMap,
     images = emptyList(),
     keyBypass = keyBypass,
     slave = slave,
@@ -119,6 +121,8 @@ internal class FakeFastMountRepository : FastMountRepository {
     var startResponse: Response<Unit> = Response.Success(Unit)
     var nextResponse: Response<Unit> = Response.Success(Unit)
     var feedbackResponse: Response<Unit> = Response.Success(Unit)
+    var answerResponse: Response<Unit> = Response.Success(Unit)
+    var downloadResponse: Response<ByteArray> = Response.Success(ByteArray(10))
     var onNext: (FastMountStep?) -> FastMountStep? = { it }
     var onPrevious: (FastMountStep?) -> FastMountStep? = { it }
     val step = MutableStateFlow<FastMountStep?>(null)
@@ -146,7 +150,7 @@ internal class FakeFastMountRepository : FastMountRepository {
         return configuration
     }
 
-    override suspend fun download(url: String): Response<ByteArray> = Response.Success(ByteArray(10))
+    override suspend fun download(url: String): Response<ByteArray> = downloadResponse
 
     override suspend fun start(configurationId: Int): Response<Unit> {
         if (startResponse is Response.Success) step.value = FastMountStep.WRITING_SETTINGS
@@ -176,7 +180,7 @@ internal class FakeFastMountRepository : FastMountRepository {
     override suspend fun answer(answer: QuestionAnswer): Response<Unit> {
         answers += answer
         delay(callMillis)
-        return Response.Success(Unit)
+        return answerResponse
     }
 
     override suspend fun skip(): Response<Unit> {

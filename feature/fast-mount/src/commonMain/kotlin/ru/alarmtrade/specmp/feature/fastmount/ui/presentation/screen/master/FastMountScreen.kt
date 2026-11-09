@@ -92,7 +92,7 @@ internal fun FastMountScreen(
 ) {
     val viewModel = koinViewModel<FastMountViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             FastMountEffect.Exit -> onExit()
             FastMountEffect.ChooseAnother -> onChooseAnother()
@@ -109,13 +109,13 @@ internal fun FastMountScreen(
             onChooseAnother = viewModel::onChooseAnother,
             onOpenAdvancedMount = viewModel::onOpenAdvancedMount,
             onRetrySummary = viewModel::onRetrySummary,
-            onStart = viewModel::onStart,
+            onStart = viewModel::onStartMount,
         )
     }
     val master = remember(viewModel) {
         MasterActions(
             onBack = viewModel::onBack,
-            onStartRetry = viewModel::onStart,
+            onStartRetry = viewModel::onStartMount,
             onWriteRetry = viewModel::onWriteRetry,
             onMountDone = viewModel::onMountDone,
             onMapOpen = viewModel::onMapOpen,
