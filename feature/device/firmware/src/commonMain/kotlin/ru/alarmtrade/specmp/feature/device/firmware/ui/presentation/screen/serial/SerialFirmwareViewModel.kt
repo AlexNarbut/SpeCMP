@@ -8,6 +8,7 @@ import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toSerialFirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
@@ -95,7 +96,13 @@ class SerialFirmwareViewModel(
         intent {
             repository.update(confirm.fileName, confirm.path)
                 .flowOn(dispatchers.io)
-                .collect { progress -> reduce { copy(phase = progress.toPhase(confirm.fileVersion)) } }
+                .collect { step ->
+                    val phase = when (step) {
+                        is Response.Success -> step.value.toPhase(confirm.fileVersion)
+                        is Response.Error -> SerialPhase.Error(step.exception.toSerialFirmwareFailure())
+                    }
+                    reduce { copy(phase = phase) }
+                }
             // Блок мог перезагрузиться (в загрузчик и обратно) — пусть сессия узнает его режим.
             deviceSession.refreshMode()
         }
@@ -124,6 +131,5 @@ class SerialFirmwareViewModel(
         SerialFirmwareProgress.Verifying -> SerialPhase.Verify
         SerialFirmwareProgress.Applying -> SerialPhase.Apply
         SerialFirmwareProgress.Finished -> SerialPhase.Success(fileVersion)
-        is SerialFirmwareProgress.Failed -> SerialPhase.Error(failure)
     }
 }

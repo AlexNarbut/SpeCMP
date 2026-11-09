@@ -9,12 +9,14 @@ import ru.alarmtrade.specialist.domain.alarmDevice.information.DeviceInformation
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemInformation
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specialist.domain.appDevice.ConnectionType
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSubsystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateException
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
@@ -104,19 +106,18 @@ internal fun SubsystemFirmware.toDomain(): FirmwareVersion = FirmwareVersion(
     canVersionCode = canVersion,
 )
 
-/** Стадия SDK → стадия приложения; процент есть только на передаче. */
-internal fun FirmwareUpdateState.toProgress(): FirmwareUpdateProgress = when (status) {
-    FirmwareUpdateStatus.SENDING_DATA -> FirmwareUpdateProgress.Sending(stateProgress)
+/** Стадия SDK → стадия приложения (процент есть только на передаче); ошибка записи — `Error`. */
+internal fun FirmwareUpdateState.toProgress(): Response<FirmwareUpdateProgress> = when (status) {
+    FirmwareUpdateStatus.SENDING_DATA -> Response.Success(FirmwareUpdateProgress.Sending(stateProgress))
 
-    FirmwareUpdateStatus.CHECKING_CRC -> FirmwareUpdateProgress.Verifying
+    FirmwareUpdateStatus.CHECKING_CRC -> Response.Success(FirmwareUpdateProgress.Verifying)
 
-    FirmwareUpdateStatus.APPLYING -> FirmwareUpdateProgress.Applying
+    FirmwareUpdateStatus.APPLYING -> Response.Success(FirmwareUpdateProgress.Applying)
 
-    FirmwareUpdateStatus.FINISHED_SUCCESS -> FirmwareUpdateProgress.Finished
+    FirmwareUpdateStatus.FINISHED_SUCCESS -> Response.Success(FirmwareUpdateProgress.Finished)
 
-    FirmwareUpdateStatus.FINISHED_ERROR -> FirmwareUpdateProgress.Failed(
-        FirmwareFailure.Write(error.toReason()),
-    )
+    FirmwareUpdateStatus.FINISHED_ERROR ->
+        Response.Error(FirmwareUpdateException(FirmwareFailure.Write(error.toReason())))
 }
 
 private fun DataWritingError?.toReason(): WriteFailureReason = when (this) {

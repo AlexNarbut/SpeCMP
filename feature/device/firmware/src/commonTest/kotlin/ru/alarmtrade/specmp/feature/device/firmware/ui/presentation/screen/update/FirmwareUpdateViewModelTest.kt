@@ -280,22 +280,22 @@ class FirmwareUpdateViewModelTest {
         assertEquals(listOf(BootModeTarget.MainProgram), updateRepository.calls.map { it.first })
         assertEquals("3.61", updateRepository.calls.single().second.version)
 
-        updateRepository.progress.emit(FirmwareUpdateProgress.Preparing)
-        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(42))
+        updateRepository.emit(FirmwareUpdateProgress.Preparing)
+        updateRepository.emit(FirmwareUpdateProgress.Sending(42))
         runCurrent()
         assertEquals(UpdatePhase.Transfer(42), vm.state.value.phase)
 
-        updateRepository.progress.emit(FirmwareUpdateProgress.Verifying)
+        updateRepository.emit(FirmwareUpdateProgress.Verifying)
         runCurrent()
         assertEquals(UpdatePhase.Verify, vm.state.value.phase)
 
-        updateRepository.progress.emit(FirmwareUpdateProgress.Applying)
+        updateRepository.emit(FirmwareUpdateProgress.Applying)
         runCurrent()
         assertEquals(UpdatePhase.Apply, vm.state.value.phase)
         // Блок мог бы перезагрузиться сам: обрыв связи на применении ожидаем.
         assertEquals(DeviceReboot.ToMain, session.reboot.value)
 
-        updateRepository.progress.emit(FirmwareUpdateProgress.Finished)
+        updateRepository.emit(FirmwareUpdateProgress.Finished)
         runCurrent()
         assertEquals(UpdatePhase.Success, vm.state.value.phase)
         assertTrue(vm.state.value.locked)
@@ -313,7 +313,7 @@ class FirmwareUpdateViewModelTest {
     @Test
     fun `block that came back after applying without a result counts as success`() = test {
         val vm = startedUpdate()
-        updateRepository.progress.emit(FirmwareUpdateProgress.Applying)
+        updateRepository.emit(FirmwareUpdateProgress.Applying)
         runCurrent()
 
         // Связь рвётся (ожидаемо) — это не «потеря связи», экран остаётся на применении.
@@ -334,7 +334,7 @@ class FirmwareUpdateViewModelTest {
     @Test
     fun `block that returns to the bootloader after applying is an applying error`() = test {
         val vm = startedUpdate()
-        updateRepository.progress.emit(FirmwareUpdateProgress.Applying)
+        updateRepository.emit(FirmwareUpdateProgress.Applying)
         runCurrent()
         linkDrop()
         runCurrent()
@@ -348,8 +348,8 @@ class FirmwareUpdateViewModelTest {
     @Test
     fun `write failure shows its reason and retry returns to the source step`() = test {
         val vm = startedUpdate()
-        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(10))
-        updateRepository.progress.emit(FirmwareUpdateProgress.Failed(FirmwareFailure.Write(WriteFailureReason.Crc)))
+        updateRepository.emit(FirmwareUpdateProgress.Sending(10))
+        updateRepository.fail(FirmwareFailure.Write(WriteFailureReason.Crc))
         runCurrent()
 
         assertEquals(UpdatePhase.Error(FailureKind.Crc), vm.state.value.phase)
@@ -364,7 +364,7 @@ class FirmwareUpdateViewModelTest {
     @Test
     fun `unknown failure without a link drop is an error`() = test {
         val vm = startedUpdate()
-        updateRepository.progress.emit(FirmwareUpdateProgress.Failed(FirmwareFailure.Unknown))
+        updateRepository.fail(FirmwareFailure.Unknown)
         runCurrent()
         advanceTimeBy(3_500)
         runCurrent()
@@ -373,9 +373,22 @@ class FirmwareUpdateViewModelTest {
     }
 
     @Test
+    fun `untyped process error is an unknown failure and ends the process`() = test {
+        val vm = startedUpdate()
+        updateRepository.emit(FirmwareUpdateProgress.Sending(10))
+        updateRepository.progress.emit(Response.Error(IllegalStateException("sdk")))
+        runCurrent()
+        advanceTimeBy(3_500)
+        runCurrent()
+
+        assertEquals(UpdatePhase.Error(FailureKind.Unknown), vm.state.value.phase)
+        assertTrue(!vm.state.value.locked)
+    }
+
+    @Test
     fun `link loss in the middle of the transfer shows lost and the source step after the block returns`() = test {
         val vm = startedUpdate()
-        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(30))
+        updateRepository.emit(FirmwareUpdateProgress.Sending(30))
         runCurrent()
 
         linkDrop()
@@ -383,7 +396,7 @@ class FirmwareUpdateViewModelTest {
         assertEquals(UpdatePhase.Lost(updating = true), vm.state.value.phase)
 
         // Поток SDK падает уже после обрыва — это тот же обрыв, а не отдельная ошибка.
-        updateRepository.progress.emit(FirmwareUpdateProgress.Failed(FirmwareFailure.Unknown))
+        updateRepository.fail(FirmwareFailure.Unknown)
         runCurrent()
         assertEquals(UpdatePhase.Lost(updating = true), vm.state.value.phase)
 
@@ -395,7 +408,7 @@ class FirmwareUpdateViewModelTest {
     @Test
     fun `update keeps running while nobody watches the screen`() = test {
         val vm = startedUpdate()
-        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(10))
+        updateRepository.emit(FirmwareUpdateProgress.Sending(10))
         runCurrent()
         stateCollectors.forEach { it.cancel() }
         advanceTimeBy(10_000)
@@ -403,8 +416,8 @@ class FirmwareUpdateViewModelTest {
 
         // Процесс без подписчика state не отменён: поток SDK по-прежнему собирается.
         assertEquals(1, updateRepository.progress.subscriptionCount.value)
-        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(80))
-        updateRepository.progress.emit(FirmwareUpdateProgress.Verifying)
+        updateRepository.emit(FirmwareUpdateProgress.Sending(80))
+        updateRepository.emit(FirmwareUpdateProgress.Verifying)
         runCurrent()
 
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
@@ -448,7 +461,7 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
         vm.onConfirmUpdate()
         runCurrent()
-        updateRepository.progress.tryEmit(FirmwareUpdateProgress.Sending(30))
+        updateRepository.progress.tryEmit(Response.Success(FirmwareUpdateProgress.Sending(30)))
         runCurrent()
         return vm
     }
@@ -467,7 +480,7 @@ class FirmwareUpdateViewModelTest {
         assertEquals(UpdatePhase.Transfer(30), vm.state.value.phase)
         // Тот же процесс: обновление не перезапускалось, прогресс SDK продолжает двигать экран.
         assertEquals(1, updateRepository.calls.size)
-        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(55))
+        updateRepository.emit(FirmwareUpdateProgress.Sending(55))
         runCurrent()
         assertEquals(UpdatePhase.Transfer(55), vm.state.value.phase)
     }
@@ -481,7 +494,7 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
         vm.onConfirmUpdate()
         runCurrent()
-        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(30))
+        updateRepository.emit(FirmwareUpdateProgress.Sending(30))
         runCurrent()
         assertEquals(listOf(BootModeTarget.MainProgram), updateRepository.calls.map { it.first })
         val reads = sessionRepository.bluetoothReads
@@ -497,7 +510,7 @@ class FirmwareUpdateViewModelTest {
         assertEquals(1, updateRepository.calls.size)
 
         // Передача закончилась — дальше (применение) режим блока снова определяется по связи.
-        updateRepository.progress.emit(FirmwareUpdateProgress.Verifying)
+        updateRepository.emit(FirmwareUpdateProgress.Verifying)
         runCurrent()
         linkDrop()
         runCurrent()
@@ -511,7 +524,7 @@ class FirmwareUpdateViewModelTest {
         linkDrop()
         runCurrent()
 
-        updateRepository.progress.emit(FirmwareUpdateProgress.Failed(FirmwareFailure.Unknown))
+        updateRepository.fail(FirmwareFailure.Unknown)
         runCurrent()
         assertEquals(UpdatePhase.Lost(updating = true), vm.state.value.phase)
 
@@ -587,7 +600,7 @@ class FirmwareUpdateViewModelTest {
         assertEquals(false, vm.state.value.exitDialog)
         assertTrue(effects.isEmpty())
 
-        updateRepository.progress.emit(FirmwareUpdateProgress.Failed(FirmwareFailure.Preparation))
+        updateRepository.fail(FirmwareFailure.Preparation)
         runCurrent()
         assertIs<UpdatePhase.Error>(vm.state.value.phase)
         vm.onBackClick()

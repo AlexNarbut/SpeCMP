@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.domain.model
 
-/** Стадии обновления прошивки. Терминальные — [Finished] и [Failed]. */
+/** Стадии обновления прошивки. Терминальная — [Finished]; неудача — `Response.Error` с [FirmwareUpdateException]. */
 sealed interface FirmwareUpdateProgress {
     /** Подготовка: SDK скачивает файл и разбирает его; процента нет. */
     data object Preparing : FirmwareUpdateProgress
@@ -14,9 +14,13 @@ sealed interface FirmwareUpdateProgress {
     data object Applying : FirmwareUpdateProgress
 
     data object Finished : FirmwareUpdateProgress
-
-    data class Failed(val failure: FirmwareFailure) : FirmwareUpdateProgress
 }
+
+class FirmwareUpdateException(val failure: FirmwareFailure, cause: Throwable? = null) :
+    Exception("Firmware update failed: $failure", cause)
+
+fun Throwable.toFirmwareFailure(): FirmwareFailure =
+    (this as? FirmwareUpdateException)?.failure ?: FirmwareFailure.Unknown
 
 /** Причина неудачи обновления. */
 sealed interface FirmwareFailure {

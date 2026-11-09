@@ -15,6 +15,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
@@ -345,14 +346,19 @@ class FirmwareUpdateViewModel(
             progress
                 .distinctUntilChanged()
                 .flowOn(dispatchers.io)
-                .collect { onProgress(it) }
+                .collect { step ->
+                    when (step) {
+                        is Response.Success -> onProgress(step.value)
+                        is Response.Error -> onFailed(step.exception.toFirmwareFailure())
+                    }
+                }
         } finally {
             deviceSession.endFirmwareTransfer()
             reduceCore { copy(running = false) }
         }
     }
 
-    private suspend fun onProgress(progress: FirmwareUpdateProgress) {
+    private fun onProgress(progress: FirmwareUpdateProgress) {
         // После передачи блок снова может сменить режим (применение — перезагрузка): режим опять перечитываем.
         if (progress !is FirmwareUpdateProgress.Sending) deviceSession.endFirmwareTransfer()
         when (progress) {
@@ -373,12 +379,11 @@ class FirmwareUpdateViewModel(
 
             // После успеха блок остаётся в загрузчике: выход — отдельной командой (или блок перезагрузится сам).
             FirmwareUpdateProgress.Finished -> setStage(UpdatePhase.Success)
-
-            is FirmwareUpdateProgress.Failed -> onFailed(progress.failure)
         }
     }
 
     private suspend fun onFailed(failure: FirmwareFailure) {
+        deviceSession.endFirmwareTransfer()
         // SDK сдался: продолжения передачи после переподключения больше не будет.
         reduceCore { copy(running = false) }
         // Неизвестный сбой при потере связи — это обрыв: экран покажет «Связь прервана», а после возврата блока

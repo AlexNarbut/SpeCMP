@@ -12,6 +12,7 @@ import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SubsystemFirmware
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SubsystemFirmwareType
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemInformation
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.data.repository.bootTarget
 import ru.alarmtrade.specmp.feature.device.firmware.data.repository.toDomain
 import ru.alarmtrade.specmp.feature.device.firmware.data.repository.toKind
@@ -21,6 +22,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareFailure
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 
@@ -102,23 +104,23 @@ class FirmwareMappersTest {
     @Test
     fun `sdk update states map to stages`() {
         assertEquals(
-            FirmwareUpdateProgress.Sending(64),
+            Response.Success(FirmwareUpdateProgress.Sending(64)),
             FirmwareUpdateState(FirmwareUpdateStatus.SENDING_DATA, stateProgress = 64).toProgress(),
         )
         assertEquals(
-            FirmwareUpdateProgress.Sending(null),
+            Response.Success(FirmwareUpdateProgress.Sending(null)),
             FirmwareUpdateState(FirmwareUpdateStatus.SENDING_DATA).toProgress(),
         )
         assertEquals(
-            FirmwareUpdateProgress.Verifying,
+            Response.Success(FirmwareUpdateProgress.Verifying),
             FirmwareUpdateState(FirmwareUpdateStatus.CHECKING_CRC).toProgress(),
         )
         assertEquals(
-            FirmwareUpdateProgress.Applying,
+            Response.Success(FirmwareUpdateProgress.Applying),
             FirmwareUpdateState(FirmwareUpdateStatus.APPLYING).toProgress(),
         )
         assertEquals(
-            FirmwareUpdateProgress.Finished,
+            Response.Success(FirmwareUpdateProgress.Finished),
             FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_SUCCESS).toProgress(),
         )
     }
@@ -136,13 +138,16 @@ class FirmwareMappersTest {
         )
         expected.forEach { (error, reason) ->
             assertEquals(
-                FirmwareUpdateProgress.Failed(FirmwareFailure.Write(reason)),
-                FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR, error = error).toProgress(),
+                FirmwareFailure.Write(reason),
+                FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR, error = error).toProgress().failure(),
             )
         }
         assertEquals(
-            FirmwareUpdateProgress.Failed(FirmwareFailure.Write(WriteFailureReason.Unknown)),
-            FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR).toProgress(),
+            FirmwareFailure.Write(WriteFailureReason.Unknown),
+            FirmwareUpdateState(FirmwareUpdateStatus.FINISHED_ERROR).toProgress().failure(),
         )
     }
+
+    private fun Response<FirmwareUpdateProgress>.failure(): FirmwareFailure? =
+        (this as? Response.Error)?.exception?.toFirmwareFailure()
 }

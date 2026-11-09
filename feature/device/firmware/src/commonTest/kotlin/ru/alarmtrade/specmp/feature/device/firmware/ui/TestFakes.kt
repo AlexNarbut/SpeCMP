@@ -8,9 +8,11 @@ import kotlinx.coroutines.flow.emptyFlow
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateException
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersionPage
@@ -176,22 +178,26 @@ internal class FakeConnectionRepository : DeviceConnectionRepository {
     override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
 }
 
-/** Процесс обновления из тестов: прогресс подаётся в [progress]; параметры запуска запоминаются. */
+/** Процесс обновления из тестов: шаги подаются в [progress]; параметры запуска запоминаются. */
 internal class FakeUpdateRepository : FirmwareUpdateRepository {
-    val progress = MutableSharedFlow<FirmwareUpdateProgress>(extraBufferCapacity = 16)
+    val progress = MutableSharedFlow<Response<FirmwareUpdateProgress>>(extraBufferCapacity = 16)
     val calls = mutableListOf<Pair<BootModeTarget, FirmwareVersion>>()
 
-    override fun update(target: BootModeTarget, firmware: FirmwareVersion): Flow<FirmwareUpdateProgress> {
+    override fun update(target: BootModeTarget, firmware: FirmwareVersion): Flow<Response<FirmwareUpdateProgress>> {
         calls += target to firmware
         return progress
     }
 
     val fileCalls = mutableListOf<Pair<BootModeTarget, String>>()
 
-    override fun updateFromFile(target: BootModeTarget, path: String): Flow<FirmwareUpdateProgress> {
+    override fun updateFromFile(target: BootModeTarget, path: String): Flow<Response<FirmwareUpdateProgress>> {
         fileCalls += target to path
         return progress
     }
+
+    suspend fun emit(step: FirmwareUpdateProgress) = progress.emit(Response.Success(step))
+
+    suspend fun fail(failure: FirmwareFailure) = progress.emit(Response.Error(FirmwareUpdateException(failure)))
 }
 
 internal class FakeFileExporter(

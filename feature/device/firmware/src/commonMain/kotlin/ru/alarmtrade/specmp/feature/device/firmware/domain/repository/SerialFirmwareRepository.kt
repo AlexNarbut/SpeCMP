@@ -13,6 +13,9 @@ interface SerialFirmwareRepository {
     /** Для какого блока файл [path] (заголовок `.frm`); ошибка — файл не прочитан или это не `.frm`. */
     suspend fun readFileInfo(path: String): Response<FrmFileInfo>
 
-    /** Прошить файл [path] ([fileName] — имя для журнала SDK). Терминальная стадия — последняя в потоке. */
-    fun update(fileName: String, path: String): Flow<SerialFirmwareProgress>
+    /**
+     * Прошить файл [path] ([fileName] — имя для журнала SDK). Поток кончается [SerialFirmwareProgress.Finished] или
+     * `Response.Error` с `SerialFirmwareException` (причина — `failure`).
+     */
+    fun update(fileName: String, path: String): Flow<Response<SerialFirmwareProgress>>
 }

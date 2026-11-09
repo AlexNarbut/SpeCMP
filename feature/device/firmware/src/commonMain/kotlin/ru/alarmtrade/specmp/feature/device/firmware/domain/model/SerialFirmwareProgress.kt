@@ -3,7 +3,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.domain.model
 /**
  * Стадии обновления основной программы блока по COM-порту (`.frm`). Порядок SDK: GOBOOT ([WaitingForBoot]: блок
  * перезагружают по питанию, пока SDK шлёт команду) → проверка загрузчика → передача → CRC → применение.
- * Терминальные — [Finished] и [Failed].
+ * Терминальная — [Finished]; неудача — `Response.Error` с [SerialFirmwareException].
  */
 sealed interface SerialFirmwareProgress {
     /** SDK шлёт GOBOOT: блок нужно перезагрузить по питанию (или он уже в загрузчике). */
@@ -19,9 +19,13 @@ sealed interface SerialFirmwareProgress {
     data object Applying : SerialFirmwareProgress
 
     data object Finished : SerialFirmwareProgress
-
-    data class Failed(val failure: SerialFirmwareFailure) : SerialFirmwareProgress
 }
+
+class SerialFirmwareException(val failure: SerialFirmwareFailure, cause: Throwable? = null) :
+    Exception("Serial firmware update failed: $failure", cause)
+
+fun Throwable.toSerialFirmwareFailure(): SerialFirmwareFailure =
+    (this as? SerialFirmwareException)?.failure ?: SerialFirmwareFailure.Unknown
 
 /** Причина неудачи обновления по COM-порту. */
 enum class SerialFirmwareFailure {

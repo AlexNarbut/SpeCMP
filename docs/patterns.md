@@ -373,7 +373,11 @@ data class MainUserAppFeatures(
 
 - **Контракты репозиториев:** one-shot операции — `suspend fun ...(): Response<T>`;
   процессы со стадиями и периодические источники — `fun ...(): Flow<Response<T>>` (не suspend).
-  Процесс описывается собственной sealed-иерархией под-состояний с гарантированным финалом:
+  Процесс описывается собственной sealed-иерархией под-состояний с гарантированным финалом; **неудача процесса —
+  последний `Response.Error`, а не стадия `Failed`**: типизированная причина — доменное исключение
+  (`FirmwareUpdateException(failure)`), VM достаёт её расширением (`toFirmwareFailure()`, чужое исключение — `Unknown`).
+  Процесс, который должен идти без подписчика экрана, VM собирает в `launchReplacing` с `when (step)` по `Response`;
+  данные экрана — `collectIntoState(onError)`:
 
 ```kotlin
 // Процесс синхронизации: стадии InProgress, всегда завершается одним из Finished
