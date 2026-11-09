@@ -18,9 +18,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSubsystem
@@ -69,7 +69,7 @@ class FirmwareSystemsViewModelTest {
     }
 
     private fun TestScope.viewModel(): FirmwareSystemsViewModel {
-        val vm = FirmwareSystemsViewModel(repository, preferences, AppDispatchers(dispatcher, dispatcher, dispatcher))
+        val vm = FirmwareSystemsViewModel(repository, preferences, testDispatchers(dispatcher))
             .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()

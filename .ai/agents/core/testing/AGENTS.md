@@ -1,0 +1,19 @@
+# core/testing
+
+## Scope
+
+Модуль общих тестовых дублёров портов `core/*` для тестов `feature/*` и composition roots (пакет `ru.alarmtrade.specmp.core.testing`). Код в `commonMain` (KMP не даёт `testFixtures`), сборка — `specmp.kmp.library` (android/jvm/iosArm64, без iOS-фреймворка); подключается **только** в тестовых source set'ах: `commonTest.dependencies { implementation(project(":core:testing")) }` (Konsist `testing-modules-test-only`).
+
+## Состав
+
+- `testDispatchers(dispatcher)` — `AppDispatchers` с одним диспетчером на `io`/`default`/`main`.
+- `FixedClock(instant)` — `kotlinx.datetime.Clock`, `instant` — `var`.
+- `FakeAppForegroundProvider` — `foregroundReturns` как `MutableSharedFlow<Unit>`, тест вызывает `emit(Unit)`.
+
+## Rules
+
+- Зависит от `core/common`, `core/lifecycle` (`api`); от `feature/*` — нет (graph-assert). `core/common` и `core/lifecycle` его не подключают — цикл через тестовую конфигурацию, у них локальные дублёры.
+- Фейки контрактов фич — в `feature/<x>/testing` рядом с владельцем, не здесь.
+- Расширять фейк параметром/состоянием, а не копией в тесте; поведение одного теста — локальный фейк.
+- Без комментариев к очевидному; detekt — как тесты (`**/testing/src/**` в тестовых исключениях), production-правила Konsist к модулю не применяются, CPD — проверяет.
+- Подробно: `docs/patterns.md` → «Тестовые дублёры», `docs/architecture.md`.

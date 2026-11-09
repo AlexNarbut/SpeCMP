@@ -22,8 +22,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
@@ -97,7 +97,7 @@ class FirmwareFileViewModelTest {
     }
 
     private fun TestScope.viewModel(): FirmwareFileViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         session = createDeviceSession(
             sessionRepository,
             FakeConnectionRepository(),

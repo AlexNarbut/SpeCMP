@@ -27,6 +27,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.FixedClock
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
@@ -63,11 +65,7 @@ class SupportChatScreenViewModelTest {
         outbox = FakeSupportChatOutbox()
         attachmentFiles = FakeSupportChatAttachmentFiles()
         fileOpener = FakeSupportChatFileOpener()
-        dispatchers = AppDispatchers(
-            main = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-        )
+        dispatchers = testDispatchers(testDispatcher)
     }
 
     // region События и история

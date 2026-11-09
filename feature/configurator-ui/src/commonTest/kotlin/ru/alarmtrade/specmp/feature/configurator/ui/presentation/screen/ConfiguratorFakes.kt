@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.datetime.LocalDateTime
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationSummary
 import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationCar
@@ -38,8 +38,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSetting
 internal val testTime = LocalDateTime(2026, 10, 21, 14, 20)
 
 internal val testDevice = AlarmDevice(1, "DX-9X", "3.57", DeviceOperationMode.MAIN, emptySet(), can = null)
-
-internal fun testDispatchers(dispatcher: TestDispatcher) = AppDispatchers(dispatcher, dispatcher, dispatcher)
 
 internal fun TestScope.testDeviceSession(link: MutableStateFlow<DeviceLinkState>, dispatcher: TestDispatcher) =
     createDeviceSession(

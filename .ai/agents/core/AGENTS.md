@@ -2,7 +2,7 @@
 
 - Область: core-модули проекта.
 - Перед изменениями читай `core/README.md`; при изменении модульных границ и зависимостей между `core`-модулями — `docs/architecture.md`.
-- Для сети переходи в `core/network/AGENTS.md`; для UI-слоя — в `core/ui/AGENTS.md`; для жизненного цикла приложения — в `core/lifecycle/AGENTS.md`.
+- Для сети переходи в `core/network/AGENTS.md`; для UI-слоя — в `core/ui/AGENTS.md`; для жизненного цикла приложения — в `core/lifecycle/AGENTS.md`; для общих тестовых дублёров — в `core/testing/AGENTS.md`.
 - Если меняешь публичные возможности `core`-модулей, обновляй `core/README.md` и соответствующий тематический документ в `docs/`.
 - `core/common/file`: `safeFileName` / `uniqueFileName` (имена файлов извне → безопасный basename), Android — `queryNameAndSize` и `Context.copyToCache` (копия документа SAF в `cacheDir`). Общие для пикеров `composeApp` и `feature:device:firmware`.
 - `core/common/di/platformSettings` — единственный платформенный `Settings()` процесса (detekt `SettingsInstantiation`): поверх него `AppSettingsFactory` (хранилища фич с префиксом), напрямую — только язык (`core/localization`) и тема (`core/ui`) до старта Koin, ключи без префикса (`docs/patterns.md`, «Хранение настроек»).

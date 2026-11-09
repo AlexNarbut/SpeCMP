@@ -27,8 +27,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
@@ -135,7 +135,7 @@ class AdvancedMountRootViewModelTest {
     }
 
     private fun TestScope.viewModel(): Pair<AdvancedMountRootViewModel, MutableList<AdvancedMountRootEffect>> {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         val session =
             createDeviceSession(
                 sessionRepository,

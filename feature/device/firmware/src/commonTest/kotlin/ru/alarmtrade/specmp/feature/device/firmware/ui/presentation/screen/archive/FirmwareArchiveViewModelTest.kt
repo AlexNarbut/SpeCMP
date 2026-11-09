@@ -20,8 +20,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
@@ -74,7 +74,7 @@ class FirmwareArchiveViewModelTest {
         val vm = FirmwareArchiveViewModel(
             request,
             repository,
-            AppDispatchers(dispatcher, dispatcher, dispatcher),
+            testDispatchers(dispatcher),
             exporter,
         ).also { viewModels += it }
         if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }

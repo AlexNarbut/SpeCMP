@@ -14,13 +14,13 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AppRestarter
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguage
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.AppLocaleStore
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 
 class AppSettingsViewModelTest {
 
@@ -53,7 +53,7 @@ class AppSettingsViewModelTest {
             restartSupported
         },
         configurationLanguages,
-        AppDispatchers(dispatcher, dispatcher, dispatcher),
+        testDispatchers(dispatcher),
     ).also { vm -> backgroundScope.launch { vm.state.collect {} } }
 
     @BeforeTest

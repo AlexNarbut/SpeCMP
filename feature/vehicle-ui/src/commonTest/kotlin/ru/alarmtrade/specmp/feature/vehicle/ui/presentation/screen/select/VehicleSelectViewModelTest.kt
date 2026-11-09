@@ -22,9 +22,9 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.ApiError
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
@@ -78,7 +78,7 @@ class VehicleSelectViewModelTest {
             request = VehicleSelectRequest(mode, catalog, device, firmwareCanCode, warnOnCanMismatch),
             repository = repository,
             recentRepository = recent,
-            dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher),
+            dispatchers = testDispatchers(dispatcher),
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }

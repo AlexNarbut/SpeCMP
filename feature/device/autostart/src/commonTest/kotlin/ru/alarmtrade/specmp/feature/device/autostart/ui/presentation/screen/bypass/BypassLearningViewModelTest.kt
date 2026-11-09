@@ -24,8 +24,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
@@ -75,7 +75,7 @@ class BypassLearningViewModelTest {
     }
 
     private fun TestScope.viewModel(subscribe: Boolean = true): BypassLearningViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         val session =
             createDeviceSession(
                 sessionRepository,

@@ -18,12 +18,12 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeLocalConfigurations
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeSettingsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.localConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDeviceSession
-import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource

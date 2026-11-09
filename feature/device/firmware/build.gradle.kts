@@ -47,6 +47,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(project(":core:testing"))
         }
         // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {

@@ -179,12 +179,8 @@ class MyViewModel(private val dispatchers: AppDispatchers) : BaseViewModel<MySta
 // ❌ Неправильно — хардкод
 coldFlow.flowOn(Dispatchers.Default).collectIntoState { … }
 
-// Тесты: подмена на UnconfinedTestDispatcher()
-val testDispatchers = AppDispatchers(
-    io = UnconfinedTestDispatcher(),
-    default = UnconfinedTestDispatcher(),
-    main = UnconfinedTestDispatcher()
-)
+// Тесты: один тестовый диспетчер на все роли (core:testing)
+val dispatchers = testDispatchers(StandardTestDispatcher())
 ```
 
 ## Источник времени
@@ -212,6 +208,28 @@ val testDispatchers = AppDispatchers(
   композицию), `currentToday()` («сегодня» на каждую рекомпозицию — `rememberCmpDateLabeler`). Значение пояса,
   от которого зависит `remember`, — его ключ. Дефолт параметра composable допустим только из `CompositionLocal`.
 - Замер длительностей и таймауты — `TimeSource.Monotonic`, правило его не трогает.
+
+## Тестовые дублёры
+
+Сначала — общий фейк из модуля тестовых дублёров, своя реализация интерфейса — только под особое поведение теста.
+Модули `core/testing` и `feature/<x>/testing` держат код в `commonMain` (KMP не даёт `testFixtures`) и подключаются
+**только** в тестовых source set'ах: `commonTest.dependencies { implementation(project(":core:testing")) }`
+(Konsist `testing-modules-test-only`). `Fake*`/`Stub*` в production-коде запрещены (`no-fakes-in-production`), рабочая
+заглушка — явный `NoOp*`.
+
+| Контракт | Дублёр | Модуль |
+|---|---|---|
+| `AppDispatchers` | `testDispatchers(dispatcher)` — один диспетчер на `io`/`default`/`main` | `:core:testing` |
+| `kotlinx.datetime.Clock` | `FixedClock(instant)` (`instant` — `var`) | `:core:testing` |
+| `AppForegroundProvider` | `FakeAppForegroundProvider` (`foregroundReturns` — `MutableSharedFlow`, тест делает `emit(Unit)`) | `:core:testing` |
+
+- Пояс фейка не требует: `TimeZoneSource.fixed(tz)` (`core/common`).
+- Расширять общий фейк параметром/состоянием, а не копировать в тест; поведение одного теста (запись аргументов,
+  сценарные ответы) — локальный фейк; неиспользуемые члены локального фейка — `error("not used")`.
+- Фейки контрактов фичи — в `feature/<x>/testing` рядом с владельцем. Модули, от которых зависит `core/testing`
+  (`core/common`, `core/lifecycle`), его не подключают — цикл через тестовую конфигурацию; у них локальные дублёры.
+- Модули `*/testing`: production-правила Konsist к ним не применяются, тестовые исключения detekt —
+  `**/testing/src/**`, CPD — проверяет.
 
 ## Логирование
 

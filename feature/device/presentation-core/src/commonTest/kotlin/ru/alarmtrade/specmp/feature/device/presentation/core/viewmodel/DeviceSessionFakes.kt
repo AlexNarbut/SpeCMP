@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -26,7 +26,7 @@ internal fun TestScope.testDeviceSession(link: MutableStateFlow<DeviceLinkState>
     createDeviceSession(
         FakeDeviceSessionRepository(link),
         FakeDeviceConnectionRepository,
-        AppDispatchers(dispatcher, dispatcher, dispatcher),
+        testDispatchers(dispatcher),
         backgroundScope.coroutineContext,
     ).also { it.start() }
 

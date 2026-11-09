@@ -20,8 +20,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FrmFileInfo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareException
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareFailure
@@ -79,7 +79,7 @@ class SerialFirmwareViewModelTest {
     private fun test(block: suspend TestScope.() -> Unit): TestResult = runTest(dispatcher) { block() }
 
     private fun TestScope.viewModel(repository: SerialFirmwareRepository): SerialFirmwareViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         sessionRepository = FakeSessionRepository(bootDevice)
         session =
             createDeviceSession(

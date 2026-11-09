@@ -123,6 +123,11 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - Связывает `AppVersionProvider` (`core/common`) с версией от платформы — её читают Specialist SDK и экраны
 - `feature/*` не создают `SpecialistApp` самостоятельно и зависят только от нужных SDK interactors
 
+### core/testing
+- Пакет: `ru.alarmtrade.specmp.core.testing`
+- Общие тестовые дублёры портов `core/*` (`testDispatchers`, `FixedClock`, `FakeAppForegroundProvider`), код в `commonMain`
+- Подключается только в тестовых source set'ах (Konsist `testing-modules-test-only`); см. `docs/patterns.md` → «Тестовые дублёры»
+
 ### core/ui
 - Пакет: `ru.alarmtrade.specmp.core.ui`
 - `LCEState<T, E>` — UI-состояние: `None` | `Loading` | `Content<T>` (+ `isUpdating`/`updateError`) | `Error<E>`, `E` — ошибка фичи с подтипом `Common(AppError)` (`docs/patterns.md`, «Ошибки фичи»)
@@ -267,6 +272,7 @@ commonMain.dependencies {
 | core/network      | `ru.alarmtrade.specmp.core.network`       |
 | core/specialist   | `ru.alarmtrade.specmp.core.specialist`    |
 | core/ui           | `ru.alarmtrade.specmp.core.ui`            |
+| core/testing      | `ru.alarmtrade.specmp.core.testing`       |
 | feature/`<name>`  | `ru.alarmtrade.specmp.feature.<name>` (дефис в имени модуля схлопывается: `auth-state` → `authstate`) |
 | feature/device/presentation-core | `ru.alarmtrade.specmp.feature.device.presentation.core` (суффиксы `-ui`/`-core` — подпакет) |
 | composeApp        | `ru.alarmtrade.specmp`                    |

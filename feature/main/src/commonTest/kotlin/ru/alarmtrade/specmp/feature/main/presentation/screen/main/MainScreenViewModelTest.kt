@@ -20,9 +20,9 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AppVersion
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
@@ -46,7 +46,7 @@ class MainScreenViewModelTest {
         LogoutUseCase(authRepository, emptyList()),
         repository,
         { AppVersion(name = "1.0", code = 1) },
-        AppDispatchers(dispatcher, dispatcher, dispatcher),
+        testDispatchers(dispatcher),
     )
 
     private fun TestScope.viewModel() = createViewModel().also { vm -> backgroundScope.launch { vm.state.collect {} } }

@@ -14,8 +14,8 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
@@ -27,9 +27,8 @@ class LoginScreenViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeLoginRepository()
 
-    private fun TestScope.viewModel() =
-        LoginScreenViewModel(repository, AppDispatchers(dispatcher, dispatcher, dispatcher))
-            .also { vm -> backgroundScope.launch { vm.state.collect {} } }
+    private fun TestScope.viewModel() = LoginScreenViewModel(repository, testDispatchers(dispatcher))
+        .also { vm -> backgroundScope.launch { vm.state.collect {} } }
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)

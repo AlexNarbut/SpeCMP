@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
+package ru.alarmtrade.specmp.core.testing
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant

@@ -8,7 +8,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -17,9 +16,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.lifecycle.AppForegroundProvider
+import ru.alarmtrade.specmp.core.testing.FakeAppForegroundProvider
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
@@ -46,18 +45,11 @@ class ScanDeviceViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun dispatchers() = AppDispatchers(
-        io = testDispatcher,
-        default = testDispatcher,
-        main = testDispatcher,
-    )
+    private fun dispatchers() = testDispatchers(testDispatcher)
 
     private var lastSession: DeviceSession? = null
 
-    private val foregroundReturns = MutableSharedFlow<Unit>()
-    private val foregroundProvider = object : AppForegroundProvider {
-        override val foregroundReturns = this@ScanDeviceViewModelTest.foregroundReturns
-    }
+    private val foregroundProvider = FakeAppForegroundProvider()
 
     private fun deviceSession(connection: FakeDeviceConnectionRepository) =
         createDeviceSession(FakeDeviceSessionRepository(), connection, dispatchers()).also { it.start() }.also {
@@ -505,7 +497,7 @@ class ScanDeviceViewModelTest {
         advanceUntilIdle()
         assertEquals(1, scan.bleScanStarts)
 
-        foregroundReturns.emit(Unit)
+        foregroundProvider.foregroundReturns.emit(Unit)
         advanceUntilIdle()
 
         assertEquals(ScanStep.Scanning, viewModel.state.value.step)
@@ -523,7 +515,7 @@ class ScanDeviceViewModelTest {
         runCurrent() // не advanceUntilIdle: он промотает таймаут подключения
         val scansBefore = scan.bleScanStarts
 
-        foregroundReturns.emit(Unit)
+        foregroundProvider.foregroundReturns.emit(Unit)
         runCurrent()
 
         assertTrue(viewModel.state.value.step is ScanStep.Connecting)

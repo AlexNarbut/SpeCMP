@@ -12,6 +12,7 @@ import com.lemonappdev.konsist.api.declaration.combined.KoClassAndInterfaceAndOb
 import com.lemonappdev.konsist.api.provider.modifier.KoVisibilityModifierProvider
 import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
+import java.io.File
 import org.junit.jupiter.api.Test
 
 private const val ROOT = "ru.alarmtrade.specmp"
@@ -23,8 +24,9 @@ private const val ROOT = "ru.alarmtrade.specmp"
  * `@file:Suppress`) с причиной комментарием строкой выше.
  */
 class ArchitectureTest {
+    // Модули тестовых дублёров `*/testing` — тестовый код в commonMain: правила продакшена к ним не применяются.
     private val scope = Konsist.scopeFromProduction().slice {
-        it.isCore || it.isFeature || it.moduleName in APP_MODULES
+        (it.isCore || it.isFeature || it.moduleName in APP_MODULES) && !it.isTestingModule
     }
     private val libraryFiles = scope.files.filter { it.isCore || it.isFeature }
     private val classes = scope.classes(includeNested = true)
@@ -305,6 +307,18 @@ class ArchitectureTest {
                 additionalMessage = "Fake*/Stub* — тестовые дублёры: только в тестовых source set'ах. Рабочая " +
                     "заглушка в проде — явный NoOp* (поведение «ничего не делать» — часть контракта).",
             ) { it.name.startsWith("Fake") || it.name.startsWith("Stub") }
+    }
+
+    @Test
+    fun `testing modules are test-only dependencies`() {
+        val violations = buildScripts().flatMap { script ->
+            script.testingDependenciesOutsideTests().map { "${script.relativeTo(projectRoot)}:$it" }
+        }
+        check(violations.isEmpty()) {
+            "testing-modules-test-only: модуль тестовых дублёров `*:testing` подключается только в тестовых source " +
+                "set'ах (commonTest/jvmTest… .dependencies, *TestImplementation): production-код не зависит от " +
+                "фейков. docs/patterns.md, «Тестовые дублёры»\n" + violations.joinToString("\n")
+        }
     }
 
     @Test
@@ -635,6 +649,50 @@ private val APP_MODULES = setOf(
 
 private val KoFileDeclaration.isCore get() = moduleName.startsWith("core/")
 private val KoFileDeclaration.isFeature get() = moduleName.startsWith("feature/")
+private val KoFileDeclaration.isTestingModule get() = moduleName.endsWith("/testing")
+
+private val projectRoot: File = generateSequence(File("").absoluteFile) { it.parentFile }
+    .first { File(it, "settings.gradle.kts").isFile }
+
+private fun buildScripts(): List<File> = (listOf("core", "feature") + APP_MODULES)
+    .map { File(projectRoot, it) }
+    .filter(File::isDirectory)
+    .flatMap { dir ->
+        dir.walkTopDown().onEnter { it.name != "build" && it.name != "src" }.filter { it.name == "build.gradle.kts" }
+    }
+
+private val TESTING_PROJECT_DEPENDENCY = Regex("""project\(":[\w:-]*:testing"\)""")
+private val TEST_SCOPE = Regex("(?i)test")
+
+// Строки (номер: текст) с project(":…:testing") вне тестового блока или тестовой конфигурации: блок — по заголовкам
+// открытых `{`, тестовый — в заголовке или в самой строке есть «test» (commonTest.dependencies, testImplementation).
+private fun File.testingDependenciesOutsideTests(): List<String> {
+    val blocks = ArrayDeque<String>()
+    return readLines().withIndex().mapNotNull { (index, line) ->
+        val code = line.substringBefore("//")
+        val violation = TESTING_PROJECT_DEPENDENCY.containsMatchIn(code) &&
+            blocks.none(TEST_SCOPE::containsMatchIn) && !TEST_SCOPE.containsMatchIn(code.substringBefore("project("))
+        var rest = code
+        while (rest.isNotEmpty()) {
+            val open = rest.indexOf('{')
+            val close = rest.indexOf('}')
+            when {
+                open >= 0 && (close < 0 || open < close) -> {
+                    blocks.addLast(rest.substring(0, open).trim())
+                    rest = rest.substring(open + 1)
+                }
+
+                close >= 0 -> {
+                    blocks.removeLastOrNull()
+                    rest = rest.substring(close + 1)
+                }
+
+                else -> rest = ""
+            }
+        }
+        if (violation) "${index + 1}: ${line.trim()}" else null
+    }
+}
 
 // feature/auth-state → …feature.authstate; суффиксы модуля -ui и -core — подпакет: feature/device/settings-ui →
 // …settings.ui, feature/device/presentation-core → …presentation.core

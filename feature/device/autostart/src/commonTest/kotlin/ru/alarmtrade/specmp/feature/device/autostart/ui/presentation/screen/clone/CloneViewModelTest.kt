@@ -24,8 +24,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
@@ -65,7 +65,7 @@ class CloneViewModelTest {
     }
 
     private fun TestScope.viewModel(fromBypass: Boolean = false, subscribe: Boolean = true): CloneViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         val session =
             createDeviceSession(
                 sessionRepository,

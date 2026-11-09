@@ -24,8 +24,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
@@ -74,7 +74,7 @@ class CheckStateViewModelTest {
     }
 
     private fun TestScope.viewModel(fastMount: Boolean = false): CheckStateViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         val session =
             createDeviceSession(
                 sessionRepository,

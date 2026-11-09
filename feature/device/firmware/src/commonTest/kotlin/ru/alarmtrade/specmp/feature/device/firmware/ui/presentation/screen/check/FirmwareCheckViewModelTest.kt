@@ -24,8 +24,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
@@ -116,7 +116,7 @@ class FirmwareCheckViewModelTest {
         transport: ConnectionTransport = ConnectionTransport.BLE,
         subscribed: Boolean = true,
     ): FirmwareCheckViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         session = createDeviceSession(
             sessionRepository,
             FakeConnectionRepository(),

@@ -16,8 +16,8 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 
 class AuthStateViewModelTest {
@@ -25,9 +25,8 @@ class AuthStateViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeAuthStateRepository()
 
-    private fun TestScope.viewModel() =
-        AuthStateViewModel(repository, AppDispatchers(dispatcher, dispatcher, dispatcher))
-            .also { vm -> backgroundScope.launch { vm.state.collect {} } }
+    private fun TestScope.viewModel() = AuthStateViewModel(repository, testDispatchers(dispatcher))
+        .also { vm -> backgroundScope.launch { vm.state.collect {} } }
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -64,7 +63,7 @@ class AuthStateViewModelTest {
     @Test
     fun `resubscription keeps the session and the running check`() = runTest(dispatcher) {
         repository.flows += MutableStateFlow(Response.Success(true))
-        val vm = AuthStateViewModel(repository, AppDispatchers(dispatcher, dispatcher, dispatcher))
+        val vm = AuthStateViewModel(repository, testDispatchers(dispatcher))
         val subscription = backgroundScope.launch { vm.state.collect {} }
         subscription.cancel()
         advanceTimeBy(10.seconds)

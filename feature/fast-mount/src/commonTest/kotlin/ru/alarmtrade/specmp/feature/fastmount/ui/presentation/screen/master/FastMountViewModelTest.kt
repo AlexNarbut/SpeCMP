@@ -23,8 +23,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
@@ -74,7 +74,7 @@ class FastMountViewModelTest {
 
     // USB по умолчанию: без цикла переподключения BLE — связь в тесте переключает сам тест.
     private fun TestScope.viewModel(transport: ConnectionTransport = ConnectionTransport.USB): FastMountViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         session =
             createDeviceSession(
                 sessionRepository,

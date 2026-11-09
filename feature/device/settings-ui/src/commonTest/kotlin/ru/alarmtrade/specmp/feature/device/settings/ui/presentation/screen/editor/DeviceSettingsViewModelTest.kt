@@ -28,9 +28,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
@@ -155,7 +155,7 @@ class DeviceSettingsViewModelTest {
         source: SettingsSource = SettingsSource.Device,
         options: SettingsEditorOptions = SettingsEditorOptions(),
     ): DeviceSettingsViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         val session =
             createDeviceSession(
                 sessionRepository,

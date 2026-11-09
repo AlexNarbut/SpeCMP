@@ -22,8 +22,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
@@ -114,7 +114,7 @@ class FirmwareUpdateViewModelTest {
     private fun TestScope.viewModel(
         transport: ConnectionTransport = ConnectionTransport.USB,
     ): Pair<FirmwareUpdateViewModel, MutableList<FirmwareUpdateEffect>> {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         session = createDeviceSession(
             sessionRepository,
             FakeConnectionRepository(),

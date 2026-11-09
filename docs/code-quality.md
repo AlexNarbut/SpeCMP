@@ -255,7 +255,7 @@ ViewModel через несколько composable, эффекты читают 
 | импорт `androidx.lifecycle.ViewModel` вне `core/ui` (`ForbiddenImport`) | наследоваться от `BaseViewModel` ([`patterns.md`](patterns.md), «BaseViewModel») |
 | импорт `androidx.compose.material3.*` вне `core/ui` (`ForbiddenImport`) | компоненты `Cmp*` из `core/ui` ([`ui-kit.md`](ui-kit.md)) |
 
-`StateFlowValueMutation` не проверяет тестовые source set'ы: тестовые фейки по [`patterns.md`](patterns.md#корутины-и-flow)
+`StateFlowValueMutation` не проверяет тестовые source set'ы и модули тестовых дублёров (`**/testing/src/**`): тестовые фейки по [`patterns.md`](patterns.md#корутины-и-flow)
 могут писать `MutableStateFlow.value` напрямую. Правило берёт тип ресивера из Analysis API (Compose `MutableState`
 не попадает) и молчит без type resolution — в `iosMain`.
 
@@ -314,7 +314,8 @@ ViewModel через несколько composable, эффекты читают 
 ### Konsist (`quality/konsist`)
 
 `ArchitectureTest` (JUnit 5) — порт из BabySteps: Konsist разбирает исходники `core/*`, `feature/*`, composition roots
-(`composeApp`, `flasherApp`) и обёрток без тестовых source set'ов. Имя модуля Konsist — путь до `src/`
+(`composeApp`, `flasherApp`) и обёрток без тестовых source set'ов и без модулей тестовых дублёров `*/testing`
+(их `commonMain` — тестовый код). Имя модуля Konsist — путь до `src/`
 (`feature/device/settings-ui`). `testName` правила — его id; сообщение правила ссылается на раздел доков.
 
 | id | Что проверяет |
@@ -338,6 +339,7 @@ ViewModel через несколько composable, эффекты читают 
 | `state-immutable` | `data class *State` в `presentation` помечен `@Immutable` или `@Stable` |
 | `sdk-confinement` | типы AlarmTrade SDK (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — data/di фич, `core/specialist`, `core/permissions`, `core/network`, приложения |
 | `no-fakes-in-production` | `Fake*`/`Stub*` — только в тестах |
+| `testing-modules-test-only` | `project(":…:testing")` в `build.gradle.kts` — только в тестовом блоке/конфигурации (`commonTest.dependencies`, `*TestImplementation`); проверка разбирает скрипты, а не Kotlin-код |
 | `forbidden-suffix` | `*Helper`/`*Utils` запрещены; `*Manager` — только в `androidMain`/`iosMain`/`jvmMain`; `*Store`/`*Storage` в фичах — нет (это `*Repository`) |
 | `mapper-placement` | top-level `toDomain*`/`to*Dto` — `internal`/`private` в пакете `data.mapper` (в `core` — `mapper`) своего модуля |
 | `storage-usage` | в фиче `com.russhwolf.settings.*` и `core.common.settings.*` — только `data` и `di` |
@@ -392,6 +394,8 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | `:feature:.* -X> :feature:.*-ui` | от `*-ui` зависят только composition roots |
 
 Общий presentation фич устройства — не `-ui`, а `device:presentation-core`: на него правило не распространяется.
+Модули тестовых дублёров `*:testing` подчиняются тем же рёбрам (`core:testing` ↛ фичи); что они подключаются только
+в тестовых конфигурациях, проверяет Konsist `testing-modules-test-only` — набор конфигураций у плагина общий на все правила.
 Экраны другой фичи подключаются слотом (`@Composable`-колбэком) из composition root, импорты — Konsist
 `cross-feature-presentation`. Регэксп правила матчит всю строку `"<from> -X> <to>"`: для исключения через негативный
 lookahead конец имени модуля слева — пробел, а не `$`.

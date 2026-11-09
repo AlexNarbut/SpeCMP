@@ -20,8 +20,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -73,7 +73,7 @@ class DeviceInteractionViewModelTest {
     private fun TestScope.session() = createDeviceSession(
         sessionRepository,
         connectionRepository,
-        AppDispatchers(dispatcher, dispatcher, dispatcher),
+        testDispatchers(dispatcher),
         backgroundScope.coroutineContext,
     ).also { it.start() }
 

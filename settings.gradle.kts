@@ -38,6 +38,7 @@ include(":core:network")
 include(":core:permissions")
 include(":core:specialist")
 include(":core:ui")
+include(":core:testing")
 
 // Main Compose Multiplatform application
 include(":composeApp")
