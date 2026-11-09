@@ -10,9 +10,11 @@ import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.common.settings.interaction.model.errors.WrongSettingsSizeException
 import ru.alarmtrade.common.settings.interaction.model.menu.AlarmDeviceSettingsMenu
 import ru.alarmtrade.common.settings.interaction.model.menu.SettingsPath
+import ru.alarmtrade.common.settings.interaction.model.search.SettingSearchResult
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.SettingsSubmenu as SdkSettingsSubmenu
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.SwitchSetting as SdkSwitchSetting
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -118,6 +120,35 @@ class SpecialistDeviceSettingsRepositoryTest {
         val request = dataSource.copyRequests.single()
         assertEquals(SettingsPath.File(snapshot.path, "DX-9X"), request.to)
         assertTrue(request.saveChanges)
+    }
+
+    @Test
+    fun `search keeps the sdk order and name highlights and passes the source path`() = runTest {
+        dataSource.found = SpecialistResponse.Success(
+            listOf(
+                SettingSearchResult(switch(id = 7, value = false), listOf(0..1)),
+                SettingSearchResult(switch(id = 3, value = true), listOf(0..0, 1..1)),
+            ),
+        )
+        val file = SettingsSource.File(path = "/tmp/a.dxs", deviceName = "DX-9X")
+
+        assertEquals(
+            Response.Success(listOf(SettingNameMatch(7, listOf(0..1)), SettingNameMatch(3, listOf(0..0, 1..1)))),
+            repository.search(file, "s7"),
+        )
+        val request = dataSource.searchRequests.single()
+        assertEquals(SettingsPath.File("/tmp/a.dxs", "DX-9X"), request.path)
+        assertEquals("s7", request.name)
+    }
+
+    @Test
+    fun `search errors and an unavailable interactor are errors`() = runTest {
+        val failure = IllegalStateException("closed")
+        dataSource.found = SpecialistResponse.Error.General(failure)
+        assertSame(failure, assertIs<Response.Error>(repository.search(SettingsSource.Device, "a")).exception)
+
+        dataSource.found = null
+        assertIs<Response.Error>(repository.search(SettingsSource.Device, "a"))
     }
 
     @Test

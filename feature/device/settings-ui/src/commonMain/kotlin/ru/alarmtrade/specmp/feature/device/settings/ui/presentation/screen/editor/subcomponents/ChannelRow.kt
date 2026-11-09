@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -38,6 +39,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SearchHighlights
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSetting
@@ -48,7 +50,9 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.C
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ContactBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.PolarityBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.WireTag
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitle
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.HighlightedPart
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.highlightedText
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settingTitleParts
 
 private const val CHANGED_TINT_ALPHA = 0.5f
 private const val FUNCTIONS_MAX_LINES = 2
@@ -64,9 +68,18 @@ internal fun ChannelRow(
     actions: SettingRowActions,
     infoButton: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    highlights: SearchHighlights? = null,
 ) {
     val colors = cmpThemeColors()
     val channel = setting.channelOrNull ?: return
+    val highlightStyle = searchHighlightStyle()
+    val shown = highlights ?: SearchHighlights()
+    val number = remember(setting.number, shown, highlightStyle) {
+        highlightedText(listOf(HighlightedPart(setting.number, shown.number)), highlightStyle)
+    }
+    val title = remember(setting.name, channel, shown, highlightStyle) {
+        highlightedText(settingTitleParts(setting.name, channel, shown), highlightStyle)
+    }
     val toggle = (setting as? SwitchOutputSetting)?.let { SettingValue.SwitchOutput(!it.value.enabled) }
     val onClick: () -> Unit = if (toggle != null) {
         { actions.onValueChange(setting.id, toggle) }
@@ -91,10 +104,10 @@ internal fun ChannelRow(
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 if (setting.number.isNotEmpty()) {
-                    CmpText(text = setting.number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
+                    CmpText(text = number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
                 }
                 CmpText(
-                    text = settingTitle(setting.name, channel),
+                    text = title,
                     style = CmpTextStyle.BodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.onSurface,

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.configurator.data.repository
 
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
@@ -36,6 +37,9 @@ internal class FakeDeviceSettingsRepository : DeviceSettingsRepository {
     override suspend fun save(source: SettingsSource): Response<Unit> = error("not used")
 
     override suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File> =
+        error("not used")
+
+    override suspend fun search(source: SettingsSource, query: String): Response<List<SettingNameMatch>> =
         error("not used")
 
     override suspend fun resetDeviceToFactory(): Response<Unit> = error("not used")

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.settings.domain.repository
 
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -25,6 +26,9 @@ interface DeviceSettingsRepository {
 
     /** Прочитан моделью [deviceName] — так их увидит блок этой модели; сессия [from] не закрывается. */
     suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File>
+
+    /** Нечёткий поиск по названию в открытой сессии [source]; по релевантности, разделы не ищутся. */
+    suspend fun search(source: SettingsSource, query: String): Response<List<SettingNameMatch>>
 
     suspend fun resetDeviceToFactory(): Response<Unit>
 }

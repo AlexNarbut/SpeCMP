@@ -80,8 +80,25 @@ internal class DeviceSettingsViewModel(
     private fun searchResults(): Flow<Pair<String, List<SettingsSearchHit>>> =
         combine(select { searchInput }, select { menu.content }) { query, root -> query to root }
             .debounce(SEARCH_DEBOUNCE_MILLIS)
-            .mapLatest { (query, root) -> query to root?.search(query).orEmpty() }
+            .mapLatest { (query, root) -> query to root?.let { search(it, query) }.orEmpty() }
             .flowOn(dispatchers.default)
+
+    private suspend fun search(root: SettingsSection, query: String): List<SettingsSearchHit> {
+        if (query.isBlank()) return emptyList()
+        val nameMatches = when (
+            val response = withContext(dispatchers.io) {
+                repository.search(source, query.trim())
+            }
+        ) {
+            is Response.Success -> response.value
+
+            is Response.Error -> {
+                logger.w(response.exception) { "Settings search failed, local search only: ${response.message}" }
+                emptyList()
+            }
+        }
+        return root.search(query, nameMatches)
+    }
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         reduce { copy(header = SettingsHeader(device.systemName, device.systemId, device.can?.code)) }

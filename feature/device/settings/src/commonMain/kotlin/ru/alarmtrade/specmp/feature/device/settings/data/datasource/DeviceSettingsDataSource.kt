@@ -3,11 +3,13 @@ package ru.alarmtrade.specmp.feature.device.settings.data.datasource
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.common.core.usecase.EmptyRequest
 import ru.alarmtrade.common.settings.interaction.model.menu.AlarmDeviceSettingsMenu
+import ru.alarmtrade.common.settings.interaction.model.search.SettingSearchResult
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.SettingItem
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.AlarmDeviceSettingsInteractor
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CloseDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CopySettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.DeviceSettingsRequest
+import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.FindSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.OpenDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingValueRequest
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
@@ -21,6 +23,7 @@ internal interface DeviceSettingsDataSource {
     suspend fun unsaved(request: DeviceSettingsRequest): SpecialistResponse<List<SettingItem>>?
     suspend fun save(request: DeviceSettingsRequest): SpecialistResponse<Unit>?
     suspend fun copy(request: CopySettingsRequest): SpecialistResponse<SettingItem>?
+    suspend fun search(request: FindSettingsRequest): SpecialistResponse<List<SettingSearchResult>>?
     suspend fun resetDeviceToFactory(): SpecialistResponse<Unit>?
 }
 
@@ -45,6 +48,9 @@ internal class SpecialistDeviceSettingsDataSource(
 
     override suspend fun copy(request: CopySettingsRequest): SpecialistResponse<SettingItem>? =
         settings.resolveOrNull()?.copyDeviceSettingsUseCase?.execute(request)
+
+    override suspend fun search(request: FindSettingsRequest): SpecialistResponse<List<SettingSearchResult>>? =
+        settings.resolveOrNull()?.searchSettingsUseCase?.execute(request)
 
     override suspend fun resetDeviceToFactory(): SpecialistResponse<Unit>? =
         alarmDevice.resolveOrNull()?.resetAlarmDeviceSettingsUseCase?.execute(EmptyRequest())

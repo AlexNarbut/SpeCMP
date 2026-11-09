@@ -11,6 +11,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsR
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
@@ -114,6 +115,9 @@ internal class FakeSettingsRepository :
     override fun discardSnapshot(snapshot: SettingsSource.File) {
         discarded += snapshot
     }
+
+    override suspend fun search(source: SettingsSource, query: String): Response<List<SettingNameMatch>> =
+        Response.Success(emptyList())
 
     override suspend fun resetDeviceToFactory(): Response<Unit> = Response.Success(Unit)
 }

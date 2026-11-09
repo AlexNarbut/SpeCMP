@@ -5,6 +5,7 @@ import ru.alarmtrade.common.settings.interaction.model.errors.WrongSettingsSizeE
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CloseDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CopySettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.DeviceSettingsRequest
+import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.FindSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.OpenDeviceSettingsRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
@@ -14,10 +15,12 @@ import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
 import ru.alarmtrade.specmp.feature.device.settings.data.datasource.DeviceSettingsDataSource
 import ru.alarmtrade.specmp.feature.device.settings.data.files.settingsScratchDirectory
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toPath
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRequest
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRootSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -77,6 +80,11 @@ internal class SpecialistDeviceSettingsRepository(private val dataSource: Device
         val snapshot = SettingsSource.File(path, deviceName)
         return copy(from, snapshot, saveChanges = true).map { snapshot }
     }
+
+    override suspend fun search(source: SettingsSource, query: String): Response<List<SettingNameMatch>> =
+        dataSource.search(FindSettingsRequest(source.toPath(), query))
+            .toResponseOrUnavailable()
+            .map { results -> results.map { it.toNameMatch() } }
 
     override suspend fun resetDeviceToFactory(): Response<Unit> =
         dataSource.resetDeviceToFactory().toResponseOrUnavailable()
