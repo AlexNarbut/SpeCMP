@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.Duration
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
@@ -38,4 +39,10 @@ data class BypassState(
     val cloneAvailable: Boolean = false,
     val phase: BypassPhase = BypassPhase.Start(),
     val dialog: BypassDialog? = null,
-)
+) {
+    /** Блокировка ввода PIN — в открытый диалог PIN; без него не меняется. */
+    fun withPinLock(lock: Duration?): BypassState {
+        val pinDialog = dialog as? BypassDialog.Pin ?: return this
+        return copy(dialog = pinDialog.copy(pin = pinDialog.pin.copy(lockedFor = lock)))
+    }
+}

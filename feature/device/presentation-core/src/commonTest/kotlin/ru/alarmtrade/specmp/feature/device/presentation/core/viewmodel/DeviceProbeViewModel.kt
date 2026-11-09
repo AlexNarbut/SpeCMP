@@ -14,7 +14,19 @@ internal class DeviceProbeViewModel(deviceSession: DeviceSession) :
         reduce { copy(launched = launchOnDevice { work() } != null) }
     }
 
+    fun onKeyedWork(work: suspend () -> Unit) {
+        reduce { copy(launched = launchOnDevice(KEY) { work() } != null) }
+    }
+
+    fun onCancelKeyed() {
+        cancelLaunched(KEY)
+    }
+
     fun onReadCurrent() {
         reduce { copy(current = currentDevice) }
+    }
+
+    private companion object {
+        const val KEY = "probe"
     }
 }

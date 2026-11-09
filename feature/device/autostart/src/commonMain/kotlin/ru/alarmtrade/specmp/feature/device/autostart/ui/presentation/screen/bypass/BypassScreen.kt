@@ -81,6 +81,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_a
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_critical
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_instruction
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_label_wait
+import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -142,9 +143,14 @@ internal data class BypassActions(
 fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) {
     val viewModel = koinViewModel<BypassLearningViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    viewModel.sideEffect.collectSideEffect { effect ->
+        when (effect) {
+            BypassEffect.Close -> onBack()
+        }
+    }
     val actions = remember(viewModel, onBack, onOpenClone, onOpenSupportChat) {
         BypassActions(
-            onBack = { if (viewModel.onBackRequest()) onBack() },
+            onBack = viewModel::onBack,
             onClose = onBack,
             onStart = viewModel::onStartClick,
             onDialogDismiss = viewModel::onDialogDismiss,
@@ -177,9 +183,14 @@ fun BypassLearningStep(
 ) {
     val viewModel = koinViewModel<BypassLearningViewModel>(key = key)
     val state by viewModel.state.collectAsStateWithLifecycle()
+    viewModel.sideEffect.collectSideEffect { effect ->
+        when (effect) {
+            BypassEffect.Close -> onBack()
+        }
+    }
     val actions = remember(viewModel, onBack, onOpenSupportChat) {
         BypassActions(
-            onBack = { if (viewModel.onBackRequest()) onBack() },
+            onBack = viewModel::onBack,
             onClose = onBack,
             onStart = viewModel::onStartClick,
             onDialogDismiss = viewModel::onDialogDismiss,

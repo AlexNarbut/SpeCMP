@@ -4,7 +4,7 @@
 - `api`: `core:ui` (супертип `BaseViewModel`) и `feature:device:interaction` (`DeviceSession`, модели блока).
 - `viewmodel/BaseDeviceViewModel<S, E>(deviceSession, initialState)` — база VM, работающих с подключённым блоком, поверх `BaseViewModel<S, E>` (правила VM действуют):
   - `connectedDevice` / `connectedDeviceName` — блок на связи (`Ready`) как поток для `collectIntoState`; `currentDevice` — снимок для интентов.
-  - `launchOnDevice { }` — работа с блоком: без связи не стартует (`null`), при потере связи отменяется вся запущенная так работа (параллельные запуски не отменяют друг друга; перезапуск по ключу — `launchReplacing`). Слежение за связью стартует с первого вызова — `super.onStart()` звать не нужно.
+  - `launchOnDevice { }` — работа с блоком: без связи не стартует (`null`), при потере связи отменяется вся запущенная так работа (параллельные запуски не отменяют друг друга); `launchOnDevice(key) { }` — то же с заменой прежней работы по ключу (процесс экрана вместо поля `Job?`), отмена — `cancelLaunched(key)`. Слежение за связью стартует с первого вызова — `super.onStart()` звать не нужно.
   - `onEachDeviceReady { }` (на каждое (пере)подключение, отменяется при потере связи) и `onDeviceLost { }` (на каждый выход сессии из `Ready`, в т.ч. если VM создана до подключения) — вызывать из `onStart()`; живут, пока жива VM (не только пока экран подписан на state).
   - Необработанные исключения логируются, как у `safeLaunch`.
 - `viewmodel/LegacyBaseDeviceViewModel` — прежняя база на `LegacyBaseViewModel` (`launchOnFirstStart`), на время этапа 2 миграции VM; новые VM — только от `BaseDeviceViewModel`.

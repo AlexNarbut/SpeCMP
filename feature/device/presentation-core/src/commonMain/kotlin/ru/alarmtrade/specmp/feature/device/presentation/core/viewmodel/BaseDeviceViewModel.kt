@@ -45,6 +45,13 @@ abstract class BaseDeviceViewModel<S : Any, E : Any>(protected val deviceSession
         return safeLaunch(deviceJob, block)
     }
 
+    /** [launchOnDevice] с заменой прежней работы с тем же [key]; отменить — `cancelLaunched(key)`. */
+    protected fun launchOnDevice(key: Any, block: suspend CoroutineScope.() -> Unit): Job? {
+        if (currentDevice == null) return null
+        deviceLossWatch.start()
+        return launchReplacing(key, deviceJob, block)
+    }
+
     /** На каждую потерю связи; работа [launchOnDevice] к этому моменту уже отменена. Вызывать из `onStart()`. */
     protected fun onDeviceLost(action: () -> Unit): Job = safeLaunch {
         deviceSession.state

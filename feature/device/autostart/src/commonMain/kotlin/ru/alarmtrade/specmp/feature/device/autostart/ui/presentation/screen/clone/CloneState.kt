@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.Duration
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
@@ -64,4 +65,16 @@ data class CloneState(
 
     /** Идёт запись или проверка в блоке: выход запрещён. */
     val locked: Boolean get() = (phase as? ClonePhase.Running)?.stage?.locked == true
+
+    /** Диалог PIN с [pin]; отсчёт блокировки открытого диалога PIN сохраняется (он приходит отдельным потоком). */
+    fun withPinDialog(pin: ServicePinDialogState): CloneState {
+        val lockedFor = (dialog as? CloneDialog.Pin)?.pin?.lockedFor
+        return copy(dialog = CloneDialog.Pin(pin.copy(lockedFor = lockedFor)))
+    }
+
+    /** Блокировка ввода PIN — в открытый диалог PIN; без него не меняется. */
+    fun withPinLock(lock: Duration?): CloneState {
+        val pinDialog = dialog as? CloneDialog.Pin ?: return this
+        return copy(dialog = pinDialog.copy(pin = pinDialog.pin.copy(lockedFor = lock)))
+    }
 }

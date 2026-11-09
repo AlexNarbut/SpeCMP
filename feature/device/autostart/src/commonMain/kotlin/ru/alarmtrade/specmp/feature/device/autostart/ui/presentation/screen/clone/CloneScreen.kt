@@ -83,6 +83,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_ret
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_msg_pin
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_title_interrupted
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_format_clone
+import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -141,9 +142,14 @@ internal data class CloneActions(
 fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) {
     val viewModel = koinViewModel<CloneViewModel> { parametersOf(fromBypass) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    viewModel.sideEffect.collectSideEffect { effect ->
+        when (effect) {
+            CloneEffect.Close -> onBack()
+        }
+    }
     val actions = remember(viewModel, onBack, onOpenSupportChat) {
         CloneActions(
-            onBack = { if (viewModel.onBackRequest()) onBack() },
+            onBack = viewModel::onBack,
             onStart = viewModel::onStartClick,
             onConfirm = viewModel::onConfirm,
             onDialogDismiss = viewModel::onDialogDismiss,
@@ -175,9 +181,14 @@ fun CloneStep(
 ) {
     val viewModel = koinViewModel<CloneViewModel>(key = key) { parametersOf(false) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    viewModel.sideEffect.collectSideEffect { effect ->
+        when (effect) {
+            CloneEffect.Close -> onBack()
+        }
+    }
     val actions = remember(viewModel, onBack, onOpenSupportChat) {
         CloneActions(
-            onBack = { if (viewModel.onBackRequest()) onBack() },
+            onBack = viewModel::onBack,
             onStart = viewModel::onStartClick,
             onConfirm = viewModel::onConfirm,
             onDialogDismiss = viewModel::onDialogDismiss,

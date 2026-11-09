@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -56,6 +58,7 @@ class BypassLearningViewModelTest {
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
     private val viewModels = mutableListOf<BypassLearningViewModel>()
+    private val effects = mutableListOf<BypassEffect>()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -71,14 +74,15 @@ class BypassLearningViewModelTest {
         }
     }
 
-    private fun TestScope.viewModel(): BypassLearningViewModel {
+    private fun TestScope.viewModel(subscribe: Boolean = true): BypassLearningViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         val session =
             DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
         session.attach(ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
         val vm = BypassLearningViewModel(session, repository, entry, cooldown, dispatchers).also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm
     }
@@ -153,9 +157,10 @@ class BypassLearningViewModelTest {
     @Test
     fun `back during learning asks and exit cancels`() = test {
         val vm = started()
-        assertFalse(vm.onBackRequest())
+        vm.onBack()
         runCurrent()
         assertEquals(BypassDialog.Exit, vm.state.value.dialog)
+        assertTrue(effects.isEmpty())
         vm.onExitConfirm()
         runCurrent()
         assertEquals(BypassPhase.Start(), vm.state.value.phase)
@@ -169,5 +174,40 @@ class BypassLearningViewModelTest {
         vm.onStartClick()
         runCurrent()
         assertEquals(2, repository.runs)
+    }
+
+    @Test
+    fun `back on start leaves at once`() = test {
+        val vm = viewModel()
+        vm.onBack()
+        runCurrent()
+        assertEquals(listOf<BypassEffect>(BypassEffect.Close), effects)
+        assertNull(vm.state.value.dialog)
+    }
+
+    @Test
+    fun `pin dialog shows the lock countdown`() = test {
+        programMode.results = listOf(Response.Success(ProgramModeResult.WRONG_PIN))
+        val vm = started()
+        val dialog = assertIs<BypassDialog.Pin>(vm.state.value.dialog)
+        assertEquals(15.seconds, dialog.pin.lockedFor)
+    }
+
+    @Test
+    fun `learning goes on while the screen is not subscribed`() = test {
+        val vm = viewModel(subscribe = false)
+        val screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        vm.onStartClick()
+        runCurrent()
+        screen.cancel()
+        advanceTimeBy(10.seconds)
+        val step = BypassStep(BypassStepKind.ACTION, BypassSubject.IGNITION_ON)
+        repository.send(BypassEvent.Step(step))
+        runCurrent()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        assertEquals(BypassPhase.Running(step), vm.state.value.phase)
+        assertEquals(1, repository.runs)
     }
 }

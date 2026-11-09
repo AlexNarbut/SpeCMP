@@ -64,4 +64,37 @@ class BaseDeviceViewModelTest {
         viewModel.onWork {}
         assertEquals(true, viewModel.state.value.launched)
     }
+
+    @Test
+    fun `keyed device work replaces the previous one and is cancelled on loss`() = runTest(dispatcher) {
+        val viewModel = DeviceProbeViewModel(testDeviceSession(link, dispatcher))
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        val first = CompletableDeferred<Unit>()
+        viewModel.onKeyedWork { awaitCancelled(first) }
+        val second = CompletableDeferred<Unit>()
+        viewModel.onKeyedWork { awaitCancelled(second) }
+        assertTrue(first.isCompleted)
+        assertFalse(second.isCompleted)
+
+        viewModel.onCancelKeyed()
+        assertTrue(second.isCompleted)
+
+        val third = CompletableDeferred<Unit>()
+        viewModel.onKeyedWork { awaitCancelled(third) }
+        link.value = DeviceLinkState.DISCONNECTED
+        advanceUntilIdle()
+        assertTrue(third.isCompleted)
+        viewModel.onKeyedWork {}
+        assertEquals(false, viewModel.state.value.launched)
+    }
+
+    private suspend fun awaitCancelled(cancelled: CompletableDeferred<Unit>) {
+        try {
+            awaitCancellation()
+        } finally {
+            cancelled.complete(Unit)
+        }
+    }
 }
