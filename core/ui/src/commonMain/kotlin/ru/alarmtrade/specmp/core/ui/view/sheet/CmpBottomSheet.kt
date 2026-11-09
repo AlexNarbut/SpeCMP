@@ -7,6 +7,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import ru.alarmtrade.specmp.core.ui.view.input.clearFocusOnTapOutside
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +20,7 @@ fun CmpBottomSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        modifier = modifier,
+        modifier = modifier.clearFocusOnTapOutside(),
         sheetState = sheetState,
         containerColor = if (containerColor == Color.Unspecified) {
             MaterialTheme.colorScheme.surface

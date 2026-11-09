@@ -47,6 +47,7 @@ import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -169,7 +170,7 @@ private fun ModelsList(
     val filtered = models.filter { q.isEmpty() || it.contains(q, ignoreCase = true) }
     val recent = state.recent.filter { q.isEmpty() || it.contains(q, ignoreCase = true) }
     val connected = state.connected?.takeIf { q.isEmpty() || it.contains(q, ignoreCase = true) }
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(modifier = Modifier.fillMaxSize().hideKeyboardOnScroll()) {
         connected?.let { name ->
             group(Strings.string.configurator_models_label_connected, listOf(name), CmpIcons.Bluetooth, onPick)
         }

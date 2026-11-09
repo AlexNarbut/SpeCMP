@@ -5,12 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import ru.alarmtrade.specmp.core.ui.view.input.clearFocusOnTapOutside
 
 @Composable
 fun CmpFullScreenDialog(onDismissRequest: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false),
-        content = { Box(modifier) { content() } },
+        content = { Box(modifier.clearFocusOnTapOutside()) { content() } },
     )
 }

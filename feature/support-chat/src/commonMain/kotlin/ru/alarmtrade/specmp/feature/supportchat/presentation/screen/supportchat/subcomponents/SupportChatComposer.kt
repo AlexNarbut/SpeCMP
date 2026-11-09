@@ -33,6 +33,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextFieldStyle
+import ru.alarmtrade.specmp.core.ui.view.input.keepFocusOnTap
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -71,6 +72,7 @@ internal fun SupportChatComposer(
         CmpRow(
             modifier = Modifier
                 .fillMaxWidth()
+                .keepFocusOnTap()
                 .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.Bottom,

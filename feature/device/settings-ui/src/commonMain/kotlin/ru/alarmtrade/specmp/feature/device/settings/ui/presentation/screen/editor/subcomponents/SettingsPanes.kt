@@ -41,6 +41,7 @@ import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -70,7 +71,7 @@ internal fun SectionPane(section: SettingsSection, marks: RowMarks, wide: Boolea
         return
     }
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
         contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 16.dp) else PaddingValues(0.dp),
     ) {
         if (wide) {
@@ -141,7 +142,7 @@ internal fun SearchPane(
             )
 
             else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
                 contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 8.dp) else PaddingValues(0.dp),
             ) {
                 rows(

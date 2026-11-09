@@ -44,7 +44,7 @@ fun CmpCodeField(
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val colors = MaterialTheme.colorScheme
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier.keepFocusOnTap(), verticalAlignment = Alignment.CenterVertically) {
         BasicTextField(
             value = value,
             onValueChange = { input -> onValueChange(input.filter(Char::isDigit).take(length)) },

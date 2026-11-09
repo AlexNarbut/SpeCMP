@@ -62,6 +62,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
 import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -450,7 +451,7 @@ private fun SupportChatMessageList(
     SupportChatVisibilityEffect(listState = listState, onMessagesVisible = actions.onMessagesVisible)
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
         state = listState,
         reverseLayout = true,
         contentPadding = PaddingValues(

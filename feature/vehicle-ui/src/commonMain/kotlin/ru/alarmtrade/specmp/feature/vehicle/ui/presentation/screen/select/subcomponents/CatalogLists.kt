@@ -56,6 +56,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
@@ -95,7 +96,7 @@ internal fun CatalogList(
     content: LazyListScope.() -> Unit,
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().hideKeyboardOnScroll(),
         state = listState,
         contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),

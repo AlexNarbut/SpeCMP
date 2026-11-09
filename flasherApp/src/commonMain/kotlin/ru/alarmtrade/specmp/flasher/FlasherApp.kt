@@ -21,6 +21,8 @@ import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.time.LocalClock
 import ru.alarmtrade.specmp.core.ui.time.LocalTimeZoneSource
+import ru.alarmtrade.specmp.core.ui.view.input.clearFocusOnTapOutside
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.flasher.di.flasherKoinModules
 import ru.alarmtrade.specmp.flasher.di.rememberPlatformKoinModules
@@ -55,7 +57,7 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
         ) {
             AppTheme(onThemeChange, themeStore = DefaultAppThemeStore) {
                 if (specialistReady) {
-                    FlasherNavigation()
+                    CmpBox(modifier = Modifier.fillMaxSize().clearFocusOnTapOutside()) { FlasherNavigation() }
                 } else {
                     CmpSurface(modifier = Modifier.fillMaxSize()) {}
                 }
