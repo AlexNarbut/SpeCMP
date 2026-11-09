@@ -69,6 +69,7 @@ class FirmwareArchiveViewModelTest {
         request: FirmwareArchiveRequest =
             FirmwareArchiveRequest(1, FirmwareChannel.RELEASE, installed, "DX4G  77", UpdateProfile.Main),
         exporter: FirmwareFileExporter? = null,
+        subscribed: Boolean = true,
     ): Pair<FirmwareArchiveViewModel, MutableList<FirmwareArchiveEffect>> {
         val vm = FirmwareArchiveViewModel(
             request,
@@ -76,9 +77,9 @@ class FirmwareArchiveViewModelTest {
             AppDispatchers(dispatcher, dispatcher, dispatcher),
             exporter,
         ).also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<FirmwareArchiveEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm to effects
     }
@@ -645,5 +646,25 @@ class FirmwareArchiveViewModelTest {
         vm.onDownload("3.61")
         runCurrent()
         assertEquals(emptyList(), exporter.saved)
+    }
+
+    @Test
+    fun `returning to the screen keeps the list without loading it again`() = test {
+        repository.archivePages[1] = page(1, "3.61", "3.60")
+        val (vm, _) = viewModel(subscribed = false)
+        var screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        vm.onSelectRow("3.60")
+
+        screen.cancel()
+        advanceTimeBy(10_000)
+        runCurrent()
+        screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+
+        assertEquals(listOf("3.61", "3.60"), vm.rows().map { it.version })
+        assertEquals("3.60", vm.state.value.selected)
+        assertEquals(listOf(1), repository.archiveCalls)
+        screen.cancel()
     }
 }

@@ -3,7 +3,9 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.chec
 import androidx.compose.runtime.Immutable
 import kotlin.time.Duration
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 
@@ -16,6 +18,10 @@ data class FirmwareCheckState(
     val dialog: CheckDialog? = null,
     /** Команда входа в загрузчик не удалась (нет связи, блок не ответил) — баннер над списком. */
     val bootFailed: Boolean = false,
+    /** Модули блока по id — цель входа в загрузчик; карточкам [content] нужны только примитивы. */
+    val modules: Map<Long, FirmwareModule> = emptyMap(),
+    /** CAN блока (единая CAN-прошивка): серверная версия основной программы ищется под него. */
+    val deviceCan: FirmwareCan? = null,
 )
 
 /** Карточка модуля: только примитивы и enum — устойчива для Compose. */

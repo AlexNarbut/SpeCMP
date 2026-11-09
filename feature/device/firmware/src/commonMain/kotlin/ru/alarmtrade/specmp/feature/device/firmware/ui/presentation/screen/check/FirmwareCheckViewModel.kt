@@ -1,22 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 
-import androidx.lifecycle.viewModelScope
-import kotlin.time.Duration
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
@@ -36,7 +24,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
-import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.LegacyBaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
 /**
  * «Проверка прошивки»: модули блока, их версии и версии на сервере, переход в режим обновления.
@@ -55,52 +43,42 @@ class FirmwareCheckViewModel(
     deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
     bootRequester: FirmwareBootRequester,
-    pinCooldown: ServicePinCooldown,
+    private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
-) : LegacyBaseDeviceViewModel(deviceSession) {
+) : BaseDeviceViewModel<FirmwareCheckState, Nothing>(deviceSession, FirmwareCheckState()) {
 
     private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
 
-    private val _state = MutableStateFlow(FirmwareCheckState())
-
-    // Модули блока по id: из них берётся цель входа в загрузчик. Карточки в state — только примитивы.
-    private val modules = MutableStateFlow<Map<Long, FirmwareModule>>(emptyMap())
-
-    // CAN блока (единая CAN-прошивка): серверная версия основной программы ищется под него.
-    private val deviceCan = MutableStateFlow<FirmwareCan?>(null)
-
-    // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
-    private val pinLock: Flow<Duration?> =
-        pinCooldown.lockedFor(_state.map { state -> state.deviceId.takeIf { state.dialog is CheckDialog.Pin } })
-
-    val state: StateFlow<FirmwareCheckState> = combine(_state, pinLock) { state, lock ->
-        state.copy(dialog = state.dialog.withPinLock(lock))
+    override suspend fun onStart() {
+        onEachDeviceReady(::onDeviceReady)
+        // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
+        pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
+            .collectIntoState { lock -> copy(dialog = dialog.withPinLock(lock)) }
     }
-        .launchOnFirstStart { onEachDeviceReady(::onDeviceReady) }
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
-        val previous = _state.value
-        _state.update { it.copy(deviceName = device.systemName, deviceId = device.systemId) }
-        deviceCan.update { device.can.toFirmwareCan() }
+        val previous = currentState
+        reduce {
+            copy(deviceName = device.systemName, deviceId = device.systemId, deviceCan = device.can.toFirmwareCan())
+        }
         val sameDevice = previous.deviceId == device.systemId
         if (!sameDevice || previous.content !is LCEState.Content) load(device)
     }
 
     private suspend fun load(device: AlarmDevice) = executeWithProceedLock {
         val transport = deviceSession.transport.value ?: return@executeWithProceedLock
-        _state.update { it.copy(content = LCEState.Loading, dialog = null, bootFailed = false) }
-        val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }
-        when (response) {
-            is Response.Error -> _state.update {
-                it.copy(content = LCEState.Error(FirmwareError.from(response.exception)))
-            }
+        reduce { copy(content = LCEState.Loading, dialog = null, bootFailed = false) }
+        when (val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }) {
+            is Response.Error -> reduce { copy(content = LCEState.Error(FirmwareError.from(response.exception))) }
 
             is Response.Success -> {
                 val list = response.value
-                modules.update { list.associateBy { module -> module.id } }
-                _state.update { it.copy(content = LCEState.Content(list.map(::initialCard))) }
+                reduce {
+                    copy(
+                        modules = list.associateBy { module -> module.id },
+                        content = LCEState.Content(list.map(::initialCard)),
+                    )
+                }
                 // Через launchOnDevice: чтение модулей и запросы версий отменяются при потере связи
                 // и не пишут в карточки нового блока.
                 list.forEach { module -> launchOnDevice { resolveModule(device, module) } }
@@ -133,8 +111,7 @@ class FirmwareCheckViewModel(
             -> CurrentVersionUi.Known(device.displayFirmwareVersion)
 
             FirmwareModuleKind.BluetoothModule -> {
-                val response = withContext(dispatchers.io) { deviceSession.readBluetoothModule() }
-                when (response) {
+                when (val response = withContext(dispatchers.io) { deviceSession.readBluetoothModule() }) {
                     is Response.Success -> CurrentVersionUi.Known(response.value.manufacturer.mainFirmwareVersion)
                     is Response.Error -> CurrentVersionUi.Absent
                 }
@@ -153,16 +130,17 @@ class FirmwareCheckViewModel(
 
     /** Серверная версия модуля в текущем канале; ответ прежнего канала отбрасывается. */
     private suspend fun lookup(moduleId: Long) {
-        val channel = _state.value.channel
+        val start = currentState
+        val channel = start.channel
         updateCard(moduleId) { it.copy(status = CardStatusUi.Searching) }
         // CAN-фильтр — только у основной программы сигнализации: прошивки остальных модулей к CAN-коду не привязаны.
-        val can = deviceCan.value.takeIf { modules.value[moduleId]?.kind == FirmwareModuleKind.AlarmMain }
+        val can = start.deviceCan.takeIf { start.modules[moduleId]?.kind == FirmwareModuleKind.AlarmMain }
         val response = withContext(dispatchers.io) { repository.latest(moduleId, channel, can) }
-        _state.update { state ->
-            if (state.channel != channel) {
-                state
+        reduce {
+            if (this.channel != channel) {
+                this
             } else {
-                state.withCard(moduleId) { card -> card.copy(status = statusOf(response, card.currentVersion)) }
+                withCard(moduleId) { card -> card.copy(status = statusOf(response, card.currentVersion)) }
             }
         }
     }
@@ -188,8 +166,8 @@ class FirmwareCheckViewModel(
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        if (_state.value.channel == channel) return
-        _state.update { it.copy(channel = channel, bootFailed = false) }
+        if (currentState.channel == channel) return
+        reduce { copy(channel = channel, bootFailed = false) }
         // Модули, у которых версия ещё читается, сами запросят сервер уже по новому каналу.
         cards().filter { it.status !is CardStatusUi.NotSupported && it.currentVersion !is CurrentVersionUi.Reading }
             .forEach { card -> launchOnDevice { lookup(card.id) } }
@@ -204,61 +182,61 @@ class FirmwareCheckViewModel(
 
     fun onDescriptionClick(moduleId: Long) {
         val status = cards().firstOrNull { it.id == moduleId }?.status as? CardStatusUi.UpdateAvailable ?: return
-        _state.update { it.copy(dialog = CheckDialog.Description(moduleId, status.version, status.description)) }
+        reduce { copy(dialog = CheckDialog.Description(moduleId, status.version, status.description)) }
     }
 
     fun onUpdateClick(moduleId: Long) {
-        if (modules.value[moduleId]?.isBootSupported != true) return
-        _state.update { it.copy(dialog = CheckDialog.ConfirmBoot(moduleId), bootFailed = false) }
+        if (currentState.modules[moduleId]?.isBootSupported != true) return
+        reduce { copy(dialog = dialog.replacedBy(CheckDialog.ConfirmBoot(moduleId)), bootFailed = false) }
     }
 
     fun onDialogDismiss() {
-        _state.update { state -> if (state.dialog.isSending()) state else state.copy(dialog = null) }
+        reduce { if (dialog.isSending()) this else copy(dialog = null) }
     }
 
     /** «Перейти» в диалоге подтверждения: без PIN — SDK сам пробует сохранённый или `1111`. */
     fun onConfirmBoot() {
-        val dialog = _state.value.dialog as? CheckDialog.ConfirmBoot ?: return
+        val dialog = currentState.dialog as? CheckDialog.ConfirmBoot ?: return
         startBoot(dialog.moduleId, pin = null)
     }
 
     /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи оно не попадает. */
     fun onPinSubmit(pin: String) {
-        val dialog = _state.value.dialog as? CheckDialog.Pin ?: return
+        val dialog = currentState.dialog as? CheckDialog.Pin ?: return
         val servicePin = ServicePin.parseOrNull(pin) ?: return
         startBoot(dialog.moduleId, servicePin)
     }
 
     private fun startBoot(moduleId: Long, pin: ServicePin?) {
-        safeLaunch { executeWithProceedLock { enterBootMode(moduleId, pin) } }
+        intent { executeWithProceedLock { enterBootMode(moduleId, pin) } }
     }
 
     private suspend fun enterBootMode(moduleId: Long, pin: ServicePin?) {
-        val target = modules.value[moduleId]?.bootTarget ?: return
-        val systemId = _state.value.deviceId ?: return
+        val target = currentState.modules[moduleId]?.bootTarget ?: return
+        val systemId = currentState.deviceId ?: return
         // Пока блок не принимает ввод, ничего не шлём: иначе он продлит блокировку.
         if (bootEntry.isPinLocked(systemId)) {
             showPin(moduleId)
             return
         }
-        _state.update { it.copy(dialog = it.dialog.sending(moduleId, pin != null), bootFailed = false) }
-        val request = FirmwareBootRequest(moduleId, _state.value.channel)
+        reduce { copy(dialog = dialog.replacedBy(dialog.sending(moduleId, pin != null)), bootFailed = false) }
+        val request = FirmwareBootRequest(moduleId, currentState.channel)
         when (bootEntry.enter(request, target, systemId, pin)) {
-            BootEntryResult.Entered -> _state.update { it.copy(dialog = null) }
-            BootEntryResult.Failed -> _state.update { it.copy(dialog = null, bootFailed = true) }
+            BootEntryResult.Entered -> reduce { copy(dialog = null) }
+            BootEntryResult.Failed -> reduce { copy(dialog = null, bootFailed = true) }
             BootEntryResult.PinLocked -> showPin(moduleId)
             BootEntryResult.WrongPin -> showPin(moduleId, wrongPin = pin != null)
         }
     }
 
     private fun showPin(moduleId: Long, wrongPin: Boolean = false) {
-        _state.update { state -> state.copy(dialog = state.dialog.nextPin(moduleId, wrongPin)) }
+        reduce { copy(dialog = dialog.replacedBy(dialog.nextPin(moduleId, wrongPin))) }
     }
 
-    private fun cards(): List<ModuleCardUi> = _state.value.content.content.orEmpty()
+    private fun cards(): List<ModuleCardUi> = currentState.content.content.orEmpty()
 
     private fun updateCard(moduleId: Long, transform: (ModuleCardUi) -> ModuleCardUi) {
-        _state.update { it.withCard(moduleId, transform) }
+        reduce { withCard(moduleId, transform) }
     }
 
     private fun FirmwareCheckState.withCard(
@@ -266,22 +244,6 @@ class FirmwareCheckViewModel(
         transform: (ModuleCardUi) -> ModuleCardUi,
     ): FirmwareCheckState {
         val ready = content as? LCEState.Content ?: return this
-        return copy(
-            content = ready.copy(
-                content = ready.content.map { card ->
-                    if (card.id ==
-                        moduleId
-                    ) {
-                        transform(card)
-                    } else {
-                        card
-                    }
-                },
-            ),
-        )
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
+        return copy(content = ready.copy(content = ready.content.map { if (it.id == moduleId) transform(it) else it }))
     }
 }

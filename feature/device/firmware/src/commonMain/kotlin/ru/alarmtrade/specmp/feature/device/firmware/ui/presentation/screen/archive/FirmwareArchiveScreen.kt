@@ -104,13 +104,12 @@ fun FirmwareArchiveEntry(
         parameters = { parametersOf(request, exporter) },
     )
     val vmState by viewModel.state.collectAsStateWithLifecycle()
-    val canInput by viewModel.canInput.collectAsStateWithLifecycle()
     val hasPicker = vehiclePicker != null
-    val state = remember(vmState, canInput, hasPicker) {
-        vmState.copy(canFilter = vmState.canFilter?.copy(canPickVehicle = hasPicker, input = canInput))
+    val state = remember(vmState, hasPicker) {
+        vmState.copy(canFilter = vmState.canFilter?.copy(canPickVehicle = hasPicker))
     }
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is FirmwareArchiveEffect.Picked -> onPick(effect.version)
         }

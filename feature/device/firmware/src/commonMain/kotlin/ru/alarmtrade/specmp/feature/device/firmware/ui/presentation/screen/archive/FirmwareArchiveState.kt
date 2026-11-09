@@ -122,7 +122,34 @@ data class FirmwareArchiveState(
     val saveTarget: FirmwareSaveTarget = FirmwareSaveTarget.Downloads,
     val canShare: Boolean = false,
     val canOpenFolder: Boolean = false,
+    /** Исходные данные списка и фильтра; поля экрана выше считаются из них (`withSource`). */
+    val source: ArchiveSource = ArchiveSource(),
 )
+
+/** Страницы архива, выбор и CAN-фильтр в том виде, в каком их ведёт VM. */
+@Immutable
+data class ArchiveSource(
+    /** Первая страница: `Content(Unit)` — загружена (строки — в [rows]). */
+    val load: LCEState<Unit, FirmwareError> = LCEState.Loading,
+    val items: List<FirmwareVersion> = emptyList(),
+    /** [items] от новой к старой; пересчитываются только при новом списке версий. */
+    val rows: List<ArchiveRowUi> = emptyList(),
+    val page: Int = 0,
+    val hasMore: Boolean = false,
+    val loadingMore: Boolean = false,
+    val moreError: FirmwareError? = null,
+    /** Ключ выбранной строки ([archiveRowKey]). */
+    val selected: String? = null,
+    /** Ключ версии, ждущей подтверждения отката. */
+    val rollback: String? = null,
+    val moduleId: Long? = null,
+    val noModule: Boolean = false,
+    val canInput: String = "",
+    val canApplied: String? = null,
+    val carTitle: String? = null,
+) {
+    val canLoadMore: Boolean get() = load is LCEState.Content && hasMore && !loadingMore && moreError == null
+}
 
 /** Действия экрана архива (stateless-контент получает их от VM или заглушки в галерее состояний). */
 class FirmwareArchiveActions(
@@ -146,8 +173,3 @@ class FirmwareArchiveActions(
     val onSavedDismiss: () -> Unit = {},
     val onExportErrorDismiss: () -> Unit = {},
 )
-
-sealed interface FirmwareArchiveEffect {
-    /** Выбрана версия для установки — результат архива. */
-    data class Picked(val version: FirmwareVersion) : FirmwareArchiveEffect
-}

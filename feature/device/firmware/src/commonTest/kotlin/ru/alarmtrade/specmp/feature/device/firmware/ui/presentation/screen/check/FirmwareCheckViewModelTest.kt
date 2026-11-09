@@ -111,7 +111,10 @@ class FirmwareCheckViewModelTest {
 
     private lateinit var session: DeviceSession
 
-    private fun TestScope.viewModel(transport: ConnectionTransport = ConnectionTransport.BLE): FirmwareCheckViewModel {
+    private fun TestScope.viewModel(
+        transport: ConnectionTransport = ConnectionTransport.BLE,
+        subscribed: Boolean = true,
+    ): FirmwareCheckViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         session = DeviceSession(
             sessionRepository,
@@ -121,7 +124,7 @@ class FirmwareCheckViewModelTest {
         )
         session.attach(transport)
         val vm = FirmwareCheckViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
         return vm
     }
@@ -456,5 +459,25 @@ class FirmwareCheckViewModelTest {
         viewModel()
 
         assertEquals(listOf<FirmwareCan?>(null), repository.latestCans)
+    }
+
+    @Test
+    fun `returning to the screen keeps the cards without asking the server again`() = test {
+        repository.modulesResult = Response.Success(listOf(alarmModule))
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
+        val vm = viewModel(subscribed = false)
+        var screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        assertIs<CardStatusUi.UpdateAvailable>(vm.card(1).status)
+
+        screen.cancel()
+        advanceTimeBy(10_000)
+        runCurrent()
+        screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+
+        assertIs<CardStatusUi.UpdateAvailable>(vm.card(1).status)
+        assertEquals(1, repository.latestCalls.size)
+        screen.cancel()
     }
 }
