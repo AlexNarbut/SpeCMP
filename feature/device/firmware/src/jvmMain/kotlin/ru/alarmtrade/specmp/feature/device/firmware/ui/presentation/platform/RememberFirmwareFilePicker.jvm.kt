@@ -3,6 +3,8 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import javax.swing.JFileChooser
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -11,7 +13,7 @@ import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_file
 
 @Composable
-actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {
+actual fun rememberFirmwareFilePicker(appScope: CoroutineScope, ioDispatcher: CoroutineDispatcher): FirmwareFilePicker {
     val title = stringResource(Strings.string.app_picker_title_file)
     return remember(title) { DesktopFirmwareFilePicker(title) }
 }

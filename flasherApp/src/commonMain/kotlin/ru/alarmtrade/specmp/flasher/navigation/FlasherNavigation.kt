@@ -17,6 +17,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
+import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -24,6 +26,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file.FirmwareFileScreen
@@ -103,7 +106,11 @@ private fun AuthedNavGraph() {
 private fun DeviceEntry(onExit: () -> Unit) {
     val session = koinInject<DeviceSession>()
     val serial = remember(session) { session.transport.value == ConnectionTransport.SERIAL }
-    val filePicker = rememberFirmwareFilePicker()
+    val filePicker = rememberFirmwareFilePicker(
+        appScope = koinInject(qualifier = appScopeQualifier),
+        ioDispatcher = koinInject<AppDispatchers>().io,
+    )
+    val archivePicker = koinInject<FirmwareArchivePicker>()
     DeviceInteractionHost(
         onExit = onExit,
         bootContent = { exit ->
@@ -113,6 +120,7 @@ private fun DeviceEntry(onExit: () -> Unit) {
                 FirmwareBootGraph(
                     onExit = exit,
                     onOpenSupportChat = {},
+                    archivePicker = archivePicker,
                     filePicker = filePicker,
                     sources = FirmwareSources.FileOnly,
                 )

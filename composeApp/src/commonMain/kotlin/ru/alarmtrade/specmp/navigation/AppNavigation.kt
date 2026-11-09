@@ -21,6 +21,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.ui.navigation.currentRoute
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
@@ -41,7 +42,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypa
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneEntry
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRoute
@@ -75,6 +75,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRoute
+import ru.alarmtrade.specmp.filepicker.rememberAppFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSettingsFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSettingsFileSaver
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
@@ -185,7 +186,8 @@ private fun AuthedNavGraph() {
                         FirmwareBootGraph(
                             onExit = onExit,
                             onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
-                            filePicker = rememberFirmwareFilePicker(),
+                            archivePicker = koinInject(),
+                            filePicker = rememberAppFirmwareFilePicker(),
                             vehiclePicker = { deviceName, onPick, onPickerBack ->
                                 ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
                             },

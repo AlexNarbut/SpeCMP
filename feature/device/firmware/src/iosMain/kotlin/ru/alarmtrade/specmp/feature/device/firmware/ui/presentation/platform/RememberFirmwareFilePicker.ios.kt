@@ -5,6 +5,8 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.uikit.LocalUIViewController
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -26,7 +28,7 @@ import platform.darwin.dispatch_get_main_queue
 import ru.alarmtrade.specmp.core.common.file.safeFileName
 
 @Composable
-actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {
+actual fun rememberFirmwareFilePicker(appScope: CoroutineScope, ioDispatcher: CoroutineDispatcher): FirmwareFilePicker {
     val viewController = LocalUIViewController.current
     return remember(viewController) { IosFirmwareFilePicker(viewController) }
 }

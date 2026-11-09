@@ -531,6 +531,19 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `composables get dependencies from parameters, view models or composition locals`() {
+        scope.files.filterNot { it.isCompositionRoot }
+            .flatMap { it.apiUsages(String::isComposableInjectionName) }
+            .assertFalse(
+                testName = "composable-injection",
+                additionalMessage = "Composable не достаёт зависимости из Koin (koinInject, currentKoinScope, " +
+                    "LocalKoinScope/LocalKoinApplication): данные и действия — через ViewModel (koinViewModel " +
+                    "разрешён), параметр или CompositionLocal, заданный в корне композиции " +
+                    "(${COMPOSITION_ROOTS.joinToString()}). docs/patterns.md, «Внедрение зависимостей»",
+            ) { true }
+    }
+
+    @Test
     fun `classes have no constructor side effects`() {
         classes.assertFalse(
             testName = "no-constructor-side-effects",
@@ -681,6 +694,9 @@ private val MUTABLE_COLLECTION_TYPE =
     Regex("""\b(Mutable\w*|ArrayList|HashMap|HashSet|LinkedHashMap|LinkedHashSet|ArrayDeque)\b""")
 
 private fun String?.isMutableCollectionType(): Boolean = this != null && MUTABLE_COLLECTION_TYPE.containsMatchIn(this)
+
+// Корни композиции: здесь composable собирают граф и передают зависимости дальше параметрами.
+private val COMPOSITION_ROOTS = setOf("composeApp", "flasherApp")
 
 // SDK AlarmTrade — всё под ru.alarmtrade.*, кроме пакетов самого приложения.
 private fun String.isSdkName(): Boolean = startsWith("ru.alarmtrade.") && !startsWith("$ROOT.") && this != ROOT
@@ -907,14 +923,34 @@ private val KoFileDeclaration.mayUseServiceLocator: Boolean
             type.parents().any { it.name.substringBefore('<').substringBefore('(').trim() in ANDROID_ENTRY_POINTS }
         }
 
+private val KoFileDeclaration.isCompositionRoot: Boolean
+    get() = moduleName in COMPOSITION_ROOTS
+
+private fun KoFileDeclaration.serviceLocatorUsages(): List<KoBaseDeclaration> =
+    apiUsages(String::isServiceLocatorName) { name -> "$name." in SERVICE_LOCATOR_PACKAGES }
+
+// Koin-API для зависимостей прямо в composable; `koinViewModel` (org.koin.compose.viewmodel) сюда не входит.
+private val COMPOSABLE_INJECTION_NAMES = setOf(
+    "org.koin.compose.koinInject",
+    "org.koin.compose.currentKoinScope",
+    "org.koin.compose.LocalKoinScope",
+    "org.koin.compose.LocalKoinApplication",
+)
+
+private fun String.isComposableInjectionName(): Boolean = removeSuffix(".*") == "org.koin.compose" ||
+    COMPOSABLE_INJECTION_NAMES.any { this == it || startsWith("$it.") }
+
 /**
- * Декларации верхнего уровня, упоминающие API Koin-локатора (по простому имени/алиасу импорта или полным именем), —
- * чтобы `@Suppress` ставился на объект, а не на файл; импорт со звёздочкой или пакета целиком и неиспользованный
- * импорт возвращаются самим импортом.
+ * Декларации верхнего уровня, упоминающие API (по простому имени/алиасу импорта или полным именем), — чтобы
+ * `@Suppress` ставился на объект, а не на файл; импорт со звёздочкой или пакета целиком ([isPackageImport]) и
+ * неиспользованный импорт возвращаются самим импортом.
  */
-private fun KoFileDeclaration.serviceLocatorUsages(): List<KoBaseDeclaration> {
-    val apiImports = imports.filter { it.name.isServiceLocatorName() }
-    val starImports = apiImports.filter { it.name.endsWith(".*") || "${it.name}." in SERVICE_LOCATOR_PACKAGES }
+private fun KoFileDeclaration.apiUsages(
+    isApiName: (String) -> Boolean,
+    isPackageImport: (String) -> Boolean = { false },
+): List<KoBaseDeclaration> {
+    val apiImports = imports.filter { isApiName(it.name) }
+    val starImports = apiImports.filter { it.name.endsWith(".*") || isPackageImport(it.name) }
     val names = (apiImports - starImports.toSet()).map { it.alias?.name ?: it.name.substringAfterLast('.') }.toSet()
     val usages = (
         classesAndInterfacesAndObjects(includeNested = false) +
@@ -922,7 +958,7 @@ private fun KoFileDeclaration.serviceLocatorUsages(): List<KoBaseDeclaration> {
             properties(includeNested = false)
         ).filter { declaration ->
         val code = declaration.text.stripCommentsAndStrings()
-        QUALIFIED_NAME.findAll(code).any { it.value.isServiceLocatorName() } ||
+        QUALIFIED_NAME.findAll(code).any { isApiName(it.value) } ||
             IDENTIFIER.findAll(code).any { it.value in names }
     }
     return starImports + usages.ifEmpty { apiImports - starImports.toSet() }

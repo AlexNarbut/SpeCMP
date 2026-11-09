@@ -1257,13 +1257,19 @@ val myFeatureModule = module {
     viewModelOf(::MyViewModel)
 }
 
-// В Compose-экранах
+// В Compose-экранах фичи
 val viewModel = koinViewModel<MyViewModel>()
-val dep = koinInject<MyDependency>()
+
+// В корне композиции (composeApp/flasherApp) — и дальше параметром
+FirmwareBootGraph(onExit = onExit, onOpenSupportChat = {}, archivePicker = koinInject())
 ```
 
 **Правила:**
 
+- **`koinInject` — только в корнях композиции `composeApp`/`flasherApp`** (Konsist `composable-injection`): composable
+  фичи получает зависимость параметром из корня, через ViewModel (`koinViewModel` разрешён) или `CompositionLocal`,
+  заданный в корне. Платформенному `remember*` фичи нужное для работы (app-scope, диспетчер) передаёт корень
+  (`rememberFirmwareFilePicker(appScope, ioDispatcher)`).
 - `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
 - **Koin-модуль — `val <name>Module` в пакете `di`** (Konsist `koin-module`), включая `core/*`
   (`core/lifecycle/di/AppLifecycleModule.kt`, `core/specialist/di/SpecialistModule.kt`).

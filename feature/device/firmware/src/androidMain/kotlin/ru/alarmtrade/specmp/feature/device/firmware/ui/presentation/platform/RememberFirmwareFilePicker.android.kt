@@ -8,15 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.compose.koinInject
-import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.common.file.copyToCache
 import ru.alarmtrade.specmp.core.common.file.queryNameAndSize
 import ru.alarmtrade.specmp.core.common.file.safeFileName
@@ -33,10 +31,8 @@ private val logger = Logger.withTag("FirmwareFilePicker")
 
 /** SAF (`OpenDocument`): документ копируется во временный файл в `cacheDir` — SDK принимает путь, не `content://`. */
 @Composable
-actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {
+actual fun rememberFirmwareFilePicker(appScope: CoroutineScope, ioDispatcher: CoroutineDispatcher): FirmwareFilePicker {
     val appContext = LocalContext.current.applicationContext
-    val dispatchers = koinInject<AppDispatchers>()
-    val appScope = koinInject<CoroutineScope>(qualifier = appScopeQualifier)
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) {
@@ -44,7 +40,7 @@ actual fun rememberFirmwareFilePicker(): FirmwareFilePicker {
         } else {
             // Копирование — вне main-потока.
             appScope.launch {
-                val result = withContext(dispatchers.io) { uri.copyToCache(appContext) }
+                val result = withContext(ioDispatcher) { uri.copyToCache(appContext) }
                 FirmwarePickerResults.channel.trySend(result)
             }
         }

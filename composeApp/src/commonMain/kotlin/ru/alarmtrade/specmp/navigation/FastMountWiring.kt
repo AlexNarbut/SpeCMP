@@ -8,6 +8,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
@@ -19,7 +20,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clon
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
@@ -50,6 +50,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
+import ru.alarmtrade.specmp.filepicker.rememberAppFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 
 /** Куда уйти после закрытия сессии блока. */
@@ -75,7 +76,8 @@ internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
             FirmwareBootGraph(
                 onExit = onExit,
                 onOpenSupportChat = onOpenSupportChat,
-                filePicker = rememberFirmwareFilePicker(),
+                archivePicker = koinInject(),
+                filePicker = rememberAppFirmwareFilePicker(),
                 vehiclePicker = { deviceName, onPick, onPickerBack ->
                     ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
                 },

@@ -16,7 +16,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
@@ -51,6 +50,7 @@ private val navConfig = SavedStateConfiguration {
  *
  * @param onExit выход из всего flow (закрывает сессию); на экране обновления вызывается после подтверждения.
  * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
+ * @param archivePicker канал версии, выбранной в архиве, к экрану обновления (singleton Koin из корня композиции).
  * @param filePicker выбор файла прошивки в файловом менеджере (платформа, `composeApp`).
  * @param vehiclePicker выбор автомобиля для CAN-фильтра архива (фича `vehicle-ui`, `composeApp`);
  *   `null` — без каталога.
@@ -60,12 +60,12 @@ private val navConfig = SavedStateConfiguration {
 fun FirmwareBootGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
+    archivePicker: FirmwareArchivePicker,
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
     vehiclePicker: ArchiveVehiclePicker? = null,
     sources: FirmwareSources = FirmwareSources.All,
 ) {
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
-    val archivePicker = koinInject<FirmwareArchivePicker>()
 
     NavDisplay(
         backStack = backStack,
