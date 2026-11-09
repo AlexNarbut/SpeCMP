@@ -91,9 +91,8 @@ private val ListMaxWidth = 760.dp
 fun FirmwareSystemsEntry(onPick: (FirmwareArchiveRequest) -> Unit, onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareSystemsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val query by viewModel.query.collectAsStateWithLifecycle()
     FirmwareSystemsContent(
-        state = state.copy(query = query),
+        state = state,
         onBack = onBack,
         onQueryChange = viewModel::onQueryChange,
         onToggle = viewModel::onToggle,

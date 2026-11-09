@@ -93,9 +93,3 @@ class SerialFirmwareActions(
     val onCancelConfirm: () -> Unit = {},
     val onResultOk: () -> Unit = {},
 )
-
-/** Одноразовые события экрана прошивки по COM. */
-sealed interface SerialFirmwareEffect {
-    /** Выйти из flow устройства (сессию закрывает хост). */
-    data object Exit : SerialFirmwareEffect
-}

@@ -243,4 +243,26 @@ class SerialFirmwareViewModelTest {
         assertEquals(FileError.TooLarge, viewModel.state.value.fileError)
         viewModel.viewModelScope.cancel()
     }
+
+    @Test
+    fun `back is ignored during the update and exits otherwise`() = test {
+        val repository = FakeSerialRepository()
+        val viewModel = viewModel(repository)
+        val effects = mutableListOf<SerialFirmwareEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { viewModel.sideEffect.collect { effects += it } }
+        runCurrent()
+        pickAndConfirm(viewModel)
+
+        viewModel.onBack()
+        runCurrent()
+        assertEquals(emptyList(), effects)
+
+        repository.progress.send(SerialFirmwareProgress.Finished)
+        repository.progress.close()
+        runCurrent()
+        viewModel.onBack()
+        runCurrent()
+        assertEquals(listOf<SerialFirmwareEffect>(SerialFirmwareEffect.Exit), effects)
+        viewModel.viewModelScope.cancel()
+    }
 }

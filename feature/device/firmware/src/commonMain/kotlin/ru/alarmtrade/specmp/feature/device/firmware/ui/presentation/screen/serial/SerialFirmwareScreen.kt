@@ -105,7 +105,7 @@ fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = No
     val viewModel = koinViewModel<SerialFirmwareViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             SerialFirmwareEffect.Exit -> onExit()
         }

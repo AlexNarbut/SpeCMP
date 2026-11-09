@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file
 
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
 
@@ -22,6 +23,8 @@ data class FirmwareFileState(
     val dialog: CheckDialog? = null,
     /** Команда входа в загрузчик не удалась — баннер. */
     val bootFailed: Boolean = false,
+    /** Цель входа в загрузчик (основная программа блока); экрану нужен только [FileTarget.Supported.moduleId]. */
+    val module: FirmwareModule? = null,
 )
 
 /** Действия экрана «Обновить из файла» (stateless-контент получает их от VM или заглушки в галерее состояний). */

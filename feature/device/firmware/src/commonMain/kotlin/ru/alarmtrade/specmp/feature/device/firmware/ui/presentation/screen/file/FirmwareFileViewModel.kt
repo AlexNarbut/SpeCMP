@@ -1,22 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file
 
-import androidx.lifecycle.viewModelScope
-import kotlin.time.Duration
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.BootEntryResult
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootEntry
@@ -26,6 +14,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.Firmwa
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.isSending
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.nextPin
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.replacedBy
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.sending
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.withPinLock
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -34,7 +23,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
-import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.LegacyBaseDeviceViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
 /**
  * «Обновить из файла» (приложение прошивки, BLE/USB): блок в рабочем режиме, одна кнопка — переход основной программы
@@ -49,32 +38,23 @@ class FirmwareFileViewModel(
     deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
     bootRequester: FirmwareBootRequester,
-    pinCooldown: ServicePinCooldown,
+    private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
-) : LegacyBaseDeviceViewModel(deviceSession) {
+) : BaseDeviceViewModel<FirmwareFileState, Nothing>(deviceSession, FirmwareFileState()) {
 
     private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
 
-    private val _state = MutableStateFlow(FirmwareFileState())
-
-    // Цель входа в загрузчик: в state — только id модуля.
-    private val module = MutableStateFlow<FirmwareModule?>(null)
-
-    // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
-    private val pinLock: Flow<Duration?> =
-        pinCooldown.lockedFor(_state.map { state -> state.deviceId.takeIf { state.dialog is CheckDialog.Pin } })
-
-    val state: StateFlow<FirmwareFileState> = combine(_state, pinLock) { state, lock ->
-        state.copy(dialog = state.dialog.withPinLock(lock))
+    override suspend fun onStart() {
+        onEachDeviceReady(::onDeviceReady)
+        // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
+        pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
+            .collectIntoState { lock -> copy(dialog = dialog.withPinLock(lock)) }
     }
-        .launchOnFirstStart { onEachDeviceReady(::onDeviceReady) }
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
-        val previous = _state.value
-        _state.update {
-            it.copy(
+        val previous = currentState
+        reduce {
+            copy(
                 deviceName = device.systemName,
                 deviceId = device.systemId,
                 firmwareVersion = device.displayFirmwareVersion,
@@ -85,18 +65,14 @@ class FirmwareFileViewModel(
 
     private suspend fun load(device: AlarmDevice) = executeWithProceedLock {
         val transport = deviceSession.transport.value ?: return@executeWithProceedLock
-        _state.update { it.copy(target = LCEState.Loading, dialog = null, bootFailed = false) }
-        val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }
-        when (response) {
-            is Response.Error -> _state.update {
-                it.copy(target = LCEState.Error(FirmwareError.from(response.exception)))
-            }
+        reduce { copy(target = LCEState.Loading, dialog = null, bootFailed = false) }
+        when (val response = withContext(dispatchers.io) { repository.modules(device.systemName, transport) }) {
+            is Response.Error -> reduce { copy(target = LCEState.Error(FirmwareError.from(response.exception))) }
 
             is Response.Success -> {
                 val main = response.value.firstOrNull { it.bootTarget == BootModeTarget.MainProgram }
-                module.update { main }
                 val target = main?.let { FileTarget.Supported(it.id) } ?: FileTarget.NotSupported
-                _state.update { it.copy(target = LCEState.Content(target)) }
+                reduce { copy(module = main, target = LCEState.Content(target)) }
             }
         }
     }
@@ -107,55 +83,51 @@ class FirmwareFileViewModel(
     }
 
     fun onUpdateClick() {
-        val moduleId = module.value?.id ?: return
-        _state.update { it.copy(dialog = CheckDialog.ConfirmBoot(moduleId), bootFailed = false) }
+        val moduleId = currentState.module?.id ?: return
+        reduce { copy(dialog = dialog.replacedBy(CheckDialog.ConfirmBoot(moduleId)), bootFailed = false) }
     }
 
     fun onDialogDismiss() {
-        _state.update { state -> if (state.dialog.isSending()) state else state.copy(dialog = null) }
+        reduce { if (dialog.isSending()) this else copy(dialog = null) }
     }
 
     /** «Перейти» в диалоге подтверждения: без PIN — SDK сам пробует сохранённый или `1111`. */
     fun onConfirmBoot() {
-        if (_state.value.dialog !is CheckDialog.ConfirmBoot) return
+        if (currentState.dialog !is CheckDialog.ConfirmBoot) return
         startBoot(pin = null)
     }
 
     /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи оно не попадает. */
     fun onPinSubmit(pin: String) {
-        if (_state.value.dialog !is CheckDialog.Pin) return
+        if (currentState.dialog !is CheckDialog.Pin) return
         val servicePin = ServicePin.parseOrNull(pin) ?: return
         startBoot(servicePin)
     }
 
     private fun startBoot(pin: ServicePin?) {
-        safeLaunch { executeWithProceedLock { enterBootMode(pin) } }
+        intent { executeWithProceedLock { enterBootMode(pin) } }
     }
 
     private suspend fun enterBootMode(pin: ServicePin?) {
-        val target = module.value ?: return
+        val target = currentState.module ?: return
         val bootTarget = target.bootTarget ?: return
-        val systemId = _state.value.deviceId ?: return
+        val systemId = currentState.deviceId ?: return
         if (bootEntry.isPinLocked(systemId)) {
             showPin(target.id)
             return
         }
-        _state.update { it.copy(dialog = it.dialog.sending(target.id, pin != null), bootFailed = false) }
+        reduce { copy(dialog = dialog.replacedBy(dialog.sending(target.id, pin != null)), bootFailed = false) }
         // Канал на экране загрузчика с файлом не используется — запрос несёт только модуль.
         val request = FirmwareBootRequest(target.id, FirmwareChannel.RELEASE)
         when (bootEntry.enter(request, bootTarget, systemId, pin)) {
-            BootEntryResult.Entered -> _state.update { it.copy(dialog = null) }
-            BootEntryResult.Failed -> _state.update { it.copy(dialog = null, bootFailed = true) }
+            BootEntryResult.Entered -> reduce { copy(dialog = null) }
+            BootEntryResult.Failed -> reduce { copy(dialog = null, bootFailed = true) }
             BootEntryResult.PinLocked -> showPin(target.id)
             BootEntryResult.WrongPin -> showPin(target.id, wrongPin = pin != null)
         }
     }
 
     private fun showPin(moduleId: Long, wrongPin: Boolean = false) {
-        _state.update { state -> state.copy(dialog = state.dialog.nextPin(moduleId, wrongPin)) }
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
+        reduce { copy(dialog = dialog.replacedBy(dialog.nextPin(moduleId, wrongPin))) }
     }
 }

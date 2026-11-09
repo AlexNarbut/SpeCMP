@@ -21,3 +21,7 @@ internal fun CheckDialog?.nextPin(moduleId: Long, wrongPin: Boolean): CheckDialo
     val wrongCount = (previous?.wrongCount ?: 0) + if (wrongPin) 1 else 0
     return CheckDialog.Pin(moduleId, wrong = wrongPin, wrongCount = wrongCount)
 }
+
+/** [next] вместо текущего диалога; отсчёт блокировки идёт отдельным потоком — новый диалог PIN его сохраняет. */
+internal fun CheckDialog?.replacedBy(next: CheckDialog?): CheckDialog? =
+    next.withPinLock((this as? CheckDialog.Pin)?.lockedFor)
