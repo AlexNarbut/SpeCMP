@@ -12,7 +12,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypa
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassPhase
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassState
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 /** Состояния экрана «Бесключевой обход» (макет B1–B8, X1, X3); PNG — в `build/state-gallery/autostart`. */
 class BypassGallery {
@@ -89,6 +89,6 @@ class BypassGallery {
     @Test
     fun exit() = render(
         "17_exit",
-        step(BypassStepKind.ACTION, BypassSubject.ENGINE_START).copy(dialog = BypassDialog.Exit)
+        step(BypassStepKind.ACTION, BypassSubject.ENGINE_START).copy(dialog = BypassDialog.Exit),
     )
 }

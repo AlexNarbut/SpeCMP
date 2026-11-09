@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -21,9 +22,9 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.ApiError
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
@@ -38,7 +39,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CatalogQuery
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
-import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
+import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesRepository
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
@@ -46,7 +47,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 
 class VehicleSelectViewModelTest {
 
-    // Unconfined: state — stateIn поверх _state, значение доходит сразу после интента (без runCurrent в каждом шаге).
+    // Unconfined: значение state доходит сразу после интента (без runCurrent в каждом шаге).
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeCatalog()
     private val recent = FakeRecent()
@@ -71,16 +72,16 @@ class VehicleSelectViewModelTest {
         catalog: VehicleCatalog = VehicleCatalog.ALL,
         device: VehicleDeviceFilter? = VehicleDeviceFilter.Device("DX-9X"),
         firmwareCanCode: String? = null,
-        warnOnCanMismatch: Boolean = false
+        warnOnCanMismatch: Boolean = false,
     ): Pair<VehicleSelectViewModel, MutableList<VehicleSelectEffect>> {
         val vm = VehicleSelectViewModel(
             request = VehicleSelectRequest(mode, catalog, device, firmwareCanCode, warnOnCanMismatch),
             repository = repository,
-            recentStore = recent,
-            dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+            recentRepository = recent,
+            dispatchers = testDispatchers(dispatcher),
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         // Как экран: state стартует работу по подписке (stateIn).
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         advanceUntilIdle()
@@ -187,6 +188,24 @@ class VehicleSelectViewModelTest {
     }
 
     @Test
+    fun `a newer brand pick cancels the stale models load`() = test {
+        val stale = CompletableDeferred<Unit>()
+        repository.modelGates[FakeCatalog.toyota.id] = stale
+        val (vm, _) = viewModel()
+        vm.onBrandPick(FakeCatalog.toyota)
+        advanceUntilIdle()
+        assertEquals(LCEState.Loading, vm.s.models)
+
+        vm.onBrandPick(FakeCatalog.kia)
+        advanceUntilIdle()
+        stale.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(FakeCatalog.kia, vm.s.selection.brand)
+        assertEquals(FakeCatalog.kiaModels, vm.s.models.content)
+    }
+
+    @Test
     fun `connection failure is kept as a network error`() = test {
         repository.failure = AppException(ApiError.NoConnection, IllegalStateException("offline"))
         repository.failBrands = true
@@ -230,6 +249,20 @@ class VehicleSelectViewModelTest {
         assertEquals(FakeCatalog.toyota, vm.s.selection.brand)
         assertEquals(FakeCatalog.camry, vm.s.selection.model)
         assertNull(vm.s.combo)
+    }
+
+    @Test
+    fun `clearing the brand and model query drops the combo`() = test {
+        val (vm, _) = viewModel()
+        vm.onQueryChange("toyota cam")
+        advanceUntilIdle()
+        assertEquals(FakeCatalog.models, vm.s.comboModels.content)
+
+        vm.onQueryChange("")
+
+        assertEquals("", vm.s.query)
+        assertNull(vm.s.combo)
+        assertEquals(LCEState.None, vm.s.comboModels)
     }
 
     @Test
@@ -284,7 +317,7 @@ class VehicleSelectViewModelTest {
         runCurrent()
 
         assertEquals(listOf<VehicleSelectEffect>(VehicleSelectEffect.Picked(FakeCatalog.camrySummary)), effects)
-        assertEquals(listOf(FakeCatalog.camrySummary), recent.recent(VehicleCatalog.ALL))
+        assertEquals(listOf(FakeCatalog.camrySummary), recent.items(VehicleCatalog.ALL))
     }
 
     @Test
@@ -376,14 +409,17 @@ private class FakeCatalog : VehicleCatalogRepository {
     var failBrands = false
     var failModels = false
     var failure: Throwable = IllegalStateException("server")
+    val modelGates = mutableMapOf<Int, CompletableDeferred<Unit>>()
 
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> {
         brandQueries += query
         return if (failBrands) error() else Response.Success(brands)
     }
 
-    override suspend fun models(query: CatalogQuery, brandId: Int): Response<List<CarModel>> =
-        if (failModels) error() else Response.Success(models)
+    override suspend fun models(query: CatalogQuery, brandId: Int): Response<List<CarModel>> {
+        modelGates[brandId]?.await()
+        return if (failModels) error() else Response.Success(if (brandId == kia.id) kiaModels else models)
+    }
 
     override suspend fun trims(query: CatalogQuery, modelId: Int): Response<List<CarTrim>> =
         Response.Success(if (modelId == camry.id) camryTrims else listOf(corollaTrim))
@@ -394,7 +430,7 @@ private class FakeCatalog : VehicleCatalogRepository {
     override suspend fun findByCanCode(
         canCode: String,
         device: VehicleDeviceFilter?,
-        groups: Set<CarFeatureGroup>
+        groups: Set<CarFeatureGroup>,
     ): Response<List<CarSummary>> {
         canQueries += canCode
         return Response.Success(
@@ -402,7 +438,7 @@ private class FakeCatalog : VehicleCatalogRepository {
                 "2154" -> listOf(camrySummary)
                 "1032" -> listOf(camrySummary.copy(id = 41), camrySummary.copy(id = 42))
                 else -> emptyList()
-            }
+            },
         )
     }
 
@@ -414,7 +450,9 @@ private class FakeCatalog : VehicleCatalogRepository {
 
     companion object {
         val toyota = CarBrand(1, "Toyota", null)
-        val brands = listOf(CarBrand(2, "Kia", null), toyota)
+        val kia = CarBrand(2, "Kia", null)
+        val brands = listOf(kia, toyota)
+        val kiaModels = listOf(CarModel(20, "Rio", null, 2015..2020))
         val camry = CarModel(10, "Camry", null, 2017..2023)
         val corolla = CarModel(11, "Corolla", null, 2018..2022)
         val models = listOf(camry, corolla)
@@ -428,29 +466,32 @@ private class FakeCatalog : VehicleCatalogRepository {
             keylessBypass = CarCapability.NoData,
             notes = emptyList(),
             features = listOf(
-                CarFeature("Двери", null, CarFeatureGroup.MAIN, emptyList(), emptyList())
+                CarFeature("Двери", null, CarFeatureGroup.MAIN, emptyList(), emptyList()),
             ),
             mountPoints = emptyList(),
             schemes = emptyList(),
             mountingMaps = emptyList(),
             userManuals = emptyList(),
-            hasUserManuals = false
+            hasUserManuals = false,
         )
     }
 }
 
-private class FakeRecent : RecentVehiclesStore {
+private class FakeRecent : RecentVehiclesRepository {
     private val items = mutableMapOf<VehicleCatalog, List<CarSummary>>()
 
-    override fun recent(catalog: VehicleCatalog): List<CarSummary> = items[catalog].orEmpty()
+    fun items(catalog: VehicleCatalog): List<CarSummary> = items[catalog].orEmpty()
 
-    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): List<CarSummary> {
-        items[catalog] = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
+    override suspend fun recent(catalog: VehicleCatalog): Response<List<CarSummary>> = Response.Success(items(catalog))
+
+    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): Response<List<CarSummary>> {
+        items[catalog] =
+            (listOf(car) + items(catalog).filter { it.id != car.id }).take(RecentVehiclesRepository.MAX_RECENT)
         return recent(catalog)
     }
 
-    override suspend fun remove(catalog: VehicleCatalog, carId: Int): List<CarSummary> {
-        items[catalog] = recent(catalog).filter { it.id != carId }
+    override suspend fun remove(catalog: VehicleCatalog, carId: Int): Response<List<CarSummary>> {
+        items[catalog] = items(catalog).filter { it.id != carId }
         return recent(catalog)
     }
 }

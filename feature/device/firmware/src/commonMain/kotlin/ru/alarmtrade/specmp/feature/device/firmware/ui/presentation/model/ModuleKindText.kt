@@ -18,7 +18,6 @@ import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_ki
 import ru.alarmtrade.specmp.core.localization.resources.firmware_common_value_kind_watch_main
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 
-/** Название типа модуля («Базовый блок сигнализации» и т.д.). */
 // Таблица соответствия типов: сложность — число веток, делить нечего
 @Suppress("CyclomaticComplexMethod")
 internal fun FirmwareModuleKind.titleRes(): StringResource = when (this) {

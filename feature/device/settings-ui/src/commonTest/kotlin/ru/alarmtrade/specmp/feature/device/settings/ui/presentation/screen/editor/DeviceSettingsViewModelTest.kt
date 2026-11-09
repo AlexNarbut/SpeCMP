@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -14,9 +15,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -26,25 +26,21 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
-import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
-import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
+import ru.alarmtrade.specmp.feature.configurator.testing.FakeLocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
@@ -67,8 +63,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
@@ -91,7 +87,7 @@ class DeviceSettingsViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = emptySet(),
-        can = null
+        can = null,
     )
 
     private val shock = SwitchSetting(11, "3.2.1", "Датчик удара", null, SettingValue.Switch(false), null, null)
@@ -102,7 +98,7 @@ class DeviceSettingsViewModelTest {
         SettingValue.Input(InputValue(listOf(true, false), InputContactType.NORMALLY_OPEN)),
         Channel(1, "IN1", emptyList()), Polarity.MINUS,
         availableLogics = listOf(ChannelLogic(0, "Двери", null), ChannelLogic(1, "Багажник", null)),
-        enabledLogics = emptyList()
+        enabledLogics = emptyList(),
     )
     private fun channel(id: Int, on: Boolean) = SwitchOutputSetting(
         id,
@@ -112,7 +108,7 @@ class DeviceSettingsViewModelTest {
         SettingValue.SwitchOutput(on),
         Channel(id, "CH$id", emptyList()),
         Polarity.MINUS,
-        emptyList()
+        emptyList(),
     )
     private val timerChannels =
         SettingsSection(50, "4.1.1", "Выбор канала", null, listOf(channel(51, true), channel(52, false)))
@@ -121,16 +117,16 @@ class DeviceSettingsViewModelTest {
         "",
         "",
         null,
-        listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors)), door, timerChannels, can)
+        listOf(SettingsSection(1, "3", "Охрана", null, listOf(sensors)), door, timerChannels, can),
     )
     private val can get() = CanCodeSetting(61, "6.1", "CAN-код", null, SettingValue.Can(CanCode("2154", 17)))
 
     private val repository = FakeSettingsRepository(tree)
-    private val sessionRepository = FakeSessionRepository(device)
+    private val sessionRepository = FakeDeviceSessionRepository(device)
     private val preferences = FakePreferences()
     private val singleCanDevice = device.copy(can = CanInfo(firmwareVersion = "1.0", code = "2154", isFactory = false))
     private val cars = FakeCars()
-    private val local = FakeLocalConfigurations()
+    private val local = FakeLocalConfigurationsRepository()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -148,23 +144,21 @@ class DeviceSettingsViewModelTest {
 
     private fun TestScope.viewModel(
         source: SettingsSource = SettingsSource.Device,
-        options: SettingsEditorOptions = SettingsEditorOptions()
+        options: SettingsEditorOptions = SettingsEditorOptions(),
     ): DeviceSettingsViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
-        val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+        val dispatchers = testDispatchers(dispatcher)
         // USB: без чтения Bluetooth-модуля при подключении.
-        session.attach(ConnectionTransport.USB)
+        val session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.USB)
         val vm = DeviceSettingsViewModel(
             source,
             options,
+            repository,
             repository,
             local,
             preferences,
             cars,
             session,
-            backgroundScope,
-            dispatchers
+            dispatchers,
         )
             .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
@@ -201,7 +195,7 @@ class DeviceSettingsViewModelTest {
         repository.snapshotTree = tree.replace(shock.copy(value = SettingValue.Switch(true)))
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onLoadRequest()
         assertEquals(SettingsDialog.LoadSources, vm.state.value.dialog)
@@ -305,7 +299,7 @@ class DeviceSettingsViewModelTest {
 
         assertEquals(
             listOf<Pair<String, SettingsSource>>("Нива без автозапуска" to SettingsSource.Device),
-            local.created
+            local.createCalls,
         )
         assertNull(vm.state.value.saveForm)
     }
@@ -410,7 +404,7 @@ class DeviceSettingsViewModelTest {
     fun `write saves to the device, resets changes and reports the count`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         vm.onValueChange(11, SettingValue.Switch(true))
         settle()
 
@@ -442,7 +436,7 @@ class DeviceSettingsViewModelTest {
     fun `exit with changes asks for confirmation, without changes exits`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onExitRequest()
         runCurrent()
@@ -496,7 +490,7 @@ class DeviceSettingsViewModelTest {
         vm.onSettingClick(41)
         assertEquals(
             SettingValue.Input(InputValue(listOf(true, false), InputContactType.NORMALLY_OPEN)),
-            vm.state.value.editing?.original
+            vm.state.value.editing?.original,
         )
         val draft = SettingValue.Input(InputValue(listOf(true, true), InputContactType.NORMALLY_CLOSED))
         vm.onDraftChange(draft)
@@ -585,7 +579,7 @@ class DeviceSettingsViewModelTest {
     fun `factory reset asks for confirmation, resets the unit and reads the menu again`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         vm.onValueChange(11, SettingValue.Switch(true))
         settle()
 
@@ -607,7 +601,7 @@ class DeviceSettingsViewModelTest {
     fun `repeated taps do not repeat a reset, a write with exit or a copy`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onResetRequest()
         vm.onResetConfirm()
@@ -625,13 +619,13 @@ class DeviceSettingsViewModelTest {
         assertEquals(1, effects.count { it is DeviceSettingsEffect.Exit })
 
         val copying = CompletableDeferred<Unit>()
-        local.gate = copying
+        local.createGate = copying
         vm.onCopyRequest("Копия")
         vm.onCopyRequest("Копия")
         assertTrue(vm.state.value.isSaving)
         copying.complete(Unit)
         settle()
-        assertEquals(1, local.created.size)
+        assertEquals(1, local.createCalls.size)
         assertEquals(false, vm.state.value.isSaving)
     }
 
@@ -654,7 +648,7 @@ class DeviceSettingsViewModelTest {
         sessionRepository.device = singleCanDevice
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onSettingClick(61)
         assertNull(vm.state.value.editing)
@@ -670,7 +664,7 @@ class DeviceSettingsViewModelTest {
         sessionRepository.device = singleCanDevice
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         vm.onValueChange(11, SettingValue.Switch(true))
         settle()
 
@@ -691,10 +685,125 @@ class DeviceSettingsViewModelTest {
 
         assertEquals(listOf(12), vm.state.value.searchHits.map { it.node.id })
     }
+
+    @Test
+    fun `typed query reaches the state together with its hits`() = test {
+        val vm = viewModel()
+        vm.onSearchQueryChange("3.2.4")
+        runCurrent()
+
+        assertEquals("", vm.state.value.searchQuery)
+        assertTrue(vm.state.value.searchHits.isEmpty())
+
+        settle()
+        assertEquals("3.2.4", vm.state.value.searchQuery)
+        assertEquals(listOf(12), vm.state.value.searchHits.map { it.node.id })
+    }
+
+    @Test
+    fun `configuration is read once and does not follow the unit connection`() = test {
+        val vm = viewModel(SettingsSource.LocalConfiguration(3, "DX-9X", "Моя"))
+        assertEquals(tree, vm.root())
+
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        settle()
+        sessionRepository.link.value = DeviceLinkState.READY
+        settle()
+
+        assertEquals(listOf(true), repository.openReloads)
+        assertNull(vm.state.value.header)
+    }
+
+    @Test
+    fun `configuration to write is compared once after the first read, not after a reconnect`() = test {
+        val owned = SettingsSource.LocalConfiguration(5, "DX-9X", "Нива")
+        val vm = viewModel(options = SettingsEditorOptions(loadOnOpen = owned))
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        settle()
+        sessionRepository.link.value = DeviceLinkState.READY
+        settle()
+
+        assertNull(vm.state.value.diff)
+        assertEquals(listOf<SettingsSource>(owned), repository.snapshotSources)
+        assertEquals(1, repository.discarded.size)
+    }
+
+    @Test
+    fun `dismissed compare discards its snapshot`() = test {
+        val vm = viewModel()
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+
+        vm.onDiffDismiss()
+        settle()
+
+        assertNull(vm.state.value.diff)
+        assertEquals(1, repository.discarded.size)
+    }
+
+    @Test
+    fun `failed car caption is not requested again on every change`() = test {
+        cars.summaryFails = true
+        val vm = viewModel()
+        vm.onValueChange(11, SettingValue.Switch(true))
+        settle()
+        vm.onValueChange(12, SettingValue.Integer(60))
+        settle()
+
+        assertEquals(listOf(17), cars.summaryCalls)
+        assertTrue(vm.state.value.cars.isEmpty())
+    }
+
+    @Test
+    fun `export keeps saving until the system save answers, then discards the snapshot`() = test {
+        val vm = viewModel(SettingsSource.RemoteConfiguration(7, "DX-9X", "Облачная"))
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
+        vm.onValueChange(12, SettingValue.Integer(60))
+        settle()
+
+        vm.onExportRequest()
+        settle()
+
+        val export = assertIs<DeviceSettingsEffect.ExportFile>(effects.last())
+        assertEquals("snapshot.dxs", export.path)
+        assertTrue(vm.state.value.isSaving)
+        assertTrue(repository.discarded.isEmpty())
+
+        vm.onFileExported(SettingsFileSaveResult.Saved("Облачная.dxs"))
+        settle()
+
+        assertFalse(vm.state.value.isSaving)
+        assertEquals(1, repository.discarded.size)
+        assertEquals(DeviceSettingsEffect.FileSaved("Облачная.dxs"), effects.last())
+        // Облачная конфигурация не сохраняет себя: после «как…» правки считаются сохранёнными.
+        assertTrue(vm.state.value.changedIds.isEmpty())
+    }
+
+    @Test
+    fun `cleared editor closes its session and discards leftover snapshots`() = test {
+        val vm = viewModel()
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+
+        assertTrue(SettingsSource.Device !in repository.closed)
+
+        ViewModelStore().apply { put("settings", vm) }.clear()
+        settle()
+
+        assertEquals(SettingsSource.Device, repository.closed.last())
+        assertEquals(1, repository.discarded.size)
+    }
 }
 
 /** Сессия SDK в памяти: правки меняют дерево и попадают в unsaved (SDK не убирает вернувшиеся значения). */
-private class FakeSettingsRepository(private val initial: SettingsSection) : DeviceSettingsRepository {
+private class FakeSettingsRepository(private val initial: SettingsSection) :
+    DeviceSettingsRepository,
+    DeviceSettingsSessionController {
     var current = initial
     val unsaved = mutableSetOf<Int>()
     var openResult: Response<SettingsSection>? = null
@@ -730,6 +839,10 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     override suspend fun close(source: SettingsSource): Response<Unit> {
         closed += source
         return Response.Success(Unit)
+    }
+
+    override fun discardSession(source: SettingsSource) {
+        closed += source
     }
 
     override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> {
@@ -770,7 +883,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     override suspend fun copy(
         from: SettingsSource,
         to: SettingsSource,
-        saveChanges: Boolean
+        saveChanges: Boolean,
     ): Response<SettingsSection> {
         copyGate?.await()
         copyResult?.let { return it }
@@ -784,7 +897,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
         return Response.Success(SettingsSource.File("snapshot.dxs", deviceName))
     }
 
-    override suspend fun discardSnapshot(snapshot: SettingsSource.File) {
+    override fun discardSnapshot(snapshot: SettingsSource.File) {
         discarded += snapshot
     }
 
@@ -798,54 +911,17 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     }
 }
 
-private class FakeLocalConfigurations : LocalConfigurationsRepository {
-    val created = mutableListOf<Pair<String, SettingsSource>>()
-
-    /** Пока не завершён — создание «идёт» (проверка повторных нажатий). */
-    var gate: CompletableDeferred<Unit>? = null
-
-    override val changes: Flow<Unit> = emptyFlow()
-
-    override suspend fun all(): Response<List<LocalConfiguration>> = Response.Success(emptyList())
-
-    override suspend fun create(
-        name: String,
-        description: String,
-        deviceName: String,
-        from: SettingsSource
-    ): Response<SettingsSource.LocalConfiguration> {
-        created += name to from
-        gate?.await()
-        return Response.Success(SettingsSource.LocalConfiguration(created.size.toLong(), deviceName, name))
-    }
-
-    override suspend fun updateInfo(configuration: LocalConfiguration, name: String, description: String) =
-        Response.Error(IllegalStateException("not used"))
-
-    override suspend fun delete(id: Long): Response<Unit> = Response.Success(Unit)
-}
-
-private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
-    val link = MutableStateFlow(DeviceLinkState.READY)
-
-    override fun linkState(): Flow<DeviceLinkState> = link
-    override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException())
-    override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
-    override suspend fun readImei(): Response<String> = Response.Success("")
-    override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
-    override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
-        Response.Success(BootModeResult.Entered)
-    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
-    override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
-}
-
 private class FakePreferences : DeviceSettingsPreferences {
-    var width: Int? = null
-    override fun treeWidthDp(): Int? = width
-    override fun setTreeWidthDp(width: Int) {
+    override val treeWidthDp = MutableStateFlow<Response<Int?>>(Response.Success(null))
+    var width: Int?
+        get() = treeWidthDp.value.getValueIfSuccess()
+        set(value) {
+            treeWidthDp.value = Response.Success(value)
+        }
+
+    override suspend fun setTreeWidthDp(width: Int): Response<Unit> {
         this.width = width
+        return Response.Success(Unit)
     }
 }
 
@@ -854,11 +930,13 @@ private class FakeCars : VehicleCatalogRepository {
     val rio = CarSummary(21, "Kia", "Rio", "IV", 2017..2020, "7001", null)
     val solaris = CarSummary(22, "Hyundai", "Solaris", "II", 2017..2020, "7002", null)
     var fail = false
+    val summaryCalls = mutableListOf<Int>()
+    var summaryFails = false
 
     override suspend fun findByCanCode(
         canCode: String,
         device: VehicleDeviceFilter?,
-        groups: Set<CarFeatureGroup>
+        groups: Set<CarFeatureGroup>,
     ): Response<List<CarSummary>> = when {
         fail -> Response.Error(IllegalStateException("no server"))
         canCode == "7001" -> Response.Success(listOf(rio))
@@ -867,7 +945,10 @@ private class FakeCars : VehicleCatalogRepository {
     }
 
     override suspend fun summary(carId: Int): Response<CarSummary> =
-        listOf(polo, rio, solaris).firstOrNull { it.id == carId }?.let { Response.Success(it) }
+        listOf(polo, rio, solaris).also { summaryCalls += carId }.takeUnless { summaryFails }.orEmpty().firstOrNull {
+            it.id ==
+                carId
+        }?.let { Response.Success(it) }
             ?: Response.Error(IllegalStateException("no car"))
 
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> = unused()
@@ -876,13 +957,6 @@ private class FakeCars : VehicleCatalogRepository {
     override suspend fun card(carId: Int, groups: Set<CarFeatureGroup>): Response<CarCard> = unused()
 
     private fun unused(): Response.Error = Response.Error(UnsupportedOperationException("not used by settings"))
-}
-
-private class FakeConnectionRepository : DeviceConnectionRepository {
-    override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
 }
 
 private const val SETTLE_PASSES = 5

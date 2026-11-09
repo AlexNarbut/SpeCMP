@@ -6,10 +6,10 @@ import java.awt.Desktop
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 
-/** Desktop: временный файл + приложение по умолчанию (`java.awt.Desktop.open`). */
 @Composable
 actual fun rememberSupportChatFileOpener(): SupportChatFileOpener {
     return remember {
@@ -43,7 +43,6 @@ private fun openWithDesktop(file: File): SupportChatFileOpenResult {
         Desktop.getDesktop().open(file)
         SupportChatFileOpenResult.Opened
     } catch (ignored: IOException) {
-        // Нет ассоциированного приложения для типа файла.
         SupportChatFileOpenResult.NoApp
     } catch (ignored: Exception) {
         SupportChatFileOpenResult.Failed

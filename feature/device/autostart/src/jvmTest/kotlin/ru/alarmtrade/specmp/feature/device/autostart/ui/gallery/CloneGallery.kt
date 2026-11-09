@@ -12,7 +12,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clon
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneInterruption
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.ClonePhase
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneState
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 /** Все состояния экрана «Процедура Clone» (макет C1–C6, X1–X3); PNG — в `build/state-gallery/autostart`. */
 class CloneGallery {
@@ -64,7 +64,7 @@ class CloneGallery {
     @Test
     fun already() = render(
         "11_already",
-        base.copy(fromBypass = true, phase = ClonePhase.Finished(CloneResult.Completed(already = true)))
+        base.copy(fromBypass = true, phase = ClonePhase.Finished(CloneResult.Completed(already = true))),
     )
 
     @Test
@@ -75,8 +75,8 @@ class CloneGallery {
         "13_error_tips",
         failed(
             CloneFailure.CALC_ERROR,
-            listOf("Проверьте, что выбран правильный CAN код автомобиля", "Выполните бесключевой обход повторно")
-        )
+            listOf("Проверьте, что выбран правильный CAN код автомобиля", "Выполните бесключевой обход повторно"),
+        ),
     )
 
     @Test
@@ -88,12 +88,12 @@ class CloneGallery {
     @Test
     fun interruptedKept() = render(
         "16_interrupted_kept",
-        base.copy(phase = ClonePhase.Start(CloneInterruption.ATTEMPT_KEPT))
+        base.copy(phase = ClonePhase.Start(CloneInterruption.ATTEMPT_KEPT)),
     )
 
     @Test
     fun interruptedCheck() = render(
         "17_interrupted_check",
-        base.copy(phase = ClonePhase.Start(CloneInterruption.CHECK_ATTEMPTS))
+        base.copy(phase = ClonePhase.Start(CloneInterruption.CHECK_ATTEMPTS)),
     )
 }

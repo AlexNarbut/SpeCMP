@@ -52,7 +52,7 @@ fun RegistrationScreen(
     layoutMode: AuthLayoutMode,
     colors: CmpThemeColors,
     onBackToLogin: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val viewModel = koinViewModel<RegistrationScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -62,7 +62,7 @@ fun RegistrationScreen(
         modifier = modifier,
         colors = colors,
         showCompactBrand = false,
-        error = state.value.registrationError?.text(Strings.string.login_common_error_registration_failed)
+        error = state.value.registrationError?.text(Strings.string.login_common_error_registration_failed),
     ) {
         if (state.value.isSuccess) {
             AuthSuccessPanel(
@@ -74,9 +74,9 @@ fun RegistrationScreen(
                     AuthSubmitButton(
                         text = stringResource(Strings.string.login_common_btn_go_to_login),
                         onClick = onBackToLogin,
-                        colors = colors
+                        colors = colors,
                     )
-                }
+                },
             )
         } else {
             RegistrationForm(
@@ -88,8 +88,8 @@ fun RegistrationScreen(
                 onPasswordChange = viewModel::onPasswordChanged,
                 onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
                 onInstallerConfirmedChange = viewModel::onInstallerConfirmedChanged,
-                onSubmit = viewModel::submit,
-                onBackToLogin = onBackToLogin
+                onSubmit = viewModel::onSubmit,
+                onBackToLogin = onBackToLogin,
             )
         }
     }
@@ -107,14 +107,14 @@ private fun RegistrationForm(
     onInstallerConfirmedChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
     onBackToLogin: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val value = state.value
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         CmpTextField(
             value = value.fullName,
@@ -126,12 +126,12 @@ private fun RegistrationForm(
             isError = RegistrationFieldError.FullName in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.FullName in value.fieldErrors,
-                text = Strings.string.login_common_error_full_name_required
+                text = Strings.string.login_common_error_full_name_required,
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Person, contentDescription = null)
-            }
+            },
         )
 
         CmpTextField(
@@ -144,15 +144,15 @@ private fun RegistrationForm(
             isError = RegistrationFieldError.Email in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.Email in value.fieldErrors,
-                text = Strings.string.login_common_error_email_invalid
+                text = Strings.string.login_common_error_email_invalid,
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
+                imeAction = ImeAction.Next,
             ),
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Email, contentDescription = null)
-            }
+            },
         )
 
         CmpTextField(
@@ -165,15 +165,15 @@ private fun RegistrationForm(
             isError = RegistrationFieldError.Phone in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.Phone in value.fieldErrors,
-                text = Strings.string.login_common_error_phone_invalid
+                text = Strings.string.login_common_error_phone_invalid,
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
-                imeAction = ImeAction.Next
+                imeAction = ImeAction.Next,
             ),
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Phone, contentDescription = null)
-            }
+            },
         )
 
         AuthPasswordField(
@@ -186,28 +186,28 @@ private fun RegistrationForm(
             isError = RegistrationFieldError.Password in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.Password in value.fieldErrors,
-                text = Strings.string.login_common_error_password_short
+                text = Strings.string.login_common_error_password_short,
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
                     if (value.canSubmit) onSubmit()
-                }
-            )
+                },
+            ),
         )
 
         CmpRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpCheckbox(
                 checked = value.isInstallerConfirmed,
                 onCheckedChange = onInstallerConfirmedChange,
-                enabled = !value.isLoading
+                enabled = !value.isLoading,
             )
             CmpText(
                 text = stringResource(Strings.string.login_registration_label_installer_confirm),
-                color = colors.onBackground
+                color = colors.onBackground,
             )
         }
 
@@ -216,13 +216,13 @@ private fun RegistrationForm(
             onClick = onSubmit,
             enabled = value.canSubmit,
             isLoading = value.isLoading,
-            colors = colors
+            colors = colors,
         )
 
         CmpTextButton(
             text = stringResource(Strings.string.login_registration_btn_back_to_login),
             onClick = onBackToLogin,
-            enabled = !value.isLoading
+            enabled = !value.isLoading,
         )
     }
 }

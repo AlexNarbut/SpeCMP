@@ -21,9 +21,9 @@ class MountSectionTest {
                 MountSection.TECH_REQUESTS,
                 MountSection.SUPPORT_CHAT,
                 MountSection.COMMUNITY_MAPS,
-                MountSection.VEHICLES
+                MountSection.VEHICLES,
             ),
-            setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS).toSections(bluetooth = false)
+            setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS).toSections(bluetooth = false),
         )
     }
 
@@ -31,7 +31,7 @@ class MountSectionTest {
     fun `chat and vehicles are always shown`() {
         assertEquals(
             listOf(MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
-            emptySet<DeviceFeature>().toSections(bluetooth = false)
+            emptySet<DeviceFeature>().toSections(bluetooth = false),
         )
     }
 
@@ -46,7 +46,7 @@ class MountSectionTest {
     fun `unread features give the unsupported fallback`() {
         assertEquals(
             listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
-            (null as Set<DeviceFeature>?).toSections(bluetooth = true)
+            (null as Set<DeviceFeature>?).toSections(bluetooth = true),
         )
     }
 
@@ -57,9 +57,9 @@ class MountSectionTest {
                 MountSection.SETTINGS,
                 MountSection.BYPASS_LEARNING,
                 MountSection.CLONE,
-                MountSection.DYNAMIC_DEVICES
+                MountSection.DYNAMIC_DEVICES,
             ),
-            MountSection.entries.filter { it.needsCan }.toSet()
+            MountSection.entries.filter { it.needsCan }.toSet(),
         )
     }
 }

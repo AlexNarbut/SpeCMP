@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation
 
-/** testTag экранов конфигуратора для ui-test (`ui.sh`). */
 internal object ConfiguratorTestTags {
     const val SEARCH = "configurator_mine_placeholder_search"
     const val MODEL_FILTER = "configurator_model_filter"

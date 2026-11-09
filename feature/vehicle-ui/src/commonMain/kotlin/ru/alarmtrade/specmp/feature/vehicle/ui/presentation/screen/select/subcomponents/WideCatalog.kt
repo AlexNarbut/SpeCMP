@@ -61,20 +61,14 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.CardPane
 
-/** Ширина панели карточки, от которой её шапка и матрица — в широком варианте. */
 private val CardWideMinWidth = 640.dp
 
-/**
- * Широкое окно. Medium — колонки «Марки · Модели» (комплектации раскрываются под моделью), карточка — на всё
- * окно с крошками. Expanded — колонки и карточка справа; при ширине ≥ 1400 dp — третья колонка «Комплектации».
- * Поиск по CAN — колонка результатов (+ карточка справа на Expanded).
- */
 @Composable
 internal fun WideCatalog(
     state: VehicleSelectState,
     layout: VehicleLayout,
     windowWidth: Dp,
-    actions: VehicleSelectActions
+    actions: VehicleSelectActions,
 ) {
     if (layout == VehicleLayout.MEDIUM && state.selection.carId != null) {
         CmpColumn(modifier = Modifier.fillMaxSize()) {
@@ -97,7 +91,7 @@ internal fun WideCatalog(
                     catalog,
                     actions,
                     third = expanded && windowWidth >= ThirdColumnMinWidth,
-                    expanded = expanded
+                    expanded = expanded,
                 )
             }
             if (expanded) CardColumn(state.forCard(), actions)
@@ -105,11 +99,9 @@ internal fun WideCatalog(
     }
 }
 
-/** Срез для колонок каталога и поиска: без карточки, диалогов и фильтра. */
 private fun VehicleSelectState.forCatalog(): VehicleSelectState =
     copy(card = LCEState.None, cardUi = CardUi(), dialog = null, filterDraft = null, picking = false)
 
-/** Срез для колонки карточки (с крошками): без списков каталога и ввода поиска по названию. */
 private fun VehicleSelectState.forCard(): VehicleSelectState = copy(
     query = "",
     brands = LCEState.None,
@@ -120,14 +112,14 @@ private fun VehicleSelectState.forCard(): VehicleSelectState = copy(
     recent = emptyList(),
     dialog = null,
     filterDraft = null,
-    picking = false
+    picking = false,
 )
 
 @Composable
 private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) {
     CmpColumn(
         modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         SearchArea(state = state, wide = true, actions = actions)
         val showRecent = state.searchMode == SearchMode.NAME && state.query.isBlank() && state.recent.isNotEmpty()
@@ -135,25 +127,25 @@ private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) 
             CmpFlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                itemVerticalAlignment = Alignment.CenterVertically
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 if (state.groups.isNotEmpty()) FilterChip(count = state.groups.size, actions = actions)
                 if (showRecent) {
                     CmpRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CmpIcon(
                             icon = CmpIcons.History,
                             contentDescription = null,
                             tint = cmpThemeColors().onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                         CmpText(
                             text = stringResource(Strings.string.vehicle_catalog_title_recent),
                             style = CmpTextStyle.Body,
                             fontWeight = FontWeight.SemiBold,
-                            color = cmpThemeColors().onSurfaceVariant
+                            color = cmpThemeColors().onSurfaceVariant,
                         )
                     }
                     state.recent.forEach { car ->
@@ -163,7 +155,7 @@ private fun TopSearch(state: VehicleSelectState, actions: VehicleSelectActions) 
                             icon = CmpIcons.DirectionsCar,
                             onClear = { actions.onRecentRemove(car) },
                             clearContentDescription = stringResource(Strings.string.vehicle_catalog_a11y_recent_remove),
-                            modifier = Modifier.testTag(VehicleTestTags.recent(car.id))
+                            modifier = Modifier.testTag(VehicleTestTags.recent(car.id)),
                         )
                     }
                 }
@@ -178,7 +170,7 @@ private fun RowScope.NameColumns(
     state: VehicleSelectState,
     actions: VehicleSelectActions,
     third: Boolean,
-    expanded: Boolean
+    expanded: Boolean,
 ) {
     val brand = state.selection.brand
     val brandWidth = when {
@@ -192,14 +184,14 @@ private fun RowScope.NameColumns(
         } else {
             stringResource(Strings.string.vehicle_catalog_title_brands, state.brands.content?.size ?: 0)
         },
-        modifier = Modifier.width(brandWidth)
+        modifier = Modifier.width(brandWidth),
     ) {
         CatalogList { brandItems(state, actions, showRecent = false, compact = true) }
     }
     CmpVerticalDivider()
     Column(
         title = brand?.name ?: stringResource(Strings.string.vehicle_catalog_title_models),
-        modifier = if (expanded) Modifier.width(if (third) 300.dp else 340.dp) else Modifier.weight(1f)
+        modifier = if (expanded) Modifier.width(if (third) 300.dp else 340.dp) else Modifier.weight(1f),
     ) {
         FadeContent(targetState = state, contentKey = { it.selection.brand?.id }) { shown ->
             if (shown.selection.brand == null) {
@@ -216,7 +208,6 @@ private fun RowScope.NameColumns(
     if (expanded) CmpVerticalDivider()
 }
 
-/** Третья колонка «Комплектации» (Expanded от 1400 dp). */
 @Composable
 private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
     Column(title = stringResource(Strings.string.vehicle_catalog_title_trims), modifier = Modifier.width(260.dp)) {
@@ -235,7 +226,7 @@ private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions
 private fun CanColumn(state: VehicleSelectState, actions: VehicleSelectActions, modifier: Modifier) {
     Column(
         title = stringResource(Strings.string.vehicle_catalog_title_can_results, state.canCode.ifEmpty { "—" }),
-        modifier = modifier
+        modifier = modifier,
     ) {
         if (state.canCode.isEmpty()) {
             Prompt(stringResource(Strings.string.vehicle_can_msg_enter))
@@ -252,7 +243,7 @@ private fun RowScope.CardColumn(state: VehicleSelectState, actions: VehicleSelec
     FadeContent(
         targetState = state,
         contentKey = { it.selection.carId },
-        modifier = Modifier.weight(1f).fillMaxHeight().background(colors.surfaceContainerLowest)
+        modifier = Modifier.weight(1f).fillMaxHeight().background(colors.surfaceContainerLowest),
     ) { shown -> CardColumnContent(shown, actions) }
 }
 
@@ -264,13 +255,13 @@ private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectA
             CmpBox(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 CmpColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     CmpIcon(
                         icon = CmpIcons.DirectionsCar,
                         contentDescription = null,
                         tint = colors.outline,
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.size(56.dp),
                     )
                     CmpText(
                         text = stringResource(
@@ -278,12 +269,12 @@ private fun CardColumnContent(state: VehicleSelectState, actions: VehicleSelectA
                                 Strings.string.vehicle_catalog_msg_card_prompt_can
                             } else {
                                 Strings.string.vehicle_catalog_msg_card_prompt
-                            }
+                            },
                         ),
                         style = CmpTextStyle.BodyLarge,
                         color = colors.onSurfaceVariant,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.widthIn(max = 340.dp)
+                        modifier = Modifier.widthIn(max = 340.dp),
                     )
                 }
             }
@@ -307,11 +298,10 @@ private fun Card(state: VehicleSelectState, actions: VehicleSelectActions, wide:
         actions = actions.card,
         onRetry = actions.onRetry,
         onPick = actions.onPick,
-        padding = padding
+        padding = padding,
     )
 }
 
-/** Колонка каталога: заголовок и содержимое. */
 @Composable
 private fun Column(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     CmpColumn(modifier = modifier.fillMaxHeight()) {
@@ -321,7 +311,7 @@ private fun Column(title: String, modifier: Modifier = Modifier, content: @Compo
             fontWeight = FontWeight.SemiBold,
             color = cmpThemeColors().onSurfaceVariant,
             maxLines = 1,
-            modifier = Modifier.padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp)
+            modifier = Modifier.padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
         )
         content()
     }
@@ -333,6 +323,6 @@ private fun Prompt(text: String) {
         text = text,
         style = CmpTextStyle.BodyLarge,
         color = cmpThemeColors().onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
     )
 }

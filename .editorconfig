@@ -6,6 +6,11 @@ max_line_length = 120
 indent_size = 4
 insert_final_newline = true
 ktlint_function_naming_ignore_when_annotated_with = Composable
+# Висячие запятые разрешены: diff при добавлении параметра/элемента затрагивает одну строку
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+# Имена тестов в обратных кавычках — это описание сценария, переносить их нельзя
+ktlint_ignore_back_ticked_identifier = true
 
 # В ktlint 1.8 правило по умолчанию выключено
 ktlint_standard_no-unused-imports = enabled
@@ -15,4 +20,4 @@ ktlint_compose_modifier-missing-check = disabled
 ktlint_compose_modifier-without-default-check = disabled
 # State<T> передаём осознанно: отложенное чтение без рекомпозиции родителя
 ktlint_compose_state-param-check = disabled
-compose_allowed_composition_locals = LocalCmpImageLoader,LocalThemeIsDark
+compose_allowed_composition_locals = LocalClock,LocalCmpImageLoader,LocalThemeIsDark,LocalTimeZoneSource,LocalWizardWide

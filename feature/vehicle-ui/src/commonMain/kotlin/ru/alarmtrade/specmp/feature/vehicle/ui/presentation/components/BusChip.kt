@@ -45,10 +45,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBus
 
 private const val TINT_ALPHA = 0.14f
 
-/**
- * Чип шины: цвет — семейство (14 % заливка + рамка 2 dp), номер шины — подписью. «Неизвестно» — пунктирный
- * контур без заливки. Подпись целиком, чип переносится в строке целиком.
- */
 @Composable
 internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
     val color = busColor(bus.family, cmpDomainColors())
@@ -58,7 +54,7 @@ internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
             drawRoundRect(
                 color = color,
                 cornerRadius = CornerRadius(8.dp.toPx()),
-                style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f)))
+                style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f))),
             )
         }
     } else {
@@ -69,13 +65,13 @@ internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
     }
     CmpBox(
         modifier = modifier.heightIn(min = 32.dp).then(frame).padding(horizontal = 10.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpText(
             text = stringResource(busLabel(bus)),
             style = CmpTextStyle.Body,
             fontWeight = FontWeight.SemiBold,
-            color = cmpThemeColors().onSurface
+            color = cmpThemeColors().onSurface,
         )
     }
 }

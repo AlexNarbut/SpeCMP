@@ -3,7 +3,13 @@
 ## Концепция
 
 `core/ui` содержит **всю дизайн-систему**: обёртки над Material3 и другими UI-библиотеками.
-Feature-модули и `composeApp` **НИКОГДА не используют** компоненты Material3/Foundation напрямую — только через `Cmp*`-функции из `core/ui`.
+Feature-модули и `composeApp` **НИКОГДА не используют** компоненты Material3 напрямую — только через `Cmp*`-функции из `core/ui`
+(detekt `ForbiddenImport` на `androidx.compose.material3.*` вне `core/ui`). Визуальные компоненты других библиотек
+(`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`; layout-примитивы, модификаторы и формы `foundation`
+(`Box`/`Column`/`Row`, `padding`, `RoundedCornerShape`, `BorderStroke`, `Lazy*`) фичи используют напрямую.
+
+Обходы (сырые цвета, `.sp`, Material/Coil/`Image`/`Dialog` мимо `Cmp*`) ловит UI-аудит — `./gradlew uiAudit` и хук
+агентов; текущие находки — в baseline, новые роняют проверку ([`code-quality.md`](code-quality.md), «UI-аудит»).
 
 **Зачем:** замена компонента (например, миграция с Material3) требует изменения одного файла в `core/ui`, а не поиска по всему проекту.
 
@@ -215,7 +221,8 @@ Lazy-контейнеры (`LazyColumn`, `LazyRow`, `items {}`) и `Canvas` — 
 
 `CmpText` принимает роль `style: CmpTextStyle?` (`Title`/`BodyLarge`/`Body`/`Caption` → `titleLarge`/`bodyLarge` 16 sp/`bodyMedium` 14 sp/`bodySmall` 12 sp) с
 маппингом на `MaterialTheme.typography` внутри обёртки (U-6) — размеры шрифтов
-в фичах числами не задаются. Параметр `fontSize` остаётся для исключений.
+в фичах числами не задаются. Параметр `fontSize` остаётся для исключений: новое `.sp` в фиче роняет UI-аудит
+(`./gradlew uiAudit`, хук агентов) — исключение помечается `// ui-audit: ignore raw_sp — причина`.
 
 ---
 
@@ -272,6 +279,9 @@ container-роли (`primaryContainer`, `secondaryContainer`, `tertiaryContainer
 `success` («поддерживается») и цвета семейств шин автомобиля (`busCan`, `busCanFd`, `busLin`, `busBean`,
 `busImmobilizer`, `busUnknown`) — цвет = семейство, номер шины пишется текстом.
 
+Сырые цвета в фичах (`Color(0x…)`, `Color.White`/`Black`/…, `Color(r, g, b)`) запрещены (UI-аудит `hex_color`,
+`raw_color`); нет подходящей роли — токен в `core/ui/theme`. `Color.Transparent`/`Unspecified` допустимы.
+
 ```kotlin
 // Прочитать текущую тему
 val isDark by LocalThemeIsDark.current
@@ -282,7 +292,7 @@ isDark = !isDark
 ```
 
 Выбор темы запоминается между запусками: `AppTheme(onThemeChange, themeStore = DefaultAppThemeStore)` в корне
-приложения (`App`, `FlasherApp`) берёт сохранённый выбор (`theme/AppThemeStore.kt`, свой `Settings`, ключ
-`app_theme_dark`), а пока пользователь не переключал тему — системную. Переключение через `LocalThemeIsDark`
+приложения (`App`, `FlasherApp`) берёт сохранённый выбор (`theme/AppThemeStore.kt`, платформенный `Settings` процесса
+`platformSettings` из `core/common/di`, ключ `app_theme_dark`), а пока пользователь не переключал тему — системную. Переключение через `LocalThemeIsDark`
 сохраняется само. Галереи и тесты вызывают `AppTheme` без хранилища — тема как в системе, сохранённый выбор на
 снимки не влияет.

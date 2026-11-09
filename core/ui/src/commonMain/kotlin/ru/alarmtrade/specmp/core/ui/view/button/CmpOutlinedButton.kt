@@ -11,7 +11,7 @@ fun CmpOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Mo
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled
+        enabled = enabled,
     ) {
         CmpText(text = text)
     }
@@ -22,12 +22,12 @@ fun CmpOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        content = content
+        content = content,
     )
 }

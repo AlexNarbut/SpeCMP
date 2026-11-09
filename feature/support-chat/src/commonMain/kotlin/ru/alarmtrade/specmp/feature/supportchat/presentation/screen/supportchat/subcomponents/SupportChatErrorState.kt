@@ -23,32 +23,28 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 
-/**
- * Полноэкранная ошибка первой загрузки истории: показывается ровно тогда,
- * когда ленты нет (history = LCEState.Error). Ошибки последующей пагинации
- * сюда не попадают — они уходят тостом, лента остаётся на экране.
- */
+/** Только когда ленты нет; ошибки последующей пагинации уходят тостом. */
 @Composable
 internal fun SupportChatErrorState(
     error: SupportChatError,
     onRetry: () -> Unit,
     colors: CmpThemeColors,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpBox(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpColumn(
             modifier = Modifier.padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CmpIcon(
                 icon = CmpIcons.WifiOff,
                 contentDescription = null,
                 tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(40.dp),
             )
 
             CmpText(
@@ -56,17 +52,17 @@ internal fun SupportChatErrorState(
                     is SupportChatError.Common -> error.error.message()
 
                     SupportChatError.HistoryUnavailable -> stringResource(
-                        Strings.string.supportchat_chat_error_history_title
+                        Strings.string.supportchat_chat_error_history_title,
                     )
                 },
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
-                color = colors.onSurface
+                color = colors.onSurface,
             )
 
             CmpButton(
                 text = stringResource(Strings.string.supportchat_common_btn_retry),
-                onClick = onRetry
+                onClick = onRetry,
             )
         }
     }

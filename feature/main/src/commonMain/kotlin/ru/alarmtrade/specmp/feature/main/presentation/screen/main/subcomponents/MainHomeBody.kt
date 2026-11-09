@@ -57,7 +57,7 @@ fun MainHomeBody(
     isDarkTheme: Boolean,
     onThemeChange: (Boolean) -> Unit,
     onLogout: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val value = state.value
     val colors = cmpThemeColors()
@@ -65,7 +65,7 @@ fun MainHomeBody(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .mainHomeBrandBackdrop(colors)
+            .mainHomeBrandBackdrop(colors),
     ) {
         val mode = mainHomeMode(maxWidth.value)
         val layoutDirection = LocalLayoutDirection.current
@@ -83,17 +83,17 @@ fun MainHomeBody(
                         isCompact = mode == MainHomeMode.Compact,
                         isLoading = value.isInitialLoading,
                         databaseSyncBadge = value.databaseSyncBadge,
-                        onMenuClick = onMenuClick
+                        onMenuClick = onMenuClick,
                     )
                     if (value.isInitialLoading) {
                         CmpLinearProgressIndicator(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(2.dp)
+                                .height(2.dp),
                         )
                     }
                 }
-            }
+            },
         ) { paddingValues ->
             val scaffoldStartPadding = paddingValues.calculateStartPadding(layoutDirection)
             val scaffoldEndPadding = paddingValues.calculateEndPadding(layoutDirection)
@@ -102,24 +102,24 @@ fun MainHomeBody(
             val contentStartPadding = if (showSidePanel) 0.dp else scaffoldStartPadding
             val sidePanelDrawerPadding = PaddingValues(
                 start = scaffoldStartPadding,
-                bottom = scaffoldBottomPadding
+                bottom = scaffoldBottomPadding,
             )
             val modalDrawerPadding = PaddingValues(
                 start = scaffoldStartPadding,
                 top = scaffoldTopPadding,
-                bottom = scaffoldBottomPadding
+                bottom = scaffoldBottomPadding,
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = scaffoldTopPadding)
+                        .padding(top = scaffoldTopPadding),
                 ) {
                     AnimatedVisibility(
                         visible = showSidePanel,
                         enter = sidePanelEnterTransition(),
-                        exit = sidePanelExitTransition()
+                        exit = sidePanelExitTransition(),
                     ) {
                         MainHomeDrawer(
                             state = value,
@@ -131,7 +131,7 @@ fun MainHomeBody(
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             contentPadding = sidePanelDrawerPadding,
-                            modifier = Modifier.width(312.dp)
+                            modifier = Modifier.width(312.dp),
                         )
                     }
 
@@ -141,7 +141,7 @@ fun MainHomeBody(
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                     } else {
                         MainHomeContent(
@@ -151,7 +151,7 @@ fun MainHomeBody(
                             startContentPadding = contentStartPadding,
                             endContentPadding = scaffoldEndPadding,
                             bottomContentPadding = scaffoldBottomPadding,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
@@ -160,20 +160,20 @@ fun MainHomeBody(
                     AnimatedVisibility(
                         visible = showModalDrawer,
                         enter = fadeIn(animationSpec = tween(DRAWER_SCRIM_ANIMATION_DURATION_MILLIS)),
-                        exit = fadeOut(animationSpec = tween(DRAWER_SCRIM_ANIMATION_DURATION_MILLIS))
+                        exit = fadeOut(animationSpec = tween(DRAWER_SCRIM_ANIMATION_DURATION_MILLIS)),
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(colors.scrim.copy(alpha = 0.42f))
-                                .clickable(onClick = onMenuDismiss)
+                                .clickable(onClick = onMenuDismiss),
                         )
                     }
 
                     AnimatedVisibility(
                         visible = showModalDrawer,
                         enter = drawerEnterTransition(),
-                        exit = drawerExitTransition()
+                        exit = drawerExitTransition(),
                     ) {
                         MainHomeDrawer(
                             state = value,
@@ -185,7 +185,7 @@ fun MainHomeBody(
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
                             contentPadding = modalDrawerPadding,
-                            modifier = Modifier.width(320.dp)
+                            modifier = Modifier.width(320.dp),
                         )
                     }
                 }
@@ -196,22 +196,22 @@ fun MainHomeBody(
 
 private fun drawerEnterTransition() = slideInHorizontally(
     animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
-    initialOffsetX = { -it }
+    initialOffsetX = { -it },
 ) + fadeIn(animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS))
 
 private fun drawerExitTransition() = slideOutHorizontally(
     animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
-    targetOffsetX = { -it }
+    targetOffsetX = { -it },
 ) + fadeOut(animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS))
 
 private fun sidePanelEnterTransition() = drawerEnterTransition() + expandHorizontally(
     animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
-    expandFrom = Alignment.Start
+    expandFrom = Alignment.Start,
 )
 
 private fun sidePanelExitTransition() = drawerExitTransition() + shrinkHorizontally(
     animationSpec = tween(DRAWER_ANIMATION_DURATION_MILLIS),
-    shrinkTowards = Alignment.Start
+    shrinkTowards = Alignment.Start,
 )
 
 @Composable
@@ -222,7 +222,7 @@ private fun MainHomeContent(
     startContentPadding: Dp,
     endContentPadding: Dp,
     bottomContentPadding: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     MainHomeDashboard(
         mode = mode,
@@ -231,7 +231,7 @@ private fun MainHomeContent(
         endContentPadding = endContentPadding,
         bottomContentPadding = bottomContentPadding,
         actions = state.visibleActions,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -241,20 +241,20 @@ private fun Modifier.mainHomeBrandBackdrop(colors: CmpThemeColors): Modifier = d
         brush = Brush.radialGradient(
             colors = listOf(
                 colors.primaryContainer.copy(alpha = 0.82f),
-                Color.Transparent
+                Color.Transparent,
             ),
             center = Offset(x = size.width * 1.04f, y = -size.height * 0.18f),
-            radius = size.maxDimension * 0.76f
-        )
+            radius = size.maxDimension * 0.76f,
+        ),
     )
     drawRect(
         brush = Brush.radialGradient(
             colors = listOf(
                 colors.tertiaryContainer.copy(alpha = 0.72f),
-                Color.Transparent
+                Color.Transparent,
             ),
             center = Offset(x = -size.width * 0.18f, y = size.height * 1.1f),
-            radius = size.maxDimension * 0.7f
-        )
+            radius = size.maxDimension * 0.7f,
+        ),
     )
 }

@@ -1,6 +1,6 @@
 # Качество кода: docs/code-quality.md. Активация: pre-commit install (типы хуков — default_install_hook_types)
-# Spotless проверяет только файлы, изменённые с HEAD (pre-commit перед хуками прячет неиндексированные правки,
-# так что это ровно коммитимое).
+# Spotless проверяет всё дерево (pre-commit перед хуками прячет неиндексированные правки, так что это коммитимое
+# состояние). Остальные проверки перед коммитом — руками: docs/code-quality.md → «Команды».
 default_install_hook_types: [pre-commit, pre-push, pre-merge-commit]
 repos:
   # Агентские конфиги: источник — .ai/; хук падает, если сгенерированное разошлось с .ai/ (ручная правка, скилл
@@ -11,7 +11,7 @@ repos:
         name: ai configs (.ai/generate.sh)
         entry: .ai/generate.sh --check
         language: system
-        files: ^(\.ai/|\.claude/(skills|agents)/|\.agents/|\.codex/|\.gemini/|\.grok/|CLAUDE\.md$|AGENTS\.md$|GEMINI\.md$|.*/AGENTS\.md$)
+        files: ^(\.ai/|\.claude/(skills|agents)/|\.claude/settings\.json$|scripts/agent-hooks/|\.agents/|\.codex/|\.gemini/|\.grok/|CLAUDE\.md$|AGENTS\.md$|GEMINI\.md$|.*/AGENTS\.md$)
         pass_filenames: false
         stages: [pre-commit]
 
@@ -24,15 +24,16 @@ repos:
         files: \.(kt|kts)$
         pass_filenames: false
         stages: [pre-commit]
+      - id: ui-audit
+        name: ui-audit (design-system bypasses vs baseline)
+        entry: ./gradlew uiAudit
+        language: system
+        files: \.kt$
+        pass_filenames: false
+        stages: [pre-commit]
       - id: serial-name-check
         name: "@SerialName on every @Serializable (docs/patterns.md)"
         entry: config/hooks/check-serial-name.sh
-        language: script
-        files: \.kt$
-        stages: [pre-commit]
-      - id: stateflow-value-check
-        name: "MutableStateFlow only via update { } (docs/patterns.md)"
-        entry: config/hooks/check-stateflow-value.py
         language: script
         files: \.kt$
         stages: [pre-commit]
@@ -43,11 +44,11 @@ repos:
         files: (composeResources/.*\.xml|check-strings\.py)$
         pass_filenames: false
         stages: [pre-commit]
-      - id: detekt-check
-        name: detekt
-        entry: ./gradlew detektCheck
+      - id: architecture-checks
+        name: detekt, Konsist, CPD, module graph, detekt-rules tests
+        entry: ./gradlew --continue detektCheck :quality:konsist:test :quality:detekt-rules:test cpdCheck assertModuleGraph
         language: system
-        files: \.kt$
+        files: (\.(kt|kts)$|gradle/libs\.versions\.toml$|^config/detekt/|^quality/)
         pass_filenames: false
         stages: [pre-push]
       # В main/master — только develop: слияние другой ветки (pre-merge-commit) и пуш коммитов не из develop (pre-push).

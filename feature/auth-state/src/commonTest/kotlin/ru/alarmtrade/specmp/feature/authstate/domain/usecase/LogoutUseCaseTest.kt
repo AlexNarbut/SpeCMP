@@ -16,7 +16,7 @@ class LogoutUseCaseTest {
         val closeables = listOf(RecordingAuthCloseable(), RecordingAuthCloseable())
         val useCase = LogoutUseCase(FakeAuthStateRepository(Response.Success(Unit)), closeables)
 
-        val result = useCase.execute()
+        val result = useCase()
 
         assertIs<Response.Success<Unit>>(result)
         assertTrue(closeables.all { it.releaseCalls == 1 })
@@ -27,10 +27,10 @@ class LogoutUseCaseTest {
         val closeable = RecordingAuthCloseable()
         val useCase = LogoutUseCase(
             FakeAuthStateRepository(Response.Error(IllegalStateException("logout failed"))),
-            listOf(closeable)
+            listOf(closeable),
         )
 
-        val result = useCase.execute()
+        val result = useCase()
 
         assertIs<Response.Error>(result)
         assertEquals(0, closeable.releaseCalls)
@@ -45,7 +45,7 @@ class LogoutUseCaseTest {
         }
         val useCase = LogoutUseCase(FakeAuthStateRepository(Response.Success(Unit)), listOf(failing))
 
-        val result = useCase.execute()
+        val result = useCase()
 
         assertIs<Response.Success<Unit>>(result)
     }

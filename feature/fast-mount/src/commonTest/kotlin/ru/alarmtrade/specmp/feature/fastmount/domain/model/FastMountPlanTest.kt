@@ -19,7 +19,7 @@ class FastMountPlanTest {
         images = emptyList(),
         keyBypass = keyBypass,
         slave = slave,
-        questions = emptyList()
+        questions = emptyList(),
     )
 
     @Test
@@ -33,9 +33,9 @@ class FastMountPlanTest {
                 PlannedStep(FastMountStep.CLONE, conditional = true),
                 PlannedStep(FastMountStep.SLAVE),
                 PlannedStep(FastMountStep.SYSTEM_CHECK),
-                PlannedStep(FastMountStep.FEEDBACK)
+                PlannedStep(FastMountStep.FEEDBACK),
             ),
-            plan.steps
+            plan.steps,
         )
         assertNull(plan.indexOf(FastMountStep.REBOOTING))
     }
@@ -49,9 +49,9 @@ class FastMountPlanTest {
                 FastMountStep.WRITING_SETTINGS,
                 FastMountStep.MOUNT,
                 FastMountStep.SYSTEM_CHECK,
-                FastMountStep.FEEDBACK
+                FastMountStep.FEEDBACK,
             ),
-            plan.steps.map { it.step }
+            plan.steps.map { it.step },
         )
     }
 
@@ -64,9 +64,9 @@ class FastMountPlanTest {
                 FastMountStep.MOUNT,
                 FastMountStep.KEY_BYPASS,
                 FastMountStep.CLONE,
-                FastMountStep.FEEDBACK
+                FastMountStep.FEEDBACK,
             ),
-            plan.steps.map { it.step }
+            plan.steps.map { it.step },
         )
     }
 

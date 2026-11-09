@@ -1,32 +1,10 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kmp.library)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.compose.compiler)
+    id("specmp.kmp.compose")
 }
 
 kotlin {
-    jvm {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
-
-    android {
-        namespace = "ru.alarmtrade.specmp.core.ui"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
-
-    listOf(
-        iosArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+    iosArm64 {
+        binaries.framework {
             baseName = "CoreUI"
             isStatic = true
         }
@@ -36,48 +14,32 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
-            // Жизненный цикл приложения для BaseViewModel (onAppForeground / onAppBackground)
-            implementation(project(":core:lifecycle"))
-            // Сохранённая тема приложения (AppThemeStore)
-            implementation(libs.multiplatformSettings)
 
-            // Compose — api so consumers get runtime/foundation/ui transitively
-            // material3 stays implementation: feature modules use Cmp* wrappers, not material3 directly
+            // material3 — implementation: фичи используют Cmp*-обёртки, не material3
             api(libs.compose.runtime)
             api(libs.compose.foundation)
             api(libs.compose.ui)
             api(libs.compose.resources)
             api(libs.compose.ui.tooling.preview)
-            // Nav3 — api: тип NavBackStack фигурирует в публичном API навигационных
-            // хелперов (core.ui.navigation.NavBackStackSafe), доступных всем фичам.
+            // api: NavBackStack — в публичном API навигационных хелперов
             api(libs.compose.nav3)
             implementation(libs.compose.material3)
-            // Каталог material-иконок для CmpIcons (резолвится в CmpIconsResolver)
             implementation(compose.materialIconsExtended)
 
-            // Image loading — единый ImageLoader приложения, обёртки CmpAsyncImage/CmpSubcomposeAsyncImage
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
 
-            // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
             // api: collectAsStateWithLifecycle — сбор state экранов во всех фичах (docs/compose-best-prac.md §4)
             api(libs.androidx.lifecycle.runtime)
 
-            // Kotlinx
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
 
             // Логирование: Logger — часть protected API BaseViewModel, поэтому api
             api(libs.kermit)
 
-            // Material Kolor
             implementation(libs.materialKolor)
-
-            // DI
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
         }
 
         androidMain.dependencies {
@@ -87,9 +49,9 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
 
-        // Галерея компонентов кита (PNG без окна) — см. KitGalleryTest
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs)
         }

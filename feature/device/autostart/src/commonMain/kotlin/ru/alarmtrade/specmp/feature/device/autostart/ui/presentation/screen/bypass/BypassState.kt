@@ -1,11 +1,11 @@
 package ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.Duration
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
-/** Фаза экрана: старт → шаги → итог. */
 sealed interface BypassPhase {
     /** @property interrupted вернулись на старт после обрыва связи на шаге. */
     data class Start(val interrupted: Boolean = false) : BypassPhase
@@ -19,16 +19,9 @@ sealed interface BypassPhase {
 sealed interface BypassDialog {
     data class Pin(val pin: ServicePinDialogState = ServicePinDialogState()) : BypassDialog
 
-    /** «Прервать?» — выход во время обучения. */
     data object Exit : BypassDialog
 }
 
-/**
- * Состояние экрана «Бесключевой обход».
- *
- * @property canCode CAN-код прошивки блока (только у блоков с прошивкой под CAN-код) — плашка на старте.
- * @property cloneAvailable у блока есть процедура Clone — на успехе предлагается переход в неё.
- */
 @Immutable
 data class BypassState(
     val deviceName: String? = null,
@@ -37,5 +30,11 @@ data class BypassState(
     val canCode: String? = null,
     val cloneAvailable: Boolean = false,
     val phase: BypassPhase = BypassPhase.Start(),
-    val dialog: BypassDialog? = null
-)
+    val dialog: BypassDialog? = null,
+) {
+    /** Блокировка ввода PIN — в открытый диалог PIN; без него не меняется. */
+    fun withPinLock(lock: Duration?): BypassState {
+        val pinDialog = dialog as? BypassDialog.Pin ?: return this
+        return copy(dialog = pinDialog.copy(pin = pinDialog.pin.copy(lockedFor = lock)))
+    }
+}

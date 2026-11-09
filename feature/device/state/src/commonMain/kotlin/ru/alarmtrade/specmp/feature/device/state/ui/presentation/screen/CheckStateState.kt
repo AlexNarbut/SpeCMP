@@ -1,7 +1,9 @@
 package ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen
 
 import androidx.compose.runtime.Immutable
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import kotlin.time.Duration
+import kotlin.time.TimeMark
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.EngineStatus
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
@@ -9,15 +11,7 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 
 /**
- * Экран «Проверка состояния».
- *
- * @property vehicle последний снимок; `null` — ждём первый ответ блока (скелетон, без нулей).
- * @property tick номер снимка: на каждом новом мигает точка «на связи», гаснут метки «Изменилось».
- * @property changedZones зоны, изменившиеся с прошлого снимка (метка «Изменилось» — до следующего снимка).
- * @property guardChanged охрана изменилась с прошлого снимка — статус вспыхивает.
  * @property staleSeconds новых снимков нет столько секунд (≥ порога) при живой связи; `null` — данные свежие.
- * @property statuses состояние кнопок команд (отправка, итог); нет записи — кнопка в покое.
- * @property pending команда в работе: остальные кнопки недоступны (одна команда за раз).
  * @property programExiting быстрый монтаж: приложение само выводит блок из режима программирования.
  */
 @Immutable
@@ -34,7 +28,9 @@ data class CheckStateState(
     val statuses: Map<StateCommand, CommandStatus> = emptyMap(),
     val pending: StateCommand? = null,
     val programExiting: Boolean = false,
-    val dialog: CheckStateDialog? = null
+    val dialog: CheckStateDialog? = null,
+    val lastSnapshot: TimeMark? = null,
+    val resultSeq: Int = 0,
 ) {
     val loading: Boolean get() = vehicle == null
 
@@ -42,9 +38,14 @@ data class CheckStateState(
     val alarm: Boolean get() = vehicle?.alarm == true
 
     fun status(command: StateCommand): CommandStatus = statuses[command] ?: CommandStatus.Idle
+
+    /** Блокировка ввода PIN — в открытый диалог PIN; без него не меняется. */
+    fun withPinLock(lock: Duration?): CheckStateState {
+        val pinDialog = dialog as? CheckStateDialog.Pin ?: return this
+        return copy(dialog = pinDialog.copy(pin = pinDialog.pin.copy(lockedFor = lock)))
+    }
 }
 
-/** Кнопка команды. [primary] — в колонке пульта; [danger] — через лист подтверждения с удержанием 2 с. */
 @Immutable
 data class CommandUi(val command: StateCommand, val primary: Boolean = false, val danger: Boolean = false)
 
@@ -62,22 +63,17 @@ enum class CommandOutcome { DONE, REJECTED, NO_REPLY, NO_LINK }
 
 @Immutable
 sealed interface CheckStateDialog {
-    /** Лист подтверждения опасной команды (запуск двигателя, паника). */
     data class Confirm(val command: StateCommand) : CheckStateDialog
 
     data class Pin(val pin: ServicePinDialogState = ServicePinDialogState()) : CheckStateDialog
 
-    /** «Выйти из проверки?»: включён режим ТО и/или программирования. */
     data class Exit(val service: Boolean, val program: Boolean) : CheckStateDialog
 
-    /** Быстрый монтаж: «Вернуться на предыдущий шаг?». */
     data object FastBack : CheckStateDialog
 
-    /** Быстрый монтаж: «Не все проверки пройдены. Завершить?». */
     data class FastFinish(val notDone: Int, val total: Int) : CheckStateDialog
 }
 
-/** Набор команд по снимку и режиму (порядок — порядок в «Все команды»). */
 internal fun commandsFor(vehicle: VehicleState?, fastMount: Boolean): List<CommandUi> {
     val engineRunning = vehicle?.engine?.status == EngineStatus.RUNNING
     val autostartRunning = vehicle?.engine?.autostart is Autostart.Running

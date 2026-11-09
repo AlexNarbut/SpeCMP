@@ -30,9 +30,13 @@ koin = "4.2.2"
 
 # Качество кода: docs/code-quality.md
 detekt = "2.0.0-alpha.6"
+junit = "5.14.4"
+konsist = "0.18.1"
 spotless = "8.10.4"
 ktlint = "1.8.0"
 composeRules = "0.6.7"
+pmd = "7.29.0"
+moduleGraphAssert = "2.9.1"
 
 android-compileSdk = "36"
 android-minSdk = "24"
@@ -87,6 +91,19 @@ koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
+# Классы плагинов для convention-плагинов build-logic
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+detekt-gradlePlugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+detekt-api = { module = "dev.detekt:detekt-api", version.ref = "detekt" }
+detekt-test = { module = "dev.detekt:detekt-test", version.ref = "detekt" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+pmd-cli = { module = "net.sourceforge.pmd:pmd-cli", version.ref = "pmd" }
+pmd-kotlin = { module = "net.sourceforge.pmd:pmd-kotlin", version.ref = "pmd" }
+
 alarmtrade-specialist = { module = "ru.alarmtrade.common:specialist", version.ref = "alarmtrade-common-specialist" }
 alarmtrade-usb-common = { module = "ru.alarmtrade.common:usb-common", version.ref = "alarmtrade-common" }
 alarmtrade-devices = { module = "ru.alarmtrade.common:alarmtrade-devices", version.ref = "alarmtrade-common" }
@@ -109,3 +126,4 @@ buildConfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig
 # Качество кода: detekt (смысл) и Spotless (ktlint + compose-rules)
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+module-graph-assert = { id = "com.jraska.module.graph.assertion", version.ref = "moduleGraphAssert" }

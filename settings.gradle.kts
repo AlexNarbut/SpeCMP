@@ -1,6 +1,8 @@
 rootProject.name = "SpeCMP"
 
 pluginManagement {
+    // Convention-плагины (specmp.kmp.library, specmp.kmp.compose, specmp.detekt): build-logic/src/main/kotlin.
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -36,6 +38,7 @@ include(":core:network")
 include(":core:permissions")
 include(":core:specialist")
 include(":core:ui")
+include(":core:testing")
 
 // Main Compose Multiplatform application
 include(":composeApp")
@@ -58,15 +61,24 @@ include(":feature:fast-mount")
 include(":feature:vehicle")
 include(":feature:account")
 include(":feature:configurator")
+include(":feature:configurator:testing")
 include(":feature:configurator-ui")
 include(":feature:vehicle-ui")
 
 include(":feature:device")
 include(":feature:device:selection")
 include(":feature:device:interaction")
+include(":feature:device:interaction:testing")
 include(":feature:device:firmware")
 include(":feature:device:autostart")
 include(":feature:device:state")
 include(":feature:device:settings")
+include(":feature:device:presentation-core")
 include(":feature:device:interaction-ui")
 include(":feature:device:settings-ui")
+
+// Свой набор правил detekt `specmp` (docs/code-quality.md → «detekt»): ./gradlew :quality:detekt-rules:test
+include(":quality:detekt-rules")
+
+// Архитектурные тесты Konsist (docs/code-quality.md → «Konsist»): ./gradlew :quality:konsist:test
+include(":quality:konsist")

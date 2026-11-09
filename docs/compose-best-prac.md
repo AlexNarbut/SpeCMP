@@ -255,7 +255,7 @@ fun Screen(vm: MyViewModel) {
 // ХОРОШО: собрать один раз, дочерний получает plain-значение
 @Composable
 fun Screen(vm: MyViewModel) {
-    val state by vm.uiState.collectAsStateWithLifecycle()
+    val state by vm.state.collectAsStateWithLifecycle()
     ItemList(state.items)
 }
 ```
@@ -264,37 +264,39 @@ fun Screen(vm: MyViewModel) {
 
 **State экрана собирается только через `collectAsStateWithLifecycle()`** (`androidx.lifecycle.compose`, KMP-артефакт
 `lifecycle-runtime-compose` — доступен в `commonMain` всем фичам через `core/ui`). Сбор останавливается, когда
-экран ниже `STARTED` (приложение в фоне), — и тогда `stateIn(WhileSubscribed(…))` во VM действительно гасит
-поллинг, сканирование и прочие источники. `collectAsState()` держит подписку и в фоне — им state экрана не собираем.
+экран ниже `STARTED` (приложение в фоне), — и тогда `state` `BaseViewModel` (`WhileSubscribed` 5 с) действительно
+гасит привязки `collectIntoState`: поллинг, сканирование и прочие источники. `collectAsState()` держит подписку и в фоне — им state экрана не собираем.
 
 - **Что не должно останавливаться в фоне** (сессия сокета, счётчик сессий, идущее обновление прошивки), — не
-  через `WhileSubscribed`: `Lazily`/`Eagerly` или `init` VM с обоснованием (`docs/patterns.md`, «BaseViewModel»).
-  Пример: `AuthStateViewModel` — `Lazily`, иначе возврат из фона обнулил бы номер сессии авторизованной зоны.
+  через `collectIntoState`: `launchReplacing(key)`/`launchOnDevice(key)` из `onStart`/интента (живёт с VM) или доменный
+  сервис со своим скоупом (`docs/patterns.md`, «Жизненный цикл ViewModel и сессии»). Пример: `AuthStateViewModel` —
+  подписка в `launchReplacing`, иначе возврат из фона обнулил бы номер сессии авторизованной зоны.
 - Эффекты — `collectSideEffect` из `core/ui` (lifecycle-aware), не `collectAsState` и не ручной `LaunchedEffect`.
 
 ### Архитектура потока данных
 
 ```
 Repository (Flow<Domain>)
-    → ViewModel (.stateIn(WhileSubscribed(5000)))
-    → StateFlow<UiState>
+    → ViewModel (onStart: flow.collectIntoState { reduce })
+    → state: StateFlow<XxxState> (BaseViewModel, WhileSubscribed 5 с)
     → Screen (.collectAsStateWithLifecycle())
     → Children (plain-значения, стабильные параметры)
 ```
 
 ### Одноразовые события (side effects)
 
-НЕ встраивать события в `UiState`. В проекте используется **только `MutableSharedFlow`** (`Channel` + `receiveAsFlow()` не используем — см. `docs/patterns.md`, раздел «One-shot события (Effects)»):
+НЕ встраивать события в state. One-shot события — поток `sideEffect` `BaseViewModel`: VM шлёт `postSideEffect(…)`,
+экран собирает `collectSideEffect { }` (`core/ui`); своих `MutableSharedFlow`/`Channel` во VM нет (Konsist
+`view-model-owns-no-flows`, `docs/patterns.md`, «One-shot события (Effects)»):
 
 ```kotlin
-private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
-val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+// ViewModel
+postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Settings))
 
-LaunchedEffect(Unit) {
-    vm.events.collect { event ->
-        when (event) {
-            is UiEvent.Navigate -> navController.navigate(event.route)
-        }
+// Screen
+viewModel.sideEffect.collectSideEffect { effect ->
+    when (effect) {
+        is MainScreenEffect.Navigate -> onNavigateToFeature(effect.target)
     }
 }
 ```
@@ -538,7 +540,7 @@ LaunchedEffect(listState) {
 ### Текстовый ввод — локальное состояние
 
 Черновик поля ввода держится в `rememberSaveable` внутри composable, а не в state ViewModel:
-иначе каждый символ → `_state.update` → рекомпозиция всего экрана со списком. ViewModel получает
+иначе каждый символ → `reduce` → рекомпозиция всего экрана со списком. ViewModel получает
 текст в момент действия (`onSend(text)`). Если VM обязана владеть черновиком (персист),
 экран разбивается так, чтобы список не попадал в область рекомпозиции поля.
 
@@ -581,7 +583,7 @@ Compose-код проверяется `./gradlew spotlessCheck` (ktlint + compos
 | `@Preview`-функции `private` | публичное превью | `preview-public-check` |
 | Composable, возвращающий значение, — `camelCase` (`rememberX`); эмитящий UI — `PascalCase`-существительное | Composable-фабрика в `PascalCase`, эмитящий composable в `camelCase` | `naming-check` |
 | Один вызов `content()` в теле | `content()` в нескольких ветках `if/when` | `content-slot-reused` |
-| Новый `CompositionLocal` — сначала подумай о параметре; если нужен, добавь имя в `compose_allowed_composition_locals` в [`.editorconfig`](../.editorconfig) (сейчас: `LocalCmpImageLoader`, `LocalThemeIsDark`) | Создавать `compositionLocalOf` без регистрации | `compositionlocal-allowlist` |
+| Новый `CompositionLocal` — сначала подумай о параметре; если нужен, добавь имя в `compose_allowed_composition_locals` в [`.editorconfig`](../.editorconfig) (сейчас: `LocalCmpImageLoader`, `LocalThemeIsDark`, `LocalClock`, `LocalTimeZoneSource` — `core/ui`; `LocalWizardWide` — `fast-mount`) | Создавать `compositionLocalOf` без регистрации | `compositionlocal-allowlist` |
 
 Исключения (осознанно выключены, не нужно добавлять `modifier` ради правила): `modifier-missing-check`,
 `modifier-without-default-check`, `state-param-check`.

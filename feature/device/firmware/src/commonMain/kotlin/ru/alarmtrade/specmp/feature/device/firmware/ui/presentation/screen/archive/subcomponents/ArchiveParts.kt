@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.arch
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -65,7 +64,6 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialogWidth
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
@@ -73,7 +71,9 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.BannerTone
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareCenteredBody
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareHero
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.FirmwareLoadError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.HeroTone
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.InfoBanner
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
@@ -84,7 +84,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.CanFilterUi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.RollbackUi
 
-private val CenterMaxWidth = 440.dp
 private val ButtonHeight = 48.dp
 private val DetailDescriptionMaxHeight = 300.dp
 
@@ -94,49 +93,44 @@ internal const val ARCHIVE_REFRESH_TAG = "firmware_archive_refresh"
 
 @Composable
 internal fun ArchiveLoading() {
-    CenteredBody {
+    FirmwareCenteredBody {
         CmpCircularProgressIndicator()
         CmpText(
             text = stringResource(Strings.string.firmware_archive_loading),
             color = cmpThemeColors().onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
 
-/**
- * Пусто. Без CAN-фильтра — «не найдено» и «Обновить». Под фильтром поле CAN остаётся над пустым состоянием:
- * «Для CAN … прошивок не найдено» + «Показать все версии»; под кодом блока — подсказка поискать под другим кодом и
- * «Выбрать автомобиль», под другим кодом — «Вернуть CAN блока».
- */
 @Composable
 internal fun ArchiveEmpty(
     onRefresh: () -> Unit,
     filter: CanFilterUi? = null,
     onShowAll: () -> Unit = {},
     onPickVehicle: () -> Unit = {},
-    onResetToDevice: () -> Unit = {}
+    onResetToDevice: () -> Unit = {},
 ) {
     val canCode = filter?.applied
-    CenteredBody {
+    FirmwareCenteredBody {
         FirmwareHero(
             icon = if (canCode != null) CmpIcons.SearchOff else CmpIcons.Inventory2,
             tone = HeroTone.Neutral,
-            size = 88.dp
+            size = 88.dp,
         )
         CmpText(
             text = canCode?.let { stringResource(Strings.string.firmware_archive_title_empty_can, it) }
                 ?: stringResource(Strings.string.firmware_archive_title_empty),
             style = CmpTextStyle.Title,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         if (filter == null || canCode == null) {
             CmpOutlinedButton(
                 text = stringResource(Strings.string.firmware_archive_btn_refresh),
                 onClick = onRefresh,
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+                modifier = Modifier.fillMaxWidth().height(52.dp),
             )
-            return@CenteredBody
+            return@FirmwareCenteredBody
         }
         val carTitle = filter.carTitle
         CmpText(
@@ -146,24 +140,24 @@ internal fun ArchiveEmpty(
                 else -> stringResource(Strings.string.firmware_archive_msg_empty_can_other)
             },
             color = cmpThemeColors().onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         CmpButton(
             text = stringResource(Strings.string.firmware_archive_btn_all_versions),
             onClick = onShowAll,
-            modifier = Modifier.fillMaxWidth().height(52.dp)
+            modifier = Modifier.fillMaxWidth().height(52.dp),
         )
         when {
             filter.appliedIsDevice && filter.canPickVehicle -> CmpOutlinedButton(
                 text = stringResource(Strings.string.firmware_archive_btn_pick_vehicle),
                 onClick = onPickVehicle,
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+                modifier = Modifier.fillMaxWidth().height(52.dp),
             )
 
             filter.canResetToDevice -> CmpOutlinedButton(
                 text = stringResource(Strings.string.firmware_archive_btn_can_reset),
                 onClick = onResetToDevice,
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+                modifier = Modifier.fillMaxWidth().height(52.dp),
             )
         }
     }
@@ -171,58 +165,27 @@ internal fun ArchiveEmpty(
 
 @Composable
 internal fun ArchiveError(error: FirmwareError, onRetry: () -> Unit) {
-    CenteredBody {
-        FirmwareHero(icon = CmpIcons.CloudOff, tone = HeroTone.Neutral, size = 88.dp)
-        CmpText(
-            text = error.text(Strings.string.firmware_archive_error_title),
-            style = CmpTextStyle.Title,
-            textAlign = TextAlign.Center
-        )
-        CmpText(
-            text = stringResource(Strings.string.firmware_archive_error_msg),
-            color = cmpThemeColors().onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        CmpButton(
-            text = stringResource(Strings.string.firmware_common_btn_retry),
-            onClick = onRetry,
-            modifier = Modifier.fillMaxWidth().height(52.dp)
-        )
-    }
+    FirmwareLoadError(
+        icon = CmpIcons.CloudOff,
+        title = error.text(Strings.string.firmware_archive_error_title),
+        message = stringResource(Strings.string.firmware_archive_error_msg),
+        onRetry = onRetry,
+    )
 }
 
-@Composable
-private fun CenteredBody(content: @Composable () -> Unit) {
-    CmpBox(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        contentAlignment = Alignment.Center
-    ) {
-        CmpColumn(
-            modifier = Modifier.widthIn(
-                max = CenterMaxWidth
-            ).fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            content()
-        }
-    }
-}
-
-/** Подвал списка: индикатор догрузки или ошибка догрузки (список выше остаётся). */
 @Composable
 internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRetryMore: () -> Unit) {
     when {
         loadingMore -> CmpRow(
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpCircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp)
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_loading_more),
                 color = cmpThemeColors().onSurfaceVariant,
-                style = CmpTextStyle.Body
+                style = CmpTextStyle.Body,
             )
         }
 
@@ -234,14 +197,13 @@ internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRe
                 CmpTextButton(
                     text = stringResource(Strings.string.firmware_common_btn_retry),
                     onClick = onRetryMore,
-                    modifier = Modifier.height(ButtonHeight)
+                    modifier = Modifier.height(ButtonHeight),
                 )
-            }
+            },
         )
     }
 }
 
-/** Панель справа на широком окне: версия, метка, дата, полное описание, предупреждения и «Установить». */
 @Composable
 internal fun ArchiveDetail(
     row: ArchiveRowUi,
@@ -251,24 +213,24 @@ internal fun ArchiveDetail(
     canFilter: CanFilterUi? = null,
     onDownload: (() -> Unit)? = null,
     onShare: (() -> Unit)? = null,
-    busy: Boolean = false
+    busy: Boolean = false,
 ) {
     val colors = cmpThemeColors()
     CmpSurface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpColumn(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     VersionText(row.version, fontSize = 34.sp)
                     VersionBadge(row.kind)
@@ -280,16 +242,17 @@ internal fun ArchiveDetail(
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
                     fontWeight = FontWeight.Medium,
-                    color = colors.onSurfaceVariant
+                    color = colors.onSurfaceVariant,
                 )
                 CmpText(
                     text = row.description.ifBlank {
                         stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
-                    modifier = Modifier.heightIn(max = DetailDescriptionMaxHeight).verticalScroll(rememberScrollState())
+                    modifier = Modifier
+                        .heightIn(max = DetailDescriptionMaxHeight)
+                        .verticalScroll(rememberScrollState()),
                 )
             }
-            // Без блока — «Скачать» / «Поделиться»; просмотр без установки — ни кнопки, ни предупреждений.
             if (onDownload != null) {
                 DetailExportActions(busy, onDownload, onShare)
                 return@CmpColumn
@@ -303,7 +266,7 @@ internal fun ArchiveDetail(
                 ArchiveRowKind.Installed -> InfoBanner(
                     text = stringResource(Strings.string.firmware_archive_msg_same),
                     tone = BannerTone.Ok,
-                    icon = CmpIcons.Info
+                    icon = CmpIcons.Info,
                 )
 
                 ArchiveRowKind.New -> Unit
@@ -314,16 +277,15 @@ internal fun ArchiveDetail(
                         Strings.string.firmware_archive_btn_reinstall
                     } else {
                         Strings.string.firmware_archive_btn_install
-                    }
+                    },
                 ),
                 onClick = onInstall,
-                modifier = Modifier.widthIn(min = 240.dp).height(52.dp).testTag(ARCHIVE_INSTALL_TAG)
+                modifier = Modifier.widthIn(min = 240.dp).height(52.dp).testTag(ARCHIVE_INSTALL_TAG),
             )
         }
     }
 }
 
-/** «Установить более старую версию?»: версия старее установленной, возможно без новых функций и исправлений. */
 @Composable
 internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -336,32 +298,28 @@ internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismi
                 text = stringResource(
                     Strings.string.firmware_archive_msg_rollback,
                     rollback.version,
-                    rollback.installedVersion
+                    rollback.installedVersion,
                 ),
-                style = CmpTextStyle.Body
+                style = CmpTextStyle.Body,
             )
         },
         dismissButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
         },
         confirmButton = {
             CmpButton(
                 text = stringResource(Strings.string.firmware_archive_btn_install),
                 onClick = onConfirm,
-                modifier = Modifier.height(ButtonHeight).testTag(ARCHIVE_ROLLBACK_CONFIRM_TAG)
+                modifier = Modifier.height(ButtonHeight).testTag(ARCHIVE_ROLLBACK_CONFIRM_TAG),
             )
-        }
+        },
     )
 }
 
-/**
- * Блок «CAN-прошивка» в панели версии: код и профиль сборки, «как в блоке» / «другой CAN» и что будет с блоком
- * после установки. Без CAN — «Без привязки к CAN».
- */
 @Composable
 private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
     val colors = cmpThemeColors()
@@ -369,13 +327,13 @@ private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
     CmpSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = colors.surfaceContainerHigh
+        color = colors.surfaceContainerHigh,
     ) {
         CmpColumn(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             CmpText(
                 text = stringResource(Strings.string.firmware_archive_label_can_panel),
                 fontWeight = FontWeight.Medium,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
             val code = row.canCode
             if (code == null) {
@@ -384,17 +342,17 @@ private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
             }
             CmpRow(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(
                     text = stringResource(Strings.string.firmware_archive_label_can, code),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 row.canVersion?.let { profile ->
                     CmpText(
                         text = stringResource(Strings.string.firmware_archive_label_can_profile) + " " + profile,
-                        color = colors.onSurfaceVariant
+                        color = colors.onSurfaceVariant,
                     )
                 }
                 if (deviceCode != null) CanPill(row.canMatchesDevice)
@@ -406,7 +364,7 @@ private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
                 deviceCode != null && !row.canMatchesDevice -> stringResource(
                     Strings.string.firmware_archive_msg_can_note_other,
                     canLabel(deviceCode, filter.deviceProfile),
-                    canLabel(code, row.canVersion)
+                    canLabel(code, row.canVersion),
                 )
 
                 row.canProfileDiffers && filter.deviceProfile != null ->
@@ -430,7 +388,7 @@ private fun CanPill(mine: Boolean) {
     CmpSurface(
         shape = RoundedCornerShape(percent = PILL_PERCENT),
         color = if (mine) colors.primary else Color.Transparent,
-        border = if (mine) null else BorderStroke(1.dp, colors.outline)
+        border = if (mine) null else BorderStroke(1.dp, colors.outline),
     ) {
         CmpText(
             text = if (mine) {
@@ -441,7 +399,7 @@ private fun CanPill(mine: Boolean) {
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (mine) colors.onPrimary else colors.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         )
     }
 }

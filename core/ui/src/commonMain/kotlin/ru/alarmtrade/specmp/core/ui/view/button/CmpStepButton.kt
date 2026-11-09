@@ -33,16 +33,12 @@ import kotlinx.coroutines.launch
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/** Задержка до автоповтора при удержании и период повтора. */
 private const val REPEAT_DELAY_MS = 400L
 private const val REPEAT_PERIOD_MS = 80L
 private const val PRESSED_OVERLAY_ALPHA = 0.12f
 private const val DISABLED_ALPHA = 0.38f
 
-/**
- * Крупная кнопка шага (−/+, ▲/▼) для числовых значений: срабатывает сразу при нажатии, при удержании —
- * повторяет [onStep] (через 400 мс, затем каждые 80 мс). Для TalkBack/VoiceOver — обычная кнопка.
- */
+/** Срабатывает сразу при нажатии, при удержании повторяет [onStep]. */
 @Composable
 fun CmpStepButton(
     icon: CmpIcons,
@@ -50,7 +46,7 @@ fun CmpStepButton(
     onStep: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    size: Dp = 64.dp
+    size: Dp = 64.dp,
 ) {
     val currentOnStep by rememberUpdatedState(onStep)
     var pressed by remember { mutableStateOf(false) }
@@ -59,7 +55,7 @@ fun CmpStepButton(
         !enabled -> colors.onSurface.copy(alpha = PRESSED_OVERLAY_ALPHA)
 
         pressed -> colors.onSecondaryContainer.copy(alpha = PRESSED_OVERLAY_ALPHA).compositeOver(
-            colors.secondaryContainer
+            colors.secondaryContainer,
         )
 
         else -> colors.secondaryContainer
@@ -103,7 +99,7 @@ fun CmpStepButton(
                         pressed = false
                     }
                 }
-            }
+            },
     ) {
         Box(contentAlignment = Alignment.Center) {
             CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(size / 2))

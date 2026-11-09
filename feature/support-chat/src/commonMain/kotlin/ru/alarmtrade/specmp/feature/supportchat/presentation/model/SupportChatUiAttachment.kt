@@ -4,14 +4,7 @@ import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
-/**
- * Presentation-модель вложения для UI (U-12).
- *
- * Доменный `SupportChatAttachment` — sealed-иерархия; передавать его параметром
- * composable напрямую компилятор считает нестабильным. Плоская @Immutable-модель
- * маппится на границе экрана; `url`/`localPath`/`mimeType`/`sizeBytes`
- * nullability совпадает с доменной семантикой (см. SupportChatAttachment).
- */
+/** Плоская `@Immutable`-модель: доменная sealed-иерархия параметром composable нестабильна. */
 @Immutable
 data class SupportChatUiAttachment(
     val id: String,
@@ -20,14 +13,11 @@ data class SupportChatUiAttachment(
     val url: String?,
     val localPath: String?,
     val mimeType: String?,
-    val sizeBytes: Long?
+    val sizeBytes: Long?,
 ) {
     enum class Kind { Image, Document }
 }
 
-/**
- * Маппинг доменного вложения в presentation-модель на границе UI.
- */
 fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this) {
     is SupportChatAttachment.Image -> SupportChatUiAttachment(
         id = id,
@@ -36,7 +26,7 @@ fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this
         url = url,
         localPath = localPath,
         mimeType = null,
-        sizeBytes = null
+        sizeBytes = null,
     )
 
     is SupportChatAttachment.Document -> SupportChatUiAttachment(
@@ -46,17 +36,16 @@ fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this
         url = url,
         localPath = localPath,
         mimeType = mimeType,
-        sizeBytes = sizeBytes
+        sizeBytes = sizeBytes,
     )
 }
 
-/** Обратный маппинг: вложение композера → доменное вложение исходящего сообщения. */
-fun SupportChatUiAttachment.toDomain(): SupportChatAttachment = when (kind) {
+fun SupportChatUiAttachment.toAttachment(): SupportChatAttachment = when (kind) {
     SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
         id = id,
         name = name,
         url = url,
-        localPath = localPath
+        localPath = localPath,
     )
 
     SupportChatUiAttachment.Kind.Document -> SupportChatAttachment.Document(
@@ -65,14 +54,11 @@ fun SupportChatUiAttachment.toDomain(): SupportChatAttachment = when (kind) {
         url = url,
         localPath = localPath,
         mimeType = mimeType,
-        sizeBytes = sizeBytes
+        sizeBytes = sizeBytes,
     )
 }
 
-/**
- * Выбранный файл → чип композера. Тип задаёт источник выбора, а не содержимое:
- * картинка, выбранная как документ, уходит документом.
- */
+/** Тип задаёт источник выбора: картинка, выбранная как документ, уходит документом. */
 fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): SupportChatUiAttachment =
     SupportChatUiAttachment(
         id = id,
@@ -81,5 +67,5 @@ fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): Su
         url = null,
         localPath = path,
         mimeType = mimeType,
-        sizeBytes = sizeBytes
+        sizeBytes = sizeBytes,
     )

@@ -51,7 +51,7 @@ dependencies {
 
 - **`ViewModelInjection` / `ViewModelForwarding`.** ViewModel'и у нас на `BaseViewModel` и Koin (`koinViewModel` правила знают). ViewModel получает только Screen, вниз передаются значения и колбэки ([`../patterns.md`](../patterns.md)).
 - **`ComposableParamOrder`** и **`ModifierMissing`.** Порядок параметров соответствует [`../compose-best-prac.md`](../compose-best-prac.md); `ModifierMissing`/`ModifierWithoutDefault` выключены (много Screen-функций).
-- **`CompositionLocalAllowlist`.** Свои `CompositionLocal` (`LocalCmpImageLoader`, `LocalThemeIsDark`) внесены в `compose_allowed_composition_locals` в [`.editorconfig`](../../.editorconfig).
+- **`CompositionLocalAllowlist`.** Свои `CompositionLocal` (`LocalCmpImageLoader`, `LocalThemeIsDark`, `LocalClock`, `LocalTimeZoneSource`, `LocalWizardWide`) внесены в `compose_allowed_composition_locals` в [`.editorconfig`](../../.editorconfig).
 - **`UnstableCollections`.** Списки в параметрах composable — `ImmutableList` ([`../compose-best-prac.md`](../compose-best-prac.md) §3).
 - **`Material2` и др.** UI Kit у нас свой — `Cmp*` из `core/ui` ([`../ui-kit.md`](../ui-kit.md)).
 - **`PreviewPublic`.** Превью в `commonMain` (KMP) могут иметь особенности видимости.

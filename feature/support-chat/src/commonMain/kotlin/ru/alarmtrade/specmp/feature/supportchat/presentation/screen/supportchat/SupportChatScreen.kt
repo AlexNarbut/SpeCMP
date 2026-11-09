@@ -55,6 +55,7 @@ import ru.alarmtrade.specmp.core.ui.format.rememberCmpDateLabeler
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.time.currentTimeZone
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
@@ -90,9 +91,9 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 @Composable
 fun SupportChatScreen(
     state: State<SupportChatScreenState>,
-    effect: SharedFlow<SupportChatEffect>,
+    sideEffect: SharedFlow<SupportChatEffect>,
     actions: SupportChatActions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     val snackbarHostState = rememberCmpSnackbarHostState()
@@ -104,14 +105,14 @@ fun SupportChatScreen(
     val retryLabel = stringResource(Strings.string.supportchat_common_btn_retry)
     val attachmentTooLargeText = stringResource(
         Strings.string.supportchat_chat_error_attachment_too_large,
-        SupportChatAttachmentLimits.MAX_MEGABYTES
+        SupportChatAttachmentLimits.MAX_MEGABYTES,
     )
     val attachFailedText = stringResource(Strings.string.supportchat_chat_error_attach)
     val openFailedText = stringResource(Strings.string.supportchat_chat_error_open)
     val openNoAppText = stringResource(Strings.string.supportchat_chat_error_open_no_app)
     val savePermissionText = stringResource(Strings.string.supportchat_chat_error_save_permission)
 
-    effect.collectSideEffect { event ->
+    sideEffect.collectSideEffect { event ->
         when (event) {
             is SupportChatEffect.MessageSendFailed -> if (event.canRetry) {
                 val result = snackbarHostState.showSnackbar(sendFailedText, actionLabel = retryLabel)
@@ -127,11 +128,11 @@ fun SupportChatScreen(
             SupportChatEffect.AttachmentDownloadFailed -> snackbarHostState.showSnackbar(downloadFailedText)
 
             is SupportChatEffect.AttachmentRejected -> snackbarHostState.showSnackbar(
-                if (event.tooLarge) attachmentTooLargeText else attachFailedText
+                if (event.tooLarge) attachmentTooLargeText else attachFailedText,
             )
 
             is SupportChatEffect.AttachmentOpenFailed -> snackbarHostState.showSnackbar(
-                if (event.noApp) openNoAppText else openFailedText
+                if (event.noApp) openNoAppText else openFailedText,
             )
 
             SupportChatEffect.AttachmentSavePermissionDenied -> snackbarHostState.showSnackbar(savePermissionText)
@@ -158,13 +159,13 @@ fun SupportChatScreen(
             actions = actions,
             onImageClick = { viewerImageSource = it },
             onDocumentClick = { documentActionsFor = it },
-            scrollToNewestRequests = scrollToNewestRequests
+            scrollToNewestRequests = scrollToNewestRequests,
         )
 
         viewerImageSource?.let { source ->
             SupportChatImageViewer(
                 imageSource = source,
-                onDismiss = { viewerImageSource = null }
+                onDismiss = { viewerImageSource = null },
             )
         }
 
@@ -179,7 +180,7 @@ fun SupportChatScreen(
                     documentActionsFor = null
                     actions.onDownloadAttachment(attachment)
                 },
-                onDismiss = { documentActionsFor = null }
+                onDismiss = { documentActionsFor = null },
             )
         }
     }
@@ -196,7 +197,7 @@ private fun SupportChatScaffold(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState
+    scrollToNewestRequests: MutableIntState,
 ) {
     CmpScaffold(
         modifier = Modifier.fillMaxSize(),
@@ -210,17 +211,16 @@ private fun SupportChatScaffold(
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.supportchat_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.supportchat_common_a11y_back),
                     )
                 },
-                // Выравнивание заголовка — свойство раскладки, а не платформы.
                 style = if (layoutMode == SupportChatLayoutMode.Compact) {
                     CmpTopAppBarStyle.Small
                 } else {
                     CmpTopAppBarStyle.CenterAligned
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         SupportChatBody(
             state = state,
@@ -230,16 +230,12 @@ private fun SupportChatScaffold(
             actions = actions,
             onImageClick = onImageClick,
             onDocumentClick = onDocumentClick,
-            scrollToNewestRequests = scrollToNewestRequests
+            scrollToNewestRequests = scrollToNewestRequests,
         )
     }
 }
 
-/**
- * Каркас тела экрана. Значение state здесь не читается: каждая секция (баннер,
- * лента, композер) читает только своё — индикатор набора или прогресс
- * скачивания не рекомпозируют композер, а символ ввода — ленту.
- */
+/** Значение state здесь не читается: каждая секция читает только своё и не рекомпозирует соседей. */
 @Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatBody(
@@ -250,7 +246,7 @@ private fun SupportChatBody(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState
+    scrollToNewestRequests: MutableIntState,
 ) {
     val columnMaxWidth = when (layoutMode) {
         SupportChatLayoutMode.Compact -> Dp.Unspecified
@@ -267,16 +263,16 @@ private fun SupportChatBody(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpBox(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(1f),
         ) {
             SupportChatWallpaper(
                 colors = colors,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
 
             SupportChatHistory(
@@ -287,7 +283,7 @@ private fun SupportChatBody(
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
-                scrollToNewestRequests = scrollToNewestRequests
+                scrollToNewestRequests = scrollToNewestRequests,
             )
 
             // Статусы — поверх ленты: появление и исчезновение не сдвигают сообщения.
@@ -302,7 +298,7 @@ private fun SupportChatBody(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = contentPadding, vertical = 8.dp)
-                .widthIn(max = columnMaxWidth)
+                .widthIn(max = columnMaxWidth),
         )
     }
 }
@@ -315,7 +311,7 @@ private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenStat
         CmpLinearProgressIndicator(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         )
     }
     SupportChatConnectionStatus(
@@ -323,7 +319,7 @@ private fun BoxScope.SupportChatStatusOverlay(state: State<SupportChatScreenStat
         colors = colors,
         modifier = Modifier
             .align(Alignment.TopCenter)
-            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+            .padding(top = 8.dp, start = 16.dp, end = 16.dp),
     )
 }
 
@@ -333,7 +329,7 @@ private fun SupportChatComposerSection(
     colors: CmpThemeColors,
     actions: SupportChatActions,
     onSend: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // Черновик — локальное UI-состояние: каждый символ не проходит через state VM
     // и не рекомпозирует ленту. В VM текст попадает только в момент отправки.
@@ -357,7 +353,7 @@ private fun SupportChatComposerSection(
         onRemoveAttachment = actions.onRemoveAttachment,
         colors = colors,
         modifier = modifier,
-        enabled = isInputEnabled
+        enabled = isInputEnabled,
     )
 }
 
@@ -371,20 +367,20 @@ private fun SupportChatHistory(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState
+    scrollToNewestRequests: MutableIntState,
 ) {
     when (val history = state.value.history) {
         is LCEState.None, is LCEState.Loading -> {
             CmpBox(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter
+                contentAlignment = Alignment.TopCenter,
             ) {
                 SupportChatLoadingSkeleton(
                     colors = colors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .widthIn(max = columnMaxWidth)
-                        .padding(horizontal = contentPadding)
+                        .padding(horizontal = contentPadding),
                 )
             }
         }
@@ -396,7 +392,7 @@ private fun SupportChatHistory(
                 colors = colors,
                 modifier = Modifier
                     .fillMaxSize()
-                    .widthIn(max = columnMaxWidth)
+                    .widthIn(max = columnMaxWidth),
             )
         }
 
@@ -409,7 +405,7 @@ private fun SupportChatHistory(
                 actions = actions,
                 onImageClick = onImageClick,
                 onDocumentClick = onDocumentClick,
-                scrollToNewestRequests = scrollToNewestRequests
+                scrollToNewestRequests = scrollToNewestRequests,
             )
         }
     }
@@ -425,10 +421,11 @@ private fun SupportChatMessageList(
     actions: SupportChatActions,
     onImageClick: (String) -> Unit,
     onDocumentClick: (SupportChatUiAttachment) -> Unit,
-    scrollToNewestRequests: MutableIntState
+    scrollToNewestRequests: MutableIntState,
 ) {
     val listState = rememberLazyListState()
     val dateLabeler = rememberCmpDateLabeler()
+    val timeZone = currentTimeZone()
     // Узкое чтение state: вложения композера, пагинация, связь ленту не перерисовывают. Набор и скачивание
     // читаются ниже — в построении списка и в элементе, а не в теле функции.
     val messages by remember(state) { derivedStateOf { state.value.messages } }
@@ -436,18 +433,18 @@ private fun SupportChatMessageList(
     val downloadingId by remember(state) { derivedStateOf { state.value.downloadingAttachmentId } }
     // Список мемоизируется только по сообщениям и меткам: индикатор набора —
     // отдельный item (index 0 при reverseLayout) и ленту не инвалидирует.
-    val listItems = remember(messages, dateLabeler) {
+    val listItems = remember(messages, dateLabeler, timeZone) {
         buildListItems(
             messages = messages,
             dateLabeler = dateLabeler,
-            timeZone = TimeZone.currentSystemDefault()
+            timeZone = timeZone,
         )
     }
 
     SupportChatFollowNewestEffect(
         listState = listState,
         newestKey = listItems.firstOrNull()?.key,
-        scrollToNewestRequests = scrollToNewestRequests
+        scrollToNewestRequests = scrollToNewestRequests,
     )
     SupportChatPaginationEffect(listState = listState, state = state, onLoadMore = actions.onLoadMore)
     SupportChatVisibilityEffect(listState = listState, onMessagesVisible = actions.onMessagesVisible)
@@ -460,10 +457,10 @@ private fun SupportChatMessageList(
             start = contentPadding,
             end = contentPadding,
             top = 8.dp,
-            bottom = 16.dp
+            bottom = 16.dp,
         ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         if (listItems.isEmpty()) {
             item {
@@ -471,7 +468,7 @@ private fun SupportChatMessageList(
                     colors = colors,
                     modifier = Modifier
                         .fillParentMaxSize()
-                        .widthIn(max = columnMaxWidth)
+                        .widthIn(max = columnMaxWidth),
                 )
             }
         } else {
@@ -480,19 +477,19 @@ private fun SupportChatMessageList(
                     SupportChatTypingIndicator(
                         author = author,
                         colors = colors,
-                        modifier = Modifier.widthIn(max = columnMaxWidth)
+                        modifier = Modifier.widthIn(max = columnMaxWidth),
                     )
                 }
             }
             items(
                 count = listItems.size,
-                key = { index -> listItems[index].key }
+                key = { index -> listItems[index].key },
             ) { index ->
                 when (val item = listItems[index]) {
                     is SupportChatListItem.DateDivider -> {
                         SupportChatDateDivider(
                             label = item.label,
-                            colors = colors
+                            colors = colors,
                         )
                     }
 
@@ -507,7 +504,7 @@ private fun SupportChatMessageList(
                             onDelete = actions.onDeleteFailed,
                             onImageClick = onImageClick,
                             onDocumentClick = onDocumentClick,
-                            onDownloadAttachment = actions.onDownloadAttachment
+                            onDownloadAttachment = actions.onDownloadAttachment,
                         )
                     }
                 }
@@ -517,25 +514,15 @@ private fun SupportChatMessageList(
 }
 
 /**
- * Новое сообщение внизу ленты. `LazyColumn` держит позицию по первому видимому
- * ключу, поэтому вставка в индекс 0 (reverseLayout) уходит под нижний край.
- *
- * - Своя отправка ([scrollToNewestRequests] растёт по кнопке «Отправить») — всегда
- *   возвращаем к последним сообщениям, где бы ни был пользователь. Триггер —
- *   счётчик, а не ключ: серверное эхо меняет ключ и отменило бы начатую прокрутку.
- * - Входящее — только если пользователь был у последних сообщений (порог 2: прежний
- *   нижний элемент после вставки сдвигается на индекс 1, при индикаторе набора — на 2);
- *   читающего историю не дёргаем.
- *
- * Анимация мягкая: издалека сначала мгновенный переход на несколько элементов от низа,
- * затем плавно до конца — без долгого пролёта через всю историю.
+ * Своя отправка — всегда к последним сообщениям (триггер — счётчик: эхо меняет ключ); входящее — только если
+ * пользователь был у последних (порог 2: вставка в индекс 0 при reverseLayout сдвигает прежний низ).
  */
 @Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatFollowNewestEffect(
     listState: LazyListState,
     newestKey: String?,
-    scrollToNewestRequests: MutableIntState
+    scrollToNewestRequests: MutableIntState,
 ) {
     val sendRequests = scrollToNewestRequests.intValue
     LaunchedEffect(sendRequests) {
@@ -554,19 +541,14 @@ private suspend fun LazyListState.softScrollToNewest() {
 }
 
 /**
- * Пагинация: reverseLayout — «верх истории» это конец списка. Снапшот включает
- * условия загрузки, а не только `canScrollForward`: если страница не заполнила
- * экран, триггер сработает снова, когда изменится state (новая страница,
- * `isLoadingMore → false`), без ожидания скролла пользователя.
- *
- * После ошибки автоповтора нет — только когда пользователь заново доскроллил
- * до конца истории (переход `atHistoryEnd: false → true`).
+ * Снапшот включает условия загрузки, а не только `canScrollForward`: неполная страница перезапускает триггер
+ * без скролла. После ошибки — только когда пользователь заново доскроллил до конца истории.
  */
 @Composable
 private fun SupportChatPaginationEffect(
     listState: LazyListState,
     state: State<SupportChatScreenState>,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
 ) {
     val currentOnLoadMore by rememberUpdatedState(onLoadMore)
     LaunchedEffect(listState, state) {
@@ -577,7 +559,7 @@ private fun SupportChatPaginationEffect(
                 atHistoryEnd = !listState.canScrollForward,
                 canLoad = current.isInputEnabled && current.hasMoreHistory && !current.isLoadingMore,
                 isFailed = current.isHistoryPagingFailed,
-                messageCount = current.messages.size
+                messageCount = current.messages.size,
             )
         }
             .distinctUntilChanged()
@@ -596,15 +578,10 @@ private data class PaginationSnapshot(
     val atHistoryEnd: Boolean,
     val canLoad: Boolean,
     val isFailed: Boolean,
-    val messageCount: Int
+    val messageCount: Int,
 )
 
-/**
- * Видимые сообщения — пачкой во VM (батч + debounce read-отметок там). Снапшот —
- * дешёвая пара индексов, а не список ключей на каждый кадр скролла; ключи
- * собираются только при смене видимого диапазона и фильтруются по префиксу
- * сообщений (разделители дат и индикатор набора — не сообщения).
- */
+/** Снапшот — пара индексов, а не список ключей на каждый кадр; ключи собираются при смене диапазона. */
 @Composable
 private fun SupportChatVisibilityEffect(listState: LazyListState, onMessagesVisible: (List<String>) -> Unit) {
     val currentOnVisible by rememberUpdatedState(onMessagesVisible)
@@ -625,17 +602,11 @@ private fun SupportChatVisibilityEffect(listState: LazyListState, onMessagesVisi
     }
 }
 
-/**
- * Элементы списка в отображаемом порядке (newest-first; экран использует
- * `reverseLayout = true`, поэтому index 0 — внизу, индикатор набора — первым).
- *
- * Порядок `messages` держит `SupportChatTimeline`: здесь только разворот и
- * перевод времени в пояс устройства, без сортировки на каждом построении.
- */
+/** Newest-first (`reverseLayout`): только разворот и перевод времени в пояс устройства, без сортировки. */
 internal fun buildListItems(
     messages: List<SupportChatMessage>,
     dateLabeler: (LocalDate) -> String,
-    timeZone: TimeZone
+    timeZone: TimeZone,
 ): ImmutableList<SupportChatListItem> {
     val result = mutableListOf<SupportChatListItem>()
 
@@ -661,7 +632,7 @@ internal fun buildListItems(
 private enum class SupportChatLayoutMode {
     Compact,
     Medium,
-    Expanded
+    Expanded,
 }
 
 private const val FOLLOW_NEWEST_THRESHOLD = 2

@@ -2,23 +2,21 @@ package ru.alarmtrade.specmp.feature.configurator.ui.di
 
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud.CloudCardViewModel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud.CloudListViewModel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.MineViewModel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsViewModel
 
-/** Koin-модуль экранов конфигуратора. Репозитории — из `feature/configurator` и `feature/device/settings`. */
 val configuratorUiModule = module {
     viewModel { (pickDeviceName: String?) ->
         MineViewModel(
             pickDeviceName = pickDeviceName,
             configurations = get(),
             settings = get(),
+            sessions = get(),
             deviceSession = get(),
-            appScope = get(appScopeQualifier),
-            dispatchers = get()
+            dispatchers = get(),
         )
     }
     viewModel { (file: SourceKey.File?) ->
@@ -35,7 +33,7 @@ val configuratorUiModule = module {
             settings = get(),
             configurations = get(),
             deviceSession = get(),
-            dispatchers = get()
+            dispatchers = get(),
         )
     }
 }

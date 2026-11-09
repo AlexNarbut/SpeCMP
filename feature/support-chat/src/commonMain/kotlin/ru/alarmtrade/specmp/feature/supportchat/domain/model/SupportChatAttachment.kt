@@ -1,15 +1,8 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.model
 
 /**
- * Вложение сообщения чата.
- *
- * Единая иерархия для входящих, отправленных и ожидающих отправки вложений:
- * состояние выражается nullability полей, а не отдельными типами.
- *
- * - Входящее/подтверждённое сервером: [url] != null, [localPath] == null.
- * - Оптимистичное (ещё не отправлено): [localPath] != null, [url] == null.
- * - Отправка возможна, только пока жив [localPath]: повтор после потери
- *   локального файла невозможен — такое сообщение уходит в `Failed`.
+ * Подтверждённое сервером: [url] != null; оптимистичное: [localPath] != null. Повтор после потери локального файла
+ * невозможен — такое сообщение уходит в `Failed`.
  */
 sealed class SupportChatAttachment {
     abstract val id: String
@@ -21,7 +14,7 @@ sealed class SupportChatAttachment {
         override val id: String,
         override val name: String,
         override val url: String? = null,
-        override val localPath: String? = null
+        override val localPath: String? = null,
     ) : SupportChatAttachment()
 
     data class Document(
@@ -30,6 +23,6 @@ sealed class SupportChatAttachment {
         override val url: String? = null,
         override val localPath: String? = null,
         val mimeType: String? = null,
-        val sizeBytes: Long? = null
+        val sizeBytes: Long? = null,
     ) : SupportChatAttachment()
 }

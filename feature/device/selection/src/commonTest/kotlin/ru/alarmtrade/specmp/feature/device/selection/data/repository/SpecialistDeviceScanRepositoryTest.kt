@@ -21,7 +21,7 @@ class SpecialistDeviceScanRepositoryTest {
         val repository = SpecialistDeviceScanRepository(
             bluetoothConnectorInteractor = { error("BLE not supported on this platform") },
             usbConnectorInteractor = { error("USB not supported on this platform") },
-            serialConnectorInteractor = { error("COM not supported on this platform") }
+            serialConnectorInteractor = { error("COM not supported on this platform") },
         )
 
         val ble = repository.scanBluetooth().first()
@@ -38,6 +38,6 @@ class SpecialistDeviceScanRepositoryTest {
     private fun compileGuard(
         bt: () -> BluetoothConnectorInteractor,
         usb: () -> UsbConnectorInteractor,
-        serial: () -> SerialConnectorInteractor
+        serial: () -> SerialConnectorInteractor,
     ) = SpecialistDeviceScanRepository(bt, usb, serial)
 }

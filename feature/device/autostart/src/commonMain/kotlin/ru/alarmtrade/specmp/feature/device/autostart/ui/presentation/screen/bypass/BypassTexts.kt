@@ -89,10 +89,8 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassSubject
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartIllustration
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.IllustrationMode
 
-/** Короткий доступ к строкам фичи (ключи длинные). */
 private val txt = Strings.string
 
-/** Иллюстрация шага (карта `BC_ILLUS` макета): у действия — «запрос» или «выполнено». */
 @Suppress("CyclomaticComplexMethod") // таблица соответствий шаг → иллюстрация
 internal fun BypassStep.illustration(): AutostartIllustration {
     val done = kind == BypassStepKind.ACCEPTED
@@ -130,17 +128,13 @@ internal fun BypassStep.illustration(): AutostartIllustration {
     }
 }
 
-/** Рамка иллюстрации по виду шага: запрос — рамка и пульс, принято — спокойно, ожидание — «дыхание». */
 internal fun BypassStepKind.illustrationMode(): IllustrationMode = when (this) {
     BypassStepKind.ACTION, BypassStepKind.INSTRUCTION -> IllustrationMode.Request
     BypassStepKind.ACCEPTED -> IllustrationMode.Done
     BypassStepKind.WAIT, BypassStepKind.CRITICAL -> IllustrationMode.Wait
 }
 
-/**
- * Текст шага. У критичного ожидания это пояснение над крупным «Не прерывайте соединение». У инструкций текста нет
- * (`null`) — они показываются списком ([instruction]).
- */
+/** У инструкций текста нет (`null`) — они показываются списком ([instruction]). */
 @Suppress("CyclomaticComplexMethod")
 internal fun BypassStep.text(): StringResource? {
     val done = kind == BypassStepKind.ACCEPTED
@@ -188,7 +182,6 @@ internal fun BypassStep.text(): StringResource? {
     }
 }
 
-/** Ошибка обучения: «Что случилось» и «Что проверить» (D4); любая часть может отсутствовать. */
 internal data class ErrorTexts(val what: StringResource?, val check: StringResource?)
 
 @Suppress("CyclomaticComplexMethod")
@@ -230,7 +223,6 @@ internal fun BypassError.texts(): ErrorTexts = when (this) {
     BypassError.VAG_OLD_ALGORITHM_03, BypassError.VAG_NEW_ALGORITHM ->
         ErrorTexts(txt.autostart_bypass_error_new_unsupported_what, null)
 
-    // Текст с кодом — форматом в экране (autostart_bypass_error_ecu_what).
     BypassError.VAG_ECU_EXCHANGE -> ErrorTexts(null, null)
 
     BypassError.MERCEDES_DRIVER_DOOR ->
@@ -254,13 +246,8 @@ internal fun BypassError.texts(): ErrorTexts = when (this) {
         ErrorTexts(txt.autostart_bypass_error_lada_vesta_patch_what, txt.autostart_bypass_error_lada_vesta_patch_check)
 }
 
-/** Ключ в пункте инструкции LADA: красный — обучающий, чёрный — рабочий. */
 internal enum class InstructionKey { RED, BLACK }
 
-/**
- * Пункт инструкции (макет `INSTR`): действие (+ счётчик), запрет, отклик или ожидание, «если не получилось», что
- * сделать после, ключ.
- */
 internal data class InstructionItem(
     val action: StringResource? = null,
     val count: StringResource? = null,
@@ -269,12 +256,11 @@ internal data class InstructionItem(
     val wait: Boolean = false,
     val fail: StringResource? = null,
     val then: StringResource? = null,
-    val key: InstructionKey? = null
+    val key: InstructionKey? = null,
 )
 
 internal data class Instruction(val title: StringResource, val lead: StringResource, val items: List<InstructionItem>)
 
-/** Инструкция шага (только LADA APS и Toyota/Daihatsu); тексты переписаны дизайнером — сверка с ТП (D11). */
 internal fun BypassSubject.instruction(): Instruction? = when (this) {
     BypassSubject.LADA_APS -> LadaInstruction
     BypassSubject.TOYOTA_DAIHATSU -> ToyotaInstruction
@@ -289,37 +275,37 @@ private val LadaInstruction = Instruction(
         InstructionItem(
             action = txt.autostart_lada_item_2_action,
             response = txt.autostart_lada_item_2_response,
-            key = InstructionKey.RED
+            key = InstructionKey.RED,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_3_action,
             response = txt.autostart_lada_item_3_response,
-            key = InstructionKey.BLACK
+            key = InstructionKey.BLACK,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_4_action,
             response = txt.autostart_lada_item_4_response,
-            key = InstructionKey.BLACK
+            key = InstructionKey.BLACK,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_5_action,
             response = txt.autostart_lada_item_5_response,
-            key = InstructionKey.RED
+            key = InstructionKey.RED,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_6_action,
             forbidden = txt.autostart_lada_item_6_forbidden,
             response = txt.autostart_lada_item_6_response,
             fail = txt.autostart_lada_item_6_fail,
-            key = InstructionKey.RED
+            key = InstructionKey.RED,
         ),
         InstructionItem(
             action = txt.autostart_lada_item_7_action,
             response = txt.autostart_lada_item_7_response,
             then = txt.autostart_lada_item_7_then,
-            key = InstructionKey.RED
-        )
-    )
+            key = InstructionKey.RED,
+        ),
+    ),
 )
 
 private val ToyotaInstruction = Instruction(
@@ -332,8 +318,8 @@ private val ToyotaInstruction = Instruction(
         InstructionItem(
             action = txt.autostart_toyota_item_4_action,
             count = txt.autostart_toyota_item_4_count,
-            then = txt.autostart_toyota_item_4_then
+            then = txt.autostart_toyota_item_4_then,
         ),
-        InstructionItem(response = txt.autostart_toyota_item_5_response, wait = true)
-    )
+        InstructionItem(response = txt.autostart_toyota_item_5_response, wait = true),
+    ),
 )

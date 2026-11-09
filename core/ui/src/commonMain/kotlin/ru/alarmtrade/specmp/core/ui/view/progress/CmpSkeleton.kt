@@ -19,10 +19,6 @@ import androidx.compose.ui.unit.dp
 private const val SKELETON_PERIOD_MS = 700
 private const val SKELETON_MIN_ALPHA = 0.45f
 
-/**
- * Заглушка загрузки (скелетон): пульсирующий блок цвета surface-container-highest. Размер задаёт [modifier]
- * (ширина/высота строки текста, картинки), форма — [shape].
- */
 @Composable
 fun CmpSkeleton(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(8.dp)) {
     val transition = rememberInfiniteTransition(label = "skeleton")
@@ -30,12 +26,12 @@ fun CmpSkeleton(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape
         initialValue = 1f,
         targetValue = SKELETON_MIN_ALPHA,
         animationSpec = infiniteRepeatable(tween(SKELETON_PERIOD_MS, easing = LinearEasing), RepeatMode.Reverse),
-        label = "skeletonAlpha"
+        label = "skeletonAlpha",
     )
     // Альфа читается в фазе draw: пульс не рекомпозирует скелетон каждый кадр.
     Box(
         modifier
             .graphicsLayer { this.alpha = alpha.value }
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape),
     )
 }

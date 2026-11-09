@@ -104,7 +104,7 @@ private fun MainNavGraph() {
             // Дефолтный декоратор: без него не работает SavedStateHandle.
             rememberSaveableStateHolderNavEntryDecorator(),
             // Per-entry ViewModelStoreOwner: VM entry живёт ровно столько,
-            // сколько запись бэкстека (init/onCleared вместо DisposableEffect
+            // сколько запись бэкстека (onStart/onCleared вместо DisposableEffect
             // и ручного сброса state).
             rememberViewModelStoreNavEntryDecorator(),
         ),
@@ -152,7 +152,7 @@ NavDisplay(
   — это дефолтный декоратор, иначе потеряешь сохранение состояния.
 - При навигации **вперёд** (push нового ключа поверх) entry остаётся в стеке и его VM живёт
   по семантике Nav3 (при возврате состояние восстанавливается); сканирование/подписки при этом
-  приостанавливаются сами, если state собран через `stateIn(WhileSubscribed)`.
+  приостанавливаются сами: `state` `BaseViewModel` — `WhileSubscribed`, привязки `collectIntoState` живут с подпиской.
 - **Граф, уходящий из композиции без pop, свои VM не очищает.** Декоратор держит хранилища записей в ближайшем
   `LocalViewModelStoreOwner` (Activity): авторизованная зона после выхода из аккаунта просто покидает композицию, и
   без отдельной границы следующий вход получил бы VM прежнего аккаунта. Граница — `ViewModelScope(name, scopeKey)`

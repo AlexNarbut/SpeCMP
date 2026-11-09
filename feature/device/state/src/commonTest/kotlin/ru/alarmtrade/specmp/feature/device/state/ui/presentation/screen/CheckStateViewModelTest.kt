@@ -24,13 +24,15 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeProgramModeRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CommandReply
 import ru.alarmtrade.specmp.feature.device.state.domain.model.EngineInfo
@@ -40,17 +42,14 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneValue
-import ru.alarmtrade.specmp.feature.device.state.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.state.ui.FakeDeviceStateRepository
-import ru.alarmtrade.specmp.feature.device.state.ui.FakeProgramModeRepository
-import ru.alarmtrade.specmp.feature.device.state.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.state.ui.vehicle
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CheckStateViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
-    private val sessionRepository = FakeSessionRepository()
+    private val sessionRepository = FakeDeviceSessionRepository()
     private val repository = FakeDeviceStateRepository()
     private val programMode = FakeProgramModeRepository()
     private val time = TestTimeSource()
@@ -74,15 +73,14 @@ class CheckStateViewModelTest {
     }
 
     private fun TestScope.viewModel(fastMount: Boolean = false): CheckStateViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
-        session.attach(ConnectionTransport.BLE)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
         val vm = CheckStateViewModel(session, repository, entry, programMode, cooldown, dispatchers, fastMount, time)
             .also { viewModels += it }
         collector = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm
     }
@@ -243,7 +241,7 @@ class CheckStateViewModelTest {
         val vm = viewModel()
         emit(vehicle(serviceMode = true))
 
-        assertEquals(false, vm.onBackRequest())
+        vm.onBack()
         runCurrent()
         assertEquals(CheckStateDialog.Exit(service = true, program = false), vm.state.value.dialog)
 
@@ -257,7 +255,10 @@ class CheckStateViewModelTest {
     fun `back without modes leaves at once`() = test {
         val vm = viewModel()
         emit(vehicle())
-        assertTrue(vm.onBackRequest())
+        vm.onBack()
+        runCurrent()
+        assertNull(vm.state.value.dialog)
+        assertEquals(CheckStateEffect.Close, effects.last())
     }
 
     @Test

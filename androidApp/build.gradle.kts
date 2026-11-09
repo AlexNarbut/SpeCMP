@@ -31,10 +31,8 @@ kotlin {
 
 dependencies {
     implementation(project(":composeApp"))
-    // Язык приложения в контексте Activity (attachBaseContext) — до первой композиции
     implementation(project(":core:localization"))
     implementation(libs.androidx.activityCompose)
-    // Box с testTagsAsResourceId в AppActivity
     implementation(libs.compose.foundation)
     // AppActivity — FragmentActivity (нужно core/permissions для bind PermissionsController)
     implementation(libs.androidx.fragment)

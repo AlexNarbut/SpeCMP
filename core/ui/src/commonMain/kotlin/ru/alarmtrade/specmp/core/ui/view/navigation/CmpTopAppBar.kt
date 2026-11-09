@@ -39,7 +39,7 @@ fun CmpTopAppBar(
     containerColor: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
     colors: TopAppBarColors = cmpTopAppBarColors(containerColor, contentColor),
-    style: CmpTopAppBarStyle = CmpTopAppBarStyle.Small
+    style: CmpTopAppBarStyle = CmpTopAppBarStyle.Small,
 ) {
     val titleSlot: @Composable () -> Unit = if (subtitle != null) {
         {
@@ -66,7 +66,7 @@ fun CmpTopAppBar(
         Row(
             modifier = Modifier.padding(start = SlotGap, end = EdgeInset),
             horizontalArrangement = Arrangement.spacedBy(SlotGap),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             actions()
         }
@@ -83,7 +83,7 @@ fun CmpTopAppBar(
             navigationIcon = navigationIconSlot,
             actions = actionsSlot,
             windowInsets = zeroInsets,
-            colors = colors
+            colors = colors,
         )
 
         CmpTopAppBarStyle.CenterAligned -> CenterAlignedTopAppBar(
@@ -92,7 +92,7 @@ fun CmpTopAppBar(
             navigationIcon = navigationIconSlot,
             actions = actionsSlot,
             windowInsets = zeroInsets,
-            colors = colors
+            colors = colors,
         )
     }
 }
@@ -116,6 +116,6 @@ private fun cmpTopAppBarColors(containerColor: Color, contentColor: Color): TopA
         scrolledContainerColor = resolvedContainerColor,
         navigationIconContentColor = resolvedContentColor,
         titleContentColor = resolvedContentColor,
-        actionIconContentColor = resolvedContentColor
+        actionIconContentColor = resolvedContentColor,
     )
 }

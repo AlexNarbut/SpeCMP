@@ -22,10 +22,11 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
+import ru.alarmtrade.specmp.core.common.file.safeFileName
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 
 @Composable
 actual fun rememberSettingsFilePicker(): SettingsFilePicker {
@@ -47,11 +48,11 @@ private class IosSettingsFilePicker(private val viewController: UIViewController
     override fun launch() {
         val picker = UIDocumentPickerViewController(
             documentTypes = listOf(DATA_UTI),
-            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen
+            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen,
         ).apply { allowsMultipleSelection = false }
         val delegate = SettingsPickerDelegate(
             onPicked = { channel.trySend(it) },
-            onFinished = { activeDelegate = null }
+            onFinished = { activeDelegate = null },
         )
         activeDelegate = delegate
         picker.delegate = delegate
@@ -61,7 +62,7 @@ private class IosSettingsFilePicker(private val viewController: UIViewController
 
 private class SettingsPickerDelegate(
     private val onPicked: (SettingsFilePickResult) -> Unit,
-    private val onFinished: () -> Unit
+    private val onFinished: () -> Unit,
 ) : NSObject(),
     UIDocumentPickerDelegateProtocol {
 
@@ -72,7 +73,6 @@ private class SettingsPickerDelegate(
             onFinished()
             return
         }
-        // Копирование не должно вешать main-поток.
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
             val picked = url.copySettingsToTemporary()
             dispatch_async(dispatch_get_main_queue()) {
@@ -102,7 +102,7 @@ private fun NSURL.copySettingsToTemporary(): SettingsFilePickResult {
             path = directory,
             withIntermediateDirectories = true,
             attributes = null,
-            error = null
+            error = null,
         )
         if (!created || !fileManager.copyItemAtURL(this, NSURL.fileURLWithPath(destination), error = null)) {
             fileManager.removeItemAtPath(root, error = null)
@@ -115,7 +115,6 @@ private fun NSURL.copySettingsToTemporary(): SettingsFilePickResult {
     }
 }
 
-/** Экспорт документа: копия с нужным именем во временный каталог → системный «Сохранить в Файлы». */
 private class IosSettingsFileSaver : SettingsFileSaver {
     override suspend fun save(sourcePath: String, fileName: String): SettingsFileSaveResult {
         val fileManager = NSFileManager.defaultManager
@@ -125,7 +124,7 @@ private class IosSettingsFileSaver : SettingsFileSaver {
             path = directory,
             withIntermediateDirectories = true,
             attributes = null,
-            error = null
+            error = null,
         ) && fileManager.copyItemAtPath(sourcePath, toPath = target, error = null)
         if (!prepared) {
             fileManager.removeItemAtPath(directory, error = null)

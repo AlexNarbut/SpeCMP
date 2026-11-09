@@ -10,9 +10,8 @@ actual fun systemAppLocale(): AppLocale {
 }
 
 /**
- * compose-resources резолвят строки по `NSLocale.preferredLanguages`; повлиять на него можно только `AppleLanguages`,
- * и список кэшируется на старте процесса. Здесь — синхронизация оверрайда с выбором (лечит расхождения после смены
- * per-app языка в настройках iOS); действует со следующего запуска.
+ * compose-resources читают `NSLocale.preferredLanguages`, его меняет только `AppleLanguages` (кэш на старте) —
+ * синхронизируем оверрайд с выбором; действует со следующего запуска.
  */
 internal actual fun applyPlatformAppLocale(locale: AppLocale) = persistPlatformAppLocale(locale)
 

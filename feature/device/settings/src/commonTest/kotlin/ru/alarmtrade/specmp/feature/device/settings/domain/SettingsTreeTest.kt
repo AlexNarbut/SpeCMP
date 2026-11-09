@@ -35,7 +35,7 @@ class SettingsTreeTest {
         id = 41, number = "4.1", name = "Концевик дверей", description = null,
         value = SettingValue.Input(InputValue(emptyList(), InputContactType.NORMALLY_OPEN)),
         channel = Channel(1, "IN1", emptyList()), defaultPolarity = Polarity.MINUS,
-        availableLogics = emptyList(), enabledLogics = emptyList()
+        availableLogics = emptyList(), enabledLogics = emptyList(),
     )
     private val inputs = section(400, "4", "Входы", door)
     private val root = section(0, "", "", guard, inputs)
@@ -105,7 +105,7 @@ class SettingsTreeTest {
         description = null,
         value = SettingValue.Switch(false),
         onTitle = null,
-        offTitle = null
+        offTitle = null,
     )
 
     private fun section(id: Int, number: String, name: String, vararg children: SettingNode) =

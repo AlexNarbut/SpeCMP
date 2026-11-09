@@ -14,7 +14,7 @@ class FrmFileHeaderTest {
         size: Int = 100,
         headerLength: Int = 56,
         name: String = "grc-key",
-        version: String = "VER1.00 "
+        version: String = "VER1.00 ",
     ): ByteArray {
         val bytes = ByteArray(size)
         fun putUInt(position: Int, value: Int) = repeat(4) { bytes[position + it] = (value shr (8 * it)).toByte() }

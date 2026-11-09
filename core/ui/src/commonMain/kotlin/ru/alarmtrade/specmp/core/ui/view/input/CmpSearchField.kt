@@ -6,17 +6,13 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/**
- * Поле поиска: лупа слева, «очистить» справа, когда есть текст. Одна строка.
- * [clearContentDescription] — подпись кнопки очистки для доступности.
- */
 @Composable
 fun CmpSearchField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
     clearContentDescription: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpTextField(
         value = value,
@@ -29,12 +25,12 @@ fun CmpSearchField(
                 CmpIconButton(
                     onClick = { onValueChange("") },
                     icon = CmpIcons.Close,
-                    contentDescription = clearContentDescription
+                    contentDescription = clearContentDescription,
                 )
             }
         } else {
             null
         },
-        modifier = modifier
+        modifier = modifier,
     )
 }

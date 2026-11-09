@@ -154,7 +154,6 @@ private const val EXPANDED_ROTATION = 180f
 /** Автозапуск по умолчанию в SDK длится 10 минут — шкала отсчёта (точной длительности блок не сообщает). */
 private const val AUTOSTART_SCALE_SECONDS = 600
 
-/** «Двигатель и питание»: состояние двигателя, автозапуск с отсчётом, показатели плитками. */
 @Composable
 internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -166,25 +165,25 @@ internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 CmpBox(
                     modifier = Modifier
                         .size(44.dp)
                         .background(if (running) colors.primary else colors.surfaceContainerHighest, CircleShape),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CmpIcon(
                         painter = painterResource(Res.drawable.devicestate_ic_engine),
                         contentDescription = null,
                         tint = if (running) colors.onPrimary else colors.onSurfaceVariant,
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(26.dp),
                     )
                 }
                 CmpText(
                     text = stringResource(Strings.string.devicestate_engine_label_engine),
                     fontSize = 16.sp,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 ValuePill(
                     text = stringResource(
@@ -192,9 +191,9 @@ internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
                             EngineStatus.STOPPED -> Strings.string.devicestate_engine_value_stopped
                             EngineStatus.RUNNING -> Strings.string.devicestate_engine_value_running
                             EngineStatus.READY -> Strings.string.devicestate_engine_value_ready
-                        }
+                        },
                     ),
-                    tone = if (running) ZoneTone.ACTIVE else ZoneTone.REST
+                    tone = if (running) ZoneTone.ACTIVE else ZoneTone.REST,
                 )
             }
             AutostartBlock(engine.autostart)
@@ -204,45 +203,45 @@ internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
                         Triple(
                             Strings.string.devicestate_engine_label_rpm,
                             it.toString(),
-                            Strings.string.devicestate_unit_label_rpm
-                        )
+                            Strings.string.devicestate_unit_label_rpm,
+                        ),
                     )
                 }
                 add(
                     Triple(
                         Strings.string.devicestate_engine_label_voltage,
                         formatOneDecimal(power.voltage),
-                        Strings.string.devicestate_unit_label_volt
-                    )
+                        Strings.string.devicestate_unit_label_volt,
+                    ),
                 )
                 add(
                     Triple(
                         Strings.string.devicestate_engine_label_engine_temp,
                         engine.temperature.toString(),
-                        Strings.string.devicestate_unit_label_celsius
-                    )
+                        Strings.string.devicestate_unit_label_celsius,
+                    ),
                 )
                 add(
                     Triple(
                         Strings.string.devicestate_engine_label_cabin_temp,
                         power.cabinTemp.toString(),
-                        Strings.string.devicestate_unit_label_celsius
-                    )
+                        Strings.string.devicestate_unit_label_celsius,
+                    ),
                 )
                 add(
                     Triple(
                         Strings.string.devicestate_engine_label_outside_temp,
                         power.outsideTemp.toString(),
-                        Strings.string.devicestate_unit_label_celsius
-                    )
+                        Strings.string.devicestate_unit_label_celsius,
+                    ),
                 )
                 power.fuelPercent?.let {
                     add(
                         Triple(
                             Strings.string.devicestate_engine_label_fuel,
                             it.toString(),
-                            Strings.string.devicestate_unit_label_percent
-                        )
+                            Strings.string.devicestate_unit_label_percent,
+                        ),
                     )
                 }
             }
@@ -253,7 +252,7 @@ internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
                             label = stringResource(label),
                             value = value,
                             unit = stringResource(unit),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                     }
                     if (row.size == 1) CmpBox(modifier = Modifier.weight(1f))
@@ -272,57 +271,56 @@ private fun AutostartBlock(autostart: Autostart) {
                 .fillMaxWidth()
                 .background(colors.primaryContainer, RoundedCornerShape(16.dp))
                 .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 CmpIcon(
                     icon = CmpIcons.Autorenew,
                     contentDescription = null,
                     tint = colors.onPrimaryContainer,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(22.dp),
                 )
                 CmpText(
                     text = stringResource(Strings.string.devicestate_engine_title_autostart_running),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colors.onPrimaryContainer
+                    color = colors.onPrimaryContainer,
                 )
             }
             CmpText(
                 text = formatMinutesSeconds(autostart.secondsLeft),
                 fontSize = 40.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.onPrimaryContainer
+                color = colors.onPrimaryContainer,
             )
             CmpLinearProgressIndicator(
                 progress = (autostart.secondsLeft.toFloat() / AUTOSTART_SCALE_SECONDS).coerceIn(0f, 1f),
-                modifier = Modifier.fillMaxWidth().height(6.dp)
+                modifier = Modifier.fillMaxWidth().height(6.dp),
             )
         }
 
         Autostart.Enabled -> KeyValueRow(
             label = stringResource(Strings.string.devicestate_engine_label_autostart),
-            value = stringResource(Strings.string.devicestate_engine_value_autostart_enabled)
+            value = stringResource(Strings.string.devicestate_engine_value_autostart_enabled),
         )
 
         Autostart.Disabled -> KeyValueRow(
             label = stringResource(Strings.string.devicestate_engine_label_autostart),
-            value = stringResource(Strings.string.devicestate_zone_value_off)
+            value = stringResource(Strings.string.devicestate_zone_value_off),
         )
     }
 }
 
-/** «Связь»: GSM полосками, GPS, SMS и звонки. */
 @Composable
 internal fun LinkCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
     val link = vehicle.link
     SectionCard(
         modifier = modifier,
         title = stringResource(Strings.string.devicestate_link_title_card),
-        contentPadding = 8.dp
+        contentPadding = 8.dp,
     ) {
         val gsm = link.gsmLevel
         KeyValueRow(
@@ -333,13 +331,13 @@ internal fun LinkCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
                 stringResource(Strings.string.devicestate_link_format_gsm, gsm)
             },
             tone = if (gsm == null) ZoneTone.REST else ZoneTone.ACTIVE,
-            trailing = gsm?.let { level -> { SignalBars(level) } }
+            trailing = gsm?.let { level -> { SignalBars(level) } },
         )
         KeyValueRow(
             label = stringResource(Strings.string.devicestate_link_label_gps),
             value = link.speedKmh?.let { stringResource(Strings.string.devicestate_link_format_gps, it) }
                 ?: stringResource(Strings.string.devicestate_link_value_no_fix),
-            tone = if (link.gpsFix) ZoneTone.ACTIVE else ZoneTone.REST
+            tone = if (link.gpsFix) ZoneTone.ACTIVE else ZoneTone.REST,
         )
         KeyValueRow(
             label = stringResource(Strings.string.devicestate_link_label_sms),
@@ -348,8 +346,8 @@ internal fun LinkCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
                     Strings.string.devicestate_link_value_allowed
                 } else {
                     Strings.string.devicestate_link_value_denied
-                }
-            )
+                },
+            ),
         )
     }
 }
@@ -369,13 +367,12 @@ private fun SignalBars(level: Int) {
                 modifier = Modifier
                     .width(BAR_WIDTH)
                     .height(BAR_BASE + BAR_STEP * bar)
-                    .background(if (bar <= level) colors.primary else colors.outlineVariant, RoundedCornerShape(2.dp))
+                    .background(if (bar <= level) colors.primary else colors.outlineVariant, RoundedCornerShape(2.dp)),
             )
         }
     }
 }
 
-/** «Дополнительно» — раскрывающиеся группы; группа без данных не показывается. */
 @Composable
 internal fun ExtraGroups(vehicle: VehicleState, modifier: Modifier = Modifier) {
     val can = vehicle.can
@@ -389,7 +386,7 @@ internal fun ExtraGroups(vehicle: VehicleState, modifier: Modifier = Modifier) {
             text = stringResource(Strings.string.devicestate_extra_title_section),
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp),
         )
         if (can != null) CanGroup(can)
         if (ev != null) EvGroup(ev)
@@ -409,30 +406,30 @@ private fun EvGroup(ev: EvInfo) {
         summary = stringResource(
             Strings.string.devicestate_extra_format_ev,
             ev.socPercent,
-            charging.lowercase()
-        )
+            charging.lowercase(),
+        ),
     ) {
         KeyValueRow(
             label = stringResource(Strings.string.devicestate_extra_label_charging),
             value = charging,
-            tone = if (ev.charging == EvCharging.NONE) ZoneTone.REST else ZoneTone.ACTIVE
+            tone = if (ev.charging == EvCharging.NONE) ZoneTone.REST else ZoneTone.ACTIVE,
         )
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_soc),
-            stringResource(Strings.string.devicestate_unit_format_percent, ev.socPercent)
+            stringResource(Strings.string.devicestate_unit_format_percent, ev.socPercent),
         )
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_soh),
-            stringResource(Strings.string.devicestate_unit_format_percent, ev.sohPercent)
+            stringResource(Strings.string.devicestate_unit_format_percent, ev.sohPercent),
         )
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_battery_temp),
-            stringResource(Strings.string.devicestate_unit_format_celsius, ev.batteryTemp)
+            stringResource(Strings.string.devicestate_unit_format_celsius, ev.batteryTemp),
         )
         ev.rangeKm?.let {
             KeyValueRow(
                 stringResource(Strings.string.devicestate_extra_label_battery_range),
-                stringResource(Strings.string.devicestate_unit_format_km, it.toString())
+                stringResource(Strings.string.devicestate_unit_format_km, it.toString()),
             )
         }
     }
@@ -445,7 +442,7 @@ private fun HeaterGroup(heater: HeaterInfo) {
             Strings.string.devicestate_extra_value_working
         } else {
             Strings.string.devicestate_extra_value_off
-        }
+        },
     )
     ExtraGroup(
         key = "heater",
@@ -454,28 +451,28 @@ private fun HeaterGroup(heater: HeaterInfo) {
         summary = if (heater.hasErrors) {
             stringResource(
                 Strings.string.devicestate_extra_format_heater_errors,
-                status
+                status,
             )
         } else {
             status
-        }
+        },
     ) {
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_status),
             status,
-            tone = if (heater.on) ZoneTone.ACTIVE else ZoneTone.REST
+            tone = if (heater.on) ZoneTone.ACTIVE else ZoneTone.REST,
         )
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_temperature),
-            stringResource(Strings.string.devicestate_unit_format_celsius, heater.temperature)
+            stringResource(Strings.string.devicestate_unit_format_celsius, heater.temperature),
         )
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_voltage),
-            stringResource(Strings.string.devicestate_unit_format_volt, formatOneDecimal(heater.voltage))
+            stringResource(Strings.string.devicestate_unit_format_volt, formatOneDecimal(heater.voltage)),
         )
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_power),
-            stringResource(Strings.string.devicestate_unit_format_percent, heater.powerPercent)
+            stringResource(Strings.string.devicestate_unit_format_percent, heater.powerPercent),
         )
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_errors),
@@ -484,9 +481,9 @@ private fun HeaterGroup(heater: HeaterInfo) {
                     Strings.string.devicestate_extra_value_has_errors
                 } else {
                     Strings.string.devicestate_extra_value_no
-                }
+                },
             ),
-            tone = if (heater.hasErrors) ZoneTone.ALARM else ZoneTone.REST
+            tone = if (heater.hasErrors) ZoneTone.ALARM else ZoneTone.REST,
         )
     }
 }
@@ -502,7 +499,7 @@ private fun CameraGroup(camera: CameraInfo) {
             stringResource(Strings.string.devicestate_extra_format_camera_recording, minutes)
         } else {
             stringResource(Strings.string.devicestate_extra_value_installed)
-        }
+        },
     ) {
         KeyValueRow(
             stringResource(Strings.string.devicestate_extra_label_recording),
@@ -511,14 +508,14 @@ private fun CameraGroup(camera: CameraInfo) {
                     Strings.string.devicestate_extra_value_recording
                 } else {
                     Strings.string.devicestate_extra_value_no
-                }
+                },
             ),
-            tone = if (camera.recording) ZoneTone.ACTIVE else ZoneTone.REST
+            tone = if (camera.recording) ZoneTone.ACTIVE else ZoneTone.REST,
         )
         minutes?.let {
             KeyValueRow(
                 stringResource(Strings.string.devicestate_extra_label_recorded),
-                stringResource(Strings.string.devicestate_unit_format_minutes, it)
+                stringResource(Strings.string.devicestate_unit_format_minutes, it),
             )
         }
     }
@@ -532,7 +529,7 @@ private fun SirenGroup(vehicle: VehicleState) {
         key = "siren",
         icon = CmpIcons.VolumeUp,
         title = stringResource(Strings.string.devicestate_extra_title_siren),
-        summary = stringResource(Strings.string.devicestate_extra_format_siren, siren, handsFree)
+        summary = stringResource(Strings.string.devicestate_extra_format_siren, siren, handsFree),
     ) {
         KeyValueRow(stringResource(Strings.string.devicestate_extra_label_siren), siren)
         KeyValueRow(stringResource(Strings.string.devicestate_extra_label_hands_free), handsFree)
@@ -551,28 +548,28 @@ private fun CanGroup(can: CanInfo) {
         summary = if (can.washerLow) {
             stringResource(
                 Strings.string.devicestate_extra_format_can_washer,
-                mileage
+                mileage,
             )
         } else {
             mileage
-        }
+        },
     ) {
         can.mileageKm?.let {
             KeyValueRow(
                 stringResource(Strings.string.devicestate_extra_label_mileage),
-                stringResource(Strings.string.devicestate_unit_format_km, it.toString())
+                stringResource(Strings.string.devicestate_unit_format_km, it.toString()),
             )
         }
         can.rangeKm?.let {
             KeyValueRow(
                 stringResource(Strings.string.devicestate_extra_label_range),
-                stringResource(Strings.string.devicestate_unit_format_km, it.toString())
+                stringResource(Strings.string.devicestate_unit_format_km, it.toString()),
             )
         }
         can.consumption?.let {
             KeyValueRow(
                 stringResource(Strings.string.devicestate_extra_label_consumption),
-                stringResource(Strings.string.devicestate_unit_format_consumption, it)
+                stringResource(Strings.string.devicestate_unit_format_consumption, it),
             )
         }
         KeyValueRow(
@@ -582,9 +579,9 @@ private fun CanGroup(can: CanInfo) {
                     Strings.string.devicestate_extra_value_washer_low
                 } else {
                     Strings.string.devicestate_extra_value_normal
-                }
+                },
             ),
-            tone = if (can.washerLow) ZoneTone.ALARM else ZoneTone.REST
+            tone = if (can.washerLow) ZoneTone.ALARM else ZoneTone.REST,
         )
         WindowsBlock(can)
         can.tires?.let { TiresBlock(it) }
@@ -602,12 +599,12 @@ private fun WindowsBlock(can: CanInfo) {
         },
         fontSize = 15.sp,
         fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
     )
     Window.entries.chunked(2).forEach { row ->
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             row.forEach { window ->
                 val open = window in can.windowsOpen
@@ -617,15 +614,15 @@ private fun WindowsBlock(can: CanInfo) {
                         .heightIn(min = 56.dp)
                         .background(
                             if (open) colors.primaryContainer else colors.surfaceContainerHigh,
-                            RoundedCornerShape(12.dp)
+                            RoundedCornerShape(12.dp),
                         )
                         .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
                 ) {
                     CmpText(
                         text = stringResource(window.label),
                         fontSize = 14.sp,
-                        color = if (open) colors.onPrimaryContainer else colors.onSurfaceVariant
+                        color = if (open) colors.onPrimaryContainer else colors.onSurfaceVariant,
                     )
                     CmpText(
                         text = stringResource(
@@ -633,11 +630,11 @@ private fun WindowsBlock(can: CanInfo) {
                                 Strings.string.devicestate_extra_value_window_open
                             } else {
                                 Strings.string.devicestate_extra_value_window_closed
-                            }
+                            },
                         ),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (open) colors.primary else colors.onSurface
+                        color = if (open) colors.primary else colors.onSurface,
                     )
                 }
             }
@@ -651,26 +648,26 @@ private fun TiresBlock(tires: TirePressure) {
         text = stringResource(Strings.string.devicestate_extra_title_tires),
         fontSize = 15.sp,
         fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
     )
     val values = listOfNotNull(
         Strings.string.devicestate_extra_label_tire_front_left to tires.frontLeft,
         Strings.string.devicestate_extra_label_tire_front_right to tires.frontRight,
         Strings.string.devicestate_extra_label_tire_rear_left to tires.rearLeft,
         Strings.string.devicestate_extra_label_tire_rear_right to tires.rearRight,
-        tires.spare?.let { Strings.string.devicestate_extra_label_tire_spare to it }
+        tires.spare?.let { Strings.string.devicestate_extra_label_tire_spare to it },
     )
     values.chunked(TIRE_COLUMNS).forEach { row ->
         CmpRow(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             row.forEach { (label, value) ->
                 MetricTile(
                     label = stringResource(label),
                     value = formatOneDecimal(value),
                     unit = null,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
             repeat(TIRE_COLUMNS - row.size) { CmpBox(modifier = Modifier.weight(1f)) }
@@ -678,7 +675,6 @@ private fun TiresBlock(tires: TirePressure) {
     }
 }
 
-/** Раскрывающаяся группа «Дополнительно»: иконка, заголовок, сводка в одну строку. */
 @Composable
 private fun ExtraGroup(key: String, icon: CmpIcons, title: String, summary: String, content: @Composable () -> Unit) {
     val colors = cmpThemeColors()
@@ -687,7 +683,7 @@ private fun ExtraGroup(key: String, icon: CmpIcons, title: String, summary: Stri
         modifier = Modifier.fillMaxWidth(),
         shape = CardShape,
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpColumn {
             CmpRow(
@@ -697,17 +693,17 @@ private fun ExtraGroup(key: String, icon: CmpIcons, title: String, summary: Stri
                     .clickable { open = !open }
                     .padding(start = 14.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 CmpBox(
                     modifier = Modifier.size(44.dp).background(colors.secondaryContainer, RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CmpIcon(
                         icon = icon,
                         contentDescription = null,
                         tint = colors.onSecondaryContainer,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
                 }
                 CmpColumn(modifier = Modifier.weight(1f)) {
@@ -717,14 +713,14 @@ private fun ExtraGroup(key: String, icon: CmpIcons, title: String, summary: Stri
                         fontSize = 14.sp,
                         color = colors.onSurfaceVariant,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 CmpIcon(
                     icon = CmpIcons.KeyboardArrowDown,
                     contentDescription = null,
                     tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(28.dp).rotate(if (open) EXPANDED_ROTATION else 0f)
+                    modifier = Modifier.size(28.dp).rotate(if (open) EXPANDED_ROTATION else 0f),
                 )
             }
             if (open) {

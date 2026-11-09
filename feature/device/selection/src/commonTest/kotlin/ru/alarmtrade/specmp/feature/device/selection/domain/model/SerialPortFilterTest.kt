@@ -15,7 +15,7 @@ class SerialPortFilterTest {
             port("/dev/tty.debug-console"),
             port("/dev/cu.Bluetooth-Incoming-Port"),
             port("/dev/cu.usbmodem5AAF2961781", vendorId = 0x1A86),
-            port("/dev/tty.usbmodem5AAF2961781", vendorId = 0x1A86)
+            port("/dev/tty.usbmodem5AAF2961781", vendorId = 0x1A86),
         )
 
         assertEquals(listOf("/dev/cu.usbmodem5AAF2961781"), ports.connectableAdapters().map { it.id })

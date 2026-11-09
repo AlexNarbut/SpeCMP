@@ -27,16 +27,12 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeLabel
 
-/**
- * Выбор типа устройства, когда блок не подключён: каталог фильтруется под сигнализацию или микробот.
- * Узкое окно — карточки строками, широкое — две крупные карточки рядом.
- */
 @Composable
 internal fun TypeChoice(wide: Boolean, onPick: (VehicleDeviceType) -> Unit, modifier: Modifier = Modifier) {
     CmpColumn(
         modifier = modifier.fillMaxWidth().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpText(text = stringResource(Strings.string.vehicle_type_title_screen), style = CmpTextStyle.Title)
         if (wide) {
@@ -63,14 +59,14 @@ private fun TypeCard(type: VehicleDeviceType, wide: Boolean, onClick: () -> Unit
         selected = false,
         onClick = onClick,
         modifier = modifier.heightIn(
-            min = if (wide) 200.dp else 96.dp
-        ).testTag(VehicleTestTags.type(type.name.lowercase()))
+            min = if (wide) 200.dp else 96.dp,
+        ).testTag(VehicleTestTags.type(type.name.lowercase())),
     ) {
         if (wide) {
             CmpColumn(
                 modifier = Modifier.fillMaxWidth().padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(72.dp))
                 CmpText(text = typeLabel(type), style = CmpTextStyle.BodyLarge, textAlign = TextAlign.Center)
@@ -79,7 +75,7 @@ private fun TypeCard(type: VehicleDeviceType, wide: Boolean, onClick: () -> Unit
             CmpRow(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(48.dp))
                 CmpText(text = typeLabel(type), style = CmpTextStyle.BodyLarge)

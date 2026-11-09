@@ -21,6 +21,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.ui.navigation.currentRoute
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
@@ -50,9 +51,11 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationEditorEntry
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateEntry
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountRoute
@@ -72,7 +75,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRoute
-import ru.alarmtrade.specmp.filepicker.rememberFirmwareFilePicker
+import ru.alarmtrade.specmp.filepicker.rememberAppFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSettingsFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSettingsFileSaver
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatAttachmentFiles
@@ -107,12 +110,10 @@ fun AppNavigation() {
         authedState = { AuthedNavGraph() },
         errorState = { onRetry ->
             SessionCheckErrorScreen(onRetry = onRetry)
-        }
+        },
     )
 }
 
-// Хост авторизованной зоны: держит app-level переходы между графами фич
-// (main / support-chat / device-selection). Каждый entry — целый граф фичи.
 @Composable
 private fun AuthedNavGraph() {
     val backStack = rememberNavBackStack(navConfig, MainRoute)
@@ -125,14 +126,14 @@ private fun AuthedNavGraph() {
             rememberSaveableStateHolderNavEntryDecorator(),
             // Per-entry ViewModelStoreOwner: VM живёт ровно столько, сколько запись
             // бэкстека, и очищается при pop (см. docs/navigation.md).
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {
             entry<MainRoute> { _ ->
                 MainNavGraph(
                     onNavigateToFeature = { target ->
                         navigateFromMain(target, backStack)
-                    }
+                    },
                 )
             }
             entry<SupportChatRoute> { _ ->
@@ -141,7 +142,7 @@ private fun AuthedNavGraph() {
                     filePicker = rememberSupportChatFilePicker(),
                     fileSaver = rememberSupportChatFileSaver(),
                     attachmentFiles = rememberSupportChatAttachmentFiles(),
-                    fileOpener = rememberSupportChatFileOpener()
+                    fileOpener = rememberSupportChatFileOpener(),
                 )
             }
             entry<DeviceSelectionRoute> { _ ->
@@ -149,7 +150,7 @@ private fun AuthedNavGraph() {
                     // Сессия создана — поиск заменяется flow работы с устройством:
                     // «Назад» из монтажа не возвращает в поиск.
                     onSessionCreate = { backStack.replaceCurrent(AdvancedMountRoute) },
-                    onClose = { backStack.popSafe() }
+                    onClose = { backStack.popSafe() },
                 )
             }
             entry<FastMountSelectionRoute> { _ ->
@@ -157,7 +158,7 @@ private fun AuthedNavGraph() {
                     // Как в расширенном монтаже: «Назад» из мастера не возвращает в поиск.
                     onSessionCreate = { backStack.replaceCurrent(FastMountRoute) },
                     onClose = { backStack.popSafe() },
-                    alarmsOnly = true
+                    alarmsOnly = true,
                 )
             }
             entry<FastMountRoute> { _ -> FastMountGraph(backStack) }
@@ -172,23 +173,23 @@ private fun AuthedNavGraph() {
                     request = key.request,
                     // Только свой маршрут: повторное «Выбрать» не закроет экран под ним.
                     onPick = { if (backStack.currentRoute == key) backStack.popSafe() },
-                    onBack = { backStack.popSafe() }
+                    onBack = { backStack.popSafe() },
                 )
             }
             entry<AdvancedMountRoute> { _ ->
-                // Обёртка interaction: дисконнект — экран поверх графа, выход — закрытие сессии.
                 DeviceInteractionHost(
                     onExit = { backStack.popSafe() },
                     bootContent = { onExit ->
                         FirmwareBootGraph(
                             onExit = onExit,
                             onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
-                            filePicker = rememberFirmwareFilePicker(),
+                            archivePicker = koinInject(),
+                            filePicker = rememberAppFirmwareFilePicker(),
                             vehiclePicker = { deviceName, onPick, onPickerBack ->
                                 ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-                            }
+                            },
                         )
-                    }
+                    },
                 ) { device, onExit ->
                     AdvancedMountNavGraph(
                         onExit = onExit,
@@ -197,7 +198,6 @@ private fun AuthedNavGraph() {
                         settingsEditor = { onBack, onOpenFirmwareUpdate ->
                             DeviceSettingsEditor(onExit = onBack, onOpenFirmwareUpdate = onOpenFirmwareUpdate)
                         },
-                        // Конфигуратор при активной сессии: «Записать в блок» — редактор блока с конфигурацией.
                         configurator = { onBack, onOpenFirmwareUpdate ->
                             AppConfigurator(
                                 onExit = onBack,
@@ -205,34 +205,30 @@ private fun AuthedNavGraph() {
                                     DeviceSettingsEditor(
                                         onExit = onEditorBack,
                                         onOpenFirmwareUpdate = onOpenFirmwareUpdate,
-                                        loadOnOpen = load
+                                        loadOnOpen = load,
                                     )
-                                }
+                                },
                             )
                         },
                         bypassLearning = { onBack, onOpenClone, onOpenSupportChat ->
                             BypassLearningEntry(
                                 onBack = onBack,
                                 onOpenClone = onOpenClone,
-                                onOpenSupportChat = onOpenSupportChat
+                                onOpenSupportChat = onOpenSupportChat,
                             )
                         },
                         clone = { fromBypass, onBack, onOpenSupportChat ->
                             CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
                         },
                         checkState = { onBack -> CheckStateEntry(onBack = onBack) },
-                        vehicles = { onBack -> DeviceVehicles(device, onBack) }
+                        vehicles = { onBack -> DeviceVehicles(device, onBack) },
                     )
                 }
             }
-        }
+        },
     )
 }
 
-/**
- * Справочник автомобилей под подключённый блок (подсистемы модели, CAN-код прошивки — в поиске по CAN). «Прошивки
- * для CAN» в карточке — архив основной программы блока с этим CAN-фильтром, только просмотр.
- */
 @Composable
 private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
     var archiveCanCode by rememberSaveable { mutableStateOf<String?>(null) }
@@ -243,17 +239,17 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
                 mode = VehicleSelectMode.VIEW,
                 catalog = VehicleCatalog.ALL,
                 device = VehicleDeviceFilter.Device(device.systemName),
-                firmwareCanCode = device.can?.code
+                firmwareCanCode = device.can?.code,
             ),
             onPick = {},
             onBack = onBack,
-            onOpenFirmwareArchive = { archiveCanCode = it }
+            onOpenFirmwareArchive = { archiveCanCode = it },
         )
     } else {
         // Архив поверх справочника: «назад» возвращает к карточке автомобиля, а не закрывает раздел.
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
-            onBackCompleted = { archiveCanCode = null }
+            onBackCompleted = { archiveCanCode = null },
         )
         FirmwareArchiveEntry(
             request = FirmwareArchiveRequest(
@@ -265,55 +261,70 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
                 deviceName = device.systemName,
                 canCode = canCode,
                 viewOnly = true,
-                // CAN блока — подсветка версий «как в блоке» рядом с кодом выбранного автомобиля.
                 deviceCanCode = device.can?.takeUnless { it.isFactory }?.code?.takeIf { it.isNotBlank() },
                 deviceCanVersion = device.can?.takeUnless { it.isFactory }?.version,
-                deviceCanProfile = device.can?.takeUnless { it.isFactory }?.firmwareVersion
+                deviceCanProfile = device.can?.takeUnless { it.isFactory }?.firmwareVersion,
             ),
             onPick = {},
             onBack = { archiveCanCode = null },
             vehiclePicker = { deviceName, onPick, onPickerBack ->
                 ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-            }
+            },
         )
     }
 }
 
-/** Конфигуратор: с главной (без [deviceEditor]) и раздел монтажа (с «Записать в блок»). */
 @Composable
 private fun AppConfigurator(
     onExit: () -> Unit,
-    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null
+    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null,
 ) {
     ConfiguratorEntry(
         onExit = onExit,
         vehiclePicker = { catalog, deviceName, onPick, onPickerBack ->
             ConfiguratorVehicles(catalog, deviceName, onPick, onPickerBack)
         },
+        editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
+            ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
+        },
         filePicker = rememberSettingsFilePicker(),
         fileSaver = rememberSettingsFileSaver(),
-        deviceEditor = deviceEditor
+        deviceEditor = deviceEditor,
     )
 }
 
-/**
- * Редактор настроек подключённого блока: раздел «Настройки» монтажа и «Записать в блок» из конфигуратора
- * ([loadOnOpen] — конфигурация, сразу открываемая в «Что изменится»).
- */
+@Composable
+internal fun ConfiguratorEditor(
+    source: SettingsSource,
+    fileSaver: SettingsFileSaver,
+    onOpenConfiguration: (SettingsSource.LocalConfiguration) -> Unit,
+    onWriteToDevice: ((SettingsSource) -> Unit)?,
+    onExit: () -> Unit,
+) {
+    ConfigurationEditorEntry(
+        source = source,
+        onExit = onExit,
+        vehiclePicker = { deviceName, onPick, onPickerBack ->
+            ConfiguratorVehicles(VehicleCatalog.ALL, deviceName, onPick, onPickerBack)
+        },
+        fileSaver = fileSaver,
+        onOpenConfiguration = onOpenConfiguration,
+        onWriteToDevice = onWriteToDevice,
+    )
+}
+
 @Composable
 private fun DeviceSettingsEditor(
     onExit: () -> Unit,
     onOpenFirmwareUpdate: () -> Unit,
-    loadOnOpen: SettingsSource? = null
+    loadOnOpen: SettingsSource? = null,
 ) {
     DeviceSettingsEntry(
         onExit = onExit,
         onOpenFirmwareUpdate = onOpenFirmwareUpdate,
-        // CAN-код из каталога: автомобили под модель блока, выбор подставляет код и carId.
         vehiclePicker = { deviceName, onPick, onPickerBack ->
             ConfiguratorVehicles(VehicleCatalog.ALL, deviceName, onPick, onPickerBack)
         },
-        // «Загрузить из…» → «Мои» / облако: экраны конфигуратора в режиме выбора.
         configurationPicker = { request, onPick, onOpenFirmware, onPickerBack ->
             ConfigurationPickerEntry(
                 request = request,
@@ -322,25 +333,24 @@ private fun DeviceSettingsEditor(
                 onBack = onPickerBack,
                 vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
                     ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
-                }
+                },
+                editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
+                    ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
+                },
             )
         },
         filePicker = rememberSettingsFilePicker(),
         fileSaver = rememberSettingsFileSaver(),
-        loadOnOpen = loadOnOpen
+        loadOnOpen = loadOnOpen,
     )
 }
 
-/**
- * Выбор автомобиля в конфигураторе: каталог с конфигурациями (облако) или весь каталог (CAN-код в редакторе).
- * Модель блока не задана — облако для всех моделей (без экрана выбора типа устройства).
- */
 @Composable
 internal fun ConfiguratorVehicles(
     catalog: VehicleCatalog,
     deviceName: String?,
     onPick: (CarSummary) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     VehicleSelectEntry(
         request = VehicleSelectRequest(
@@ -349,30 +359,29 @@ internal fun ConfiguratorVehicles(
             device = deviceName?.let { VehicleDeviceFilter.Device(it) }
                 ?: VehicleDeviceFilter.Type(VehicleDeviceType.ALARM).takeIf {
                     catalog == VehicleCatalog.WITH_CONFIGURATIONS
-                }
+                },
         ),
         onPick = onPick,
-        onBack = onBack
+        onBack = onBack,
     )
 }
 
-/** Выбор автомобиля для CAN-фильтра архива прошивок: каталог под модель блока, результат — CAN-код и название. */
 @Composable
 internal fun ArchiveVehiclePicker(
     deviceName: String?,
     onPick: (canCode: String, carTitle: String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     VehicleSelectEntry(
         request = VehicleSelectRequest(
             mode = VehicleSelectMode.PICK,
             catalog = VehicleCatalog.ALL,
-            device = deviceName?.let { VehicleDeviceFilter.Device(it) }
+            device = deviceName?.let { VehicleDeviceFilter.Device(it) },
         ),
         onPick = { car ->
             onPick(car.canCode, car.fullName())
         },
-        onBack = onBack
+        onBack = onBack,
     )
 }
 
@@ -386,9 +395,8 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.FirmwareArchive -> backStack.navigateSafe(FirmwareArchiveRoute)
 
-        // Справочник автомобилей: блок не подключён — сначала выбор типа устройства.
         MainNavigationTarget.Cars -> backStack.navigateSafe(
-            VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null))
+            VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null)),
         )
 
         MainNavigationTarget.CanScanner -> Unit
@@ -413,7 +421,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 private fun AppStartLoading() {
     CmpBox(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpCircularProgressIndicator(color = cmpThemeColors().primary)
     }

@@ -14,11 +14,7 @@ internal actual fun applyPlatformAppLocale(locale: AppLocale) {
     Locale.setDefault(Locale.forLanguageTag(locale.languageTag))
 }
 
-/**
- * Тот же файл, что у `Settings()` (default SharedPreferences), — запоминается в [withAppLocale] (раньше любой VM).
- * Нужен для синхронной записи: `Settings` пишет через `apply()`, а перезапуск ([saveAppLocale] → `AppRestarter`) сразу
- * завершает процесс — асинхронная запись не успела бы на диск.
- */
+/** Файл `Settings()` для синхронной записи: `apply()` не успел бы на диск до завершения процесса перезапуском. */
 @Volatile
 private var appPreferences: SharedPreferences? = null
 
@@ -27,12 +23,8 @@ internal actual fun persistPlatformAppLocale(locale: AppLocale) {
 }
 
 /**
- * Контекст Activity с языком приложения — вызывать из `attachBaseContext`, до первой композиции.
- *
- * Два механизма, потому что язык резолвят по-разному: android-ресурсы — по `Configuration` контекста,
- * compose-resources — по процессной локали (`LocaleList.getDefault()`). Язык в конфигурации Activity нужен ещё и
- * затем, чтобы смена конфигурации (поворот, размер окна при `configChanges`) не возвращала процессную локаль
- * к системной. Пользователь язык не выбирал — контекст как есть (системный язык).
+ * Вызывать из `attachBaseContext`. Android-ресурсы резолвят язык по `Configuration`, compose-resources — по процессной
+ * локали; язык в конфигурации ещё и не даёт смене конфигурации вернуть процессную локаль к системной.
  */
 fun Context.withAppLocale(): Context {
     appPreferences = applicationContext.getSharedPreferences("${packageName}_preferences", Context.MODE_PRIVATE)
@@ -45,12 +37,7 @@ fun Context.withAppLocale(): Context {
     return createConfigurationContext(config)
 }
 
-/**
- * Снова применить язык приложения к процессной локали — из `Activity.onConfigurationChanged`. При смене конфигурации,
- * которую Activity обрабатывает сама (`configChanges`: поворот, размер окна), система возвращает `Locale.getDefault()`
- * к системному языку, и перерисованный UI (compose-resources) съехал бы на него. Перерисовка — на следующем кадре,
- * поэтому достаточно вызвать до `super`/сразу после.
- */
+/** Из `onConfigurationChanged`: при `configChanges` система возвращает `Locale.getDefault()` к системному языку. */
 fun reapplyAppLocale() {
     Locale.setDefault(Locale.forLanguageTag(currentAppLocale().languageTag))
 }

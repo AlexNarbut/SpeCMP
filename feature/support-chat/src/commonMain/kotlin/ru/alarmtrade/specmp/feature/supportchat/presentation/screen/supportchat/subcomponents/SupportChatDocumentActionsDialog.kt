@@ -11,18 +11,13 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 
-/**
- * Действия с документом по тапу: «Открыть» (во внешнем приложении) и «Скачать»
- * (в «Загрузки»). Файл скачивается только после выбора пользователя. «Скачать»
- * есть только у вложения с url — своё неподтверждённое вложение можно лишь открыть
- * из локальной копии.
- */
+/** Файл скачивается только после выбора; «Скачать» есть только у вложения с url. */
 @Composable
 internal fun SupportChatDocumentActionsDialog(
     attachment: SupportChatUiAttachment,
     onOpen: () -> Unit,
     onDownload: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     CmpDialog(
         onDismissRequest = onDismiss,
@@ -30,18 +25,18 @@ internal fun SupportChatDocumentActionsDialog(
         confirmButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.supportchat_chat_btn_open),
-                onClick = onOpen
+                onClick = onOpen,
             )
         },
         dismissButton = if (attachment.url != null) {
             {
                 CmpTextButton(
                     text = stringResource(Strings.string.supportchat_chat_btn_download),
-                    onClick = onDownload
+                    onClick = onDownload,
                 )
             }
         } else {
             null
-        }
+        },
     )
 }

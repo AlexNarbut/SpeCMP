@@ -56,12 +56,6 @@ private val HeroSize = 128.dp
 
 internal const val FILE_UPDATE_TAG = "firmware_file_update"
 
-/**
- * «Прошивка блока» (приложение прошивки, BLE/USB): блок в рабочем режиме, кнопка «Обновить из файла» переводит его
- * в загрузчик. Публичная точка входа — рабочий контент хоста устройства (`DeviceInteractionHost`).
- *
- * @param onBack выход из flow устройства (закрывает сессию).
- */
 @Composable
 fun FirmwareFileScreen(onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareFileViewModel>()
@@ -73,13 +67,12 @@ fun FirmwareFileScreen(onBack: () -> Unit) {
             onUpdateClick = viewModel::onUpdateClick,
             onDialogDismiss = viewModel::onDialogDismiss,
             onConfirmBoot = viewModel::onConfirmBoot,
-            onPinSubmit = viewModel::onPinSubmit
+            onPinSubmit = viewModel::onPinSubmit,
         )
     }
     FirmwareFileContent(state = state, actions = actions)
 }
 
-/** Stateless-контент экрана «Обновить из файла». */
 @Composable
 internal fun FirmwareFileContent(state: FirmwareFileState, actions: FirmwareFileActions) {
     CmpScaffold(
@@ -93,11 +86,11 @@ internal fun FirmwareFileContent(state: FirmwareFileState, actions: FirmwareFile
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back),
                     )
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         CmpBox(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val target = state.target) {
@@ -111,13 +104,13 @@ internal fun FirmwareFileContent(state: FirmwareFileState, actions: FirmwareFile
         is CheckDialog.ConfirmBoot -> ConfirmBootDialog(
             dialog = dialog,
             onDismiss = actions.onDialogDismiss,
-            onConfirm = actions.onConfirmBoot
+            onConfirm = actions.onConfirmBoot,
         )
 
         is CheckDialog.Pin -> PinDialog(
             dialog = dialog,
             onDismiss = actions.onDialogDismiss,
-            onSubmit = actions.onPinSubmit
+            onSubmit = actions.onPinSubmit,
         )
 
         is CheckDialog.Description, null -> Unit
@@ -128,12 +121,12 @@ internal fun FirmwareFileContent(state: FirmwareFileState, actions: FirmwareFile
 private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClick: () -> Unit) {
     CmpColumn(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpColumn(
             modifier = Modifier.widthIn(max = BodyMaxWidth).fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             when (target) {
                 is FileTarget.Supported -> FirmwareHero(CmpIcons.SystemUpdate, size = HeroSize)
@@ -148,7 +141,7 @@ private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClic
                 InfoBanner(
                     text = stringResource(Strings.string.firmware_check_msg_boot_failed),
                     tone = BannerTone.Error,
-                    icon = CmpIcons.CloudOff
+                    icon = CmpIcons.CloudOff,
                 )
             }
             when (target) {
@@ -157,12 +150,12 @@ private fun ReadyBody(state: FirmwareFileState, target: FileTarget, onUpdateClic
                     CmpButton(
                         text = stringResource(Strings.string.firmware_common_btn_update_file),
                         onClick = onUpdateClick,
-                        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(FILE_UPDATE_TAG)
+                        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(FILE_UPDATE_TAG),
                     )
                 }
 
                 FileTarget.NotSupported -> InfoBanner(
-                    text = stringResource(Strings.string.firmware_file_msg_not_supported)
+                    text = stringResource(Strings.string.firmware_file_msg_not_supported),
                 )
             }
         }

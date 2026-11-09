@@ -2,30 +2,25 @@ package ru.alarmtrade.specmp.feature.login.data.repository
 
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.errors.UserIsNotConfirmed
-import ru.alarmtrade.specialist.interactors.auth.AuthInteractor
 import ru.alarmtrade.specialist.interactors.auth.requests.LoginRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.ResendActivationEmailRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.ResetPasswordRequest
 import ru.alarmtrade.specialist.interactors.auth.requests.SignUpRequest
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
-import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.login.data.datasource.LoginDataSource
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.LoginResult
 import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
-class SpecialistLoginRepository(
-    private val authInteractor: AuthInteractor,
-    private val specialistInitializer: SpecialistInitializer
-) : LoginRepository {
+internal class SpecialistLoginRepository(private val dataSource: LoginDataSource) : LoginRepository {
 
     override suspend fun login(credentials: LoginCredentials): Response<LoginResult> =
-        saveDeviceInformation().mapIfSuccess {
-            when (val response = authInteractor.loginUseCase.execute(credentials.toLoginRequest())) {
+        dataSource.syncClientInfo().mapIfSuccess {
+            when (val response = dataSource.login(credentials.toLoginRequest())) {
                 is SpecialistResponse.Success -> Response.Success(LoginResult.Authorized)
 
                 is SpecialistResponse.Error -> {
@@ -39,39 +34,35 @@ class SpecialistLoginRepository(
         }
 
     override suspend fun signUp(credentials: SignUpCredentials): Response<Unit> =
-        authInteractor.signUpUseCase.execute(credentials.toSignUpRequest()).toResponse().map { }
+        dataSource.signUp(credentials.toSignUpRequest()).toResponse()
 
     override suspend fun resetPassword(credentials: ResetPasswordCredentials): Response<Unit> =
-        authInteractor.resetPasswordUseCase.execute(credentials.toResetPasswordRequest()).toResponse().map { }
+        dataSource.resetPassword(credentials.toResetPasswordRequest()).toResponse()
 
     override suspend fun resendActivationEmail(credentials: LoginCredentials): Response<Unit> =
-        saveDeviceInformation().mapIfSuccess {
-            authInteractor.resendActivationEmailUseCase.execute(credentials.toResendActivationEmailRequest())
-                .toResponse()
-                .map { }
+        dataSource.syncClientInfo().mapIfSuccess {
+            dataSource.resendActivationEmail(credentials.toResendActivationEmailRequest()).toResponse()
         }
 
     private fun LoginCredentials.toLoginRequest(): LoginRequest = LoginRequest(
         username = normalizedLogin,
-        password = password
+        password = password,
     )
 
     private fun SignUpCredentials.toSignUpRequest(): SignUpRequest = SignUpRequest(
         email = normalizedEmail,
         password = password,
         fullName = normalizedFullName,
-        phoneNumber = normalizedPhoneNumber
+        phoneNumber = normalizedPhoneNumber,
     )
 
     private fun ResetPasswordCredentials.toResetPasswordRequest(): ResetPasswordRequest = ResetPasswordRequest(
-        login = normalizedEmail
+        login = normalizedEmail,
     )
 
     private fun LoginCredentials.toResendActivationEmailRequest(): ResendActivationEmailRequest =
         ResendActivationEmailRequest(
             email = normalizedLogin,
-            password = password
+            password = password,
         )
-
-    private suspend fun saveDeviceInformation(): Response<Unit> = specialistInitializer.syncClientInfo()
 }

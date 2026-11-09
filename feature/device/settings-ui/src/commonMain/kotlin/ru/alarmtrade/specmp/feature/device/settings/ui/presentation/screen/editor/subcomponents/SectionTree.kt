@@ -53,17 +53,14 @@ private data class TreeRow(
     val section: SettingsSection,
     val depth: Int,
     val hasSubsections: Boolean,
-    val expanded: Boolean
+    val expanded: Boolean,
 ) {
-    /** Пустой раздел не выбирается: без нажатия и наведения, текст приглушён. */
     val enterable: Boolean get() = section.children.isNotEmpty()
 }
 
 /**
- * Дерево разделов для широкой раскладки. Настройки корневого уровня меню (как «Код модели» в старом приложении) —
- * строками над разделами: значение справа, нажатие открывает окно настройки. Выбранный раздел выделен, путь к нему
- * раскрывается при переходе; у разделов с изменениями — счётчик. Раскрытие переключается стрелкой или повторным
- * нажатием на выбранный раздел — в том числе на пути к выбранному (свёрнутое на пути сбрасывается при смене выбора).
+ * Раскрытие переключается стрелкой или повторным нажатием на выбранный раздел (в том числе на пути к нему);
+ * свёрнутое на пути сбрасывается при смене выбора.
  */
 @Composable
 internal fun SectionTree(
@@ -76,7 +73,7 @@ internal fun SectionTree(
     width: () -> Dp,
     onEditSetting: (settingId: Int) -> Unit,
     onSelect: (sectionId: Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     var expanded by rememberSaveable { mutableStateOf(listOf<Int>()) }
@@ -120,7 +117,7 @@ internal fun SectionTree(
             }
             .fillMaxHeight()
             .background(colors.surfaceContainerLow)
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
     ) {
         items(rootSettings, key = { "setting-${it.id}" }) { setting ->
             TreeSettingRow(setting = setting, changed = setting.id in changedIds, onClick = {
@@ -139,13 +136,12 @@ internal fun SectionTree(
                     } else {
                         onSelect(row.section.id)
                     }
-                }
+                },
             )
         }
     }
 }
 
-/** Настройка корневого уровня: шестерёнка, номер и название, значение; нажатие — окно настройки. */
 @Composable
 private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Unit) {
     val colors = cmpThemeColors()
@@ -158,14 +154,14 @@ private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Un
             .clip(CircleShape)
             .clickable(role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CmpBox(modifier = Modifier.size(width = ToggleSize, height = RowHeight), contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = CmpIcons.Settings,
                 contentDescription = null,
                 tint = colors.primary,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
         }
         CmpText(
@@ -174,7 +170,7 @@ private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Un
             color = colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         if (changed) CmpDot()
         CmpText(
@@ -183,7 +179,7 @@ private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Un
             fontWeight = FontWeight.SemiBold,
             color = colors.primary,
             maxLines = 1,
-            modifier = Modifier.padding(end = 12.dp)
+            modifier = Modifier.padding(end = 12.dp),
         )
     }
 }
@@ -201,13 +197,12 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
             .heightIn(min = RowHeight)
-            // Наведение и нажатие — на всю «таблетку» строки, как у выбранного раздела.
             .testTag(SettingsTestTags.tree(row.section.id))
             .clip(CircleShape)
             .background(if (selected) colors.secondaryContainer else colors.surfaceContainerLow)
             .then(if (row.enterable) Modifier.clickable(role = Role.Button, onClick = onSelect) else Modifier)
             .padding(start = LevelIndent * row.depth),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpBox(modifier = Modifier.size(width = ToggleSize, height = RowHeight), contentAlignment = Alignment.Center) {
             if (row.hasSubsections) {
@@ -216,7 +211,7 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
                     icon = if (row.expanded) CmpIcons.KeyboardArrowDown else CmpIcons.ChevronRight,
                     contentDescription = null,
                     tint = content,
-                    modifier = Modifier.size(ToggleSize)
+                    modifier = Modifier.size(ToggleSize),
                 )
             }
         }
@@ -226,7 +221,7 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
                 .heightIn(min = RowHeight)
                 .padding(end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpText(
                 text = row.section.number.takeIf { it.isNotEmpty() }?.let { "$it ${row.section.name}" }
@@ -236,7 +231,7 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
                 color = content,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             if (changes > 0) CmpCountPill(count = changes)
         }

@@ -1,39 +1,13 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kmp.library)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.compose.compiler)
+    id("specmp.kmp.compose")
     alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
-    jvm {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
-
-    android {
-        namespace = "ru.alarmtrade.specmp.feature.device.state"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-        // обязательно для модулей с compose resources (см. docs/build.md): силуэт и значки
-        androidResources.enable = true
-    }
-
-    iosArm64()
-
     sourceSets {
         commonMain.dependencies {
-            // SDK: живое состояние блока (телеметрия) и команды управления — только BLE.
             implementation(project(":core:specialist"))
             implementation(libs.alarmtrade.specialist)
-            // DeviceState и команды управления (ru.alarmtrade.devices.*)
             implementation(libs.alarmtrade.devices)
             implementation(libs.kermit)
 
@@ -42,16 +16,12 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
-            // Сессия устройства: связь, транспорт, режим программирования (PIN)
             implementation(project(":feature:device:interaction"))
-            // BaseDeviceViewModel, ServicePinDialog
-            implementation(project(":feature:device:interaction-ui"))
+            implementation(project(":feature:device:presentation-core"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 
-            // Nav3 (см. docs/navigation.md)
             implementation(libs.compose.nav3)
-            // ViewModelStore-декоратор: per-entry ViewModelStore → очистка VM при pop
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.kotlinx.serialization.json)
 
@@ -67,15 +37,15 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(project(":core:testing"))
+            implementation(project(":feature:device:interaction:testing"))
         }
-        // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs)
         }
     }
 }
 
-// Слои силуэта и значки показателей/команд (vector XML из design/features/check-state).
 compose.resources {
     publicResClass = false
     generateResClass = always

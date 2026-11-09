@@ -45,14 +45,15 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickRequest
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.NoSettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.SettingsLayout
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.NoSettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsContent
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsEffect
@@ -70,7 +71,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
-/** Раздел меню; `null` — корень. */
 @Serializable
 @SerialName("device.settings-ui.SettingsSectionRoute")
 internal data class SettingsSectionRoute(val sectionId: Int?) : NavKey
@@ -89,21 +89,8 @@ private val navConfig = SavedStateConfiguration {
 }
 
 /**
- * Расширенные настройки подключённого блока: слот раздела «Настройки» графа расширенного монтажа.
- *
- * Одна сессия на граф ([DeviceSettingsViewModel] в хранилище записи, в которой стоит слот); back stack графа —
- * путь по разделам от корня (+ поиск). «Назад» поднимается на уровень вверх, с корня — выход (с незаписанными
- * изменениями — подтверждение).
- *
- * @param onExit выход из настроек.
- * @param onOpenFirmwareUpdate выход в «Проверку прошивок»: на блоке с единой CAN-прошивкой CAN-код меняется прошивкой.
- * @param vehiclePicker выбор автомобиля из каталога для CAN-кода (фича `vehicle-ui`, подключается в `composeApp`):
- *   получает модель блока (`null` — ещё не прочитана), выбранный автомобиль и отмену. Рисуется поверх настроек.
- * @param configurationPicker «Загрузить из…» → «Мои конфигурации» / облако (фича `configurator-ui`, подключается в
- *   `composeApp`): получает запрос, выбранный источник, переход к обновлению прошивки (CAN-код облачной конфигурации
- *   не совпадает с прошивкой) и отмену. Рисуется поверх настроек.
- * @param filePicker / [fileSaver] — платформенные выбор и сохранение файла `.dxs`.
- * @param loadOnOpen конфигурация, которую сравнить и загрузить сразу после чтения блока («Записать в блок»).
+ * Одна сессия на граф ([DeviceSettingsViewModel] в хранилище записи слота); back stack графа — путь по разделам от
+ * корня. «Назад» — на уровень вверх, с корня — выход (с незаписанными изменениями — подтверждение).
  */
 @Composable
 fun DeviceSettingsEntry(
@@ -114,11 +101,11 @@ fun DeviceSettingsEntry(
         request: ConfigurationPickRequest,
         onPicked: (SettingsSource) -> Unit,
         onOpenFirmwareUpdate: () -> Unit,
-        onBack: () -> Unit
+        onBack: () -> Unit,
     ) -> Unit,
     filePicker: SettingsFilePicker,
     fileSaver: SettingsFileSaver,
-    loadOnOpen: SettingsSource? = null
+    loadOnOpen: SettingsSource? = null,
 ) {
     SettingsEditorHost(
         source = SettingsSource.Device,
@@ -131,18 +118,11 @@ fun DeviceSettingsEntry(
             filePicker = filePicker,
             fileSaver = fileSaver,
             onOpenConfiguration = null,
-            onWriteToDevice = null
-        )
+            onWriteToDevice = null,
+        ),
     )
 }
 
-/**
- * Редактор конфигурации (K5): «Мои», файл, облако, заводские. Тот же редактор, что для блока, — меняются шапка
- * (источник, модель, «Только просмотр»), меню «⋯» и действие панели («Сохранить» / «Сохранить как…»).
- *
- * @param onOpenConfiguration «Открыть» в тосте после «Сохранить в мои».
- * @param onWriteToDevice «Записать в блок» (пункт меню — только при подключённом блоке); `null` — не поддерживается.
- */
 @Composable
 fun ConfigurationEditorEntry(
     source: SettingsSource,
@@ -150,7 +130,7 @@ fun ConfigurationEditorEntry(
     vehiclePicker: @Composable (deviceName: String?, onPick: (CarSummary) -> Unit, onBack: () -> Unit) -> Unit,
     fileSaver: SettingsFileSaver,
     onOpenConfiguration: (SettingsSource.LocalConfiguration) -> Unit,
-    onWriteToDevice: ((SettingsSource) -> Unit)? = null
+    onWriteToDevice: ((SettingsSource) -> Unit)? = null,
 ) {
     SettingsEditorHost(
         source = source,
@@ -163,12 +143,11 @@ fun ConfigurationEditorEntry(
             filePicker = NoSettingsFilePicker,
             fileSaver = fileSaver,
             onOpenConfiguration = onOpenConfiguration,
-            onWriteToDevice = onWriteToDevice
-        )
+            onWriteToDevice = onWriteToDevice,
+        ),
     )
 }
 
-/** Слоты и колбэки хоста редактора. */
 private class EditorSlots(
     val onExit: () -> Unit,
     val onOpenFirmwareUpdate: () -> Unit,
@@ -177,19 +156,19 @@ private class EditorSlots(
         request: ConfigurationPickRequest,
         onPicked: (SettingsSource) -> Unit,
         onOpenFirmwareUpdate: () -> Unit,
-        onBack: () -> Unit
+        onBack: () -> Unit,
     ) -> Unit,
     val filePicker: SettingsFilePicker,
     val fileSaver: SettingsFileSaver,
     val onOpenConfiguration: ((SettingsSource.LocalConfiguration) -> Unit)?,
-    val onWriteToDevice: ((SettingsSource) -> Unit)?
+    val onWriteToDevice: ((SettingsSource) -> Unit)?,
 )
 
 @Composable
 private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOptions, slots: EditorSlots) {
     val viewModel = koinViewModel<DeviceSettingsViewModel>(
         key = "settings:$source",
-        parameters = { parametersOf(source, options) }
+        parameters = { parametersOf(source, options) },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(navConfig, SettingsSectionRoute(null))
@@ -199,7 +178,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
     LaunchedEffect(slots.filePicker) { slots.filePicker.results.collect(viewModel::onFilePicked) }
     // Каждый эффект — в своей корутине: тост «Сохранено» с «Открыть» висит до 10 с, и выход по «назад» (тоже эффект)
     // не должен ждать, пока он закроется. Тосты всё равно идут по очереди — их упорядочивает snackbarHostState.
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         scope.launch { handleEffect(effect, viewModel, slots, snackbarHostState) }
     }
 
@@ -214,7 +193,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
             },
             onEdit = viewModel::onSettingClick,
             onValueChange = viewModel::onValueChange,
-            onDescription = viewModel::onDescriptionClick
+            onDescription = viewModel::onDescriptionClick,
         )
     }
     val actions = remember(viewModel, backStack) {
@@ -238,10 +217,10 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
                 onDismiss = viewModel::onEditDismiss,
                 onCarSearch = viewModel::onCarSearch,
                 onCarPick = viewModel::onCarPick,
-                onPickFromCatalog = viewModel::onVehiclePickerOpen
+                onPickFromCatalog = viewModel::onVehiclePickerOpen,
             ),
             transfer = transferActions(viewModel),
-            onEditSetting = viewModel::onSettingClick
+            onEditSetting = viewModel::onSettingClick,
         )
     }
 
@@ -253,7 +232,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
             snackbarHostState,
             onBack,
             rowActions,
-            viewModel::onSearchQueryChange
+            viewModel::onSearchQueryChange,
         )
         if (state.vehiclePicker) {
             CmpSurface(modifier = Modifier.fillMaxSize()) {
@@ -269,7 +248,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
                         viewModel.onConfigurationPickerClose()
                         viewModel.onSingleCanUpdate()
                     },
-                    viewModel::onConfigurationPickerClose
+                    viewModel::onConfigurationPickerClose,
                 )
             }
         }
@@ -295,7 +274,7 @@ private fun transferActions(viewModel: DeviceSettingsViewModel) = TransferAction
     onBarAction = viewModel::onBarAction,
     onExitSave = viewModel::onExitSave,
     onCopy = viewModel::onCopyRequest,
-    onWriteToDevice = viewModel::onWriteToDeviceRequest
+    onWriteToDevice = viewModel::onWriteToDeviceRequest,
 )
 
 @Suppress("CyclomaticComplexMethod") // плоский when по эффектам экрана
@@ -303,19 +282,19 @@ private suspend fun handleEffect(
     effect: DeviceSettingsEffect,
     viewModel: DeviceSettingsViewModel,
     slots: EditorSlots,
-    snackbarHostState: CmpSnackbarHostState
+    snackbarHostState: CmpSnackbarHostState,
 ) {
     when (effect) {
         is DeviceSettingsEffect.Written -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_editor_msg_written, effect.count)
+            getString(Strings.string.settings_editor_msg_written, effect.count),
         )
 
         DeviceSettingsEffect.SetValueFailed -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_editor_error_set_value)
+            getString(Strings.string.settings_editor_error_set_value),
         )
 
         DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_reset_msg_done)
+            getString(Strings.string.settings_reset_msg_done),
         )
 
         is DeviceSettingsEffect.Exit -> when (effect.target) {
@@ -329,7 +308,7 @@ private suspend fun handleEffect(
             } else {
                 getString(Strings.string.settings_common_msg_loaded_same)
             },
-            duration = CmpSnackbarDuration.Long
+            duration = CmpSnackbarDuration.Long,
         )
 
         DeviceSettingsEffect.PickFile -> slots.filePicker.launch()
@@ -338,7 +317,7 @@ private suspend fun handleEffect(
             viewModel.onFileExported(slots.fileSaver.save(effect.path, effect.fileName))
 
         is DeviceSettingsEffect.FileSaved -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_common_msg_saved_file, effect.name)
+            getString(Strings.string.settings_common_msg_saved_file, effect.name),
         )
 
         is DeviceSettingsEffect.SavedToMine -> {
@@ -346,13 +325,13 @@ private suspend fun handleEffect(
             val result = snackbarHostState.showSnackbar(
                 getString(Strings.string.settings_common_msg_saved_mine),
                 actionLabel = open?.let { getString(Strings.string.settings_saved_btn_open) },
-                duration = CmpSnackbarDuration.Long
+                duration = CmpSnackbarDuration.Long,
             )
             if (result == CmpSnackbarResult.ActionPerformed) open?.invoke(effect.configuration)
         }
 
         DeviceSettingsEffect.Saved -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_common_msg_saved)
+            getString(Strings.string.settings_common_msg_saved),
         )
 
         is DeviceSettingsEffect.WriteToDevice -> slots.onWriteToDevice?.invoke(effect.source)
@@ -368,7 +347,7 @@ private fun SettingsWithNav(
     snackbarHostState: CmpSnackbarHostState,
     onBack: () -> Unit,
     rowActions: SettingRowActions,
-    onSearchQueryChange: (String) -> Unit
+    onSearchQueryChange: (String) -> Unit,
 ) {
     // Строкам — только их пометки: ввод, диалоги и прочие поля state строки не перерисовывают.
     val marks = remember(state.changedIds, state.sectionChanges, state.cars) {
@@ -379,14 +358,14 @@ private fun SettingsWithNav(
         state = state,
         location = backStack.location(),
         actions = actions,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
     ) { layout ->
         NavDisplay(
             backStack = backStack,
             onBack = onBack,
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
+                rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider<NavKey> {
                 entry<SettingsSectionRoute> { key ->
@@ -400,11 +379,11 @@ private fun SettingsWithNav(
                             marks = marks,
                             wide = layout.isWide,
                             onQueryChange = onSearchQueryChange,
-                            actions = rowActions
+                            actions = rowActions,
                         )
                     }
                 }
-            }
+            },
         )
     }
 }
@@ -424,7 +403,7 @@ internal fun SectionEntry(
     marks: RowMarks,
     sectionId: Int?,
     layout: SettingsLayout,
-    actions: SettingRowActions
+    actions: SettingRowActions,
 ) {
     root ?: return
     // На широкой раскладке корень не показывается — открыт первый раздел (он же выделен в дереве).
@@ -435,10 +414,9 @@ internal fun SectionEntry(
 
 private fun NavBackStack<NavKey>.location(): SettingsLocation = SettingsLocation(
     sectionPath = mapNotNull { (it as? SettingsSectionRoute)?.sectionId },
-    isSearch = lastOrNull() == SettingsSearchRoute
+    isSearch = lastOrNull() == SettingsSearchRoute,
 )
 
-/** Стек = корень + путь разделов (поиск закрывается). */
 private fun NavBackStack<NavKey>.navigateTo(path: List<Int>) {
     clear()
     add(SettingsSectionRoute(null))

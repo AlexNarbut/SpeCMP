@@ -14,7 +14,7 @@ fun CmpBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Unspecified,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
@@ -26,6 +26,6 @@ fun CmpBottomSheet(
         } else {
             containerColor
         },
-        content = { content() }
+        content = { content() },
     )
 }

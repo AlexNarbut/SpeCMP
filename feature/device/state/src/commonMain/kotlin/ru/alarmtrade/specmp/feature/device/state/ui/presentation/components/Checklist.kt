@@ -58,17 +58,13 @@ internal const val CHECKLIST_TASK_TAG_PREFIX = "devicestate_task_"
 private const val PASSED_ALPHA = 0.14f
 private const val ALL_DONE_ALPHA = 0.2f
 
-/**
- * Чек-лист быстрого монтажа: прогресс «Пройдено N из M», задания (открытые — сверху). Авто-задание показывает
- * текущее значение своей зоны и отмечается само; ручное — кнопки вариантов.
- */
 @Composable
 internal fun ChecklistPanel(
     checklist: CheckStateChecklist,
     vehicle: VehicleState?,
     onSkip: (String) -> Unit,
     onAnswer: (String, Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     val success = cmpDomainColors().success
@@ -85,20 +81,20 @@ internal fun ChecklistPanel(
                 .fillMaxWidth()
                 .background(
                     if (allDone) success.copy(alpha = ALL_DONE_ALPHA) else colors.surfaceContainerHigh,
-                    RoundedCornerShape(16.dp)
+                    RoundedCornerShape(16.dp),
                 )
                 .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (allDone) {
                     CmpIcon(
                         icon = CmpIcons.TaskAlt,
                         contentDescription = null,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(28.dp),
                     )
                 }
                 CmpText(
@@ -108,12 +104,12 @@ internal fun ChecklistPanel(
                         stringResource(Strings.string.devicestate_fast_format_progress, checklist.closed, total)
                     },
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
             CmpLinearProgressIndicator(
                 progress = if (total == 0) 1f else checklist.closed.toFloat() / total,
-                modifier = Modifier.fillMaxWidth().height(8.dp)
+                modifier = Modifier.fillMaxWidth().height(8.dp),
             )
             CmpText(
                 text = when {
@@ -121,12 +117,12 @@ internal fun ChecklistPanel(
 
                     checklist.failed > 0 -> stringResource(
                         Strings.string.devicestate_fast_format_failed,
-                        checklist.failed
+                        checklist.failed,
                     )
 
                     else -> stringResource(Strings.string.devicestate_fast_msg_all_done)
                 },
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
         }
         order.forEach { task ->
@@ -136,7 +132,7 @@ internal fun ChecklistPanel(
                 number = checklist.tasks.indexOf(task) + 1,
                 vehicle = vehicle,
                 onSkip = onSkip,
-                onAnswer = onAnswer
+                onAnswer = onAnswer,
             )
         }
     }
@@ -149,7 +145,7 @@ private fun TaskRow(
     number: Int,
     vehicle: VehicleState?,
     onSkip: (String) -> Unit,
-    onAnswer: (String, Int) -> Unit
+    onAnswer: (String, Int) -> Unit,
 ) {
     val colors = cmpThemeColors()
     val pending = task.status == ChecklistStatus.PENDING
@@ -166,7 +162,7 @@ private fun TaskRow(
             .then(if (current) Modifier.border(2.dp, colors.primary, shape) else Modifier)
             .padding(horizontal = 10.dp, vertical = 12.dp)
             .testTag(CHECKLIST_TASK_TAG_PREFIX + task.id),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         TaskBadge(task.status, number, current)
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -176,7 +172,7 @@ private fun TaskRow(
                 fontSize = 16.sp,
                 fontWeight = if (pending) FontWeight.SemiBold else FontWeight.Medium,
                 color = taskTextColor(failed, waiting),
-                modifier = Modifier.padding(top = if (current) 0.dp else 6.dp)
+                modifier = Modifier.padding(top = if (current) 0.dp else 6.dp),
             )
             if (waiting) WaitingLabel() else TaskDetails(task, vehicle, onAnswer)
         }
@@ -184,7 +180,6 @@ private fun TaskRow(
     }
 }
 
-/** «Текущее задание» над текстом задания строгого порядка. */
 @Composable
 private fun CurrentLabel(visible: Boolean) {
     if (!visible) return
@@ -192,7 +187,7 @@ private fun CurrentLabel(visible: Boolean) {
         text = stringResource(Strings.string.devicestate_fast_label_current),
         fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
-        color = cmpThemeColors().primary
+        color = cmpThemeColors().primary,
     )
 }
 
@@ -216,7 +211,6 @@ private fun taskTextColor(failed: Boolean, waiting: Boolean) = when {
     else -> cmpThemeColors().onSurface
 }
 
-/** «Ожидает — после предыдущего»: задание строгого порядка ещё не текущее. */
 @Composable
 private fun WaitingLabel() {
     val colors = cmpThemeColors()
@@ -225,18 +219,17 @@ private fun WaitingLabel() {
             icon = CmpIcons.Schedule,
             contentDescription = null,
             tint = colors.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(20.dp),
         )
         CmpText(
             text = stringResource(Strings.string.devicestate_fast_msg_waiting),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
 }
 
-/** Под текстом задания: текущее значение (авто), варианты ответа (ручное) или итог. */
 @Composable
 private fun TaskDetails(task: ChecklistTask, vehicle: VehicleState?, onAnswer: (String, Int) -> Unit) {
     val colors = cmpThemeColors()
@@ -245,13 +238,13 @@ private fun TaskDetails(task: ChecklistTask, vehicle: VehicleState?, onAnswer: (
 
         task.status == ChecklistStatus.PENDING -> CmpRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             task.options.forEachIndexed { index, option ->
                 CmpOutlinedButton(
                     text = option,
                     onClick = { onAnswer(task.id, index) },
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 )
             }
         }
@@ -260,7 +253,7 @@ private fun TaskDetails(task: ChecklistTask, vehicle: VehicleState?, onAnswer: (
             text = stringResource(task.resultText),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (task.status == ChecklistStatus.FAILED) colors.onErrorContainer else colors.onSurfaceVariant
+            color = if (task.status == ChecklistStatus.FAILED) colors.onErrorContainer else colors.onSurfaceVariant,
         )
     }
 }
@@ -286,55 +279,54 @@ private fun TaskBadge(status: ChecklistStatus, number: Int, current: Boolean = f
     when (status) {
         ChecklistStatus.PASSED -> CmpBox(
             modifier.background(success, CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.Check,
                 contentDescription = null,
                 tint = colors.surface,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(22.dp),
             )
         }
 
         ChecklistStatus.FAILED -> CmpBox(
             modifier.background(colors.error, CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.Close,
                 contentDescription = null,
                 tint = colors.onError,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(22.dp),
             )
         }
 
         ChecklistStatus.SKIPPED -> CmpBox(
             modifier.border(2.dp, colors.outlineVariant, CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.Redo,
                 contentDescription = null,
                 tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
         }
 
         ChecklistStatus.PENDING -> CmpBox(
             modifier.border(2.dp, if (current) colors.primary else colors.outline, CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpText(
                 text = number.toString(),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (current) colors.primary else colors.onSurface
+                color = if (current) colors.primary else colors.onSurface,
             )
         }
     }
 }
 
-/** «Сейчас: <значение> · отметится само» — текущее значение зоны (или охраны) авто-задания. */
 @Composable
 private fun LiveValue(task: ChecklistTask, vehicle: VehicleState?) {
     val colors = cmpThemeColors()
@@ -352,18 +344,18 @@ private fun LiveValue(task: ChecklistTask, vehicle: VehicleState?) {
     CmpFlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        itemVerticalAlignment = Alignment.CenterVertically
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         CmpText(
             text = stringResource(Strings.string.devicestate_fast_label_now),
             fontSize = 14.sp,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
         if (live != null) ValuePill(text = live.first, tone = live.second)
         CmpText(
             text = stringResource(Strings.string.devicestate_fast_msg_auto),
             fontSize = 14.sp,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
 }

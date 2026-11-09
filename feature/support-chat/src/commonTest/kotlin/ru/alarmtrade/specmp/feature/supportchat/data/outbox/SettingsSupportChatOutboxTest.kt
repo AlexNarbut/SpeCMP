@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.supportchat.data.outbox
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -9,10 +10,13 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
+import ru.alarmtrade.specmp.core.testing.InMemorySettings
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
+import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
 
 class SettingsSupportChatOutboxTest {
 
@@ -27,13 +31,13 @@ class SettingsSupportChatOutboxTest {
                 name = "scheme.pdf",
                 localPath = "/files/scheme.pdf",
                 mimeType = "application/pdf",
-                sizeBytes = 42
-            )
+                sizeBytes = 42,
+            ),
         )
 
         outbox.enqueue(message)
 
-        assertEquals(listOf(message), outbox.load())
+        assertEquals(listOf(message), outbox.loaded())
     }
 
     @Test
@@ -41,10 +45,10 @@ class SettingsSupportChatOutboxTest {
         outbox.enqueue(pending("a"))
         outbox.enqueue(pending("a").copy(status = SupportChatMessageStatus.Failed))
 
-        assertEquals(listOf(SupportChatMessageStatus.Failed), outbox.load().map { it.status })
+        assertEquals(listOf(SupportChatMessageStatus.Failed), outbox.loaded().map { it.status })
 
         outbox.remove("a")
-        assertTrue(outbox.load().isEmpty())
+        assertTrue(outbox.loaded().isEmpty())
     }
 
     @Test
@@ -54,9 +58,9 @@ class SettingsSupportChatOutboxTest {
         // Эхо пришло раньше ответа SDK: запись уже удалена — markSent её не воскрешает.
         outbox.markSent("gone")
 
-        assertEquals(listOf("a"), outbox.load().map { it.id })
+        assertEquals(listOf("a"), outbox.loaded().map { it.id })
         // Sent (эха не было) восстанавливается как Pending.
-        assertEquals(listOf(SupportChatMessageStatus.Pending), outbox.load().map { it.status })
+        assertEquals(listOf(SupportChatMessageStatus.Pending), outbox.loaded().map { it.status })
     }
 
     @Test
@@ -65,7 +69,7 @@ class SettingsSupportChatOutboxTest {
         outbox.enqueue(pending("server").copy(serverId = 7))
         outbox.enqueue(pending("no-file").copy(attachment = SupportChatAttachment.Image(id = "i", name = "a.png")))
 
-        assertTrue(outbox.load().isEmpty())
+        assertTrue(outbox.loaded().isEmpty())
     }
 
     @Test
@@ -76,7 +80,7 @@ class SettingsSupportChatOutboxTest {
             (1..25).map { index -> async { outbox.remove("m$index") } }.awaitAll()
         }
 
-        assertEquals((26..50).map { "m$it" }.toSet(), outbox.load().map { it.id }.toSet())
+        assertEquals((26..50).map { "m$it" }.toSet(), outbox.loaded().map { it.id }.toSet())
     }
 
     @Test
@@ -86,7 +90,7 @@ class SettingsSupportChatOutboxTest {
 
         outbox.release()
 
-        assertTrue(outbox.load().isEmpty())
+        assertTrue(outbox.loaded().isEmpty())
         assertEquals("ru", root.getStringOrNull("app_locale"))
     }
 
@@ -98,6 +102,9 @@ class SettingsSupportChatOutboxTest {
         time = Instant.fromEpochMilliseconds(1_000),
         isMine = true,
         authorEmail = null,
-        status = SupportChatMessageStatus.Pending
+        status = SupportChatMessageStatus.Pending,
     )
 }
+
+private suspend fun SupportChatOutbox.loaded(): List<SupportChatMessage> =
+    assertIs<Response.Success<List<SupportChatMessage>>>(load()).value

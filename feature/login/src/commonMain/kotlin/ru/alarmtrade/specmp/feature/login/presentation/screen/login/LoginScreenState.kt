@@ -11,7 +11,7 @@ data class LoginScreenState(
     val password: String = "",
     val isPasswordVisible: Boolean = false,
     val authState: LCEState<LoginResult, AuthFormError> = LCEState.None,
-    val activationResendState: LCEState<Unit, AuthFormError> = LCEState.None
+    val activationResendState: LCEState<Unit, AuthFormError> = LCEState.None,
 ) {
     val authError: AuthFormError? get() = (authState as? LCEState.Error)?.error
     val activationResendError: AuthFormError? get() = (activationResendState as? LCEState.Error)?.error

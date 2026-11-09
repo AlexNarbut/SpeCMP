@@ -29,12 +29,12 @@ internal fun SupportChatImageViewer(imageSource: String, onDismiss: () -> Unit) 
                 .fillMaxSize()
                 .background(colors.surface)
                 .clickable(onClick = onDismiss),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpAsyncImage(
                 model = imageSource,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
 
             CmpIconButton(
@@ -45,7 +45,7 @@ internal fun SupportChatImageViewer(imageSource: String, onDismiss: () -> Unit) 
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
                     .size(48.dp),
-                tint = colors.onSurface
+                tint = colors.onSurface,
             )
         }
     }

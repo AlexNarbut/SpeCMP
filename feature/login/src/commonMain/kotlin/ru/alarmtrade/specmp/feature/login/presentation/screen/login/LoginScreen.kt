@@ -48,21 +48,21 @@ fun LoginScreen(
     onOpenForgotPassword: () -> Unit,
     onResendActivationEmail: () -> Unit,
     onDismissActivationRequest: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val isAuthError = state.isAuthError
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (layoutMode == AuthLayoutMode.Expanded) {
             CmpText(
                 text = stringResource(Strings.string.login_login_title_screen),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.onSurface
+                color = colors.onSurface,
             )
         }
 
@@ -76,14 +76,14 @@ fun LoginScreen(
             isError = isAuthError,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
+                imeAction = ImeAction.Next,
             ),
             leadingIcon = {
                 CmpIcon(
                     icon = CmpIcons.Email,
-                    contentDescription = null
+                    contentDescription = null,
                 )
-            }
+            },
         )
 
         AuthPasswordField(
@@ -97,15 +97,15 @@ fun LoginScreen(
             keyboardActions = KeyboardActions(
                 onDone = {
                     if (state.canSubmit) onSubmit()
-                }
-            )
+                },
+            ),
         )
 
         CmpTextButton(
             text = stringResource(Strings.string.login_login_link_forgot_password),
             onClick = onOpenForgotPassword,
             modifier = Modifier.align(Alignment.End),
-            enabled = !state.isAuthLoading
+            enabled = !state.isAuthLoading,
         )
 
         AuthSubmitButton(
@@ -118,22 +118,22 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth().height(52.dp),
             enabled = state.canSubmit,
             isLoading = state.isAuthLoading,
-            colors = colors
+            colors = colors,
         )
 
         CmpRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpText(
                 text = stringResource(Strings.string.login_login_msg_no_account),
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
             CmpTextButton(
                 text = stringResource(Strings.string.login_login_link_signup),
                 onClick = onOpenRegistration,
-                enabled = !state.isAuthLoading
+                enabled = !state.isAuthLoading,
             )
         }
     }
@@ -142,7 +142,7 @@ fun LoginScreen(
         ActivationRequiredDialog(
             state = state,
             onResendActivationEmail = onResendActivationEmail,
-            onDismissActivationRequest = onDismissActivationRequest
+            onDismissActivationRequest = onDismissActivationRequest,
         )
     }
 }

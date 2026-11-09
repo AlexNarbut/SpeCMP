@@ -11,13 +11,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountChecklist
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountTaskStatus
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.model.FastMountError
 
-/**
- * Состояние мастера быстрого монтажа: подготовка (блок → автомобиль → конфигурация → сводка) и шаги SDK.
- *
- * @property fixed блок, зафиксированный на первом подключении; монтаж идёт только с ним.
- * @property unit данные блока с последнего подключения (прошивка, CAN) — карточка «Проверка блока» и сводка.
- * @property wrongDevice подключён другой блок — его название; мастер стоит, пока не вернётся [fixed].
- */
+/** @property fixed блок, зафиксированный на первом подключении; монтаж идёт только с ним. */
 @Immutable
 data class FastMountState(
     val fixed: FixedDevice? = null,
@@ -30,28 +24,24 @@ data class FastMountState(
     val configuration: FastMountConfiguration? = null,
     val plan: FastMountPlan? = null,
     val master: MasterState = MasterState(),
-    val dialog: WizardDialog? = null
+    val dialog: WizardDialog? = null,
 ) {
     val usb: Boolean get() = fixed?.transport == ConnectionTransport.USB
 }
 
-/** Блок монтажа. [title] — «Модель · ID». */
 @Immutable
 data class FixedDevice(
     val systemId: Long,
     val systemName: String,
     val title: String,
-    val transport: ConnectionTransport?
+    val transport: ConnectionTransport?,
 )
 
-/** Данные блока для карточек: прошивка без `VER`, CAN-прошивка ([canCode] `null` — блок без CAN-прошивки). */
 @Immutable
 data class UnitInfo(val firmware: String, val canCode: String?, val canVersion: String?, val canFactory: Boolean)
 
-/** Экран подготовки; [MASTER] — шаги SDK (какой — по [MasterState.screen]). */
 enum class WizardScreen { CHECK, FIRMWARE, VEHICLE, CONFIGURATION, SUMMARY, MASTER }
 
-/** Проверка блока перед монтажом (F2/F3). */
 @Immutable
 sealed interface UnitCheck {
     data object Checking : UnitCheck
@@ -63,7 +53,6 @@ sealed interface UnitCheck {
     data class Done(val verdict: UnitVerdict) : UnitCheck
 }
 
-/** Итог проверки: монтаж можно начинать ([blocking] = false) или сначала решить проблему. */
 @Immutable
 sealed interface UnitVerdict {
     val blocking: Boolean
@@ -72,17 +61,14 @@ sealed interface UnitVerdict {
         override val blocking = false
     }
 
-    /** Доступна новая прошивка [latest] — рекомендация, не блокирует. */
     data class Outdated(val latest: String) : UnitVerdict {
         override val blocking = false
     }
 
-    /** В блоке заводские CAN-настройки — монтаж невозможен до обновления CAN-прошивки. */
     data object FactoryCan : UnitVerdict {
         override val blocking = true
     }
 
-    /** Нет доступа к блоку на сервере; [message] — причина от сервера. */
     data class NoAccess(val message: String) : UnitVerdict {
         override val blocking = true
     }
@@ -96,24 +82,10 @@ sealed interface SummaryLoad {
 
     data object Ready : SummaryLoad
 
-    /** @property configurationId что не загрузилось — для повтора. */
     data class Failed(val configurationId: Int, val error: FastMountError) : SummaryLoad
 }
 
-/**
- * Шаги SDK.
- *
- * @property starting идёт старт (сервер, геолокация); [startError] — старт не удался.
- * @property step текущий шаг SDK; `null` — ещё не стартовали.
- * @property busy ждём ответа SDK (переход, запись) — главная кнопка со спиннером, повторный тап невозможен.
- * @property error ошибка текущего шага — плашка с причиной и «Повторить».
- * @property reboot ждём перезагрузку блока после шага [RebootWait.from] — экран «Перезагрузка блока…».
- * @property stepAttempt номер прохода обхода/Clone: «Вернуться к монтажу» начинает их заново (новые VM экранов).
- * @property cloneNeeded обход потребовал Clone (`true`), не потребовал (`false`), ещё неизвестно (`null`).
- * @property statuses статусы заданий проверки системы по id вопроса.
- * @property startedAt когда SDK стартовал монтаж («Начать монтаж»).
- * @property mountMinutes длительность монтажа от [startedAt] на последнем шаге — итоги на шаге отзыва.
- */
+/** @property stepAttempt номер прохода обхода/Clone: «Вернуться к монтажу» начинает их заново (новые VM экранов). */
 @Immutable
 data class MasterState(
     val starting: Boolean = false,
@@ -133,7 +105,7 @@ data class MasterState(
     val feedback: String = "",
     val startedAt: TimeSource.Monotonic.ValueTimeMark? = null,
     val mountMinutes: Int = 0,
-    val toast: WizardToast? = null
+    val toast: WizardToast? = null,
 ) {
     val screen: MasterScreen
         get() = when {
@@ -165,14 +137,12 @@ enum class MasterScreen {
     SLAVE,
     SYSTEM_CHECK,
     FEEDBACK,
-    DONE
+    DONE,
 }
 
-/** Ожидание перезагрузки после шага [from] (таймер ведёт экран). */
 @Immutable
 data class RebootWait(val from: FastMountStep)
 
-/** Карта монтажа (PDF): нет в конфигурации, качается, скачана ([sizeBytes]), ошибка. */
 @Immutable
 sealed interface MountMapState {
     data object None : MountMapState
@@ -189,35 +159,15 @@ sealed interface MountMapState {
 }
 
 enum class WizardDialog {
-    /** «Выйти из быстрого монтажа?» — монтаж, ошибка записи. */
     EXIT,
 
-    /** «Вернуться к монтажу?» — обход (Clone не нужен). */
     TO_MOUNT,
 
-    /** «Вернуться к монтажу?» — обход и Clone придётся пройти заново. */
     TO_MOUNT_CLONE,
 
-    /** «Монтаж завершён?» — блок перезагрузится. */
     MOUNT_DONE,
 
-    /** «Обучение Slave завершено?» */
-    SLAVE_DONE
+    SLAVE_DONE,
 }
 
 enum class WizardToast { SETTINGS_WRITTEN, FILE_NO_APP, FILE_FAILED }
-
-/** Разовые действия мастера, которые выполняет UI. */
-sealed interface FastMountEffect {
-    /** Выйти из монтажа (сессия закрывается обёрткой). */
-    data object Exit : FastMountEffect
-
-    /** Выйти с возвратом к поиску блока. */
-    data object ChooseAnother : FastMountEffect
-
-    /** Выйти в расширенный монтаж (новый поиск). */
-    data object AdvancedMount : FastMountEffect
-
-    /** Открыть файл системным приложением. */
-    class OpenFile(val name: String, val bytes: ByteArray) : FastMountEffect
-}

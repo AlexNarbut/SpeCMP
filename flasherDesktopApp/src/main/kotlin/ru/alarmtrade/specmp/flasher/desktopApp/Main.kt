@@ -14,16 +14,15 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(
             width = 900.dp,
-            height = 720.dp
+            height = 720.dp,
         ),
         title = "SpeCMP Flasher",
-        icon = painterResource("icon.png")
+        icon = painterResource("icon.png"),
     ) {
         FlasherApp(appVersionName = versionName, appVersionCode = versionCode)
     }
 }
 
-/** Версия из `version.properties` — его генерирует Gradle из каталога версий (`generateVersionProperties`). */
 private fun loadDesktopAppVersion(): Pair<String, Int> {
     val properties = java.util.Properties()
     val stream = requireNotNull(Thread.currentThread().contextClassLoader?.getResourceAsStream("version.properties")) {

@@ -45,7 +45,7 @@ internal fun MainHomeTopBar(
     databaseSyncBadge: MainDatabaseSyncBadge,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
-    colors: CmpThemeColors = cmpThemeColors()
+    colors: CmpThemeColors = cmpThemeColors(),
 ) {
     CmpTopAppBar(
         modifier = modifier
@@ -56,7 +56,7 @@ internal fun MainHomeTopBar(
                 text = stringResource(Strings.string.main_main_title_app),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.onBackground
+                color = colors.onBackground,
             )
         },
         navigationIcon = {
@@ -64,7 +64,7 @@ internal fun MainHomeTopBar(
                 onClick = onMenuClick,
                 icon = CmpIcons.Menu,
                 contentDescription = stringResource(Strings.string.main_common_a11y_open_menu),
-                enabled = !isLoading
+                enabled = !isLoading,
             )
         },
         actions = {
@@ -72,13 +72,13 @@ internal fun MainHomeTopBar(
                 MainDatabaseStatusChip(
                     isCompact = isCompact,
                     badge = databaseSyncBadge,
-                    colors = colors
+                    colors = colors,
                 )
             }
         },
         containerColor = Color.Transparent,
         contentColor = colors.onBackground,
-        style = CmpTopAppBarStyle.CenterAligned
+        style = CmpTopAppBarStyle.CenterAligned,
     )
 }
 
@@ -87,7 +87,7 @@ private fun MainDatabaseStatusChip(
     isCompact: Boolean,
     badge: MainDatabaseSyncBadge,
     colors: CmpThemeColors,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val chipModifier = if (isCompact) {
         modifier.size(40.dp)
@@ -102,32 +102,32 @@ private fun MainDatabaseStatusChip(
     Row(
         modifier = chipModifier.clip(CircleShape),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         when (badge) {
             MainDatabaseSyncBadge.CheckingVersion,
             MainDatabaseSyncBadge.Downloading,
-            MainDatabaseSyncBadge.Applying
+            MainDatabaseSyncBadge.Applying,
             -> CmpCircularProgressIndicator(
                 modifier = Modifier.size(18.dp),
                 strokeWidth = 2.5.dp,
-                color = colors.primary
+                color = colors.primary,
             )
 
             MainDatabaseSyncBadge.Updated -> CmpIcon(
                 icon = CmpIcons.CheckCircle,
                 contentDescription = if (isCompact) label else null,
                 modifier = Modifier.size(if (isCompact) 22.dp else 18.dp),
-                tint = MainHomeTokens.Success
+                tint = MainHomeTokens.Success,
             )
 
             is MainDatabaseSyncBadge.UpdateFailed,
-            MainDatabaseSyncBadge.AppUpdateRequired
+            MainDatabaseSyncBadge.AppUpdateRequired,
             -> CmpIcon(
                 icon = CmpIcons.Warning,
                 contentDescription = if (isCompact) label else null,
                 modifier = Modifier.size(if (isCompact) 22.dp else 18.dp),
-                tint = colors.error
+                tint = colors.error,
             )
         }
 
@@ -136,7 +136,7 @@ private fun MainDatabaseStatusChip(
                 text = label,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
         }
     }
@@ -156,6 +156,6 @@ private fun MainDatabaseSyncBadge.label(): String = when (this) {
         error?.message() ?: stringResource(Strings.string.main_common_status_database_update_failed)
 
     MainDatabaseSyncBadge.AppUpdateRequired -> stringResource(
-        Strings.string.main_common_status_database_app_update_required
+        Strings.string.main_common_status_database_app_update_required,
     )
 }

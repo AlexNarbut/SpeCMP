@@ -108,7 +108,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
 import ru.alarmtrade.specmp.feature.device.state.domain.model.HandsFreeMode
 import ru.alarmtrade.specmp.feature.device.state.domain.model.SirenMode
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
@@ -141,7 +141,6 @@ private val WideSplitFrom = 1100.dp
 private const val ALARM_BORDER_MIN_ALPHA = 0.25f
 private const val ALARM_BORDER_MILLIS = 500
 
-/** Действия экрана; один экземпляр на экран. */
 @Immutable
 internal data class CheckStateActions(
     val onBack: () -> Unit = {},
@@ -153,15 +152,10 @@ internal data class CheckStateActions(
     val onExitKeep: () -> Unit = {},
     val onFastBackConfirm: () -> Unit = {},
     val onNext: () -> Unit = {},
-    val onFinishConfirm: () -> Unit = {}
+    val onFinishConfirm: () -> Unit = {},
 )
 
-/**
- * Экран «Проверка состояния»: раздел расширенного монтажа или — с [fastMount] — шаг быстрого монтажа (чек-лист,
- * «Далее»). Только BLE: плитку при USB не показывает расширенный монтаж.
- *
- * @param onBack выход с экрана (расширенный монтаж; в быстром монтаже — [CheckStateFastMount.onBack]).
- */
+/** Только BLE: при USB плитку не показывает расширенный монтаж. */
 @Composable
 fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) {
     val viewModel = koinViewModel<CheckStateViewModel> { parametersOf(fastMount != null) }
@@ -169,7 +163,7 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
     val snackbar = rememberCmpSnackbarHostState()
     val leave = fastMount?.onBack ?: onBack
     val checklist = fastMount?.checklist
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is CheckStateEffect.CommandFinished -> showResult(snackbar, effect, viewModel::onRetry)
             CheckStateEffect.Close -> onBack()
@@ -178,7 +172,7 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
     }
     val actions = remember(viewModel, leave, checklist) {
         CheckStateActions(
-            onBack = { if (viewModel.onBackRequest()) leave() },
+            onBack = viewModel::onBack,
             onCommand = viewModel::onCommand,
             onConfirm = viewModel::onConfirm,
             onDialogDismiss = viewModel::onDialogDismiss,
@@ -196,14 +190,14 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
                 val tasks = checklist?.tasks.orEmpty()
                 viewModel.onNext(notDone = tasks.size - (checklist?.closed ?: 0), total = tasks.size)
             },
-            onFinishConfirm = viewModel::onFinishConfirm
+            onFinishConfirm = viewModel::onFinishConfirm,
         )
     }
     if (fastMount != null) {
         // Шаг мастера: системный «Назад» — как стрелка в шапке (диалог «Вернуться на предыдущий шаг?»).
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
-            onBackCompleted = actions.onBack
+            onBackCompleted = actions.onBack,
         )
     }
     CheckStateContent(state = state, actions = actions, fastMount = fastMount, snackbar = snackbar)
@@ -212,31 +206,26 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
 private suspend fun showResult(
     snackbar: CmpSnackbarHostState,
     effect: CheckStateEffect.CommandFinished,
-    onRetry: (StateCommand) -> Unit
+    onRetry: (StateCommand) -> Unit,
 ) {
     val message = getString(effect.outcome.snackbarFormat, getString(effect.command.label))
     val failed = effect.outcome != CommandOutcome.DONE
     val result = snackbar.showSnackbar(
         message = message,
-        actionLabel = if (failed) getString(Strings.string.devicestate_cmd_btn_retry) else null
+        actionLabel = if (failed) getString(Strings.string.devicestate_cmd_btn_retry) else null,
     )
     if (failed && result == CmpSnackbarResult.ActionPerformed) onRetry(effect.command)
 }
 
 private enum class Tab { CHECKS, PULT, DETAILS }
 
-/**
- * Stateless-контент. Узко (< 860 dp): сверху статус и плашки, ниже вкладки «Пульт / Подробно» (в быстром монтаже
- * первая — «Проверки N/M»). Широко: слева статус, горизонтальный пульт и «Подробно» вкладками, справа — чек-лист
- * (быстрый монтаж) или все команды. [CheckStateFastMount.chrome] — шапка и панель мастера быстрого монтажа.
- */
 @Composable
 internal fun CheckStateContent(
     state: CheckStateState,
     actions: CheckStateActions,
     fastMount: CheckStateFastMount? = null,
     snackbar: CmpSnackbarHostState = rememberCmpSnackbarHostState(),
-    initialTab: Int? = null
+    initialTab: Int? = null,
 ) {
     val subtitle = state.deviceId?.let { id -> deviceTitle(state.deviceName.orEmpty(), id) }
     var allCommands by rememberSaveable { mutableStateOf(false) }
@@ -255,13 +244,13 @@ internal fun CheckStateContent(
                         CmpIconButton(
                             onClick = actions.onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.devicestate_check_a11y_back)
+                            contentDescription = stringResource(Strings.string.devicestate_check_a11y_back),
                         )
-                    }
+                    },
                 )
             }
         },
-        snackbarHost = { CmpSnackbarHost(hostState = snackbar) }
+        snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val wide = maxWidth >= WideFrom
@@ -277,7 +266,7 @@ internal fun CheckStateContent(
                         180.dp
                     } else {
                         150.dp
-                    }
+                    },
                 )
             } else {
                 CompactLayout(parts, initialTab)
@@ -292,20 +281,19 @@ internal fun CheckStateContent(
             enabled = !state.loading && state.pending == null,
             columns = 2,
             onFire = onFire,
-            onDismiss = { allCommands = false }
+            onDismiss = { allCommands = false },
         )
     }
     CheckStateDialogs(state, actions)
 }
 
-/** Части экрана, общие для узкой и широкой раскладки. */
 private class Parts(
     val state: CheckStateState,
     val actions: CheckStateActions,
     val fastMount: CheckStateFastMount?,
     val onFire: (CommandUi) -> Unit,
     val columns: Int,
-    val onAllCommands: () -> Unit
+    val onAllCommands: () -> Unit,
 ) {
     val hasChecks: Boolean get() = fastMount != null && fastMount.checklist.tasks.isNotEmpty()
 }
@@ -323,7 +311,7 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             StatusArea(state, parts.actions)
             Banners(state, parts.actions)
@@ -332,11 +320,11 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
             selectedTabIndex = index,
             tabs = tabs.map { CmpTabItem(title = tabTitle(it, parts)) },
             onTabSelect = { selected = it },
-            modifier = Modifier.testTag(CHECK_STATE_TABS_TAG)
+            modifier = Modifier.testTag(CHECK_STATE_TABS_TAG),
         )
         CmpColumn(
             modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             when (tabs[index]) {
                 Tab.CHECKS -> Checks(parts)
@@ -345,7 +333,7 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
                     state,
                     carWidth = 196.dp,
                     onFire = parts.onFire,
-                    onAllCommands = parts.onAllCommands
+                    onAllCommands = parts.onAllCommands,
                 )
 
                 Tab.DETAILS -> Details(parts)
@@ -355,28 +343,23 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
     }
 }
 
-/** Ширина правой колонки (чек-лист / все команды) в широком окне. */
 private fun wideRightWidth(width: Dp): Dp = when {
     width >= 1200.dp -> 440.dp
     width >= 960.dp -> 380.dp
     else -> 340.dp
 }
 
-/**
- * Широкое окно (макет): слева — статус, пульт с машиной горизонтально и «Подробно» одной карточкой с вкладками;
- * справа — чек-лист (быстрый монтаж) или все команды (расширенный). «Далее» — в нижней панели справа.
- */
 @Composable
 private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
     val state = parts.state
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         CmpRow(
             modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CmpColumn(
                 modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 StatusArea(state, parts.actions)
                 Banners(state, parts.actions)
@@ -385,12 +368,12 @@ private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
             }
             CmpColumn(
                 modifier = Modifier.width(rightWidth).verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (parts.hasChecks) {
                     SectionCard(
                         title = stringResource(Strings.string.devicestate_fast_title_checks),
-                        contentPadding = 8.dp
+                        contentPadding = 8.dp,
                     ) {
                         Checks(parts)
                     }
@@ -405,7 +388,6 @@ private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
 
 private enum class DetailsTab { ZONES, ENGINE, LINK, EXTRA }
 
-/** «Подробно» в широком окне — одна карточка с вкладками вместо длинной ленты карточек. */
 @Composable
 private fun DetailsTabs(parts: Parts) {
     val vehicle = parts.state.vehicle
@@ -415,7 +397,7 @@ private fun DetailsTabs(parts: Parts) {
         CmpTabRow(
             selectedTabIndex = tab.ordinal,
             tabs = DetailsTab.entries.map { CmpTabItem(title = stringResource(it.title())) },
-            onTabSelect = { selected = it }
+            onTabSelect = { selected = it },
         )
         CmpColumn(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when {
@@ -424,7 +406,7 @@ private fun DetailsTabs(parts: Parts) {
                 tab == DetailsTab.ZONES -> ZonesList(
                     vehicle = vehicle,
                     changed = parts.state.changedZones,
-                    tick = parts.state.tick
+                    tick = parts.state.tick,
                 )
 
                 tab == DetailsTab.ENGINE -> EngineCard(vehicle)
@@ -435,7 +417,7 @@ private fun DetailsTabs(parts: Parts) {
 
                 else -> CmpText(
                     text = stringResource(Strings.string.devicestate_details_msg_no_extra),
-                    color = cmpThemeColors().onSurfaceVariant
+                    color = cmpThemeColors().onSurfaceVariant,
                 )
             }
         }
@@ -460,14 +442,14 @@ private fun CommandsSection(parts: Parts, columns: Int) {
             text = stringResource(Strings.string.devicestate_cmd_msg_hold_hint),
             fontSize = 14.sp,
             color = cmpThemeColors().onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
         )
         CommandsGrid(
             commands = state.commands,
             status = { state.status(it.command) },
             enabled = !state.loading && state.pending == null,
             columns = columns,
-            onFire = parts.onFire
+            onFire = parts.onFire,
         )
     }
 }
@@ -479,7 +461,7 @@ private fun tabTitle(tab: Tab, parts: Parts): String = when (tab) {
         stringResource(
             Strings.string.devicestate_tabs_format_checks,
             checklist?.closed ?: 0,
-            checklist?.tasks?.size ?: 0
+            checklist?.tasks?.size ?: 0,
         )
     }
 
@@ -488,10 +470,7 @@ private fun tabTitle(tab: Tab, parts: Parts): String = when (tab) {
     Tab.DETAILS -> stringResource(Strings.string.devicestate_tabs_item_details)
 }
 
-/**
- * Место главного статуса. В режиме программирования блок не отдаёт охрану и не выполняет часть команд — вместо
- * карточки «Снято с охраны» плашка режима (с «Выключить»; в быстром монтаже — выход идёт сам).
- */
+/** В режиме программирования блок не отдаёт охрану и не выполняет часть команд — вместо статуса плашка режима. */
 @Composable
 private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
     val vehicle = state.vehicle
@@ -502,7 +481,7 @@ private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
             title = stringResource(Strings.string.devicestate_banner_title_program_exit),
             text = stringResource(Strings.string.devicestate_banner_msg_reboot),
             busy = true,
-            modifier = Modifier.heightIn(min = 72.dp)
+            modifier = Modifier.heightIn(min = 72.dp),
         )
 
         else -> StateBanner(
@@ -513,7 +492,7 @@ private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
                 state.pending == null && !state.fastMount
             },
             onAction = { actions.onCommand(StateCommand.PROGRAM_MODE_OFF) },
-            modifier = Modifier.heightIn(min = 72.dp)
+            modifier = Modifier.heightIn(min = 72.dp),
         )
     }
 }
@@ -527,7 +506,7 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
             title = stringResource(Strings.string.devicestate_banner_format_stale, stale),
             text = stringResource(Strings.string.devicestate_banner_msg_stale),
             icon = CmpIcons.SyncProblem,
-            neutral = true
+            neutral = true,
         )
     }
     val enabled = state.pending == null
@@ -537,7 +516,7 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
             text = stringResource(Strings.string.devicestate_banner_msg_not_guarding),
             icon = CmpIcons.Build,
             action = stringResource(Strings.string.devicestate_banner_btn_turn_off).takeIf { enabled },
-            onAction = { actions.onCommand(StateCommand.SERVICE_MODE_OFF) }
+            onAction = { actions.onCommand(StateCommand.SERVICE_MODE_OFF) },
         )
     }
 }
@@ -559,14 +538,14 @@ private fun Details(parts: Parts) {
             text = stringResource(Strings.string.devicestate_cmd_msg_hold_hint),
             fontSize = 14.sp,
             color = cmpThemeColors().onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
         )
         CommandsGrid(
             commands = state.commands,
             status = { state.status(it.command) },
             enabled = !state.loading && state.pending == null,
             columns = parts.columns,
-            onFire = parts.onFire
+            onFire = parts.onFire,
         )
     }
 }
@@ -578,7 +557,7 @@ private fun Checks(parts: Parts) {
         checklist = fastMount.checklist,
         vehicle = parts.state.vehicle,
         onSkip = fastMount.onSkip,
-        onAnswer = fastMount.onAnswer
+        onAnswer = fastMount.onAnswer,
     )
 }
 
@@ -595,7 +574,7 @@ private fun FastDock(parts: Parts, wide: Boolean = false) {
             },
             onClick = parts.actions.onNext,
             enabled = !fastMount.nextBusy,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(CHECK_STATE_NEXT_TAG)
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag(CHECK_STATE_NEXT_TAG),
         )
     }
     val chrome = fastMount.chrome
@@ -607,7 +586,7 @@ private fun FastDock(parts: Parts, wide: Boolean = false) {
     CmpSurface(color = colors.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
         CmpBox(
             modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 14.dp),
-            contentAlignment = Alignment.CenterEnd
+            contentAlignment = Alignment.CenterEnd,
         ) {
             CmpColumn(modifier = if (wide) Modifier.widthIn(max = 400.dp).fillMaxWidth() else Modifier.fillMaxWidth()) {
                 button()
@@ -616,7 +595,6 @@ private fun FastDock(parts: Parts, wide: Boolean = false) {
     }
 }
 
-/** Красная пульсирующая рамка по краю экрана при тревоге. */
 @Composable
 private fun AlarmBorder() {
     val colors = cmpThemeColors()
@@ -625,7 +603,7 @@ private fun AlarmBorder() {
         initialValue = 1f,
         targetValue = ALARM_BORDER_MIN_ALPHA,
         animationSpec = infiniteRepeatable(tween(ALARM_BORDER_MILLIS), RepeatMode.Reverse),
-        label = "alarmBorderAlpha"
+        label = "alarmBorderAlpha",
     )
     CmpBox(modifier = Modifier.fillMaxSize().alpha(alpha).border(6.dp, colors.error))
 }
@@ -639,7 +617,7 @@ private fun CheckStateDialogs(state: CheckStateState, actions: CheckStateActions
             command = dialog.command,
             vehicle = state.vehicle,
             onConfirm = actions.onConfirm,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is CheckStateDialog.Pin -> ServicePinDialog(
@@ -647,7 +625,7 @@ private fun CheckStateDialogs(state: CheckStateState, actions: CheckStateActions
             state = dialog.pin,
             onDismiss = actions.onDialogDismiss,
             onSubmit = actions.onPinSubmit,
-            testTagPrefix = "devicestate_pin"
+            testTagPrefix = "devicestate_pin",
         )
 
         is CheckStateDialog.Exit -> ChoiceDialog(
@@ -658,7 +636,7 @@ private fun CheckStateDialogs(state: CheckStateState, actions: CheckStateActions
                     dialog.service && dialog.program -> Strings.string.devicestate_exit_msg_both
                     dialog.service -> Strings.string.devicestate_exit_msg_service
                     else -> Strings.string.devicestate_exit_msg_program
-                }
+                },
             ),
             primary = stringResource(Strings.string.devicestate_exit_btn_turn_off) to actions.onExitTurnOff,
             secondary = stringResource(
@@ -668,10 +646,10 @@ private fun CheckStateDialogs(state: CheckStateState, actions: CheckStateActions
                     Strings.string.devicestate_exit_btn_keep_both
                 } else {
                     Strings.string.devicestate_exit_btn_keep
-                }
+                },
             ) to actions.onExitKeep,
             cancel = stringResource(Strings.string.devicestate_exit_btn_cancel),
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         CheckStateDialog.FastBack -> ChoiceDialog(
@@ -681,7 +659,7 @@ private fun CheckStateDialogs(state: CheckStateState, actions: CheckStateActions
             primary = stringResource(Strings.string.devicestate_fast_btn_back) to actions.onFastBackConfirm,
             secondary = null,
             cancel = stringResource(Strings.string.devicestate_fast_btn_cancel),
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
 
         is CheckStateDialog.FastFinish -> ChoiceDialog(
@@ -691,12 +669,11 @@ private fun CheckStateDialogs(state: CheckStateState, actions: CheckStateActions
             primary = stringResource(Strings.string.devicestate_fast_btn_continue) to actions.onDialogDismiss,
             secondary = stringResource(Strings.string.devicestate_fast_btn_finish) to actions.onFinishConfirm,
             cancel = null,
-            onDismiss = actions.onDialogDismiss
+            onDismiss = actions.onDialogDismiss,
         )
     }
 }
 
-/** Диалог с вертикальными кнопками во всю ширину: основная, вторичная, «Отмена». */
 @Composable
 private fun ChoiceDialog(
     icon: CmpIcons,
@@ -705,7 +682,7 @@ private fun ChoiceDialog(
     primary: Pair<String, () -> Unit>,
     secondary: Pair<String, () -> Unit>?,
     cancel: String?,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     CmpDialog(
         onDismissRequest = onDismiss,
@@ -717,23 +694,23 @@ private fun ChoiceDialog(
                 CmpButton(
                     text = primary.first,
                     onClick = primary.second,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 )
                 if (secondary != null) {
                     CmpOutlinedButton(
                         text = secondary.first,
                         onClick = secondary.second,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     )
                 }
                 if (cancel != null) {
                     CmpTextButton(
                         text = cancel,
                         onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     )
                 }
             }
-        }
+        },
     )
 }

@@ -13,10 +13,7 @@ import platform.Network.nw_path_monitor_start
 import platform.Network.nw_path_status_satisfied
 import platform.darwin.dispatch_get_main_queue
 
-/**
- * [NetworkMonitor] поверх `NWPathMonitor`. До первого колбэка считает сеть доступной (колбэк
- * приходит сразу после старта). Экземпляр — синглтон процесса: монитор не останавливается.
- */
+/** До первого колбэка сеть считается доступной; синглтон процесса — монитор не останавливается. */
 @OptIn(ExperimentalForeignApi::class)
 class IosNetworkMonitor : NetworkMonitor {
     private val _isAvailable = MutableStateFlow(true)

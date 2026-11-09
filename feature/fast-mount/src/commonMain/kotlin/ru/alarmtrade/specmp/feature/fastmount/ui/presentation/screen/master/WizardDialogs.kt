@@ -37,17 +37,14 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.MainBut
 internal const val FAST_MOUNT_DIALOG_CONFIRM_TAG = "fastmount_dialog_confirm"
 internal const val FAST_MOUNT_DIALOG_DISMISS_TAG = "fastmount_dialog_dismiss"
 
-/**
- * Тексты диалога. [primaryConfirm] — подтверждение безопасное (заливкой, первым); иначе первым идёт «остаться»,
- * а уход с шага — контуром (макет `StdDialog`).
- */
+/** [primaryConfirm] — подтверждение безопасное (заливкой, первым); иначе первым идёт «остаться». */
 private class DialogTexts(
     val icon: CmpIcons,
     val title: StringResource,
     val text: StringResource,
     val confirm: StringResource,
     val dismiss: StringResource,
-    val primaryConfirm: Boolean
+    val primaryConfirm: Boolean,
 )
 
 private fun WizardDialog.texts(): DialogTexts = when (this) {
@@ -57,7 +54,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_exit,
         Strings.string.fastmount_dialog_btn_exit,
         Strings.string.fastmount_dialog_btn_continue_mount,
-        primaryConfirm = false
+        primaryConfirm = false,
     )
 
     WizardDialog.TO_MOUNT -> DialogTexts(
@@ -66,7 +63,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_to_mount,
         Strings.string.fastmount_dialog_btn_to_mount,
         Strings.string.fastmount_dialog_btn_stay,
-        primaryConfirm = false
+        primaryConfirm = false,
     )
 
     WizardDialog.TO_MOUNT_CLONE -> DialogTexts(
@@ -75,7 +72,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_to_mount_clone,
         Strings.string.fastmount_dialog_btn_to_mount,
         Strings.string.fastmount_dialog_btn_stay,
-        primaryConfirm = false
+        primaryConfirm = false,
     )
 
     WizardDialog.MOUNT_DONE -> DialogTexts(
@@ -84,7 +81,7 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_mount_done,
         Strings.string.fastmount_dialog_btn_mount_done,
         Strings.string.fastmount_dialog_btn_cancel,
-        primaryConfirm = true
+        primaryConfirm = true,
     )
 
     WizardDialog.SLAVE_DONE -> DialogTexts(
@@ -93,11 +90,10 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
         Strings.string.fastmount_dialog_msg_slave_done,
         Strings.string.fastmount_dialog_btn_slave_done,
         Strings.string.fastmount_dialog_btn_cancel,
-        primaryConfirm = true
+        primaryConfirm = true,
     )
 }
 
-/** Диалоги мастера (F16): выход, возврат к монтажу, подтверждения монтажа и Slave. */
 @Composable
 internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val texts = dialog.texts()
@@ -106,7 +102,7 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
             text = stringResource(texts.confirm),
             outlined = !texts.primaryConfirm,
             onClick = onConfirm,
-            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_CONFIRM_TAG)
+            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_CONFIRM_TAG),
         )
     }
     val dismiss: @Composable () -> Unit = {
@@ -114,7 +110,7 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
             text = stringResource(texts.dismiss),
             outlined = texts.primaryConfirm,
             onClick = onDismiss,
-            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_DISMISS_TAG)
+            modifier = Modifier.testTag(FAST_MOUNT_DIALOG_DISMISS_TAG),
         )
     }
     CmpDialog(
@@ -126,7 +122,7 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
                 text = stringResource(texts.text),
                 style = CmpTextStyle.BodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         },
         confirmButton = {
@@ -139,6 +135,6 @@ internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDis
                     confirm()
                 }
             }
-        }
+        },
     )
 }

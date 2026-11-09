@@ -13,5 +13,5 @@ enum class MainNavigationTarget {
     TechSupportChat,
     Warehouse1C,
     Settings,
-    AppUpdate
+    AppUpdate,
 }

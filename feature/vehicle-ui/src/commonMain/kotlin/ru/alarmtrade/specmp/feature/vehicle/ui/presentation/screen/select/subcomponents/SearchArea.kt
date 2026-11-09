@@ -58,26 +58,22 @@ private const val CAN_CODE_LENGTH = 4
 private val FIELD_HEIGHT = 56.dp
 private val HINT_HEIGHT = 24.dp
 
-/**
- * Зона поиска: сегменты «По названию | По CAN-коду» (кроме каталога конфигураций) и поле запроса либо
- * 4 ячейки CAN-кода. [wide] — сегменты и поле в одну строку.
- */
 @Composable
 internal fun SearchArea(
     state: VehicleSelectState,
     wide: Boolean,
     actions: VehicleSelectActions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val segments: @Composable (Modifier) -> Unit = { segmentsModifier ->
         CmpSegmentedButton(
             options = listOf(
                 stringResource(Strings.string.vehicle_search_btn_mode_name),
-                stringResource(Strings.string.vehicle_search_btn_mode_can)
+                stringResource(Strings.string.vehicle_search_btn_mode_can),
             ),
             selectedIndex = state.searchMode.ordinal,
             onSelect = { actions.onSearchModeChange(SearchMode.entries[it]) },
-            modifier = segmentsModifier
+            modifier = segmentsModifier,
         )
     }
     val input: @Composable (Modifier) -> Unit = { inputModifier ->
@@ -91,7 +87,7 @@ internal fun SearchArea(
         CmpRow(
             modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.Top,
         ) {
             // Под полем — строка подсказки: сегменты центрируются по высоте самого поля, а не всего слота.
             if (state.mode.canSearchAvailable) {
@@ -128,15 +124,12 @@ private fun NameField(state: VehicleSelectState, actions: VehicleSelectActions, 
             onValueChange = actions.onQueryChange,
             placeholder = placeholder,
             clearContentDescription = stringResource(Strings.string.vehicle_common_a11y_clear),
-            modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.SEARCH)
+            modifier = Modifier.fillMaxWidth().testTag(VehicleTestTags.SEARCH),
         )
     }
 }
 
-/**
- * Поле поиска и строка подсказки под ним фиксированной высоты в обоих режимах — переключение «По названию /
- * По CAN-коду» не сдвигает список под зоной поиска.
- */
+/** Высота фиксирована в обоих режимах — переключение режима поиска не сдвигает список под ним. */
 @Composable
 private fun InputSlot(modifier: Modifier, hint: @Composable () -> Unit, field: @Composable () -> Unit) {
     CmpColumn(modifier = modifier) {
@@ -159,7 +152,7 @@ private fun CanField(state: VehicleSelectState, actions: VehicleSelectActions, m
             label = stringResource(Strings.string.vehicle_can_label_code),
             clearContentDescription = stringResource(Strings.string.vehicle_common_a11y_clear),
             length = CAN_CODE_LENGTH,
-            modifier = Modifier.testTag(VehicleTestTags.CAN_INPUT)
+            modifier = Modifier.testTag(VehicleTestTags.CAN_INPUT),
         )
     }
 }
@@ -170,39 +163,36 @@ private fun CanHint(state: VehicleSelectState, fromFirmware: Boolean) {
     when {
         fromFirmware -> CmpRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpIcon(
                 icon = CmpIcons.Memory,
                 contentDescription = null,
                 tint = colors.primary,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(16.dp),
             )
             CmpText(
                 text = stringResource(Strings.string.vehicle_can_hint_firmware),
                 style = CmpTextStyle.Body,
-                color = colors.primary
+                color = colors.primary,
             )
         }
 
         state.canCode.length < CAN_CODE_LENGTH -> CmpText(
             text = stringResource(Strings.string.vehicle_can_hint_prompt),
             style = CmpTextStyle.Body,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
 }
 
-/**
- * Крошки пути и чип фильтра (узкое окно — под поиском; карточка на Medium — над ней). [typeChip] — чип типа
- * устройства на узком окне (в шапке ему не хватает места).
- */
+/** [typeChip] — чип типа устройства на узком окне (в шапке ему не хватает места). */
 @Composable
 internal fun CrumbsBar(
     state: VehicleSelectState,
     actions: VehicleSelectActions,
     modifier: Modifier = Modifier,
-    typeChip: Boolean = false
+    typeChip: Boolean = false,
 ) {
     val crumbs = crumbs(state)
     val filterActive = state.groups.isNotEmpty()
@@ -212,13 +202,13 @@ internal fun CrumbsBar(
         modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        itemVerticalAlignment = Alignment.CenterVertically
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         type?.let { TypeChip(type = it, onPick = actions.onTypePick) }
         if (crumbs.size > 1) {
             CmpBreadcrumbs(
                 items = crumbs.map { CmpBreadcrumb(it.first) },
-                onItemClick = { index -> crumbs[index].second?.let(actions.onCrumb) }
+                onItemClick = { index -> crumbs[index].second?.let(actions.onCrumb) },
             )
         }
         if (filterActive) FilterChip(count = state.groups.size, actions = actions)
@@ -234,11 +224,10 @@ internal fun FilterChip(count: Int, actions: VehicleSelectActions) {
         selected = true,
         onClear = actions.onFilterClear,
         clearContentDescription = stringResource(Strings.string.vehicle_filter_a11y_clear),
-        modifier = Modifier.testTag(VehicleTestTags.FILTER_CLEAR)
+        modifier = Modifier.testTag(VehicleTestTags.FILTER_CLEAR),
     )
 }
 
-/** Крошки: подпись и куда ведёт (`null` — текущий уровень, не нажимается). */
 @Composable
 private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> {
     val selection = state.selection
@@ -269,5 +258,4 @@ private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> 
     return items.mapIndexed { index, item -> if (index == items.lastIndex) item.first to null else item }
 }
 
-/** Уровень, ещё не загруженный, — для подсказок «пусто». */
 internal fun <T> LCEState<List<T>, CatalogError>.isEmptyReady(): Boolean = content?.isEmpty() == true

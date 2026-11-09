@@ -24,12 +24,11 @@ actual fun rememberPlatformKoinModules(): List<Module> {
                 single<NetworkMonitor> { AndroidNetworkMonitor(appContext) }
                 single<AppRestarter> { AppRestarter { appContext.restartApplication() } }
                 single<SilentLocationProvider> { AndroidSilentLocationProvider(appContext) }
-            }
+            },
         )
     }
 }
 
-/** Полный перезапуск процесса: новая задача с launch-Activity, текущий процесс завершается. */
 private fun Context.restartApplication(): Boolean {
     val launch = packageManager.getLaunchIntentForPackage(packageName)?.component ?: return false
     startActivity(Intent.makeRestartActivityTask(launch))

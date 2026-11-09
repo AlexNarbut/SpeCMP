@@ -13,13 +13,13 @@ fun CmpImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    alignment: Alignment = Alignment.Center
+    alignment: Alignment = Alignment.Center,
 ) {
     Image(
         painter = painter,
         contentDescription = contentDescription,
         modifier = modifier,
         contentScale = contentScale,
-        alignment = alignment
+        alignment = alignment,
     )
 }

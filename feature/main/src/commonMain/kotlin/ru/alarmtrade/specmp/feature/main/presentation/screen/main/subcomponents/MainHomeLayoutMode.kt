@@ -9,7 +9,7 @@ internal enum class MainHomeMode {
     Compact,
     Medium,
     Expanded,
-    Large
+    Large,
 }
 
 private const val LARGE_MIN_WIDTH_DP = 1_200f
@@ -30,14 +30,17 @@ internal val MainHomeMode.contentPadding: Dp
         MainHomeMode.Medium -> 24.dp
 
         MainHomeMode.Expanded,
-        MainHomeMode.Large -> 32.dp
+        MainHomeMode.Large,
+        -> 32.dp
     }
 
 internal val MainHomeMode.contentMaxWidth: Dp
     get() = when (this) {
         MainHomeMode.Compact,
-        MainHomeMode.Medium -> Dp.Unspecified
+        MainHomeMode.Medium,
+        -> Dp.Unspecified
 
         MainHomeMode.Expanded,
-        MainHomeMode.Large -> 1_040.dp
+        MainHomeMode.Large,
+        -> 1_040.dp
     }

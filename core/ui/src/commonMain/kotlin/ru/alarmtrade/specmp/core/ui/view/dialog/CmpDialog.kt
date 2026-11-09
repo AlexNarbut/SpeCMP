@@ -36,11 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 
-/**
- * Ширина диалога как доля ширины окна: `fraction × окно`, но не меньше [min] и не больше [max]; на узком окне —
- * не шире окна за вычетом полей. Нужна для диалогов с длинным текстом: стандартный `AlertDialog` Material 3 жёстко
- * ограничен 560 dp и шире не растягивается.
- */
+/** `AlertDialog` M3 ограничен 560 dp; для длинного текста — доля окна в пределах [min]..[max]. */
 class CmpDialogWidth(private val fraction: Float, private val min: Dp, private val max: Dp) {
 
     internal fun resolve(window: Dp): Dp =
@@ -49,7 +45,6 @@ class CmpDialogWidth(private val fraction: Float, private val min: Dp, private v
     companion object {
         private val WINDOW_MARGIN = 16.dp
 
-        /** Широкий диалог с длинным текстом: 60 % окна, от 480 до 840 dp. */
         val Wide = CmpDialogWidth(fraction = 0.6f, min = 480.dp, max = 840.dp)
     }
 }
@@ -59,10 +54,6 @@ private val DialogVerticalMargin = 48.dp
 private val ButtonsGap = 8.dp
 private val SectionGap = 16.dp
 
-/**
- * Диалог. Без [width] — стандартный `AlertDialog` Material 3 (до 560 dp); с [width] — собственная раскладка той же
- * формы (значок, заголовок, текст, кнопки) на окне нужной ширины. Текст в таком диалоге прокручивается сам.
- */
 @Composable
 fun CmpDialog(
     onDismissRequest: () -> Unit,
@@ -73,7 +64,7 @@ fun CmpDialog(
     text: (@Composable () -> Unit)? = null,
     icon: ImageVector? = null,
     shape: Shape? = null,
-    width: CmpDialogWidth? = null
+    width: CmpDialogWidth? = null,
 ) {
     if (width == null) {
         AlertDialog(
@@ -84,7 +75,7 @@ fun CmpDialog(
             title = title,
             text = text,
             icon = icon?.let { { CmpIcon(imageVector = it, contentDescription = null) } },
-            shape = shape ?: AlertDialogDefaults.shape
+            shape = shape ?: AlertDialogDefaults.shape,
         )
     } else {
         WideDialog(onDismissRequest, confirmButton, modifier, dismissButton, title, text, icon, shape, width)
@@ -103,7 +94,7 @@ private fun WideDialog(
     text: (@Composable () -> Unit)?,
     icon: ImageVector?,
     shape: Shape?,
-    width: CmpDialogWidth
+    width: CmpDialogWidth,
 ) {
     Dialog(onDismissRequest = onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         // Окно диалога на всю ширину: касание вне карточки закрывает диалог, касание карточки — нет.
@@ -112,9 +103,9 @@ private fun WideDialog(
             modifier = Modifier.fillMaxSize().clickable(
                 interactionSource = outside,
                 indication = null,
-                onClick = onDismissRequest
+                onClick = onDismissRequest,
             ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Surface(
                 modifier = modifier
@@ -123,14 +114,14 @@ private fun WideDialog(
                     .pointerInput(Unit) { detectTapGestures { } },
                 shape = shape ?: AlertDialogDefaults.shape,
                 color = AlertDialogDefaults.containerColor,
-                tonalElevation = AlertDialogDefaults.TonalElevation
+                tonalElevation = AlertDialogDefaults.TonalElevation,
             ) {
                 Column(modifier = Modifier.padding(ContentPadding)) {
                     DialogHeader(icon, title)
                     text?.let { DialogText(it) }
                     Row(
                         modifier = Modifier.align(Alignment.End).padding(top = SectionGap),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonsGap)
+                        horizontalArrangement = Arrangement.spacedBy(ButtonsGap),
                     ) {
                         dismissButton?.invoke()
                         confirmButton()
@@ -148,7 +139,7 @@ private fun ColumnScope.DialogHeader(icon: ImageVector?, title: (@Composable () 
             CmpIcon(
                 imageVector = it,
                 contentDescription = null,
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = SectionGap)
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = SectionGap),
             )
         }
     }

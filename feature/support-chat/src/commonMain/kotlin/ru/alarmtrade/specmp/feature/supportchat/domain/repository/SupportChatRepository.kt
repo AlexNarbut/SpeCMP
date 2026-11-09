@@ -7,30 +7,19 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryC
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
-/**
- * Контракт чата техподдержки — тонкая обёртка над SDK. Соединением (подключение, подписка
- * комнаты, переподключение, ожидание сети) владеет SDK; вызывающий решает, когда чат нужен.
- * Состояния аккаунта не держит — на логауте соединение гасит сам SDK, сбрасывать нечего.
- */
+/** Соединением владеет SDK (подключение, переподключение, ожидание сети); на логауте его гасит сам SDK. */
 interface SupportChatRepository {
 
     /**
-     * Чат-сессия: пока поток собирается, SDK держит соединение; отмена сбора его отпускает.
-     *
-     * Поток не завершается сам: обрывы и переподключения приходят как `Connection(state)`.
-     * Исключение — `Connection(Unavailable)` (сессию не удалось начать): финал, поток завершается.
+     * Пока поток собирается, SDK держит соединение. Сам поток не завершается (обрывы — `Connection(state)`), кроме
+     * `Response.Error` с `SupportChatUnavailableException`.
      */
-    fun session(): Flow<SupportChatEvent>
+    fun session(): Flow<Response<SupportChatEvent>>
 
-    /**
-     * Страница истории: [cursor] `null` — самая новая. Не зависит от состояния соединения.
-     */
+    /** [cursor] `null` — самая новая страница; не зависит от состояния соединения. */
     suspend fun loadHistoryPage(cursor: SupportChatHistoryCursor?): Response<SupportChatHistoryPage>
 
-    /**
-     * Вне `Ready` или без сети — `Response.Error` с
-     * [ru.alarmtrade.specmp.core.common.AppException] (`ApiError.NoConnection`).
-     */
+    /** Вне `Ready` или без сети — `Response.Error` с `ApiError.NoConnection`. */
     suspend fun sendMessage(text: String): Response<Unit>
     suspend fun sendImage(file: SupportChatPickedFile): Response<Unit>
     suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit>

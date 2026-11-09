@@ -16,6 +16,6 @@ actual fun rememberPlatformKoinModules(): List<Module> = remember {
             // Легального перезапуска на iOS нет (exit() — причина отклонения в App Store):
             // пользователь перезапускает сам.
             single<AppRestarter> { AppRestarter { false } }
-        }
+        },
     )
 }

@@ -30,6 +30,7 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentLimits
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFilePicker
@@ -61,14 +62,14 @@ private class IosSupportChatFilePicker(private val viewController: UIViewControl
         val picker = PHPickerViewController(configuration)
         val delegate = PhotoPickerDelegate(
             onPicked = onPicked,
-            onFinished = { activeDelegate = null }
+            onFinished = { activeDelegate = null },
         )
         activeDelegate = delegate
         picker.delegate = delegate
         viewController.presentViewController(
             viewControllerToPresent = picker,
             animated = true,
-            completion = null
+            completion = null,
         )
     }
 
@@ -79,20 +80,20 @@ private class IosSupportChatFilePicker(private val viewController: UIViewControl
     private fun launchPicker(documentTypes: List<String>) {
         val picker = UIDocumentPickerViewController(
             documentTypes = documentTypes,
-            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen
+            inMode = UIDocumentPickerMode.UIDocumentPickerModeOpen,
         ).apply {
             allowsMultipleSelection = false
         }
         val delegate = DocumentPickerDelegate(
             onPicked = onPicked,
-            onFinished = { activeDelegate = null }
+            onFinished = { activeDelegate = null },
         )
         activeDelegate = delegate
         picker.delegate = delegate
         viewController.presentViewController(
             viewControllerToPresent = picker,
             animated = true,
-            completion = null
+            completion = null,
         )
     }
 
@@ -105,7 +106,7 @@ private const val IMAGE_UTI = "public.image"
 
 private class PhotoPickerDelegate(
     private val onPicked: (SupportChatPickedFileResult) -> Unit,
-    private val onFinished: () -> Unit
+    private val onFinished: () -> Unit,
 ) : NSObject(),
     PHPickerViewControllerDelegateProtocol {
 
@@ -131,7 +132,7 @@ private class PhotoPickerDelegate(
 
 private class DocumentPickerDelegate(
     private val onPicked: (SupportChatPickedFileResult) -> Unit,
-    private val onFinished: () -> Unit
+    private val onFinished: () -> Unit,
 ) : NSObject(),
     UIDocumentPickerDelegateProtocol {
 
@@ -142,7 +143,6 @@ private class DocumentPickerDelegate(
             onFinished()
             return
         }
-        // Копирование большого документа не должно вешать main-поток.
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
             val picked = url.copyToAttachments(SupportChatPickKind.Document)
             dispatch_async(dispatch_get_main_queue()) {
@@ -158,11 +158,7 @@ private class DocumentPickerDelegate(
     }
 }
 
-/**
- * Копия в `Application Support/support-chat-attachments`, а не во временный каталог:
- * она нужна outbox'у после рестарта, а tmp система вправе вычистить. Удаляет копию
- * [rememberSupportChatAttachmentFiles], когда сообщение подтверждено или удалено.
- */
+/** Копия в `Application Support`, не в tmp: нужна outbox'у после рестарта. */
 private fun NSURL.copyToAttachments(kind: SupportChatPickKind): SupportChatPickedFileResult {
     val canAccess = startAccessingSecurityScopedResource()
     return try {
@@ -181,7 +177,7 @@ private fun NSURL.copyToAttachments(kind: SupportChatPickKind): SupportChatPicke
             path = directory,
             withIntermediateDirectories = true,
             attributes = null,
-            error = null
+            error = null,
         )
         if (!created || !fileManager.copyItemAtURL(this, NSURL.fileURLWithPath(destinationPath), error = null)) {
             fileManager.removeItemAtPath(directory, error = null)
@@ -204,16 +200,15 @@ private fun NSURL.copyToAttachments(kind: SupportChatPickKind): SupportChatPicke
                 name = originalName,
                 path = destinationPath,
                 mimeType = mimeTypeForName(originalName),
-                sizeBytes = sizeBytes
+                sizeBytes = sizeBytes,
             ),
-            kind
+            kind,
         )
     } finally {
         if (canAccess) stopAccessingSecurityScopedResource()
     }
 }
 
-/** Каталог копий вложений; создаётся при первом обращении. `null` — недоступен. */
 internal fun supportChatAttachmentsDirectory(): String? {
     val base = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)
         .firstOrNull() as? String ?: return null
@@ -222,7 +217,7 @@ internal fun supportChatAttachmentsDirectory(): String? {
         path = directory,
         withIntermediateDirectories = true,
         attributes = null,
-        error = null
+        error = null,
     )
     return directory.takeIf { created }
 }

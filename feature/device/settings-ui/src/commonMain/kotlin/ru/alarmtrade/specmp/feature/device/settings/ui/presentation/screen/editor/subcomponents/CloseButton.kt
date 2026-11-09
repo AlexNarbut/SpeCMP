@@ -16,7 +16,6 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 
-/** Крестик закрытия в правом верхнем углу окна (48 dp). */
 @Composable
 internal fun CloseButton(onClose: () -> Unit) {
     CmpIconButton(
@@ -24,11 +23,10 @@ internal fun CloseButton(onClose: () -> Unit) {
         icon = CmpIcons.Close,
         contentDescription = stringResource(Strings.string.settings_common_a11y_close),
         tint = cmpThemeColors().onSurfaceVariant,
-        modifier = Modifier.testTag(SettingsTestTags.DIALOG_CLOSE)
+        modifier = Modifier.testTag(SettingsTestTags.DIALOG_CLOSE),
     )
 }
 
-/** Заголовок диалога с крестиком закрытия справа. */
 @Composable
 internal fun DialogTitle(text: String, onClose: () -> Unit) {
     CmpRow(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

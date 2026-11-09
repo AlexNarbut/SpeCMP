@@ -11,20 +11,16 @@ fun CmpBox(
     modifier: Modifier = Modifier,
     contentAlignment: Alignment = Alignment.TopStart,
     propagateMinConstraints: Boolean = false,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
         modifier = modifier,
         contentAlignment = contentAlignment,
         propagateMinConstraints = propagateMinConstraints,
-        content = content
+        content = content,
     )
 }
 
-/**
- * Вариант «только прямоугольник»: нужен закрашенный бокс без контента —
- * пустая content-лямбда у полной обёртки выглядит как недочёт API (U-18).
- */
 @Composable
 fun CmpBox(modifier: Modifier = Modifier) {
     Box(modifier = modifier)

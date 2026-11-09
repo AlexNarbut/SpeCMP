@@ -11,10 +11,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Выбор одного варианта из нескольких коротких (2–3) сегментами одной кнопки. Сегменты делят ширину поровну,
- * выбранный отмечен галочкой, длинная подпись обрезается. Высота по умолчанию — 48 dp (зона касания).
- */
 @Composable
 fun CmpSegmentedButton(
     options: List<String>,
@@ -22,7 +18,7 @@ fun CmpSegmentedButton(
     onSelect: (index: Int) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    minHeight: Dp = 48.dp
+    minHeight: Dp = 48.dp,
 ) {
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
         options.forEachIndexed { index, label ->
@@ -32,7 +28,7 @@ fun CmpSegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
                 enabled = enabled,
                 modifier = Modifier.weight(1f).heightIn(min = minHeight),
-                label = { Text(text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                label = { Text(text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             )
         }
     }

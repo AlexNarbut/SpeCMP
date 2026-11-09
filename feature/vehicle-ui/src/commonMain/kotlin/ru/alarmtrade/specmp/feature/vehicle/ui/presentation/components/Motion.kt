@@ -17,23 +17,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 
-// Мягкие переходы каталога: смена шага/колонки — перекрёстное затухание, элементы списков появляются,
-// исчезают и сдвигаются плавно (без мигания и скачков при загрузке и раскрытии).
-
 private const val FADE_IN_MS = 220
 private const val FADE_IN_DELAY_MS = 60
 private const val FADE_OUT_MS = 120
 
-/**
- * Смена содержимого с затуханием, когда меняется [contentKey] состояния. Уходящее содержимое дорисовывается
- * со своим старым [targetState] — не подменяется новыми данными.
- */
+/** Уходящее содержимое дорисовывается со своим старым [targetState]. */
 @Composable
 internal fun <S> FadeContent(
     targetState: S,
     contentKey: (S) -> Any?,
     modifier: Modifier = Modifier,
-    content: @Composable (S) -> Unit
+    content: @Composable (S) -> Unit,
 ) {
     AnimatedContent(
         targetState = targetState,
@@ -44,15 +38,11 @@ internal fun <S> FadeContent(
         },
         contentAlignment = Alignment.TopStart,
         contentKey = contentKey,
-        label = "vehicleFade"
+        label = "vehicleFade",
     ) { state -> content(state) }
 }
 
-/**
- * Элемент ленивого списка с плавным появлением, исчезновением и сдвигом. Ключ обязателен — по нему анимация.
- * Тип элемента для переиспользования слотов — префикс ключа до «-» (`brand-12` → `brand`, `letter-A` → `letter`):
- * при прокрутке строка марки переиспользует слот строки марки, а не заголовка буквы.
- */
+/** Тип слота — префикс ключа до «-» (`brand-12` → `brand`): при прокрутке строка марки переиспользует слот марки. */
 internal fun LazyListScope.fadeItem(key: Any, content: @Composable () -> Unit) {
     item(key = key, contentType = contentTypeOf(key)) { Animated { content() } }
 }
@@ -61,7 +51,7 @@ internal fun <T> LazyListScope.fadeItems(list: List<T>, key: (T) -> Any, content
     items(
         count = list.size,
         key = { key(list[it]) },
-        contentType = { contentTypeOf(key(list[it])) }
+        contentType = { contentTypeOf(key(list[it])) },
     ) { index -> Animated { content(list[index]) } }
 }
 
@@ -74,9 +64,9 @@ private fun LazyItemScope.Animated(content: @Composable () -> Unit) {
             fadeInSpec = tween(FADE_IN_MS),
             placementSpec = spring(
                 stiffness = Spring.StiffnessMediumLow,
-                visibilityThreshold = IntOffset.VisibilityThreshold
+                visibilityThreshold = IntOffset.VisibilityThreshold,
             ),
-            fadeOutSpec = tween(FADE_OUT_MS)
-        )
+            fadeOutSpec = tween(FADE_OUT_MS),
+        ),
     ) { content() }
 }

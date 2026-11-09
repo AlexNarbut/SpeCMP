@@ -1,26 +1,18 @@
 package ru.alarmtrade.specmp.feature.device.autostart.domain.model
 
-/**
- * Вид шага обучения бесключевому обходу — от него зависят цвет карточки, метка и подпись полосы статуса.
- */
 enum class BypassStepKind {
-    /** Блок ждёт действия монтажника («Включите зажигание»). */
     ACTION,
 
-    /** Блок увидел действие («Зажигание включено. Ожидайте»). */
     ACCEPTED,
 
-    /** Блок работает сам, монтажнику — ждать. */
     WAIT,
 
     /** Обмен данными через приложение: связь прерывать нельзя («Не прерывайте соединение»). */
     CRITICAL,
 
-    /** Инструкция из нескольких пунктов: монтажник выполняет её сам, блок ждёт. */
-    INSTRUCTION
+    INSTRUCTION,
 }
 
-/** О чём шаг: определяет текст и иллюстрацию. */
 enum class BypassSubject {
     PREPARE,
     IGNITION_ON,
@@ -37,16 +29,12 @@ enum class BypassSubject {
     LADA_APS,
     LADA_CAN,
     LADA_VESTA_CAN,
-    TOYOTA_DAIHATSU
+    TOYOTA_DAIHATSU,
 }
 
-/** Текущий шаг обучения. */
 data class BypassStep(val kind: BypassStepKind, val subject: BypassSubject)
 
-/**
- * Причина ошибки обучения — по `BypassLearningError` SDK. Ошибки без своего текста (новые в SDK, `NO_ERROR`,
- * `DEFAULT`) — [GENERAL]. [START_FAILED] — сбой SDK без статуса (не вошли в режим программирования, оборвался поток).
- */
+/** Без своего текста (новые в SDK, `NO_ERROR`, `DEFAULT`) — [GENERAL]; [START_FAILED] — сбой SDK без статуса. */
 enum class BypassError {
     GENERAL,
     START_FAILED,
@@ -76,28 +64,24 @@ enum class BypassError {
     MERCEDES_NO_RESPONSE_0F,
     LADA_CAN_BUS,
     LADA_REPEAT,
-    LADA_VESTA_CAN_PATCH_SEND
+    LADA_VESTA_CAN_PATCH_SEND,
 }
 
-/** Итог обучения. */
 sealed interface BypassResult {
     data object Success : BypassResult
 
-    /** Обучение завершено, но для автозапуска нужна процедура Clone. */
     data object CloneRequired : BypassResult
 
     data object NotSupported : BypassResult
 
-    /** @property code код ошибки блока (только у [BypassError.VAG_ECU_EXCHANGE]). */
     data class Error(val error: BypassError, val code: Int? = null) : BypassResult
 }
 
-/** Событие потока обучения. */
 sealed interface BypassEvent {
     data class Step(val step: BypassStep) : BypassEvent
 
     data class Finished(val result: BypassResult) : BypassEvent
-
-    /** Сбой SDK без статуса; что это — обрыв связи или ошибка, решает ViewModel по состоянию сессии. */
-    data object Failure : BypassEvent
 }
+
+/** Сбой SDK без статуса; что это — обрыв связи или ошибка, решает ViewModel по состоянию сессии. */
+class BypassLearningException(cause: Throwable? = null) : Exception("Bypass learning failed", cause)

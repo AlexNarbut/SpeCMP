@@ -1,50 +1,33 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 
 /**
- * Учёт изменённых настроек редактора (без I/O и корутин — тестируется напрямую):
- * - «как было» ([resetBaseline]) — значения после чтения меню или записи;
- * - «загружено» ([markLoaded]) — изменённое последней загрузкой конфигурации: SDK такие правки в `unsavedIds`
- *   не отмечает;
- * - «изменено» ([changesOf]) — отличается от «как было» и при этом есть в `unsavedIds` SDK или загружено. Возврат
- *   исходного значения снимает подсветку, даже если SDK ещё считает настройку несохранённой.
- *
- * Обход дерева — линейный по числу настроек; VM вызывает на `default`.
+ * «Изменено» — отличается от «как было» и есть в `unsavedIds` SDK или загружено ([withLoaded]: SDK загруженное не
+ * отмечает). Возврат исходного значения снимает подсветку, даже если SDK ещё считает настройку несохранённой.
  */
-internal class SettingsChangeTracker {
+internal data class SettingsChangeTracker(
+    private val baseline: Map<Int, SettingValue> = emptyMap(),
+    private val loaded: Set<Int> = emptySet(),
+) {
 
-    private val baseline = MutableStateFlow<Map<Int, SettingValue>>(emptyMap())
-    private val loaded = MutableStateFlow<Set<Int>>(emptySet())
+    fun original(settingId: Int): SettingValue? = baseline[settingId]
 
-    /** Значение «как было» настройки [settingId]. */
-    fun original(settingId: Int): SettingValue? = baseline.value[settingId]
+    fun withBaseline(root: SettingsSection): SettingsChangeTracker =
+        copy(baseline = root.settings().associate { it.id to it.value })
 
-    /** Новый снимок «как было» — текущее меню [root]. */
-    fun resetBaseline(root: SettingsSection) {
-        val values = root.settings().associate { it.id to it.value }
-        baseline.update { values }
-    }
+    fun withoutLoaded(): SettingsChangeTracker = copy(loaded = emptySet())
 
-    fun clearLoaded() {
-        loaded.update { emptySet() }
-    }
+    fun withLoaded(root: SettingsSection): SettingsChangeTracker =
+        copy(loaded = root.settings().differingFrom(baseline))
 
-    /** Загрузка конфигурации: «загружено» — всё, что в [root] отличается от «как было». */
-    fun markLoaded(root: SettingsSection) {
-        val differing = root.settings().differingFrom(baseline.value)
-        loaded.update { differing }
-    }
-
-    /** Изменённые настройки [root] (id) и их число по разделам; [unsaved] `null` — SDK не ответил: все отличающиеся. */
+    /** [unsaved] `null` — SDK не ответил: изменены все отличающиеся. */
     fun changesOf(root: SettingsSection, settings: List<Setting>, unsaved: Set<Int>?): Changes {
-        val differing = settings.differingFrom(baseline.value)
-        val changed = if (unsaved == null) differing else differing.intersect(unsaved + loaded.value)
+        val differing = settings.differingFrom(baseline)
+        val changed = if (unsaved == null) differing else differing.intersect(unsaved + loaded)
         return Changes(changed, root.sectionChanges(changed))
     }
 
@@ -54,7 +37,6 @@ internal class SettingsChangeTracker {
 private fun List<Setting>.differingFrom(baseline: Map<Int, SettingValue>): Set<Int> =
     filter { it.value != baseline[it.id] }.mapTo(mutableSetOf()) { it.id }
 
-/** Число изменённых настроек в каждом разделе дерева (на любой глубине); разделы без изменений не входят. */
 private fun SettingsSection.sectionChanges(changed: Set<Int>): Map<Int, Int> {
     val result = mutableMapOf<Int, Int>()
     fun count(section: SettingsSection): Int {

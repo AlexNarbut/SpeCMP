@@ -16,7 +16,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePicker
@@ -44,35 +43,24 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Граф экранов режима загрузчика: «Обновление прошивки» → «Архив прошивок».
- * Слот `bootContent` хоста устройства (`composeApp`):
- * хост показывает граф, пока блок в загрузчике или ждёт перезагрузку, и сам решает, когда уйти.
- *
- * @param onExit выход из всего flow (закрывает сессию); на экране обновления вызывается после подтверждения.
- * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
- * @param filePicker выбор файла прошивки в файловом менеджере (платформа, `composeApp`).
- * @param vehiclePicker выбор автомобиля для CAN-фильтра архива (фича `vehicle-ui`, `composeApp`);
- *   `null` — без каталога.
- * @param sources источники прошивки на экране обновления; [FirmwareSources.FileOnly] — только файл.
- */
+/** Слот `bootContent` хоста устройства: хост показывает граф, пока блок в загрузчике или ждёт перезагрузку. */
 @Composable
 fun FirmwareBootGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
+    archivePicker: FirmwareArchivePicker,
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
     vehiclePicker: ArchiveVehiclePicker? = null,
-    sources: FirmwareSources = FirmwareSources.All
+    sources: FirmwareSources = FirmwareSources.All,
 ) {
     val backStack = rememberNavBackStack(navConfig, FirmwareUpdateRoute)
-    val archivePicker = koinInject<FirmwareArchivePicker>()
 
     NavDisplay(
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         onBack = { backStack.popSafe() },
         entryProvider = entryProvider<NavKey> {
@@ -82,7 +70,7 @@ fun FirmwareBootGraph(
                     onOpenSupportChat = onOpenSupportChat,
                     filePicker = filePicker,
                     onOpenArchive = { request -> backStack.navigateSafe(FirmwareArchiveRoute(request)) },
-                    sources = sources
+                    sources = sources,
                 )
             }
             entry<FirmwareArchiveRoute> { key ->
@@ -94,9 +82,9 @@ fun FirmwareBootGraph(
                         backStack.popSafe()
                     },
                     onBack = { backStack.popSafe() },
-                    vehiclePicker = vehiclePicker
+                    vehiclePicker = vehiclePicker,
                 )
             }
-        }
+        },
     )
 }

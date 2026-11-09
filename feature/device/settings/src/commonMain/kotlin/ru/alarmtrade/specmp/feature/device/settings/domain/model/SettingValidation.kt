@@ -1,11 +1,9 @@
 package ru.alarmtrade.specmp.feature.device.settings.domain.model
 
-/** Длина CAN-кода автомобиля (4 цифры). */
 const val CAN_CODE_LENGTH = 4
 
 private val CAN_CODE_PATTERN = Regex("\\d{$CAN_CODE_LENGTH}")
 
-/** Можно ли применить значение [draft] к настройке: диапазон, длина, шаблон устройства, формат CAN-кода. */
 @Suppress("CyclomaticComplexMethod") // плоская таблица проверок по типам настроек
 fun Setting.accepts(draft: SettingValue): Boolean = when {
     this is IntegerSetting && draft is SettingValue.Integer -> draft.value in range

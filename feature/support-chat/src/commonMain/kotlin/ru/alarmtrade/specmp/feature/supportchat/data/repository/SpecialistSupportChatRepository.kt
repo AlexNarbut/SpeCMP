@@ -7,7 +7,6 @@ import kotlinx.coroutines.launch
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.chat.ChatConnectionState
 import ru.alarmtrade.specialist.domain.chat.ChatEvent
-import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.interactors.chat.requests.DownloadChatFileRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.LoadChatMessagesRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.MarkMessagesAsReadRequest
@@ -17,25 +16,27 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
 import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
+import ru.alarmtrade.specmp.feature.supportchat.data.datasource.SupportChatDataSource
 import ru.alarmtrade.specmp.feature.supportchat.data.mapper.SupportChatMessageMapper
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatUnavailableException
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
-class SpecialistSupportChatRepository(
-    private val chatInteractor: ChatInteractor,
-    private val accountRepository: AccountRepository
+internal class SpecialistSupportChatRepository(
+    private val dataSource: SupportChatDataSource,
+    private val accountRepository: AccountRepository,
 ) : SupportChatRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     private val messageMapper = SupportChatMessageMapper()
 
-    override fun session(): Flow<SupportChatEvent> = channelFlow {
-        send(SupportChatEvent.Connection(SupportChatConnectionState.Connecting))
+    override fun session(): Flow<Response<SupportChatEvent>> = channelFlow {
+        send(Response.Success(SupportChatEvent.Connection(SupportChatConnectionState.Connecting)))
 
         // Профиль — часть сессии: нужен маппингу «моё / чужое», получаем один раз.
         val profile = when (val response = accountRepository.currentProfile()) {
@@ -43,15 +44,17 @@ class SpecialistSupportChatRepository(
 
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to resolve chat profile" }
-                send(SupportChatEvent.Connection(SupportChatConnectionState.Unavailable))
+                send(Response.Error(SupportChatUnavailableException(response.exception)))
                 return@channelFlow
             }
         }
 
         launch {
-            chatInteractor.getChatEventsFlowUseCase.execute().collect { response ->
+            dataSource.chatEvents().collect { response ->
                 when (response) {
-                    is SpecialistResponse.Success -> response.value.toSupportChatEvent(profile)?.let { send(it) }
+                    is SpecialistResponse.Success -> response.value.toSupportChatEvent(profile)?.let {
+                        send(Response.Success(it))
+                    }
 
                     // Обрывы отражает состояние соединения; ошибка в потоке событий — только лог.
                     is SpecialistResponse.Error -> logger.d(response.exception) { "Chat event error" }
@@ -60,10 +63,10 @@ class SpecialistSupportChatRepository(
         }
 
         // Заявка на соединение живёт, пока собирается этот поток.
-        chatInteractor.chatSessionFlowUseCase.execute().collect { response ->
+        dataSource.chatSession().collect { response ->
             when (response) {
                 is SpecialistResponse.Success -> response.value.toDomain()?.let {
-                    send(SupportChatEvent.Connection(it))
+                    send(Response.Success(SupportChatEvent.Connection(it)))
                 }
 
                 is SpecialistResponse.Error -> logger.d(response.exception) { "Chat connection state error" }
@@ -77,12 +80,12 @@ class SpecialistSupportChatRepository(
             is Response.Error -> return response
         }
         val request = LoadChatMessagesRequest(cursor = cursor?.token, pageSize = HISTORY_PAGE_SIZE)
-        return when (val response = chatInteractor.loadChatMessagesUseCase.execute(request)) {
+        return when (val response = dataSource.loadMessages(request)) {
             is SpecialistResponse.Success -> Response.Success(
                 SupportChatHistoryPage(
                     messages = response.value.messages.mapNotNull { messageMapper.map(it, profile.email) },
-                    nextCursor = response.value.nextCursor?.let { SupportChatHistoryCursor(it.token) }
-                )
+                    nextCursor = response.value.nextCursor?.let { SupportChatHistoryCursor(it.token) },
+                ),
             )
 
             is SpecialistResponse.Error -> response.toResponse()
@@ -90,25 +93,25 @@ class SpecialistSupportChatRepository(
     }
 
     override suspend fun sendMessage(text: String): Response<Unit> =
-        chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text)).toResponse()
+        dataSource.writeMessage(WriteMessageRequest(text)).toResponse()
 
     override suspend fun sendImage(file: SupportChatPickedFile): Response<Unit> =
-        chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path)).toResponse()
+        dataSource.attachImage(UploadChatFileRequest(file.path)).toResponse()
 
     override suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit> =
-        chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path)).toResponse()
+        dataSource.attachDocument(UploadChatFileRequest(file.path)).toResponse()
 
     override suspend fun downloadFile(url: String): Response<ByteArray> {
         // Лимит размера (20 МБ) проверяет SDK.
-        return chatInteractor.downloadChatFileUseCase.execute(
-            DownloadChatFileRequest(url)
+        return dataSource.downloadFile(
+            DownloadChatFileRequest(url),
         ).toResponse().also { response ->
             if (response is Response.Error) logger.d(response.exception) { "Failed to download chat file" }
         }
     }
 
     override suspend fun markMessagesAsRead(ids: List<Long>): Response<Unit> =
-        chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids)).toResponse()
+        dataSource.markMessagesAsRead(MarkMessagesAsReadRequest(ids)).toResponse()
 
     private fun ChatConnectionState.toDomain(): SupportChatConnectionState? = when (this) {
         // Заявка взята, но SDK ещё не начал подключение — для экрана это то же «подключение».
@@ -138,7 +141,7 @@ class SpecialistSupportChatRepository(
         is ChatEvent.Chat.Writing.Stop ->
             SupportChatEvent.TypingChanged(userLogin, isTyping = false, isMine = userLogin == profile.email)
 
-        // Состояние соединения — из chatSessionFlowUseCase.
+        // Состояние соединения — из потока сессии чата.
         is ChatEvent.Connection, is ChatEvent.ChatRoom, is ChatEvent.Error -> null
 
         else -> {

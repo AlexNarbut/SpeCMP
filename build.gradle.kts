@@ -11,8 +11,9 @@ plugins {
     alias(libs.plugins.android.kmp.library).apply(false)
     alias(libs.plugins.kotlinx.serialization).apply(false)
     alias(libs.plugins.buildConfig).apply(false)
-    alias(libs.plugins.detekt).apply(false)
+    id("specmp.detekt").apply(false)
     alias(libs.plugins.spotless)
+    alias(libs.plugins.module.graph.assert)
 }
 
 var giteaUsername = System.getenv("GITEA_USERNAME")
@@ -72,87 +73,143 @@ buildscript {
     }
 }
 
+// UI-аудит: обходы дизайн-системы core/ui в фичах и composition roots сверх baseline роняют задачу;
+// правила и исключения — docs/code-quality.md → «UI-аудит».
+tasks.register<Exec>("uiAudit") {
+    group = "verification"
+    description = "Сравнивает находки scripts/ui-audit/ui_audit.py с baseline; рост → ошибка"
+    workingDir = rootDir
+    commandLine("python3", "-I", "scripts/ui-audit/ui_audit.py", "--diff")
+}
+
+// Поиск скопированного кода (PMD CPD): дубли длиннее 100 токенов Kotlin роняют задачу. Корневая задача без
+// плагина: CLI PMD в отдельной конфигурации, исходники — объявленный input (совместимо с configuration cache).
+// Исключения — только повторы по построению, у каждого причина; подробно в docs/code-quality.md → «CPD».
+val cpd: Configuration by configurations.creating
+
+dependencies {
+    cpd(libs.pmd.cli)
+    cpd(libs.pmd.kotlin)
+}
+
+tasks.register<JavaExec>("cpdCheck") {
+    group = "verification"
+    description = "Дубли Kotlin-кода длиннее 100 токенов (PMD CPD)"
+    val sources = fileTree(rootDir) {
+        include(
+            "core/**/src/**/*.kt",
+            "feature/**/src/**/*.kt",
+            "composeApp/src/**/*.kt",
+            "flasherApp/src/**/*.kt",
+            "quality/**/src/**/*.kt",
+        )
+        exclude(
+            "**/build/**",
+            "**/generated/**",
+            // Тесты: фикстуры и arrange-блоки повторяются намеренно — читаемость теста важнее DRY.
+            "**/src/test/**",
+            "**/src/*Test/**",
+        )
+    }
+    val fileList = layout.buildDirectory.file("cpd/files.txt")
+    inputs.files(sources).withPathSensitivity(PathSensitivity.RELATIVE)
+    classpath = cpd
+    mainClass = "net.sourceforge.pmd.cli.PmdCli"
+    args("cpd", "--language", "kotlin", "--minimum-tokens", "100", "--format", "text")
+    argumentProviders.add(CommandLineArgumentProvider { listOf("--file-list", fileList.get().asFile.path) })
+    doFirst {
+        fileList.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(sources.files.sorted().joinToString("\n"))
+        }
+    }
+}
+
+// Направления зависимостей между Gradle-модулями (modules-graph-assert): задача assertModuleGraph. Плагин в корне
+// строит граф по всем подпроектам при настройке задачи. Импорты в коде проверяет Konsist (module-direction);
+// правила — docs/code-quality.md → «graph-assert».
+moduleGraphAssert {
+    restricted = arrayOf(
+        ":core:.* -X> :feature:.*",
+        ":(core|feature):.* -X> :(composeApp|flasherApp)",
+        ".* -X> :(androidApp|desktopApp|flasherAndroidApp|flasherDesktopApp)",
+        ".* -X> :quality:.*",
+        ":quality:.* -X> :(core|feature):.*",
+        // От *-ui зависят только composition roots.
+        ":feature:.* -X> :feature:.*-ui",
+    )
+    configurations = setOf(
+        "api",
+        "implementation",
+        "testImplementation",
+        "commonMainApi",
+        "commonMainImplementation",
+        "commonTestImplementation",
+        "androidMainApi",
+        "androidMainImplementation",
+        "iosMainApi",
+        "iosMainImplementation",
+        "jvmMainApi",
+        "jvmMainImplementation",
+        "jvmTestImplementation",
+    )
+}
+
 // Качество кода: docs/code-quality.md.
-// Один корневой Spotless на весь репозиторий (ktlint + compose-rules). По умолчанию проверяются только файлы,
-// изменённые относительно HEAD; для проверки ветки — -PspotlessRatchetFrom=origin/develop.
-// В check/build не входит: запускается только spotlessCheck / spotlessApply.
+// Spotless не подхватывает эти свойства из .editorconfig (дефолты стиля android_studio берут верх),
+// поэтому они продублированы явным override; значения держать в синхроне с .editorconfig.
+val ktlintEditorConfigOverride = mapOf(
+    "ij_kotlin_allow_trailing_comma" to true,
+    "ij_kotlin_allow_trailing_comma_on_call_site" to true,
+    "ktlint_ignore_back_ticked_identifier" to true,
+)
+
+// Один корневой Spotless (ktlint + compose-rules) на весь репозиторий, входит в check. По умолчанию проверяется
+// всё дерево; -PspotlessRatchetFrom=<ref> ограничивает проверку файлами, изменёнными относительно ref.
 spotless {
-    isEnforceCheck = false
-    ratchetFrom(providers.gradleProperty("spotlessRatchetFrom").getOrElse("HEAD"))
+    providers.gradleProperty("spotlessRatchetFrom").orNull?.let { ratchetFrom(it) }
     kotlin {
         target(
             fileTree(rootDir) {
                 include("**/src/**/*.kt")
                 exclude("**/build/**", "**/generated/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
-            }
+            },
         )
         ktlint(libs.versions.ktlint.get())
+            .setEditorConfigPath(rootProject.file(".editorconfig"))
+            .editorConfigOverride(ktlintEditorConfigOverride)
             .customRuleSets(listOf("io.nlopez.compose.rules:ktlint:${libs.versions.composeRules.get()}"))
     }
     kotlinGradle {
         target(
             fileTree(rootDir) {
-                include("*.gradle.kts", "*/*.gradle.kts", "*/*/*.gradle.kts", "*/*/*/*.gradle.kts")
+                include(
+                    "*.gradle.kts",
+                    "*/*.gradle.kts",
+                    "*/*/*.gradle.kts",
+                    "*/*/*/*.gradle.kts",
+                    "build-logic/src/**/*.gradle.kts",
+                )
                 exclude("**/build/**", "**/.gradle/**", "**/.git/**", "**/.kotlin/**")
-            }
+            },
         )
         ktlint(libs.versions.ktlint.get())
+            .setEditorConfigPath(rootProject.file(".editorconfig"))
+            .editorConfigOverride(ktlintEditorConfigOverride)
     }
 }
 
-// detekt подключается к каждому подпроекту: у каждого модуля свои source set'ы и type resolution.
+// detekt (build-logic, specmp.detekt) — всем Kotlin-модулям: KMP-библиотекам, composition roots и обёрткам.
+// quality/* — инструменты проверок, сами detekt не проходят (detekt-rules подключается к остальным как плагин).
 subprojects {
-    apply(plugin = "dev.detekt")
-
-    extensions.configure<dev.detekt.gradle.extensions.DetektExtension> {
-        buildUponDefaultConfig.set(true)
-        config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-        parallel.set(true)
-    }
-
-    // Плагин detekt вешает обычный `detekt` на check — отвязываем: анализ запускается только через detektCheck.
-    tasks.matching { it.name == "check" }.configureEach {
-        setDependsOn(
-            dependsOn.filterNot {
-                (it as? TaskProvider<*>)?.name == "detekt" || (it as? Task)?.name == "detekt"
-            }
-        )
-    }
-
-    // Compose Resources, BuildConfig и прочий генерируемый код лежат в build/ и попадают в type-resolution задачи.
-    tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-        exclude("**/build/**", "**/generated/**")
-        // Шаблоны выше — относительно корня source set; у сгенерированных source set'ов (аксессоры Strings) сам корень
-        // лежит в build/, поэтому отсекаем по абсолютному пути.
-        exclude { it.file.absolutePath.contains("${File.separator}build${File.separator}") }
-    }
-
-    // Агрегатор `detekt` в KMP ничего не запускает. detektCheck собирает задачи с type resolution по production- и
-    // host-test-компиляциям (dev-компиляция Compose Hot Reload не анализируется); iosMain — отдельной
-    // source-set-задачей (без типов). В check и в сборку APK detekt не входит.
-    tasks.register("detektCheck") {
-        group = "verification"
-        description = "detekt с type resolution по production- и host-test-компиляциям"
-        dependsOn(
-            tasks.matching {
-                val names = if (plugins.hasPlugin("com.android.application")) {
-                    // androidApp: только debug-вариант и его unit-тесты
-                    setOf("detektDebug", "detektDebugUnitTest")
-                } else {
-                    setOf(
-                        // KMP: commonMain + androidMain, commonMain + jvmMain, commonTest + jvmTest, iosMain
-                        "detektMainAndroid",
-                        "detektMainJvm",
-                        "detektTestJvm",
-                        "detektIosMainSourceSet",
-                        // desktopApp (kotlin("jvm"))
-                        "detektMain",
-                        "detektTest"
-                    )
-                }
-                it.name in names
-            }
-        )
+    if (path.startsWith(":quality:")) return@subprojects
+    listOf(
+        "org.jetbrains.kotlin.multiplatform",
+        "org.jetbrains.kotlin.android",
+        "org.jetbrains.kotlin.jvm",
+        "com.android.application",
+    ).forEach { id ->
+        pluginManager.withPlugin(id) { pluginManager.apply("specmp.detekt") }
     }
 }
 

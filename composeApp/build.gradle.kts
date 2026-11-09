@@ -1,33 +1,17 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.android.kmp.library)
+    id("specmp.kmp.compose")
     alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
-    val jvmTargetVersion = JvmTarget.JVM_17
-
-    jvm {
-        compilerOptions { jvmTarget.set(jvmTargetVersion) }
-    }
-
     android {
         namespace = "ru.alarmtrade.specmp"
-        compileSdk = libs.versions.android.targetSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        compilerOptions { jvmTargetVersion }
     }
-
-    iosArm64()
 
     sourceSets {
         commonMain.dependencies {
-            // Core modules
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
             implementation(project(":core:network"))
@@ -37,7 +21,6 @@ kotlin {
             implementation(project(":feature:account"))
             implementation(project(":core:ui"))
 
-            // Feature modules
             implementation(project(":feature:auth-state"))
             implementation(project(":feature:login"))
             implementation(project(":feature:app-settings"))
@@ -49,6 +32,7 @@ kotlin {
             implementation(project(":feature:device:autostart"))
             implementation(project(":feature:device:state"))
             implementation(project(":feature:device:settings"))
+            implementation(project(":feature:device:presentation-core"))
             implementation(project(":feature:vehicle"))
             implementation(project(":feature:vehicle-ui"))
             implementation(project(":feature:configurator"))
@@ -58,7 +42,6 @@ kotlin {
             implementation(project(":feature:advanced-mount"))
             implementation(project(":feature:fast-mount"))
 
-            // Compose
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -66,40 +49,31 @@ kotlin {
             implementation(libs.compose.resources)
             implementation(libs.compose.ui.tooling.preview)
 
-            // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime)
-            implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
-            // Navigation
             implementation(libs.compose.nav3)
-            // ViewModelStore-декоратор Nav3: per-entry ViewModelStore → очистка VM при pop
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
-            // DI
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
-            // Image loading
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
 
-            // Coroutines
             implementation(libs.kotlinx.coroutines.core)
 
-            // Serialization (for nav3 routes)
             implementation(libs.kotlinx.serialization.json)
         }
 
         iosMain.dependencies {
-            // Дублирование логов в stdout в отладочной сборке (MainViewController)
             implementation(libs.kermit)
         }
 
-        iosMain.dependencies {
-            // Дублирование логов в stdout в отладочной сборке (MainViewController)
-            implementation(libs.kermit)
+        jvmTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.koin.test)
         }
 
         androidMain.dependencies {
@@ -125,11 +99,8 @@ dependencies {
     androidRuntimeClasspath(libs.compose.ui.tooling)
 }
 
-// Ресурсы SDK на moko-resources (встроенная база настроек и моделей блоков `settings.json` и др.) лежат в
-// iOS-klib как `default/resources/<id>.bundle`. Плагин moko-resources в проекте не подключён (у SDK свой форк),
-// поэтому bundle копируются в приложение этой задачей — Xcode вызывает её вместе с
-// embedAndSignAppleFrameworkForXcode. moko находит bundle по идентификатору, перебирая содержимое приложения.
-// Без неё на iOS синхронизация базы падает: модели нет — блок «не поддерживается».
+// Плагин moko-resources не подключён (у SDK свой форк): bundle ресурсов SDK из iOS-klib копирует в приложение эта
+// задача (Xcode зовёт её с embedAndSignAppleFrameworkForXcode); без них на iOS нет базы моделей блоков.
 val copyMokoBundlesToXcode by tasks.registering(Copy::class) {
     description = "Copies moko-resources bundles from iOS klib dependencies into the Xcode app bundle"
     val klibs = configurations.named("iosArm64CompileKlibraries")
@@ -141,6 +112,6 @@ val copyMokoBundlesToXcode by tasks.registering(Copy::class) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     into(
         providers.environmentVariable("TARGET_BUILD_DIR")
-            .zip(providers.environmentVariable("UNLOCALIZED_RESOURCES_FOLDER_PATH")) { dir, path -> "$dir/$path" }
+            .zip(providers.environmentVariable("UNLOCALIZED_RESOURCES_FOLDER_PATH")) { dir, path -> "$dir/$path" },
     )
 }

@@ -16,18 +16,17 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 
 @Composable
 internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = Modifier) {
-    // drawWithCache: раскладка тайлов и градиент считаются один раз на размер,
-    // а не на каждый проход фазы Draw (U-19).
+    // drawWithCache: раскладка тайлов и градиент — один раз на размер, а не на каждый проход Draw.
     val drawCacheColors = colors
     Canvas(
         modifier = modifier.drawWithCache {
             val gradient = Brush.radialGradient(
                 colors = listOf(
                     drawCacheColors.primary.copy(alpha = 0.06f),
-                    Color.Transparent
+                    Color.Transparent,
                 ),
                 center = Offset(size.width / 2f, -size.height * 0.12f),
-                radius = size.maxDimension * 0.72f
+                radius = size.maxDimension * 0.72f,
             )
 
             val tile = 240.dp.toPx()
@@ -38,7 +37,7 @@ internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = M
                 WrenchPlacement(0.32f, 0.50f, 82f),
                 WrenchPlacement(0.82f, 0.60f, -64f),
                 WrenchPlacement(0.16f, 0.84f, 12f),
-                WrenchPlacement(0.61f, 0.90f, -18f)
+                WrenchPlacement(0.61f, 0.90f, -18f),
             )
 
             val areaSize = size
@@ -52,10 +51,10 @@ internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = M
                                 WrenchDraw(
                                     center = Offset(
                                         x = tileX + tile * placement.x,
-                                        y = tileY + tile * placement.y
+                                        y = tileY + tile * placement.y,
                                     ),
-                                    degrees = placement.degrees
-                                )
+                                    degrees = placement.degrees,
+                                ),
                             )
                         }
                         tileX += tile
@@ -70,9 +69,8 @@ internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = M
                     drawWrench(center = wrench.center, degrees = wrench.degrees, color = wrenchColor)
                 }
             }
-        }
+        },
     ) {
-        // Весь контент рисуется через drawWithCache-обёртку выше.
     }
 }
 
@@ -86,13 +84,13 @@ private fun DrawScope.drawWrench(center: Offset, degrees: Float, color: Color) {
             color = color,
             start = Offset(center.x - handleLength, center.y),
             end = Offset(center.x + headRadius, center.y),
-            strokeWidth = strokeWidth
+            strokeWidth = strokeWidth,
         )
         drawCircle(
             color = color,
             radius = 3.5.dp.toPx(),
             center = Offset(center.x - handleLength, center.y),
-            style = Stroke(width = 2.dp.toPx())
+            style = Stroke(width = 2.dp.toPx()),
         )
         drawArc(
             color = color,
@@ -101,7 +99,7 @@ private fun DrawScope.drawWrench(center: Offset, degrees: Float, color: Color) {
             useCenter = false,
             topLeft = Offset(center.x, center.y - headRadius),
             size = Size(headRadius * 2f, headRadius * 2f),
-            style = Stroke(width = strokeWidth)
+            style = Stroke(width = strokeWidth),
         )
     }
 }

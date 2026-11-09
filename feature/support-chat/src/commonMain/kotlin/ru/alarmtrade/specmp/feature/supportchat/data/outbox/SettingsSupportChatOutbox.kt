@@ -7,38 +7,39 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
 
 /**
- * Outbox в именованном хранилище `multiplatform-settings` (JSON одной строкой).
- *
- * Каждая операция — read-modify-write под [mutex]: key-value хранилище не даёт
- * атомарности, а переходы приходят из разных корутин (коллектор событий и
- * интенты экрана). Очередь мала (единицы сообщений), поэтому полная перезапись
- * списка проще и надёжнее диффов. Диспетчер выбирает вызывающий.
+ * Каждая операция — read-modify-write под [mutex]: хранилище не атомарно, а переходы приходят из разных корутин.
+ * Очередь мала — полная перезапись списка проще и надёжнее диффов.
  */
-class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOutbox {
+internal class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOutbox {
 
     private val mutex = Mutex()
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun load(): List<SupportChatMessage> = mutex.withLock { read() }.map { it.toMessage() }
+    override suspend fun load(): Response<List<SupportChatMessage>> =
+        safeRun { mutex.withLock { read() }.map { it.toMessage() } }
 
-    override suspend fun enqueue(message: SupportChatMessage) {
-        val entry = message.toEntry() ?: return
-        mutex.withLock {
-            val entries = read()
-            val index = entries.indexOfFirst { it.clientId == entry.clientId }
-            write(
-                if (index == -1) entries + entry else entries.toMutableList().apply { set(index, entry) }
-            )
+    override suspend fun enqueue(message: SupportChatMessage): Response<Unit> {
+        val entry = message.toEntry() ?: return Response.Success(Unit)
+        return safeRun {
+            mutex.withLock {
+                val entries = read()
+                val index = entries.indexOfFirst { it.clientId == entry.clientId }
+                write(
+                    if (index == -1) entries + entry else entries.toMutableList().apply { set(index, entry) },
+                )
+            }
         }
     }
 
-    override suspend fun markSent(clientId: String) {
+    override suspend fun markSent(clientId: String): Response<Unit> = safeRun {
         mutex.withLock {
             val entries = read()
             val index = entries.indexOfFirst { it.clientId == clientId }
@@ -46,13 +47,13 @@ class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOut
                 write(
                     entries.toMutableList().apply {
                         set(index, get(index).copy(status = SupportChatOutboxEntry.Status.Sent))
-                    }
+                    },
                 )
             }
         }
     }
 
-    override suspend fun remove(clientId: String) {
+    override suspend fun remove(clientId: String): Response<Unit> = safeRun {
         mutex.withLock {
             val entries = read()
             if (entries.any { it.clientId == clientId }) {
@@ -95,7 +96,7 @@ internal data class SupportChatOutboxEntry(
     val timeMillis: Long,
     val text: String?,
     val attachment: Attachment?,
-    val status: Status
+    val status: Status,
 ) {
 
     @Serializable
@@ -106,7 +107,7 @@ internal data class SupportChatOutboxEntry(
         val kind: Kind,
         val localPath: String,
         val mimeType: String?,
-        val sizeBytes: Long?
+        val sizeBytes: Long?,
     )
 
     @Serializable
@@ -130,7 +131,8 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
 
         SupportChatMessageStatus.Sending,
         SupportChatMessageStatus.Sent,
-        SupportChatMessageStatus.Read -> return null
+        SupportChatMessageStatus.Read,
+        -> return null
     }
     val source = attachment
     val storedAttachment = if (source != null) {
@@ -144,7 +146,7 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
             },
             localPath = localPath,
             mimeType = (source as? SupportChatAttachment.Document)?.mimeType,
-            sizeBytes = (source as? SupportChatAttachment.Document)?.sizeBytes
+            sizeBytes = (source as? SupportChatAttachment.Document)?.sizeBytes,
         )
     } else {
         null
@@ -154,7 +156,7 @@ private fun SupportChatMessage.toEntry(): SupportChatOutboxEntry? {
         timeMillis = time.toEpochMilliseconds(),
         text = text,
         attachment = storedAttachment,
-        status = entryStatus
+        status = entryStatus,
     )
 }
 
@@ -167,7 +169,7 @@ private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage = SupportChat
             SupportChatOutboxEntry.Kind.Image -> SupportChatAttachment.Image(
                 id = stored.id,
                 name = stored.name,
-                localPath = stored.localPath
+                localPath = stored.localPath,
             )
 
             SupportChatOutboxEntry.Kind.Document -> SupportChatAttachment.Document(
@@ -175,7 +177,7 @@ private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage = SupportChat
                 name = stored.name,
                 localPath = stored.localPath,
                 mimeType = stored.mimeType,
-                sizeBytes = stored.sizeBytes
+                sizeBytes = stored.sizeBytes,
             )
         }
     },
@@ -185,8 +187,9 @@ private fun SupportChatOutboxEntry.toMessage(): SupportChatMessage = SupportChat
     status = when (status) {
         // Доставка Sent неизвестна (эха не было) — повторяем.
         SupportChatOutboxEntry.Status.Pending,
-        SupportChatOutboxEntry.Status.Sent -> SupportChatMessageStatus.Pending
+        SupportChatOutboxEntry.Status.Sent,
+        -> SupportChatMessageStatus.Pending
 
         SupportChatOutboxEntry.Status.Failed -> SupportChatMessageStatus.Failed
-    }
+    },
 )

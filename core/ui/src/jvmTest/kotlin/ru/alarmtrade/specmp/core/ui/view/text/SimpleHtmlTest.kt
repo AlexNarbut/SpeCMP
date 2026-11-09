@@ -16,7 +16,7 @@ class SimpleHtmlTest {
     fun `list items become bullet lines`() {
         assertEquals(
             "Шаги:\n• Снять\n• Подключить",
-            parseSimpleHtml("Шаги:<ul><li>Снять</li><li>Подключить</li></ul>").text
+            parseSimpleHtml("Шаги:<ul><li>Снять</li><li>Подключить</li></ul>").text,
         )
     }
 

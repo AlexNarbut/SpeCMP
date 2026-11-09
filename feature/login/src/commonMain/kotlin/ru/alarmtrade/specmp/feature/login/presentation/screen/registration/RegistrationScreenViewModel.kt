@@ -1,9 +1,5 @@
 package ru.alarmtrade.specmp.feature.login.presentation.screen.registration
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -17,69 +13,60 @@ import ru.alarmtrade.specmp.feature.login.presentation.model.AuthFormError
 import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldError
 
 class RegistrationScreenViewModel(private val repository: LoginRepository, private val dispatchers: AppDispatchers) :
-    BaseViewModel() {
-
-    private val _state = MutableStateFlow(RegistrationScreenState())
-    val state: StateFlow<RegistrationScreenState> = _state.asStateFlow()
+    BaseViewModel<RegistrationScreenState, Nothing>(RegistrationScreenState()) {
 
     fun onFullNameChanged(value: String) {
-        _state.update { it.withFieldEdited(RegistrationFieldError.FullName) { copy(fullName = value) } }
+        reduce { withFieldEdited(RegistrationFieldError.FullName) { copy(fullName = value) } }
     }
 
     fun onEmailChanged(value: String) {
-        _state.update { it.withFieldEdited(RegistrationFieldError.Email) { copy(email = value) } }
+        reduce { withFieldEdited(RegistrationFieldError.Email) { copy(email = value) } }
     }
 
     fun onPhoneNumberChanged(value: String) {
-        _state.update { it.withFieldEdited(RegistrationFieldError.Phone) { copy(phoneNumber = value) } }
+        reduce { withFieldEdited(RegistrationFieldError.Phone) { copy(phoneNumber = value) } }
     }
 
     fun onPasswordChanged(value: String) {
-        _state.update { it.withFieldEdited(RegistrationFieldError.Password) { copy(password = value) } }
+        reduce { withFieldEdited(RegistrationFieldError.Password) { copy(password = value) } }
     }
 
     fun onPasswordVisibilityChanged() {
-        _state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+        reduce { copy(isPasswordVisible = !isPasswordVisible) }
     }
 
     fun onInstallerConfirmedChanged(value: Boolean) {
-        _state.update { it.copy(isInstallerConfirmed = value, registrationState = it.registrationState.dismissError()) }
+        reduce { copy(isInstallerConfirmed = value, registrationState = registrationState.dismissError()) }
     }
 
-    fun submit() {
-        // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
-        if (_state.value.registrationState is LCEState.Loading) return
-        val credentials = _state.value.toCredentials()
+    fun onSubmit() {
+        if (currentState.registrationState is LCEState.Loading) return
+        val credentials = currentState.toCredentials()
 
         val fieldErrors = credentials.validationErrors()
         if (fieldErrors.isNotEmpty()) {
-            _state.update {
-                it.copy(
+            reduce {
+                copy(
                     fieldErrors = fieldErrors.mapTo(mutableSetOf()) { error -> error.toFieldError() },
-                    registrationState = it.registrationState.dismissError()
+                    registrationState = registrationState.dismissError(),
                 )
             }
             return
         }
 
-        safeLaunch {
-            _state.update {
-                it.copy(
-                    registrationState = LCEState.Loading
-                )
-            }
-
+        intent {
+            reduce { copy(registrationState = LCEState.Loading) }
             val response = withContext(dispatchers.io) { repository.signUp(credentials) }
-            _state.update { it.copy(registrationState = response.asLCEState(AuthFormError::from)) }
+            reduce { copy(registrationState = response.asLCEState(AuthFormError::from)) }
         }
     }
 
     private inline fun RegistrationScreenState.withFieldEdited(
         field: RegistrationFieldError,
-        edit: RegistrationScreenState.() -> RegistrationScreenState
+        edit: RegistrationScreenState.() -> RegistrationScreenState,
     ): RegistrationScreenState = edit().copy(
         registrationState = registrationState.dismissError(),
-        fieldErrors = fieldErrors - field
+        fieldErrors = fieldErrors - field,
     )
 
     private fun RegistrationScreenState.toCredentials(): SignUpCredentials = SignUpCredentials(
@@ -87,7 +74,7 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
         email = email,
         phoneNumber = phoneNumber,
         password = password,
-        isInstallerConfirmed = isInstallerConfirmed
+        isInstallerConfirmed = isInstallerConfirmed,
     )
 
     private fun SignUpValidationError.toFieldError(): RegistrationFieldError = when (this) {

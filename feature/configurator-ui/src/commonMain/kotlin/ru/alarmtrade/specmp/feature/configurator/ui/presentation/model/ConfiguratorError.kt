@@ -7,11 +7,9 @@ import ru.alarmtrade.specmp.core.common.AppError
 import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.core.ui.error.message
 
-/** Ошибка загрузки списков и карточек конфигуратора (модели, облако, мои конфигурации). */
 internal sealed interface ConfiguratorError {
     data class Common(val error: AppError) : ConfiguratorError
 
-    /** Данные не получены (сервер или локальное хранилище). */
     data object LoadFailed : ConfiguratorError
 
     companion object {
@@ -19,7 +17,7 @@ internal sealed interface ConfiguratorError {
     }
 }
 
-/** Текст ошибки; [loadFailed] — фраза экрана для своего отказа. */
+/** [loadFailed] — фраза экрана для своего отказа. */
 @Composable
 internal fun ConfiguratorError.text(loadFailed: StringResource): String = when (this) {
     is ConfiguratorError.Common -> error.message()

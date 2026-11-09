@@ -50,7 +50,7 @@ private val LightColorScheme = lightColorScheme(
     surfaceContainerLow = SurfaceContainerLowLight,
     surfaceContainer = SurfaceContainerLight,
     surfaceContainerHigh = SurfaceContainerHighLight,
-    surfaceContainerHighest = SurfaceContainerHighestLight
+    surfaceContainerHighest = SurfaceContainerHighestLight,
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -88,20 +88,17 @@ private val DarkColorScheme = darkColorScheme(
     surfaceContainerLow = SurfaceContainerLowDark,
     surfaceContainer = SurfaceContainerDark,
     surfaceContainerHigh = SurfaceContainerHighDark,
-    surfaceContainerHighest = SurfaceContainerHighestDark
+    surfaceContainerHighest = SurfaceContainerHighestDark,
 )
 
 val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }
 
-/**
- * Тема приложения. Тёмная/светлая — выбор пользователя из [themeStore] (переключатель меняет [LocalThemeIsDark] и
- * сохраняется), а пока не выбирали — как в системе. Без хранилища (галереи, тесты) — всегда как в системе.
- */
+/** Тёмная/светлая — сохранённый выбор из [themeStore]; пока не выбирали или без хранилища — как в системе. */
 @Composable
 fun AppTheme(
     onThemeChange: @Composable (isDark: Boolean) -> Unit,
     themeStore: AppThemeStore? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val systemIsDark = isSystemInDarkTheme()
     val isDarkState = remember(systemIsDark, themeStore) {
@@ -114,13 +111,13 @@ fun AppTheme(
         }
     }
     CompositionLocalProvider(
-        LocalThemeIsDark provides isDarkState
+        LocalThemeIsDark provides isDarkState,
     ) {
         val isDark by isDarkState
         onThemeChange(!isDark)
         MaterialTheme(
             colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
-            content = { Surface(content = content) }
+            content = { Surface(content = content) },
         )
     }
 }

@@ -32,7 +32,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
 
 private val PlaceholderMaxWidth = 420.dp
 
-/** Чтение меню из устройства. */
 @Composable
 internal fun MenuLoading() {
     Centered {
@@ -40,18 +39,17 @@ internal fun MenuLoading() {
         CmpText(
             text = stringResource(Strings.string.settings_editor_loading_read),
             style = CmpTextStyle.Body,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         CmpText(
             text = stringResource(Strings.string.settings_editor_hint_read),
             style = CmpTextStyle.Caption,
             color = cmpThemeColors().onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
 
-/** Ошибка чтения меню и «Повторить». */
 @Composable
 internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
     Centered {
@@ -59,23 +57,22 @@ internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
         CmpText(
             text = error.text(Strings.string.settings_editor_error_read_title),
             style = CmpTextStyle.Title,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         CmpText(
             text = stringResource(Strings.string.settings_editor_error_read_text),
             style = CmpTextStyle.Body,
             color = cmpThemeColors().onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         CmpButton(
             text = stringResource(Strings.string.settings_common_btn_retry),
             onClick = onRetry,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
         )
     }
 }
 
-/** Пустое состояние по центру: значок, заголовок, пояснение. */
 @Composable
 internal fun EmptyMessage(icon: CmpIcons, title: String, hint: String?) {
     Centered {
@@ -86,7 +83,7 @@ internal fun EmptyMessage(icon: CmpIcons, title: String, hint: String?) {
                 text = hint,
                 style = CmpTextStyle.Body,
                 color = cmpThemeColors().onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -98,7 +95,7 @@ private fun Centered(content: @Composable () -> Unit) {
         CmpColumn(
             modifier = Modifier.widthIn(max = PlaceholderMaxWidth),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             content()
         }

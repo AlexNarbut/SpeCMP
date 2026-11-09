@@ -2,7 +2,7 @@ package ru.alarmtrade.specmp.feature.device.state.ui.gallery
 
 import java.io.File
 import kotlin.test.Test
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CameraInfo
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CanInfo
@@ -41,7 +41,7 @@ class CheckStateGallery {
     private val outDir = File("build/state-gallery/device-state")
 
     private val normal = vehicle(
-        zones = mapOf(Zone.HANDBRAKE to ZoneValue.ON, Zone.NEUTRAL to ZoneValue.ON)
+        zones = mapOf(Zone.HANDBRAKE to ZoneValue.ON, Zone.NEUTRAL to ZoneValue.ON),
     ).copy(event = DeviceEventKind.DISARMING)
 
     private fun state(vehicle: VehicleState?, fastMount: Boolean = false) = CheckStateState(
@@ -50,7 +50,7 @@ class CheckStateGallery {
         fastMount = fastMount,
         vehicle = vehicle,
         tick = 5,
-        commands = commandsFor(vehicle, fastMount)
+        commands = commandsFor(vehicle, fastMount),
     )
 
     private fun render(name: String, state: CheckStateState, tab: Int? = null, fastMount: CheckStateFastMount? = null) =
@@ -74,7 +74,7 @@ class CheckStateGallery {
     fun s03Changed() = both(
         "s03_changed",
         state(normal.copy(zones = normal.zones + (Zone.DOOR_FRONT_LEFT to ZoneValue.ON) + (Zone.BRAKE to ZoneValue.ON)))
-            .copy(changedZones = setOf(Zone.DOOR_FRONT_LEFT, Zone.BRAKE))
+            .copy(changedZones = setOf(Zone.DOOR_FRONT_LEFT, Zone.BRAKE)),
     )
 
     @Test
@@ -88,9 +88,9 @@ class CheckStateGallery {
             normal.copy(
                 security = SecurityState.ARMED,
                 alarm = true,
-                zones = normal.zones + (Zone.TRUNK to ZoneValue.ALARM) + (Zone.SHOCK to ZoneValue.MAIN)
-            )
-        )
+                zones = normal.zones + (Zone.TRUNK to ZoneValue.ALARM) + (Zone.SHOCK to ZoneValue.MAIN),
+            ),
+        ),
     )
 
     @Test
@@ -99,7 +99,7 @@ class CheckStateGallery {
     @Test
     fun s07Autostart() = both(
         "s07_autostart",
-        state(normal.copy(engine = EngineInfo(EngineStatus.RUNNING, 82, 900, Autostart.Running(452))))
+        state(normal.copy(engine = EngineInfo(EngineStatus.RUNNING, 82, 900, Autostart.Running(452)))),
     )
 
     @Test
@@ -113,13 +113,13 @@ class CheckStateGallery {
                     8,
                     true,
                     setOf(Window.FRONT_LEFT),
-                    TirePressure(2.3f, 2.3f, 2.2f, 2.4f, 2.5f)
+                    TirePressure(2.3f, 2.3f, 2.2f, 2.4f, 2.5f),
                 ),
                 ev = EvInfo(EvCharging.SLOW, 78, 96, 24, 312),
                 heater = HeaterInfo(on = false, temperature = 18, voltage = 12.5f, powerPercent = 0, hasErrors = true),
-                camera = CameraInfo(recording = true, minutes = 42)
-            )
-        )
+                camera = CameraInfo(recording = true, minutes = 42),
+            ),
+        ),
     )
 
     @Test
@@ -133,10 +133,10 @@ class CheckStateGallery {
             statuses = mapOf(
                 StateCommand.ARM to CommandStatus.Sending,
                 StateCommand.OPEN_TRUNK to CommandStatus.Finished(CommandOutcome.DONE, 1),
-                StateCommand.PANIC to CommandStatus.Finished(CommandOutcome.NO_REPLY, 2)
-            )
+                StateCommand.PANIC to CommandStatus.Finished(CommandOutcome.NO_REPLY, 2),
+            ),
         ),
-        tab = 0
+        tab = 0,
     )
 
     @Test
@@ -151,7 +151,7 @@ class CheckStateGallery {
     fun s14Exit() = render(
         "s14_exit",
         state(normal.copy(serviceMode = true)).copy(dialog = CheckStateDialog.Exit(service = true, program = false)),
-        tab = 0
+        tab = 0,
     )
 
     private val tasks = listOf(
@@ -160,7 +160,7 @@ class CheckStateGallery {
         ChecklistTask("t3", "Нажмите педаль тормоза", zone = Zone.BRAKE),
         ChecklistTask("t4", "Поставьте на охрану брелоком", guard = true),
         ChecklistTask("t5", "Сработала ли сирена при постановке на охрану?", options = listOf("Да", "Нет")),
-        ChecklistTask("t6", "Затяните ручник", ChecklistStatus.SKIPPED, zone = Zone.HANDBRAKE)
+        ChecklistTask("t6", "Затяните ручник", ChecklistStatus.SKIPPED, zone = Zone.HANDBRAKE),
     )
 
     private fun fast(tasks: List<ChecklistTask>) = CheckStateFastMount(CheckStateChecklist(tasks), {
@@ -186,16 +186,16 @@ class CheckStateGallery {
                         } else {
                             ChecklistStatus.PENDING
                         },
-                        active = index == 1
+                        active = index == 1,
                     )
                 },
-                sequential = true
+                sequential = true,
             ),
             {},
             {},
             {},
-            { _, _ -> }
-        )
+            { _, _ -> },
+        ),
     )
 
     @Test
@@ -203,7 +203,7 @@ class CheckStateGallery {
         "f04_all_done",
         state(normal, fastMount = true),
         tab = 0,
-        fastMount = fast(tasks.map { it.copy(status = ChecklistStatus.PASSED) })
+        fastMount = fast(tasks.map { it.copy(status = ChecklistStatus.PASSED) }),
     )
 
     @Test
@@ -211,7 +211,7 @@ class CheckStateGallery {
         "f05_finish",
         state(normal, fastMount = true).copy(dialog = CheckStateDialog.FastFinish(4, 6)),
         tab = 0,
-        fastMount = fast(tasks)
+        fastMount = fast(tasks),
     )
 
     @Test

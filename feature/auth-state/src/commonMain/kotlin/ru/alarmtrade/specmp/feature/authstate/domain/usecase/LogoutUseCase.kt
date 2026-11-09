@@ -7,21 +7,14 @@ import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 
-/**
- * Точка очистки состояния при логауте.
- *
- * Выполняет logout и только после успеха проходит по всем зарегистрированным
- * в DI [AuthCloseable] (app-scoped синглтоны: чат-репозиторий и будущие
- * холдеры сессий), вызывая [AuthCloseable.release]. Ошибки очистки не
- * отменяют logout: они логируются и проглатываются — сессия уже закрыта.
- */
+/** Ошибки [AuthCloseable.release] не отменяют logout: логируются и проглатываются — сессия уже закрыта. */
 class LogoutUseCase(private val authStateRepository: AuthStateRepository, private val closeables: List<AuthCloseable>) {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     // Сбой release() одного AuthCloseable не должен сорвать выход: ловим всё, кроме отмены, и логируем
     @Suppress("TooGenericExceptionCaught")
-    suspend fun execute(): Response<Unit> = when (val response = timedLogout()) {
+    suspend operator fun invoke(): Response<Unit> = when (val response = timedLogout()) {
         is Response.Success -> {
             closeables.forEach { closeable ->
                 try {

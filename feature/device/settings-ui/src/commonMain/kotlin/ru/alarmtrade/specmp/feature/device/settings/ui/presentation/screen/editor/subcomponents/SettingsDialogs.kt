@@ -42,7 +42,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 
-/** Описание настройки или раздела (по ⓘ). */
 @Composable
 internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
     CmpDialog(
@@ -50,17 +49,16 @@ internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
         title = {
             DialogTitle(
                 text = if (node.number.isEmpty()) node.name else "${node.number} ${node.name}",
-                onClose = onDismiss
+                onClose = onDismiss,
             )
         },
         text = { CmpText(text = node.description.orEmpty()) },
         confirmButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_ok), onClick = onDismiss)
-        }
+        },
     )
 }
 
-/** Выход с незаписанными изменениями: записать и выйти / выйти без записи / отмена. */
 @Composable
 internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -73,25 +71,24 @@ internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit
             CmpColumn(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpButton(
                     text = stringResource(Strings.string.settings_exit_btn_write),
                     onClick = onWrite,
-                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_WRITE)
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_WRITE),
                 )
                 CmpOutlinedButton(
                     text = stringResource(Strings.string.settings_exit_btn_discard),
                     onClick = onDiscard,
-                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD)
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsTestTags.EXIT_DISCARD),
                 )
                 CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
             }
-        }
+        },
     )
 }
 
-/** Блокирующий прогресс записи: SDK не отдаёт процентов, индикатор неопределённый. */
 @Composable
 internal fun WriteProgressDialog() {
     CmpDialog(
@@ -103,7 +100,7 @@ internal fun WriteProgressDialog() {
                 CmpText(text = stringResource(Strings.string.settings_write_msg_progress))
             }
         },
-        confirmButton = {}
+        confirmButton = {},
     )
 }
 
@@ -118,11 +115,10 @@ internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
-        }
+        },
     )
 }
 
-/** Подтверждение сброса блока к заводским: незаписанные изменения пропадут, отменить нельзя. */
 @Composable
 internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -136,23 +132,22 @@ internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: 
                     stringResource(Strings.string.settings_reset_msg_confirm_changes, changed)
                 } else {
                     stringResource(Strings.string.settings_reset_msg_confirm)
-                }
+                },
             )
         },
         confirmButton = {
             CmpButton(
                 text = stringResource(Strings.string.settings_reset_btn_confirm),
                 onClick = onConfirm,
-                modifier = Modifier.testTag(SettingsTestTags.RESET_CONFIRM)
+                modifier = Modifier.testTag(SettingsTestTags.RESET_CONFIRM),
             )
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
-        }
+        },
     )
 }
 
-/** Блокирующий прогресс сброса (SDK не отдаёт процентов). */
 @Composable
 internal fun ResetProgressDialog() {
     CmpDialog(
@@ -164,7 +159,7 @@ internal fun ResetProgressDialog() {
                 CmpText(text = stringResource(Strings.string.settings_reset_msg_progress))
             }
         },
-        confirmButton = {}
+        confirmButton = {},
     )
 }
 
@@ -179,11 +174,10 @@ internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_close), onClick = onDismiss)
-        }
+        },
     )
 }
 
-/** Единая CAN-прошивка: CAN-код меняется прошивкой CAN под автомобиль — переход к обновлению прошивки. */
 @Composable
 internal fun SingleCanFirmwareDialog(canCode: String, onUpdate: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -194,11 +188,11 @@ internal fun SingleCanFirmwareDialog(canCode: String, onUpdate: () -> Unit, onDi
             CmpButton(
                 text = stringResource(Strings.string.settings_can_btn_single_update),
                 onClick = onUpdate,
-                modifier = Modifier.testTag(SettingsTestTags.CAN_SINGLE_UPDATE)
+                modifier = Modifier.testTag(SettingsTestTags.CAN_SINGLE_UPDATE),
             )
         },
         dismissButton = {
             CmpTextButton(text = stringResource(Strings.string.settings_common_btn_cancel), onClick = onDismiss)
-        }
+        },
     )
 }

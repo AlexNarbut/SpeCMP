@@ -14,16 +14,15 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(
             width = 1200.dp,
-            height = 800.dp
+            height = 800.dp,
         ),
         title = "SpeCMP",
-        icon = painterResource("icon.png")
+        icon = painterResource("icon.png"),
     ) {
         App(appVersionName = versionName, appVersionCode = versionCode)
     }
 }
 
-/** Версия из `version.properties` — его генерирует Gradle из каталога версий (`generateVersionProperties`). */
 private fun loadDesktopAppVersion(): Pair<String, Int> {
     val properties = java.util.Properties()
     val stream = requireNotNull(Thread.currentThread().contextClassLoader?.getResourceAsStream("version.properties")) {

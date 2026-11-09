@@ -4,34 +4,21 @@ import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountPlan
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 
-/** Шаг в колонке шагов: подготовка (одна точка с подшагами) и шаги мастера. */
 enum class RailKey { PREP, WRITE, MOUNT, BYPASS, CLONE, SLAVE, CHECK, REVIEW }
 
-/** Подшаг подготовки. */
 enum class PrepSub { UNIT, VEHICLE, CONFIGURATION, SUMMARY }
 
-/**
- * Статус шага (макет `statusesFor`): пройден · текущий · впереди · по необходимости (Clone ещё не нужен) ·
- * пропущен (Clone не потребовался) · следующий после перезагрузки (пульсирует).
- */
 enum class RailStatus { DONE, CURRENT, AHEAD, OPTIONAL, SKIPPED, NEXT }
 
-/** Где мастер сейчас: шаг [current] (`null` — «Готово»), после шага [rebootFrom] идёт перезагрузка. */
 @Immutable
 data class RailPosition(val current: RailKey?, val prepSub: PrepSub = PrepSub.UNIT, val rebootFrom: RailKey? = null)
 
-/** Строка колонки: [number] — номер среди считаемых шагов (`null` — Clone «по необходимости» / пропущен). */
 @Immutable
 data class RailRow(val key: RailKey, val status: RailStatus, val number: Int?)
 
-/** Колонка целиком: строки и счётчик «N из M». */
 @Immutable
 data class RailModel(val rows: List<RailRow>, val currentNumber: Int, val total: Int, val done: Boolean)
 
-/**
- * Путь шагов: до выбора конфигурации — полный (как в макете), после — по плану (обход/Slave — по конфигурации,
- * USB — без Slave и проверки системы).
- */
 fun railPath(plan: FastMountPlan?, usb: Boolean): List<RailKey> {
     if (plan == null) {
         return buildList {
@@ -61,7 +48,6 @@ fun FastMountStep.railKey(): RailKey? = when (this) {
     FastMountStep.REBOOTING, FastMountStep.FINISH -> null
 }
 
-/** Clone не потребовался — пропущен; ещё не потребовался (и впереди) — «по необходимости»; иначе — как все. */
 private fun cloneStatus(key: RailKey, cloneNeeded: Boolean?, ahead: Boolean): RailStatus? = when {
     key != RailKey.CLONE -> null
     cloneNeeded == false -> RailStatus.SKIPPED
@@ -69,7 +55,6 @@ private fun cloneStatus(key: RailKey, cloneNeeded: Boolean?, ahead: Boolean): Ra
     else -> null
 }
 
-/** Модель колонки по пути, позиции и итогу обхода ([cloneNeeded]: `null` — ещё неизвестно). */
 fun railModel(path: List<RailKey>, position: RailPosition, cloneNeeded: Boolean?): RailModel {
     val counted = path.filter { it != RailKey.CLONE || cloneNeeded == true }
     val target = position.rebootFrom?.let { from -> counted.getOrNull(counted.indexOf(from) + 1) } ?: position.current

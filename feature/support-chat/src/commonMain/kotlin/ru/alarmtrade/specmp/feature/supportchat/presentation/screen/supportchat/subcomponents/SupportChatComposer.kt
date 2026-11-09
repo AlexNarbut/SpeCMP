@@ -50,7 +50,7 @@ internal fun SupportChatComposer(
     onRemoveAttachment: (String) -> Unit,
     colors: CmpThemeColors,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
 ) {
     // Владелец черновика — composer, поэтому «есть что отправить» считается
     // здесь; доступность ввода (только Online) приходит из state единственным источником.
@@ -58,13 +58,13 @@ internal fun SupportChatComposer(
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (pendingAttachments.isNotEmpty()) {
             PendingAttachmentsRow(
                 attachments = pendingAttachments,
                 onRemove = onRemoveAttachment,
-                colors = colors
+                colors = colors,
             )
         }
 
@@ -73,20 +73,20 @@ internal fun SupportChatComposer(
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
-            verticalAlignment = Alignment.Bottom
+            verticalAlignment = Alignment.Bottom,
         ) {
             CmpIconButton(
                 onClick = onAttachFile,
                 icon = CmpIcons.AttachFile,
                 contentDescription = stringResource(Strings.string.supportchat_chat_a11y_attach_file),
-                enabled = enabled
+                enabled = enabled,
             )
 
             CmpIconButton(
                 onClick = onAttachPhoto,
                 icon = CmpIcons.Image,
                 contentDescription = stringResource(Strings.string.supportchat_chat_a11y_attach_photo),
-                enabled = enabled
+                enabled = enabled,
             )
 
             CmpTextField(
@@ -112,19 +112,19 @@ internal fun SupportChatComposer(
                 maxLines = 4,
                 style = CmpTextFieldStyle.Filled,
                 keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Send
+                    imeAction = ImeAction.Send,
                 ),
                 keyboardActions = KeyboardActions(
                     onSend = {
                         if (canSend) onSend()
-                    }
-                )
+                    },
+                ),
             )
 
             SendButton(
                 onClick = onSend,
                 enabled = canSend,
-                colors = colors
+                colors = colors,
             )
         }
     }
@@ -134,23 +134,23 @@ internal fun SupportChatComposer(
 private fun PendingAttachmentsRow(
     attachments: ImmutableList<SupportChatUiAttachment>,
     onRemove: (String) -> Unit,
-    colors: CmpThemeColors
+    colors: CmpThemeColors,
 ) {
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         items(
             items = attachments,
-            key = { attachment -> attachment.id }
+            key = { attachment -> attachment.id },
         ) { attachment ->
             SupportChatPendingAttachmentChip(
                 attachment = attachment,
                 onRemove = { onRemove(attachment.id) },
-                colors = colors
+                colors = colors,
             )
         }
     }
@@ -165,12 +165,12 @@ private fun SendButton(onClick: () -> Unit, enabled: Boolean, colors: CmpThemeCo
         color = if (enabled) colors.primary else colors.onSurface.copy(alpha = 0.1f),
         contentColor = if (enabled) colors.onPrimary else colors.onSurface.copy(alpha = 0.38f),
         modifier = Modifier.size(48.dp),
-        enforceMinimumTouchTarget = false
+        enforceMinimumTouchTarget = false,
     ) {
         CmpBox(contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = CmpIcons.Send,
-                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_send)
+                contentDescription = stringResource(Strings.string.supportchat_chat_a11y_send),
             )
         }
     }

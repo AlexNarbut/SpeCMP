@@ -17,7 +17,7 @@ fun CmpDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp, color: Color
             color
         } else {
             androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant
-        }
+        },
     )
 }
 
@@ -30,6 +30,6 @@ fun CmpVerticalDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp, colo
             color
         } else {
             androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant
-        }
+        },
     )
 }

@@ -55,10 +55,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 
 private val ContentMaxWidth = 1040.dp
 
-/**
- * «Проверка прошивки»: слот графа расширенного монтажа (вход и выход — через [onBack]); переход в режим обновления
- * запускает ViewModel, дальше экран загрузчика показывает хост устройства.
- */
 @Composable
 fun FirmwareCheckScreen(onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareCheckViewModel>()
@@ -74,16 +70,15 @@ fun FirmwareCheckScreen(onBack: () -> Unit) {
             onUpdateClick = viewModel::onUpdateClick,
             onDialogDismiss = viewModel::onDialogDismiss,
             onConfirmBoot = viewModel::onConfirmBoot,
-            onPinSubmit = viewModel::onPinSubmit
+            onPinSubmit = viewModel::onPinSubmit,
         )
     }
     FirmwareCheckContent(
         state = state,
-        actions = actions
+        actions = actions,
     )
 }
 
-/** Stateless-контент экрана проверки: раскладка по ширине окна и диалоги. */
 @Composable
 internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCheckActions) {
     CmpScaffold(
@@ -97,11 +92,11 @@ internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCh
                     CmpIconButton(
                         onClick = actions.onBack,
                         icon = CmpIcons.ArrowBack,
-                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
+                        contentDescription = stringResource(Strings.string.firmware_common_a11y_back),
                     )
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = firmwareLayoutOf(maxWidth)
@@ -120,25 +115,25 @@ private fun ReadyBody(
     state: FirmwareCheckState,
     modules: List<ModuleCardUi>,
     layout: FirmwareLayout,
-    actions: FirmwareCheckActions
+    actions: FirmwareCheckActions,
 ) {
     val columns = if (layout == FirmwareLayout.Compact) 1 else 2
     CmpColumn(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CmpColumn(
             modifier = Modifier
                 .widthIn(max = ContentMaxWidth)
                 .fillMaxWidth()
                 .padding(if (layout == FirmwareLayout.Compact) 14.dp else 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (state.bootFailed) {
                 InfoBanner(
                     text = stringResource(Strings.string.firmware_check_msg_boot_failed),
                     tone = BannerTone.Error,
-                    icon = CmpIcons.CloudOff
+                    icon = CmpIcons.CloudOff,
                 )
             }
             state.deviceId?.let { DeviceRow(state.deviceName, it, state.channel, layout, actions.onChannelSelected) }
@@ -152,7 +147,7 @@ private fun ReadyBody(
                             onRefresh = { actions.onRefreshModule(card.id) },
                             onDescription = { actions.onDescriptionClick(card.id) },
                             onUpdate = { actions.onUpdateClick(card.id) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                     }
                     // Нечётная последняя строка: пустое место, чтобы карточка не растягивалась на всю ширину.
@@ -167,17 +162,13 @@ private fun ReadyBody(
     }
 }
 
-/**
- * Строка устройства: иконка, полное имя (переносится), ID и кнопка канала. В Compact — две строки: иконка и имя, затем
- * ID и кнопка канала; на широком окне — одна.
- */
 @Composable
 private fun DeviceRow(
     name: String,
     id: Long,
     channel: FirmwareChannel,
     layout: FirmwareLayout,
-    onChannelSelect: (FirmwareChannel) -> Unit
+    onChannelSelect: (FirmwareChannel) -> Unit,
 ) {
     val colors = cmpThemeColors()
     val idText = stringResource(Strings.string.firmware_common_label_device_id, id.toString())
@@ -185,18 +176,18 @@ private fun DeviceRow(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         if (layout == FirmwareLayout.Compact) {
             CmpColumn(
                 modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 DeviceNameRow(name, idText = null)
                 CmpRow(
                     modifier = Modifier.fillMaxWidth().padding(start = 38.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CmpText(text = idText, color = colors.onSurfaceVariant, style = CmpTextStyle.Body)
                     ChannelChip(channel, onChannelSelect)
@@ -206,7 +197,7 @@ private fun DeviceRow(
             CmpRow(
                 modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 DeviceNameRow(name, idText, modifier = Modifier.weight(1f))
                 ChannelChip(channel, onChannelSelect)
@@ -221,13 +212,13 @@ private fun DeviceNameRow(name: String, idText: String?, modifier: Modifier = Mo
     CmpRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpIcon(
             icon = CmpIcons.Sensors,
             contentDescription = null,
             modifier = Modifier.size(26.dp),
-            tint = colors.primary
+            tint = colors.primary,
         )
         CmpText(text = name, modifier = Modifier.weight(1f))
         idText?.let { CmpText(text = it, color = colors.onSurfaceVariant, style = CmpTextStyle.Body) }
@@ -242,19 +233,19 @@ private fun CheckDialogHost(dialog: CheckDialog?, actions: FirmwareCheckActions)
         is CheckDialog.Description -> DescriptionDialog(
             dialog = dialog,
             onDismiss = actions.onDialogDismiss,
-            onUpdate = { actions.onUpdateClick(dialog.moduleId) }
+            onUpdate = { actions.onUpdateClick(dialog.moduleId) },
         )
 
         is CheckDialog.ConfirmBoot -> ConfirmBootDialog(
             dialog = dialog,
             onDismiss = actions.onDialogDismiss,
-            onConfirm = actions.onConfirmBoot
+            onConfirm = actions.onConfirmBoot,
         )
 
         is CheckDialog.Pin -> PinDialog(
             dialog = dialog,
             onDismiss = actions.onDialogDismiss,
-            onSubmit = actions.onPinSubmit
+            onSubmit = actions.onPinSubmit,
         )
     }
 }

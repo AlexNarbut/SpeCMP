@@ -41,11 +41,9 @@ private const val MAX_DECIMALS = 3
 private const val TEN = 10.0
 private const val TIME_DIGITS = 2
 
-/** Текущее значение настройки строкой для показа. */
 @Composable
 internal fun valueText(setting: Setting): String = valueText(setting, setting.value)
 
-/** Значение [value] настройки [setting] строкой для показа (в т. ч. «Было: …» в окне редактирования). */
 @Suppress("CyclomaticComplexMethod") // плоский when по типам настроек
 @Composable
 internal fun valueText(setting: Setting, value: SettingValue): String = when {
@@ -53,7 +51,7 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
 
     setting is SwitchOutputSetting && value is SettingValue.SwitchOutput ->
         stringResource(
-            if (value.enabled) Strings.string.settings_common_value_on else Strings.string.settings_common_value_off
+            if (value.enabled) Strings.string.settings_common_value_on else Strings.string.settings_common_value_off,
         )
 
     setting is OptionSetting && value is SettingValue.Option -> setting.options.getOrElse(value.index) { "" }
@@ -75,7 +73,7 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
         stringResource(
             Strings.string.settings_common_value_schedule,
             if (schedule.isMorningStartEnabled) schedule.morningStartTime.text() else empty,
-            if (schedule.isEveningStartEnabled) schedule.eveningStartTime.text() else empty
+            if (schedule.isEveningStartEnabled) schedule.eveningStartTime.text() else empty,
         )
     }
 
@@ -85,7 +83,7 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
         } else {
             Strings.string.settings_common_value_siren_melody
         },
-        value.value.number
+        value.value.number,
     )
 
     setting is CanCodeSetting && value is SettingValue.Can -> value.value.code
@@ -96,12 +94,12 @@ internal fun valueText(setting: Setting, value: SettingValue): String = when {
             InputContactType.NORMALLY_CLOSED -> stringResource(Strings.string.settings_common_value_contact_nc)
             InputContactType.UNDEFINED -> null
         },
-        stringResource(Strings.string.settings_common_value_functions, value.value.logicsState.count { it })
+        stringResource(Strings.string.settings_common_value_functions, value.value.logicsState.count { it }),
     ).joinToString(" · ")
 
     setting is OutputSetting && value is SettingValue.Output -> listOfNotNull(
         polarityText(value.value.polarity),
-        stringResource(Strings.string.settings_common_value_functions, value.value.logicsState.count { it })
+        stringResource(Strings.string.settings_common_value_functions, value.value.logicsState.count { it }),
     ).joinToString(" · ")
 
     else -> ""
@@ -126,12 +124,11 @@ internal fun decimalText(setting: DecimalSetting, value: Float): String =
     edgeText(value, setting.minValue, setting.maxValue, setting.minValueText, setting.maxValueText)
         ?: withUnits(decimalNumber(setting, value), setting.units)
 
-/** Число дробной настройки с количеством знаков по шагу и разделителем языка (без единиц). */
 @Composable
 internal fun decimalNumber(setting: DecimalSetting, value: Float): String = formatDecimal(
     value,
     decimalsOf(setting.step),
-    stringResource(Strings.string.settings_common_format_decimal_separator)
+    stringResource(Strings.string.settings_common_format_decimal_separator),
 )
 
 internal fun TimeOfDay.text(): String =

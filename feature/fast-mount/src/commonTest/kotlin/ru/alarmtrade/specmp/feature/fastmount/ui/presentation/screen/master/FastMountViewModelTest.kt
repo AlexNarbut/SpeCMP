@@ -11,6 +11,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -22,24 +23,25 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeProgramModeRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountFile
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountTaskStatus
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
-import ru.alarmtrade.specmp.feature.fastmount.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.FakeFastMountRepository
-import ru.alarmtrade.specmp.feature.fastmount.ui.FakeProgramModeRepository
-import ru.alarmtrade.specmp.feature.fastmount.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.question
 import ru.alarmtrade.specmp.feature.fastmount.ui.testConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.ui.testDevice
@@ -48,10 +50,11 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.testDevice
 class FastMountViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
-    private val sessionRepository = FakeSessionRepository()
+    private val sessionRepository = FakeDeviceSessionRepository(testDevice())
     private val repository = FakeFastMountRepository()
     private val programMode = FakeProgramModeRepository()
     private val viewModels = mutableListOf<FastMountViewModel>()
+    private val stateCollectors = mutableListOf<Job>()
     private lateinit var session: DeviceSession
 
     @BeforeTest
@@ -70,15 +73,33 @@ class FastMountViewModelTest {
 
     // USB по умолчанию: без цикла переподключения BLE — связь в тесте переключает сам тест.
     private fun TestScope.viewModel(transport: ConnectionTransport = ConnectionTransport.USB): FastMountViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
-        session.attach(transport)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
         val vm = FastMountViewModel(session, repository, programMode, dispatchers).also { viewModels += it }
-        // Экран подписан на state — с этого стартует работа VM (launchOnFirstStart).
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        // Экран подписан на state — с этого стартует работа VM (onStart).
+        stateCollectors += backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
         return vm
+    }
+
+    /** Экран ушёл (нет подписчика state дольше тайм-аута), затем вернулся. */
+    private fun TestScope.leaveScreen() {
+        stateCollectors.forEach { it.cancel() }
+        stateCollectors.clear()
+        advanceTimeBy(10_000)
+        runCurrent()
+    }
+
+    private fun TestScope.returnToScreen(vm: FastMountViewModel) {
+        stateCollectors += backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+    }
+
+    private fun TestScope.effects(vm: FastMountViewModel): List<FastMountEffect> {
+        val effects = mutableListOf<FastMountEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
+        return effects
     }
 
     private fun TestScope.reconnect(systemId: Long, device: AlarmDevice = testDevice(systemId)) {
@@ -104,7 +125,7 @@ class FastMountViewModelTest {
         vm.onCarPicked(car)
         vm.onConfigurationPicked(42)
         runCurrent()
-        vm.onStart()
+        vm.onStartMount()
         runCurrent()
         return vm
     }
@@ -190,9 +211,9 @@ class FastMountViewModelTest {
                 FastMountStep.MOUNT,
                 FastMountStep.KEY_BYPASS,
                 FastMountStep.CLONE,
-                FastMountStep.FEEDBACK
+                FastMountStep.FEEDBACK,
             ),
-            state.plan?.steps?.map { it.step }
+            state.plan?.steps?.map { it.step },
         )
         // Запись начинается сама.
         assertEquals(1, repository.nextCalls)
@@ -277,7 +298,7 @@ class FastMountViewModelTest {
         val vm = started(ConnectionTransport.BLE)
         runCurrent()
         val effects = mutableListOf<FastMountEffect>()
-        backgroundScope.launch { vm.effect.toList(effects) }
+        backgroundScope.launch { vm.sideEffect.toList(effects) }
 
         vm.onBack()
         assertEquals(WizardDialog.EXIT, state(vm).dialog)
@@ -393,5 +414,94 @@ class FastMountViewModelTest {
         advanceTimeBy(1_001)
         assertEquals(1, repository.previousCalls)
         assertEquals(false, state(vm).master.busy)
+    }
+
+    @Test
+    fun `sdk steps and system check questions keep going while nobody watches the screen`() = test {
+        repository.onNext = { if (it == FastMountStep.WRITING_SETTINGS) FastMountStep.SYSTEM_CHECK else it }
+        val vm = started(ConnectionTransport.BLE)
+        repository.questionsState.value = QuestionsState(current = question(5, automatic = true), completed = false)
+        runCurrent()
+        leaveScreen()
+
+        // Автоответы SDK считаются в подписчике вопросов — он жив и без экрана.
+        assertEquals(1, repository.questionsState.subscriptionCount.value)
+        repository.questionsState.value = QuestionsState(current = question(100), completed = false)
+        runCurrent()
+        repository.step.value = FastMountStep.FEEDBACK
+        runCurrent()
+        // Проверка системы позади — вопросы больше не слушаем.
+        assertEquals(0, repository.questionsState.subscriptionCount.value)
+
+        returnToScreen(vm)
+        assertEquals(MasterScreen.FEEDBACK, state(vm).master.screen)
+        assertEquals(MountTaskStatus.PASSED, state(vm).master.checklist.tasks[0].status)
+    }
+
+    @Test
+    fun `mounting map is downloaded ahead, retried after a failure and opened as pdf`() = test {
+        repository.configuration = Response.Success(testConfiguration(mountingMap = MountFile("Карта", "url")))
+        repository.downloadResponse = Response.Error(IllegalStateException())
+        val vm = viewModel()
+        val effects = effects(vm)
+        vm.onCheckNext()
+        vm.onCarPicked(car)
+        vm.onConfigurationPicked(42)
+        runCurrent()
+        assertEquals(MountMapState.Failed, state(vm).master.mountMap)
+
+        repository.downloadResponse = Response.Success(ByteArray(3))
+        vm.onMapRetry()
+        runCurrent()
+        assertEquals(3, assertIs<MountMapState.Ready>(state(vm).master.mountMap).sizeBytes)
+
+        vm.onMapOpen()
+        runCurrent()
+        assertEquals("Карта.pdf", assertIs<FastMountEffect.OpenFile>(effects.single()).name)
+        vm.onFileOpenResult(false)
+        assertEquals(WizardToast.FILE_NO_APP, state(vm).master.toast)
+        vm.onToastShown()
+        assertNull(state(vm).master.toast)
+    }
+
+    @Test
+    fun `failed answer returns the task to the cursor`() = test {
+        repository.onNext = { if (it == FastMountStep.WRITING_SETTINGS) FastMountStep.SYSTEM_CHECK else it }
+        val vm = started(ConnectionTransport.BLE)
+        repository.questionsState.value = QuestionsState(current = question(100), completed = false)
+        runCurrent()
+        repository.answerResponse = Response.Error(IllegalStateException())
+
+        vm.onTaskAnswer(100, option = 0)
+        runCurrent()
+        val task = state(vm).master.checklist.tasks[1]
+        assertEquals(MountTaskStatus.PENDING, task.status)
+        assertTrue(task.active)
+    }
+
+    @Test
+    fun `back on check offers another unit and return from firmware checks the unit again`() = test {
+        val vm = viewModel()
+        val effects = effects(vm)
+        vm.onBack()
+        runCurrent()
+        assertEquals(listOf<FastMountEffect>(FastMountEffect.ChooseAnother), effects)
+
+        vm.onOpenFirmwareUpdate()
+        assertEquals(WizardScreen.FIRMWARE, state(vm).screen)
+        repository.latest = Response.Success("3.60")
+        vm.onBack()
+        runCurrent()
+        assertEquals(WizardScreen.CHECK, state(vm).screen)
+        assertEquals(UnitCheck.Done(UnitVerdict.Outdated("3.60")), state(vm).check)
+        assertEquals(2, repository.classRequests)
+    }
+
+    @Test
+    fun `reconnect after the check does not check the unit again`() = test {
+        val vm = started()
+        reconnect(systemId = 77)
+        assertEquals(1, repository.classRequests)
+        assertEquals(WizardScreen.MASTER, state(vm).screen)
     }
 }

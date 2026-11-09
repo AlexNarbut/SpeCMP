@@ -13,8 +13,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -26,8 +24,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
@@ -35,19 +33,13 @@ import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMoun
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AdvancedMountRootViewModelTest {
@@ -60,35 +52,8 @@ class AdvancedMountRootViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS, DeviceFeature.CLONE),
-        can = null
+        can = null,
     )
-
-    private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
-        val link = MutableStateFlow(DeviceLinkState.READY)
-        var bootModeCount = 0
-        override fun linkState(): Flow<DeviceLinkState> = link
-        override suspend fun readBluetoothModule(): Response<BluetoothModule> =
-            Response.Error(IllegalStateException("usb only"))
-        override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
-        override suspend fun readImei(): Response<String> = Response.Success("351756051523999")
-        override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
-        override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
-            bootModeCount++
-            return Response.Success(BootModeResult.Entered)
-        }
-        override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
-        override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
-    }
-
-    private class FakeConnectionRepository : DeviceConnectionRepository {
-        override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
-            emptyFlow()
-        override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-        override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-        override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
-    }
 
     private class FakeMountRepository : AdvancedMountRepository {
         var access: Response<DeviceAccess> = Response.Success(DeviceAccess(hasAccess = true, message = ""))
@@ -97,7 +62,7 @@ class AdvancedMountRootViewModelTest {
         override suspend fun verify(
             systemId: Long,
             systemName: String,
-            firmwareVersion: String
+            firmwareVersion: String,
         ): Response<DeviceAccess> {
             verifyCount++
             return access
@@ -108,11 +73,12 @@ class AdvancedMountRootViewModelTest {
                 delay(60_000)
             }
         }
-        override fun remoteMountAvailable(): Flow<Boolean> = flowOf(true)
+        var remote: Flow<Response<Boolean>> = flowOf(Response.Success(true))
+        override fun remoteMountAvailable(): Flow<Response<Boolean>> = remote
         override suspend fun isProductInfoEnabled(): Response<Boolean> = Response.Success(true)
     }
 
-    private val sessionRepository = FakeSessionRepository(device)
+    private val sessionRepository = FakeDeviceSessionRepository(device)
     private val mountRepository = FakeMountRepository()
 
     @BeforeTest
@@ -133,14 +99,13 @@ class AdvancedMountRootViewModelTest {
     }
 
     private fun TestScope.viewModel(): Pair<AdvancedMountRootViewModel, MutableList<AdvancedMountRootEffect>> {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+        val dispatchers = testDispatchers(dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
-        session.attach(ConnectionTransport.USB)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.USB)
         val vm = AdvancedMountRootViewModel(session, mountRepository, dispatchers).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<AdvancedMountRootEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm to effects
     }
@@ -158,6 +123,14 @@ class AdvancedMountRootViewModelTest {
         val content = assertIs<MountAccess.Ready>(state.content.content)
         assertEquals(false, content.unsupported)
         assertTrue(MountSection.CLONE in content.sections)
+    }
+
+    @Test
+    fun `remote mount error is shown as unavailable`(): TestResult = test {
+        mountRepository.remote = flowOf(Response.Success(true), Response.Error(IllegalStateException("chat closed")))
+        val (vm, _) = viewModel()
+
+        assertEquals(false, vm.state.value.remoteAvailable)
     }
 
     @Test
@@ -189,7 +162,7 @@ class AdvancedMountRootViewModelTest {
         assertTrue(content.unsupported)
         assertEquals(
             listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
-            content.sections
+            content.sections,
         )
     }
 
@@ -206,7 +179,7 @@ class AdvancedMountRootViewModelTest {
         vm.onSectionClick(MountSection.FIRMWARE_UPDATE)
         assertEquals(
             listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)),
-            effects
+            effects,
         )
 
         effects.clear()
@@ -216,9 +189,9 @@ class AdvancedMountRootViewModelTest {
         // Переход к обновлению — экран проверки прошивок (он сам запрашивает PIN и вход в загрузчик), не прямая команда.
         assertEquals(
             listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)),
-            effects
+            effects,
         )
-        assertEquals(0, sessionRepository.bootModeCount)
+        assertEquals(0, sessionRepository.bootCalls)
     }
 
     @Test

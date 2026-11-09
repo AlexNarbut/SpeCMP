@@ -75,22 +75,19 @@ private val WideHero = 220.dp
 
 internal const val EXIT_DIALOG_CONFIRM_TAG = "firmware_exit_dialog_confirm"
 
-/**
- * «Обновление прошивки»: экран режима загрузчика, слот хоста устройства. Выход и чат поддержки — колбэки графа;
- * системная «Назад» перехвачена: на процессе заблокирована, на выборе спрашивает подтверждение.
- */
+/** Системная «Назад» перехвачена: на процессе заблокирована, на выборе спрашивает подтверждение. */
 @Composable
 fun FirmwareUpdateScreen(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     onOpenArchive: (FirmwareArchiveRequest) -> Unit,
     filePicker: FirmwareFilePicker = NoFirmwareFilePicker,
-    sources: FirmwareSources = FirmwareSources.All
+    sources: FirmwareSources = FirmwareSources.All,
 ) {
     val viewModel = koinViewModel<FirmwareUpdateViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             FirmwareUpdateEffect.OpenSupportChat -> onOpenSupportChat()
             is FirmwareUpdateEffect.OpenArchive -> onOpenArchive(effect.args)
@@ -101,7 +98,7 @@ fun FirmwareUpdateScreen(
     LaunchedEffect(filePicker) { filePicker.results.collect(viewModel::onFilePicked) }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = viewModel::onBackClick
+        onBackCompleted = viewModel::onBackClick,
     )
 
     // Один экземпляр на экран: дочерние composable пропускают рекомпозицию по равенству действий.
@@ -122,22 +119,21 @@ fun FirmwareUpdateScreen(
             onReconnect = viewModel::onReconnect,
             onDisconnect = viewModel::onDisconnect,
             onExitDialogDismiss = viewModel::onExitDialogDismiss,
-            onExitConfirm = viewModel::onExitConfirm
+            onExitConfirm = viewModel::onExitConfirm,
         )
     }
     FirmwareUpdateContent(
         state = state,
         actions = actions,
-        sources = sources
+        sources = sources,
     )
 }
 
-/** Stateless-контент экрана обновления: иллюстрация и тело по фазе; на широком окне — две равные части. */
 @Composable
 internal fun FirmwareUpdateContent(
     state: FirmwareUpdateState,
     actions: FirmwareUpdateActions,
-    sources: FirmwareSources = FirmwareSources.All
+    sources: FirmwareSources = FirmwareSources.All,
 ) {
     CmpScaffold(
         topBar = {
@@ -153,12 +149,12 @@ internal fun FirmwareUpdateContent(
                         CmpIconButton(
                             onClick = actions.onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
+                            contentDescription = stringResource(Strings.string.firmware_common_a11y_back),
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = firmwareLayoutOf(maxWidth)
@@ -170,20 +166,20 @@ internal fun FirmwareUpdateContent(
                     }
                     CmpBox(
                         modifier = Modifier.weight(1f).fillMaxSize().verticalScroll(rememberScrollState()),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         PhaseBody(
                             state,
                             actions,
                             sources,
-                            Modifier.padding(start = 8.dp, end = 32.dp, top = 24.dp, bottom = 24.dp)
+                            Modifier.padding(start = 8.dp, end = 32.dp, top = 24.dp, bottom = 24.dp),
                         )
                     }
                 }
             } else {
                 CmpColumn(
                     modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     CmpBox(modifier = Modifier.padding(top = 20.dp, bottom = 4.dp)) {
                         PhaseHero(state.phase, CompactHero)
@@ -205,7 +201,7 @@ private fun LockedBackIcon() {
         CmpIcon(
             icon = CmpIcons.Lock,
             contentDescription = stringResource(Strings.string.firmware_update_a11y_locked),
-            tint = cmpThemeColors().onSurfaceVariant
+            tint = cmpThemeColors().onSurfaceVariant,
         )
     }
 }
@@ -230,7 +226,8 @@ private fun PhaseHero(phase: UpdatePhase, size: Dp) {
         is UpdatePhase.Transfer,
         UpdatePhase.Verify,
         UpdatePhase.Apply,
-        UpdatePhase.Finishing -> FirmwareHero(CmpIcons.SystemUpdate, size = size, pulse = true)
+        UpdatePhase.Finishing,
+        -> FirmwareHero(CmpIcons.SystemUpdate, size = size, pulse = true)
     }
 }
 
@@ -239,14 +236,14 @@ private fun PhaseBody(
     state: FirmwareUpdateState,
     actions: FirmwareUpdateActions,
     sources: FirmwareSources,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     val fileOnly = sources == FirmwareSources.FileOnly
     val source = state.phase == UpdatePhase.Source
     CmpColumn(
         modifier = modifier.widthIn(max = BodyMaxWidth).fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = if (source) Alignment.Start else Alignment.CenterHorizontally
+        horizontalAlignment = if (source) Alignment.Start else Alignment.CenterHorizontally,
     ) {
         when (val phase = state.phase) {
             UpdatePhase.Loading -> LoadingBody()
@@ -272,7 +269,7 @@ private fun PhaseBody(
             is UpdatePhase.Error -> ErrorBody(
                 phase.failure,
                 actions.onRetry,
-                actions.onSupportClick.takeUnless { fileOnly }
+                actions.onSupportClick.takeUnless { fileOnly },
             )
 
             is UpdatePhase.Lost -> LostBody(phase.updating, actions.onReconnect, actions.onDisconnect)
@@ -292,15 +289,15 @@ private fun ExitDialog(actions: FirmwareUpdateActions) {
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_update_btn_exit_stay),
                 onClick = actions.onExitDialogDismiss,
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(48.dp),
             )
         },
         confirmButton = {
             CmpButton(
                 text = stringResource(Strings.string.firmware_update_btn_exit_exit),
                 onClick = actions.onExitConfirm,
-                modifier = Modifier.height(48.dp).testTag(EXIT_DIALOG_CONFIRM_TAG)
+                modifier = Modifier.height(48.dp).testTag(EXIT_DIALOG_CONFIRM_TAG),
             )
-        }
+        },
     )
 }

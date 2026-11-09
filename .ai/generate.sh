@@ -276,10 +276,60 @@ for d in .grok/skills .grok/agents; do
     fi
 done
 
+# --- Хуки агентов: .ai/hooks/* → .claude/settings.json, .gemini/settings.json, .codex/hooks.json ---
+# Merge: остальные ключи сохраняются; запись хука с той же command (или тем же скриптом *.sh/*.py,
+# например после переезда) заменяется, а не дублируется.
+
+merge_hooks() {
+    local src="$AI_DIR/hooks/$1" target_dir="$PROJECT_DIR/$2" dst="$PROJECT_DIR/$2/$3"
+
+    [ -f "$src" ] || return 0
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo -e "${RED}!${NC} python3 not found: $2/$3 not updated"
+        return 0
+    fi
+    if [ -e "$target_dir" ] && [ ! -d "$target_dir" ]; then
+        echo -e "${RED}!${NC} $2 is a file, not a directory: $2/$3 not updated"
+        return 0
+    fi
+    mkdir -p "$target_dir"
+    python3 -I - "$src" "$dst" <<'PY'
+import json, re, sys
+from pathlib import Path
+
+src, dst = Path(sys.argv[1]), Path(sys.argv[2])
+
+def key(command):
+    m = re.search(r"[\w.-]+\.(?:sh|py)\b", command or "")
+    return m.group(0) if m else command
+
+def keys(item):
+    return {key(h.get("command")) for h in item.get("hooks", [])} if isinstance(item, dict) else set()
+
+def merge(base, add):
+    if isinstance(base, dict) and isinstance(add, dict):
+        return {**base, **{k: merge(base[k], v) if k in base else v for k, v in add.items()}}
+    if isinstance(base, list) and isinstance(add, list):
+        added = set().union(*map(keys, add))
+        return [b for b in base if b not in add and not keys(b) & added] + add
+    return add
+
+current = json.loads(dst.read_text(encoding="utf-8")) if dst.exists() else {}
+merged = merge(current, json.loads(src.read_text(encoding="utf-8")))
+dst.write_text(json.dumps(merged, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+PY
+    echo -e "${GREEN}+${NC} $2/$3"
+}
+
+HOOK_TARGETS=(.claude/settings.json .gemini/settings.json .codex/hooks.json)
+merge_hooks claude-settings.json .claude settings.json
+merge_hooks gemini-settings.json .gemini settings.json
+merge_hooks codex-hooks.json .codex hooks.json
+
 # pre-commit видит только изменения отслеживаемых файлов: новые сгенерированные (новый скил) ловим сами.
 if [ "${1:-}" = "--check" ]; then
     untracked="$(cd "$PROJECT_DIR" && git status --porcelain --untracked-files=all -- \
-        CLAUDE.md AGENTS.md GEMINI.md "${GENERATED_DIRS[@]}" | sed -n 's/^?? //p')"
+        CLAUDE.md AGENTS.md GEMINI.md "${GENERATED_DIRS[@]}" "${HOOK_TARGETS[@]}" | sed -n 's/^?? //p')"
     if [ -n "$untracked" ]; then
         echo -e "${RED}!${NC} сгенерированные файлы не добавлены в git — git add и повтори коммит:"
         echo "$untracked"

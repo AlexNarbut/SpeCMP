@@ -25,14 +25,8 @@ import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/** Тон блока состояния: ошибка (error-container) или нейтральное (пусто, ничего не найдено). */
 enum class CmpStateTone { Neutral, Error }
 
-/**
- * Блок состояния вместо содержимого: иконка в круге, заголовок, пояснение и действия ([actions]: «Повторить»,
- * «Сбросить фильтр»…) по центру, ширина до 420 dp. [compact] — меньше отступы и иконка (колонки широкого окна).
- * Ошибка объявляется экранным диктором (live region).
- */
 @Composable
 fun CmpStateBox(
     icon: CmpIcons,
@@ -41,7 +35,7 @@ fun CmpStateBox(
     text: String? = null,
     tone: CmpStateTone = CmpStateTone.Neutral,
     compact: Boolean = false,
-    actions: @Composable ColumnScope.() -> Unit = {}
+    actions: @Composable ColumnScope.() -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     val error = tone == CmpStateTone.Error
@@ -52,19 +46,19 @@ fun CmpStateBox(
                 .padding(horizontal = if (compact) 16.dp else 20.dp, vertical = if (compact) 24.dp else 40.dp)
                 .then(if (error) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
                 modifier = Modifier
                     .size(if (compact) 64.dp else 80.dp)
                     .background(if (error) colors.errorContainer else colors.surfaceContainerHigh, CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     icon = icon,
                     contentDescription = null,
                     tint = if (error) colors.onErrorContainer else colors.onSurfaceVariant,
-                    modifier = Modifier.size(if (compact) 32.dp else 40.dp)
+                    modifier = Modifier.size(if (compact) 32.dp else 40.dp),
                 )
             }
             Text(text = title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
@@ -73,7 +67,7 @@ fun CmpStateBox(
                     text = it,
                     style = MaterialTheme.typography.bodyLarge,
                     color = colors.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
             actions()

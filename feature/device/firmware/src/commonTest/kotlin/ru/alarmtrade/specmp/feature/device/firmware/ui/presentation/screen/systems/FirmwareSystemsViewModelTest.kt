@@ -9,6 +9,7 @@ import kotlin.test.assertIs
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -17,8 +18,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSubsystem
@@ -34,11 +36,13 @@ class FirmwareSystemsViewModelTest {
     private val repository = FakeFirmwareRepository()
     private val viewModels = mutableListOf<FirmwareSystemsViewModel>()
 
-    private class FakePreferences(var order: SystemsOrder = SystemsOrder.Added) : FirmwareArchivePreferences {
-        override fun systemsOrder() = order
+    private class FakePreferences : FirmwareArchivePreferences {
+        override val systemsOrder = MutableStateFlow<Response<SystemsOrder>>(Response.Success(SystemsOrder.Added))
+        val order: SystemsOrder? get() = systemsOrder.value.getValueIfSuccess()
 
-        override fun setSystemsOrder(order: SystemsOrder) {
-            this.order = order
+        override suspend fun setSystemsOrder(order: SystemsOrder): Response<Unit> {
+            systemsOrder.value = Response.Success(order)
+            return Response.Success(Unit)
         }
     }
 
@@ -65,7 +69,7 @@ class FirmwareSystemsViewModelTest {
     }
 
     private fun TestScope.viewModel(): FirmwareSystemsViewModel {
-        val vm = FirmwareSystemsViewModel(repository, preferences, AppDispatchers(dispatcher, dispatcher, dispatcher))
+        val vm = FirmwareSystemsViewModel(repository, preferences, testDispatchers(dispatcher))
             .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()

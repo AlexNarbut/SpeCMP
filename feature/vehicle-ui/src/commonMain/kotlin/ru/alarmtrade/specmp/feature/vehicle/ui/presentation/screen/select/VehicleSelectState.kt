@@ -9,42 +9,41 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarTrim
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 
 internal enum class SearchMode { NAME, CAN }
 
 /** Откуда открыта карточка — от этого зависит «назад» на узком окне. */
 internal enum class CardSource { CATALOG, CAN, RECENT }
 
-/** Уровень каталога, который можно перезагрузить «Повторить». */
 internal enum class CatalogLevel { BRANDS, MODELS, TRIMS, COMBO, CAN, CARD }
 
-/** Вкладки карточки (показываются только непустые). */
 internal enum class CardTab { FEATURES, MOUNT_POINTS, SCHEMES, MAPS, USER_MANUALS }
 
-/** Раскладка по ширине окна. */
 internal enum class VehicleLayout {
     COMPACT,
     MEDIUM,
-    EXPANDED;
+    EXPANDED,
+    ;
 
     val isWide: Boolean get() = this != COMPACT
 }
 
-/** Выбранный путь в каталоге. */
 internal data class CatalogSelection(
     val brand: CarBrand? = null,
     val model: CarModel? = null,
-    /** Комплектация, чья карточка открыта. */
     val carId: Int? = null,
-    val cardSource: CardSource = CardSource.CATALOG
+    val cardSource: CardSource = CardSource.CATALOG,
 )
 
 /** Поиск «марка модель» на уровне марок: марка распознана, [rest] — фильтр её моделей. */
 internal data class ComboSearch(val brand: CarBrand, val rest: String)
 
-/** Что открыто внутри карточки. */
 internal data class CardUi(
     val tab: CardTab? = null,
     /** Открытая точка подключения (индекс), `null` — список точек. */
@@ -52,14 +51,12 @@ internal data class CardUi(
     val photo: Int = 0,
     val viewerOpen: Boolean = false,
     val notesExpanded: Boolean = false,
-    val collapsedGroups: Set<CarFeatureGroup> = emptySet()
+    val collapsedGroups: Set<CarFeatureGroup> = emptySet(),
 )
 
 internal sealed interface VehicleDialog {
-    /** Примечание к возможности автомобиля. */
     data class CapabilityNote(val kind: CapabilityKind, val capability: CarCapability) : VehicleDialog
 
-    /** Выбранный автомобиль не совпадает по CAN-коду с прошивкой блока. */
     data class CanMismatch(val car: CarSummary, val firmwareCanCode: String) : VehicleDialog
 }
 
@@ -90,35 +87,38 @@ internal data class VehicleSelectState(
     val filterDraft: Set<CarFeatureGroup>? = null,
     val dialog: VehicleDialog? = null,
     /** Идёт получение данных автомобиля для «Выбрать» из строки. */
-    val picking: Boolean = false
+    val picking: Boolean = false,
 ) {
     val showTypeChoice: Boolean get() = mode.typeSelectable && deviceType == null
 }
 
-/** Постоянные параметры экрана из запроса. */
+internal fun VehicleSelectRequest.initialState(): VehicleSelectState {
+    val configurationsOnly = catalog == VehicleCatalog.WITH_CONFIGURATIONS
+    return VehicleSelectState(
+        mode = VehicleSelectModeUi(
+            pick = mode == VehicleSelectMode.PICK,
+            configurationsOnly = configurationsOnly,
+            typeSelectable = device == null,
+            deviceName = (device as? VehicleDeviceFilter.Device)?.deviceName,
+            firmwareCanCode = firmwareCanCode,
+        ),
+        deviceType = (device as? VehicleDeviceFilter.Type)?.type,
+        canCode = firmwareCanCode.takeUnless { configurationsOnly }.orEmpty(),
+    )
+}
+
 internal data class VehicleSelectModeUi(
     val pick: Boolean,
     /** Каталог «с конфигурациями»: без поиска по CAN-коду и фильтра функций. */
     val configurationsOnly: Boolean,
-    /** Тип устройства выбирается пользователем (чип «Сигнализация ▾» в шапке). */
     val typeSelectable: Boolean,
     val deviceName: String?,
-    val firmwareCanCode: String?
+    val firmwareCanCode: String?,
 ) {
     val canSearchAvailable: Boolean get() = !configurationsOnly
     val filterAvailable: Boolean get() = !configurationsOnly
 }
 
-internal sealed interface VehicleSelectEffect {
-    data class Picked(val car: CarSummary) : VehicleSelectEffect
-    data object Exit : VehicleSelectEffect
-    data class CanCopied(val code: String) : VehicleSelectEffect
-
-    /** «Выбрать» не удалось (данные автомобиля не получены). */
-    data class PickFailed(val error: CatalogError) : VehicleSelectEffect
-}
-
-/** Шаг узкой раскладки — выводится из state. */
 internal enum class CompactStep { BRANDS, MODELS, TRIMS, CAN, CARD }
 
 internal fun VehicleSelectState.compactStep(): CompactStep = when {

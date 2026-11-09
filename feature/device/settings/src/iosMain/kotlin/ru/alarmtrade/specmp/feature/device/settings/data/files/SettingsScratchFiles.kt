@@ -11,7 +11,7 @@ internal actual fun settingsScratchDirectory(): String {
         path = directory,
         withIntermediateDirectories = true,
         attributes = null,
-        error = null
+        error = null,
     )
     return directory
 }

@@ -9,26 +9,17 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionAnswer
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
 
-/**
- * Мастер быстрого монтажа над `FastMountInteractor` SDK. Состояние мастера держит SDK (сессия в памяти), репозиторий
- * без состояния. Предметные ошибки — `FastMountException` в `Response.Error`.
- */
+/** Состояние мастера держит SDK (сессия в памяти), репозиторий без состояния. */
 interface FastMountRepository {
-    /** Класс блока по основной подсистеме модели из базы устройств. */
     suspend fun deviceClass(systemName: String): Response<MountDeviceClass>
 
-    /** Доступ к блоку на сервере (как при входе в расширенный монтаж). */
     suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<UnitAccess>
 
-    /**
-     * Версия последней релизной прошивки основной программы модели; `null` — модуля нет в базе. [canCode] и
-     * [canVersion] — CAN блока с единой CAN-прошивкой: последняя версия под его CAN-код.
-     */
+    /** `null` — модуля нет в базе; [canCode] и [canVersion] — последняя версия под CAN-код блока. */
     suspend fun latestFirmware(systemName: String, canCode: String? = null, canVersion: Int? = null): Response<String?>
 
     suspend fun configuration(id: Int): Response<FastMountConfiguration>
 
-    /** Файл конфигурации (карта монтажа) целиком в память. */
     suspend fun download(url: String): Response<ByteArray>
 
     /** Старт: конфигурация перечитывается с сервера и передаётся SDK; сессия монтажа на сервере. */

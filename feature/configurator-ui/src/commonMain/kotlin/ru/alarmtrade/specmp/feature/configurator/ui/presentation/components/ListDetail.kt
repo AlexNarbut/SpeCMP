@@ -13,18 +13,16 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 
-/** С этой ширины окна списки конфигуратора показываются вместе с карточкой выбранного элемента. */
 internal val ListDetailWideFrom = 600.dp
 
 private const val LIST_WEIGHT = 0.45f
 
-/** Телефон — только [list]; широкое окно — [list] слева и [detail] справа через разделитель. */
 @Composable
 internal fun ListDetailPane(
     wide: Boolean,
     detail: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    list: @Composable ColumnScope.() -> Unit
+    list: @Composable ColumnScope.() -> Unit,
 ) {
     CmpRow(modifier = modifier.fillMaxSize()) {
         val listModifier = if (wide) Modifier.weight(LIST_WEIGHT).fillMaxHeight() else Modifier.fillMaxSize()
@@ -36,7 +34,6 @@ internal fun ListDetailPane(
     }
 }
 
-/** Блокирующая операция экрана (копирование, сохранение) — индикатор поверх содержимого. */
 @Composable
 internal fun BusyOverlay() {
     CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

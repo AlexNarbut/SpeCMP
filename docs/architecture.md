@@ -3,28 +3,34 @@
 ## Граф зависимостей модулей
 
 ```
-core/common ──┬── core/network
-              ├── core/ui
-              ├── core/localization
-              └── core/specialist
+core/common ◄── core/localization ◄── core/ui
+core/common, core/network ◄── core/specialist
+core/lifecycle, core/permissions, core/network, core/common — без зависимостей на проект
+core/testing (→ core/common, core/lifecycle) — только тестовые source set'ы
                     ▲
                     │
-              feature/* (будущие)
+feature/<name> ◄── feature/<name>-ui          feature/device/presentation-core
+(domain + data)    (presentation)             (общий presentation фич устройства)
                     ▲
                     │
-              composeApp (KMP Library)
-                    ▲
-                    ├────────┐
-                    │        │
-              androidApp  desktopApp  iosApp
-              (Android)     (JVM)   (Swift wrapper)
+composeApp (App())                       flasherApp (FlasherApp(), без iOS)
+    ▲                                        ▲
+androidApp  desktopApp  iosApp           flasherAndroidApp  flasherDesktopApp
 ```
+
+Направления держат проверки ([`code-quality.md`](code-quality.md)): graph-assert по Gradle-зависимостям —
+`core` ↛ `feature`, `core`/`feature` ↛ composition roots (`composeApp`, `flasherApp`), никто ↛ платформенные обёртки и
+`quality/*`, от `*-ui` зависят только composition roots; Konsist — те же направления по импортам (`module-direction`,
+`cross-feature-presentation`), модули `*:testing` — только в тестовых конфигурациях (`testing-modules-test-only`).
 
 **Ключевые принципы:**
 - `core/*` — атомарная, широко переиспользуемая инфраструктура без бизнес-логики фич. Модули в `core/` минимально зависят от других модулей проекта и не содержат доменных моделей конкретных фич (аккаунты, дети, дневник и т.д.). Если модуль завязан на доменную логику или зависит от нескольких других модулей — он принадлежит `feature/*`.
 - `feature/*` — доменная и UI-логика фич, включая модели, репозитории и экраны. Сюда же относятся «сервисные» модули с доменными моделями (например, `feature/account` — профиль текущего аккаунта, общий для нескольких фич).
-- `composeApp` — общая Compose UI библиотека (зависит от всех core и feature модулей), точка входа: `App()`
-- Платформенные приложения (`androidApp`, `desktopApp`, `iosApp`) — только тонкие обёртки
+- `composeApp` — composition root основного приложения (зависит от всех core и feature модулей), точка входа: `App()`
+- `flasherApp` — второй composition root (мини-приложение прошивки) поверх тех же `core/*` и `feature/device/*`;
+  Android и desktop, без iOS
+- Платформенные приложения (`androidApp`, `desktopApp`, `iosApp`, `flasherAndroidApp`, `flasherDesktopApp`) — только
+  тонкие обёртки
 
 **Правило границ feature-модулей:**
 - `feature/*` не владеют app-level инфраструктурой: глобальной локалью, темой приложения, SDK-контейнерами, платформенной инициализацией сторонних библиотек, глобальными настройками, навигационным composition root и DI-модулями всего приложения.
@@ -44,9 +50,9 @@ core/common ──┬── core/network
 | Тип | Состав | Кто подключает | Пример в проекте |
 |---|---|---|---|
 | **Логическая** | `domain` + `data` + DI, без UI (или с минимальным служебным presentation) | ViewModel других фич — как узкий API (repository/interactor) | `feature/auth-state` (session-операции; presentation — только переключатель зон) |
-| **Обособленная** | `domain` + `data` + `presentation` в одном модуле | Только `composeApp` (публичный вход — nav-граф/экран) | `feature/login` |
-| **Экранная (композиционная)** | Только `presentation`; бизнес-логику подключает из логических фич | Только `composeApp` | `feature/main` (logout через `AuthStateRepository` из `feature/auth-state`) |
-| **Крупная → пара модулей** | `feature/<name>` — только логика; `feature/<name>-ui` — presentation, зависящий от `feature/<name>` | Логику — любые фичи; `-ui` — только `composeApp` | — (появится по мере роста) |
+| **Обособленная** | `domain` + `data` + `presentation` в одном модуле | Только composition roots (публичный вход — nav-граф/экран) | `feature/login` |
+| **Экранная (композиционная)** | Только `presentation`; бизнес-логику подключает из логических фич | Только composition roots | `feature/main` (logout через `AuthStateRepository` из `feature/auth-state`) |
+| **Крупная → пара модулей** | `feature/<name>` — только логика; `feature/<name>-ui` — presentation, зависящий от `feature/<name>` | Логику — любые фичи; `-ui` — только composition roots | `vehicle` + `vehicle-ui`, `configurator` + `configurator-ui`, `device/settings` + `device/settings-ui`, `device/interaction` + `device/interaction-ui` |
 
 ### Правила зависимостей между типами
 
@@ -54,9 +60,19 @@ core/common ──┬── core/network
   `feature/<name>`; логический модуль никогда не зависит от UI-модуля и не тянет
   Compose-зависимости — потребители подключают его легковесно, без транзитивного UI.
 - **Межфичевое переиспользование — только через логические модули.** Чужой presentation
-  (`*-ui`, экраны, ViewModel) фича не подключает никогда: экраны интегрирует `composeApp`
-  через навигацию, логику — ViewModel через узкий API (см. «Правило границ feature-модулей»
+  (`*-ui`, экраны, ViewModel) фича не подключает никогда: экраны интегрирует composition root
+  (`composeApp`, `flasherApp`) через навигацию, логику — ViewModel через узкий API (см. «Правило границ feature-модулей»
   выше).
+- Исключение — общий presentation фич устройства `feature/device/presentation-core` (не `-ui`, пакет
+  `…feature.device.presentation.core`): база VM блока `BaseDeviceViewModel<S, E>`, диалог PIN, компоненты и порты
+  файлов конфигураций `.dxs`, запрос выбора конфигурации. Его подключают фичи устройства, `advanced-mount`,
+  `fast-mount`, `configurator-ui` и `composeApp`; сам он `*-ui` не подключает, экранов и DI в нём нет (описание —
+  `feature/device/presentation-core/AGENTS.md`). Экран другой фичи (редактор настроек в конфигураторе, экраны
+  конфигуратора в редакторе) — слот (`@Composable`-колбэк), который заполняет `composeApp` (graph-assert
+  `:feature:.* -X> :feature:.*-ui`, Konsist `cross-feature-presentation`).
+- **Правила `-ui`-модулей**: `-ui` зависит от своей логики (`feature/<name>`), `core/ui` и при необходимости
+  `presentation-core`, но не от другого `-ui`; от `-ui` зависят только composition roots. Пакет — `…<name>.ui`
+  (явный `namespace` в `build.gradle.kts`), Koin-модуль — `<name>UiModule` (ViewModel); domain/data в `-ui` нет.
 - «Только UI-компоненты» — это не фича: доменно-нейтральные компоненты живут в `core/ui`.
   Feature-модулю принадлежат лишь доменные UI-блоки (виджет конкретной бизнес-сущности) —
   и тогда это `presentation` соответствующей фичи или её `-ui` модуль.
@@ -77,7 +93,7 @@ core/common ──┬── core/network
 Механика разделения: `domain` + `data` + их DI переезжают в `feature/<name>` без смены
 пакетов; `presentation` и его DI — в `feature/<name>-ui`. У каждого модуля свой
 Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` — ViewModel);
-`composeApp` подключает оба. Публичный вход UI-модуля — его nav-граф.
+composition root подключает оба. Публичный вход UI-модуля — его nav-граф.
 
 ### Чек-лист классификации
 
@@ -97,9 +113,23 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - `ResponseExt` — функции-расширения
 - `AppDispatchers` — обёртка над корутин-диспетчерами
 - `AuthCloseable` — контракт компонентов, обязанных чистить состояние при смене аккаунта (`release()` вызывает `LogoutUseCase`)
-- `appScopeQualifier` — application-scoped `CoroutineScope` для работы, переживающей инициатора
-- `AppSettingsFactory` — именованные key-value хранилища (multiplatform-settings, `api`-зависимость)
+- `appScopeQualifier` — application-scoped `CoroutineScope` для доменных сервисов, чья работа переживает экран;
+  скоупы сервисов создаёт Koin-модуль через `serviceScope(dispatcher, logTag)` (`coroutines/`)
+- `AppServicesStarter` — запуск process-wide доменных сервисов (`start()`), слоты — Koin-модули корней
+  (`docs/patterns.md`, «Доменные сервисы»)
+- `AppSettingsFactory` — именованные key-value хранилища поверх единственного `platformSettings` (`di/`)
+- `Clock`/`TimeZoneSource` (`time/`), `AppVersionProvider`
 - Без UI-зависимостей
+
+### core/lifecycle
+- Пакет: `ru.alarmtrade.specmp.core.lifecycle`
+- `AppForegroundProvider` — порт «возврат на передний план» для VM и data (Konsist `foreground-usage`); `AppLifecycle`
+  читает только его реализация
+
+### core/permissions
+- Пакет: `ru.alarmtrade.specmp.core.permissions`
+- `PermissionsProvider` — разрешения и состояние радио (BLE, геолокация); типы библиотеки разрешений наружу не выходят
+  (Konsist `capability-usage`)
 
 ### core/network
 - Пакет: `ru.alarmtrade.specmp.core.network`
@@ -112,11 +142,17 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 
 ### core/specialist
 - Пакет: `ru.alarmtrade.specmp.core.specialist`
-- `specialistModule` — Koin-модуль инициализации `SpecialistApp`
+- `di/specialistModule` — Koin-модуль инициализации `SpecialistApp`
 - Регистрирует app-level SDK singleton и конкретные SDK interactors для feature-модулей
 - Содержит platform-specific сборку `AppDeviceInformation` для Specialist SDK
-- Содержит `SpecialistAppVersionProvider` для единой передачи версии приложения в Specialist SDK
+- Связывает `AppVersionProvider` (`core/common`) с версией от платформы — её читают Specialist SDK и экраны
 - `feature/*` не создают `SpecialistApp` самостоятельно и зависят только от нужных SDK interactors
+
+### core/testing
+- Пакет: `ru.alarmtrade.specmp.core.testing`
+- Общие тестовые дублёры портов `core/*` (`testDispatchers`, `FixedClock`, `FakeAppForegroundProvider`, `InMemorySettings`), код в `commonMain`
+- Подключается только в тестовых source set'ах (Konsist `testing-modules-test-only`); см. `docs/patterns.md` → «Тестовые дублёры»
+- Дублёры контрактов фич — в `feature/<x>/testing` рядом с владельцем (`feature/device/interaction/testing`, пакет `ru.alarmtrade.specmp.feature.device.interaction.testing`: фейки репозиториев устройства и `testDeviceSession(…)`; `feature/configurator/testing` — `FakeLocalConfigurationsRepository`)
 
 ### core/ui
 - Пакет: `ru.alarmtrade.specmp.core.ui`
@@ -130,11 +166,19 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - Плагин: `com.android.kotlin.multiplatform.library`
 - Ресурсы: `composeApp/src/commonMain/composeResources/`
 - Пакет генерируемых ресурсов: `specmp.composeapp.generated.resources`
-- `App()` — composition root, все Koin-модули (включая платформенные) подключаются внутри common-кода, без параметров от платформы
+- `App()` — composition root: Koin-модули — `di/AppKoinModules.kt` (`appKoinModules(…)`, платформенные —
+  `rememberPlatformKoinModules()`), полноту графа проверяет `jvmTest` `AppKoinModulesTest` (koin-test `verify`);
+  process-wide сервисы запускает `AppServicesStarter` (слоты — `di/AppServicesModule.kt`)
 - `composeApp/src/iosMain/kotlin/.../MainViewController.kt` — iOS entry point, создаёт `ComposeUIViewController`
 
+### flasherApp
+- Пакет: `ru.alarmtrade.specmp.flasher`; `FlasherApp()` — тот же старт, что у `App()`: `flasherKoinModules(…)`
+  (`FlasherKoinModulesTest`), слоты сервисов — `di/FlasherServicesModule.kt` (описание — `flasherApp/AGENTS.md`)
+- Корни друг от друга не зависят: общий код корней — в `core/*` или фиче
+
 ### Все KMP-модули (core/*, feature/* и composeApp)
-- Плагин: `alias(libs.plugins.android.kmp.library)`
+- На convention-плагинах `specmp.kmp.library` / `specmp.kmp.compose` (`build-logic`, `docs/build.md`): таргеты, JVM,
+  SDK, namespace и `androidResources` задаёт конвенция; `flasherApp` без iOS — `specmp.kmp.android-jvm`
 - Android-конфигурация внутри `kotlin { android { } }` — НЕ в top-level `android { }`
 - Нет `androidTarget { }` — заменён на `android { }` внутри `kotlin { }`
 - JVM target используется платформенной обёрткой `desktopApp`
@@ -148,21 +192,28 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 ```
 feature/
 └── feature_name/
-    ├── domain/           # Чистая бизнес-логика — без Compose, без @Serializable, без Android
+    ├── domain/           # Чистая бизнес-логика — без Compose, без @Serializable, без Android и SDK
     │   ├── model/        # Kotlin-сущности: sealed-классы, enum, value objects
-    │   └── repository/   # Интерфейсы репозиториев, возвращающих Response<T>
-    ├── data/             # DTO, mapper-ы, реализации репозиториев
-    │   ├── dto/          # @Serializable DTO
-    │   ├── mapper/       # Функции-расширения toDomain() / toDto()
-    │   └── repository/   # Реализации репозиториев
+    │   ├── repository/   # Интерфейсы репозиториев: Response<T> / Flow<Response<T>>
+    │   ├── service/      # Интерфейсы доменных сервисов (состояние процесса, работа дольше экрана)
+    │   └── usecase/      # Use case — только оркестрация ≥ 2 зависимостей
+    ├── data/             # всё internal
+    │   ├── datasource/   # internal interface <Фича>DataSource + Specialist<Фича>DataSource (делегирует в SDK)
+    │   ├── mapper/       # top-level toDomain*() — SDK → domain
+    │   ├── repository/   # Specialist<Интерфейс> / Settings<Интерфейс> — реализации репозиториев
+    │   └── service/      # <Сервис>Impl — реализации доменных сервисов
     ├── presentation/     # ViewModels, экраны, Compose-компоненты (подробная раскладка ниже)
     │   ├── screen/<screen_name>/
     │   ├── widgets/<widget_name>/
-    │   └── components/
-    └── di/               # Определение Koin-модуля
+    │   ├── components/
+    │   ├── model/        # ошибка фичи, presentation-модели
+    │   └── platform/     # порты платформы (пикеры файлов и т.п.), actual — в composition root
+    └── di/               # Koin-модуль <name>Module
 ```
 
 > **`domain/model/`** — только чистый Kotlin. Без Compose, без `@Serializable`, без зависимостей от фреймворков.
+> Раскладку ролей и слоёв проверяет Konsist (`layer-placement`, `domain-isolation`, `data-visibility`, `mapper-placement`
+> и др.) — `docs/patterns.md`, «Слои и границы модуля».
 
 ### Раскладка `presentation/`
 
@@ -172,9 +223,10 @@ feature/
 presentation/
 ├── screen/<screen_name>/            # Экран — обычно по одному на feature-модуль
 │   ├── <Name>Screen.kt              # Корневая @Composable функция экрана
-│   ├── <Name>ScreenState.kt         # @Immutable state (+ sealed actions / enum'ы state-слоя)
-│   ├── <Name>ScreenViewModel.kt     # ViewModel — регистрируется в di/
-│   ├── <Name>StateMapper.kt         # (опционально) domain → UI state
+│   ├── <Name>State.kt               # @Immutable state и все его подстейты
+│   ├── <Name>Effect.kt              # one-shot эффекты (если есть)
+│   ├── <Name>ViewModel.kt           # только ViewModel — регистрируется в di/
+│   ├── <Name>Transitions.kt         # (опционально) чистые переходы state большой VM
 │   └── subcomponents/               # Все прочие @Composable этого экрана
 │       └── *.kt                     # Header, секции, карточки, BottomSheet'ы, чарты и т.п.
 ├── widgets/<widget_name>/           # Встраиваемый виджет — отображается на других экранах
@@ -188,7 +240,7 @@ presentation/
 
 **Правила размещения:**
 
-- В корне `screen/<name>/` или `widgets/<name>/` — только `root composable + state + ViewModel + (опционально) mapper`. Ничего другого.
+- В корне `screen/<name>/` или `widgets/<name>/` — только `root composable + state + effect + ViewModel + (опционально) actions/transitions`. Ничего другого (`docs/patterns.md`, «Файлы экрана»).
 - Любая дополнительная @Composable функция для конкретного экрана/виджета → `<unit>/subcomponents/`.
 - Composable или helper, который реально переиспользуется между разными screen/widget внутри той же фичи → `presentation/components/`.
 - Composable, нужный сразу нескольким features, — поднимать в `core/ui` (`docs/ui-kit.md`), а не в `feature/*/presentation/components/`.
@@ -196,12 +248,14 @@ presentation/
 
 **State-файлы:**
 
-- `*State.kt` — всегда `@Immutable` (или `@Stable`) для skip-оптимизации Compose.
-- `*StateMapper.kt` — опционально; инкапсулирует сложное преобразование domain → UI и внедряется в ViewModel через Koin.
+- `*State.kt` — всегда `@Immutable` (или `@Stable`) для skip-оптимизации Compose (Konsist `state-immutable`).
+- Чистые переходы state (`*Transitions.kt`, `*Machine.kt`) — top-level функции рядом с VM, тестируются без VM.
 
 Feature-модули:
 - Являются Kotlin Multiplatform библиотеками
-- Подключаются в `:composeApp` для интеграции в UI
+- Подключаются в composition root (`:composeApp`, фичи прошивки — и `:flasherApp`) для интеграции в UI
+- Тестовые дублёры своих контрактов, нужные другим модулям, держат в `feature/<x>/testing` (`docs/patterns.md`,
+  «Тестовые дублёры»)
 - **НЕ импортируют** `androidx.compose.material.icons` напрямую — иконки берутся из `CmpIcons` enum в `core/ui`, либо подключаются как compose resources модуля
 - **НЕ объявляют** app-level типы и сервисы (`AppLocale`, глобальные settings, SDK app-контейнеры, root navigation/DI). Такие типы создаются в `core/*` или `composeApp`.
 
@@ -217,23 +271,24 @@ Feature-модули:
 | `:core:localization` | Строки `Strings`, `AppLocale` / `AppLocaleStore` | Всем фичам с UI (строки); выбор языка — только `feature/app-settings` |
 | `:core:ui` | `LCEState<T, E>`, `LCEStateExt`, `AppError.message()`, `AppTheme`, Cmp*-компоненты | Только если у фичи есть UI-слой (presentation) |
 | `:core:network` | `NetworkMonitor`, HTTP-движки Ktor процесса | Фичам обычно не нужен — сеть идёт через Specialist SDK |
+| `:core:lifecycle` | `AppForegroundProvider` | VM/репозиторию, которому нужен возврат приложения на передний план |
+| `:core:permissions` | `PermissionsProvider`, `DeviceAccessRequirement` | Фичам, которые сами просят разрешения/радио (поиск блока) |
+| `:core:testing` | `testDispatchers`, `FixedClock`, `InMemorySettings`, `FakeAppForegroundProvider` | Только `commonTest.dependencies` |
 
 Примеры `build.gradle.kts`:
 
 ```kotlin
 // Feature с UI и compose resources
+plugins {
+    id("specmp.kmp.compose")
+}
+
 compose.resources {
     publicResClass = false
     generateResClass = always
 }
 
 kotlin {
-    android {
-        namespace = "ru.alarmtrade.specmp.feature.<name>"
-        // ...
-        androidResources.enable = true  // обязательно если есть composeResources/
-    }
-    // ...
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:common"))  // Response, AppDispatchers — обязательно
@@ -248,7 +303,7 @@ commonMain.dependencies {
 }
 ```
 
-> **Важно:** Если feature-модуль содержит `composeResources/`, в `kotlin { android { } }` необходимо добавить `androidResources.enable = true`. Без этого ресурсы не будут упакованы в Android APK и приложение упадёт с `MissingResourceException` в runtime.
+> **Важно:** `androidResources.enable = true` для модуля с `composeResources/` ставит `specmp.kmp.compose`. Без него ресурсы не будут упакованы в Android APK и приложение упадёт с `MissingResourceException` в runtime.
 
 > **Примечание:** `core:ui` зависит от `core:common` через `implementation`, поэтому `Response` и `AppDispatchers` **не** доступны транзитивно. Feature-модули **обязаны** явно подключать `:core:common`.
 
@@ -259,12 +314,18 @@ commonMain.dependencies {
 | Модуль            | Пакет                                     |
 |-------------------|-------------------------------------------|
 | core/common       | `ru.alarmtrade.specmp.core.common`        |
+| core/lifecycle    | `ru.alarmtrade.specmp.core.lifecycle`     |
+| core/permissions  | `ru.alarmtrade.specmp.core.permissions`   |
 | core/localization | `ru.alarmtrade.specmp.core.localization`  |
 | core/network      | `ru.alarmtrade.specmp.core.network`       |
 | core/specialist   | `ru.alarmtrade.specmp.core.specialist`    |
 | core/ui           | `ru.alarmtrade.specmp.core.ui`            |
+| core/testing      | `ru.alarmtrade.specmp.core.testing`       |
 | feature/`<name>`  | `ru.alarmtrade.specmp.feature.<name>` (дефис в имени модуля схлопывается: `auth-state` → `authstate`) |
+| feature/device/presentation-core | `ru.alarmtrade.specmp.feature.device.presentation.core` (суффиксы `-ui`/`-core` — подпакет) |
+| feature/`<x>`/testing | `ru.alarmtrade.specmp.feature.<x>.testing` |
 | composeApp        | `ru.alarmtrade.specmp`                    |
+| flasherApp        | `ru.alarmtrade.specmp.flasher`            |
 | androidApp        | `ru.alarmtrade.specmp.androidApp`         |
 
 JVM target: **Java 17**

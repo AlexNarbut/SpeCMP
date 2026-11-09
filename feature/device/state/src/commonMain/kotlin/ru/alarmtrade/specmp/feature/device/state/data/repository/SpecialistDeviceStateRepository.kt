@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.state.data.repository
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.common.core.response.Response as SdkResponse
@@ -19,58 +20,40 @@ import ru.alarmtrade.devices.domain.alarmDevice.commands.TurnOnHeaterCommand
 import ru.alarmtrade.devices.domain.alarmDevice.commands.TurnOnLightCommand
 import ru.alarmtrade.devices.domain.alarmDevice.state.DeviceState
 import ru.alarmtrade.devices.interactors.alarmDeviceInteractor.requests.SendControlCommandRequest
-import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.device.state.data.datasource.DeviceStateDataSource
+import ru.alarmtrade.specmp.feature.device.state.data.mapper.toVehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CommandReply
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.repository.DeviceStateRepository
 
-/**
- * [DeviceStateRepository] над `BluetoothAlarmDeviceInteractor`: поток `getDeviceTelemetryStateFlowUseCase`
- * + `start/stopRequestingDeviceStateUseCase` (период 3 с задан в SDK) и `sendControlCommandUseCase`.
- */
-class SpecialistDeviceStateRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
-) : DeviceStateRepository {
+internal class SpecialistDeviceStateRepository(private val dataSource: DeviceStateDataSource) : DeviceStateRepository {
 
     override fun states(): Flow<Response<VehicleState>> = flow {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-        if (interactor == null) {
-            emit(interactorUnavailable())
-            return@flow
-        }
-        val started = interactor.startRequestingDeviceStateUseCase.execute().toResponse()
+        val started = dataSource.startRequestingState().toResponseOrUnavailable()
         if (started is Response.Error) {
             emit(started)
             return@flow
         }
         try {
-            safeFlowRun { interactor.getDeviceTelemetryStateFlowUseCase.execute().toProjectFlow() }
+            safeFlowRun { dataSource.telemetry()?.toProjectFlow() ?: flowOf(interactorUnavailable()) }
                 .collect(::emit)
         } finally {
             // Опрос — ресурс блока: останавливаем и при отмене сбора (уход с экрана, потеря связи).
-            withContext(NonCancellable) { interactor.stopRequestingDeviceStateUseCase.execute() }
+            withContext(NonCancellable) { dataSource.stopRequestingState() }
         }
     }
 
     override suspend fun send(command: StateCommand): Response<CommandReply> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull() ?: return interactorUnavailable()
         val sdkCommand = command.toSdk() ?: return Response.Error(IllegalArgumentException("Not a control command"))
-        return when (
-            val response = interactor.sendControlCommandUseCase.execute(SendControlCommandRequest(sdkCommand))
-                .toResponse()
-        ) {
-            is Response.Success -> Response.Success(
-                if (response.value.isSuccess) CommandReply.DONE else CommandReply.REJECTED
-            )
-
-            is Response.Error -> response
-        }
+        return dataSource.sendCommand(SendControlCommandRequest(sdkCommand)).toResponseOrUnavailable()
+            .map { if (it.isSuccess) CommandReply.DONE else CommandReply.REJECTED }
     }
 }
 

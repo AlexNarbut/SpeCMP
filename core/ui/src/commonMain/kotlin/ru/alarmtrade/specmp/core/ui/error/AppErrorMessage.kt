@@ -18,11 +18,9 @@ import ru.alarmtrade.specmp.core.localization.resources.common_error_permission_
 import ru.alarmtrade.specmp.core.localization.resources.common_error_server
 import ru.alarmtrade.specmp.core.localization.resources.common_error_timeout
 
-/** Текст общей ошибки — одинаков на всех экранах. Ошибка фичи отдаёт сюда свой подтип `Common(error)`. */
 @Composable
 fun AppError.message(): String = stringResource(messageRes())
 
-/** То же вне composition — для снекбаров из обработчика эффектов. */
 suspend fun AppError.messageText(): String = getString(messageRes())
 
 private fun AppError.messageRes(): StringResource = when (this) {

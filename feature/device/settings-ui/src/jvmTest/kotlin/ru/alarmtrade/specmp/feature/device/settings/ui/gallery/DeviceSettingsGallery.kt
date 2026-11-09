@@ -76,9 +76,9 @@ class DeviceSettingsGallery {
         IntegerSetting(
             id, number, name, "Описание настройки $number",
             SettingValue.Integer(
-                value
+                value,
             ),
-            range, units, min, null
+            range, units, min, null,
         )
 
     private fun opt(id: Int, number: String, name: String, value: Int, options: List<String>) =
@@ -102,11 +102,11 @@ class DeviceSettingsGallery {
                 "Только световая индикация",
                 "Короткий сигнал сирены",
                 "Сирена и световая индикация в течение 30 секунд",
-                "Уведомление владельцу без сирены"
-            )
+                "Уведомление владельцу без сирены",
+            ),
         ),
         int(324, "3.2.4", "Задержка постановки", 30, 0..120, "с", "Выкл"),
-        section(325, "3.2.5", "Доп. датчики", sw(3251, "3.2.5.1", "Датчик наклона", on = true))
+        section(325, "3.2.5", "Доп. датчики", sw(3251, "3.2.5.1", "Датчик наклона", on = true)),
     )
     private val general = section(
         100,
@@ -114,14 +114,14 @@ class DeviceSettingsGallery {
         "Общие",
         TextSetting(
             101, "1.1", "Имя устройства", "Название в приложении", SettingValue.Text("Volvo XC60"), 16,
-            TextInputType.TEXT, null, null
+            TextInputType.TEXT, null, null,
         ),
         opt(102, "1.2", "Язык голосовых сообщений", 0, listOf("Русский", "English", "Українська", "Polski")),
         sw(104, "1.4", "Звук подтверждения", on = true),
         DecimalSetting(
-            105, "1.5", "Порог температуры", null, SettingValue.Decimal(-5f), -40f, 20f, 0.5f, "°C", null, null
+            105, "1.5", "Порог температуры", null, SettingValue.Decimal(-5f), -40f, 20f, 0.5f, "°C", null, null,
         ),
-        TimeSetting(106, "1.6", "Ежедневный запуск", null, SettingValue.Time(TimeOfDay(7, 30)))
+        TimeSetting(106, "1.6", "Ежедневный запуск", null, SettingValue.Time(TimeOfDay(7, 30))),
     )
     private val inputs = section(
         400,
@@ -132,8 +132,8 @@ class DeviceSettingsGallery {
             SettingValue.Input(InputValue(listOf(true, true, false), InputContactType.NORMALLY_CLOSED)),
             Channel(1, "IN1", listOf(Wire("Жёлто-чёрный", listOf(0xE0B400, 0x1B1B1B), 5))), Polarity.MINUS,
             listOf(ChannelLogic(0, "Двери", null), ChannelLogic(1, "Багажник", null), ChannelLogic(2, "Капот", null)),
-            listOf(ChannelLogic(0, "Двери", null), ChannelLogic(1, "Багажник", null))
-        )
+            listOf(ChannelLogic(0, "Двери", null), ChannelLogic(1, "Багажник", null)),
+        ),
     )
     private fun logic(id: Int, name: String) = ChannelLogic(id, name, null)
 
@@ -146,7 +146,7 @@ class DeviceSettingsGallery {
             SettingValue.SwitchOutput(on),
             Channel(id, ch, listOf(wire)),
             Polarity.MINUS,
-            logics
+            logics,
         )
 
     private val channelChoice = section(
@@ -160,7 +160,7 @@ class DeviceSettingsGallery {
             "4.1.1.3",
             "CH3",
             Wire("Сине/Черный", listOf(0x0033AA, 0x000000), 13),
-            listOf(logic(1, "Блокировка 1 NC"))
+            listOf(logic(1, "Блокировка 1 NC")),
         ),
         osw(4114, "4.1.1.4", "CH4", Wire("Зеленый", listOf(0x1E8F5A), 6), listOf(logic(2, "Указатели поворотов"))),
         osw(
@@ -168,8 +168,8 @@ class DeviceSettingsGallery {
             "4.1.1.5",
             "CH5",
             Wire("Красно/черный", listOf(0xEE2222, 0x000000), 2),
-            listOf(logic(3, "Выход Бипер"))
-        )
+            listOf(logic(3, "Выход Бипер")),
+        ),
     )
     private val outputs = section(
         500,
@@ -181,18 +181,18 @@ class DeviceSettingsGallery {
             Channel(
                 1,
                 "CH1",
-                listOf(Wire("Синий", listOf(0x1565C0), 1), Wire("Сине-белый", listOf(0x1565C0, 0xF2F2F2), 2))
+                listOf(Wire("Синий", listOf(0x1565C0), 1), Wire("Сине-белый", listOf(0x1565C0, 0xF2F2F2), 2)),
             ),
             canEditPolarity = true, defaultPolarity = Polarity.MINUS,
             availableLogics = listOf(logic(0, "Открытие ЦЗ"), logic(1, "Закрытие ЦЗ"), logic(2, "Канал ACC")),
-            enabledLogics = emptyList()
+            enabledLogics = emptyList(),
         ),
         OutputSetting(
             502, "5.4", "Реле 1", null, SettingValue.Output(OutputValue(listOf(false), Polarity.MINUS)),
             Channel(4, "R1", emptyList()), canEditPolarity = false, defaultPolarity = Polarity.MINUS,
-            availableLogics = listOf(logic(0, "Сирена")), enabledLogics = emptyList()
+            availableLogics = listOf(logic(0, "Сирена")), enabledLogics = emptyList(),
         ),
-        osw(503, "5.5", "SIREN", Wire("", emptyList(), 6), listOf(logic(4, "Подогрев сидений")), on = true)
+        osw(503, "5.5", "SIREN", Wire("", emptyList(), 6), listOf(logic(4, "Подогрев сидений")), on = true),
     )
 
     private val extras = section(
@@ -205,7 +205,7 @@ class DeviceSettingsGallery {
             "Понедельник",
             null,
             SettingValue.AutoStart(AutoStartSchedule(true, TimeOfDay(7, 30), false, TimeOfDay(18, 0))),
-            Weekday.MONDAY
+            Weekday.MONDAY,
         ),
         SirenSetting(
             802,
@@ -215,7 +215,7 @@ class DeviceSettingsGallery {
             SettingValue.Siren(SirenTone(SirenToneType.MELODY, 3)),
             1..12,
             null,
-            SirenEvent.ALARM
+            SirenEvent.ALARM,
         ),
         CanCodeSetting(803, "8.3", "CAN-код автомобиля", null, SettingValue.Can(CanCode("7002", null))),
         section(
@@ -226,8 +226,8 @@ class DeviceSettingsGallery {
             section(812, "", "ИЛИ"),
             sw(813, "8.4.2", "Двигатель запущен", on = false),
             section(814, "", "И"),
-            sw(815, "8.4.3", "Охрана выключена", on = true)
-        )
+            sw(815, "8.4.3", "Охрана выключена", on = true),
+        ),
     )
     private val cars =
         listOf(
@@ -239,8 +239,8 @@ class DeviceSettingsGallery {
                 "II",
                 2017..2020,
                 "7002",
-                null
-            )
+                null,
+            ),
         )
 
     private val root = section(
@@ -252,16 +252,16 @@ class DeviceSettingsGallery {
             300,
             "3",
             "Охрана",
-            sensors
+            sensors,
         ),
-        inputs, channelChoice, outputs, extras, section(700, "7", "Резерв")
+        inputs, channelChoice, outputs, extras, section(700, "7", "Резерв"),
     )
 
     private val base = DeviceSettingsState(
         header = SettingsHeader("DX-9X", 1234567, singleCanCode = "2154"),
         menu = LCEState.Content(root),
         changedIds = setOf(322, 3251),
-        sectionChanges = mapOf(300 to 2, 320 to 2, 325 to 1)
+        sectionChanges = mapOf(300 to 2, 320 to 2, 325 to 1),
     )
 
     private val noRowActions = SettingRowActions({}, {}, { _, _ -> }, {})
@@ -272,8 +272,8 @@ class DeviceSettingsGallery {
         }, onResetRequest = {
         }, onResetConfirm = {}, onSingleCanUpdate = {}, editor = EditorActions({}, {}, {}, {}, {}, {}, {}),
         transfer = TransferActions(
-            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}
-        )
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {},
+        ),
     )
 
     private fun render(name: String, state: DeviceSettingsState, path: List<Int>, search: Boolean = false) =
@@ -282,7 +282,7 @@ class DeviceSettingsGallery {
                 state = state,
                 location = SettingsLocation(path, search),
                 actions = noActions,
-                snackbarHostState = remember { CmpSnackbarHostState() }
+                snackbarHostState = remember { CmpSnackbarHostState() },
             ) { layout ->
                 val marks = RowMarks(state.changedIds, state.sectionChanges, state.cars)
                 if (search) {
@@ -293,7 +293,7 @@ class DeviceSettingsGallery {
                         marks,
                         path.lastOrNull(),
                         layout,
-                        noRowActions
+                        noRowActions,
                     )
                 }
             }
@@ -311,7 +311,7 @@ class DeviceSettingsGallery {
     fun error() = render(
         "02_error",
         base.copy(menu = LCEState.Error(SettingsError.LoadFailed), changedIds = emptySet()),
-        emptyList()
+        emptyList(),
     )
 
     @Test
@@ -352,14 +352,14 @@ class DeviceSettingsGallery {
     fun editCanMany() = render(
         "25_edit_can_many",
         base.copy(editing = editing(803).copy(carSearch = LCEState.Content(cars))),
-        listOf(800)
+        listOf(800),
     )
 
     @Test
     fun editCanNone() = render(
         "26_edit_can_none",
         base.copy(editing = editing(803).copy(carSearch = LCEState.Content(emptyList()))),
-        listOf(800)
+        listOf(800),
     )
 
     @Test
@@ -415,7 +415,7 @@ class DeviceSettingsGallery {
     fun description() = render(
         "18_description",
         base.copy(dialog = SettingsDialog.Description(root.findNode(321) as Setting)),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     // ── Конфигурации: «Загрузить из…» / «Сохранить в…», «Что изменится», редактор конфигурации ─────────────
@@ -427,8 +427,8 @@ class DeviceSettingsGallery {
         .replace((root.findNode(803) as CanCodeSetting).copy(value = SettingValue.Can(CanCode("1032", null))))
         .replace(
             (root.findNode(401) as InputSetting).copy(
-                value = SettingValue.Input(InputValue(listOf(true, false, true), InputContactType.NORMALLY_OPEN))
-            )
+                value = SettingValue.Input(InputValue(listOf(true, false, true), InputContactType.NORMALLY_OPEN)),
+            ),
         )
         .replace((root.findNode(101) as TextSetting).copy(value = SettingValue.Text("Шевроле Нива")))
 
@@ -444,7 +444,7 @@ class DeviceSettingsGallery {
     fun diffSame() = render(
         "42_diff_same",
         base.copy(diff = DiffState.Ready("Заводские", root.diffTo(root), pendingChanges = 0)),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     @Test
@@ -457,10 +457,10 @@ class DeviceSettingsGallery {
             diff = DiffState.Error(
                 "Облачная",
                 SettingsSource.LocalConfiguration(1, "DX-4GS", "Нива"),
-                closeAfter = true
-            )
+                closeAfter = true,
+            ),
         ),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     @Test
@@ -474,17 +474,17 @@ class DeviceSettingsGallery {
                 SettingsSource.LocalConfiguration(1, "DX-4GS", "Нива"),
                 "DX-4GS",
                 "DX-9X",
-                forWrite = false
-            )
+                forWrite = false,
+            ),
         ),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     @Test
     fun loadError() = render(
         "47_load_error",
         base.copy(dialog = SettingsDialog.LoadError(LoadErrorKind.MISMATCH)),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     @Test
@@ -495,7 +495,7 @@ class DeviceSettingsGallery {
     fun saveForm() = render(
         "49_save_form",
         base.copy(saveForm = SaveForm("Нива без автозапуска", "Отключён автозапуск, сирена тише", "DX-9X")),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     @Test
@@ -503,9 +503,9 @@ class DeviceSettingsGallery {
         "50_editor_mine",
         base.copy(
             header = null,
-            source = SourceHeader(SourceKind.MINE, "Шевроле Нива — без автозапуска", "DX-9X", false, canSave = true)
+            source = SourceHeader(SourceKind.MINE, "Шевроле Нива — без автозапуска", "DX-9X", false, canSave = true),
         ),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     @Test
@@ -513,9 +513,9 @@ class DeviceSettingsGallery {
         "51_editor_cloud",
         base.copy(
             header = null,
-            source = SourceHeader(SourceKind.CLOUD, "Lada Niva Travel — CAN", "DX-9X", true, canSave = false)
+            source = SourceHeader(SourceKind.CLOUD, "Lada Niva Travel — CAN", "DX-9X", true, canSave = false),
         ),
-        listOf(300, 320)
+        listOf(300, 320),
     )
 
     @Test
@@ -524,8 +524,8 @@ class DeviceSettingsGallery {
         base.copy(
             header = null,
             source = SourceHeader(SourceKind.DEFAULTS, "", "DX-9X", true, canSave = false),
-            dialog = SettingsDialog.ExitSave
+            dialog = SettingsDialog.ExitSave,
         ),
-        emptyList()
+        emptyList(),
     )
 }

@@ -1,23 +1,18 @@
 package ru.alarmtrade.specmp.feature.device.autostart.domain.repository
 
 import kotlinx.coroutines.flow.Flow
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 
-/** Обучение блока бесключевому обходу штатного иммобилайзера (SDK ведёт шаги, приложение их показывает). */
 interface BypassLearningRepository {
-    /**
-     * Запустить обучение: шаги до итога ([BypassEvent.Finished]) или сбоя ([BypassEvent.Failure]).
-     * Блок должен быть в режиме программирования (`ProgramModeRepository.enter`).
-     */
-    fun learn(): Flow<BypassEvent>
+    /** Блок должен быть в режиме программирования (`ProgramModeRepository.enter`). */
+    fun learn(): Flow<Response<BypassEvent>>
 }
 
-/** Процедура Clone: ключ вычисляет сервер, приложение пишет его в блок. */
 interface CloneRepository {
-    /** Оставшееся число попыток Clone для подключённого блока; `null` — узнать не удалось (сеть, сервер). */
-    suspend fun attempts(): Int?
+    suspend fun attempts(): Response<Int?>
 
-    /** Запустить процедуру; режим программирования SDK включает сам (неверный PIN — [CloneEvent.WrongPin]). */
-    fun run(): Flow<CloneEvent>
+    /** Режим программирования SDK включает сам; неверный PIN — `CloneProcedureFailure.WRONG_PIN`. */
+    fun run(): Flow<Response<CloneEvent>>
 }

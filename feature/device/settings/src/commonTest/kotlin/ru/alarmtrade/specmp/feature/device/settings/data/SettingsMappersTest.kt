@@ -29,11 +29,11 @@ import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDevi
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingOutputSwitchValueRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingOutputValueRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingSirenIntValueRequest
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.DEFAULT_DECIMAL_STEP
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toDomain
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toPath
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toRequest
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toRootSection
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.DEFAULT_DECIMAL_STEP
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toPath
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRequest
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRootSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType
@@ -72,10 +72,10 @@ class SettingsMappersTest {
                     name = "Охрана",
                     number = "3",
                     privacy = 0,
-                    childItems = listOf(switch(id = 2, value = true))
+                    childItems = listOf(switch(id = 2, value = true)),
                 ),
-                switch(id = 3, value = false)
-            )
+                switch(id = 3, value = false),
+            ),
         )
 
         val root = sdk.toRootSection()
@@ -98,7 +98,7 @@ class SettingsMappersTest {
         val sdk = SdkIntegerSetting(
             id = 5, uuid = "", name = "Задержка", number = "3.2.4", privacy = 0, value = 30,
             minValue = 0, maxValue = 120, units = "с", minValueText = "Выкл", maxValueText = null,
-            description = "d"
+            description = "d",
         )
 
         val setting = assertIs<IntegerSetting>(sdk.toDomain())
@@ -113,7 +113,7 @@ class SettingsMappersTest {
     fun `decimal setting without step gets the default step`() {
         val sdk = SdkFloatSetting(
             id = 1, uuid = "", name = "t", number = "", privacy = 0, value = -5f, minValue = -40f,
-            maxValue = 20f, units = "°C", minValueText = null, maxValueText = null, step = null, description = null
+            maxValue = 20f, units = "°C", minValueText = null, maxValueText = null, step = null, description = null,
         )
 
         assertEquals(DEFAULT_DECIMAL_STEP, assertIs<DecimalSetting>(sdk.toDomain()).step)
@@ -124,7 +124,7 @@ class SettingsMappersTest {
         val sdk = SdkSirenRingtoneSetting(
             id = 1, uuid = "", name = "s", number = "", privacy = 0,
             value = SirenRingtoneValue(SirenRingtoneType.MELODY, 3), minValue = 0, maxValue = 15, units = null,
-            description = null, ringtoneEvent = SirenRingtoneEvent.ALARM
+            description = null, ringtoneEvent = SirenRingtoneEvent.ALARM,
         )
 
         val setting = assertIs<SirenSetting>(sdk.toDomain())
@@ -143,7 +143,7 @@ class SettingsMappersTest {
             availableLogics = listOf(SdkChannelLogic(0, "Двери"), SdkChannelLogic(1, "Багажник", "desc")),
             enabledLogics = listOf(SdkChannelLogic(1, "Багажник", "desc")),
             wires = listOf(DeviceWire("Жёлто-чёрный", intArrayOf(0xFFE0B400.toInt(), 0x1B1B1B), 5)),
-            channelName = "IN1", channelNumber = 1, description = null
+            channelName = "IN1", channelNumber = 1, description = null,
         )
 
         val setting = assertIs<InputSetting>(sdk.toDomain())
@@ -161,8 +161,8 @@ class SettingsMappersTest {
         val sdk = output(
             wires = listOf(
                 DeviceWire("", intArrayOf(0x00FFFFFF), 0),
-                DeviceWire("Без цвета", intArrayOf(0x00FFFFFF), 13)
-            )
+                DeviceWire("Без цвета", intArrayOf(0x00FFFFFF), 13),
+            ),
         )
 
         val setting = assertIs<OutputSetting>(sdk.toDomain())
@@ -184,7 +184,7 @@ class SettingsMappersTest {
         assertIs<SetDeviceSettingOutputSwitchValueRequest>(SettingValue.SwitchOutput(true).toRequest(path, 1))
 
         val siren = assertIs<SetDeviceSettingSirenIntValueRequest>(
-            SettingValue.Siren(SirenTone(SirenToneType.TONE, 4)).toRequest(path, 9)
+            SettingValue.Siren(SirenTone(SirenToneType.TONE, 4)).toRequest(path, 9),
         )
         assertEquals(9, siren.settingId)
         assertEquals(SirenRingtoneValue(SirenRingtoneType.TONE, 4), siren.value)
@@ -194,12 +194,12 @@ class SettingsMappersTest {
         assertEquals(SdkCanCode("2154", 17), can.value)
 
         val input = assertIs<SetDeviceSettingInputValueRequest>(
-            SettingValue.Input(InputValue(listOf(true), InputContactType.NORMALLY_OPEN)).toRequest(path, 1)
+            SettingValue.Input(InputValue(listOf(true), InputContactType.NORMALLY_OPEN)).toRequest(path, 1),
         )
         assertEquals(SystemInputValue(listOf(true), InputType.NO), input.value)
 
         val output = assertIs<SetDeviceSettingOutputValueRequest>(
-            SettingValue.Output(OutputValue(listOf(false), Polarity.PLUS)).toRequest(path, 1)
+            SettingValue.Output(OutputValue(listOf(false), Polarity.PLUS)).toRequest(path, 1),
         )
         assertEquals(SystemOutputValue(listOf(false), ChannelPolarity.PLUS), output.value)
         assertTrue(output.path == path)
@@ -216,7 +216,7 @@ class SettingsMappersTest {
 
     private fun switch(id: Int, value: Boolean) = SdkSwitchSetting(
         id = id, uuid = "", name = "s$id", number = "", privacy = 0, value = value, onTitle = null, offTitle = null,
-        description = null
+        description = null,
     )
 
     private fun output(wires: List<DeviceWire> = emptyList(), polarity: ChannelPolarity = ChannelPolarity.MINUS) =
@@ -224,6 +224,6 @@ class SettingsMappersTest {
             id = 51, uuid = "", name = "Реле", number = "5.4", privacy = 0,
             value = SystemOutputValue(emptyList(), polarity), canEditPolarity = false,
             defaultPolarity = ChannelPolarity.MINUS, availableLogics = emptyList(), enabledLogics = emptyList(),
-            wires = wires, channelName = "R1", channelNumber = 1, description = null
+            wires = wires, channelName = "R1", channelNumber = 1, description = null,
         )
 }

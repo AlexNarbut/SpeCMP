@@ -16,14 +16,14 @@ fun CmpCard(
     shape: Shape = CardDefaults.shape,
     elevation: Dp = 1.dp,
     border: BorderStroke? = null,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
         modifier = modifier,
         shape = shape,
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         border = border,
-        content = content
+        content = content,
     )
 }
 
@@ -35,7 +35,7 @@ fun CmpClickableCard(
     shape: Shape = CardDefaults.shape,
     elevation: Dp = 1.dp,
     border: BorderStroke? = null,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
         onClick = onClick,
@@ -44,6 +44,6 @@ fun CmpClickableCard(
         shape = shape,
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         border = border,
-        content = content
+        content = content,
     )
 }

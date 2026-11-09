@@ -16,12 +16,12 @@ internal fun SupportChatDateDivider(label: String, colors: CmpThemeColors, modif
         modifier = modifier.padding(vertical = 6.dp),
         shape = RoundedCornerShape(percent = 50),
         color = colors.surfaceContainerLow,
-        contentColor = colors.onSurfaceVariant
+        contentColor = colors.onSurfaceVariant,
     ) {
         CmpText(
             text = label,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }

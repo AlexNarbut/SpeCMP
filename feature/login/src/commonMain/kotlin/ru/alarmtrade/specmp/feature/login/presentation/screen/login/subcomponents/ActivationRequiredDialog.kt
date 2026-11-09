@@ -32,7 +32,7 @@ import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenS
 fun ActivationRequiredDialog(
     state: LoginScreenState,
     onResendActivationEmail: () -> Unit,
-    onDismissActivationRequest: () -> Unit
+    onDismissActivationRequest: () -> Unit,
 ) {
     val resendSucceeded = state.activationResendState is LCEState.Content
     val resendError = state.activationResendError
@@ -43,12 +43,11 @@ fun ActivationRequiredDialog(
         title = {
             CmpText(
                 text = stringResource(Strings.string.login_login_title_confirm_email),
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                // Один текстовый слот: сообщение заменяется по состоянию отправки.
                 CmpText(
                     text = when {
                         resendSucceeded ->
@@ -59,16 +58,16 @@ fun ActivationRequiredDialog(
 
                         else ->
                             stringResource(Strings.string.login_login_msg_activation_required)
-                    }
+                    },
                 )
                 if (state.isActivationResendLoading) {
                     CmpRow(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         CmpCircularProgressIndicator(
                             modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp
+                            strokeWidth = 2.dp,
                         )
                         CmpText(text = stringResource(Strings.string.login_common_loading_send_email))
                     }
@@ -80,7 +79,7 @@ fun ActivationRequiredDialog(
                 CmpTextButton(
                     text = stringResource(Strings.string.login_login_btn_resend_activation),
                     onClick = onResendActivationEmail,
-                    enabled = !state.isActivationResendLoading
+                    enabled = !state.isActivationResendLoading,
                 )
             }
         },
@@ -88,8 +87,8 @@ fun ActivationRequiredDialog(
             CmpTextButton(
                 text = stringResource(Strings.string.login_common_btn_close),
                 onClick = onDismissActivationRequest,
-                enabled = !state.isActivationResendLoading
+                enabled = !state.isActivationResendLoading,
             )
-        }
+        },
     )
 }

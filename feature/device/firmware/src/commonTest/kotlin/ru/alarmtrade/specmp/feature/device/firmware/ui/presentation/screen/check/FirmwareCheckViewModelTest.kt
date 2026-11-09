@@ -24,8 +24,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
@@ -34,9 +34,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleK
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -47,8 +45,10 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 class FirmwareCheckViewModelTest {
 
@@ -60,7 +60,7 @@ class FirmwareCheckViewModelTest {
         firmwareVersion = "VER3.57",
         mode = DeviceOperationMode.MAIN,
         features = emptySet(),
-        can = null
+        can = null,
     )
 
     private val alarmModule = FirmwareModule(
@@ -68,28 +68,28 @@ class FirmwareCheckViewModelTest {
         kind = FirmwareModuleKind.AlarmMain,
         systemName = "DX4G",
         title = "Pandora DX 4G",
-        bootTarget = BootModeTarget.MainProgram
+        bootTarget = BootModeTarget.MainProgram,
     )
     private val bluetoothModule = FirmwareModule(
         id = 2,
         kind = FirmwareModuleKind.BluetoothModule,
         systemName = "BTM2",
         title = "Pandora BT",
-        bootTarget = BootModeTarget.BluetoothModule
+        bootTarget = BootModeTarget.BluetoothModule,
     )
     private val watchModule = FirmwareModule(
         id = 3,
         kind = FirmwareModuleKind.WatchBluetooth,
         systemName = "PW2",
         title = "Pandora Watch",
-        bootTarget = null
+        bootTarget = null,
     )
 
     private fun version(value: String, description: String = "") =
         FirmwareVersion(0, value, LocalDate(2026, 10, 14), description, "https://fw/$value")
 
     private val repository = FakeFirmwareRepository()
-    private val sessionRepository = FakeSessionRepository(device)
+    private val sessionRepository = FakeDeviceSessionRepository(device)
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
     private val requester = FirmwareBootRequester()
@@ -111,17 +111,14 @@ class FirmwareCheckViewModelTest {
 
     private lateinit var session: DeviceSession
 
-    private fun TestScope.viewModel(transport: ConnectionTransport = ConnectionTransport.BLE): FirmwareCheckViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
-        session = DeviceSession(
-            sessionRepository,
-            FakeConnectionRepository(),
-            dispatchers,
-            backgroundScope.coroutineContext
-        )
-        session.attach(transport)
+    private fun TestScope.viewModel(
+        transport: ConnectionTransport = ConnectionTransport.BLE,
+        subscribed: Boolean = true,
+    ): FirmwareCheckViewModel {
+        val dispatchers = testDispatchers(dispatcher)
+        session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
         val vm = FirmwareCheckViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
         return vm
     }
@@ -171,7 +168,7 @@ class FirmwareCheckViewModelTest {
         // Первое чтение — определение режима при подключении (BLE), второе — версия для карточки.
         sessionRepository.bluetoothVersions = listOf(
             sessionRepository.bluetoothVersions.single(),
-            Response.Error(IllegalStateException("no answer"))
+            Response.Error(IllegalStateException("no answer")),
         )
         val vm = viewModel()
 
@@ -317,7 +314,7 @@ class FirmwareCheckViewModelTest {
         repository.latest[2L to FirmwareChannel.RELEASE] = Response.Success(version("1.16"))
         sessionRepository.bootResults = listOf(
             Response.Success(BootModeResult.WrongPin),
-            Response.Success(BootModeResult.Entered)
+            Response.Success(BootModeResult.Entered),
         )
         val vm = viewModel()
         vm.onUpdateClick(2)
@@ -456,5 +453,25 @@ class FirmwareCheckViewModelTest {
         viewModel()
 
         assertEquals(listOf<FirmwareCan?>(null), repository.latestCans)
+    }
+
+    @Test
+    fun `returning to the screen keeps the cards without asking the server again`() = test {
+        repository.modulesResult = Response.Success(listOf(alarmModule))
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61"))
+        val vm = viewModel(subscribed = false)
+        var screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        assertIs<CardStatusUi.UpdateAvailable>(vm.card(1).status)
+
+        screen.cancel()
+        advanceTimeBy(10_000)
+        runCurrent()
+        screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+
+        assertIs<CardStatusUi.UpdateAvailable>(vm.card(1).status)
+        assertEquals(1, repository.latestCalls.size)
+        screen.cancel()
     }
 }

@@ -3,10 +3,124 @@
 # дополнительно как страховка.
 # Описание и принятые решения — docs/code-quality.md.
 
+# Свой набор правил `specmp` (quality/detekt-rules, docs/code-quality.md → «Свои правила»). Новое правило включается
+# вместе с устранением его нарушений.
+specmp:
+  # runCatching ловит CancellationException — граница с бросающим кодом только safeRun/safeResponseRun (ResponseExt.kt).
+  ForbiddenRunCatching:
+    active: true
+  ForbiddenPrintln:
+    active: true
+  # Только update { }; требует type resolution (молчит в iosMain). Тестовые фейки (вкл. модули `*/testing`) пишут .value напрямую.
+  StateFlowValueMutation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Правила ViewModel (docs/patterns.md, «BaseViewModel») — без исключений для наследников.
+  # Корутины ViewModel — только intent/safeLaunch; сами они живут в BaseViewModel.
+  ViewModelScopeLaunch:
+    active: true
+    excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt']
+  # Стартовая работа VM — onStart() из BaseViewModel, не init.
+  ViewModelInitBlock:
+    active: true
+  # Файл ViewModel содержит только ViewModel: State/Effect/модели — в своих файлах, private-хелперы — вложенные.
+  ViewModelFileContents:
+    active: true
+    excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt']
+  # Контракт экрана в именах: BaseViewModel<…State, …Effect | Nothing>.
+  ViewModelContractNames:
+    active: true
+  # Публичный API наследника BaseViewModel — state, sideEffect и интенты с результатом Unit; требует type resolution.
+  ViewModelPublicApi:
+    active: true
+  # Нет var-свойств и изменяемых коллекций: служебное — поле state, перезапускаемая корутина — launchReplacing.
+  # ViewModelScope.kt — не экранная VM, а держатель ViewModelStore навигации на androidx ViewModel.
+  ViewModelMutableProperty:
+    active: true
+    excludes: ['**/core/ui/**/navigation/ViewModelScope.kt']
+  # Диспетчер выбирает вызывающий (VM/точка входа); исключения — класс со своим CoroutineScope, withContext(NonCancellable).
+  RepositoryWithContext:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Не оборачивать в safeRun/safeResponseRun то, что уже возвращает Response; требует type resolution.
+  RedundantSafeRun:
+    active: true
+  # Платформенный Settings() создаёт только core/common/di (platformSettings под AppSettingsFactory).
+  SettingsInstantiation:
+    active: true
+    excludes: ['**/core/common/**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # safeRun/safeResponseRun — граница с бросающим кодом в data; ViewModel ветвится по Response.
+  SafeRunInViewModel:
+    active: true
+    excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  RawFlowFromRepository:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # getOrThrow() на Response — ошибка снова исключение; требует type resolution.
+  ResponseGetOrThrow:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Результат Response используется или обрабатывается на месте (onError/when); требует type resolution.
+  ResponseIgnored:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # «Сейчас» и пояс — из внедрённых Clock/TimeZoneSource, в composable — LocalClock/LocalTimeZoneSource (docs/patterns.md,
+  # «Источник времени»); дефолт допустим только у параметра первичного конструктора. Вне охвата: тесты, di и сами
+  # источники времени — core/common/time и core/ui/time/LocalClock.kt (системные дефолты).
+  DirectClockUsage:
+    active: true
+    excludes: ['**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**', '**/core/common/**/time/**', '**/core/ui/**/time/LocalClock.kt']
+  # В *Repository/*UseCase бросать — только внутри safeRun/safeResponseRun/safeFlowRun.
+  ThrowInRepository:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Пакет «гонки и корутины» (docs/patterns.md, «Конкурентность», «Корутины и Flow»); тесты вне охвата.
+  # Лямбда update/getAndUpdate/updateAndGet чистая (повторяется при CAS-конфликте): без suspend, репозиториев/сервисов, emit, launch.
+  UpdateLambdaSideEffects:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Широкий catch в корутине пробрасывает CancellationException (обычно — safeRun).
+  CatchSwallowsCancellation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Mutex.isLocked — check-then-act; ровно один в полёте — tryLock(), очередь — withLock.
+  MutexIsLockedCheck:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Mutex нереентерабелен: withLock того же мьютекса внутри withLock — deadlock.
+  NestedSameMutexLock:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Suspend-вызов под synchronized/Lock/@Synchronized; вокруг suspend-работы — Mutex.withLock.
+  SuspendInsideSynchronized:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # var и изменяемые коллекции в объектах со своим CoroutineScope и сервисах data-слоя; поле под Mutex — @Suppress с причиной.
+  SharedMutableStateInSingleton:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # CoroutineScope(…) — в DI (serviceScope) или с явным cancel(); контекст — SupervisorJob() + обработчик исключений.
+  UnmanagedCoroutineScope:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**', '**/core/common/**/coroutines/ServiceScope.kt']
+  # shareIn/stateIn — только в инициализаторе свойства, не в функции.
+  SharingInsideFunction:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Deferred из async { } дожидается await/awaitAll; без результата — launch.
+  UnawaitedAsync:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Без collect внутри collect: потоки комбинируются flatMapLatest/combine.
+  NestedCollect:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+
 complexity:
   LongMethod:
     active: true
     allowedLines: 120
+  # Наборы колбэков экрана (*Actions) длинные по построению; порог конструктора ViewModel — Konsist view-model-constructor.
   LongParameterList:
     active: false
   CyclomaticComplexMethod:
@@ -22,7 +136,7 @@ exceptions:
   # Границы, где ловится всё и нормализуется в Response.Error: сетевой слой и safe*-хелперы ResponseExt.
   # Сознательно игнорируемое исключение называется `ignored` (allowedExceptionNameRegex) — без исключений в конфиге.
   TooGenericExceptionCaught:
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/core/network/**', '**/core/common/src/commonMain/**/ResponseExt.kt']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**', '**/core/network/**', '**/core/common/src/commonMain/**/ResponseExt.kt']
   SwallowedException:
     ignoredExceptionTypes:
       - 'InterruptedException'
@@ -31,8 +145,18 @@ exceptions:
       - 'ParseException'
 
 coroutines:
+  # Фоновая работа — в своём scope (serviceScope из DI), не в GlobalScope (docs/patterns.md, «Конкурентность»).
+  # В detekt 2.0 правило выключено по умолчанию.
+  GlobalCoroutineUsage:
+    active: true
+  # runCatching/suspend-вызов в лямбде runCatching глотает CancellationException (в detekt 2.0 выключено по умолчанию);
+  # SleepInsteadOfDelay, RedundantSuspendModifier, SuspendFunWithFlowReturnType включены по умолчанию.
+  SuspendFunSwallowedCancellation:
+    active: true
+  # Диспетчеры приходят через AppDispatchers (DI); дефолты Dispatchers.IO/Default живут только в нём.
   InjectDispatcher:
-    active: false
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**', '**/core/common/**/AppDispatchers.kt']
 
 naming:
   FunctionNaming:
@@ -54,10 +178,10 @@ style:
     active: false
   MagicNumber:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/*.kts']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**', '**/*.kts']
   MaxLineLength:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
   NewLineAtEndOfFile:
     active: true
   WildcardImport:
@@ -70,21 +194,14 @@ style:
     forbiddenImports:
       - reason: 'ViewModel фичи наследуется от BaseViewModel (core/ui), а не от androidx ViewModel'
         value: 'androidx.lifecycle.ViewModel'
+      # ui-kit (docs/ui-kit.md): фичи берут компоненты Cmp* из core/ui, material3 напрямую не импортируют.
+      - reason: 'Компоненты дизайн-системы — из core/ui (docs/ui-kit.md), не material3 напрямую'
+        value: 'androidx.compose.material3.*'
   ForbiddenComment:
     active: true
     comments:
       - value: 'FIXME:'
       - value: 'STOPSHIP:'
-  # Тестовые фейки пишут MutableStateFlow.value напрямую (docs/patterns.md), поэтому тесты исключены
+  # runCatching, println/print и запись MutableStateFlow.value — свои правила набора `specmp` (выше).
   ForbiddenMethodCall:
-    active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
-    methods:
-      - reason: 'Используйте safeRun (docs/patterns.md)'
-        value: 'kotlin.runCatching'
-      - reason: 'Используйте логгер (Kermit)'
-        value: 'kotlin.io.println'
-      - reason: 'Используйте логгер (Kermit)'
-        value: 'kotlin.io.print'
-      - reason: 'Пишите состояние через MutableStateFlow.update { } (docs/patterns.md)'
-        value: 'kotlinx.coroutines.flow.MutableStateFlow.value'
+    active: false

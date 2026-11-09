@@ -99,7 +99,6 @@ private const val FULL_TURN = 360f
 private const val PULSE_MIN_ALPHA = 0.45f
 private val TooltipWidth = 280.dp
 
-/** Ширина колонки шагов по ширине окна (макет: ≥1100 — 300, 900–1099 — 264, 760–899 — компактная 88). */
 internal fun railWidth(windowWidth: Dp): Dp = when {
     windowWidth >= 1100.dp -> 300.dp
     windowWidth >= 900.dp -> 264.dp
@@ -108,13 +107,8 @@ internal fun railWidth(windowWidth: Dp): Dp = when {
 
 internal val CompactRailWidth = 88.dp
 
-/** Карточка выбранного автомобиля и конфигурации внизу колонки. */
 internal data class RailCar(val title: String, val configuration: String, val usb: Boolean)
 
-/**
- * Колонка шагов (W1, вариант B): заголовок со счётчиком «N из M», шаги со статусами, «бегущая» линия
- * перезагрузки под завершённым шагом, карточка автомобиля внизу. Тап по шагу — короткая справка рядом, перехода нет.
- */
 @Composable
 internal fun StepRail(
     model: RailModel,
@@ -123,7 +117,7 @@ internal fun StepRail(
     rebootSeconds: Int,
     modifier: Modifier = Modifier,
     dense: Boolean = false,
-    car: RailCar? = null
+    car: RailCar? = null,
 ) {
     val colors = cmpThemeColors()
     val compact = width <= CompactRailWidth
@@ -135,7 +129,7 @@ internal fun StepRail(
             .width(width)
             .fillMaxHeight()
             .background(colors.surfaceContainerLow)
-            .testTag(STEP_RAIL_TAG)
+            .testTag(STEP_RAIL_TAG),
     ) {
         CmpColumn(modifier = Modifier.fillMaxHeight()) {
             RailHeader(model, compact, dense)
@@ -144,7 +138,7 @@ internal fun StepRail(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = if (compact) 8.dp else 12.dp, vertical = 2.dp)
+                    .padding(horizontal = if (compact) 8.dp else 12.dp, vertical = 2.dp),
             ) {
                 model.rows.forEachIndexed { index, row ->
                     var top by remember { mutableIntStateOf(0) }
@@ -153,7 +147,7 @@ internal fun StepRail(
                         position = position,
                         compact = compact,
                         onClick = { help = if (help?.first == row.key) null else row.key to top - railTop },
-                        modifier = Modifier.onGloballyPositioned { top = it.positionInWindow().y.toInt() }
+                        modifier = Modifier.onGloballyPositioned { top = it.positionInWindow().y.toInt() },
                     )
                     val next = model.rows.getOrNull(index + 1) ?: return@forEachIndexed
                     if (position.rebootFrom == row.key) {
@@ -166,7 +160,7 @@ internal fun StepRail(
             if (car != null && !compact && !dense) RailCarCard(car)
         }
         CmpBox(
-            Modifier.align(Alignment.CenterEnd).width(1.dp).fillMaxHeight().background(colors.outlineVariant)
+            Modifier.align(Alignment.CenterEnd).width(1.dp).fillMaxHeight().background(colors.outlineVariant),
         )
         help?.let { (key, top) ->
             val status = model.rows.firstOrNull { it.key == key }?.status
@@ -186,17 +180,17 @@ private fun RailHeader(model: RailModel, compact: Boolean, dense: Boolean) {
     if (compact) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CmpText(
                 text = if (model.done) "✓" else "${model.currentNumber}/${model.total}",
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 16.sp,
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_rail_label_step),
                 style = CmpTextStyle.Caption,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
         }
     } else {
@@ -205,16 +199,16 @@ private fun RailHeader(model: RailModel, compact: Boolean, dense: Boolean) {
                 start = 20.dp,
                 end = 20.dp,
                 top = if (dense) 14.dp else 18.dp,
-                bottom = if (dense) 8.dp else 12.dp
+                bottom = if (dense) 8.dp else 12.dp,
             ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CmpText(
                 text = stringResource(Strings.string.fastmount_common_title_screen),
                 style = CmpTextStyle.Title,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             CmpText(text = counter, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = colors.onSurfaceVariant)
         }
@@ -227,7 +221,7 @@ private fun RailStepRow(
     position: RailPosition,
     compact: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     val current = row.status == RailStatus.CURRENT
@@ -240,7 +234,7 @@ private fun RailStepRow(
             .padding(horizontal = if (compact) 0.dp else 10.dp, vertical = 6.dp)
             .animateContentSize(),
         horizontalArrangement = if (compact) Arrangement.Center else Arrangement.spacedBy(12.dp),
-        verticalAlignment = if (compact) Alignment.CenterVertically else Alignment.Top
+        verticalAlignment = if (compact) Alignment.CenterVertically else Alignment.Top,
     ) {
         CmpBox(modifier = Modifier.width(MarkerSize), contentAlignment = Alignment.Center) {
             Marker(row.status, row.number)
@@ -251,14 +245,14 @@ private fun RailStepRow(
                     text = stringResource(row.key.title()),
                     fontSize = 16.sp,
                     fontWeight = if (current) FontWeight.Bold else FontWeight.Medium,
-                    color = titleColor(row.status)
+                    color = titleColor(row.status),
                 )
                 statusText(row.status)?.let { text ->
                     CmpText(
                         text = stringResource(text),
                         style = CmpTextStyle.Body,
                         fontWeight = if (row.status == RailStatus.NEXT) FontWeight.SemiBold else null,
-                        color = if (row.status == RailStatus.NEXT) colors.primary else colors.onSurfaceVariant
+                        color = if (row.status == RailStatus.NEXT) colors.primary else colors.onSurfaceVariant,
                     )
                 }
                 if (row.key == RailKey.PREP && current) PrepSubSteps(position.prepSub)
@@ -284,7 +278,7 @@ private fun PrepSubSteps(current: PrepSub) {
             CmpRow(
                 modifier = Modifier.heightIn(min = 28.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpBox(modifier = Modifier.width(20.dp), contentAlignment = Alignment.Center) {
                     when {
@@ -292,18 +286,18 @@ private fun PrepSubSteps(current: PrepSub) {
                             icon = CmpIcons.Check,
                             contentDescription = null,
                             tint = colors.onSecondaryContainer,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
 
                         active -> CmpIcon(
                             icon = CmpIcons.ChevronRight,
                             contentDescription = null,
                             tint = colors.onSecondaryContainer,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
 
                         else -> CmpBox(
-                            Modifier.size(12.dp).border(1.5.dp, colors.onSurfaceVariant, CircleShape)
+                            Modifier.size(12.dp).border(1.5.dp, colors.onSurfaceVariant, CircleShape),
                         )
                     }
                 }
@@ -311,7 +305,7 @@ private fun PrepSubSteps(current: PrepSub) {
                     text = stringResource(sub.title()),
                     fontSize = 15.sp,
                     fontWeight = if (active) FontWeight.Bold else null,
-                    color = if (active || done) colors.onSecondaryContainer else colors.onSurfaceVariant
+                    color = if (active || done) colors.onSecondaryContainer else colors.onSurfaceVariant,
                 )
             }
         }
@@ -331,7 +325,7 @@ private fun Marker(status: RailStatus, number: Int?) {
             modifier = Modifier
                 .size(MarkerSize + 8.dp)
                 .background(colors.primary.copy(alpha = 0.25f), CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             MarkerCircle(colors.primary, null) {
                 CmpText(text = label, color = colors.onPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -343,7 +337,7 @@ private fun Marker(status: RailStatus, number: Int?) {
                 initialValue = 1f,
                 targetValue = PULSE_MIN_ALPHA,
                 animationSpec = infiniteRepeatable(tween(PULSE_MILLIS / 2), RepeatMode.Reverse),
-                label = "pulse"
+                label = "pulse",
             )
             MarkerCircle(colors.background, colors.primary, Modifier.alpha(pulse.value)) {
                 CmpText(text = label, color = colors.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -355,7 +349,7 @@ private fun Marker(status: RailStatus, number: Int?) {
                 CmpIcons.Add,
                 contentDescription = null,
                 tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
         }
 
@@ -364,7 +358,7 @@ private fun Marker(status: RailStatus, number: Int?) {
                 CmpIcons.Remove,
                 contentDescription = null,
                 tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
         }
 
@@ -380,20 +374,19 @@ private fun MarkerCircle(
     border: Color?,
     modifier: Modifier = Modifier,
     size: Dp = MarkerSize,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     CmpBox(
         modifier = modifier
             .size(size)
             .background(fill, CircleShape)
             .then(if (border != null) Modifier.border(2.dp, border, CircleShape) else Modifier),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         content()
     }
 }
 
-/** Линия между шагами: пунктир — к Clone «по необходимости», цвет — пройдено/впереди. */
 @Composable
 private fun Connector(row: RailRow, next: RailRow, compact: Boolean, dense: Boolean) {
     val colors = cmpThemeColors()
@@ -405,7 +398,7 @@ private fun Connector(row: RailRow, next: RailRow, compact: Boolean, dense: Bool
             .fillMaxWidth()
             .height(if (dense) 6.dp else 10.dp)
             .padding(horizontal = if (compact) 0.dp else 10.dp),
-        horizontalArrangement = if (compact) Arrangement.Center else Arrangement.Start
+        horizontalArrangement = if (compact) Arrangement.Center else Arrangement.Start,
     ) {
         CmpBox(modifier = Modifier.width(MarkerSize).fillMaxHeight(), contentAlignment = Alignment.Center) {
             CmpBox(
@@ -413,7 +406,7 @@ private fun Connector(row: RailRow, next: RailRow, compact: Boolean, dense: Bool
                     .width(3.dp)
                     .fillMaxHeight()
                     .alpha(if (dotted) DOTTED_ALPHA else 1f)
-                    .background(if (passed && !dotted) colors.primary else colors.outlineVariant)
+                    .background(if (passed && !dotted) colors.primary else colors.outlineVariant),
             )
         }
     }
@@ -421,7 +414,6 @@ private fun Connector(row: RailRow, next: RailRow, compact: Boolean, dense: Bool
 
 private const val DOTTED_ALPHA = 0.5f
 
-/** Перезагрузка — «бегущая» линия под завершённым шагом и плашка «Перезагрузка · м:сс». */
 @Composable
 private fun RebootLine(seconds: Int, compact: Boolean) {
     val colors = cmpThemeColors()
@@ -430,13 +422,13 @@ private fun RebootLine(seconds: Int, compact: Boolean) {
         initialValue = 0.35f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(RUN_MILLIS, easing = LinearEasing), RepeatMode.Reverse),
-        label = "run"
+        label = "run",
     )
     val angle by transition.animateFloat(
         initialValue = 0f,
         targetValue = FULL_TURN,
         animationSpec = infiniteRepeatable(tween(SPIN_MILLIS, easing = LinearEasing)),
-        label = "spin"
+        label = "spin",
     )
     CmpRow(
         modifier = Modifier
@@ -444,7 +436,7 @@ private fun RebootLine(seconds: Int, compact: Boolean) {
             .heightIn(min = if (compact) 40.dp else 48.dp)
             .padding(horizontal = if (compact) 0.dp else 10.dp),
         horizontalArrangement = if (compact) Arrangement.Center else Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CmpBox(modifier = Modifier.width(MarkerSize).height(40.dp), contentAlignment = Alignment.Center) {
             CmpBox(Modifier.width(4.dp).fillMaxHeight().alpha(run).background(colors.primary, RoundedCornerShape(2.dp)))
@@ -455,19 +447,19 @@ private fun RebootLine(seconds: Int, compact: Boolean) {
                     .background(colors.primaryContainer, RoundedCornerShape(12.dp))
                     .padding(horizontal = 12.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 CmpIcon(
                     icon = CmpIcons.Autorenew,
                     contentDescription = null,
                     tint = colors.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp).rotate(angle)
+                    modifier = Modifier.size(20.dp).rotate(angle),
                 )
                 CmpText(
                     text = stringResource(Strings.string.fastmount_rail_format_reboot, formatElapsed(seconds)),
                     color = colors.onPrimaryContainer,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    fontSize = 15.sp,
                 )
             }
         }
@@ -484,13 +476,13 @@ private fun RailCarCard(car: RailCar) {
             .background(colors.surfaceContainerHigh, RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         CmpIcon(
             icon = if (car.usb) CmpIcons.Usb else CmpIcons.Bluetooth,
             contentDescription = null,
             tint = colors.onSurfaceVariant,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(22.dp),
         )
         CmpColumn(modifier = Modifier.weight(1f)) {
             CmpText(
@@ -498,20 +490,19 @@ private fun RailCarCard(car: RailCar) {
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
             CmpText(
                 text = car.configuration,
                 style = CmpTextStyle.Body,
                 color = colors.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
 }
 
-/** Короткая справка по шагу рядом с колонкой (макет: всплывающая подсказка, а не раскрытие строки). */
 @Composable
 private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: () -> Unit) {
     val colors = cmpThemeColors()
@@ -523,7 +514,7 @@ private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: 
                 .width(TooltipWidth)
                 .background(colors.onSurface, RoundedCornerShape(16.dp))
                 .clickable(onClick = onClose)
-                .padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 14.dp)
+                .padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 14.dp),
         ) {
             CmpRow(verticalAlignment = Alignment.CenterVertically) {
                 val suffix = status?.let(::statusText)?.let { " · " + stringResource(it).lowercase() }.orEmpty()
@@ -532,14 +523,14 @@ private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: 
                     color = colors.surface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                     CmpIcon(
                         icon = CmpIcons.Close,
                         contentDescription = stringResource(Strings.string.fastmount_rail_a11y_close),
                         tint = colors.surface,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -548,7 +539,7 @@ private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: 
                 style = CmpTextStyle.Body,
                 color = colors.surface,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = 8.dp),
             )
         }
     }

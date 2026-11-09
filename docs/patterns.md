@@ -8,25 +8,28 @@
 
 Каждое правило раскрыто в своём разделе; здесь — короткая памятка.
 
-- Никогда не использовать `material3` / `foundation` напрямую в фичах — только `Cmp*` из `core/ui`.
+- Компоненты Material3 в фичах — только через `Cmp*` из `core/ui` (detekt `ForbiddenImport` на `androidx.compose.material3.*`); визуальные компоненты других библиотек (`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`, layout-примитивы и модификаторы `foundation` — напрямую (`docs/ui-kit.md`).
 - Предпочитать `commonMain`; `expect`/`actual` — только для по-настоящему платформо-специфичного кода.
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
 - **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
-- **ViewModel — только через `BaseViewModel`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`), корутины — через `safeLaunch` — см. «BaseViewModel».
-- **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel`** (`feature/device/interaction-ui`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/AGENTS.md`).
+- **ViewModel — только через `BaseViewModel<S, E>`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`): наружу `state`, `sideEffect` и интенты `onXxx()`, state меняется только `reduce`, эффекты — `postSideEffect`, корутины — `intent`/`safeLaunch`/`launchReplacing`, стартовая работа — `onStart()` — см. «BaseViewModel».
+- **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
+- **«Сейчас» и часовой пояс — только из внедрённых `Clock`/`TimeZoneSource`, в composable — из `LocalClock`/`LocalTimeZoneSource`** (detekt `DirectClockUsage`, весь production): без `Clock.System`/`TimeZone.currentSystemDefault()` в теле и дефолтах функций — см. «Источник времени».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
-- **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
+- **Без побочных эффектов в конструкторе** (Konsist `no-constructor-side-effects`): нет `init { }` и корутин в инициализаторах свойств; фоновая работа — идемпотентный `start()` (CAS, `start-once-cas`) доменного сервиса из `AppServicesStarter` — см. «Доменные сервисы».
+- **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов (Konsist `domain-isolation`, `domain-model-purity`) — см. «Domain».
+- **Слои и модули — только по направлению зависимостей**: presentation → domain ← data, фича ↛ data и presentation чужой фичи, типы SDK — только data/di (Konsist `module-direction`, `presentation-isolation`, `cross-feature-presentation`, `sdk-confinement`, graph-assert) — см. «Слои и границы модуля».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
 - **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
-- **Стабильность для Compose:** state и presentation-модели — `@Immutable`, domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
-- **У каждого `@Serializable` — `@SerialName("<модуль>.<Класс>")`** — см. «Сериализация».
+- **Стабильность для Compose:** state и presentation-модели — `@Immutable` (Konsist `state-immutable`), domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
+- **`@Serializable` — только форматы данных и маршруты, у каждого — `@SerialName("<модуль>.<Класс>")`** (Konsist `serializable-placement`) — см. «Сериализация».
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
 - **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()`: в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
-- **Сессия экрана — `init {}` / `onCleared()` per-entry VM**, без `DisposableEffect`, полей-`Job` и `var`-флагов, которые пишутся с разных диспетчеров — см. «Жизненный цикл ViewModel и сессии».
+- **Время жизни работы VM задаёт место запуска**: `collectIntoState` — пока экран подписан, `onStart()` — один раз, `launchReplacing(key)`/`launchOnDevice(key)` — всю жизнь VM, дольше экрана — репозиторий со скоупом приложения; без `init {}`, `DisposableEffect`, полей-`Job` и `var` — см. «Жизненный цикл ViewModel и сессии».
 - **У каждого флага загрузки — гарантированный сброс; ошибка первой загрузки ≠ пустой экран; «нечего делать» ≠ `Success`** — см. «Корректность state».
 - **Код проходит `./gradlew spotlessCheck` и `./gradlew detektCheck` без замечаний** (строка ≤ 120, без `runCatching`/`!!`/`println`, generic `catch` только на границах) — см. «Что проверяют анализаторы (Spotless + detekt)» и [`code-quality.md`](code-quality.md).
 
@@ -55,7 +58,7 @@
   `_flag.update { true }`): одно правило без исключений не даёт «простой» записи со временем
   превратиться в read-modify-write. Атомарный «проверил и записал» — `compareAndSet(expect, update)`.
   Чтение `_state.value` допустимо. Правило — для production-кода; тестовые фейки могут писать `.value`.
-  Проверяется автоматически: `config/hooks/check-stateflow-value.py` (pre-commit и хук агентов после правки `.kt`).
+  Проверяется автоматически: detekt `StateFlowValueMutation` (`detektCheck`, [`code-quality.md`](code-quality.md)).
 - **Персистентный read-modify-write не атомарен.** Key-value-хранилища
   (Settings / DataStore / SharedPreferences) не дают атомарного «прочитал → изменил → записал»:
   при конкурентных писателях одно из изменений теряется — например,
@@ -76,24 +79,55 @@
   `MutableStateFlow` / `StateFlow` — горячие, для них эти операторы бессмысленны:
 
 ```kotlin
-// ✅ Холодный Flow (combine) — нужен flowOn + stateIn
-val state: StateFlow<DashboardState> = combine(
-    _profile, _transactions
-) { profile, transactions ->
-    DashboardState(profile, transactions)
-}
+// ✅ Холодный Flow (combine) — flowOn на upstream; во VM — привязка к state базы
+combine(select { systems }, select { query }, ::systemRows)
     .flowOn(dispatchers.default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), DashboardState())
+    .collectIntoState { content -> copy(content = content) }
 
-// ✅ MutableStateFlow — уже горячий, просто asStateFlow()
+// ✅ MutableStateFlow держателя состояния (репозиторий) — уже горячий, наружу asStateFlow()
 private val _state = MutableStateFlow(MyState())
 val state: StateFlow<MyState> = _state.asStateFlow()
 
 // ❌ Неправильно — flowOn/stateIn на горячем StateFlow
 val state = _state
     .flowOn(dispatchers.default)   // бессмысленно
-    .stateIn(viewModelScope, ...)  // лишнее
+    .stateIn(scope, ...)           // лишнее
 ```
+
+
+### Конкурентность
+
+Пакет правил «гонки и корутины» (detekt, набор `specmp`; production-код, тесты вне охвата):
+
+- **Scope сервиса создаёт DI** — `serviceScope(dispatcher, logTag)` (`core.common.coroutines`: `SupervisorJob()` +
+  диспетчер + обработчик, логирующий необработанное исключение) передаётся в конструктор (`DeviceSessionImpl(…, scope)`,
+  `appScope` в `commonModule`); scope живёт столько же, сколько синглтон Koin, тест передаёт свой
+  (`serviceScope(dispatcher, parent = backgroundScope.coroutineContext)`). `CoroutineScope(…)` вне пакета `di` — только
+  короткоживущий с явным `scope.cancel()` по завершении (ресивер, мост: scope на одно действие + `cancel()` в
+  `finally`); контекст всегда с `SupervisorJob()` и обработчиком — detekt `UnmanagedCoroutineScope`. `GlobalScope` —
+  нет (detekt `GlobalCoroutineUsage`).
+- **Нет голых `var` и изменяемых коллекций в разделяемых объектах**: у класса со своим `CoroutineScope` и у сервисов
+  data-слоя (`..data..`, `*Repository`/`*Coordinator`/`*Controller`/`*Session`/`*Impl`) состояние — `MutableStateFlow`
+  + `update { }`/`compareAndSet`; поле, которое читают и пишут строго под `Mutex`, — `@Suppress` с причиной (detekt
+  `SharedMutableStateInSingleton`). Локальные `var` в функциях не в счёт.
+- **Лямбда `update`/`getAndUpdate`/`updateAndGet` — чистая функция**: при CAS-конфликте она выполняется повторно. Без
+  suspend-вызовов, вызовов чужих репозиториев/сервисов, записи в хранилище, `emit`/`tryEmit`/`postSideEffect`,
+  `launch`; значение считается в `update`, эффект — до или после (detekt `UpdateLambdaSideEffects`).
+- **`Mutex` нереентерабелен и проверяется только атомарно**: `withLock` того же мьютекса внутри `withLock` (в т. ч.
+  через свой метод) — deadlock (detekt `NestedSameMutexLock`); «уже занято → выйти» — `tryLock()`, не `isLocked`
+  (detekt `MutexIsLockedCheck`); suspend-вызов под блокирующей блокировкой потока (`synchronized`, `Lock.lock()`…
+  `unlock()`) запрещён (detekt `SuspendInsideSynchronized`).
+- **Отмену не глотать**: широкий `catch (Throwable/Exception)` в корутине вокруг suspend-вызова — только с пробросом
+  `CancellationException` (отдельный `catch` выше, `if (e is CancellationException) throw e`, `ensureActive()`);
+  обычно — `safeRun { }` (detekt `CatchSwallowsCancellation`, стандартный `SuspendFunSwallowedCancellation`).
+- **Горячий поток — один на объект**: `shareIn`/`stateIn` только в инициализаторе свойства, не в функции/геттере
+  (detekt `SharingInsideFunction`); `async { }` всегда дожидаются (`await`/`awaitAll`), «огонь и забудь» — `launch`
+  (detekt `UnawaitedAsync`); потоки комбинируются `flatMapLatest`/`combine`, без `collect` внутри `collect` (detekt
+  `NestedCollect`).
+- **Стресс-тест на гонку**: у каждого start-once сервиса и места с `Mutex`/`tryLock` — тест «32 параллельных вызова
+  на `Dispatchers.Default` → эффект ровно один раз / без потерь / без пересечения» (`AppServicesStarterTest`,
+  `DeviceSessionImplTest` — `start()` и `sessionMutex`, `BaseViewModelTest` — `executeWithProceedLock`,
+  `RecentListTest`).
 
 ## Диспетчеры (AppDispatchers)
 
@@ -101,16 +135,23 @@ val state = _state
 
 | Диспетчер | Назначение |
 |-----------|-----------|
-| `dispatchers.io` | Сеть, БД, файловый I/O — во ViewModel вокруг вызова repository |
+| `dispatchers.io` | SDK, сеть, `Settings`, файловый I/O — **в месте вызова** (обычно VM) вокруг вызова репозитория |
 | `dispatchers.default` | Маппинг, комбинация, CPU-работа — в `flowOn()`, `withContext()` |
 | `dispatchers.main` | UI-обновления (обычно не нужен явно — `viewModelScope` уже на Main) |
 
-**Где переключать контекст.** Диспетчер переключаем **в месте вызова** — обычно во ViewModel:
-`withContext(dispatchers.io) { repository.foo() }`. Репозитории **не** оборачивают свои методы
-в `withContext` — это прячет переключение от вызывающего кода. Единственное исключение —
-`AppDispatchers` внутри менеджера/репозитория допустим, когда у него есть собственная,
-не зависимая от UI фоновая логика (пуллинг, периодическая синхронизация): такая работа живёт
-в доменном объекте и сама владеет своим диспетчером.
+**Где переключать контекст.** Диспетчер выбирает **вызывающая сторона** — ViewModel или точка входа
+(platform-делегат, обработчик файла, `*Entry`): `withContext(dispatchers.io) { repository.foo() }`, у потока —
+`.flowOn(dispatchers.io)` после `repository.foo()`. Репозитории и `*DataSource` **не** оборачивают свои методы
+в `withContext` — это прячет переключение от вызывающего; suspend-метод — голый `safeRun { }`/`safeResponseRun { }`
+(detekt `RepositoryWithContext`: классы `*Repository`, в т.ч. `Specialist*Repository`, `*RepositoryImpl`,
+`*DataSource`). Вызов репозитория из VM без `withContext`/`flowOn` — ошибка, даже если метод «быстрый»: внутри SDK,
+`Settings` (`commit()` на Android) или файл.
+
+Исключение — объект, который **сам хранит состояние и сам запускает фоновую работу в собственном `CoroutineScope`**
+(сессии, контроллеры с app-scope: `DeviceSessionImpl`, `DeviceSettingsSessionControllerImpl`; scope приходит из DI —
+«Конкурентность»): он переключает диспетчер внутри, вызывающий его вызов **не** оборачивает. Правило распознаёт такой класс структурно — свойство, параметр
+конструктора или супертип `CoroutineScope`; `@Suppress` не нужен. `withContext(NonCancellable)` (suspend-уборка
+в `finally` после отмены) — не выбор диспетчера и разрешён везде.
 
 **`withContext` внутри `flow {}` vs `flowOn`.** Внутри `flow {}` `withContext` можно — для вычисления
 значения (`val recent = withContext(dispatchers.io) { models.recent() }`, затем `emit(recent)`).
@@ -121,32 +162,125 @@ val state = _state
 
 **Что не должно работать на Main:** вызовы SDK/сети/BLE/БД (включая `suspend`-методы SDK, которые
 «выглядят» асинхронными — внутри может быть блокирующий вызов), обход больших деревьев и сортировка/
-фильтрация списков. Производные списки экрана (фильтр по поиску, сортировка) считаются в `combine`
-перед `.flowOn(dispatchers.default)` и кладутся в state готовыми полями (`MineState.withLists()`),
-а не `get()`-свойствами, которые пересчитываются на Main при каждом чтении из Compose.
+фильтрация больших списков. Производные списки экрана (фильтр по поиску, сортировка) кладутся в state готовыми
+полями, а не `get()`-свойствами, которые пересчитываются на Main при каждом чтении из Compose: небольшие — в том же
+`reduce`, что и их входы (`MineState.withLists()`), тяжёлые — `combine(select { … }).flowOn(dispatchers.default)
+.collectIntoState { … }` (`FirmwareSystemsViewModel`).
 
 **Хардкод запрещён** — иначе нельзя подменить в тестах:
 
 ```kotlin
 // ✅ Правильно — через инжектированный AppDispatchers
-class MyViewModel(private val dispatchers: AppDispatchers) : BaseViewModel() {
-    val state = coldFlow
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), initial)
+class MyViewModel(private val dispatchers: AppDispatchers) : BaseViewModel<MyState, Nothing>(MyState()) {
+    override suspend fun onStart() {
+        coldFlow.flowOn(dispatchers.default).collectIntoState { value -> copy(value = value) }
+    }
 }
 
 // ❌ Неправильно — хардкод
-val state = coldFlow
-    .flowOn(Dispatchers.Default)
-    .stateIn(...)
+coldFlow.flowOn(Dispatchers.Default).collectIntoState { … }
 
-// Тесты: подмена на UnconfinedTestDispatcher()
-val testDispatchers = AppDispatchers(
-    io = UnconfinedTestDispatcher(),
-    default = UnconfinedTestDispatcher(),
-    main = UnconfinedTestDispatcher()
-)
+// Тесты: один тестовый диспетчер на все роли (core:testing)
+val dispatchers = testDispatchers(StandardTestDispatcher())
 ```
+
+## Источник времени
+
+«Сейчас» — внедряемый `kotlinx.datetime.Clock`, часовой пояс — `TimeZoneSource` (`core/common/time`). Оба привязаны в
+`commonModule`: `single<Clock> { Clock.System }`, `single<TimeZoneSource> { TimeZoneSource.System }`.
+`kotlin.time.Clock` не используем: SDK закрепляет `kotlinx-datetime` 0.6.2, где модели (`Instant`) —
+`kotlinx.datetime.Instant`, а мостов к `kotlin.time.Instant` нет.
+
+- **Охват detekt `DirectClockUsage` — весь production-код** (domain, data, ViewModel, мапперы/форматтеры
+  presentation, composable, инфраструктура `core/*`, androidMain/iosMain). Запрещены `Clock.System`,
+  `TimeZoneSource.System`, `TimeZone.currentSystemDefault()`, `System.currentTimeMillis()`/`nanoTime()`, `NSDate()`.
+  Вне охвата: тесты, `di`-модули и сами источники времени — `core/common/time` и `core/ui/time/LocalClock.kt`.
+- **Классы** (domain, data, ViewModel, инфраструктура) получают их параметром первичного конструктора —
+  `clock: Clock = Clock.System`, `timeZones: TimeZoneSource = TimeZoneSource.System`; DI передаёт `get()`, тест —
+  фиксированные часы (`FixedClock`) и `TimeZoneSource.fixed(TimeZone.UTC)`. Дефолт допустим только у первичного
+  конструктора; в теле, свойствах и дефолтах обычных функций — `clock.now()`/`timeZones.current()`, чистой функции —
+  параметром (`timeZone: TimeZone`, без дефолта).
+- **Пояс читается на вызов, не внедряется значением**: синглтон с `TimeZone` «замёрз» бы при смене пояса на
+  устройстве.
+- **Один `now` на операцию**: `val now = clock.now()` один раз и дальше — значение (`SupportChatScreenViewModel.onSend`).
+- **Composable** — `LocalClock`/`LocalTimeZoneSource` (`core/ui/time`): `App()`/`FlasherApp()` провайдят их из Koin
+  (`LocalClock provides koinInject<Clock>()`), UI-тест — `CompositionLocalProvider(LocalClock provides fixedClock)`;
+  системный дефолт — только для превью и корней без провайдера. Хелперы: `currentTimeZone()` (пояс на каждую
+  композицию), `currentToday()` («сегодня» на каждую рекомпозицию — `rememberCmpDateLabeler`). Значение пояса,
+  от которого зависит `remember`, — его ключ. Дефолт параметра composable допустим только из `CompositionLocal`.
+- Замер длительностей и таймауты — `TimeSource.Monotonic`, правило его не трогает.
+
+## Тестирование репозиториев
+
+У каждой реализации репозитория (класс `..data..` с супертипом `*Repository`: `Specialist*Repository`,
+`Settings*Repository`) есть тест в тестовом source set своего модуля, который использует класс по имени в коде — не
+только в `import`, KDoc или строке (Konsist `repository-impl-tested`, без исключений). Тест — не заглушка ради
+правила; минимум:
+
+- **успешный путь**: ответ SDK → доменная модель (`Response.Success` с ожидаемым значением, для потоков — ожидаемая
+  последовательность);
+- **ошибка SDK → `Response.Error`** с нужным типом: общая ошибка (`SpecialistResponse.Error.Network(IOException)`,
+  `NetworkIsNotAvailableException`) — `exception.appError` (`ApiError.NoConnection`…), предметная (`AuthFailure`,
+  `UserIsNotConfirmed`) — исключение SDK как есть или доменный результат, если репозиторий его так трактует;
+- **ключевые операции**: что уходит в SDK (нормализованный запрос), порядок шагов (синхронизация клиента до входа),
+  особые ветки (`settingsVersion not found` → `null`), поток, бросивший исключение, → последний `Response.Error`.
+
+Источники в тесте:
+
+- **SDK AlarmTrade — через `*DataSource`.** Интеракторы SDK — `final` с `internal`-конструктором от DI SDK, их не
+  создать и не подменить; поэтому репозиторий получает не интерактор, а `internal interface <Фича>DataSource` из
+  `data/datasource`. Его реализация `Specialist<Фича>DataSource` в том же файле — только делегирование в
+  интерактор (`authInteractor.loginUseCase.execute(request)`), без ветвлений и маппинга: принимает запросы SDK и
+  возвращает `SpecialistResponse<SdkType>`/`Flow<SpecialistResponse<…>>`. Вся логика — сборка запроса, маппинг SDK →
+  domain, `toResponse()`, особые ветки — остаётся в репозитории и тестируется с локальным фейком источника
+  (`FakeLoginDataSource`). Модели и ответы SDK (`User`, `SettingsUpdatingStatus`, `SpecialistResponse.Error.*`)
+  создаются в тесте напрямую. Привязка — в Koin-модуле фичи: `singleOf(::SpecialistLoginDataSource) bind
+  LoginDataSource::class`. Эталоны — `SpecialistLoginRepositoryTest`, `SpecialistMainRepositoryTest`,
+  `SpecialistAccountRepositoryTest`.
+- **Ленивый интерактор** (`() -> Interactor`, недоступный на платформе не должен ронять создание) уходит в источник
+  вместе с провайдером: метод источника — `interactor.resolveOrNull()?.useCase?.execute(request)`, ответ `null` —
+  интерактор недоступен; репозиторий переводит его `toResponseOrUnavailable()` (`core/specialist`: `null` →
+  `interactorUnavailable()`). Тест проверяет и эту ветку (фейк отвечает `null`). Поток над ленивым интерактором —
+  не-`suspend` `Flow<…>?` (`resolveOrNull()?.let { flow { emitAll(…) } }`), репозиторий разбирает `null` внутри своего
+  `flow { }`: `?: flowOf(interactorUnavailable())` или, у процессов (прошивка, обход, Clone), доменное исключение
+  процесса (`FirmwareUpdateException`…). Процессный поток тестируется на успех, ошибку посреди процесса (поток
+  обрывается на ней) и недоступный интерактор. Провайдер создаёт Koin-модуль:
+  `single<VehicleCatalogDataSource> { SpecialistVehicleCatalogDataSource(cars = { get() }, …) }`.
+- **Хранилище настроек** (`Settings*Repository`, «недавние» в `Specialist*Repository`) — `InMemorySettings` из
+  `core:testing`; повторное открытие — новый репозиторий над тем же `Settings`, битые данные — `putString` мусора.
+- **Другие репозитории фичи** — общий фейк из `*:testing`, если он есть («Тестовые дублёры»), иначе локальная
+  реализация интерфейса в тестовом source set (`FakeAccountRepository` в `feature/main`).
+- **Время, поллинг** — `runTest` с виртуальным временем: интервал опроса проверяется по `currentTime`.
+
+## Тестовые дублёры
+
+Сначала — общий фейк из модуля тестовых дублёров, своя реализация интерфейса — только под особое поведение теста.
+Модули `core/testing` и `feature/<x>/testing` держат код в `commonMain` (KMP не даёт `testFixtures`) и подключаются
+**только** в тестовых source set'ах: `commonTest.dependencies { implementation(project(":core:testing")) }`
+(Konsist `testing-modules-test-only`). `Fake*`/`Stub*` в production-коде запрещены (`no-fakes-in-production`), рабочая
+заглушка — явный `NoOp*`.
+
+| Контракт | Дублёр | Модуль |
+|---|---|---|
+| `AppDispatchers` | `testDispatchers(dispatcher)` — один диспетчер на `io`/`default`/`main` | `:core:testing` |
+| `kotlinx.datetime.Clock` | `FixedClock(instant)` (`instant` — `var`) | `:core:testing` |
+| `com.russhwolf.settings.Settings` | `InMemorySettings` — map в памяти | `:core:testing` |
+| `AppForegroundProvider` | `FakeAppForegroundProvider` (`foregroundReturns` — `MutableSharedFlow`, тест делает `emit(Unit)`) | `:core:testing` |
+| `DeviceSessionRepository` | `FakeDeviceSessionRepository(device, link)` — связь `link`, сценарные ответы списками, счётчики | `:feature:device:interaction:testing` |
+| `DeviceConnectionRepository` | `FakeDeviceConnectionRepository(states, …)` — статусы подключения, счётчики подключений/закрытий | `:feature:device:interaction:testing` |
+| `ProgramModeRepository` | `FakeProgramModeRepository` (`results` по порядку, `calls`/`exits`) | `:feature:device:interaction:testing` |
+| `DeviceSession` | `testDeviceSession(repo, conn, dispatcher, transport)` — настоящая сессия, `start()` и `attach` уже сделаны | `:feature:device:interaction:testing` |
+| `LocalConfigurationsRepository` | `FakeLocalConfigurationsRepository` — `items`/`changes`, `createResult` + `createGate`, записи `createCalls`/`deleted` | `:feature:configurator:testing` |
+
+- Пояс фейка не требует: `TimeZoneSource.fixed(tz)` (`core/common`).
+- Расширять общий фейк параметром/состоянием, а не копировать в тест; поведение одного теста (запись аргументов,
+  сценарные ответы) — локальный фейк; неиспользуемые члены локального фейка — `error("not used")`.
+- Локальные фейки — по файлу на класс (`Fake<Контракт>.kt`), фикстуры — `<Фича>Fixtures.kt`; без сборных `TestFakes.kt`.
+- Фейки контрактов фичи — в `feature/<x>/testing` рядом с владельцем. Модули, от которых зависит модуль дублёров
+  (`core/common`, `core/lifecycle` для `core/testing`; сама `feature/device/interaction` для своего `testing`), его не
+  подключают — цикл через тестовую конфигурацию; у них локальные дублёры.
+- Модули `*/testing`: production-правила Konsist к ним не применяются, тестовые исключения detekt —
+  `**/testing/src/**`, CPD — проверяет.
 
 ## Логирование
 
@@ -207,6 +341,8 @@ import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
 
 ## Сериализация
 
+- **Где:** `@Serializable` — форматы передачи и хранения (пакеты `..data..`), маршруты навигации (`..navigation..`, `NavKey`
+  и типы аргументов маршрутов); в `domain/model` — нет (Konsist `serializable-placement`, `domain-model-purity`).
 - **Каждый `@Serializable`-класс, объект, интерфейс и enum — с `@SerialName`.** Имя по умолчанию — FQN класса:
   оно меняется при переносе в другой пакет или переименовании и участвует в данных — дискриминатор полиморфных
   типов (`NavKey`-маршруты в `SavedStateConfiguration`, sealed-иерархии), сохранённый back stack. С явным именем
@@ -246,11 +382,11 @@ internal sealed interface SourceKey {
 
   | ❌ Нельзя | ✅ Вместо этого |
   |---|---|
-  | `runCatching { }` | `safeRun { }` / `safeResponseRun { }` из `ResponseExt` (раздел «Data — репозитории») |
-  | `println(...)` / `print(...)` | Kermit `Logger` (раздел «Логирование») |
+  | `runCatching { }` (detekt `ForbiddenRunCatching`) | `safeRun { }` / `safeResponseRun { }` из `ResponseExt` (раздел «Data — репозитории») |
+  | `println(...)` / `print(...)` (detekt `ForbiddenPrintln`) | Kermit `Logger` (раздел «Логирование») |
   | `x!!` | `requireNotNull(x) { "что отсутствует" }`, `?:`, `?.let` |
   | `throw IllegalStateException("…")` | `error("…")` / `check(...)` |
-  | `flow.value = x` у `MutableStateFlow` | `flow.update { x }` (раздел «Корутины и Flow»); читать `.value` можно, тестовые фейки — исключение |
+  | `flow.value = x` у `MutableStateFlow` (detekt `StateFlowValueMutation`) | `flow.update { x }` (раздел «Корутины и Flow»); читать `.value` можно, тестовые фейки — исключение |
   | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита |
 
 - **Исключения.** Generic `catch (e: Exception/Throwable)` допустим только на границах (`core/network`,
@@ -274,6 +410,8 @@ internal sealed interface SourceKey {
   таблиц-мапперов допустим `@Suppress("LongMethod", "CyclomaticComplexMethod")`.
 - **Пустое.** Класс без тела — `class X` (не `class X {}`), конструктор без параметров — без `()`,
   файл заканчивается переводом строки.
+- **Порядок верхнеуровневых свойств.** Свойство верхнего уровня не читает свойство, объявленное ниже в том же файле:
+  инициализаторы идут сверху вниз, и чтение даст `null` (на iOS — падение Koin в `includes`) (Konsist `top-level-init-order`).
 - **Подавления** — исключение, ставятся на конкретное место и объединяются в одну аннотацию `@Suppress(...)`;
   правила про файловый и функциональный уровень — в [`code-quality.md`](code-quality.md#подавления).
 
@@ -288,9 +426,9 @@ internal sealed interface SourceKey {
 
 | Модуль | Что даёт фичам |
 |--------|----------------|
-| `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища) |
-| `core/ui` | `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel`, `sideEffectFlow`/`collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
-| `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`SpecialistAppVersionProvider`, device info) |
+| `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища), `Clock`/`TimeZoneSource` (`time/`, «Источник времени») |
+| `core/ui` | `LocalClock`/`LocalTimeZoneSource` (`time/`), `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel<S, E>`, `collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
+| `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`AppVersionProvider` из `core/common`, device info) |
 | `core/network` | HTTP-движки Ktor (для SDK и Coil), `NetworkMonitor` |
 | `core/localization` | `AppLocale`, чтение/применение локали |
 
@@ -301,7 +439,7 @@ internal sealed interface SourceKey {
   примитивы темы.
 - **Key-value хранилище фичи — только через `AppSettingsFactory.create("<feature>")`** (`core/common`,
   Koin single), а не `Settings()` в фиче: именованное хранилище изолирует ключи фичи префиксом, и
-  `clear()` одной фичи не трогает чужие.
+  `clear()` одной фичи не трогает чужие. Подробнее — «Хранение настроек».
 - **Feature-модули не создают singleton внешнего SDK/application container** (`SpecialistApp`
   и аналоги) — такой singleton создаётся в профильном `core/*` модуле или в `composeApp`.
 - **В конструкторы feature-классов передаются узкие зависимости** (`AuthInteractor`, repository,
@@ -351,6 +489,29 @@ SDK-ответы проходят `toResponse()` (`core/specialist`), он пр�
 `Common(AppError)`, экран показывает общий текст `AppError.message()` (`core/ui`). Свои «Проверьте интернет»
 на любую ошибку и проверка сети через `NetworkMonitor` во VM не нужны — см. «Ошибки фичи».
 
+### Слои и границы модуля
+
+Раскладка и направления держатся проверками (Konsist, graph-assert; таблица — [`code-quality.md`](code-quality.md),
+«Правило → проверка»):
+
+- **Пакет = модуль**: пакет файла начинается с базового пакета модуля, дефисы схлопываются, суффиксы `-ui`/`-core` —
+  подпакет (`feature/device/presentation-core` → `…feature.device.presentation.core`) (Konsist `module-package`).
+- **Направления модулей**: `core/*` импортирует только `core/*`, фичи — `core/*` и фичи, пакеты composition roots
+  (`composeApp`, `flasherApp`) не импортирует никто (Konsist `module-direction`); на уровне Gradle — graph-assert
+  (`core` ↛ `feature`, от `*-ui` зависят только composition roots, `docs/architecture.md`).
+- **Слои внутри фичи**: domain не видит data/presentation/di, Compose, ресурсы, хранилища, сериализацию и SDK (Konsist
+  `domain-isolation`); пакеты `..data..` импортируются только из data и di фичи, в `core` — не из presentation, в
+  приложениях — только из di (Konsist `presentation-isolation`); data не видит presentation и di (Konsist `data-isolation`).
+- **Чужая фича — только через domain**: data другой фичи не импортируется (Konsist `feature-data-isolation`), presentation
+  другого модуля — тоже (Konsist `cross-feature-presentation`); общий presentation фич устройства —
+  `feature/device/presentation-core`, экран другой фичи — слот (`@Composable`-колбэк), который заполняет composition root.
+- **Роли — в своих пакетах** (Konsist `layer-placement`): реализация репозитория — `data/repository`, `*DataSource` —
+  `data/datasource`, реализация доменного сервиса — `data/service` (или `platform`), интерфейс `*Coordinator`/`*Controller` —
+  `domain/service`; интерфейс `*Repository` фичи — `domain/repository` (Konsist `repository-in-domain`).
+- **SDK AlarmTrade** (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — только data/di фич, `core/specialist`,
+  `core/permissions`, `core/network` и приложения (Konsist `sdk-confinement`).
+- **`@Composable` фичи — только в `presentation`**, включая форматтеры текста (Konsist `composable-in-presentation`).
+
 ## Domain
 
 `feature/<name>/domain` — модели (`domain/model`) и контракты репозиториев (`domain/repository`).
@@ -376,9 +537,20 @@ data class MainUserAppFeatures(
 )
 ```
 
-- **Контракты репозиториев:** one-shot операции — `suspend fun ...(): Response<T>`;
-  процессы со стадиями и периодические источники — `fun ...(): Flow<Response<T>>` (не suspend).
-  Процесс описывается собственной sealed-иерархией под-состояний с гарантированным финалом:
+- **Контракты репозиториев** (интерфейс — в `domain/repository`, Konsist `repository-in-domain`; Konsist
+  `repository-contract` — интерфейсы `*Repository` и всё в `domain/repository`,
+  detekt `RawFlowFromRepository` — публичные потоки реализаций): one-shot операции — `suspend fun ...(): Response<T>`;
+  процессы со стадиями и периодические источники — `fun ...(): Flow<Response<T>>` (не suspend); других членов нет.
+  Синхронный снимок (начальный state VM) — `StateFlow<Response<T>>.value` (`DeviceSettingsPreferences.treeWidthDp`);
+  сигнал «изменилось» — тоже `Flow<Response<Unit>>`. Константа платформы или сборки — не член репозитория: значение
+  из DI (`supportedDeviceTransports()` в фабрике VM, `AppVersionProvider`). Синхронная команда «в фоне приложения»,
+  которую зовут из `onCleared`/`finally`, — доменный сервис (`domain/service`, `DeviceSettingsSessionController`),
+  а не репозиторий.
+  Процесс описывается собственной sealed-иерархией под-состояний с гарантированным финалом; **неудача процесса —
+  последний `Response.Error`, а не стадия `Failed`**: типизированная причина — доменное исключение
+  (`FirmwareUpdateException(failure)`), VM достаёт её расширением (`toFirmwareFailure()`, чужое исключение — `Unknown`).
+  Процесс, который должен идти без подписчика экрана, VM собирает в `launchReplacing` с `when (step)` по `Response`;
+  данные экрана — `collectIntoState(onError)`:
 
 ```kotlin
 // Процесс синхронизации: стадии InProgress, всегда завершается одним из Finished
@@ -431,10 +603,24 @@ sealed interface MainDatabaseSyncStatus {
   контракты репозиториев; модели, которые порт отдаёт (`PickedFile`), — в `domain/model`, а не в
   файле интерфейса.
 
+### Use case
+
+Слой use case массово не вводится: ViewModel зовёт репозиторий (в том числе чужой фичи через её `domain/repository`).
+`*UseCase` нужен только для оркестрации (Konsist `use-case-package`, `use-case-contract`):
+
+- лежит в `feature/<name>/domain/usecase` (в `core` — пакет `usecase` модуля);
+- в первичном конструкторе ≥ 2 зависимостей-ролей (`*Repository`/`*UseCase`/`*Coordinator`/`*Controller`/`*Service`/
+  `*Session`/`*Closeable`, в том числе `List<…>` из `getAll()`); диспетчеры, часы, логгер не считаются;
+- единственный публичный метод — `operator fun invoke`: `suspend` → `Response<T>`, иначе `Flow`/`StateFlow<Response<T>>`.
+  Пример — `LogoutUseCase` (`AuthStateRepository` + все `AuthCloseable`), вызов `logoutUseCase()`.
+
+Одна зависимость — это не use case (VM зовёт репозиторий); чистое правило без зависимостей — класс с ролью
+(`*Validator`/`*Resolver`/`*Calculator`), не `*UseCase`.
+
 ## Data — репозитории
 
-`feature/<name>/data/repository` — реализации контрактов; единственное место фичи, где живут
-прямые вызовы SDK и маппинг SDK-типов в domain-модели.
+`feature/<name>/data/repository` — реализации контрактов; единственное место фичи, где живёт маппинг SDK-типов в
+domain-модели. Прямые вызовы SDK — в `data/datasource` (`Specialist*DataSource`, только делегирование).
 
 ```kotlin
 // ✅ Правильно — граница с бросающим кодом оборачивается хелпером из ResponseExt
@@ -468,19 +654,37 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
 
 **Правила:**
 
+- **Видимость и имя реализации.** Всё в пакетах `..data..` — `internal`/`private` (Konsist `data-visibility`): наружу
+  модуля видны только контракты domain. Реализация репозитория называется по источнику — `Specialist<Интерфейс>`
+  (`SpecialistLoginRepository : LoginRepository`), реализует свой интерфейс (Konsist `repository-impl`) и `internal`
+  (`impl-visibility`, как и любой `*Impl`). Создаёт её только Koin-модуль фичи (`koin-wiring`), см. «Внедрение
+  зависимостей».
+- **SDK — через `*DataSource`.** Репозиторий не держит интерактор SDK: вызовы идут через `internal interface
+  <Фича>DataSource` (`data/datasource`) с реализацией-делегатом `Specialist<Фича>DataSource`, иначе репозиторий не
+  протестировать (см. «Тестирование репозиториев»). `*DataSource` в конструкторе — только у реализации репозитория и
+  составного `*DataSource`: VM, use case и доменные сервисы ходят через репозиторий (Konsist `data-source-consumers`).
 - ВСЕ suspend-функции в репозиториях ДОЛЖНЫ возвращать `Response<T>`.
-- НИКОГДА не бросать исключения из репозиториев.
+- НИКОГДА не бросать исключения из репозиториев (detekt `ThrowInRepository`: в файлах `*Repository`/`*UseCase`
+  `throw`, `error()`, `check`/`require*`, `!!` — только внутри `safeRun { }`/`safeResponseRun { }`/`safeFlowRun { }` (включая
+  операторы потока внутри `safeFlowRun`); проброс `CancellationException` разрешён).
+- **Контракт результата: `Response` не теряется молча** (detekt `ResponseIgnored`, `ResponseGetOrThrow`). Результат
+  вызова либо используется (присваивание, `return`, `when`, условие), либо обрабатывается на месте: во ViewModel
+  ошибка — в state или эффект (`when`/`collectIntoState(onError)`); в фоне и при уборке (`finally`, закрытие сессии,
+  «огонь и забудь», повтор, итог которого показывает сам экран) — `.onError { logger.w(it) { "…" } }`. Пустой
+  `onError { }` — не обработка. Ошибку не превращают обратно в исключение (`getOrThrow()`): ветвление — `when`/`map*`/
+  `onError`, значение с запасным — `getValueIfSuccess()`.
 - **Безопасные конструкции — только готовые хелперы из `core/common` `ResponseExt`**,
   не самописные try/catch: `safeRun` (бросающий код → `Response`), `safeResponseRun` (блок сам
   возвращает `Response`, но содержит бросающий код), `safeFlowRun` (для `Flow<Response<T>>`). Хелперы уже пробрасывают `CancellationException` и логируют ошибку — ручная
   обёртка обычно теряет одно из двух.
 - **Не оборачивать то, что уже возвращает `Response`.** Если вызываемый метод (или цепочка)
   возвращает `Response<T>` — в том числе SDK-Response с той же семантикой `Success`/`Error` —
-  его контракт уже гарантирует, что исключение не вылетит; повторная обёртка — шум. Обёртка
+  его контракт уже гарантирует, что исключение не вылетит; повторная обёртка — шум (detekt `RedundantSafeRun`). Обёртка
   нужна только на границе с кодом, который реально может бросить: HTTP/DB-клиент, парсинг,
   файловый I/O, коллекция «сырого» Flow, SDK-вызов без Response-контракта.
 - Ветвление и трансформации `Response` — через расширения `ResponseExt` (по одному имени на операцию:
-  `map`, `mapIfSuccess`, `mapIfError`, `onError`, `getValueIfSuccess`; новое — только под реальный вызов),
+  `map`, `mapIfSuccess`, `mapIfError`, `onError`, `getValueIfSuccess`; новое — только под реальный вызов, Konsist
+  `core-helper-usage`),
   а не ручной `when`, когда расширение выражает то же самое. Одинаковая конвертация
   SDK-Response → `Response`, повторённая в нескольких методах, выносится в одно приватное
   расширение репозитория (`private fun <T> SdkResponse<T>.toResponse(): Response<T>`),
@@ -491,6 +695,10 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
   поток: для долгоживущей подписки (WebSocket, события SDK) это значит «событий больше не будет».
   Либо поток самовосстанавливается (`retryWhen`) в репозитории, либо VM явно пересоздаёт подписку
   при ручном реконнекте — «баннер снят, а события не приходят» недопустимо.
+- **Мапперы — в `data/mapper`** (Konsist `mapper-placement`): `toDomain*`/`to*Dto` — top-level `internal`/`private`
+  функции в пакете `data.mapper` своего модуля (`data/mapper/*Mappers.kt`; в `core` — пакет `mapper` модуля), не в файле
+  репозитория. Приватный маппер-член класса репозитория допустим. Обратный маппинг presentation → domain — не
+  `toDomain`, а `to<Модель>()` в presentation (`SupportChatUiAttachment.toAttachment()`).
 - **Маппинг не теряет данные молча.** `else -> null` / ветка, читающая поле только у одного
   наследника, превращают неизвестный вариант SDK в «пустое» сообщение без единой ошибки. Ветки
   исчерпывающие; неподдерживаемый вариант — явная ошибка маппинга (с `logger.d`), а не тихий
@@ -512,6 +720,64 @@ override fun observeChatAvailability(): Flow<Response<Boolean>> = flow {
 }
 ```
 
+### Хранение настроек
+
+- Платформенный `Settings()` создаёт только `core/common/di` (`platformSettings`, detekt `SettingsInstantiation`): поверх
+  него — `AppSettingsFactory` (Koin single), фича получает своё хранилище `get<AppSettingsFactory>().create("<feature>")`
+  в Koin-модуле и передаёт конструктором. Напрямую `platformSettings` читают только язык и тема (`core/localization`,
+  `core/ui`) — до старта Koin, ключи без префикса.
+- В фиче `com.russhwolf.settings.*` и `core.common.settings.*` — только `data` и `di` (Konsist `storage-usage`): domain и
+  presentation получают данные через репозиторий.
+- Хранилище фичи — это репозиторий: контракт `*Repository` в `domain/repository`, реализация
+  `Settings<Интерфейс>` в `data/repository` (`SettingsRecentVehiclesRepository`); `*Store`/`*Storage` в фичах запрещены
+  (Konsist `forbidden-suffix`).
+
+### Платформенные возможности
+
+Konsist `capability-usage`:
+
+- API `core/permissions`, которое обращается к ОС (`PermissionsProvider`, `BindEffect`, `permissionsModule`,
+  `blePermissions`), и moko-permissions — в фиче только `data`, `di` и файл ViewModel (`ScanDeviceViewModel`); значения
+  (`DeviceAccessRequirement`, `BlePermissionResult`) — всем. Composition roots — свободно.
+- Порты `presentation/platform` фичи (пикеры, сохранение, открытие файлов) — только presentation своего модуля, `di` и
+  composition roots. Общие порты фич устройства (файлы настроек `.dxs`: `SettingsFilePicker`/`SettingsFileSaver`) —
+  в `feature/device/presentation-core` (`platform`), их импортирует presentation любой фичи.
+
+## Доменные сервисы
+
+Объект, который держит состояние процесса приложения или работает дольше экрана (сессия устройства, уборка сессий
+настроек), — доменный сервис: интерфейс в `domain/service`, реализация `*Impl` — `internal` в `data/service`,
+`single` в Koin-модуле фичи (`DeviceSession` → `DeviceSessionImpl`, `DeviceSettingsSessionController` →
+`DeviceSettingsSessionControllerImpl`). Чистая логика без своего скоупа и I/O (`ServicePinCooldown`,
+`ProgramModeEntry` в `interaction/domain/session`) сервисом не оформляется.
+
+- **Контракт** (Konsist `service-contract`): `suspend` → `Response<T>`, потоки → `…<Response<T>>`, синхронная
+  функция — только команда с результатом `Unit`/`Boolean` (`start()`, `close()`, «закрыть в фоне» из `onCleared`).
+  Состояние сервиса в памяти, которое не может «упасть» (`DeviceSession.state` — ошибка связи уже свёрнута в
+  `Disconnected`, `reboot`, `transport`), — `StateFlow<T>` с `@Suppress("konsist.service-contract")` и причиной.
+  «Дождаться» — отдельный `suspend`-член с `Response` (`close()` + `closeAndAwait()`), не `Job` наружу.
+- **Реализацию для тестов других модулей** собирает модуль тестовых дублёров через Koin-модуль фичи: реализация
+  `internal`, а VM-тестам нужна настоящая сессия поверх фейковых репозиториев. Скоуп сервиса — отдельная Koin-запись
+  (`deviceSessionScopeQualifier`), тест подменяет её, репозитории и скоуп (`testDeviceSession(…)` из
+  `:feature:device:interaction:testing`, уже после `start()`). Публичных фабрик «только для тестов» в `di` нет.
+
+### Без побочных эффектов в конструкторе
+
+Создание объекта (Koin-резолв — на любом потоке, в непредсказуемый момент) ничего не запускает (Konsist
+`no-constructor-side-effects`, весь production): нет `init { }`, инициализаторы свойств не запускают корутин —
+`launch`/`async`/`launchIn` (кроме `CoroutineStart.LAZY`), `shareIn`/`stateIn` с `SharingStarted.Eagerly`. Создать
+`CoroutineScope`, `MutableStateFlow`, `stateIn(WhileSubscribed)` — можно; геттер и `by lazy` исполняются не в
+конструкторе. Белый список `init` — платформенные мониторы сети (`AndroidNetworkMonitor`, `IosNetworkMonitor`):
+синхронная регистрация колбэка в ОС.
+
+- **Состояние, производное от потока**, — `stateIn(WhileSubscribed)` (`DeviceSession.state`: горячий, пока есть
+  подписчики).
+- **Реакция без подписчиков** — `start()` доменного сервиса со своим скоупом (`DeviceSessionImpl.start()` публикует
+  `reboot`). Сервисы запускает `AppServicesStarter` (`core/common`; слоты — `appServicesModule` в `composeApp`,
+  `flasherServicesModule` во `flasherApp`, `start()` — из корня композиции): новый process-wide сервис — новый слот.
+- **`start()` идемпотентен через CAS** (Konsist `start-once-cas`): guard — `MutableStateFlow(false).compareAndSet(false,
+  true)`, не `var started`/`var job` (check-then-set при параллельном `start()` запустит работу дважды).
+
 ## Состояние сессии и смена аккаунта
 
 Репозитории фич регистрируются как Koin `single` и **переживают логаут**. Всё, что они держат
@@ -520,7 +786,7 @@ override fun observeChatAvailability(): Flow<Response<Boolean>> = flow {
 
 - **ViewModel зон авторизации живут одну сессию**: `AuthStateNavGraph` оборачивает и авторизованную,
   и неавторизованную зону в `ViewModelScope(name, session)` (`core/ui`), поэтому каждый вход/выход
-  получает новые VM — их загрузка при старте (`launchOnFirstStart`) выполняется заново, формы входа и
+  получает новые VM — их загрузка при старте (`onStart()`) выполняется заново, формы входа и
   регистрации пустые. Сбрасывать state VM «на логаут» вручную (`reset()` из `DisposableEffect`) не
   нужно; своё хранилище VM для зоны, переживающей смену аккаунта, не заводить (`docs/navigation.md`).
 
@@ -574,69 +840,153 @@ presentation/screen/<screen>/
 
 ### BaseViewModel
 
-**Все ViewModel фич наследуются от `BaseViewModel`** (`core/ui`, пакет
-`ru.alarmtrade.specmp.core.ui.viewmodel`), а не от androidx `ViewModel` напрямую — импорт
-`androidx.lifecycle.ViewModel` вне `core/ui` запрещён detekt (`ForbiddenImport`). Что даёт:
+Все ViewModel фич наследуются от `BaseViewModel<S, E>` (`core/ui`, пакет `ru.alarmtrade.specmp.core.ui.viewmodel`), а
+не от androidx `ViewModel` напрямую — импорт `androidx.lifecycle.ViewModel` вне `core/ui` запрещён detekt
+(`ForbiddenImport`); имя — `*ViewModel`, в фиче — пакет `presentation` (Konsist `view-model`). VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>` (`feature/device/presentation-core`,
+см. ниже). `S` — `XxxState`, `E` — `XxxEffect`/`XxxSideEffect` или `Nothing` (detekt `ViewModelContractNames`).
 
-- **`safeLaunch { }`** (есть перегрузка с `CoroutineContext`) — вместо `viewModelScope.launch`:
-  в контекст добавлен `CoroutineExceptionHandler`, логирующий необработанные исключения.
-  `viewModelScope` напрямую используется только для `stateIn`.
-- **`logger`** (protected, тег = имя класса) — свой `Logger.withTag(...)` во VM не создавать.
-- **`executeWithProceedLock { }`** — взаимоисключение операций под общим для VM mutex'ом:
-  по умолчанию пропускает вызов, пока выполняется предыдущий (защита от дублей);
-  с `needSkipAnother = false` — сериализует (дожидается и выполняет следом).
-  От отмены он НЕ защищает — block живёт в корутине вызывающего.
+| Член | Что делает |
+|---|---|
+| `val state: StateFlow<S>` | единственный state экрана: `stateIn(WhileSubscribed(5 s))` поверх приватного `MutableStateFlow`; первая подписка запускает `onStart()` |
+| `val sideEffect: SharedFlow<E>` | one-shot эффекты (`replay = 0`, буфер 16, `DROP_OLDEST`); экран без эффектов — `E = Nothing` |
+| `protected open suspend fun onStart()` | стартовая работа вместо `init`: один раз за жизнь VM, при первой подписке UI на `state`, отдельной корутиной (цепочку state не держит) |
+| `protected val currentState: S` | текущее значение state для чтения в интентах |
+| `protected fun reduce(transform: S.() -> S)` | единственный способ изменить state (атомарный `update`) |
+| `protected fun postSideEffect(effect: E)` | эффект в `sideEffect` |
+| `protected fun intent(block): Job` / `safeLaunch(block)` / `safeLaunch(context, block)` | запуск корутины с `CoroutineExceptionHandler` базы (необработанное исключение — в лог, не падение) |
+| `protected fun <T> Flow<T>.collectIntoState(reducer: S.(T) -> S): Job` | привязка потока к state: каждое значение — через `reduce`; собирается, только пока экран подписан на `state` (с тем же запасом 5 с), и перезапускается при возврате |
+| `protected fun <T> Flow<Response<T>>.collectIntoState(onError, reducer): Job` | то же для `Flow<Response<T>>`; `onError` обязателен (без него вызов не компилируется — перегрузка `@Deprecated(ERROR)`) |
+| `protected fun <T> select(selector: S.() -> T): Flow<T>` | часть state как вход подписки (`distinctUntilChanged`): `select { query }.flatMapLatest { … }.collectIntoState { … }` |
+| `protected fun reload()` | переподписывает все привязки `collectIntoState` («Повторить» для реактивных источников) |
+| `protected fun launchReplacing(key, context, block): Job` / `cancelLaunched(key)` | одна корутина на ключ, живёт с VM (не с подпиской): новый запуск отменяет прежний с тем же ключом; замена полю `var job: Job?` |
+| `protected suspend fun repeatOnSubscription(block)` | работа без state на время подписки экрана (сброс разового состояния при возврате, поток событий → `postSideEffect`) |
+| `protected suspend fun executeWithProceedLock(needSkipAnother = true, block)` | взаимоисключение под общим mutex VM: `true` — дубль пропускается (двойной клик), `false` — выполняется следом; от отмены не защищает |
+| `protected val logger` | Kermit-логгер с тегом по имени класса; свой `Logger.withTag` не создавать |
 
-**Время жизни эффекта = место, где он живёт.** Куда положить запуск работы — определяется
-требуемым временем жизни эффекта:
+Пример — `AppSettingsViewModel` (`feature/app-settings`):
 
-- **Эффект живёт ровно столько, сколько screen/VM** → `init {}` во VM честен. Примеры: лог
-  «открыт экран», старт подписки, которую надо убить вместе с VM (`viewModelScope` сделает сам).
-  Повторный запуск при пересоздании VM — не баг, а согласованность: новый инстанс = новая жизнь.
-- **Эффект привязан к подписке UI на state (init-стадия экрана)** → `launchOnFirstStart { … }` на
-  цепочке state — см. «Запуск работы на старте экрана».
-- **Эффект должен пережить экран / выполниться один раз за сессию процесса** → выносим из VM:
-  VM не может это гарантировать (пересоздание при навигации, process death). Место — app-scoped
-  singleton (репозиторий/контроллер/use-case) с идемпотентным `start()` (guard «уже запущен»:
-  `if (job != null) return`), владеющий собственным `CoroutineScope`. Пример в проекте:
-  наблюдение сессии в `feature/auth-state` — `AuthStateRepository` зарегистрирован как Koin
-  single, его `observeIsLoggedIn()` собирает app-level `AuthStateViewModel` в composition root,
-  а не VM отдельного экрана.
-- Эмит one-shot эффектов (навигация/снекбар) из `init` запрещён отдельно
-  (см. «One-shot события»).
+```kotlin
+internal class AppSettingsViewModel(
+    private val localeStore: AppLocaleStore,
+    private val restarter: AppRestarter,
+    private val configurationLanguages: ConfigurationLanguageStore,
+    private val dispatchers: AppDispatchers,
+) : BaseViewModel<AppSettingsState, Nothing>(AppSettingsState(current = localeStore.current())) {
+
+    override suspend fun onStart() {
+        val language = withContext(dispatchers.io) { configurationLanguages.current() }
+        reduce { copy(configurationLanguage = language) }
+    }
+
+    fun onLocaleSelect(locale: AppLocale) {
+        reduce { copy(selected = locale) }                 // UI-флаги — поля state, не отдельные MutableStateFlow
+    }
+
+    fun onConfigurationLanguageSelect(language: ConfigurationLanguage) {
+        intent { executeWithProceedLock(needSkipAnother = false) { saveConfigurationLanguage(language) } }
+    }
+}
+```
+
+Правила (все с проверкой, [`code-quality.md`](code-quality.md), «Правило → проверка»):
+
+- **Публичный API — только `state`, `sideEffect` и интенты** (detekt `ViewModelPublicApi`). Интент — `fun onXxx(...)`
+  с блочным телом и результатом `Unit`, не `suspend`: у `fun onSave() = intent { }` выведен `Job`, поэтому
+  `fun onSave() { intent { … } }`. Нельзя: публичные `val`/`var` (включая параметры конструктора), функции-запросы
+  (`fun onBackRequest(): Boolean`) — решение VM отдаёт полем state или эффектом (`onBack()` ставит диалог или шлёт
+  `Close`). `internal` считается публичным, `override` не проверяются.
+- **State — один, и всё состояние VM — в нём.** Своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`mutableStateOf`
+  у VM нет (Konsist `view-model-owns-no-flows`): вход подписки (запрос поиска, фильтр, выбранный элемент) — поле state +
+  `select { }`; «Повторить» подписки — `reload()`, загрузки — перезапуск того же `launchReplacing(key)`.
+- **Нет `var`-свойств и изменяемых коллекций** (detekt `ViewModelMutableProperty`, включая `private`/`lateinit`,
+  вложенные классы и конструктор): служебное между интентами (фаза процесса, номер попытки, снимок для сравнения) —
+  поле state; корутина «перезапустить/отменить» — `launchReplacing(key)`/`cancelLaunched(key)`.
+- **Без `init { }`** (detekt `ViewModelInitBlock`) — стартовая работа в `onStart()`, синхронный посев — в начальном
+  state (`BaseViewModel(initialState)`, функция от параметров конструктора: `VehicleSelectRequest.initialState()`).
+- **Корутины — `intent`/`safeLaunch`/`launchReplacing`**, не `viewModelScope.launch`/`async`/`flow.launchIn(viewModelScope)`
+  (detekt `ViewModelScopeLaunch`).
+- **`safeRun`/`safeResponseRun` во VM нет** (detekt `SafeRunInViewModel`): бросающий код оборачивает репозиторий, VM
+  ветвится по `Response`.
+- **Производные поля считаются в том же `reduce`, что и их входы** (`copy(order = order).withLists()`), иначе на кадр
+  state расходится сам с собой. Чистые переходы state больших VM — в файлах рядом (`*Transitions.kt`, `*Machine.kt`),
+  они тестируются без VM.
+- **Файл VM содержит только VM** (detekt `ViewModelFileContents`, см. «Файлы экрана»); private-хелперы — вложенными
+  private-типами или top-level функциями в отдельном файле.
+- **Конструктор — не больше 12 параметров** (Konsist `view-model-constructor`): разросшуюся VM делим по поведению.
+
+#### Зависимости ViewModel
+
+Параметры конструктора VM (и аргументы их дженериков) — только из разрешающего списка (Konsist
+`view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
+(аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
+`AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`,
+`Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
+типы SDK, `Flow`, `CoroutineScope`, функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
+
+#### `BaseDeviceViewModel<S, E>`
+
+`BaseDeviceViewModel(deviceSession, initialState)` (`feature/device/presentation-core`) добавляет работу с блоком:
+`connectedDevice`/`connectedDeviceName` (потоки для `collectIntoState`), `currentDevice` (снимок), `launchOnDevice { }`
+(без связи не стартует, при обрыве отменяется) и `launchOnDevice(key) { }` (то же с заменой по ключу, отмена —
+`cancelLaunched(key)`), `onEachDeviceReady { }`/`onDeviceLost { }` — из `onStart()`, живут с VM. Свои
+`deviceSession.state.map { … Ready … }` не писать. Пример — `CloneViewModel` (`feature/device/autostart`):
+
+```kotlin
+override suspend fun onStart() {
+    onEachDeviceReady(::onDeviceReady)                      // на каждое (пере)подключение
+    onDeviceLost(::onConnectionLost)                        // процесс уже отменён — вернуть экран на старт
+    pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CloneDialog.Pin } })
+        .collectIntoState { lock -> withPinLock(lock) }
+}
+
+fun onExitConfirm() {
+    if (currentState.locked) return
+    cancelLaunched(PROCEDURE)
+    reduce { copy(phase = ClonePhase.Start(), dialog = null) }
+}
+
+private fun run(pinTries: Int = 0) {
+    launchOnDevice(PROCEDURE) {                             // процесс живёт с VM, а не с подпиской экрана
+        reduce { copy(phase = ClonePhase.Running(CloneStage.PREPARING)) }
+        repository.run().transformWhile { … }.collect { event -> reduce { … } }
+    }
+}
+```
 
 ### Жизненный цикл ViewModel и сессии
 
-Каждый `NavDisplay` подключает `rememberViewModelStoreNavEntryDecorator()` (см.
-`docs/navigation.md`), поэтому `koinViewModel()` отдаёт **per-entry** инстанс: VM живёт ровно
-столько, сколько запись бэкстека. Новый вход на экран = новый инстанс = чистое состояние.
+Каждый `NavDisplay` подключает `rememberViewModelStoreNavEntryDecorator()` (см. `docs/navigation.md`), поэтому
+`koinViewModel()` отдаёт **per-entry** инстанс: VM живёт ровно столько, сколько запись бэкстека. Новый вход на экран =
+новый инстанс = чистое состояние.
 
-- **Сессия экрана** (подписка на сокет, открытие чата) открывается в `init {}` и закрывается в
-  `onCleared()`. Не нужны: `DisposableEffect` в nav-графе, методы `onScreenOpened()`/
-  `onScreenDisposed()`, ручной сброс `_state` при входе, поля-`Job` для «текущей сессии».
-- **Suspend-работа из `onCleared()`** — через application-scoped скоуп
-  (`get(appScopeQualifier)` из `core:common`, передаётся в конструктор VM): `viewModelScope` к
-  этому моменту уже отменён.
-- **`var`-поля VM не пишутся с разных диспетчеров.** Коллектор на `dispatchers.io`, который
-  пишет `var job`/`var flag`, а main — те же поля из интентов, — гонка (потерянная отмена, два
-  параллельных цикла). Изменяемое состояние — в `MutableStateFlow` (`update {}`) или сериализация
-  через `executeWithProceedLock`; остальные поля main-confined.
-- **Одно поле `Job` — одна роль.** Поле, в котором по очереди живут «переподключение» и
-  «закрытие сокета», молча отменяет одну операцию другой. Лучше, чтобы поля-`Job` не было вовсе.
-- **Самодельные барьеры** («флаг `rerunRequested` + `while`», «`if (busy) return`») не пишутся —
-  есть `executeWithProceedLock` (`needSkipAnother = true` — пропустить дубль, `false` —
-  выполнить следом).
-- **Зависимости — в конструктор, не параметром интента.** `onDownload(item, saver)`, где `saver`
-  приходит из UI, прячет зависимость VM от DI и тестов; платформенный порт передаётся через
-  конструктор (`parametersOf` из `composeApp`).
-- **`WhileSubscribed` — только когда останавливать безопасно.** Для поллинга — да. Для сессии
-  (сокет) — нет: `collectAsStateWithLifecycle` + `WhileSubscribed(5.seconds)` погасит соединение
-  через 5 секунд после блокировки экрана. Время жизни сессии = время жизни VM.
-- **Не открывать/закрывать сессию в `onStart`/`onCompletion` потока.** `Flow.onStart` выполняется
-  **до** подписки на upstream — hot-событие без replay, опубликованное во время открытия,
-  потеряется. `onCompletion` при отмене вызывается в отменённом контексте — suspend-`close()`
-  сразу бросит `CancellationException` (нужен `withContext(NonCancellable)`). Порядок «сначала
-  подписка, потом открытие» явно задаётся в `init {}`.
+**Время жизни работы = место, где она живёт:**
+
+| Сколько должна жить работа | Где | Пример |
+|---|---|---|
+| Пока экран подписан на state (поллинг, подписка на источник, «свежесть» при возврате) | `collectIntoState` / `safeLaunch { repeatOnSubscription { … } }` в `onStart` | поллинг чата в `MainScreenViewModel`, отсчёт PIN `lockedFor(...)` |
+| Один раз за жизнь VM (первичная загрузка) | тело `onStart()` | `MainScreenViewModel.initialRefresh()` |
+| Всю жизнь VM, с повтором/заменой (загрузка с «Повторить», процесс, сессия) | `launchReplacing(key)` из `onStart`/интента | `CloudListViewModel.load()`, сессия `SupportChatScreenViewModel` |
+| Работа с блоком, отменяемая обрывом связи | `launchOnDevice(key)` | процесс `CloneViewModel`, `BypassLearningViewModel` |
+| Дольше экрана (в т.ч. из `onCleared()`) | доменный сервис со скоупом приложения (`get(appScopeQualifier)`), VM зовёт его обычный (не `suspend`) метод | `DeviceSettingsSessionController.discardSession(source)` |
+
+- **Процесс не зависит от подписки на state.** Прошивка, клонирование, обучение, сессия чата идут в `launchReplacing`/
+  `launchOnDevice`, а не в `collectIntoState`: иначе через 5 с после ухода приложения в фон (`WhileSubscribed`)
+  процесс отменится. VM-тест на это — «экран без подписчика 10 s — прогресс продолжается».
+- **`CoroutineScope` в конструктор VM не передаётся** (`view-model-dependencies`): работа, переживающая экран, — в
+  доменном сервисе со своим скоупом («Доменные сервисы»).
+- **Не нужны:** `DisposableEffect` в nav-графе, методы `onScreenOpened()`/`onScreenDisposed()`, ручной сброс state при
+  входе, поля-`Job`, самодельные барьеры («флаг + `while`», «`if (busy) return`» вне state) — есть `launchReplacing` и
+  `executeWithProceedLock`. «Процесс уже идёт» — по фазе в state (`if (phase is Running) return`).
+- **Возврат приложения на передний план** — порт `AppForegroundProvider` (`core/lifecycle`) в конструкторе (Konsist
+  `foreground-usage`: `core.lifecycle` — только data, di и ViewModel, Koin-модуль `core.lifecycle.di` — где угодно):
+  `foregroundProvider.foregroundReturns` собирается из `onStart` (`ScanDeviceViewModel`). Compose-эффекты
+  (`LifecycleResumeEffect`) для решений VM не используются.
+- **Зависимости — в конструктор, не параметром интента.** Платформенный порт передаётся через конструктор
+  (`parametersOf` из `composeApp`).
+- **Не открывать/закрывать сессию в `onStart`/`onCompletion` потока.** `Flow.onStart` выполняется **до** подписки на
+  upstream — hot-событие без replay, опубликованное во время открытия, потеряется; `onCompletion` при отмене вызывается
+  в отменённом контексте — suspend-`close()` сразу бросит `CancellationException`. Закрытие при уходе — `finally` в
+  корутине сессии или метод репозитория со скоупом приложения.
 
 ### LCEState — ViewModel + Compose
 
@@ -650,257 +1000,99 @@ presentation/screen/<screen>/
   `state.dismissError()`. Своих `Loading/Ready/Failed`-иерархий в фичах не заводим.
 
 ```kotlin
-// ViewModel
-class UserViewModel(
-    private val repository: UserRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
-    private val _state = MutableStateFlow<LCEState<User, ProfileError>>(LCEState.None)
-    val state: StateFlow<LCEState<User, ProfileError>> = _state.asStateFlow()
+// CloudListViewModel (feature/configurator-ui): загрузка живёт с VM, «Повторить» перезапускает тот же ключ
+override suspend fun onStart() {
+    load()
+}
 
-    fun load(id: String) {
-        safeLaunch {
-            _state.update { LCEState.Loading }
-            val response = withContext(dispatchers.io) { repository.fetchUser(id) }
-            _state.update { response.asLCEState(ProfileError::from) }
-        }
+fun onRetry() {
+    load()
+}
+
+private fun load() {
+    launchReplacing(LOAD_KEY) {
+        reduce { copy(list = LCEState.Loading).withLists() }
+        val response = withContext(dispatchers.io) { cloud.byCar(carId, deviceName) }
+        reduce { copy(list = response.asLCEState(ConfiguratorError::from)).withLists() }
     }
 }
 
-// Compose UI — исчерпывающий when, ошибка → локализованная строка
-when (val user = state.value) {
+// Compose UI (схема) — исчерпывающий when, ошибка → локализованная строка, «Повторить» → интент
+when (val list = state.list) {
     LCEState.None, LCEState.Loading -> CmpCircularProgressIndicator()
-    is LCEState.Content -> UserCard(user.content)
-    is LCEState.Error -> ErrorBox(user.error.text(Strings.string.profile_common_error_load))
+    is LCEState.Content -> CloudList(list.content)
+    is LCEState.Error -> ErrorBox(list.error, onRetry = viewModel::onRetry)
 }
 ```
 
-### State экрана: множественные LCEState
+### State экрана: несколько источников
 
-Когда экрану нужно несколько независимых асинхронных данных, каждое оборачивается в отдельный `LCEState` внутри
-общего State (тип ошибки — один на фичу):
+Когда экрану нужно несколько независимых асинхронных данных, каждое — отдельный `LCEState` внутри общего State
+(тип ошибки — один на фичу), а загрузки идут параллельно:
 
-```kotlin
-@Immutable
-data class DashboardState(
-    val profile: LCEState<ProfileContent, DashboardError> = LCEState.None,
-    val transactions: LCEState<List<Transaction>, DashboardError> = LCEState.None,
-)
-```
-
-#### Императивный подход — загрузка по запросу
-
-Подходит когда данные грузятся **по запросу** (one-shot). Каждое поле грузится в своём `safeLaunch` — параллельно:
+- **Загрузка по запросу** — каждое поле своей корутиной (`safeLaunch`/`launchReplacing`) или `async` внутри одной
+  (`MainScreenViewModel.initialRefresh()`: профиль, функции и коммерческие данные — `awaitAll`, скелетон снимается в
+  `finally`). Зависимый запрос — последовательно в одной корутине (`currentState.profile.content?.let { … }`).
+- **Реактивные источники** — привязка в `onStart`; входы из state — `select`, маппинг — до `flowOn(dispatchers.default)`:
 
 ```kotlin
-fun loadData() {
-    safeLaunch {
-        _state.update { it.copy(profile = LCEState.Loading) }
-        val response = withContext(dispatchers.io) { profileRepo.getProfile() }
-        _state.update { it.copy(profile = response.asLCEState(DashboardError::from).mapContent { p -> p.toContent() }) }
-    }
-    safeLaunch {
-        _state.update { it.copy(transactions = LCEState.Loading) }
-        val response = withContext(dispatchers.io) { transactionsRepo.getTransactions() }
-        _state.update { it.copy(transactions = response.asLCEState(DashboardError::from)) }
-    }
+// FirmwareSystemsViewModel (feature/device/firmware): строки списка пересчитываются в фоне из полей state
+override suspend fun onStart() {
+    combine(select { systems }, select { query }, select { expanded }, select { order }, ::systemRows)
+        .flowOn(dispatchers.default)
+        .collectIntoState { content -> copy(content = content) }
+    executeWithProceedLock { load() }
 }
 ```
 
-Когда второй запрос зависит от результата первого — последовательно в одном `safeLaunch`
-(`_state.value.profile.content?.let { … }`).
+- Независимые источники, которые пишут в разные поля, — отдельные привязки, а не один `combine`.
+- Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять `.onStart { emit(<initial>) }`,
+  иначе `combine` не эмитит, пока не ответят все источники.
+- **Поток, отдающий state целиком (`{ mapped -> mapped }`), — единственный источник state.** Иначе привязка
+  копирует только свои поля (`copy(content = content)`), чтобы следующее значение не затёрло UI-флаги и свежий ввод.
+- **Поллинг не держать ручными `Job` во VM.** Репозиторий отдаёт `Flow<Response<T>>` (см. «Data — репозитории»), VM
+  привязывает его к state — база сама остановит сбор без подписчика и запустит заново при возврате.
+- Свой `stateIn(…)` во VM не нужен: state даёт база. `SharingStarted.Lazily` — только для app-scoped держателей
+  состояния (доменных сервисов, репозиториев), не для экранов; `Eagerly` в инициализаторе свойства запрещён
+  (`no-constructor-side-effects`) — работа без подписчиков идёт из `start()` сервиса.
 
-#### Реактивный подход — combine / zip + stateIn
+### Запуск работы на старте экрана — `onStart`, а не `LaunchedEffect`
 
-Когда репозитории возвращают `Flow` (реактивные источники, подписки на БД, поллинг, WebSocket), вместо ручного управления `MutableStateFlow<LCEState<T, E>>` лучше **комбинировать Flow-ы** и преобразовывать в `StateFlow`.
-
-| Оператор | Когда использовать |
-|----------|-------------------|
-| `combine` | Источники эмитят **независимо**, нужно последнее значение от каждого |
-| `zip` | Источники эмитят **попарно**, нужно дождаться значения от каждого |
-
-```kotlin
-class DashboardViewModel(
-    profileRepo: ProfileRepository,        // Flow<Response<Profile>>
-    transactionsRepo: TransactionsRepository, // Flow<Response<List<Transaction>>>
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
-
-    val state: StateFlow<DashboardState> = combine(
-        profileRepo.observeProfile(),
-        transactionsRepo.observeTransactions(),
-    ) { profileResponse, transactionsResponse ->
-        DashboardState(
-            profile = profileResponse.asLCEState(DashboardError::from),
-            transactions = transactionsResponse.asLCEState(DashboardError::from),
-        )
-    }
-        .flowOn(dispatchers.default)  // маппинг НЕ на Main потоке
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeout = 5.seconds),
-            initialValue = DashboardState()
-        )
-}
-```
-
-Смешанный вариант (часть данных one-shot, часть реактивно) — см. пример в
-«Запуск работы на старте экрана»: one-shot источники пишут в `_state`, реактивные
-комбинируются с ним в общий `StateFlow`.
-
-#### Выбор SharingStarted-стратегии
-
-| Стратегия | Поведение | Когда использовать |
-|-----------|-----------|-------------------|
-| `WhileSubscribed(stopTimeout)` | Активен пока есть подписчики + таймаут после отписки | **По умолчанию для экранов.** Экономит ресурсы при уходе с экрана, `stopTimeout = 5.seconds` — стандартное значение (переживает поворот экрана) |
-| `Lazily` | Стартует при первом подписчике, **никогда не останавливается** | Источник со значением на всю жизнь VM: фоновый кэш, подписка, флаг из репозитория (init-загрузка — `launchOnFirstStart`) |
-| `Eagerly` | Стартует немедленно при создании | Критичные данные, нужные сразу (редко используется) |
+Первичную загрузку данных экрана НЕ запускать из UI (`LaunchedEffect(Unit) { vm.load() }` — запрещено): такой запуск
+завязан на композицию, а не на подписку на state, требует метода-интента «для старта» во VM и guard-флагов от
+повторных вызовов. Триггер «экран начал слушать state» уже есть — подписка на `StateFlow`; база вешает на него
+`onStart()` (один раз за жизнь VM).
 
 ```kotlin
-// ✅ Экран — отписываемся при уходе
-.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), initial)
-
-// ✅ Однократная работа / фоновый кэш — живёт пока жива ViewModel
-.stateIn(viewModelScope, SharingStarted.Lazily, initial)
-```
-
-#### Запуск работы на старте экрана — `onStart`, а не `LaunchedEffect`
-
-Первичную загрузку данных экрана НЕ запускать из UI (`LaunchedEffect(Unit) { vm.load() }` — запрещено):
-такой запуск завязан на композицию, а не на подписку на state, требует метода-интента «для старта»
-во VM и guard-флагов от повторных вызовов при каждом входе в композицию. Composable side-effect'ы —
-только для чисто UI-нужд и проброса события в метод VM (например
-`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`), но не для самой бизнес-логики;
-реакции на действия пользователя — явный метод-интент VM (`onRetryClicked()`).
-
-Триггер «экран реально начал слушать state» уже существует — это подписка на `StateFlow`.
-Init-стадия оформляется хелпером **`launchOnFirstStart { … }`** из `BaseViewModel` на цепочке state перед
-`stateIn`: блок запускается отдельной корутиной VM при первом старте цепочки и ровно один раз за жизнь VM
-(внутри — `Job` с `CoroutineStart.LAZY`, `onStart { job.start() }`; `start()` идемпотентен). Без `var`-флагов,
-методов «startIfNeeded» и фиктивных источников `flow { load(); emit(Unit) }.stateIn(Lazily)` в `combine`.
-
-Почему не голый `onStart { load() }`:
-- он **блокирует цепочку**: `combine` начинает собирать только после выхода из `onStart`, поэтому `Loading`,
-  записанный в `_state` во время загрузки, экран не увидит — увидит сразу результат;
-- он **повторяется на каждый перезапуск** `WhileSubscribed` — возврат на экран (или из фона) после stopTimeout
-  перезагрузит данные.
-
-```kotlin
-class MainScreenViewModel(
-    private val mainRepository: MainRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
-
-    private val _state = MutableStateFlow(MainScreenState())  // isInitialLoading = true
-
-    // Периодический источник: репозиторий отдаёт Flow<Response<T>>,
-    // ручные Job + onCleared во VM не нужны
-    private val chatAvailability: Flow<LCEState<Boolean, MainError>> = mainRepository
-        .observeChatAvailability()
+// MainScreenViewModel (feature/main)
+override suspend fun onStart() {
+    // Поллинг чата живёт, пока экран подписан на state: при возврате перезапускается с None.
+    mainRepository.observeChatAvailability()
         .map { response -> response.asLCEState(MainError::from) }
         .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None) }  // combine не ждёт первый ответ сети
-
-    val state: StateFlow<MainScreenState> = combine(_state, chatAvailability) { state, chat ->
-        state.copy(chatAvailabilityState = chat)
-    }
-        .launchOnFirstStart { initialRefresh() }  // один раз за жизнь VM, не блокирует цепочку
-        .onStart { resetTransientState() }       // на каждый (пере)запуск шаринга
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), _state.value)
-
-    private suspend fun initialRefresh() {
-        try {
-            coroutineScope {
-                awaitAll(async { loadUserProfile() }, async { loadUserAppFeatures() })  // пишут в _state
-            }
-        } finally {
-            _state.update { it.copy(isInitialLoading = false) }  // скелетон убирается и при сбое
-        }
-    }
+        .onStart { emit(LCEState.None) }
+        .collectIntoState { chatAvailability -> copy(chatAvailabilityState = chatAvailability).withActions() }
+    safeLaunch { repeatOnSubscription { resetLogoutTransientState() } }   // на каждый возврат на экран
+    initialRefresh()                                                       // один раз за жизнь VM
 }
 ```
 
-**Порядок объявлений важен:** свойства инициализируются сверху вниз, поэтому источники
-(`chatAvailability`) объявляются **до** `state` — иначе `combine` захватит ещё не инициализированное (null)
-поле и упадёт в runtime. Блок `launchOnFirstStart` выполняется позже (при подписке), ему порядок не важен.
-
-**`onStart` vs `onSubscription`:**
-
-| Оператор | Куда ставится | Когда срабатывает | Для чего |
-|----------|---------------|-------------------|----------|
-| `launchOnFirstStart` | на холодную цепочку state **до** `stateIn` | один раз за жизнь VM — при первом старте шаринга | init-загрузка экрана, потоки перезагрузки (`retries.collectLatest { load() }`) |
-| `onStart` | на холодную цепочку **до** `stateIn` | при (пере)запуске шаринга: первый подписчик после простоя (`WhileSubscribed`) либо единожды (`Lazily`) | сброс transient-state при возврате на экран, эмит начального значения в источник; не для долгой работы |
-| `onSubscription` | на **горячий** `SharedFlow`/`StateFlow` (после `stateIn` / на `MutableSharedFlow`) | на **каждого** нового подписчика | редкие случаи «действие на каждую подписку»; для init не годится — несколько коллекторов (второй `collectAsState`, пересоздание composition) повторят действие |
-
-**Правила:**
-
-- **Один раз за жизнь VM** → `launchOnFirstStart` (пример выше), не guard-флаг и не фиктивный источник.
-  `stateIn(Lazily)` — только для источников с настоящим значением (флаг из репозитория, подписка на всю жизнь VM).
-  **На каждый (пере)запуск шаринга** (сброс transient-state, обновление «свежести» при возврате
-  на экран) → `onStart` на общей цепочке перед `stateIn(WhileSubscribed)` — он сработает повторно,
-  когда подписчики вернулись после stopTimeout. `onSubscription` — только когда действие осознанно
-  нужно на каждую подписку.
-- Лямбда `onStart` не должна блокировать цепочку долгой suspend-работой: долгие загрузки — в
-  `launchOnFirstStart` или через `safeLaunch`.
-- **Поллинг не держать ручными `Job` во VM.** Репозиторий отдаёт `Flow<Response<T>>`
-  (см. «Data — репозитории»), VM комбинирует его в state. `WhileSubscribed` сам останавливает
-  поллинг, когда экран никто не слушает, и перезапускает при возврате — `Job`-поля и `onCleared`
-  не нужны.
-- Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять
-  `.onStart { emit(<initial>) }`, иначе `combine` не эмитит, пока не ответят все источники.
-- **Повтор/перезагрузка — тот же поток загрузок, а не второй `safeLaunch`.** Триггеры (`MutableSharedFlow`
-  «повторить», изменения хранилища) сливаются в один поток, `collectLatest { load() }` отменяет
-  устаревшую загрузку — гонки двух параллельных загрузок нет:
-  ```kotlin
-  private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-  val state = combine(_state, …) { … }
-      .launchOnFirstStart {
-          merge(repository.changes, retryRequests).onStart { emit(Unit) }.collectLatest { load() }  // пишет в _state
-      }
-      .flowOn(dispatchers.default)
-      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), _state.value)
-  fun onRetry() { retryRequests.tryEmit(Unit) }
-  ```
-- **Снимки чужого state не копировать в `_state`.** Значение из `deviceSession.state` и т.п.
-  комбинируется в `state` как источник; внутри интентов читать `deviceSession.state.value`, а не
-  поле, скопированное в `init`.
-- Ресурсы, открытые на время загрузки (`settings.open/close`), закрываются в `finally` — загрузку
-  может отменить `mapLatest` или уход VM.
-- **Тесты VM с `stateIn`:** `state.value` обновляется, только пока есть подписчик — тест
-  подписывается (`backgroundScope.launch { vm.state.collect {} }`), а `Dispatchers.setMain` —
-  `UnconfinedTestDispatcher`, чтобы источники отработали без `advanceUntilIdle()` на каждом шаге.
-
-**Запрещено, без исключений (частые «оправдания», которые не работают):**
-
-- `LaunchedEffect(Unit) { viewModel.start() }` / `init()` / `load()` / `prepareX()` — **запрещено**,
-  даже если метод назван не «load». Переименование init-хука не делает его легальным: любой
-  запуск работы VM из composition side-effect нарушает правило. Триггер — подписка на `state`.
-- **«Это платформенно-зависимо, поэтому можно через `LaunchedEffect`»** — нет. Composition
-  side-effects (`LaunchedEffect`/`DisposableEffect`) допустимы **только** для (а) привязки
-  платформенных объектов, живущих в композиции (напр. `BindEffect` для `PermissionsController`),
-  и (б) проброса UI-события/сигнала в метод-интент VM (`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`).
-  Запуск собственного жизненного цикла/загрузки VM сюда не входит — привязка контроллера и старт
-  работы VM это разные вещи.
-- **Начальный шаг/режим экрана как чистая функция от входа/платформы — это НЕ «работа», а начальное
-  значение состояния.** Вычисляй его в конструкторе VM (инициализация `MutableStateFlow`), а не
-  через `start()`-интент. Реактивные источники, завязанные на этот шаг (скан, подписки), стартуют
-  сами при первой подписке на `state` (`flatMapLatest`/`combine` + `stateIn(WhileSubscribed/Lazily)`).
-
-```kotlin
-// ❌ Плохо — init-хук через LaunchedEffect, даже под именем start()
-// VM:
-fun start() { if (started) return; started = true; _step.value = if (…) Scanning else Rationale }
-// UI:
-LaunchedEffect(Unit) { viewModel.start() }
-
-// ✅ Хорошо — начальный шаг = начальное состояние; скан реактивен и стартует по подписке
-private val _step = MutableStateFlow(if (requirements.isEmpty()) Scanning else Rationale)
-private val devices = _step.flatMapLatest { if (it is Scanning) scan() else flowOf(None) }
-val state = combine(_step, devices, …) { … }.stateIn(scope, WhileSubscribed(5.seconds), initial)
-// реакция на действие пользователя — явный интент (это не init-загрузка):
-fun onAllowClicked(controller: PermissionsController) { … }
-```
+- **Не `init {}`** — он работает при создании VM, а не при показе экрана: VM, созданная без подписчика (быстрая
+  навигация, превью), уже грузит данные.
+- **Не голый `onStart { load() }` на цепочке потока** — он блокирует цепочку до конца загрузки (`Loading` экран не
+  увидит) и повторяется на каждый перезапуск `WhileSubscribed`.
+- **`onStart()` стартует на Main, dispatcher переключает вызываемый код**: IO — `withContext(dispatchers.io)`, маппинг —
+  `dispatchers.default`, подписка — `flowOn` на холодном upstream. Привязки `collectIntoState` не подвешивают `onStart` —
+  у каждой своя корутина; долгую разовую работу — после привязок или в `intent { }`.
+- **Начальный шаг/режим экрана как чистая функция от входа/платформы — не «работа», а начальное state**
+  (`BaseViewModel(initialState)`); реактивные источники, завязанные на шаг, строятся через `select { step }`.
+- Composition side-effects (`LaunchedEffect`/`DisposableEffect`) допустимы **только** для привязки платформенных
+  объектов, живущих в композиции (`BindEffect` для `PermissionsController`), и проброса UI-события в интент VM
+  (`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`). Переименование init-хука (`start()`, `prepareX()`) не
+  делает его легальным.
+- **Тесты VM подписываются на state, как экран:** `backgroundScope.launch { vm.state.collect {} }`
+  (`Dispatchers.setMain(UnconfinedTestDispatcher())`), иначе `onStart` не запустится и `state.value` останется
+  начальным. Процесс, который должен жить без подписчика, проверяется отпиской и `advanceTimeBy` дольше 5 с.
 
 ### Корректность state
 
@@ -916,10 +1108,10 @@ fun onAllowClicked(controller: PermissionsController) { … }
 
 ```kotlin
 // Ошибка истории
-if (_state.value.history is LCEState.Content) {
-    emitEffect(Effect.PageLoadFailed)                            // лента остаётся, тост
+if (currentState.history is LCEState.Content) {
+    postSideEffect(SupportChatEffect.HistoryLoadFailed)           // лента остаётся, тост
 } else {
-    _state.update { it.copy(history = LCEState.Error(ChatError.from(e))) } // полноэкранная ошибка + Retry
+    reduce { copy(history = LCEState.Error(ChatError.from(e))) }  // полноэкранная ошибка + Retry
 }
 // Живое сообщение во время первой загрузки само переводит history в Content —
 // поэтому полноэкранная ошибка уже не затрёт ленту.
@@ -943,9 +1135,9 @@ if (_state.value.history is LCEState.Content) {
   (state или composable), а не дублируется в двух — копии разойдутся молча.
 - **Инварианты держит state, а не UI.** Порядок списка, дедупликация поддерживаются при вставке в
   state; сортировка в composable на каждом рендере — лишняя работа и второй источник истины.
-- **Check-then-act на `_state.value` не атомарен.** `if (_state.value.busy) return` + отдельный
-  `update` пропускают два быстрых нажатия. Проверка и запись — внутри одного `update {}` либо через
-  `executeWithProceedLock`.
+- **Check-then-act на `currentState` не атомарен между корутинами.** `if (currentState.busy) return` + отдельный
+  `reduce` после `suspend`-вызова пропускают два быстрых нажатия. Проверка и запись — внутри одного `reduce {}`
+  (синхронно в интенте, до запуска корутины) либо через `executeWithProceedLock`.
 - **Сетевые вызовы из частых UI-событий — пачкой.** Видимость элементов, ввод текста, скролл — не
   повод для запроса на каждое событие: UI отдаёт пачку (`onMessagesVisible(ids)`), VM батчит с
   debounce, если контракт принимает список.
@@ -956,37 +1148,44 @@ if (_state.value.history is LCEState.Content) {
 
 ### One-shot события (Effects)
 
-Навигация, snackbar'ы и прочие одноразовые события из ViewModel в UI — **только через `MutableSharedFlow`**. `Channel` + `receiveAsFlow()` в проекте не используем.
-
-Механизм изолирован в `core/ui` — `ru.alarmtrade.specmp.core.ui.effect`: фабрика `sideEffectFlow()` для emit-стороны и composable `collectSideEffect { }` для lifecycle-aware сбора. Руками `LaunchedEffect` + `repeatOnLifecycle` в фичах не писать.
+Навигация, snackbar'ы и прочие одноразовые события из ViewModel в UI — поток `sideEffect` базы: VM шлёт событие
+`postSideEffect(...)`, экран собирает его `collectSideEffect { }` (`core/ui`, `ru.alarmtrade.specmp.core.ui.effect`).
+Своих `MutableSharedFlow`/`Channel` для эффектов во VM нет (Konsist `view-model-owns-no-flows`); руками
+`LaunchedEffect` + `repeatOnLifecycle` в фичах не пишем.
 
 ```kotlin
-// ViewModel — emit через sideEffectFlow()
-class LoginViewModel(...) : BaseViewModel() {
-
-    private val _effect = sideEffectFlow<LoginEffect>()   // extraBufferCapacity = 1, replay = 0
-    val effect: SharedFlow<LoginEffect> = _effect.asSharedFlow()
-
-    private fun emitEffect(effect: LoginEffect) {
-        _effect.tryEmit(effect)
-    }
+// MainScreenEffect.kt
+sealed interface MainScreenEffect {
+    data class Navigate(val target: MainNavigationTarget) : MainScreenEffect
 }
 
-// UI — сбор через collectSideEffect
-viewModel.effect.collectSideEffect { effect ->
+// MainScreenViewModel.kt
+fun onSettingsClicked() {
+    reduce { copy(isMenuOpen = false) }
+    postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Settings))
+}
+
+// MainScreen.kt
+viewModel.sideEffect.collectSideEffect { effect ->
     when (effect) {
-        is LoginEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+        is MainScreenEffect.Navigate -> onNavigateToFeature(effect.target)
     }
 }
 ```
 
 **Правила:**
 
-- `sideEffectFlow()` фиксирует стандартную конфигурацию (`replay = 0`, буфер 16, `DROP_OLDEST`); эмит — через `tryEmit`, он никогда не возвращает `false`. `replay` не задаём (повтор события после пересоздания экрана приведёт к двойной навигации).
-- Обработчик в `collectSideEffect` выполняется последовательно: пока он suspend'ится (`showSnackbar` висит секунды), следующие эффекты ждут в буфере. Буфер это переживает, но обработчик не должен блокироваться бесконечно (ожидание результата другого экрана, `awaitCancellation`).
-- `collectSideEffect` собирает с `repeatOnLifecycle(STARTED)` и `rememberUpdatedState` — подписка приостанавливается в фоне, пересоздание лямбды не перезапускает сбор.
-- Эффекты эмитим только в ответ на действия пользователя, когда экран на переднем плане — коллектор гарантированно активен. Эмит «в пустоту» (до старта коллектора) будет потерян — не эмитить эффекты из `init`.
-- Несколько подписчиков получат одно и то же событие каждый — на эффект подписывается ровно один экран.
+- Тип события — `sealed interface XxxEffect` (или `XxxSideEffect`) в своём файле; даже одно событие — `data object`
+  (`Close`), а не голый `Unit`/`Boolean`. Экран без эффектов — `E = Nothing`.
+- Поток эффектов: `replay = 0` (повтор события после пересоздания экрана — двойная навигация), буфер 16,
+  `DROP_OLDEST` — `postSideEffect` не блокирует и не теряет события, пока обработчик suspend'ится.
+- Обработчик в `collectSideEffect` выполняется последовательно: пока он висит (`showSnackbar` — секунды), следующие
+  эффекты ждут в буфере; бесконечно блокироваться он не должен.
+- `collectSideEffect` собирает с `repeatOnLifecycle(STARTED)` и `rememberUpdatedState` — подписка приостанавливается в
+  фоне, пересоздание лямбды не перезапускает сбор.
+- Эффекты шлём в ответ на действия пользователя, когда экран на переднем плане. Событие, эмитнутое без коллектора
+  (из `onStart` до отрисовки, в фоне), теряется; результат, который нельзя потерять, — поле state.
+- На эффект подписывается ровно один экран.
 
 ### Compose: локальное состояние и стабильность
 
@@ -1111,13 +1310,13 @@ sealed interface ProfileFormError {
 ```kotlin
 // ❌ Плохо — строковый код как контракт VM ↔ UI
 // ViewModel:
-_state.update { it.copy(registrationError = "required_fields") }
+reduce { copy(registrationError = "required_fields") }
 // UI (другой файл, своя копия константы):
 if (state.error == REQUIRED_FIELDS_ERROR) { /* ... */ }
 
 // ✅ Хорошо — типизированная ошибка в state
 enum class RegistrationError { RequiredFields, RequestFailed }
-_state.update { it.copy(error = RegistrationError.RequiredFields) }
+reduce { copy(error = RegistrationError.RequiredFields) }
 // UI:
 val text = when (error) {
     RegistrationError.RequiredFields -> stringResource(Strings.string.login_common_error_required_fields)
@@ -1146,40 +1345,61 @@ val text = when (error) {
 
 ## Внедрение зависимостей — Koin 4.2.2
 
-Инициализация в `composeApp` через `KoinApplication { modules(...) }` в `App()` (не `startKoin`);
-`composeApp` подключает все Koin-модули приложения и является composition root.
+Инициализация в composition root через `KoinApplication { modules(...) }` (не `startKoin`): `App()` в `composeApp`,
+`FlasherApp()` во `flasherApp`; список модулей корня — функция в его пакете `di`.
 
 ```kotlin
 // composeApp/.../App.kt
 KoinApplication(application = {
-    modules(commonModule, specialistModule, loginModule)
+    modules(platformModules + appKoinModules(versionName, versionCode)) // di/AppKoinModules.kt
 }) {
     AppTheme(onThemeChange) { AppNavigation() }
 }
 
 // DI-модуль в feature/*/di/
 val myFeatureModule = module {
-    singleOf(::MyRepositoryImpl) bind MyRepository::class
+    singleOf(::SpecialistMyRepository) bind MyRepository::class
     viewModelOf(::MyViewModel)
 }
 
-// В Compose-экранах
+// В Compose-экранах фичи
 val viewModel = koinViewModel<MyViewModel>()
-val dep = koinInject<MyDependency>()
+
+// В корне композиции (composeApp/flasherApp) — и дальше параметром
+FirmwareBootGraph(onExit = onExit, onOpenSupportChat = {}, archivePicker = koinInject())
 ```
 
 **Правила:**
 
-- `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
+- **`koinInject` — только в корнях композиции `composeApp`/`flasherApp`** (Konsist `composable-injection`): composable
+  фичи получает зависимость параметром из корня, через ViewModel (`koinViewModel` разрешён) или `CompositionLocal`,
+  заданный в корне. Платформенному `remember*` фичи нужное для работы (app-scope, диспетчер) передаёт корень
+  (`rememberFirmwareFilePicker(appScope, ioDispatcher)`).
+- **Список модулей корня — функция в `di`** (`appKoinModules(versionName, versionCode)` в `composeApp`,
+  `flasherKoinModules(…)` во `flasherApp`; платформенные — `rememberPlatformKoinModules()` отдельно). Граф проверяет
+  JVM-тест корня (`AppKoinModulesTest`, `FlasherKoinModulesTest`: koin-test `Module.verify`): у каждого параметра
+  конструктора определения есть определение. Платформенные типы и значения, собранные в лямбдах модулей, —
+  `extraTypes`; параметры ViewModel из `parametersOf` — `injections` (`definition<Vm>(Param::class)`, internal-классы
+  фич — по имени рефлексией). Новый модуль/параметр `parametersOf` — правка списка или теста в том же изменении.
+- `feature/*/di` регистрирует только зависимости конкретной фичи: репозитории, `*DataSource`, доменные сервисы,
+  ViewModel (мапперы — top-level функции, в DI не регистрируются).
+- **Koin-модуль — `val <name>Module` в пакете `di`** (Konsist `koin-module`), включая `core/*`
+  (`core/lifecycle/di/AppLifecycleModule.kt`, `core/specialist/di/SpecialistModule.kt`).
+- **Реализацию (`*Impl`, `Specialist*Repository`) создаёт только Koin-модуль** (Konsist `koin-wiring`): `Foo(…)` или
+  `::Foo` вне пакета `di` — ручная сборка графа в обход DI; остальной код получает абстракцию конструктором.
 - **Один Koin-модуль на gradle-модуль, в его корневом пакете `di/`** (`feature/<name>/…/<name>/di/<Name>Module.kt`). Не заводить `ui/di`, `data/di` внутри модуля: ViewModel и репозитории одного gradle-модуля регистрируются вместе. Отдельный UI-модуль Koin бывает только у отдельного gradle-модуля `<name>-ui`.
 - App-level инфраструктура и SDK-контейнеры регистрируются в `core/*`/`composeApp`,
   не в фиче — см. раздел «Core».
-- Не добавляй use case, если он только прокидывает один вызов в repository. В таком случае
-  ViewModel может зависеть от repository напрямую; отдельный use case нужен только когда он
-  инкапсулирует самостоятельное бизнес-правило или оркестрацию нескольких зависимостей.
+- **Koin как сервис-локатор** (`KoinComponent`/`inject`/`get`, `GlobalContext`, `KoinPlatformTools`…) — только пакеты `di`,
+  composition roots, платформенные обёртки и Android-компоненты, которые создаёт система (Konsist `no-service-locator`);
+  остальной код получает зависимости конструктором.
+- Use case — только для оркестрации ≥ 2 зависимостей (см. «Use case»); один вызов репозитория VM делает напрямую.
 
 Чеклист при добавлении фичи:
 
-1. Добавить зависимость модуля в `composeApp/build.gradle.kts`
-2. Зарегистрировать Koin-модуль в `KoinApplication { modules(...) }` в `App()`
-3. Добавить маршруты в навигацию в `AppNavigation.kt`
+1. Добавить зависимость модуля в `composeApp/build.gradle.kts` (фича устройства, нужная прошивальщику, — и во
+   `flasherApp/build.gradle.kts`).
+2. Добавить Koin-модуль в список корня — `appKoinModules(…)` (`composeApp/.../di/AppKoinModules.kt`; во `flasherApp` —
+   `flasherKoinModules(…)`) и прогнать `AppKoinModulesTest`/`FlasherKoinModulesTest` (`jvmTest` корня).
+3. Доменный сервис со `start()` — слот в `di/AppServicesModule.kt` (и `di/FlasherServicesModule.kt`), см. «Доменные сервисы».
+4. Добавить маршруты в навигацию в `AppNavigation.kt`.

@@ -1,7 +1,15 @@
 package ru.alarmtrade.specmp.feature.configurator.di
 
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
+import ru.alarmtrade.specmp.feature.configurator.data.datasource.CloudConfigurationsDataSource
+import ru.alarmtrade.specmp.feature.configurator.data.datasource.DeviceModelsDataSource
+import ru.alarmtrade.specmp.feature.configurator.data.datasource.LocalConfigurationsDataSource
+import ru.alarmtrade.specmp.feature.configurator.data.datasource.SpecialistCloudConfigurationsDataSource
+import ru.alarmtrade.specmp.feature.configurator.data.datasource.SpecialistDeviceModelsDataSource
+import ru.alarmtrade.specmp.feature.configurator.data.datasource.SpecialistLocalConfigurationsDataSource
 import ru.alarmtrade.specmp.feature.configurator.data.repository.SpecialistCloudConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.data.repository.SpecialistDeviceModelsRepository
 import ru.alarmtrade.specmp.feature.configurator.data.repository.SpecialistLocalConfigurationsRepository
@@ -11,20 +19,17 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigur
 
 private const val CONFIGURATOR_PREFERENCES = "configurator"
 
-/**
- * Koin-модуль логической фичи `feature/configurator`: «Мои конфигурации», облачные конфигурации, модели блоков.
- * SDK-интеракторы — из `core/specialist`, сессии настроек — из `feature/device/settings`.
- */
 val configuratorModule = module {
-    // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание репозитория.
-    single<LocalConfigurationsRepository> {
-        SpecialistLocalConfigurationsRepository(interactor = { get() }, settings = get())
-    }
-    single<CloudConfigurationsRepository> { SpecialistCloudConfigurationsRepository(interactor = { get() }) }
+    // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание источника.
+    single<LocalConfigurationsDataSource> { SpecialistLocalConfigurationsDataSource(interactor = { get() }) }
+    single<CloudConfigurationsDataSource> { SpecialistCloudConfigurationsDataSource(interactor = { get() }) }
+    single<DeviceModelsDataSource> { SpecialistDeviceModelsDataSource(interactor = { get() }) }
+    singleOf(::SpecialistLocalConfigurationsRepository) bind LocalConfigurationsRepository::class
+    singleOf(::SpecialistCloudConfigurationsRepository) bind CloudConfigurationsRepository::class
     single<DeviceModelsRepository> {
         SpecialistDeviceModelsRepository(
-            interactor = { get() },
-            settings = get<AppSettingsFactory>().create(CONFIGURATOR_PREFERENCES)
+            dataSource = get(),
+            settings = get<AppSettingsFactory>().create(CONFIGURATOR_PREFERENCES),
         )
     }
 }

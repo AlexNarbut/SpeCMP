@@ -48,11 +48,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.Settin
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
-/**
- * CAN-код: 4 ячейки (цифровая клавиатура), «Найти автомобиль» по коду и «Выбрать из каталога». Один
- * найденный по коду автомобиль привязывается сразу, несколько — выбор, ни одного или нет связи — предупреждение (код
- * всё равно можно применить). Выбор из каталога подставляет и код, и автомобиль.
- */
 @Suppress("LongMethod")
 @Composable
 internal fun CanCodeEditor(
@@ -62,14 +57,14 @@ internal fun CanCodeEditor(
     onCodeChange: (String) -> Unit,
     onSearch: () -> Unit,
     onPick: (carId: Int) -> Unit,
-    onPickFromCatalog: () -> Unit
+    onPickFromCatalog: () -> Unit,
 ) {
     val complete = value.code.length == CAN_CODE_LENGTH
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             CmpCodeField(
                 value = value.code,
@@ -78,48 +73,47 @@ internal fun CanCodeEditor(
                 clearContentDescription = stringResource(Strings.string.settings_can_a11y_clear),
                 length = CAN_CODE_LENGTH,
                 isError = value.code.isNotEmpty() && !complete,
-                modifier = Modifier.testTag(SettingsTestTags.CAN_CODE)
+                modifier = Modifier.testTag(SettingsTestTags.CAN_CODE),
             )
             if (!complete) {
                 CmpText(
                     text = stringResource(Strings.string.settings_can_hint_digits),
                     style = CmpTextStyle.Body,
-                    color = if (value.code.isEmpty()) cmpThemeColors().onSurfaceVariant else cmpThemeColors().error
+                    color = if (value.code.isEmpty()) cmpThemeColors().onSurfaceVariant else cmpThemeColors().error,
                 )
             }
         }
         CmpOutlinedButton(
             onClick = onSearch,
             enabled = complete && carSearch != LCEState.Loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_FIND)
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_FIND),
         ) {
             CmpIcon(icon = CmpIcons.Search, contentDescription = null)
             CmpText(
                 text = stringResource(Strings.string.settings_can_btn_find),
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
             )
         }
         CmpOutlinedButton(
             onClick = onPickFromCatalog,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_PICK_VEHICLE)
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag(SettingsTestTags.CAN_PICK_VEHICLE),
         ) {
             CmpIcon(icon = CmpIcons.DirectionsCar, contentDescription = null)
             CmpText(
                 text = stringResource(Strings.string.settings_can_btn_catalog),
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
             )
         }
         CarSearchResult(value, carSearch, cars, onPick)
     }
 }
 
-/** Результат поиска автомобиля по коду: привязанный автомобиль, загрузка, выбор из нескольких или предупреждение. */
 @Composable
 private fun CarSearchResult(
     value: CanCode,
     carSearch: LCEState<List<CarSummary>, SettingsError>,
     cars: Map<Int, CarSummary>,
-    onPick: (carId: Int) -> Unit
+    onPick: (carId: Int) -> Unit,
 ) {
     val colors = cmpThemeColors()
     when (carSearch) {
@@ -130,7 +124,7 @@ private fun CarSearchResult(
             CmpText(
                 text = stringResource(Strings.string.settings_can_loading),
                 style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
         }
 
@@ -140,7 +134,7 @@ private fun CarSearchResult(
 
                 is SettingsError.Common ->
                     "${error.error.message()}. ${stringResource(Strings.string.settings_can_msg_apply_without_car)}"
-            }
+            },
         )
 
         is LCEState.Content -> when (carSearch.content.size) {
@@ -152,7 +146,7 @@ private fun CarSearchResult(
                 CmpText(
                     text = stringResource(Strings.string.settings_can_msg_many),
                     style = CmpTextStyle.Body,
-                    color = colors.onSurfaceVariant
+                    color = colors.onSurfaceVariant,
                 )
                 carSearch.content.forEach { car ->
                     val selected = car.id == value.carId
@@ -162,19 +156,19 @@ private fun CarSearchResult(
                             .heightIn(min = 56.dp)
                             .background(
                                 if (selected) colors.secondaryContainer else Color.Transparent,
-                                RoundedCornerShape(16.dp)
+                                RoundedCornerShape(16.dp),
                             )
                             .clickable(role = Role.RadioButton) { onPick(car.id) }
                             .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         CmpRadioButton(selected = selected, onClick = null)
                         CmpText(
                             text = carLabel(car),
                             style = CmpTextStyle.BodyLarge,
                             color = if (selected) colors.onSecondaryContainer else colors.onSurface,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
@@ -192,14 +186,14 @@ private fun CarCard(text: String) {
             .background(colors.primaryContainer, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = CmpIcons.Check, contentDescription = null, tint = colors.onPrimaryContainer)
         CmpText(
             text = text,
             style = CmpTextStyle.BodyLarge,
             fontWeight = FontWeight.SemiBold,
-            color = colors.onPrimaryContainer
+            color = colors.onPrimaryContainer,
         )
     }
 }
@@ -213,7 +207,7 @@ private fun Warning(text: String) {
             .background(colors.tertiaryContainer, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(icon = CmpIcons.Warning, contentDescription = null, tint = colors.onTertiaryContainer)
         CmpText(text = text, style = CmpTextStyle.Body, color = colors.onTertiaryContainer)

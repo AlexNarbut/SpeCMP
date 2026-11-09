@@ -7,13 +7,11 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.Configura
 @Immutable
 internal data class ModelsState(
     val list: LCEState<List<String>, ConfiguratorError> = LCEState.Loading,
-    /** Имя файла (K3) — подзаголовок; `null` — «С нуля». */
+    /** Имя файла — подзаголовок; `null` — «С нуля». */
     val fileName: String? = null,
     val recent: List<String> = emptyList(),
     val connected: String? = null,
     val query: String = "",
-    /** Проверяем файл в выбранной модели. */
     val checking: Boolean = false,
-    /** Файл не открылся для этой модели. */
-    val fileError: String? = null
+    val fileError: String? = null,
 )

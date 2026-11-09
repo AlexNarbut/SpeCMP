@@ -22,8 +22,8 @@ core/localization/src/commonMain/composeResources/
 
 - **Файл фичи = префикс её ключей** (`login.xml` → только `login_*`). Языки добавляются папками
   `values-<lang>/` с тем же набором файлов и ключей.
-- В фиче — **только картинки** (`composeResources/drawable/`, свой `Res`). Блок `compose.resources` и
-  `androidResources.enable = true` в `build.gradle.kts` фичи нужны **только если у неё есть свои картинки**;
+- В фиче — **только картинки** (`composeResources/drawable/`, свой `Res`). Блок `compose.resources` в
+  `build.gradle.kts` фичи нужен **только если у неё есть свои картинки** (`androidResources` включает конвенция);
   ради строк модуль ничего не настраивает — достаточно зависимости `implementation(project(":core:localization"))`.
 
 ### Реестр префиксов
@@ -36,7 +36,7 @@ core/localization/src/commonMain/composeResources/
 | `advancedmount` | `feature/advanced-mount` |
 | `vehicle`, `configurator` | `feature/vehicle-ui`, `feature/configurator-ui` |
 | `firmware`, `settings` | `feature/device/firmware`, `feature/device/settings-ui` |
-| `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui` |
+| `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui`, `feature/device/presentation-core` |
 | `autostart` | `feature/device/autostart` (бесключевой обход, процедура Clone) |
 | `devicestate` | `feature/device/state` (проверка состояния) |
 | `fastmount` | `feature/fast-mount` (мастер быстрого монтажа) |
@@ -212,7 +212,7 @@ iOS — `NSLocale.preferredLanguages`, кэшируется на старте п
 перезапуска. Схема похожа на `sportlinesNew` (там нет шага `onConfigurationChanged` ниже — и та же ошибка при смене
 размера окна).
 
-1. **Хранение** — `core/localization` (`AppLocale.kt`): свой `Settings`, ключ `app_locale` (не Koin: на Android язык
+1. **Хранение** — `core/localization` (`AppLocale.kt`): платформенный `Settings` процесса (`platformSettings`, `core/common/di`), ключ `app_locale` (не Koin: на Android язык
    нужен в `attachBaseContext`, до старта DI). `currentAppLocale()` — выбор или системный; `saveAppLocale(locale)` —
    сохранить (iOS — сразу и `AppleLanguages`).
 2. **Применение на старте:**
@@ -304,5 +304,5 @@ CMP-парсер обрабатывает **только** эти последо
    наборы — `<string-array>` (п. 8).
 3. В Kotlin-коде нет захардкоженных строк (кроме технических: log tags, debug); технические строки — в
    `private const val`, UI-текст не собирается конкатенацией (п. 6, 7).
-4. Модуль зависит от `:core:localization`; `compose.resources` и `androidResources.enable = true` — только если у
+4. Модуль зависит от `:core:localization`; `compose.resources` — только если у
    фичи есть свои картинки (`docs/build.md`, «Ресурсы»).

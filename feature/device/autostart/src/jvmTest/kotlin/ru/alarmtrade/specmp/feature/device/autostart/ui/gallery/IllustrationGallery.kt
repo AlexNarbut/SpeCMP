@@ -29,7 +29,7 @@ class IllustrationGallery {
         FlowRow(
             modifier = Modifier.fillMaxSize().background(colors.background).padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AutostartIllustration.entries.forEach { illustration ->
                 CmpColumn(modifier = Modifier.width(180.dp)) {
@@ -39,7 +39,7 @@ class IllustrationGallery {
                         accent = colors.primary,
                         modifier = Modifier
                             .aspectRatio(720f / 495f)
-                            .background(colors.surfaceContainerLow, RoundedCornerShape(16.dp))
+                            .background(colors.surfaceContainerLow, RoundedCornerShape(16.dp)),
                     )
                     CmpText(text = illustration.name, color = colors.onSurfaceVariant)
                 }

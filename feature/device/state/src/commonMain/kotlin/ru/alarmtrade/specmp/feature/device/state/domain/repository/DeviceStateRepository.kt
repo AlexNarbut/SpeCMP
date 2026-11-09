@@ -6,12 +6,8 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.CommandReply
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 
-/** Живое состояние блока и команды управления (SDK — только BLE). */
 interface DeviceStateRepository {
-    /**
-     * Снимки состояния: холодный поток — опрос блока стартует при сборе и останавливается при его отмене.
-     * Пустой стартовый снимок SDK пропускается; ошибки опроса — [Response.Error], поток не обрывают.
-     */
+    /** Холодный поток: опрос стартует при сборе и останавливается при отмене; ошибки опроса поток не обрывают. */
     fun states(): Flow<Response<VehicleState>>
 
     /**

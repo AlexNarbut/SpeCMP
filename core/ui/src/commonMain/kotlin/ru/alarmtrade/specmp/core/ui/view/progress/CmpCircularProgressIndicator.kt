@@ -7,16 +7,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * @param progress null means indeterminate
- */
+/** [progress] = null — неопределённый индикатор. */
 @Composable
 fun CmpCircularProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float? = null,
     strokeWidth: Dp = 4.dp,
     color: Color = Color.Unspecified,
-    trackColor: Color = Color.Unspecified
+    trackColor: Color = Color.Unspecified,
 ) {
     if (progress != null) {
         CircularProgressIndicator(
@@ -32,7 +30,7 @@ fun CmpCircularProgressIndicator(
                 trackColor
             } else {
                 androidx.compose.material3.ProgressIndicatorDefaults.circularTrackColor
-            }
+            },
         )
     } else {
         CircularProgressIndicator(
@@ -47,7 +45,7 @@ fun CmpCircularProgressIndicator(
                 trackColor
             } else {
                 androidx.compose.material3.ProgressIndicatorDefaults.circularTrackColor
-            }
+            },
         )
     }
 }

@@ -5,7 +5,7 @@ data class SignUpCredentials(
     val email: String,
     val phoneNumber: String,
     val password: String,
-    val isInstallerConfirmed: Boolean
+    val isInstallerConfirmed: Boolean,
 ) {
     val normalizedFullName: String = fullName.trim()
     val normalizedEmail: String = email.trim()
@@ -19,7 +19,6 @@ data class SignUpCredentials(
     }
 
     private companion object {
-        // Правила зафиксированы в дизайне auth-флоу (design/features/auth).
         val EMAIL_REGEX = Regex("""^[^\s@]+@[^\s@]+\.[^\s@]+$""")
         val PHONE_REGEX = Regex("""^[+\d][\d\s()-]{5,}$""")
         const val MIN_PASSWORD_LENGTH = 6

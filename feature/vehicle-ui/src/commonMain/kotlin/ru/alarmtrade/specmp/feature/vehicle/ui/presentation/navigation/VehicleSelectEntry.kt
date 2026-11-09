@@ -32,12 +32,8 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectViewModel
 
 /**
- * Точка входа «Выбор автомобиля» (каталог и карточка автомобиля). Подключается через слоты навигации в
- * `composeApp` (главная, расширенный монтаж, настройки блока).
- *
- * @param onPick выбранный автомобиль (только [VehicleSelectMode.PICK]); закрыть экран — дело вызывающего.
- * @param onOpenFirmwareArchive открыть архив прошивок с CAN-кодом (режим просмотра); `null` — кнопки нет.
- * @param onOpenUserManual открыть народную карту; `null` — строки без перехода.
+ * [onPick] — только в [VehicleSelectMode.PICK], закрыть экран — дело вызывающего; `null` у [onOpenFirmwareArchive] и
+ * [onOpenUserManual] — без кнопки и перехода.
  */
 @Composable
 fun VehicleSelectEntry(
@@ -45,12 +41,12 @@ fun VehicleSelectEntry(
     onPick: (CarSummary) -> Unit,
     onBack: () -> Unit,
     onOpenFirmwareArchive: ((canCode: String) -> Unit)? = null,
-    onOpenUserManual: ((manualId: Int) -> Unit)? = null
+    onOpenUserManual: ((manualId: Int) -> Unit)? = null,
 ) {
     // Ключ — запрос: каталог для другого режима в том же владельце (справочник и выбор для архива) — своя ViewModel.
     val viewModel = koinViewModel<VehicleSelectViewModel>(
         key = "VehicleSelect:$request",
-        parameters = { parametersOf(request) }
+        parameters = { parametersOf(request) },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
@@ -61,7 +57,7 @@ fun VehicleSelectEntry(
     val currentOnPick by rememberUpdatedState(onPick)
     val currentOnBack by rememberUpdatedState(onBack)
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is VehicleSelectEffect.Picked -> currentOnPick(effect.car)
 
@@ -80,7 +76,7 @@ fun VehicleSelectEntry(
         val layout = vehicleLayoutOf(maxWidth)
         NavigationBackHandler(
             state = rememberNavigationEventState(NavigationEventInfo.None),
-            onBackCompleted = { viewModel.onBack(layout) }
+            onBackCompleted = { viewModel.onBack(layout) },
         )
         val actions = remember(viewModel, layout, onOpenFirmwareArchive, onOpenUserManual) {
             VehicleSelectActions(
@@ -120,8 +116,8 @@ fun VehicleSelectEntry(
                     onOpenFirmwareArchive = onOpenFirmwareArchive,
                     onOpenUserManual = onOpenUserManual,
                     onDialogDismiss = viewModel::onDialogDismiss,
-                    onMismatchConfirm = viewModel::onMismatchConfirm
-                )
+                    onMismatchConfirm = viewModel::onMismatchConfirm,
+                ),
             )
         }
         VehicleSelectContent(
@@ -129,7 +125,7 @@ fun VehicleSelectEntry(
             layout = layout,
             windowWidth = maxWidth,
             actions = actions,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
         )
     }
 }

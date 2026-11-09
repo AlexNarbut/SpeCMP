@@ -58,12 +58,11 @@ class FlasherActivity : FragmentActivity() {
         }
 
         setContent {
-            // testTag видны снаружи (uiautomator, ui-test) как resource-id.
             Box(modifier = Modifier.semantics { testTagsAsResourceId = true }) {
                 FlasherApp(
                     appVersionName = versionName,
                     appVersionCode = versionCode,
-                    onThemeChange = { ThemeChanged(it) }
+                    onThemeChange = { ThemeChanged(it) },
                 )
             }
         }

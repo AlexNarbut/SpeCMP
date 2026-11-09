@@ -92,20 +92,13 @@ private val HeroSize = 128.dp
 internal const val SERIAL_UPDATE_FILE_TAG = "firmware_serial_update_file"
 internal const val SERIAL_RESULT_OK_TAG = "firmware_serial_result_ok"
 
-/**
- * «Прошивка по COM-порту»: публичная точка входа (приложение прошивки, `flasherApp`) — контент хоста устройства
- * для сессии [ConnectionTransport.SERIAL][ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport]
- * и в рабочем режиме блока, и в загрузчике. «Назад» заблокирован, пока идёт обновление.
- *
- * @param onExit выход из flow устройства (закрывает сессию).
- * @param filePicker выбор файла прошивки в файловом менеджере (платформа, composition root).
- */
+/** Контент хоста и в рабочем режиме блока, и в загрузчике; «Назад» заблокирован, пока идёт обновление. */
 @Composable
 fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = NoFirmwareFilePicker) {
     val viewModel = koinViewModel<SerialFirmwareViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             SerialFirmwareEffect.Exit -> onExit()
         }
@@ -114,7 +107,7 @@ fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = No
     LaunchedEffect(filePicker) { filePicker.results.collect(viewModel::onFilePicked) }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = viewModel::onBack
+        onBackCompleted = viewModel::onBack,
     )
 
     val actions = remember(viewModel, filePicker) {
@@ -123,13 +116,12 @@ fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = No
             onFileClick = filePicker::launch,
             onConfirmUpdate = viewModel::onConfirmUpdate,
             onCancelConfirm = viewModel::onCancelConfirm,
-            onResultOk = viewModel::onResultOk
+            onResultOk = viewModel::onResultOk,
         )
     }
     SerialFirmwareContent(state = state, actions = actions)
 }
 
-/** Stateless-контент экрана прошивки по COM: иллюстрация и тело по фазе. */
 @Composable
 internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFirmwareActions) {
     CmpScaffold(
@@ -145,23 +137,23 @@ internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFi
                             CmpIcon(
                                 icon = CmpIcons.Lock,
                                 contentDescription = stringResource(Strings.string.firmware_update_a11y_locked),
-                                tint = cmpThemeColors().onSurfaceVariant
+                                tint = cmpThemeColors().onSurfaceVariant,
                             )
                         }
                     } else {
                         CmpIconButton(
                             onClick = actions.onBack,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.firmware_common_a11y_back)
+                            contentDescription = stringResource(Strings.string.firmware_common_a11y_back),
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         CmpColumn(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CmpBox(modifier = Modifier.padding(top = 20.dp, bottom = 4.dp)) { PhaseHero(state.phase) }
             CmpColumn(
@@ -170,7 +162,7 @@ internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFi
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PhaseBody(state, actions)
             }
@@ -192,7 +184,8 @@ private fun PhaseHero(phase: SerialPhase) {
         SerialPhase.CheckingBoot,
         is SerialPhase.Transfer,
         SerialPhase.Verify,
-        SerialPhase.Apply -> FirmwareHero(CmpIcons.SystemUpdate, size = HeroSize, pulse = true)
+        SerialPhase.Apply,
+        -> FirmwareHero(CmpIcons.SystemUpdate, size = HeroSize, pulse = true)
     }
 }
 
@@ -224,7 +217,7 @@ private fun PhaseBody(state: SerialFirmwareState, actions: SerialFirmwareActions
             InfoBanner(
                 text = stringResource(phase.failure.messageRes()),
                 tone = BannerTone.Error,
-                icon = CmpIcons.AlertCircle
+                icon = CmpIcons.AlertCircle,
             )
             BigButton(Strings.string.firmware_common_btn_retry, actions.onResultOk, SERIAL_RESULT_OK_TAG)
         }
@@ -238,9 +231,9 @@ private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, deviceVersion: String?,
             text = stringResource(
                 Strings.string.firmware_serial_msg_other_device,
                 mismatch.fileSystemName,
-                mismatch.deviceSystemName
+                mismatch.deviceSystemName,
             ),
-            tone = BannerTone.Warning
+            tone = BannerTone.Warning,
         )
     }
     ConfirmBody(
@@ -249,11 +242,11 @@ private fun ConfirmPhaseBody(phase: SerialPhase.Confirm, deviceVersion: String?,
             newVersion = phase.fileVersion ?: phase.fileName,
             description = "",
             older = phase.older,
-            localFile = false
+            localFile = false,
         ),
         testChannel = false,
         onUpdate = actions.onConfirmUpdate,
-        onCancel = actions.onCancelConfirm
+        onCancel = actions.onCancelConfirm,
     )
 }
 
@@ -298,10 +291,10 @@ private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
                 when (error) {
                     FileError.TooLarge -> Strings.string.firmware_update_error_file_too_large
                     FileError.Failed -> Strings.string.firmware_update_error_file
-                }
+                },
             ),
             tone = BannerTone.Error,
-            icon = CmpIcons.ErrorOutline
+            icon = CmpIcons.ErrorOutline,
         )
     }
     state.fileProblem?.let { problem ->
@@ -310,7 +303,7 @@ private fun ReadyBody(state: SerialFirmwareState, onFileClick: () -> Unit) {
                 SerialFileProblem.NotFrm -> stringResource(Strings.string.firmware_serial_error_file)
             },
             tone = BannerTone.Error,
-            icon = CmpIcons.ErrorOutline
+            icon = CmpIcons.ErrorOutline,
         )
     }
     BigButton(Strings.string.firmware_common_btn_update_file, onFileClick, SERIAL_UPDATE_FILE_TAG)
@@ -321,7 +314,7 @@ private fun BigButton(text: StringResource, onClick: () -> Unit, tag: String) {
     CmpButton(
         text = stringResource(text),
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(tag)
+        modifier = Modifier.fillMaxWidth().height(BigButtonHeight).testTag(tag),
     )
 }
 

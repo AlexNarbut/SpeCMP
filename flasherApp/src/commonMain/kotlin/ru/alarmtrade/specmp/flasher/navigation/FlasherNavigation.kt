@@ -17,6 +17,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.koinInject
+import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -24,23 +26,22 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.feature.authstate.presentation.navigation.AuthStateNavGraph
 import ru.alarmtrade.specmp.feature.authstate.presentation.screen.SessionCheckErrorScreen
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file.FirmwareFileScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.serial.SerialFirmwareScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareSources
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
-import ru.alarmtrade.specmp.flasher.filepicker.rememberFirmwareFilePicker
 
-/** Поиск устройства — корень авторизованной зоны. */
 @Serializable
 @SerialName("flasher.ScanRoute")
 private data object ScanRoute : NavKey
 
-/** Подключённый блок (BLE / USB / COM): хост устройства — связь, обрыв, рабочий режим и загрузчик. */
 @Serializable
 @SerialName("flasher.DeviceRoute")
 private data object DeviceRoute : NavKey
@@ -54,17 +55,13 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Навигация приложения прошивки: логин (первая версия; финальная — без авторизации) → поиск → блок.
- * Экранов два: поиск и экран блока с одной кнопкой «Обновить из файла».
- */
 @Composable
 fun FlasherNavigation() {
     AuthStateNavGraph(
         waitingState = { StartLoading() },
         noAuthState = { LoginNavGraph() },
         authedState = { AuthedNavGraph() },
-        errorState = { onRetry -> SessionCheckErrorScreen(onRetry = onRetry) }
+        errorState = { onRetry -> SessionCheckErrorScreen(onRetry = onRetry) },
     )
 }
 
@@ -77,7 +74,7 @@ private fun AuthedNavGraph() {
         onBack = { backStack.popSafe() },
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {
             entry<ScanRoute> { _ ->
@@ -86,24 +83,24 @@ private fun AuthedNavGraph() {
                 DeviceSelectionNavGraph(
                     onSessionCreate = { backStack.replaceCurrent(DeviceRoute) },
                     onClose = null,
-                    serialEnabled = true
+                    serialEnabled = true,
                 )
             }
             entry<DeviceRoute> { _ -> DeviceEntry(onExit = { backStack.replaceCurrent(ScanRoute) }) }
-        }
+        },
     )
 }
 
-/**
- * Экран блока. BLE / USB: «Обновить из файла» переводит блок в загрузчик, прошивку ведёт граф загрузчика.
- * COM: загрузчик SDK входит сам внутри обновления — один экран прошивки по COM в обоих слотах хоста (VM у них общая).
- * Транспорт читается один раз: сессия уже создана поиском, а на выходе она закрывается (транспорт — `null`).
- */
+/** COM: загрузчик SDK входит сам внутри обновления — один экран прошивки в обоих слотах хоста (VM у них общая). */
 @Composable
 private fun DeviceEntry(onExit: () -> Unit) {
     val session = koinInject<DeviceSession>()
     val serial = remember(session) { session.transport.value == ConnectionTransport.SERIAL }
-    val filePicker = rememberFirmwareFilePicker()
+    val filePicker = rememberFirmwareFilePicker(
+        appScope = koinInject(qualifier = appScopeQualifier),
+        ioDispatcher = koinInject<AppDispatchers>().io,
+    )
+    val archivePicker = koinInject<FirmwareArchivePicker>()
     DeviceInteractionHost(
         onExit = onExit,
         bootContent = { exit ->
@@ -113,11 +110,12 @@ private fun DeviceEntry(onExit: () -> Unit) {
                 FirmwareBootGraph(
                     onExit = exit,
                     onOpenSupportChat = {},
+                    archivePicker = archivePicker,
                     filePicker = filePicker,
-                    sources = FirmwareSources.FileOnly
+                    sources = FirmwareSources.FileOnly,
                 )
             }
-        }
+        },
     ) { _, exit ->
         if (serial) {
             SerialFirmwareScreen(onExit = exit, filePicker = filePicker)

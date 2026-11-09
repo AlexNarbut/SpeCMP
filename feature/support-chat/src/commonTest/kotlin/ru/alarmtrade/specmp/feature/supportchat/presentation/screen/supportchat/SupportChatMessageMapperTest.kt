@@ -31,7 +31,7 @@ class SupportChatMessageMapperTest {
         val mine = mapper.map(sdkMessage(text = "My"), myEmail = "me@example.com")!!
         val theirs = mapper.map(
             sdkMessage(text = "Their", senderLogin = "agent@example.com"),
-            myEmail = "me@example.com"
+            myEmail = "me@example.com",
         )!!
 
         assertTrue(mine.isMine)
@@ -49,16 +49,16 @@ class SupportChatMessageMapperTest {
     fun `exclusive content maps to text or attachment only`() {
         val text = mapper.map(
             sdkMessage(content = ChatMessageContent.Text("caption")),
-            myEmail = null
+            myEmail = null,
         )!!
         assertEquals("caption", text.text)
         assertNull(text.attachment)
 
         val image = mapper.map(
             sdkMessage(
-                content = ChatMessageContent.Image(id = "img-1", name = "a.png", url = "https://files/a.png")
+                content = ChatMessageContent.Image(id = "img-1", name = "a.png", url = "https://files/a.png"),
             ),
-            myEmail = null
+            myEmail = null,
         )!!
         assertNull(image.text)
         assertEquals("img-1", image.attachment?.id)
@@ -68,12 +68,12 @@ class SupportChatMessageMapperTest {
         time: LocalDateTime = LocalDateTime(2026, 1, 15, 10, 0),
         senderLogin: String = "me@example.com",
         text: String = "Hello",
-        content: ChatMessageContent = ChatMessageContent.Text(text)
+        content: ChatMessageContent = ChatMessageContent.Text(text),
     ): ChatEvent.Chat.Message.Default = ChatEvent.Chat.Message.Default(
         id = 1,
         time = time,
         wasRead = false,
         sender = ChatMessageSender(userId = 1, login = senderLogin),
-        messageContent = content
+        messageContent = content,
     )
 }

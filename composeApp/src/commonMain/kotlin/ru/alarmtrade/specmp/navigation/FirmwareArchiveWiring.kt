@@ -13,10 +13,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archi
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.systems.FirmwareSystemsEntry
 import ru.alarmtrade.specmp.filepicker.rememberFirmwareFileExporter
 
-/**
- * «Архив прошивок» с главного экрана, без блока: системы и подсистемы базы устройств → архив подсистемы. «Назад» из
- * архива и «Сменить» в его шапке — к списку систем (поиск и раскрытые системы сохраняются), из списка — на главный.
- */
 @Composable
 internal fun FirmwareArchiveHome(onBack: () -> Unit) {
     var archive by remember { mutableStateOf<FirmwareArchiveRequest?>(null) }
@@ -27,7 +23,7 @@ internal fun FirmwareArchiveHome(onBack: () -> Unit) {
     }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        onBackCompleted = { archive = null }
+        onBackCompleted = { archive = null },
     )
     FirmwareArchiveEntry(
         request = request,
@@ -35,6 +31,6 @@ internal fun FirmwareArchiveHome(onBack: () -> Unit) {
         onBack = { archive = null },
         vehiclePicker = { deviceName, onPick, onPickerBack -> ArchiveVehiclePicker(deviceName, onPick, onPickerBack) },
         exporter = rememberFirmwareFileExporter(),
-        onChangeModel = { archive = null }
+        onChangeModel = { archive = null },
     )
 }

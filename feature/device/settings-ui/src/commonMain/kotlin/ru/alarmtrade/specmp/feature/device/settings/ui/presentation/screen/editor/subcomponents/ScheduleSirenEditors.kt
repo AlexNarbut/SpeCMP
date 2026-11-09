@@ -48,10 +48,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
 private const val DISABLED_ALPHA = 0.38f
 private val TimeChipFontSize = 20.sp
 
-/**
- * Расписание автозапуска: утренний и вечерний запуск — у каждого переключатель и время; время раскрывается
- * кнопками часов и минут по нажатию (неактивно, пока запуск выключен).
- */
 @Composable
 internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedule) -> Unit) {
     var openSlot by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -63,7 +59,7 @@ internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedu
             open = openSlot == MORNING,
             onEnabledChange = { onChange(value.copy(isMorningStartEnabled = it)) },
             onToggleOpen = { openSlot = if (openSlot == MORNING) null else MORNING },
-            onTimeChange = { onChange(value.copy(morningStartTime = it)) }
+            onTimeChange = { onChange(value.copy(morningStartTime = it)) },
         )
         ScheduleSlot(
             label = stringResource(Strings.string.settings_schedule_label_evening),
@@ -72,7 +68,7 @@ internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedu
             open = openSlot == EVENING,
             onEnabledChange = { onChange(value.copy(isEveningStartEnabled = it)) },
             onToggleOpen = { openSlot = if (openSlot == EVENING) null else EVENING },
-            onTimeChange = { onChange(value.copy(eveningStartTime = it)) }
+            onTimeChange = { onChange(value.copy(eveningStartTime = it)) },
         )
     }
 }
@@ -89,19 +85,19 @@ private fun ScheduleSlot(
     open: Boolean,
     onEnabledChange: (Boolean) -> Unit,
     onToggleOpen: () -> Unit,
-    onTimeChange: (TimeOfDay) -> Unit
+    onTimeChange: (TimeOfDay) -> Unit,
 ) {
     val colors = cmpThemeColors()
     CmpSurface(
         shape = RoundedCornerShape(16.dp),
         color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant)
+        border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         CmpColumn {
             CmpRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 8.dp, end = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 CmpBox(modifier = Modifier.size(width = 64.dp, height = 48.dp), contentAlignment = Alignment.Center) {
                     CmpSwitch(checked = enabled, onCheckedChange = onEnabledChange)
@@ -114,7 +110,7 @@ private fun ScheduleSlot(
                     modifier = Modifier
                         .widthIn(min = 96.dp)
                         .heightIn(min = 48.dp)
-                        .clickable(enabled = enabled, role = Role.Button, onClick = onToggleOpen)
+                        .clickable(enabled = enabled, role = Role.Button, onClick = onToggleOpen),
                 ) {
                     CmpBox(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
                         CmpText(
@@ -123,7 +119,7 @@ private fun ScheduleSlot(
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Center,
                             color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED_ALPHA),
-                            modifier = Modifier.padding(vertical = 10.dp)
+                            modifier = Modifier.padding(vertical = 10.dp),
                         )
                     }
                 }
@@ -136,32 +132,31 @@ private fun ScheduleSlot(
     }
 }
 
-/** Звук сирены: тон или мелодия и номер в диапазоне устройства (при смене типа — с начала диапазона). */
 @Composable
 internal fun SirenEditor(setting: SirenSetting, value: SirenTone, onChange: (SirenTone) -> Unit) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CmpSegmentedButton(
             options = listOf(
                 stringResource(Strings.string.settings_siren_label_tone),
-                stringResource(Strings.string.settings_siren_label_melody)
+                stringResource(Strings.string.settings_siren_label_melody),
             ),
             selectedIndex = if (value.type == SirenToneType.TONE) 0 else 1,
             onSelect = { index ->
                 val type = if (index == 0) SirenToneType.TONE else SirenToneType.MELODY
                 if (type != value.type) onChange(SirenTone(type, setting.range.first))
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         CmpText(
             text = stringResource(Strings.string.settings_siren_label_number),
             style = CmpTextStyle.Body,
-            color = cmpThemeColors().onSurfaceVariant
+            color = cmpThemeColors().onSurfaceVariant,
         )
         IntRangeEditor(
             value = value.number,
             range = setting.range,
             units = setting.units,
-            onChange = { onChange(value.copy(number = it)) }
+            onChange = { onChange(value.copy(number = it)) },
         )
     }
 }

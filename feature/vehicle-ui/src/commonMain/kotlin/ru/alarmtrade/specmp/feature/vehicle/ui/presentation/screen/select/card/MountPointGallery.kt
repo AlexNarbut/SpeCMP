@@ -52,14 +52,13 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.CarPhoto
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PHOTO_RATIO
 
-/** Точка подключения: «← Все точки подключения», тип и название, галерея фото, описание. */
 @Composable
 internal fun MountPointDetail(
     point: MountPoint,
     photo: Int,
     onBack: () -> Unit,
     onPhotoChange: (Int) -> Unit,
-    onFullScreen: () -> Unit
+    onFullScreen: () -> Unit,
 ) {
     val colors = cmpThemeColors()
     CmpColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -67,7 +66,7 @@ internal fun MountPointDetail(
             CmpIcon(icon = CmpIcons.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp))
             CmpText(
                 text = stringResource(Strings.string.vehicle_points_btn_back),
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
             )
         }
         CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -77,7 +76,7 @@ internal fun MountPointDetail(
                     text = point.type.uppercase(),
                     style = CmpTextStyle.Caption,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.primary
+                    color = colors.primary,
                 )
                 CmpText(text = point.title, style = CmpTextStyle.Title, color = colors.onSurface)
             }
@@ -91,7 +90,6 @@ internal fun MountPointDetail(
     }
 }
 
-/** Галерея: пейджер (свайп), стрелки, «3 из 7», миниатюры; тап по фото — полноэкранный просмотр. */
 @Composable
 private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit, onFullScreen: () -> Unit) {
     val count = point.photos.size
@@ -111,15 +109,15 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                         .fillMaxSize()
                         .clickable(
                             onClickLabel = stringResource(Strings.string.vehicle_photo_a11y_full),
-                            onClick = onFullScreen
+                            onClick = onFullScreen,
                         )
-                        .testTag(VehicleTestTags.PHOTO_FULL)
+                        .testTag(VehicleTestTags.PHOTO_FULL),
                 )
             }
             Counter(
                 index = pager.currentPage,
                 count = count,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp)
+                modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp),
             )
         }
         if (count > 1) {
@@ -128,12 +126,12 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     icon = CmpIcons.ChevronLeft,
                     contentDescription = stringResource(Strings.string.vehicle_photo_a11y_prev),
-                    enabled = pager.currentPage > 0
+                    enabled = pager.currentPage > 0,
                 )
                 // Лениво: у точки бывают десятки фото — миниатюры за краем не композируются и не грузятся.
                 LazyRow(
                     modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     itemsIndexed(point.photos) { index, item ->
                         val selected = index == pager.currentPage
@@ -145,9 +143,9 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                                 .border(
                                     if (selected) 2.dp else 0.dp,
                                     if (selected) colors.primary else Color.Transparent,
-                                    RoundedCornerShape(8.dp)
+                                    RoundedCornerShape(8.dp),
                                 )
-                                .clickable { scope.launch { pager.animateScrollToPage(index) } }
+                                .clickable { scope.launch { pager.animateScrollToPage(index) } },
                         )
                     }
                 }
@@ -155,7 +153,7 @@ private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit,
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
                     icon = CmpIcons.ChevronRight,
                     contentDescription = stringResource(Strings.string.vehicle_photo_a11y_next),
-                    enabled = pager.currentPage < count - 1
+                    enabled = pager.currentPage < count - 1,
                 )
             }
         }
@@ -171,11 +169,10 @@ private fun Counter(index: Int, count: Int, modifier: Modifier = Modifier) {
         color = Color.White,
         modifier = modifier
             .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
     )
 }
 
-/** Полноэкранный просмотр фото точки: зум, листание стрелками и свайпом, «3 из 7», подпись, «✕». */
 @Composable
 internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit, onClose: () -> Unit) {
     val count = point.photos.size
@@ -189,37 +186,37 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
                 CmpZoomableImage(
                     model = point.photos[page].url,
                     contentDescription = point.photos[page].name,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
             CmpRow(
                 modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpText(
                     text = point.type,
                     style = CmpTextStyle.BodyLarge,
                     color = Color.White,
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                    modifier = Modifier.weight(1f).padding(start = 8.dp),
                 )
                 CmpIconButton(
                     onClick = onClose,
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.vehicle_common_btn_close),
-                    tint = Color.White
+                    tint = Color.White,
                 )
             }
             CmpRow(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 CmpIconButton(
                     onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
                     icon = CmpIcons.ChevronLeft,
                     contentDescription = stringResource(Strings.string.vehicle_photo_a11y_prev),
                     enabled = pager.currentPage > 0,
-                    tint = Color.White
+                    tint = Color.White,
                 )
                 Counter(index = pager.currentPage, count = count)
                 CmpIconButton(
@@ -227,7 +224,7 @@ internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> 
                     icon = CmpIcons.ChevronRight,
                     contentDescription = stringResource(Strings.string.vehicle_photo_a11y_next),
                     enabled = pager.currentPage < count - 1,
-                    tint = Color.White
+                    tint = Color.White,
                 )
             }
         }

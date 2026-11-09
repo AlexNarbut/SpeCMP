@@ -1,76 +1,84 @@
 package ru.alarmtrade.specmp.feature.device.autostart.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transformWhile
 import ru.alarmtrade.specialist.domain.errors.IncorrectServicePinException
-import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.device.autostart.data.datasource.AutostartDataSource
+import ru.alarmtrade.specmp.feature.device.autostart.data.mapper.isWriting
+import ru.alarmtrade.specmp.feature.device.autostart.data.mapper.toEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassLearningException
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureException
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
 
-/**
- * [BypassLearningRepository] над `learnBypassFlowUseCase` (SDK сам пишет лог событий обучения на сервер).
- * Поток кончается на итоге или сбое; ошибка SDK — [BypassEvent.Failure].
- */
-class SpecialistBypassLearningRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor
-) : BypassLearningRepository {
+/** Поток кончается на итоге или на первой ошибке SDK; лог событий обучения на сервер SDK пишет сам. */
+internal class SpecialistBypassLearningRepository(private val dataSource: AutostartDataSource) :
+    BypassLearningRepository {
 
-    override fun learn(): Flow<BypassEvent> = flow {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-        if (interactor == null) {
-            emit(BypassEvent.Failure)
+    override fun learn(): Flow<Response<BypassEvent>> = flow {
+        val source = dataSource.learnBypass()
+        if (source == null) {
+            emit(Response.Error(BypassLearningException()))
             return@flow
         }
-        safeFlowRun { interactor.learnBypassFlowUseCase.execute().map { it.toResponse() } }
-            .collect { response ->
-                val event = when (response) {
-                    is Response.Success -> response.value.toEvent()
-                    is Response.Error -> BypassEvent.Failure
+        val events = safeFlowRun { source.map { it.toResponse() } }
+            .transformWhile { response ->
+                when (response) {
+                    is Response.Success -> emit(Response.Success(response.value.toEvent()))
+                    is Response.Error -> emit(Response.Error(BypassLearningException(response.exception)))
                 }
-                emit(event)
+                response is Response.Success
             }
+        emitAll(events)
     }
 }
 
-/** [CloneRepository] над `makeCloneProcedureFlowUseCase` и `getAvailableCloneAttemptsUseCase`. */
-class SpecialistCloneRepository(private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor) :
-    CloneRepository {
+internal class SpecialistCloneRepository(private val dataSource: AutostartDataSource) : CloneRepository {
 
-    override suspend fun attempts(): Int? {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull() ?: return null
-        return when (val response = interactor.getAvailableCloneAttemptsUseCase.execute().toResponse()) {
-            is Response.Success -> response.value.int
-            is Response.Error -> null
-        }
+    override suspend fun attempts(): Response<Int?> = dataSource.cloneAttempts().toResponseOrUnavailable().map {
+        it.int
     }
 
-    override fun run(): Flow<CloneEvent> = flow {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-        if (interactor == null) {
-            emit(CloneEvent.Failure)
+    override fun run(): Flow<Response<CloneEvent>> = flow {
+        val source = dataSource.cloneProcedure()
+        if (source == null) {
+            emit(Response.Error(CloneProcedureException(CloneProcedureFailure.UNKNOWN)))
             return@flow
         }
         // Дошли ли до записи в блок: от этого зависит смысл итога «готово» (см. toEvent).
         var written = false
-        safeFlowRun { interactor.makeCloneProcedureFlowUseCase.execute().map { it.toResponse() } }
-            .collect { response ->
-                val event = when (response) {
-                    is Response.Success -> response.value.toEvent(written)
-
-                    is Response.Error -> when (response.exception) {
-                        is IncorrectServicePinException -> CloneEvent.WrongPin
-                        else -> CloneEvent.Failure
+        val events = safeFlowRun { source.map { it.toResponse() } }
+            .transformWhile { response ->
+                when (response) {
+                    is Response.Success -> {
+                        val event = response.value.toEvent(written)
+                        written = written || event.isWriting
+                        emit(Response.Success(event))
                     }
+
+                    is Response.Error -> emit(Response.Error(response.exception.toCloneProcedureException()))
                 }
-                written = written || event.isWriting
-                emit(event)
+                response is Response.Success
             }
+        emitAll(events)
+    }
+
+    private fun Throwable.toCloneProcedureException(): CloneProcedureException {
+        val failure = when (this) {
+            is IncorrectServicePinException -> CloneProcedureFailure.WRONG_PIN
+            else -> CloneProcedureFailure.UNKNOWN
+        }
+        return CloneProcedureException(failure, this)
     }
 }

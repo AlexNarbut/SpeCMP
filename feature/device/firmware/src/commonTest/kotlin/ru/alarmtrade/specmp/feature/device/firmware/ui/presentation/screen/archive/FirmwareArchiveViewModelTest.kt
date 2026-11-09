@@ -20,8 +20,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
@@ -68,17 +68,18 @@ class FirmwareArchiveViewModelTest {
         installed: String? = "3.57",
         request: FirmwareArchiveRequest =
             FirmwareArchiveRequest(1, FirmwareChannel.RELEASE, installed, "DX4G  77", UpdateProfile.Main),
-        exporter: FirmwareFileExporter? = null
+        exporter: FirmwareFileExporter? = null,
+        subscribed: Boolean = true,
     ): Pair<FirmwareArchiveViewModel, MutableList<FirmwareArchiveEffect>> {
         val vm = FirmwareArchiveViewModel(
             request,
             repository,
-            AppDispatchers(dispatcher, dispatcher, dispatcher),
-            exporter
+            testDispatchers(dispatcher),
+            exporter,
         ).also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<FirmwareArchiveEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm to effects
     }
@@ -97,7 +98,7 @@ class FirmwareArchiveViewModelTest {
         assertEquals(listOf("3.61", "3.57", "3.55"), rows.map { it.version })
         assertEquals(
             listOf(ArchiveRowKind.New, ArchiveRowKind.Installed, ArchiveRowKind.Older),
-            rows.map { it.kind }
+            rows.map { it.kind },
         )
         // Выбрана верхняя (самая новая) версия.
         assertEquals("3.61", vm.state.value.selected)
@@ -318,7 +319,7 @@ class FirmwareArchiveViewModelTest {
             profile = UpdateProfile.Main,
             deviceName = "DX4G",
             canCode = "0213",
-            viewOnly = true
+            viewOnly = true,
         )
         val (vm, effects) = viewModel(request = request)
 
@@ -347,7 +348,7 @@ class FirmwareArchiveViewModelTest {
     @Test
     fun `can of a version is shown in its row`() = test {
         repository.archivePages[1] = Response.Success(
-            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "0213", canVersion = "2.0")), 1)
+            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "0213", canVersion = "2.0")), 1),
         )
         val (vm, _) = viewModel()
 
@@ -366,16 +367,16 @@ class FirmwareArchiveViewModelTest {
         deviceCanCode = "2154".takeUnless { factory },
         deviceCanVersion = 103.takeUnless { factory },
         deviceCanProfile = "1.03".takeUnless { factory },
-        deviceCanFactory = factory
+        deviceCanFactory = factory,
     )
 
     private fun canVersion(value: String, code: String, profile: String, profileCode: Int) = version(
-        value
+        value,
     ).copy(
         url = "https://fw/$value/$code/$profile",
         canCode = code,
         canVersion = profile,
-        canVersionCode = profileCode
+        canVersionCode = profileCode,
     )
 
     @Test
@@ -385,10 +386,10 @@ class FirmwareArchiveViewModelTest {
                 listOf(
                     canVersion("3.61", "2154", "1.03", 103),
                     canVersion("3.60", "3312", "1.01", 101),
-                    version("3.58")
+                    version("3.58"),
                 ),
-                1
-            )
+                1,
+            ),
         )
         val (vm, _) = viewModel(request = deviceCanRequest())
 
@@ -427,7 +428,7 @@ class FirmwareArchiveViewModelTest {
     @Test
     fun `vehicle code from the card wins over the block can but block rows stay highlighted`() = test {
         repository.archivePages[1] = Response.Success(
-            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "2154")), 1)
+            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "2154")), 1),
         )
         val (vm, _) = viewModel(request = deviceCanRequest().copy(canCode = "0213", viewOnly = true))
 
@@ -438,7 +439,7 @@ class FirmwareArchiveViewModelTest {
     @Test
     fun `factory can settings open all versions with nothing to highlight or reset`() = test {
         repository.archivePages[1] = Response.Success(
-            FirmwareVersionPage(listOf(canVersion("3.57", "2154", "1.03", 103), version("3.57")), 1)
+            FirmwareVersionPage(listOf(canVersion("3.57", "2154", "1.03", 103), version("3.57")), 1),
         )
         val (vm, _) = viewModel(request = deviceCanRequest(factory = true))
 
@@ -461,10 +462,10 @@ class FirmwareArchiveViewModelTest {
                 listOf(
                     canVersion("3.57", "2154", "1.03", 103),
                     canVersion("3.57", "2154", "1.02", 102),
-                    canVersion("3.57", "0188", "1.00", 100)
+                    canVersion("3.57", "0188", "1.00", 100),
                 ),
-                1
-            )
+                1,
+            ),
         )
         val (vm, _) = viewModel(request = deviceCanRequest().copy(canCode = null, deviceCanCode = "2154"))
         vm.onCanInput("")
@@ -481,13 +482,13 @@ class FirmwareArchiveViewModelTest {
             FirmwareVersionPage(
                 listOf(
                     version("3.61").copy(url = "https://fw/2154", canCode = "2154", canVersion = "1.03"),
-                    version("3.61").copy(url = "https://fw/3312", canCode = "3312", canVersion = "1.01")
+                    version("3.61").copy(url = "https://fw/3312", canCode = "3312", canVersion = "1.01"),
                 ),
-                1
-            )
+                1,
+            ),
         )
         repository.archivePages[2] = Response.Success(
-            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "3312", canVersion = "1.01")), 2)
+            FirmwareVersionPage(listOf(version("3.61").copy(canCode = "3312", canVersion = "1.01")), 2),
         )
         val (vm, effects) = viewModel(request = deviceCanRequest().copy(canCode = null, deviceCanCode = null))
 
@@ -510,8 +511,8 @@ class FirmwareArchiveViewModelTest {
             module,
             if (alarm) "Основная программа" else "Bluetooth-модуль",
             if (alarm) "DX-4GS" else "BT-M2",
-            if (alarm) FirmwareModuleKind.AlarmMain else FirmwareModuleKind.BluetoothModule
-        )
+            if (alarm) FirmwareModuleKind.AlarmMain else FirmwareModuleKind.BluetoothModule,
+        ),
     )
 
     @Test
@@ -547,8 +548,8 @@ class FirmwareArchiveViewModelTest {
                 null,
                 "PW2",
                 UpdateProfile.Main,
-                canFilterAllowed = false
-            )
+                canFilterAllowed = false,
+            ),
         )
         assertNull(unit.state.value.canFilter)
     }
@@ -570,10 +571,14 @@ class FirmwareArchiveViewModelTest {
         repository.archivePages[1] = Response.Success(
             FirmwareVersionPage(
                 listOf(
-                    version("3.61 C").copy(url = "https://fw/files/main.pld?t=1", canCode = "2154", canVersion = "1.03")
+                    version("3.61 C").copy(
+                        url = "https://fw/files/main.pld?t=1",
+                        canCode = "2154",
+                        canVersion = "1.03",
+                    ),
                 ),
-                1
-            )
+                1,
+            ),
         )
         repository.files["https://fw/files/main.pld?t=1"] = Response.Success(ByteArray(16))
         val exporter = FakeFileExporter()
@@ -641,5 +646,25 @@ class FirmwareArchiveViewModelTest {
         vm.onDownload("3.61")
         runCurrent()
         assertEquals(emptyList(), exporter.saved)
+    }
+
+    @Test
+    fun `returning to the screen keeps the list without loading it again`() = test {
+        repository.archivePages[1] = page(1, "3.61", "3.60")
+        val (vm, _) = viewModel(subscribed = false)
+        var screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        vm.onSelectRow("3.60")
+
+        screen.cancel()
+        advanceTimeBy(10_000)
+        runCurrent()
+        screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+
+        assertEquals(listOf("3.61", "3.60"), vm.rows().map { it.version })
+        assertEquals("3.60", vm.state.value.selected)
+        assertEquals(listOf(1), repository.archiveCalls)
+        screen.cancel()
     }
 }

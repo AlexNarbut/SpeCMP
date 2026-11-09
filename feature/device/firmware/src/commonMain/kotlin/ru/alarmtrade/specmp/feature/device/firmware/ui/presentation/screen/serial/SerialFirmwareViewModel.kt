@@ -1,97 +1,72 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.serial
 
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.updateIf
-import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toSerialFirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceOrNull
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /**
- * Прошивка блока по COM-порту: «Обновить из файла» → разбор заголовка `.frm` → подтверждение с версиями блока и
- * файла (имя блока в файле другое — предупреждение, прошить можно) → GOBOOT (пользователь перезагружает блок по
- * питанию) → передача → CRC → применение → результат.
- *
- * Сессию порта держит [deviceSession] (её открыл поиск), связь и обрыв показывает хост устройства. Экран стоит и в
- * рабочем слоте хоста, и в слоте загрузчика: VM одна на запись навигации, поэтому смена режима блока экран не
+ * Экран стоит и в рабочем слоте хоста, и в слоте загрузчика: VM одна на запись навигации, смена режима его не
  * сбрасывает. Порт при перезагрузке блока не отключается — после обновления режим перечитывается явно.
- *
- * Блок VM не копирует: [state] собирается из собственных фаз и `DeviceSession.state`, проверка файла читает блок
- * из сессии в момент проверки. Выбранный файл живёт в фазе [SerialPhase.Confirm] — отдельных полей нет.
  */
 class SerialFirmwareViewModel(
     private val repository: SerialFirmwareRepository,
     private val deviceSession: DeviceSession,
-    private val dispatchers: AppDispatchers
-) : BaseViewModel() {
+    private val dispatchers: AppDispatchers,
+) : BaseViewModel<SerialFirmwareState, SerialFirmwareEffect>(SerialFirmwareState()) {
 
-    // Фазы экрана и баннеры выбора файла; блок добавляет state из сессии.
-    private val screen = MutableStateFlow(SerialFirmwareState())
-
-    val state: StateFlow<SerialFirmwareState> = combine(screen, deviceSession.state) { own, session ->
-        own.copy(device = session.deviceOrNull, deviceInBoot = session is DeviceSessionState.FirmwareBoot)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), SerialFirmwareState())
-
-    private val _effect = sideEffectFlow<SerialFirmwareEffect>()
-    val effect: SharedFlow<SerialFirmwareEffect> = _effect.asSharedFlow()
-
-    /** Результат выбора файла: `.frm` для этого блока — на подтверждение, иначе — баннер на шаге выбора. */
-    fun onFilePicked(result: FirmwareFilePickResult) {
-        if (screen.value.phase != SerialPhase.Ready) return
-        when (result) {
-            FirmwareFilePickResult.Cancelled -> Unit
-
-            is FirmwareFilePickResult.Picked -> checkFile(result.name, result.path)
-
-            FirmwareFilePickResult.TooLarge -> screen.updateIf({ it.phase == SerialPhase.Ready }) {
-                it.copy(fileError = FileError.TooLarge, fileProblem = null)
-            }
-
-            FirmwareFilePickResult.Failed -> screen.updateIf({ it.phase == SerialPhase.Ready }) {
-                it.copy(fileError = FileError.Failed, fileProblem = null)
-            }
+    override suspend fun onStart() {
+        deviceSession.state.collectIntoState { session ->
+            copy(device = session.deviceOrNull, deviceInBoot = session is DeviceSessionState.FirmwareBoot)
         }
     }
 
+    fun onFilePicked(result: FirmwareFilePickResult) {
+        if (currentState.phase != SerialPhase.Ready) return
+        when (result) {
+            FirmwareFilePickResult.Cancelled -> Unit
+            is FirmwareFilePickResult.Picked -> checkFile(result.name, result.path)
+            FirmwareFilePickResult.TooLarge -> showFileError(FileError.TooLarge)
+            FirmwareFilePickResult.Failed -> showFileError(FileError.Failed)
+        }
+    }
+
+    private fun showFileError(error: FileError) {
+        reduce { if (phase == SerialPhase.Ready) copy(fileError = error, fileProblem = null) else this }
+    }
+
     private fun checkFile(fileName: String, path: String) {
-        safeLaunch {
+        intent {
             val info = withContext(dispatchers.io) { repository.readFileInfo(path) }
             val current = deviceSession.state.value.deviceOrNull
-            screen.updateIf({ it.phase == SerialPhase.Ready }) { state ->
+            reduce {
                 when {
-                    info !is Response.Success -> state.copy(fileError = null, fileProblem = SerialFileProblem.NotFrm)
+                    phase != SerialPhase.Ready -> this
+
+                    info !is Response.Success -> copy(fileError = null, fileProblem = SerialFileProblem.NotFrm)
 
                     else -> {
                         val version = info.value.version
                         val older = version != null && current != null &&
                             version.relationTo(current.firmwareVersion) == VersionRelation.Older
-                        // Блок ещё не прочитан — сверять не с чем.
                         val mismatch = current?.takeUnless { info.value.isFor(it.systemName) }?.let {
                             SystemNameMismatch(info.value.systemName, it.systemName.trim())
                         }
-                        state.copy(
+                        copy(
                             phase = SerialPhase.Confirm(fileName, path, version, older, mismatch),
                             fileError = null,
-                            fileProblem = null
+                            fileProblem = null,
                         )
                     }
                 }
@@ -100,32 +75,41 @@ class SerialFirmwareViewModel(
     }
 
     fun onCancelConfirm() {
-        screen.updateIf({ it.phase is SerialPhase.Confirm }) { it.copy(phase = SerialPhase.Ready) }
+        reduce { if (phase is SerialPhase.Confirm) copy(phase = SerialPhase.Ready) else this }
     }
 
     fun onConfirmUpdate() {
-        val confirm = screen.value.phase as? SerialPhase.Confirm ?: return
-        // Переход атомарный: двойное нажатие запустит обновление один раз.
-        if (!screen.updateIf({ it.phase == confirm }) { it.copy(phase = SerialPhase.WaitingBoot) }) return
-        safeLaunch {
+        val confirm = currentState.phase as? SerialPhase.Confirm ?: return
+        // Фаза уходит из Confirm до запуска: двойное нажатие запустит обновление один раз.
+        reduce { copy(phase = SerialPhase.WaitingBoot) }
+        intent {
             repository.update(confirm.fileName, confirm.path)
                 .flowOn(dispatchers.io)
-                .collect { progress -> screen.update { it.copy(phase = progress.toPhase(confirm.fileVersion)) } }
+                .collect { step ->
+                    val phase = when (step) {
+                        is Response.Success -> step.value.toPhase(confirm.fileVersion)
+                        is Response.Error -> SerialPhase.Error(step.exception.toSerialFirmwareFailure())
+                    }
+                    reduce { copy(phase = phase) }
+                }
             // Блок мог перезагрузиться (в загрузчик и обратно) — пусть сессия узнает его режим.
             deviceSession.refreshMode()
         }
     }
 
-    /** «OK» на результате — снова «Обновить из файла». */
     fun onResultOk() {
-        screen.updateIf({ it.phase is SerialPhase.Success || it.phase is SerialPhase.Error }) {
-            it.copy(phase = SerialPhase.Ready, fileError = null, fileProblem = null)
+        reduce {
+            if (phase is SerialPhase.Success || phase is SerialPhase.Error) {
+                copy(phase = SerialPhase.Ready, fileError = null, fileProblem = null)
+            } else {
+                this
+            }
         }
     }
 
     fun onBack() {
-        if (screen.value.locked) return
-        _effect.tryEmit(SerialFirmwareEffect.Exit)
+        if (currentState.locked) return
+        postSideEffect(SerialFirmwareEffect.Exit)
     }
 
     private fun SerialFirmwareProgress.toPhase(fileVersion: String?): SerialPhase = when (this) {
@@ -135,10 +119,5 @@ class SerialFirmwareViewModel(
         SerialFirmwareProgress.Verifying -> SerialPhase.Verify
         SerialFirmwareProgress.Applying -> SerialPhase.Apply
         SerialFirmwareProgress.Finished -> SerialPhase.Success(fileVersion)
-        is SerialFirmwareProgress.Failed -> SerialPhase.Error(failure)
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

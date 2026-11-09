@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
@@ -18,12 +19,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
@@ -31,31 +33,34 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassSubject
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeBypassRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeConnectionRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeProgramModeRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeSessionRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.testDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeProgramModeRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testAlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BypassLearningViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
-    private val sessionRepository = FakeSessionRepository(
-        testDevice.copy(features = setOf(DeviceFeature.CLONE), can = CanInfo("1.0", "VWPOLO20", isFactory = false))
+    private val sessionRepository = FakeDeviceSessionRepository(
+        testAlarmDevice.copy(
+            features = setOf(DeviceFeature.CLONE),
+            can = CanInfo("1.0", "VWPOLO20", isFactory = false),
+        ),
     )
     private val repository = FakeBypassRepository()
     private val programMode = FakeProgramModeRepository()
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
     private val viewModels = mutableListOf<BypassLearningViewModel>()
+    private val effects = mutableListOf<BypassEffect>()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -71,14 +76,14 @@ class BypassLearningViewModelTest {
         }
     }
 
-    private fun TestScope.viewModel(): BypassLearningViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+    private fun TestScope.viewModel(subscribe: Boolean = true): BypassLearningViewModel {
+        val dispatchers = testDispatchers(dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
-        session.attach(ConnectionTransport.BLE)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
         val vm = BypassLearningViewModel(session, repository, entry, cooldown, dispatchers).also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm
     }
@@ -153,9 +158,10 @@ class BypassLearningViewModelTest {
     @Test
     fun `back during learning asks and exit cancels`() = test {
         val vm = started()
-        assertFalse(vm.onBackRequest())
+        vm.onBack()
         runCurrent()
         assertEquals(BypassDialog.Exit, vm.state.value.dialog)
+        assertTrue(effects.isEmpty())
         vm.onExitConfirm()
         runCurrent()
         assertEquals(BypassPhase.Start(), vm.state.value.phase)
@@ -169,5 +175,62 @@ class BypassLearningViewModelTest {
         vm.onStartClick()
         runCurrent()
         assertEquals(2, repository.runs)
+    }
+
+    @Test
+    fun `sdk failure on a step with live connection is a start error`() = test {
+        val vm = started()
+        repository.send(BypassEvent.Step(BypassStep(BypassStepKind.WAIT, BypassSubject.LEARNING)))
+        repository.fail()
+        runCurrent()
+        assertEquals(BypassPhase.Finished(BypassResult.Error(BypassError.START_FAILED)), vm.state.value.phase)
+        vm.onStartClick()
+        runCurrent()
+        assertEquals(2, repository.runs)
+    }
+
+    @Test
+    fun `sdk failure after connection loss keeps the interrupted start`() = test {
+        val vm = started()
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        runCurrent()
+        repository.fail()
+        runCurrent()
+        assertEquals(BypassPhase.Start(interrupted = true), vm.state.value.phase)
+    }
+
+    @Test
+    fun `back on start leaves at once`() = test {
+        val vm = viewModel()
+        vm.onBack()
+        runCurrent()
+        assertEquals(listOf<BypassEffect>(BypassEffect.Close), effects)
+        assertNull(vm.state.value.dialog)
+    }
+
+    @Test
+    fun `pin dialog shows the lock countdown`() = test {
+        programMode.results = listOf(Response.Success(ProgramModeResult.WRONG_PIN))
+        val vm = started()
+        val dialog = assertIs<BypassDialog.Pin>(vm.state.value.dialog)
+        assertEquals(15.seconds, dialog.pin.lockedFor)
+    }
+
+    @Test
+    fun `learning goes on while the screen is not subscribed`() = test {
+        val vm = viewModel(subscribe = false)
+        val screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        vm.onStartClick()
+        runCurrent()
+        screen.cancel()
+        advanceTimeBy(10.seconds)
+        val step = BypassStep(BypassStepKind.ACTION, BypassSubject.IGNITION_ON)
+        repository.send(BypassEvent.Step(step))
+        runCurrent()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        assertEquals(BypassPhase.Running(step), vm.state.value.phase)
+        assertEquals(1, repository.runs)
     }
 }

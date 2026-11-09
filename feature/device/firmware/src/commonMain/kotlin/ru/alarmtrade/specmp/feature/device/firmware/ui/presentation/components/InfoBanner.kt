@@ -21,14 +21,13 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 internal enum class BannerTone { Warning, Error, Ok }
 
-/** Плашка с иконкой и текстом: предупреждение, ошибка, подтверждение. [action] — необязательная кнопка справа. */
 @Composable
 internal fun InfoBanner(
     text: String,
     modifier: Modifier = Modifier,
     tone: BannerTone = BannerTone.Warning,
     icon: CmpIcons = CmpIcons.Warning,
-    action: (@Composable () -> Unit)? = null
+    action: (@Composable () -> Unit)? = null,
 ) {
     val colors = cmpThemeColors()
     val container = when (tone) {
@@ -45,12 +44,12 @@ internal fun InfoBanner(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         color = container,
-        contentColor = content
+        contentColor = content,
     ) {
         CmpRow(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.Top,
         ) {
             CmpIcon(icon = icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = content)
             CmpText(text = text, modifier = Modifier.weight(1f), color = content, style = CmpTextStyle.Body)

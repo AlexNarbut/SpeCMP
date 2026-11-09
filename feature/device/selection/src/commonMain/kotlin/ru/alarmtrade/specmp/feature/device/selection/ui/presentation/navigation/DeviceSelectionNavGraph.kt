@@ -19,7 +19,6 @@ import kotlinx.serialization.modules.polymorphic
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.DeviceSelectionScreen
 
-/** Внутренний роут графа фичи — экран поиска устройства. */
 @Serializable
 @SerialName("device.selection.ScanDeviceRoute")
 internal data object ScanDeviceRoute : NavKey
@@ -32,24 +31,12 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Nav3-граф фичи поиска устройства (публичный вход для `composeApp`).
- * Собственный `NavDisplay` с per-entry `ViewModelStore` (VM очищается при уходе с экрана)
- * и собственный back stack — граф расширяется новыми экранами (напр. инструкции подключения)
- * без изменений в `composeApp`.
- *
- * @param onSessionCreate сессия с устройством создана — навигация приложения решает, куда вести.
- * @param onClose выход из графа поиска; `null` — поиск — корневой экран (без «Назад»).
- * @param serialEnabled искать и COM-порты (приложение прошивки); сессия по порту создаётся как по USB.
- * @param alarmsOnly только сигнализации (быстрый монтаж): другие BLE-устройства видны, но недоступны. USB до
- *   подключения не опознать — класс блока проверяет сценарий после подключения.
- */
 @Composable
 fun DeviceSelectionNavGraph(
     onSessionCreate: () -> Unit,
     onClose: (() -> Unit)?,
     serialEnabled: Boolean = false,
-    alarmsOnly: Boolean = false
+    alarmsOnly: Boolean = false,
 ) {
     val backStack = rememberNavBackStack(navConfig, ScanDeviceRoute)
 
@@ -58,7 +45,7 @@ fun DeviceSelectionNavGraph(
         modifier = Modifier.fillMaxSize(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         onBack = {
             if (!backStack.popSafe()) onClose?.invoke()
@@ -69,9 +56,9 @@ fun DeviceSelectionNavGraph(
                     onSessionCreate = onSessionCreate,
                     onClose = onClose,
                     serialEnabled = serialEnabled,
-                    alarmsOnly = alarmsOnly
+                    alarmsOnly = alarmsOnly,
                 )
             }
-        }
+        },
     )
 }

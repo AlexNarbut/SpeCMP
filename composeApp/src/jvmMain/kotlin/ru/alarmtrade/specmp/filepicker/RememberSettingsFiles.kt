@@ -10,12 +10,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.stringResource
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.app_picker_title_file
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 
 @Composable
 actual fun rememberSettingsFilePicker(): SettingsFilePicker {
@@ -56,7 +57,6 @@ private class DesktopSettingsFileSaver : SettingsFileSaver {
     override suspend fun save(sourcePath: String, fileName: String): SettingsFileSaveResult {
         val chooser = JFileChooser().apply {
             fileSelectionMode = JFileChooser.FILES_ONLY
-            // Имя по умолчанию в текущем каталоге диалога.
             selectedFile = File(currentDirectory, safeFileName(fileName))
             fileFilter = FileNameExtensionFilter(DXS_FILTER, DXS_EXTENSION)
         }

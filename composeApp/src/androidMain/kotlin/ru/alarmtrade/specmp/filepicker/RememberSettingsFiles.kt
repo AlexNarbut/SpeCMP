@@ -21,10 +21,13 @@ import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
+import ru.alarmtrade.specmp.core.common.file.copyToCache
+import ru.alarmtrade.specmp.core.common.file.queryNameAndSize
+import ru.alarmtrade.specmp.core.common.file.safeFileName
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 
 /**
  * Буфер результатов — на уровне процесса: пока открыт системный пикер, процесс могут убить, и registry доставит
@@ -62,11 +65,7 @@ actual fun rememberSettingsFilePicker(): SettingsFilePicker {
     }
 }
 
-/**
- * SAF (`CreateDocument`): пользователь выбирает место и имя, готовый `.dxs` копируется в документ целиком (режим
- * `wt` — с обрезкой: перезапись длинного файла коротким не оставляет хвост). Лаунчер живёт в композиции,
- * сейвер ждёт результат через [SettingsSaveRequester].
- */
+/** Режим `wt` — с обрезкой: перезапись длинного файла коротким не оставляет хвост. */
 @Composable
 actual fun rememberSettingsFileSaver(): SettingsFileSaver {
     val appContext = LocalContext.current.applicationContext

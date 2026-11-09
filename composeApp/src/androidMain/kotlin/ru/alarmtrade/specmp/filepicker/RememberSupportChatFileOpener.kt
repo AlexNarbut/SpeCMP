@@ -10,15 +10,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import java.io.File
 import java.util.UUID
+import ru.alarmtrade.specmp.core.common.file.safeFileName
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 
-/**
- * Открытие во внешнем приложении через `FileProvider` (`<provider>` и пути —
- * в манифесте `androidApp`) и `ACTION_VIEW` с выбором приложения. Разрешения не
- * нужны: доступ к файлу выдаётся URI-грантом `FLAG_GRANT_READ_URI_PERMISSION`.
- * Только `applicationContext` — VM, которой передан порт, переживает Activity.
- */
+/** Только `applicationContext`: VM, которой передан порт, переживает Activity; доступ — URI-грантом. */
 @Composable
 actual fun rememberSupportChatFileOpener(): SupportChatFileOpener {
     val appContext = LocalContext.current.applicationContext
@@ -26,8 +22,7 @@ actual fun rememberSupportChatFileOpener(): SupportChatFileOpener {
         object : SupportChatFileOpener {
             override suspend fun openBytes(fileName: String, bytes: ByteArray): SupportChatFileOpenResult {
                 val file = try {
-                    // Временная копия в cacheDir: система вправе её вычистить, повторное
-                    // открытие скачает файл заново. Старые копии чистим перед записью.
+                    // Старые копии чистим перед записью: система вправе вычистить cacheDir, повтор скачает заново.
                     val root = File(appContext.cacheDir, OPEN_DIR).apply {
                         deleteRecursively()
                         mkdirs()
@@ -58,7 +53,7 @@ private fun Context.openInExternalApp(file: File): SupportChatFileOpenResult = t
     startActivity(
         Intent(Intent.ACTION_VIEW)
             .setDataAndType(uri, mimeType)
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK),
     )
     SupportChatFileOpenResult.Opened
 } catch (ignored: ActivityNotFoundException) {

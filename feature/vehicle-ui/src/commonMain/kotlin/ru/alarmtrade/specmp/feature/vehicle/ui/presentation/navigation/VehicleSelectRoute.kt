@@ -7,10 +7,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 
-/**
- * Маршрут выбора автомобиля для app-level графа (`composeApp`): экран — [VehicleSelectEntry] с [request].
- * Сериализуется своё зеркало запроса ([RequestKey]): domain-модели каталога формата хранения не знают.
- */
+/** Сериализуется своё зеркало запроса ([RequestKey]): domain-модели каталога формата хранения не знают. */
 @Serializable
 @SerialName("vehicle-ui.VehicleSelectRoute")
 data class VehicleSelectRoute internal constructor(private val key: RequestKey) : NavKey {
@@ -26,7 +23,7 @@ internal data class RequestKey(
     val catalog: CatalogKey,
     val device: DeviceFilterKey?,
     val firmwareCanCode: String?,
-    val warnOnCanMismatch: Boolean
+    val warnOnCanMismatch: Boolean,
 ) {
     fun toRequest() = VehicleSelectRequest(
         mode = mode,
@@ -43,11 +40,11 @@ internal data class RequestKey(
                 when (device.type) {
                     DeviceTypeKey.ALARM -> VehicleDeviceType.ALARM
                     DeviceTypeKey.MICROBOT -> VehicleDeviceType.MICROBOT
-                }
+                },
             )
         },
         firmwareCanCode = firmwareCanCode,
-        warnOnCanMismatch = warnOnCanMismatch
+        warnOnCanMismatch = warnOnCanMismatch,
     )
 
     companion object {
@@ -66,11 +63,11 @@ internal data class RequestKey(
                     when (device.type) {
                         VehicleDeviceType.ALARM -> DeviceTypeKey.ALARM
                         VehicleDeviceType.MICROBOT -> DeviceTypeKey.MICROBOT
-                    }
+                    },
                 )
             },
             firmwareCanCode = request.firmwareCanCode,
-            warnOnCanMismatch = request.warnOnCanMismatch
+            warnOnCanMismatch = request.warnOnCanMismatch,
         )
     }
 }

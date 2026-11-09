@@ -6,15 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-/**
- * @param progress null means indeterminate
- */
+/** [progress] = null — неопределённый индикатор. */
 @Composable
 fun CmpLinearProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float? = null,
     color: Color = Color.Unspecified,
-    trackColor: Color = Color.Unspecified
+    trackColor: Color = Color.Unspecified,
 ) {
     val resolvedColor = if (color != Color.Unspecified) color else ProgressIndicatorDefaults.linearColor
     val resolvedTrack = if (trackColor != Color.Unspecified) trackColor else ProgressIndicatorDefaults.linearTrackColor
@@ -24,13 +22,13 @@ fun CmpLinearProgressIndicator(
             progress = { progress },
             modifier = modifier,
             color = resolvedColor,
-            trackColor = resolvedTrack
+            trackColor = resolvedTrack,
         )
     } else {
         LinearProgressIndicator(
             modifier = modifier,
             color = resolvedColor,
-            trackColor = resolvedTrack
+            trackColor = resolvedTrack,
         )
     }
 }

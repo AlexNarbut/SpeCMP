@@ -32,14 +32,13 @@ private const val PULSE_FROM = 0.9f
 private const val PULSE_TO = 1.35f
 private const val PULSE_ALPHA = 0.5f
 
-/** Круглая иллюстрация состояния: иконка на цветном круге; [pulse] — расходящееся кольцо (идёт процесс). */
 @Composable
 internal fun FirmwareHero(
     icon: CmpIcons,
     modifier: Modifier = Modifier,
     tone: HeroTone = HeroTone.Primary,
     size: Dp = 160.dp,
-    pulse: Boolean = false
+    pulse: Boolean = false,
 ) {
     val colors = cmpThemeColors()
     val container = when (tone) {
@@ -60,7 +59,7 @@ internal fun FirmwareHero(
                     icon = icon,
                     contentDescription = null,
                     modifier = Modifier.size(size * ICON_FRACTION),
-                    tint = content
+                    tint = content,
                 )
             }
         }
@@ -74,7 +73,7 @@ private fun PulseRing(size: Dp) {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(PULSE_MILLIS, easing = LinearEasing), RepeatMode.Restart),
-        label = "firmwareHeroPulseProgress"
+        label = "firmwareHeroPulseProgress",
     )
     CmpSurface(
         modifier = Modifier
@@ -89,6 +88,6 @@ private fun PulseRing(size: Dp) {
             },
         shape = CircleShape,
         color = Color.Transparent,
-        border = BorderStroke(3.dp, cmpThemeColors().primary)
+        border = BorderStroke(3.dp, cmpThemeColors().primary),
     ) {}
 }

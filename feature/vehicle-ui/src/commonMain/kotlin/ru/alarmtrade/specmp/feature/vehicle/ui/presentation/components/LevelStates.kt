@@ -35,13 +35,12 @@ import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 
-/** Ошибка загрузки уровня: сбой связи (общий заголовок) или отказ сервера, с «Повторить». */
 @Composable
 internal fun LoadFailed(
     error: CatalogError,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    compact: Boolean = false
+    compact: Boolean = false,
 ) {
     val offline = error == CatalogError.Common(ApiError.NoConnection)
     CmpStateBox(
@@ -51,36 +50,34 @@ internal fun LoadFailed(
             CatalogError.LoadFailed -> stringResource(Strings.string.vehicle_catalog_title_error)
         },
         text = stringResource(
-            if (offline) Strings.string.vehicle_catalog_msg_offline else Strings.string.vehicle_catalog_msg_error
+            if (offline) Strings.string.vehicle_catalog_msg_offline else Strings.string.vehicle_catalog_msg_error,
         ),
         tone = CmpStateTone.Error,
         compact = compact,
-        modifier = modifier
+        modifier = modifier,
     ) {
         StateAction(text = stringResource(Strings.string.vehicle_common_btn_retry), onClick = onRetry, primary = true)
     }
 }
 
-/** Фильтр функций отсеял всё на уровне — «Сбросить фильтр». */
 @Composable
 internal fun FilteredOut(
     onReset: () -> Unit,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
-    text: String? = null
+    text: String? = null,
 ) {
     CmpStateBox(
         icon = CmpIcons.FilterAltOff,
         title = stringResource(Strings.string.vehicle_catalog_title_filter_empty),
         text = text ?: stringResource(Strings.string.vehicle_catalog_msg_filter_empty),
         compact = compact,
-        modifier = modifier
+        modifier = modifier,
     ) {
         StateAction(text = stringResource(Strings.string.vehicle_catalog_btn_filter_reset), onClick = onReset)
     }
 }
 
-/** Кнопка действия в блоке состояния (52 dp, от 200 dp). */
 @Composable
 internal fun StateAction(text: String, onClick: () -> Unit, primary: Boolean = false) {
     val modifier = Modifier.heightIn(min = 52.dp).width(220.dp).let {
@@ -93,7 +90,6 @@ internal fun StateAction(text: String, onClick: () -> Unit, primary: Boolean = f
     }
 }
 
-/** Скелетон списка: [count] строк с квадратной миниатюрой; [thumb] — строка с подписью (модели, результаты). */
 @Composable
 internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Boolean = false) {
     CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -101,11 +97,11 @@ internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Bool
             CmpRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 CmpSkeleton(
                     Modifier.size(if (thumb) PhotoThumbSize else ThumbSize),
-                    shape = RoundedCornerShape(ThumbRadius)
+                    shape = RoundedCornerShape(ThumbRadius),
                 )
                 CmpColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     CmpSkeleton(Modifier.width(180.dp).height(18.dp))

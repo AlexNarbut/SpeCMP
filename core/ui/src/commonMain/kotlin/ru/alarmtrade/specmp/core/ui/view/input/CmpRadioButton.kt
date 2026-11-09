@@ -10,6 +10,6 @@ fun CmpRadioButton(selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier
         selected = selected,
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled
+        enabled = enabled,
     )
 }

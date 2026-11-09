@@ -39,15 +39,15 @@ class FirmwareArchiveGallery {
             "3.55",
             LocalDate(2026, 4, 11),
             "• Улучшена стабильность связи по Bluetooth",
-            ArchiveRowKind.Older
+            ArchiveRowKind.Older,
         ),
-        ArchiveRowUi("3.52", LocalDate(2026, 2, 3), "", ArchiveRowKind.Older)
+        ArchiveRowUi("3.52", LocalDate(2026, 2, 3), "", ArchiveRowKind.Older),
     )
     private val base = FirmwareArchiveState(
         content = LCEState.Content(rows),
         selected = "3.61",
         installedVersion = "3.57",
-        deviceTitle = "Pandora DX-4GS  107131"
+        deviceTitle = "Pandora DX-4GS  107131",
     )
 
     private fun render(name: String, state: FirmwareArchiveState) =
@@ -99,8 +99,8 @@ class FirmwareArchiveGallery {
         "13_can_vehicle",
         withFilter.copy(
             content = LCEState.Content(canRows),
-            canFilter = CanFilterUi("0213", "0213", "Toyota Camry XV70 2018–2024", canPickVehicle = true)
-        )
+            canFilter = CanFilterUi("0213", "0213", "Toyota Camry XV70 2018–2024", canPickVehicle = true),
+        ),
     )
 
     @Test
@@ -108,8 +108,8 @@ class FirmwareArchiveGallery {
         "14_can_empty",
         withFilter.copy(
             content = LCEState.Content(emptyList<ArchiveRowUi>()),
-            canFilter = CanFilterUi("9999", "9999", canPickVehicle = true)
-        )
+            canFilter = CanFilterUi("9999", "9999", canPickVehicle = true),
+        ),
     )
 
     @Test
@@ -118,8 +118,8 @@ class FirmwareArchiveGallery {
         withFilter.copy(
             content = LCEState.Content(canRows),
             canFilter = CanFilterUi("0213", "0213", canPickVehicle = true),
-            viewOnly = true
-        )
+            viewOnly = true,
+        ),
     )
 
     private val deviceRows = listOf(
@@ -130,7 +130,7 @@ class FirmwareArchiveGallery {
             ArchiveRowKind.New,
             "2154",
             "1.03",
-            canMatchesDevice = true
+            canMatchesDevice = true,
         ),
         ArchiveRowUi("3.61", LocalDate(2026, 10, 14), "", ArchiveRowKind.New, "3312", "1.01"),
         ArchiveRowUi(
@@ -140,7 +140,7 @@ class FirmwareArchiveGallery {
             ArchiveRowKind.Installed,
             "2154",
             "1.03",
-            canMatchesDevice = true
+            canMatchesDevice = true,
         ),
         ArchiveRowUi(
             "3.57",
@@ -150,9 +150,9 @@ class FirmwareArchiveGallery {
             "2154",
             "1.02",
             canMatchesDevice = true,
-            canProfileDiffers = true
+            canProfileDiffers = true,
         ),
-        ArchiveRowUi("3.55", LocalDate(2026, 4, 11), "", ArchiveRowKind.Older)
+        ArchiveRowUi("3.55", LocalDate(2026, 4, 11), "", ArchiveRowKind.Older),
     )
     private val deviceFilter =
         CanFilterUi("2154", "2154", canPickVehicle = true, deviceCode = "2154", deviceProfile = "1.03")
@@ -167,14 +167,14 @@ class FirmwareArchiveGallery {
         withFilter.copy(
             content = LCEState.Content(deviceRows.subList(1, 2)),
             selected = deviceRows[1].key,
-            canFilter = deviceFilter.copy(input = "3312", applied = "3312")
-        )
+            canFilter = deviceFilter.copy(input = "3312", applied = "3312"),
+        ),
     )
 
     @Test
     fun canFactory() = render(
         "18_can_factory",
-        withFilter.copy(canFilter = CanFilterUi(canPickVehicle = true, deviceFactory = true))
+        withFilter.copy(canFilter = CanFilterUi(canPickVehicle = true, deviceFactory = true)),
     )
 
     @Test
@@ -182,14 +182,14 @@ class FirmwareArchiveGallery {
         "19_can_cleared",
         withFilter.copy(
             content = LCEState.Content(deviceRows),
-            canFilter = deviceFilter.copy(input = "", applied = null)
-        )
+            canFilter = deviceFilter.copy(input = "", applied = null),
+        ),
     )
 
     @Test
     fun canPartialDevice() = render(
         "20_can_partial_device",
-        withFilter.copy(content = LCEState.Content(deviceRows), canFilter = deviceFilter.copy(input = "21"))
+        withFilter.copy(content = LCEState.Content(deviceRows), canFilter = deviceFilter.copy(input = "21")),
     )
 
     @Test
@@ -197,14 +197,14 @@ class FirmwareArchiveGallery {
         "21_can_vehicle_device",
         withFilter.copy(
             content = LCEState.Content(deviceRows.subList(1, 2)),
-            canFilter = deviceFilter.copy(input = "0188", applied = "0188", carTitle = "Kia Rio 2021")
-        )
+            canFilter = deviceFilter.copy(input = "0188", applied = "0188", carTitle = "Kia Rio 2021"),
+        ),
     )
 
     @Test
     fun canEmptyDevice() = render(
         "22_can_empty_device",
-        withFilter.copy(content = LCEState.Content(emptyList()), canFilter = deviceFilter)
+        withFilter.copy(content = LCEState.Content(emptyList()), canFilter = deviceFilter),
     )
 
     @Test
@@ -212,20 +212,20 @@ class FirmwareArchiveGallery {
         "23_can_empty_other",
         withFilter.copy(
             content = LCEState.Content(emptyList()),
-            canFilter = deviceFilter.copy(input = "0342", applied = "0342")
-        )
+            canFilter = deviceFilter.copy(input = "0342", applied = "0342"),
+        ),
     )
 
     @Test
     fun canDetailProfileDiffers() = render(
         "24_can_detail_profile",
-        withFilter.copy(content = LCEState.Content(deviceRows), selected = deviceRows[3].key, canFilter = deviceFilter)
+        withFilter.copy(content = LCEState.Content(deviceRows), selected = deviceRows[3].key, canFilter = deviceFilter),
     )
 
     private val noUnitRows = listOf(
         ArchiveRowUi("3.61", LocalDate(2026, 10, 14), notes, ArchiveRowKind.New, "2154", "1.03"),
         ArchiveRowUi("3.61", LocalDate(2026, 10, 14), "", ArchiveRowKind.New, "3312", "1.01"),
-        ArchiveRowUi("3.58", LocalDate(2026, 7, 19), "", ArchiveRowKind.New)
+        ArchiveRowUi("3.58", LocalDate(2026, 7, 19), "", ArchiveRowKind.New),
     )
     private val noUnit = base.copy(
         content = LCEState.Content(noUnitRows),
@@ -237,7 +237,7 @@ class FirmwareArchiveGallery {
         viewOnly = true,
         noUnit = true,
         canShare = true,
-        canFilter = CanFilterUi(canPickVehicle = true, noUnit = true)
+        canFilter = CanFilterUi(canPickVehicle = true, noUnit = true),
     )
 
     @Test
@@ -249,8 +249,8 @@ class FirmwareArchiveGallery {
         noUnit.copy(
             content = LCEState.Content(noUnitRows.take(1)),
             canFilter = noUnit.canFilter?.copy(input = "2154", applied = "2154", carTitle = "Kia Rio 2021"),
-            busy = noUnitRows[0].key
-        )
+            busy = noUnitRows[0].key,
+        ),
     )
 
     @Test
@@ -262,14 +262,14 @@ class FirmwareArchiveGallery {
             profile = UpdateProfile.Bluetooth,
             deviceTitle = "Bluetooth-модуль",
             channel = FirmwareChannel.BETA,
-            canFilter = null
-        )
+            canFilter = null,
+        ),
     )
 
     @Test
     fun noUnitNoFirmware() = render(
         "28_no_unit_no_firmware",
-        noUnit.copy(content = LCEState.Content(emptyList()), noModelFirmware = true, deviceTitle = "Метка BT-760")
+        noUnit.copy(content = LCEState.Content(emptyList()), noModelFirmware = true, deviceTitle = "Метка BT-760"),
     )
 
     @Test
@@ -280,9 +280,9 @@ class FirmwareArchiveGallery {
                 noUnitRows[0].key,
                 "DX-4GS_3.61_CAN2154-1.03.pld",
                 "Download/Pandora Spec/DX-4GS_3.61_CAN2154-1.03.pld",
-                "Download/Pandora Spec"
-            )
-        )
+                "Download/Pandora Spec",
+            ),
+        ),
     )
 
     @Test
@@ -296,9 +296,9 @@ class FirmwareArchiveGallery {
                 noUnitRows[0].key,
                 "DX-4GS_3.61_CAN2154-1.03.pld",
                 "/Users/master/Downloads/Pandora Spec/DX-4GS_3.61_CAN2154-1.03.pld",
-                "/Users/master/Downloads/Pandora Spec"
-            )
-        )
+                "/Users/master/Downloads/Pandora Spec",
+            ),
+        ),
     )
 
     @Test

@@ -2,31 +2,31 @@ package ru.alarmtrade.specmp.feature.fastmount.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import ru.alarmtrade.common.core.response.Response as SdkResponse
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SubsystemFirmwareType
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
-import ru.alarmtrade.specialist.interactors.configuration.ConfigurationInteractor
 import ru.alarmtrade.specialist.interactors.configuration.requests.ConfigurationRequest
-import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
-import ru.alarmtrade.specialist.interactors.deviceVerification.VerificationInteractor
 import ru.alarmtrade.specialist.interactors.deviceVerification.request.VerifyDeviceRequest
-import ru.alarmtrade.specialist.interactors.fastMount.FastMountInteractor
 import ru.alarmtrade.specialist.interactors.fastMount.requests.AddMountFeedbackRequest
 import ru.alarmtrade.specialist.interactors.fastMount.requests.AnswerCurrentQuestionRequest
 import ru.alarmtrade.specialist.interactors.fastMount.requests.StartFastMountRequest
-import ru.alarmtrade.specialist.interactors.files.RemoteFilesInteractor
 import ru.alarmtrade.specialist.interactors.files.requests.DownloadFileRequest
-import ru.alarmtrade.specialist.interactors.firmwareFiles.FirmwareFilesInteractor
 import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwareRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
-import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.fastmount.data.datasource.FastMountDataSource
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toDeviceClass
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toFastMountFailure
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toSdk
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountException
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
@@ -36,88 +36,60 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
 import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountRepository
 
-/**
- * [FastMountRepository] над `FastMountInteractor` SDK. Интеракторы — лениво: недоступный на платформе не должен
- * ронять создание репозитория.
- */
-class SpecialistFastMountRepository(
-    private val fastMount: () -> FastMountInteractor,
-    private val configurations: () -> ConfigurationInteractor,
-    private val deviceInformation: () -> DeviceInformationInteractor,
-    private val verification: () -> VerificationInteractor,
-    private val firmwareFiles: () -> FirmwareFilesInteractor,
-    private val files: () -> RemoteFilesInteractor
-) : FastMountRepository {
+internal class SpecialistFastMountRepository(private val dataSource: FastMountDataSource) : FastMountRepository {
 
     override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<UnitAccess> {
-        val interactor = verification.resolveOrNull() ?: return interactorUnavailable()
         val request =
             VerifyDeviceRequest(systemId = systemId, systemName = systemName, firmwareVersion = firmwareVersion)
-        return interactor.verifyDeviceUseCase.execute(request).toResponse().map { UnitAccess(it.hasAccess, it.message) }
+        return dataSource.verify(request).toResponseOrUnavailable().map { UnitAccess(it.hasAccess, it.message) }
     }
 
     override suspend fun latestFirmware(systemName: String, canCode: String?, canVersion: Int?): Response<String?> {
-        val information = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
-        val firmware = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
         val moduleId = when (
-            val response = information.getDeviceInformation.execute(GetDeviceInformationRequest(systemName))
-                .toResponse()
+            val response = dataSource.deviceInformation(GetDeviceInformationRequest(systemName))
+                .toResponseOrUnavailable()
         ) {
             is Response.Success -> response.value.subsystems.firstOrNull { it.type == SubsystemType.ALARM_MAIN }?.id
             is Response.Error -> return response
         } ?: return Response.Success(null)
-        return firmware.getLatestSubsystemFirmwareUseCase
-            .execute(
+        return dataSource
+            .latestFirmware(
                 SubsystemFirmwareRequest(
                     subsystemId = moduleId,
                     type = SubsystemFirmwareType.RELEASE,
                     canCode = canCode,
-                    canCodeVersion = canVersion
-                )
+                    canCodeVersion = canVersion,
+                ),
             )
-            .toResponse()
+            .toResponseOrUnavailable()
             .map { it.version }
     }
 
-    override suspend fun download(url: String): Response<ByteArray> {
-        val interactor = files.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.downloadFileUseCase.execute(DownloadFileRequest(url)).toResponse()
-    }
+    override suspend fun download(url: String): Response<ByteArray> =
+        dataSource.download(DownloadFileRequest(url)).toResponseOrUnavailable()
 
-    override suspend fun deviceClass(systemName: String): Response<MountDeviceClass> {
-        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getDeviceInformation.execute(GetDeviceInformationRequest(systemName)).toResponse()
+    override suspend fun deviceClass(systemName: String): Response<MountDeviceClass> =
+        dataSource.deviceInformation(GetDeviceInformationRequest(systemName)).toResponseOrUnavailable()
             .map { information -> information.subsystems.map { it.type }.toDeviceClass() }
-    }
 
-    override suspend fun configuration(id: Int): Response<FastMountConfiguration> {
-        val interactor = configurations.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getConfigurationByIdUseCase.execute(ConfigurationRequest(id)).toResponse()
-            .map { it.toDomain() }
-    }
+    override suspend fun configuration(id: Int): Response<FastMountConfiguration> =
+        dataSource.configuration(ConfigurationRequest(id)).toResponseOrUnavailable().map { it.toDomain() }
 
     override suspend fun start(configurationId: Int): Response<Unit> {
-        val configs = configurations.resolveOrNull() ?: return interactorUnavailable()
-        val interactor = fastMount.resolveOrNull() ?: return interactorUnavailable()
         val configuration = when (
-            val response = configs.getConfigurationByIdUseCase.execute(ConfigurationRequest(configurationId))
-                .toResponse()
+            val response = dataSource.configuration(ConfigurationRequest(configurationId)).toResponseOrUnavailable()
         ) {
             is Response.Success -> response.value
             is Response.Error -> return response
         }
-        return interactor.startFastMountUseCase
-            .execute(StartFastMountRequest(carConfiguration = configuration, isDebug = false))
+        return dataSource.start(StartFastMountRequest(carConfiguration = configuration, isDebug = false))
             .toFastMountResponse()
     }
 
     override fun steps(): Flow<Response<FastMountStep>> = flow {
-        val interactor = fastMount.resolveOrNull()
-        if (interactor == null) {
-            emit(interactorUnavailable())
-            return@flow
+        safeFlowRun {
+            dataSource.mountStates()?.map { it.toFastMountResponse() } ?: flowOf(interactorUnavailable())
         }
-        safeFlowRun { interactor.getCurrentMountStateFlowUseCase.execute().map { it.toFastMountResponse() } }
             .mapNotNull { response ->
                 when (response) {
                     is Response.Success -> response.value.toStep()?.let { Response.Success(it) }
@@ -127,42 +99,28 @@ class SpecialistFastMountRepository(
             .collect { emit(it) }
     }
 
-    override suspend fun next(): Response<Unit> = call { goToNextMountStateUseCase.execute().toFastMountResponse() }
+    override suspend fun next(): Response<Unit> = dataSource.next().toFastMountResponse()
 
-    override suspend fun previous(): Response<Unit> =
-        call { goToPreviousMountStateUseCase.execute().toFastMountResponse() }
+    override suspend fun previous(): Response<Unit> = dataSource.previous().toFastMountResponse()
 
     override fun questions(): Flow<Response<QuestionsState>> = flow {
-        val interactor = fastMount.resolveOrNull()
-        if (interactor == null) {
-            emit(interactorUnavailable())
-            return@flow
-        }
         safeFlowRun {
-            interactor.getFastMountQuestionsFlowUseCase.execute()
-                .map { response -> response.toFastMountResponse().map { it.toDomain() } }
+            dataSource.questions()?.map { response -> response.toFastMountResponse().map { it.toDomain() } }
+                ?: flowOf(interactorUnavailable())
         }.collect { emit(it) }
     }
 
-    override suspend fun answer(answer: QuestionAnswer): Response<Unit> = call {
-        answerCurrentQuestionUseCase.execute(AnswerCurrentQuestionRequest(answer.toSdk())).toFastMountResponse()
-    }
+    override suspend fun answer(answer: QuestionAnswer): Response<Unit> =
+        dataSource.answer(AnswerCurrentQuestionRequest(answer.toSdk())).toFastMountResponse()
 
-    override suspend fun skip(): Response<Unit> = call { skipCurrentQuestionUseCase.execute().toFastMountResponse() }
+    override suspend fun skip(): Response<Unit> = dataSource.skip().toFastMountResponse()
 
-    override suspend fun feedback(text: String, rating: Int): Response<Unit> = call {
-        addMountFeedbackUseCase.execute(AddMountFeedbackRequest(feedback = text, rating = rating))
-            .toFastMountResponse()
-    }
-
-    private suspend fun call(block: suspend FastMountInteractor.() -> Response<Unit>): Response<Unit> {
-        val interactor = fastMount.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.block()
-    }
+    override suspend fun feedback(text: String, rating: Int): Response<Unit> =
+        dataSource.feedback(AddMountFeedbackRequest(feedback = text, rating = rating)).toFastMountResponse()
 }
 
-/** Ответ SDK → [Response]; предметные ошибки быстрого монтажа — [FastMountException]. */
-private fun <T> SdkResponse<T>.toFastMountResponse(): Response<T> = when (val response = toResponse()) {
+/** Ответ SDK → [Response]; предметные ошибки — [FastMountException], `null` — интерактор недоступен. */
+private fun <T> SdkResponse<T>?.toFastMountResponse(): Response<T> = when (val response = toResponseOrUnavailable()) {
     is Response.Success -> response
 
     is Response.Error -> response.exception.toFastMountFailure()

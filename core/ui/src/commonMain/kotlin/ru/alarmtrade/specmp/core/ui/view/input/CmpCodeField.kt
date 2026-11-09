@@ -29,11 +29,7 @@ import androidx.compose.ui.unit.sp
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/**
- * Поле короткого цифрового кода по ячейкам (CAN-код — 4 цифры): цифровая клавиатура, ввод отбрасывает не-цифры и
- * лишнее сверх [length]. Рамка активной ячейки — primary, [isError] — все ячейки error. «✕» очищает поле
- * ([clearContentDescription]). [label] — подпись поля для доступности.
- */
+/** Ввод отбрасывает не-цифры и всё сверх [length]. */
 @Composable
 fun CmpCodeField(
     value: String,
@@ -43,7 +39,7 @@ fun CmpCodeField(
     modifier: Modifier = Modifier,
     length: Int = 4,
     isError: Boolean = false,
-    focusRequester: FocusRequester = remember { FocusRequester() }
+    focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
@@ -73,21 +69,21 @@ fun CmpCodeField(
                                 .border(
                                     width = if (isError || active) 2.dp else 1.dp,
                                     color = borderColor,
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(12.dp),
                                 ),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = value.getOrNull(index)?.toString().orEmpty(),
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 28.sp,
-                                color = colors.onSurface
+                                color = colors.onSurface,
                             )
                         }
                     }
                 }
-            }
+            },
         )
         if (value.isNotEmpty()) {
             CmpIconButton(
@@ -96,7 +92,7 @@ fun CmpCodeField(
                     focusRequester.requestFocus()
                 },
                 icon = CmpIcons.Close,
-                contentDescription = clearContentDescription
+                contentDescription = clearContentDescription,
             )
         }
     }

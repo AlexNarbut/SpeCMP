@@ -16,7 +16,6 @@ import ru.alarmtrade.specmp.core.localization.resources.vehicle_type_label_micro
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 
-/** Годы выпуска: «2017–2023» или «2018». */
 @Composable
 internal fun yearsText(years: IntRange): String = if (years.first == years.last) {
     stringResource(Strings.string.vehicle_common_format_years_single, years.first)
@@ -31,23 +30,21 @@ internal fun groupLabel(group: CarFeatureGroup): String = stringResource(
         CarFeatureGroup.EXTENDED -> Strings.string.vehicle_group_label_extended
         CarFeatureGroup.ELECTRIC -> Strings.string.vehicle_group_label_electric
         CarFeatureGroup.TRAILER -> Strings.string.vehicle_group_label_trailer
-    }
+    },
 )
 
-/** Полное название типа устройства (экран выбора типа, подзаголовок). */
 @Composable
 internal fun typeLabel(type: VehicleDeviceType): String = stringResource(
     when (type) {
         VehicleDeviceType.ALARM -> Strings.string.vehicle_type_label_alarm
         VehicleDeviceType.MICROBOT -> Strings.string.vehicle_type_label_microbot
-    }
+    },
 )
 
-/** Короткое название типа (чип в шапке). */
 @Composable
 internal fun typeChipLabel(type: VehicleDeviceType): String = stringResource(
     when (type) {
         VehicleDeviceType.ALARM -> Strings.string.vehicle_type_btn_alarm
         VehicleDeviceType.MICROBOT -> Strings.string.vehicle_type_btn_microbot
-    }
+    },
 )

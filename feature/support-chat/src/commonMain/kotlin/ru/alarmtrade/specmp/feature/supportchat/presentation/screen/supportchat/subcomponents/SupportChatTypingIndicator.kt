@@ -37,14 +37,14 @@ internal fun SupportChatTypingIndicator(author: String, colors: CmpThemeColors, 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         CmpText(
             // Одна фраза целиком в ресурсе (правило 6 localization.md):
             // порядок слов и разделитель — часть перевода.
             text = stringResource(Strings.string.supportchat_chat_msg_typing_author, author),
             modifier = Modifier.padding(horizontal = 6.dp),
-            color = colors.primary
+            color = colors.primary,
         )
 
         CmpSurface(
@@ -52,24 +52,24 @@ internal fun SupportChatTypingIndicator(author: String, colors: CmpThemeColors, 
                 topStart = 16.dp,
                 topEnd = 16.dp,
                 bottomStart = 4.dp,
-                bottomEnd = 16.dp
+                bottomEnd = 16.dp,
             ),
             color = colors.surfaceContainerLow,
             contentColor = colors.onSurface,
             border = BorderStroke(
                 width = 1.dp,
-                color = colors.outlineVariant
-            )
+                color = colors.outlineVariant,
+            ),
         ) {
             CmpRow(
                 modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 repeat(TYPING_DOT_COUNT) { index ->
                     TypingDot(
                         color = colors.onSurfaceVariant,
-                        delayMillis = index * 180
+                        delayMillis = index * 180,
                     )
                 }
             }
@@ -85,15 +85,15 @@ private fun TypingDot(color: Color, delayMillis: Int) {
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 600, delayMillis = delayMillis),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "typing_dot_alpha"
+        label = "typing_dot_alpha",
     )
 
     CmpBox(
         modifier = Modifier
             .size(8.dp)
             .clip(CircleShape)
-            .background(color.copy(alpha = alpha))
+            .background(color.copy(alpha = alpha)),
     )
 }

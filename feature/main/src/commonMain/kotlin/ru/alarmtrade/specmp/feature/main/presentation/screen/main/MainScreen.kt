@@ -13,12 +13,12 @@ internal fun MainScreen(
     isDarkTheme: Boolean,
     onThemeChange: (Boolean) -> Unit,
     onNavigateToFeature: (MainNavigationTarget) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val viewModel = koinViewModel<MainScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is MainScreenEffect.Navigate -> onNavigateToFeature(effect.target)
         }
@@ -35,7 +35,7 @@ internal fun MainScreen(
         onSettingsClick = viewModel::onSettingsClicked,
         isDarkTheme = isDarkTheme,
         onThemeChange = onThemeChange,
-        onLogout = viewModel::logout,
-        modifier = modifier
+        onLogout = viewModel::onLogout,
+        modifier = modifier,
     )
 }

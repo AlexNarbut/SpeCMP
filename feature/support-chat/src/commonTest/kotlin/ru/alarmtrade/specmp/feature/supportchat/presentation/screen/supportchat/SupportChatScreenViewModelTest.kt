@@ -7,24 +7,28 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.FixedClock
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
@@ -36,6 +40,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFi
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
@@ -50,6 +55,7 @@ class SupportChatScreenViewModelTest {
     private lateinit var attachmentFiles: FakeSupportChatAttachmentFiles
     private lateinit var fileOpener: FakeSupportChatFileOpener
     private lateinit var dispatchers: AppDispatchers
+    private val clock = FixedClock(LocalDateTime(2026, 1, 15, 12, 0).toInstant(TimeZone.UTC))
 
     @BeforeTest
     fun setup() {
@@ -59,11 +65,7 @@ class SupportChatScreenViewModelTest {
         outbox = FakeSupportChatOutbox()
         attachmentFiles = FakeSupportChatAttachmentFiles()
         fileOpener = FakeSupportChatFileOpener()
-        dispatchers = AppDispatchers(
-            main = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher
-        )
+        dispatchers = testDispatchers(testDispatcher)
     }
 
     // region События и история
@@ -97,7 +99,7 @@ class SupportChatScreenViewModelTest {
         repository.historyPageOnLoad = listOf(
             incomingMessageAt(id = 3, minute = 12, text = "Third"),
             incomingMessageAt(id = 2, minute = 9, text = "Second"),
-            incomingMessageAt(id = 1, minute = 5, text = "First")
+            incomingMessageAt(id = 1, minute = 5, text = "First"),
         )
         val viewModel = createViewModel()
 
@@ -108,7 +110,7 @@ class SupportChatScreenViewModelTest {
     fun `live message is placed after older history page`() = runChatTest {
         repository.historyPageOnLoad = listOf(
             incomingMessageAt(id = 2, minute = 9, text = "Second"),
-            incomingMessageAt(id = 1, minute = 5, text = "First")
+            incomingMessageAt(id = 1, minute = 5, text = "First"),
         )
         val viewModel = createViewModel()
 
@@ -180,6 +182,42 @@ class SupportChatScreenViewModelTest {
         repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", false, isMine = false))
         runCurrent()
         assertNull(viewModel.state.value.typingAuthor)
+    }
+
+    @Test
+    fun `typing indicator hides after timeout counted from the last event`() = runChatTest {
+        val viewModel = createViewModel()
+
+        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", true, isMine = false))
+        runCurrent()
+        advanceTimeBy(3.seconds)
+        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", true, isMine = false))
+        runCurrent()
+        advanceTimeBy(3.seconds)
+        runCurrent()
+        assertEquals("agent@example.com", viewModel.state.value.typingAuthor)
+
+        advanceTimeBy(3.seconds)
+        runCurrent()
+        assertNull(viewModel.state.value.typingAuthor)
+    }
+
+    @Test
+    fun `failed read mark is sent again with the next batch`() = runChatTest {
+        val viewModel = createViewModel()
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 7, text = "First")))
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 8, text = "Second")))
+        advanceUntilIdle()
+        repository.markMessagesAsReadResult = Response.Error(Exception("Network error"))
+
+        viewModel.onMessagesVisible(listOf("7"))
+        advanceUntilIdle()
+        repository.markMessagesAsReadResult = Response.Success(Unit)
+        viewModel.onMessagesVisible(listOf("7", "8"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(listOf(7L), listOf(7L, 8L)), repository.markedAsRead)
+        assertTrue(viewModel.state.value.messages.all { it.status == SupportChatMessageStatus.Read })
     }
 
     @Test
@@ -335,6 +373,23 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `loadMore is skipped while reconnect reloads the newest page`() = runChatTest {
+        repository.historyPageOnLoad = listOf(incomingMessage(id = 1, text = "Old"))
+        val viewModel = createViewModel()
+        repository.loadDelayMillis = 1_000
+
+        repository.disconnect()
+        runCurrent()
+        repository.connect()
+        runCurrent()
+        viewModel.onLoadMore()
+        advanceUntilIdle()
+
+        assertEquals(listOf<SupportChatHistoryCursor?>(null, null), repository.historyCursors)
+        assertFalse(viewModel.state.value.isLoadingMore)
+    }
+
+    @Test
     fun `loadMore is no-op when hasMoreHistory is false`() = runChatTest {
         val viewModel = createViewModel()
         val callsAfterInit = repository.loadHistoryCallCount
@@ -359,6 +414,17 @@ class SupportChatScreenViewModelTest {
         assertEquals(1, viewModel.state.value.messages.size)
         assertEquals(SupportChatMessageStatus.Sent, viewModel.state.value.messages.first().status)
         assertEquals(listOf("Test message"), repository.sentMessages)
+    }
+
+    @Test
+    fun `optimistic message is stamped with injected clock`() = runChatTest {
+        val viewModel = createViewModel()
+
+        clock.instant = LocalDateTime(2026, 1, 15, 12, 30).toInstant(TimeZone.UTC)
+        viewModel.onSend("Stamped")
+        runCurrent()
+
+        assertEquals(listOf(clock.instant), viewModel.state.value.messages.map { it.time })
     }
 
     @Test
@@ -472,7 +538,7 @@ class SupportChatScreenViewModelTest {
         listOf(
             SupportChatConnectionState.Reconnecting,
             SupportChatConnectionState.WaitingForNetwork,
-            SupportChatConnectionState.Reconnecting
+            SupportChatConnectionState.Reconnecting,
         ).forEach { state ->
             repository.disconnect(state)
             runCurrent()
@@ -535,6 +601,18 @@ class SupportChatScreenViewModelTest {
         assertEquals(2, repository.sessionCount)
         assertEquals(SupportChatConnection.Online, viewModel.state.value.connection)
         assertEquals(listOf("Recovered"), viewModel.state.value.messages.map { it.text })
+    }
+
+    @Test
+    fun `unavailable session ends the session offline`() = runChatTest {
+        repository.sessionUnavailable = true
+        val viewModel = createViewModel()
+
+        val state = viewModel.state.value
+        assertFalse(state.isSessionActive)
+        assertEquals(SupportChatConnection.Offline, state.connection)
+        assertEquals(LCEState.Error(SupportChatError.HistoryUnavailable), state.history)
+        assertEquals(1, repository.releasedSessionCount)
     }
 
     @Test
@@ -635,7 +713,7 @@ class SupportChatScreenViewModelTest {
         runCurrent()
 
         repository.emitEvent(
-            SupportChatEvent.MessageReceived(ownImageEcho(id = 100, attachmentName = "server-renamed.png"))
+            SupportChatEvent.MessageReceived(ownImageEcho(id = 100, attachmentName = "server-renamed.png")),
         )
         advanceUntilIdle()
 
@@ -716,8 +794,8 @@ class SupportChatScreenViewModelTest {
                 name = "scheme.pdf",
                 path = "/tmp/scheme.pdf",
                 mimeType = "application/pdf",
-                sizeBytes = 2_048
-            )
+                sizeBytes = 2_048,
+            ),
         )
         viewModel.onSend("See attachments")
         advanceUntilIdle()
@@ -798,7 +876,7 @@ class SupportChatScreenViewModelTest {
         val restored = ownOptimistic(text = "Delivered", status = SupportChatMessageStatus.Pending)
         outbox.enqueue(restored)
         repository.historyPageOnLoad = listOf(
-            ownTextEcho(id = 400, text = "Delivered").copy(time = restored.time)
+            ownTextEcho(id = 400, text = "Delivered").copy(time = restored.time),
         )
 
         val viewModel = createViewModel()
@@ -918,9 +996,9 @@ class SupportChatScreenViewModelTest {
         assertEquals(
             listOf<SupportChatEffect>(
                 SupportChatEffect.AttachmentOpenFailed(noApp = true),
-                SupportChatEffect.AttachmentOpenFailed(noApp = false)
+                SupportChatEffect.AttachmentOpenFailed(noApp = false),
             ),
-            effects
+            effects,
         )
         assertEquals(1, fileOpener.openedBytes.size)
     }
@@ -973,6 +1051,25 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `session keeps running while the screen is not subscribed`() = runChatTest {
+        val viewModel = createViewModel(subscribe = false)
+        val subscription = subscribe(viewModel)
+        advanceUntilIdle()
+
+        subscription.cancel()
+        advanceTimeBy(10.seconds)
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 1, text = "While away")))
+        advanceUntilIdle()
+        subscribe(viewModel)
+        advanceUntilIdle()
+
+        assertEquals(listOf("While away"), viewModel.state.value.messages.map { it.text })
+        assertEquals(1, repository.sessionCount)
+        assertEquals(0, repository.releasedSessionCount)
+        assertEquals(1, repository.loadHistoryCallCount)
+    }
+
+    @Test
     fun `cancelled view model scope releases the session`() = runChatTest {
         val viewModel = createViewModel()
 
@@ -982,7 +1079,7 @@ class SupportChatScreenViewModelTest {
         assertEquals(1, repository.releasedSessionCount)
         assertEquals(
             listOf(FakeSupportChatRepository.ACQUIRE_CALL, FakeSupportChatRepository.RELEASE_CALL),
-            repository.connectionCalls
+            repository.connectionCalls,
         )
     }
 
@@ -1003,9 +1100,9 @@ class SupportChatScreenViewModelTest {
             listOf(
                 FakeSupportChatRepository.ACQUIRE_CALL,
                 FakeSupportChatRepository.RELEASE_CALL,
-                FakeSupportChatRepository.ACQUIRE_CALL
+                FakeSupportChatRepository.ACQUIRE_CALL,
             ),
-            repository.connectionCalls
+            repository.connectionCalls,
         )
     }
 
@@ -1039,28 +1136,35 @@ class SupportChatScreenViewModelTest {
         }
     }
 
-    private fun TestScope.createViewModel(advance: Boolean = true): SupportChatScreenViewModel {
+    private fun TestScope.createViewModel(
+        advance: Boolean = true,
+        subscribe: Boolean = true,
+    ): SupportChatScreenViewModel {
         val viewModel = SupportChatScreenViewModel(
             repository = repository,
             dispatchers = dispatchers,
             fileSaver = saver,
             attachmentFiles = attachmentFiles,
             fileOpener = fileOpener,
-            outbox = outbox
+            outbox = outbox,
+            clock = clock,
         )
         createdViewModels += viewModel
-        // Экран подписан на state — с этого стартует работа VM (launchOnFirstStart).
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
+        // Экран подписан на state — с этого стартует работа VM (onStart).
+        if (subscribe) subscribe(viewModel)
         if (advance) advanceUntilIdle()
         return viewModel
     }
+
+    private fun TestScope.subscribe(viewModel: SupportChatScreenViewModel): Job =
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
 
     private fun TestScope.collectEffects(viewModel: SupportChatScreenViewModel): List<SupportChatEffect> {
         val effects = mutableListOf<SupportChatEffect>()
         // Unconfined: advanceUntilIdle не выполняет задачи backgroundScope, поэтому
         // коллектор должен получать эффект сразу при tryEmit, без диспатча.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effect.collect { effects.add(it) }
+            viewModel.sideEffect.collect { effects.add(it) }
         }
         return effects
     }
@@ -1070,15 +1174,15 @@ class SupportChatScreenViewModelTest {
         serverId = id,
         text = text,
         attachment = null,
-        time = Clock.System.now(),
+        time = clock.now(),
         isMine = false,
         authorEmail = "agent@example.com",
-        status = SupportChatMessageStatus.Sent
+        status = SupportChatMessageStatus.Sent,
     )
 
     private fun incomingMessageAt(id: Long, minute: Int, text: String): SupportChatMessage =
         incomingMessage(id = id, text = text).copy(
-            time = LocalDateTime(2026, 1, 15, 10, minute).toInstant(TimeZone.UTC)
+            time = LocalDateTime(2026, 1, 15, 10, minute).toInstant(TimeZone.UTC),
         )
 
     private fun ownOptimistic(text: String, status: SupportChatMessageStatus): SupportChatMessage = SupportChatMessage(
@@ -1086,10 +1190,10 @@ class SupportChatScreenViewModelTest {
         serverId = null,
         text = text,
         attachment = null,
-        time = Clock.System.now(),
+        time = clock.now(),
         isMine = true,
         authorEmail = null,
-        status = status
+        status = status,
     )
 
     private fun ownTextEcho(id: Long, text: String): SupportChatMessage =
@@ -1101,10 +1205,10 @@ class SupportChatScreenViewModelTest {
             attachment = SupportChatAttachment.Image(
                 id = "srv-$id",
                 name = attachmentName,
-                url = "https://example.com/files/$id"
+                url = "https://example.com/files/$id",
             ),
             isMine = true,
-            authorEmail = "me@example.com"
+            authorEmail = "me@example.com",
         )
 
     private fun pickedImage(id: String, name: String): SupportChatPickedFile =
@@ -1117,7 +1221,7 @@ class SupportChatScreenViewModelTest {
         url = "https://files/scheme.pdf",
         localPath = null,
         mimeType = "application/pdf",
-        sizeBytes = 1024
+        sizeBytes = 1024,
     )
 
     private fun imageUiAttachment(): SupportChatUiAttachment = SupportChatUiAttachment(
@@ -1127,7 +1231,7 @@ class SupportChatScreenViewModelTest {
         url = "https://files/photo.jpg",
         localPath = null,
         mimeType = null,
-        sizeBytes = null
+        sizeBytes = null,
     )
 
     // endregion

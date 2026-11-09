@@ -17,17 +17,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 
-/**
- * Текст из простого HTML с сервера (примечания, описания): абзацы, `<br>`, жирный, курсив, подчёркнутый,
- * списки (строки с «•»), ссылки (открываются системой). Прочие теги отбрасываются, текст остаётся.
- * [maxLines] — свёрнутый вид с многоточием. Стиль — bodyLarge.
- */
+/** Простой HTML с сервера: абзацы, `<br>`, b/i/u, списки, ссылки; прочие теги отбрасываются, текст остаётся. */
 @Composable
 fun CmpHtmlText(
     html: String,
     modifier: Modifier = Modifier,
     maxLines: Int = Int.MAX_VALUE,
-    color: Color = LocalContentColor.current
+    color: Color = LocalContentColor.current,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
     val text = remember(html, linkColor) { parseSimpleHtml(html, linkColor) }
@@ -37,7 +33,7 @@ fun CmpHtmlText(
         style = MaterialTheme.typography.bodyLarge,
         color = color,
         maxLines = maxLines,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -54,13 +50,9 @@ private val entities = mapOf(
     "&laquo;" to "«",
     "&raquo;" to "»",
     "&mdash;" to "—",
-    "&ndash;" to "–"
+    "&ndash;" to "–",
 )
 
-/**
- * Разбор подмножества HTML в [AnnotatedString]. Пробелы схлопываются как в браузере; блоки (`p`, `div`, `li`,
- * `br`) — переносы строк без пустых строк в начале и конце.
- */
 internal fun parseSimpleHtml(html: String, linkColor: Color = Color.Unspecified): AnnotatedString =
     buildAnnotatedString { SimpleHtmlWriter(this, linkColor).write(html) }.trimEnd()
 
@@ -81,7 +73,7 @@ private class SimpleHtmlWriter(private val builder: AnnotatedString.Builder, pri
             tag(
                 name = match.groupValues[TAG_GROUP].lowercase(),
                 closing = match.groupValues[CLOSING_GROUP] == "/",
-                attributes = match.groupValues[ATTRIBUTES_GROUP]
+                attributes = match.groupValues[ATTRIBUTES_GROUP],
             )
         }
         text(html.substring(cursor))

@@ -126,7 +126,6 @@ private const val TICK_MILLIS = 1_000L
 private const val SLAVE_TEXT_WEIGHT = 1.15f
 private const val REVIEW_FORM_WEIGHT = 1.3f
 
-/** Действия шагов мастера. */
 internal class MasterActions(
     val onBack: () -> Unit = {},
     val onStartRetry: () -> Unit = {},
@@ -140,10 +139,9 @@ internal class MasterActions(
     val onFeedbackChange: (String) -> Unit = {},
     val onFeedbackSend: () -> Unit = {},
     val onRetryStep: () -> Unit = {},
-    val onHome: () -> Unit = {}
+    val onHome: () -> Unit = {},
 )
 
-/** «Готовим монтаж…» (F6) и ошибка старта. */
 @Composable
 internal fun StartingScreen(state: FastMountState, actions: MasterActions) {
     val error = state.master.startError
@@ -161,39 +159,38 @@ internal fun StartingScreen(state: FastMountState, actions: MasterActions) {
                             MainButton(
                                 text = stringResource(Strings.string.fastmount_common_btn_retry),
                                 icon = CmpIcons.Refresh,
-                                onClick = actions.onStartRetry
+                                onClick = actions.onStartRetry,
                             )
                         },
                         {
                             MainButton(
                                 text = stringResource(Strings.string.fastmount_common_btn_back),
                                 outlined = true,
-                                onClick = actions.onBack
+                                onClick = actions.onBack,
                             )
-                        }
-                    )
+                        },
+                    ),
                 )
             }
-        }
+        },
     ) {
         if (error == null) {
             Hero(
                 title = stringResource(Strings.string.fastmount_start_title_screen),
                 text = stringResource(Strings.string.fastmount_start_msg_screen),
-                art = { BusyArt(icon = CmpIcons.CloudSync) }
+                art = { BusyArt(icon = CmpIcons.CloudSync) },
             )
         } else {
             Hero(
                 title = stringResource(Strings.string.fastmount_start_error_title),
                 text = listOfNotNull(error.text(), stringResource(Strings.string.fastmount_start_msg_error))
                     .joinToString(" "),
-                art = { RoundArt(icon = CmpIcons.CloudOff, tone = BannerTone.ERROR) }
+                art = { RoundArt(icon = CmpIcons.CloudOff, tone = BannerTone.ERROR) },
             )
         }
     }
 }
 
-/** Запись настроек в блок (F7): процесс без процентов и ошибка с «Повторить». */
 @Composable
 internal fun WritingScreen(state: FastMountState, actions: MasterActions) {
     val error = state.master.error.takeIf { !state.master.busy }
@@ -211,18 +208,18 @@ internal fun WritingScreen(state: FastMountState, actions: MasterActions) {
                             text = stringResource(Strings.string.fastmount_common_btn_retry),
                             icon = CmpIcons.Refresh,
                             onClick = actions.onWriteRetry,
-                            modifier = Modifier.testTag(FAST_MOUNT_WRITE_RETRY_TAG)
+                            modifier = Modifier.testTag(FAST_MOUNT_WRITE_RETRY_TAG),
                         )
-                    }
+                    },
                 )
             }
-        }
+        },
     ) {
         if (error == null) {
             Hero(
                 title = stringResource(Strings.string.fastmount_write_title_screen),
                 text = stringResource(Strings.string.fastmount_write_msg_screen),
-                art = { BusyArt(icon = CmpIcons.Memory) }
+                art = { BusyArt(icon = CmpIcons.Memory) },
             ) {
                 IndeterminateBar()
             }
@@ -231,19 +228,18 @@ internal fun WritingScreen(state: FastMountState, actions: MasterActions) {
                 Banner(
                     tone = BannerTone.ERROR,
                     title = stringResource(Strings.string.fastmount_write_error_title),
-                    text = error.text() ?: stringResource(Strings.string.fastmount_write_msg_error)
+                    text = error.text() ?: stringResource(Strings.string.fastmount_write_msg_error),
                 )
                 Hero(
                     title = stringResource(Strings.string.fastmount_write_title_interrupted),
                     text = stringResource(Strings.string.fastmount_write_msg_interrupted),
-                    art = { RoundArt(icon = CmpIcons.Memory) }
+                    art = { RoundArt(icon = CmpIcons.Memory) },
                 )
             }
         }
     }
 }
 
-/** Перезагрузка блока (F9): таймер, «Не отключайте питание», «Далее: …». 60 с — потерю связи покажет обёртка. */
 @Composable
 internal fun RebootScreen(state: FastMountState, next: RailKey?, seconds: Int) {
     val colors = cmpThemeColors()
@@ -253,35 +249,34 @@ internal fun RebootScreen(state: FastMountState, next: RailKey?, seconds: Int) {
         nav = WizardNav.LOCK,
         onBack = {},
         centered = true,
-        modifier = Modifier.testTag(FAST_MOUNT_REBOOT_TAG)
+        modifier = Modifier.testTag(FAST_MOUNT_REBOOT_TAG),
     ) {
         Hero(
             title = stringResource(Strings.string.fastmount_reboot_title_screen),
             text = stringResource(Strings.string.fastmount_reboot_msg_power),
-            art = { BusyArt(icon = CmpIcons.RestartAlt, spin = true) }
+            art = { BusyArt(icon = CmpIcons.RestartAlt, spin = true) },
         ) {
             CmpText(
                 text = formatElapsed(seconds),
                 fontSize = 40.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
             CmpText(
                 text = stringResource(Strings.string.fastmount_reboot_msg_hint),
                 style = CmpTextStyle.Body,
-                color = colors.onSurfaceVariant
+                color = colors.onSurfaceVariant,
             )
             Tag(
                 text = stringResource(
                     Strings.string.fastmount_reboot_format_next,
-                    stringResource(next?.title() ?: Strings.string.fastmount_done_title_step)
+                    stringResource(next?.title() ?: Strings.string.fastmount_done_title_step),
                 ),
-                icon = CmpIcons.ArrowForward
+                icon = CmpIcons.ArrowForward,
             )
         }
     }
 }
 
-/** Секунды с момента, как экран перезагрузки появился (таймер экрана и колонки). */
 @Composable
 internal fun rememberRebootSeconds(active: Boolean): Int {
     var seconds by remember { mutableIntStateOf(0) }
@@ -295,7 +290,6 @@ internal fun rememberRebootSeconds(active: Boolean): Int {
     return seconds
 }
 
-/** Ошибка перехода на текущем шаге (F17): причина и «Повторить». */
 @Composable
 internal fun StepErrorBanner(state: FastMountState, actions: MasterActions) {
     val error = state.master.error ?: return
@@ -305,11 +299,10 @@ internal fun StepErrorBanner(state: FastMountState, actions: MasterActions) {
         title = stringResource(Strings.string.fastmount_step_title_error),
         text = error.text(),
         action = stringResource(Strings.string.fastmount_common_btn_retry),
-        onAction = actions.onRetryStep
+        onAction = actions.onRetryStep,
     )
 }
 
-/** Обучение Slave (F11): анимация из старого приложения, 3 шага, «Обучение выполнено» в нижней панели. */
 @Composable
 internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
     val wide = LocalWizardWide.current
@@ -322,7 +315,7 @@ internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
             enabled = done,
             busy = state.master.busy,
             onClick = actions.onSlaveNext,
-            modifier = Modifier.testTag(FAST_MOUNT_SLAVE_NEXT_TAG)
+            modifier = Modifier.testTag(FAST_MOUNT_SLAVE_NEXT_TAG),
         )
     }
     WizardScaffold(
@@ -330,7 +323,7 @@ internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
         subtitle = state.fixed?.title,
         nav = WizardNav.BACK,
         onBack = actions.onBack,
-        dock = { Dock(buttons = if (wide) listOf(nextButton, doneRow) else listOf(doneRow, nextButton)) }
+        dock = { Dock(buttons = if (wide) listOf(nextButton, doneRow) else listOf(doneRow, nextButton)) },
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             val two = maxWidth >= 860.dp
@@ -338,12 +331,12 @@ internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
                 if (two) {
                     CmpRow(
                         horizontalArrangement = Arrangement.spacedBy(28.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         SlaveAnimation(modifier = Modifier.weight(1f))
                         CmpColumn(
                             modifier = Modifier.weight(SLAVE_TEXT_WEIGHT),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
                             SlaveInstructions()
                         }
@@ -366,25 +359,25 @@ private fun SlaveInstructions() {
         CmpText(
             text = stringResource(Strings.string.fastmount_slave_msg_lead),
             style = CmpTextStyle.BodyLarge,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
     listOf(
         Strings.string.fastmount_slave_msg_step1,
         Strings.string.fastmount_slave_msg_step2,
-        Strings.string.fastmount_slave_msg_step3
+        Strings.string.fastmount_slave_msg_step3,
     ).forEachIndexed { index, text ->
         CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 6.dp)) {
             CmpBox(
                 modifier = Modifier.size(36.dp).background(colors.secondaryContainer, CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpText(text = "${index + 1}", fontWeight = FontWeight.Bold, color = colors.onSecondaryContainer)
             }
             CmpText(
                 text = stringResource(text),
                 style = CmpTextStyle.BodyLarge,
-                modifier = Modifier.padding(top = 6.dp)
+                modifier = Modifier.padding(top = 6.dp),
             )
         }
     }
@@ -403,18 +396,17 @@ private fun SlaveDoneRow(done: Boolean, onChange: (Boolean) -> Unit) {
             .toggleable(value = done, role = Role.Checkbox, onValueChange = onChange)
             .padding(start = 6.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         CmpCheckbox(checked = done, onCheckedChange = null)
         CmpText(
             text = stringResource(Strings.string.fastmount_slave_label_done),
             fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
 
-/** Отзыв (F13): оценка и текст обязательны (правило SDK), итоги монтажа; ошибка — плашка (F17). */
 @Composable
 internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
     val master = state.master
@@ -441,11 +433,11 @@ internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
                         enabled = ready,
                         busy = master.busy,
                         onClick = actions.onFeedbackSend,
-                        modifier = Modifier.testTag(FAST_MOUNT_REVIEW_SEND_TAG)
+                        modifier = Modifier.testTag(FAST_MOUNT_REVIEW_SEND_TAG),
                     )
-                }
+                },
             )
-        }
+        },
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             val two = maxWidth >= 860.dp
@@ -454,7 +446,7 @@ internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
                     CmpRow(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                         CmpColumn(
                             modifier = Modifier.weight(REVIEW_FORM_WEIGHT),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
                             FeedbackForm(state, actions)
                         }
@@ -479,7 +471,7 @@ private fun FeedbackForm(state: FastMountState, actions: MasterActions) {
         CmpText(
             text = stringResource(Strings.string.fastmount_review_msg_lead),
             style = CmpTextStyle.BodyLarge,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
     state.configuration?.let { configuration ->
@@ -495,7 +487,7 @@ private fun FeedbackForm(state: FastMountState, actions: MasterActions) {
         label = stringResource(Strings.string.fastmount_review_label_feedback),
         placeholder = stringResource(Strings.string.fastmount_review_hint_feedback),
         enabled = !master.busy,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 132.dp)
+        modifier = Modifier.fillMaxWidth().heightIn(min = 132.dp),
     )
 }
 
@@ -510,13 +502,13 @@ private fun Stars(rating: Int, enabled: Boolean, onChange: (Int) -> Unit) {
                 modifier = Modifier
                     .size(56.dp)
                     .clickable(enabled = enabled, role = Role.RadioButton, onClickLabel = a11y) { onChange(value) },
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpIcon(
                     icon = if (value <= rating) CmpIcons.Star else CmpIcons.StarBorder,
                     contentDescription = a11y,
                     tint = if (value <= rating) star else colors.onSurfaceVariant,
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(42.dp),
                 )
             }
         }
@@ -531,7 +523,7 @@ private fun MountSummary(state: FastMountState, modifier: Modifier) {
     InfoCard(title = stringResource(Strings.string.fastmount_review_title_summary), modifier = modifier) {
         KeyValue(
             stringResource(Strings.string.fastmount_review_label_time),
-            stringResource(Strings.string.fastmount_review_format_minutes, state.master.mountMinutes)
+            stringResource(Strings.string.fastmount_review_format_minutes, state.master.mountMinutes),
         )
         if (!state.usb && checklist.tasks.isNotEmpty()) {
             KeyValue(
@@ -540,8 +532,8 @@ private fun MountSummary(state: FastMountState, modifier: Modifier) {
                     Strings.string.fastmount_review_format_checks,
                     checklist.tasks.size - checklist.skipped - checklist.failed,
                     checklist.tasks.size,
-                    checklist.skipped
-                )
+                    checklist.skipped,
+                ),
             )
         }
         val passed = state.plan?.steps.orEmpty()
@@ -550,14 +542,13 @@ private fun MountSummary(state: FastMountState, modifier: Modifier) {
         CmpFlowRow(
             modifier = Modifier.padding(top = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             passed.forEach { key -> Tag(text = stringResource(key.title()), icon = CmpIcons.Check) }
         }
     }
 }
 
-/** «Готово» (F14): анимация успеха, «На главную». */
 @Composable
 internal fun DoneScreen(state: FastMountState, actions: MasterActions) {
     WizardScaffold(
@@ -573,21 +564,20 @@ internal fun DoneScreen(state: FastMountState, actions: MasterActions) {
                     MainButton(
                         text = stringResource(Strings.string.fastmount_common_btn_home),
                         icon = CmpIcons.Home,
-                        onClick = actions.onHome
+                        onClick = actions.onHome,
                     )
-                }
+                },
             )
-        }
+        },
     ) {
         Hero(
             title = stringResource(Strings.string.fastmount_done_title_screen),
             text = stringResource(Strings.string.fastmount_done_msg_screen),
-            art = { SuccessArt() }
+            art = { SuccessArt() },
         )
     }
 }
 
-/** Успех: машина в круге и всплывающий значок (макет `SuccessArt`, плейсхолдер художника — иконки). */
 @Composable
 private fun SuccessArt() {
     val pop = remember { Animatable(0f) }
@@ -602,13 +592,13 @@ private fun SuccessArt() {
                 .size(72.dp)
                 .scale(pop.value)
                 .background(cmpDomainColors().success, CircleShape),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpIcon(
                 icon = CmpIcons.Check,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(44.dp),
             )
         }
     }

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "AfterTool": [
+      {
+        "matcher": "write_file|replace",
+        "hooks": [
+          {
+            "name": "kotlin-quality",
+            "type": "command",
+            "command": "\"$GEMINI_PROJECT_DIR\"/scripts/agent-hooks/kotlin-quality.sh --format gemini",
+            "timeout": 180000
+          }
+        ]
+      }
+    ]
+  }
+}

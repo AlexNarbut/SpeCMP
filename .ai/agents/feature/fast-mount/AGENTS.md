@@ -15,7 +15,8 @@
   основной программы (`firmwareFilesInteractor`), конфигурация, скачивание карты монтажа (`filesInteractor`), шаги SDK.
   Предметные ошибки SDK — `FastMountException(failure)` в `Response.Error`, в UI — `FastMountError.from`. Поток
   `questions()` холодный, автоответы SDK считаются в подписчике — **ровно один подписчик** (VM, пока идёт проверка
-  системы). `start(configurationId)` перечитывает конфигурацию с сервера (SDK нужен `CarConfiguration`).
+  системы). `start(configurationId)` перечитывает конфигурацию с сервера (SDK нужен `CarConfiguration`). SDK — через
+  `data/datasource/FastMountDataSource` (только делегирование, интеракторы лениво); тест — `SpecialistFastMountRepositoryTest`.
 - Вход: плитка «Быстрый монтаж» → `FastMountSelectionRoute` (`DeviceSelectionNavGraph(alarmsOnly = true)`: не
   сигнализации видны пунктиром с плашкой «Только для сигнализаций», выбрать нельзя) → `FastMountRoute`
   (`composeApp/navigation/FastMountWiring.kt`: `DeviceInteractionHost` + `FastMountEntry(onExit, onChooseAnother,
@@ -32,7 +33,8 @@
   возврат нужного — продолжение), проверка блока (сигнализация → доступ → заводской CAN блокирует → новая прошивка —
   только рекомендация), подготовка (автомобиль → конфигурация → сводка), шаги SDK: запись настроек стартует сама,
   `busy` на переходах, ошибки шагов, итог обхода (`cloneNeeded`), статусы заданий проверки (курсор SDK сдвинулся —
-  пропущенные нами задания засчитал SDK), отзыв. Выход с монтажа — диалог, затем выход из режима программирования
+  пропущенные нами задания засчитал SDK), отзыв. База — `BaseDeviceViewModel`: подписки на шаги и вопросы SDK, карта монтажа — `launchReplacing(key)`,
+  проверка блока — `launchOnDevice(key)`; всё это живёт с VM, а не с подпиской экрана на state. Выход с монтажа — диалог, затем выход из режима программирования
   (BLE, по возможности) и закрытие сессии.
 - **Перезагрузка** после монтажа, обхода и Clone (BLE): `DeviceSession.expectReboot(DeviceReboot.Restart)` — обёртка
   не показывает обрыв как потерю связи, мастер держит экран «Перезагрузка блока…» с таймером до возврата блока; связь

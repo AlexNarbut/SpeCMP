@@ -62,30 +62,19 @@ import specmp.feature.device.interaction_ui.generated.resources.Res
 import specmp.feature.device.interaction_ui.generated.resources.device_link_lost
 
 /**
- * Обёртка flow работы с подключённым устройством (аналог `DeviceInteractionComponent` старого приложения).
- *
- * - Блок на связи в рабочем режиме — [content] (граф дочернего flow).
- * - Связь потеряна или ещё устанавливается — экран состояния **поверх** [content]: дочерний flow
- *   остаётся в композиции (его back stack и VM живы), после переподключения пользователь там же.
- * - «Назад» на экране состояния — выход из всего flow (сессия закрывается), а не из подэкрана.
- * - Блок в загрузчике (BLE-модуля или основной программы), либо вход в загрузчик / возврат после прошивки
- *   ожидается ([DeviceInteractionState.showBootContent]) — [bootContent] вместо оверлеев связи: он сам рисует и
- *   обрыв связи в процессе обновления. Рабочий [content] уходит из композиции, когда блок вернулся в загрузчике,
- *   и стартует заново после возврата в рабочий режим. Режим определяется на каждом подключении.
- *
- * @param bootContent экран режима загрузчика (обновление прошивки); получает выход из всего flow (закрывает сессию).
- * @param content дочерний flow; получает блок и выход из flow (закрывает сессию).
+ * Связь потеряна — экран состояния поверх [content]: дочерний flow остаётся в композиции (back stack и VM живы).
+ * Блок в загрузчике или его ждём ([DeviceInteractionState.showBootContent]) — [bootContent] вместо оверлеев связи.
  */
 @Composable
 fun DeviceInteractionHost(
     onExit: () -> Unit,
     bootContent: @Composable (onExit: () -> Unit) -> Unit,
-    content: @Composable (device: AlarmDevice, onExit: () -> Unit) -> Unit
+    content: @Composable (device: AlarmDevice, onExit: () -> Unit) -> Unit,
 ) {
     val viewModel = koinViewModel<DeviceInteractionViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             DeviceInteractionEffect.Exit -> onExit()
         }
@@ -118,38 +107,31 @@ fun DeviceInteractionHost(
             status?.let {
                 NavigationBackHandler(
                     state = rememberNavigationEventState(NavigationEventInfo.None),
-                    onBackCompleted = viewModel::onExit
+                    onBackCompleted = viewModel::onExit,
                 )
                 DeviceStatusContent(
                     status = it,
                     transport = state.transport,
                     deviceName = device?.systemName,
-                    onExit = viewModel::onExit
+                    onExit = viewModel::onExit,
                 )
             }
         }
     }
 }
 
-/** testTag кнопки «Выйти» на экране «Подключение к блоку…». */
 internal const val DEVICE_STATUS_EXIT_TAG = "device_status_exit"
 
-/** testTag кнопки «Отключиться» на экране потери связи. */
 internal const val DEVICE_STATUS_DISCONNECT_TAG = "device_status_disconnect"
 
-/** Состояние связи, при котором поверх дочернего flow показывается экран обёртки. */
 internal enum class DeviceStatus { Connecting, Disconnected }
 
-/**
- * Stateless-экран состояния поверх дочернего flow («Назад» перехватывает [DeviceInteractionHost]).
- * Потеря связи — по макету: иллюстрация, текст по транспорту, ожидание возврата блока, «Отключиться».
- */
 @Composable
 internal fun DeviceStatusContent(
     status: DeviceStatus,
     transport: ConnectionTransport?,
     deviceName: String?,
-    onExit: () -> Unit
+    onExit: () -> Unit,
 ) {
     val colors = cmpThemeColors()
     // Surface поверх content перехватывает касания.
@@ -162,20 +144,20 @@ internal fun DeviceStatusContent(
                         CmpIconButton(
                             onClick = onExit,
                             icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.deviceinteraction_common_a11y_back)
+                            contentDescription = stringResource(Strings.string.deviceinteraction_common_a11y_back),
                         )
-                    }
+                    },
                 )
-            }
+            },
         ) { padding ->
             CmpBox(
                 modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CmpColumn(
                     modifier = Modifier.widthIn(max = 460.dp).fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     when (status) {
                         DeviceStatus.Disconnected -> DisconnectedBody(transport, onExit)
@@ -186,13 +168,13 @@ internal fun DeviceStatusContent(
                                 text = stringResource(Strings.string.deviceinteraction_connecting_title),
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                             CmpCircularProgressIndicator()
                             CmpButton(
                                 text = stringResource(Strings.string.deviceinteraction_common_btn_exit),
                                 onClick = onExit,
-                                modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_EXIT_TAG)
+                                modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_EXIT_TAG),
                             )
                         }
                     }
@@ -209,7 +191,7 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
         painter = painterResource(Res.drawable.device_link_lost),
         contentDescription = null,
         modifier = Modifier.size(width = 176.dp, height = 121.dp),
-        tint = colors.primary
+        tint = colors.primary,
     )
     Headline(
         title = stringResource(Strings.string.deviceinteraction_disconnected_title),
@@ -219,21 +201,21 @@ private fun DisconnectedBody(transport: ConnectionTransport?, onExit: () -> Unit
                 ConnectionTransport.SERIAL -> Strings.string.deviceinteraction_disconnected_msg_serial
                 ConnectionTransport.BLE -> Strings.string.deviceinteraction_disconnected_msg_ble
                 null -> Strings.string.deviceinteraction_disconnected_subtitle
-            }
-        )
+            },
+        ),
     )
     CmpRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
         CmpCircularProgressIndicator(modifier = Modifier.size(18.dp))
         CmpText(
             text = stringResource(Strings.string.deviceinteraction_common_msg_waiting),
             fontSize = 14.sp,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
     }
     CmpOutlinedButton(
         text = stringResource(Strings.string.deviceinteraction_common_btn_disconnect),
         onClick = onExit,
-        modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_DISCONNECT_TAG)
+        modifier = Modifier.fillMaxWidth().testTag(DEVICE_STATUS_DISCONNECT_TAG),
     )
 }
 
@@ -243,14 +225,14 @@ private fun StatusHero(icon: CmpIcons) {
     CmpSurface(
         modifier = Modifier.size(96.dp),
         shape = CircleShape,
-        color = colors.primaryContainer
+        color = colors.primaryContainer,
     ) {
         CmpBox(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CmpIcon(
                 icon = icon,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
-                tint = colors.onPrimaryContainer
+                tint = colors.onPrimaryContainer,
             )
         }
     }

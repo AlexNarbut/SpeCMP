@@ -42,7 +42,7 @@ fun ForgotPasswordScreen(
     layoutMode: AuthLayoutMode,
     colors: CmpThemeColors,
     onBackToLogin: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val viewModel = koinViewModel<ForgotPasswordScreenViewModel>()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -52,7 +52,7 @@ fun ForgotPasswordScreen(
         modifier = modifier,
         colors = colors,
         showCompactBrand = false,
-        error = state.value.resetError?.text(Strings.string.login_common_error_reset_password_failed)
+        error = state.value.resetError?.text(Strings.string.login_common_error_reset_password_failed),
     ) {
         if (state.value.isSuccess) {
             AuthSuccessPanel(
@@ -64,17 +64,17 @@ fun ForgotPasswordScreen(
                     AuthSubmitButton(
                         text = stringResource(Strings.string.login_common_btn_go_to_login),
                         onClick = onBackToLogin,
-                        colors = colors
+                        colors = colors,
                     )
-                }
+                },
             )
         } else {
             ForgotPasswordForm(
                 state = state,
                 colors = colors,
                 onEmailChange = viewModel::onEmailChanged,
-                onSubmit = viewModel::submit,
-                onBackToLogin = onBackToLogin
+                onSubmit = viewModel::onSubmit,
+                onBackToLogin = onBackToLogin,
             )
         }
     }
@@ -87,20 +87,20 @@ private fun ForgotPasswordForm(
     onEmailChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onBackToLogin: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val value = state.value
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         CmpText(
             text = stringResource(Strings.string.login_forgot_subtitle_screen),
             modifier = Modifier.fillMaxWidth(),
             fontSize = 14.sp,
-            color = colors.onSurfaceVariant
+            color = colors.onSurfaceVariant,
         )
 
         CmpTextField(
@@ -113,16 +113,16 @@ private fun ForgotPasswordForm(
             isError = value.resetError?.blamesInput == true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Done
+                imeAction = ImeAction.Done,
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
                     if (value.canSubmit) onSubmit()
-                }
+                },
             ),
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Email, contentDescription = null)
-            }
+            },
         )
 
         AuthSubmitButton(
@@ -130,13 +130,13 @@ private fun ForgotPasswordForm(
             onClick = onSubmit,
             enabled = value.canSubmit,
             isLoading = value.isLoading,
-            colors = colors
+            colors = colors,
         )
 
         CmpTextButton(
             text = stringResource(Strings.string.login_forgot_link_back_to_login),
             onClick = onBackToLogin,
-            enabled = !value.isLoading
+            enabled = !value.isLoading,
         )
     }
 }

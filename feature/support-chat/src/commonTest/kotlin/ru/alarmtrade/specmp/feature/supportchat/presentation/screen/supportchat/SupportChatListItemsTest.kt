@@ -22,10 +22,10 @@ class SupportChatListItemsTest {
             messages = listOf(
                 message(id = "first", time = LocalDateTime(2024, 5, 1, 10, 0)),
                 message(id = "second-early", time = LocalDateTime(2024, 5, 2, 9, 0)),
-                message(id = "second-late", time = LocalDateTime(2024, 5, 2, 12, 0))
+                message(id = "second-late", time = LocalDateTime(2024, 5, 2, 12, 0)),
             ),
             dateLabeler = { date -> "label:$date" },
-            timeZone = TimeZone.UTC
+            timeZone = TimeZone.UTC,
         )
 
         val types = items.map {
@@ -41,9 +41,9 @@ class SupportChatListItemsTest {
                 "msg:second-early",
                 "divider:$secondDate",
                 "msg:first",
-                "divider:$firstDate"
+                "divider:$firstDate",
             ),
-            types
+            types,
         )
     }
 
@@ -53,7 +53,7 @@ class SupportChatListItemsTest {
         val items = buildListItems(
             messages = listOf(message(id = "late", time = LocalDateTime(2026, 1, 15, 22, 30))),
             dateLabeler = { date -> "label:$date" },
-            timeZone = TimeZone.of("UTC+03:00")
+            timeZone = TimeZone.of("UTC+03:00"),
         )
 
         val message = items.filterIsInstance<SupportChatListItem.Message>().single().message
@@ -70,6 +70,6 @@ class SupportChatListItemsTest {
         time = time.toInstant(TimeZone.UTC),
         isMine = false,
         authorEmail = null,
-        status = SupportChatMessageStatus.Sent
+        status = SupportChatMessageStatus.Sent,
     )
 }

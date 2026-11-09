@@ -2,13 +2,10 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.detectCombo
 
-/*
- * Переходы по каталогу — чистые функции над state (тестируются без VM). VM только отменяет устаревшие загрузки и
- * шлёт эффекты; решения «куда шагнуть» — здесь.
- */
+// Переходы — чистые функции над state (тестируются без VM); VM только отменяет устаревшие загрузки и шлёт эффекты.
 
-/** Крошки: к маркам (или результатам CAN-поиска), к моделям марки, к комплектациям модели. */
 internal fun VehicleSelectState.withCrumb(target: CrumbTarget): VehicleSelectState {
     val next = when (target) {
         CrumbTarget.TOP -> CatalogSelection()
@@ -20,14 +17,11 @@ internal fun VehicleSelectState.withCrumb(target: CrumbTarget): VehicleSelectSta
         query = "",
         card = LCEState.None,
         cardUi = CardUi(),
-        trims = if (next.model == null) LCEState.None else trims
+        trims = if (next.model == null) LCEState.None else trims,
     )
 }
 
-/**
- * Закрыть карточку: из CAN-поиска и недавних — к началу; из каталога — к комплектациям модели, а если комплектация
- * одна и окно узкое — сразу к моделям (экрана из одной строки нет).
- */
+/** Комплектация одна и окно узкое — сразу к моделям (экрана из одной строки нет). */
 internal fun VehicleSelectState.withCardClosed(layout: VehicleLayout): VehicleSelectState {
     val next = when (selection.cardSource) {
         CardSource.CAN, CardSource.RECENT -> CatalogSelection()
@@ -36,7 +30,7 @@ internal fun VehicleSelectState.withCardClosed(layout: VehicleLayout): VehicleSe
             val singleTrim = trims.content?.size == 1
             selection.copy(
                 carId = null,
-                model = if (singleTrim && layout == VehicleLayout.COMPACT) null else selection.model
+                model = if (singleTrim && layout == VehicleLayout.COMPACT) null else selection.model,
             )
         }
     }
@@ -53,7 +47,6 @@ internal fun VehicleSelectState.catalogStepBack(layout: VehicleLayout): VehicleS
     }
 }
 
-/** Сброс выбранного типа устройства: каталог — с экрана выбора типа. */
 internal fun VehicleSelectState.withTypeReset(): VehicleSelectState = copy(
     deviceType = null,
     selection = CatalogSelection(),
@@ -64,5 +57,15 @@ internal fun VehicleSelectState.withTypeReset(): VehicleSelectState = copy(
     trims = LCEState.None,
     comboModels = LCEState.None,
     card = LCEState.None,
-    canResults = LCEState.None
+    canResults = LCEState.None,
 )
+
+/**
+ * Марка распознаётся по загруженным маркам; без неё модели комбо-поиска сбрасываются. Вне уровня марок state
+ * не меняется.
+ */
+internal fun VehicleSelectState.withDetectedCombo(): VehicleSelectState {
+    if (searchMode != SearchMode.NAME || selection.brand != null) return this
+    val detected = brands.content?.let { detectCombo(query, it) }
+    return copy(combo = detected, comboModels = if (detected == null) LCEState.None else comboModels)
+}

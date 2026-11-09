@@ -38,15 +38,14 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components.VersionText
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialog
-import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.pin.ServicePinDialogState
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 private val ButtonHeight = 48.dp
 
 internal const val ENTER_CONFIRM_TAG = "firmware_enter_confirm"
 private const val PIN_TAG_PREFIX = "firmware_pin"
 
-/** Описание версии: номер и полное описание; «Обновить» ведёт к подтверждению перехода в режим обновления. */
 @Composable
 internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () -> Unit, onUpdate: () -> Unit) {
     val colors = cmpThemeColors()
@@ -58,24 +57,24 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CmpRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CmpText(
                         text = stringResource(Strings.string.firmware_common_label_version),
-                        color = colors.onSurfaceVariant
+                        color = colors.onSurfaceVariant,
                     )
                     VersionText(dialog.version)
                 }
                 CmpText(
                     text = stringResource(Strings.string.firmware_check_label_dialog_full_description),
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 CmpText(
                     text = dialog.description.ifBlank {
                         stringResource(Strings.string.firmware_check_msg_dialog_no_description)
                     },
                     color = colors.onSurfaceVariant,
-                    style = CmpTextStyle.Body
+                    style = CmpTextStyle.Body,
                 )
             }
         },
@@ -83,20 +82,19 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
         },
         confirmButton = {
             CmpTextButton(
                 text = stringResource(Strings.string.firmware_check_btn_update),
                 onClick = onUpdate,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
-        }
+        },
     )
 }
 
-/** Подтверждение перехода в режим обновления: блок перезагрузится, обновление надо довести до конца. */
 @Composable
 internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     CmpDialog(
@@ -112,7 +110,7 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
                 text = stringResource(Strings.string.firmware_common_btn_cancel),
                 onClick = onDismiss,
                 enabled = !dialog.sending,
-                modifier = Modifier.height(ButtonHeight)
+                modifier = Modifier.height(ButtonHeight),
             )
         },
         confirmButton = {
@@ -121,15 +119,12 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
                 sending = dialog.sending,
                 enabled = !dialog.sending,
                 onClick = onConfirm,
-                modifier = Modifier.testTag(ENTER_CONFIRM_TAG)
+                modifier = Modifier.testTag(ENTER_CONFIRM_TAG),
             )
-        }
+        },
     )
 }
 
-/**
- * PIN программирования для входа в загрузчик — общий [ServicePinDialog] с текстом прошивки; теги — `firmware_pin_*`.
- */
 @Composable
 internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
     ServicePinDialog(
@@ -138,15 +133,14 @@ internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit:
             sending = dialog.sending,
             wrong = dialog.wrong,
             wrongCount = dialog.wrongCount,
-            lockedFor = dialog.lockedFor
+            lockedFor = dialog.lockedFor,
         ),
         onDismiss = onDismiss,
         onSubmit = onSubmit,
-        testTagPrefix = PIN_TAG_PREFIX
+        testTagPrefix = PIN_TAG_PREFIX,
     )
 }
 
-/** Кнопка подтверждения: пока команда уходит — вместо текста индикатор. */
 @Composable
 private fun ProgressButton(text: String, sending: Boolean, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
     CmpButton(onClick = onClick, enabled = enabled, modifier = modifier.height(ButtonHeight)) {

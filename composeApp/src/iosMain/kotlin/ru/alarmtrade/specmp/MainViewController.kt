@@ -14,16 +14,12 @@ import ru.alarmtrade.common.logger.PlatformLogger
 // Имя — точка входа для Swift (MainViewControllerKt.MainViewController), PascalCase сохраняется
 @Suppress("ktlint:standard:function-naming", "FunctionNaming")
 fun MainViewController(appVersionName: String, appVersionCode: Int) = ComposeUIViewController(
-    configure = { enableDebugConsoleLogs() }
+    configure = { enableDebugConsoleLogs() },
 ) {
     App(appVersionName = appVersionName, appVersionCode = appVersionCode)
 }
 
-/**
- * Отладочная сборка: логи Kermit и логи SDK (KmLogging) дублируются в stdout. Системный журнал iOS не сохраняет
- * debug-сообщения, а stdout видно при запуске с Mac (`xcrun devicectl device process launch --console …`) и в
- * консоли Xcode.
- */
+/** Системный журнал iOS не хранит debug-сообщения, а stdout видно в консоли Xcode и `devicectl … --console`. */
 @OptIn(ExperimentalNativeApi::class)
 private fun enableDebugConsoleLogs() {
     if (!Platform.isDebugBinary) return
@@ -31,7 +27,8 @@ private fun enableDebugConsoleLogs() {
     KmLogging.setLoggers(PlatformLogger(FixedLogLevel(true)), ConsoleSdkLogger)
 }
 
-/** Логгер SDK в stdout (только отладка). */
+// stdout здесь и есть цель (см. enableDebugConsoleLogs): PlatformLogger SDK уже пишет в системный журнал.
+@Suppress("ForbiddenPrintln")
 private object ConsoleSdkLogger : SdkLogger, LogLevelController by FixedLogLevel(true) {
     override fun verbose(tag: String, msg: String) = println("SDK V/$tag: $msg")
 

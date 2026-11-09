@@ -9,6 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -18,31 +19,35 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeCloneRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeConnectionRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CloneViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
-    private val sessionRepository = FakeSessionRepository()
+    private val sessionRepository = FakeDeviceSessionRepository()
     private val repository = FakeCloneRepository()
-    private val cooldown = ServicePinCooldown(TestTimeSource())
+    private val time = TestTimeSource()
+    private val cooldown = ServicePinCooldown(time)
     private val viewModels = mutableListOf<CloneViewModel>()
+    private val effects = mutableListOf<CloneEffect>()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -58,13 +63,13 @@ class CloneViewModelTest {
         }
     }
 
-    private fun TestScope.viewModel(fromBypass: Boolean = false): CloneViewModel {
-        val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
+    private fun TestScope.viewModel(fromBypass: Boolean = false, subscribe: Boolean = true): CloneViewModel {
+        val dispatchers = testDispatchers(dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
-        session.attach(ConnectionTransport.BLE)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val vm = CloneViewModel(session, repository, cooldown, dispatchers, fromBypass).also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm
     }
@@ -84,7 +89,7 @@ class CloneViewModelTest {
 
     @Test
     fun `unknown attempts still allow start`() = test {
-        repository.attempts = null
+        repository.attempts = Response.Error(IllegalStateException("offline"))
         val vm = viewModel()
         assertEquals(CloneAttempts.Unknown, vm.state.value.attempts)
         vm.onStartClick()
@@ -94,7 +99,7 @@ class CloneViewModelTest {
 
     @Test
     fun `zero attempts block start`() = test {
-        repository.attempts = 0
+        repository.attempts = Response.Success(0)
         val vm = viewModel()
         vm.onStartClick()
         assertNull(vm.state.value.dialog)
@@ -129,7 +134,7 @@ class CloneViewModelTest {
     @Test
     fun `result refreshes attempts`() = test {
         val vm = started()
-        repository.attempts = 2
+        repository.attempts = Response.Success(2)
         repository.send(CloneEvent.Finished(CloneResult.Completed(already = false)))
         runCurrent()
         assertEquals(ClonePhase.Finished(CloneResult.Completed(already = false)), vm.state.value.phase)
@@ -142,8 +147,10 @@ class CloneViewModelTest {
         repository.send(CloneEvent.Stage(CloneStage.WRITING))
         runCurrent()
         assertTrue(vm.state.value.locked)
-        assertFalse(vm.onBackRequest())
+        vm.onBack()
+        runCurrent()
         assertNull(vm.state.value.dialog)
+        assertTrue(effects.isEmpty())
     }
 
     @Test
@@ -151,9 +158,10 @@ class CloneViewModelTest {
         val vm = started()
         repository.send(CloneEvent.Stage(CloneStage.READING))
         runCurrent()
-        assertFalse(vm.onBackRequest())
+        vm.onBack()
         runCurrent()
         assertEquals(CloneDialog.Exit, vm.state.value.dialog)
+        assertTrue(effects.isEmpty())
         vm.onExitConfirm()
         runCurrent()
         assertIs<ClonePhase.Start>(vm.state.value.phase)
@@ -182,7 +190,7 @@ class CloneViewModelTest {
     @Test
     fun `wrong pin shows pin dialog and reruns with entered pin`() = test {
         val vm = started()
-        repository.send(CloneEvent.WrongPin)
+        repository.fail(CloneProcedureFailure.WRONG_PIN)
         runCurrent()
         val dialog = assertIs<CloneDialog.Pin>(vm.state.value.dialog)
         assertFalse(dialog.pin.wrong, "silent SDK attempt is not a wrong entered PIN")
@@ -191,9 +199,64 @@ class CloneViewModelTest {
     @Test
     fun `sdk failure with live connection is an unknown error`() = test {
         val vm = started()
-        repository.send(CloneEvent.Failure)
+        repository.fail(CloneProcedureFailure.UNKNOWN)
         runCurrent()
         val result = assertIs<CloneResult.Failed>(assertIs<ClonePhase.Finished>(vm.state.value.phase).result)
         assertEquals(CloneFailure.UNKNOWN, result.failure)
+    }
+
+    @Test
+    fun `retry after an sdk failure runs the procedure again`() = test {
+        val vm = started()
+        repository.send(CloneEvent.Stage(CloneStage.READING))
+        repository.fail(CloneProcedureFailure.UNKNOWN)
+        runCurrent()
+        assertIs<ClonePhase.Finished>(vm.state.value.phase)
+        vm.onStartClick()
+        vm.onConfirm()
+        runCurrent()
+        assertEquals(2, repository.runs)
+        assertEquals(ClonePhase.Running(CloneStage.PREPARING), vm.state.value.phase)
+    }
+
+    @Test
+    fun `back on start leaves at once`() = test {
+        val vm = viewModel()
+        vm.onBack()
+        runCurrent()
+        assertEquals(listOf<CloneEffect>(CloneEffect.Close), effects)
+        assertNull(vm.state.value.dialog)
+    }
+
+    @Test
+    fun `entered pin is saved and the procedure reruns`() = test {
+        val vm = started()
+        repository.fail(CloneProcedureFailure.WRONG_PIN)
+        runCurrent()
+        assertEquals(15.seconds, assertIs<CloneDialog.Pin>(vm.state.value.dialog).pin.lockedFor)
+        time += 16.seconds
+        vm.onPinSubmit("1234")
+        runCurrent()
+        assertEquals(1, sessionRepository.pins.size)
+        assertEquals(2, repository.runs)
+        assertNull(vm.state.value.dialog)
+    }
+
+    @Test
+    fun `procedure goes on while the screen is not subscribed`() = test {
+        val vm = viewModel(subscribe = false)
+        val screen = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        vm.onStartClick()
+        vm.onConfirm()
+        runCurrent()
+        screen.cancel()
+        advanceTimeBy(10.seconds)
+        repository.send(CloneEvent.Stage(CloneStage.READING))
+        runCurrent()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        assertEquals(ClonePhase.Running(CloneStage.READING), vm.state.value.phase)
+        assertEquals(1, repository.runs)
     }
 }

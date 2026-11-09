@@ -61,29 +61,33 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.Min
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsEffect
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsScreen
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickRequest
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.NoSettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationEditorEntry
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.NoSettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 
-/**
- * Выбор автомобиля из каталога (фича `vehicle-ui`, подключается в `composeApp`): [VehicleCatalog.WITH_CONFIGURATIONS] —
- * облачные конфигурации (K4), [VehicleCatalog.ALL] — CAN-код в редакторе. `deviceName == null` — каталог для всех
- * моделей блока.
- */
+/** `deviceName == null` — каталог для всех моделей блока. */
 typealias ConfiguratorVehiclePicker = @Composable (
     catalog: VehicleCatalog,
     deviceName: String?,
     onPick: (CarSummary) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+) -> Unit
+
+/** `onWriteToDevice == null` — «Записать в блок» не поддерживается. */
+typealias ConfigurationEditor = @Composable (
+    source: SettingsSource,
+    fileSaver: SettingsFileSaver,
+    onOpenConfiguration: (SettingsSource.LocalConfiguration) -> Unit,
+    onWriteToDevice: ((SettingsSource) -> Unit)?,
+    onExit: () -> Unit,
 ) -> Unit
 
 private val navConfig = SavedStateConfiguration {
@@ -100,34 +104,25 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Конфигуратор (точка A — плитка на главной): «Мои конфигурации» (K1), выбор модели (K2) и файла (K3), облачные
- * конфигурации (K4), редактор конфигурации (K5).
- *
- * @param deviceEditor «Записать в блок»: редактор подключённого блока с загрузкой конфигурации (подключается в
- *   `composeApp` вместе с обёрткой сессии устройства); `null` — не поддерживается. Пункт виден только при связи
- *   с блоком.
- */
+/** [deviceEditor] `null` — «Записать в блок» не поддерживается; пункт виден только при связи с блоком. */
 @Composable
 fun ConfiguratorEntry(
     onExit: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
+    editor: ConfigurationEditor,
     filePicker: SettingsFilePicker,
     fileSaver: SettingsFileSaver,
-    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null
+    deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null,
 ) {
     ConfiguratorGraph(
         start = MineListRoute,
         onExit = onExit,
         vehiclePicker = vehiclePicker,
-        mode = GraphMode.Full(filePicker, fileSaver, deviceEditor)
+        editor = editor,
+        mode = GraphMode.Full(filePicker, fileSaver, deviceEditor),
     )
 }
 
-/**
- * Выбор конфигурации для «Загрузить из…» в редакторе блока (K7): «Мои» под модель блока или облако (каталог под модель
- * блока → список → карточка «Загрузить в редактор»). Подключается в `composeApp` в слот `configurationPicker`.
- */
 @Composable
 fun ConfigurationPickerEntry(
     request: ConfigurationPickRequest,
@@ -135,8 +130,9 @@ fun ConfigurationPickerEntry(
     onOpenFirmwareUpdate: () -> Unit,
     onBack: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
+    editor: ConfigurationEditor,
     purpose: ConfigurationPickPurpose = ConfigurationPickPurpose.LOAD,
-    cloudCar: ConfigurationPickCar? = null
+    cloudCar: ConfigurationPickCar? = null,
 ) {
     ConfiguratorGraph(
         start = when {
@@ -146,29 +142,28 @@ fun ConfigurationPickerEntry(
         },
         onExit = onBack,
         vehiclePicker = vehiclePicker,
-        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose)
+        editor = editor,
+        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose),
     )
 }
 
-/** Зачем выбирают конфигурацию: загрузить в редактор блока или для быстрого монтажа (кнопка «Выбрать»). */
 enum class ConfigurationPickPurpose { LOAD, FAST_MOUNT }
 
 /** Автомобиль, уже выбранный вызывающим: облако открывается сразу списком конфигураций для него. */
 data class ConfigurationPickCar(val id: Int, val title: String)
 
-/** Конфигуратор целиком или выбор конфигурации для загрузки в блок. */
 private sealed interface GraphMode {
     class Full(
         val filePicker: SettingsFilePicker,
         val fileSaver: SettingsFileSaver,
-        val deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)?
+        val deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)?,
     ) : GraphMode
 
     class Pick(
         val request: ConfigurationPickRequest,
         val onPick: (SettingsSource) -> Unit,
         val onOpenFirmwareUpdate: () -> Unit,
-        val purpose: ConfigurationPickPurpose
+        val purpose: ConfigurationPickPurpose,
     ) : GraphMode
 }
 
@@ -180,7 +175,8 @@ private fun ConfiguratorGraph(
     start: NavKey,
     onExit: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
-    mode: GraphMode
+    editor: ConfigurationEditor,
+    mode: GraphMode,
 ) {
     val backStack = rememberNavBackStack(navConfig, start)
     val back = { if (!backStack.popSafe()) onExit() }
@@ -189,24 +185,21 @@ private fun ConfiguratorGraph(
         onBack = back,
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {
             entry<MineListRoute> { _ -> Opaque { MineEntry(backStack, mode, back) } }
             entry<ModelsRoute> { key -> Opaque { ModelsEntry(key, backStack, back) } }
             entry<EditorRoute> { key ->
                 val full = mode as? GraphMode.Full
-                ConfigurationEditorEntry(
-                    source = key.source.toSource(),
-                    onExit = back,
-                    vehiclePicker = { deviceName, onPick, onPickerBack ->
-                        vehiclePicker(VehicleCatalog.ALL, deviceName, onPick, onPickerBack)
-                    },
-                    fileSaver = full?.fileSaver ?: NoSaver,
-                    onOpenConfiguration = { opened -> opened.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) } },
-                    onWriteToDevice = full?.deviceEditor?.let {
+                editor(
+                    key.source.toSource(),
+                    full?.fileSaver ?: NoSaver,
+                    { opened -> opened.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) } },
+                    full?.deviceEditor?.let {
                         { source -> source.toKey()?.let { backStack.navigateSafe(DeviceWriteRoute(it)) } }
-                    }
+                    },
+                    back,
                 )
             }
             entry<CloudCarsRoute> { _ ->
@@ -215,7 +208,7 @@ private fun ConfiguratorGraph(
                         VehicleCatalog.WITH_CONFIGURATIONS,
                         (mode as? GraphMode.Pick)?.request?.deviceName,
                         { car -> backStack.navigateSafe(CloudListRoute(car.id, car.fullName())) },
-                        back
+                        back,
                     )
                 }
             }
@@ -230,13 +223,11 @@ private fun ConfiguratorGraph(
             entry<DeviceWriteRoute> { key ->
                 (mode as? GraphMode.Full)?.deviceEditor?.invoke(key.source.toSource(), back)
             }
-        }
+        },
     )
 }
 
-/**
- * Непрозрачный фон записи: на переходе NavDisplay новая запись едет поверх старой, и без фона старая просвечивает.
- */
+/** Непрозрачный фон записи: на переходе NavDisplay без него старая запись просвечивает. */
 @Composable
 private fun Opaque(content: @Composable () -> Unit) {
     CmpBox(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) { content() }
@@ -256,7 +247,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
         filePicker.results.collect { result ->
             when (result) {
                 is SettingsFilePickResult.Picked -> backStack.navigateSafe(
-                    ModelsRoute(SourceKey.File(result.path, "", result.name, result.inPlace))
+                    ModelsRoute(SourceKey.File(result.path, "", result.name, result.inPlace)),
                 )
 
                 SettingsFilePickResult.Failed -> snackbarHostState.showSnackbar(fileFailed)
@@ -265,7 +256,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
             }
         }
     }
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is MineEffect.Message -> snackbarHostState.showSnackbar(getString(effect.message.text()))
 
@@ -273,7 +264,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
                 val result = snackbarHostState.showSnackbar(
                     getString(Strings.string.configurator_common_msg_copied),
                     actionLabel = getString(Strings.string.configurator_common_btn_open),
-                    duration = CmpSnackbarDuration.Long
+                    duration = CmpSnackbarDuration.Long,
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
                     effect.configuration.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) }
@@ -286,7 +277,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
                 viewModel.onFileExported((full?.fileSaver ?: NoSaver).save(effect.path, effect.fileName))
 
             is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
-                getString(Strings.string.configurator_common_msg_file_saved, effect.name)
+                getString(Strings.string.configurator_common_msg_file_saved, effect.name),
             )
         }
     }
@@ -294,7 +285,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
     MineScreen(
         state = if (full?.deviceEditor == null) state.copy(connectedDeviceName = null) else state,
         actions = actions,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -303,7 +294,7 @@ private fun mineActions(
     backStack: NavBackStack<NavKey>,
     mode: GraphMode,
     filePicker: SettingsFilePicker,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ): MineActions {
     val pick = mode as? GraphMode.Pick
     val full = mode as? GraphMode.Full
@@ -349,7 +340,7 @@ private fun mineActions(
         },
         onDeleteRequest = viewModel::onDeleteRequest,
         onDeleteConfirm = viewModel::onDeleteConfirm,
-        onDialogDismiss = viewModel::onDialogDismiss
+        onDialogDismiss = viewModel::onDialogDismiss,
     )
 }
 
@@ -357,7 +348,7 @@ private fun mineActions(
 private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBack: () -> Unit) {
     val viewModel = koinViewModel<ModelsViewModel>(parameters = { parametersOf(key.file) })
     val state by viewModel.state.collectAsStateWithLifecycle()
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             // Модель выбрана — вместо выбора модели открывается редактор: «назад» из него ведёт к списку.
             is ModelsEffect.Open -> backStack.replaceCurrent(EditorRoute(effect.source))
@@ -370,7 +361,7 @@ private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBac
         onPick = viewModel::onPick,
         onRecentRemove = viewModel::onRecentRemove,
         onRetry = viewModel::onRetry,
-        onDialogDismiss = viewModel::onDialogDismiss
+        onDialogDismiss = viewModel::onDialogDismiss,
     )
 }
 
@@ -389,30 +380,30 @@ private fun CloudListEntry(key: CloudListRoute, backStack: NavBackStack<NavKey>,
         onRetry = viewModel::onRetry,
         onOpen = { item -> backStack.navigateSafe(CloudCardRoute(item.id, item.name)) },
         onSelect = viewModel::onSelect,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
     ) { id ->
         val (cardState, actions) = cloudCard(id, backStack, mode, snackbarHostState)
         CloudCardContent(cardState, actions)
     }
 }
 
-/** VM карточки облачной конфигурации [id] (своя на id — правая панель меняет выбранную) и её действия. */
+/** Своя VM на [id]: правая панель меняет выбранную. */
 @Composable
 private fun cloudCard(
     id: Int,
     backStack: NavBackStack<NavKey>,
     mode: GraphMode,
-    snackbarHostState: CmpSnackbarHostState
+    snackbarHostState: CmpSnackbarHostState,
 ): Pair<CloudCardState, CloudCardActions> {
     val pick = mode as? GraphMode.Pick
     val full = mode as? GraphMode.Full
     val viewModel = koinViewModel<CloudCardViewModel>(
         key = "cloud_card_$id",
-        parameters = { parametersOf(id, pick?.request?.firmwareCanCode) }
+        parameters = { parametersOf(id, pick?.request?.firmwareCanCode) },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is CloudCardEffect.OpenUrl -> safeRun { uriHandler.openUri(effect.url) }
 
@@ -420,7 +411,7 @@ private fun cloudCard(
                 val result = snackbarHostState.showSnackbar(
                     getString(Strings.string.configurator_common_msg_saved_mine),
                     actionLabel = if (full != null) getString(Strings.string.configurator_common_btn_open) else null,
-                    duration = CmpSnackbarDuration.Long
+                    duration = CmpSnackbarDuration.Long,
                 )
                 if (result == CmpSnackbarResult.ActionPerformed) {
                     effect.configuration.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) }
@@ -428,7 +419,7 @@ private fun cloudCard(
             }
 
             CloudCardEffect.SaveFailed -> snackbarHostState.showSnackbar(
-                getString(Strings.string.configurator_common_msg_failed)
+                getString(Strings.string.configurator_common_msg_failed),
             )
         }
     }
@@ -450,7 +441,7 @@ private fun cloudCard(
                 { card -> card.toSource().toKey()?.let { key -> backStack.navigateSafe(DeviceWriteRoute(key)) } }
             },
             onOpenFirmwareUpdate = pick?.onOpenFirmwareUpdate,
-            selectForMount = pick?.purpose == ConfigurationPickPurpose.FAST_MOUNT
+            selectForMount = pick?.purpose == ConfigurationPickPurpose.FAST_MOUNT,
         )
     }
     return state to actions
@@ -463,7 +454,6 @@ private fun MineMessage.text() = when (this) {
     MineMessage.FAILED -> Strings.string.configurator_common_msg_failed
 }
 
-/** Сохранение файла недоступно (режим выбора). */
 private object NoSaver : SettingsFileSaver {
     override suspend fun save(sourcePath: String, fileName: String) = SettingsFileSaveResult.Cancelled
 }

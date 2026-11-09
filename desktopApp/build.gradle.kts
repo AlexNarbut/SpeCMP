@@ -19,7 +19,6 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-// version.properties (versionName/versionCode) — из каталога версий, а не руками в resources.
 val generateVersionProperties by tasks.registering {
     val name = libs.versions.app.versionName.get()
     val code = libs.versions.app.versionCode.get()
@@ -39,12 +38,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.swing)
 }
 
-// USB-слой SDK на JVM (usb4java 1.3.0) содержит нативную библиотеку только для darwin-x86-64:
-// на macOS arm64 USB-устройства находятся только при запуске на x86_64-JDK. JDK для run/package выбирается так:
-// 1) `compose.jvmHome` (Gradle-свойство или local.properties) — явный выбор;
-// 2) на macOS arm64 — установленный x86_64-JDK 17 (`/usr/libexec/java_home -a x86_64 -v 17`), чтобы USB не пропадал,
-//    когда IDE пересоздаёт local.properties;
-// 3) иначе JDK Gradle.
+// usb4java в SDK несёт нативную библиотеку только для darwin-x86-64: на macOS arm64 USB работает лишь на x86_64-JDK.
+// Выбор JDK: `compose.jvmHome` → на macOS arm64 установленный x86_64-JDK 17 → JDK Gradle.
 val composeJvmHome: String? = providers.gradleProperty("compose.jvmHome").orNull
     ?: rootProject.file("local.properties").takeIf { it.exists() }?.let { file ->
         Properties().apply { file.inputStream().use(::load) }.getProperty("compose.jvmHome")
@@ -61,13 +56,12 @@ val macX64JvmHome: String? = if (composeJvmHome == null && isMacArm) {
 }
 val desktopJvmHome: String? = composeJvmHome ?: macX64JvmHome
 
-// macOS arm64 без x86_64-JDK: приложение запустится, но USB-устройства не найдутся — говорим об этом при запуске.
 if (isMacArm && desktopJvmHome == null) {
     tasks.withType<JavaExec>().matching { it.name == "run" }.configureEach {
         doFirst {
             logger.warn(
                 "WARNING: macOS arm64 без x86_64-JDK 17 — USB-устройства не будут найдены (usb4java). " +
-                    "Установите x86_64-JDK 17 или задайте compose.jvmHome, см. docs/build.md."
+                    "Установите x86_64-JDK 17 или задайте compose.jvmHome, см. docs/build.md.",
             )
         }
     }
@@ -82,7 +76,7 @@ compose.desktop {
             targetFormats(
                 TargetFormat.Dmg,
                 TargetFormat.Msi,
-                TargetFormat.Deb
+                TargetFormat.Deb,
             )
             packageName = "SpeCMP"
             packageVersion = libs.versions.app.versionName.get()

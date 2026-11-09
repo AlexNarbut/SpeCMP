@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.device.settings.data.files
 
 import java.io.File
 
-// На Android `java.io.tmpdir` — `cacheDir` приложения.
 internal actual fun settingsScratchDirectory(): String =
     File(System.getProperty("java.io.tmpdir"), SETTINGS_SCRATCH_DIR).apply { mkdirs() }.absolutePath
 

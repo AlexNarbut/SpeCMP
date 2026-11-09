@@ -1,24 +1,15 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.model
 
-/**
- * Состояние соединения чата для UI.
- *
- * Ввод доступен только в [Online]: офлайн-отправка запрещена продуктово, а до
- * открытия сессии ([Connecting]) сообщение ушло бы в незакрытое соединение.
- */
+/** Ввод только в [Online]: до открытия сессии сообщение ушло бы в незакрытое соединение. */
 enum class SupportChatConnection {
     Connecting,
     Online,
-    Offline
+    Offline,
 }
 
-/**
- * Плашка соединения: [Connecting] — только первое подключение; [Reconnecting] —
- * соединение терялось: SDK переподключается или ждёт сеть (одна плашка, без мигания);
- * [AuthFailed] — сервер отверг авторизацию, SDK подключится после повторного входа.
- */
+/** [Reconnecting] — одна плашка на переподключение и ожидание сети, без мигания. */
 enum class SupportChatConnectionBanner {
     Connecting,
     Reconnecting,
-    AuthFailed
+    AuthFailed,
 }

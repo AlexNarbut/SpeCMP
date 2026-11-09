@@ -1,7 +1,8 @@
 # core/lifecycle
 
-- Область: жизненный цикл **приложения** для слоя ViewModel — `AppLifecycle` (`events: Flow<AppLifecycleEvent>`), события `FOREGROUND` / `BACKGROUND`, Koin-модуль `appLifecycleModule` (подключён в `composeApp/App.kt`).
+- Область: жизненный цикл **приложения** для слоя ViewModel — `AppLifecycle` (`events: Flow<AppLifecycleEvent>`), события `FOREGROUND` / `BACKGROUND`, Koin-модуль `di/appLifecycleModule` (подключён в `composeApp/App.kt` и `flasherApp/FlasherApp.kt`).
 - Платформы: Android — `ProcessLifecycleOwner` (`ON_START`/`ON_STOP`, стартовое состояние не эмитится; зависимость `androidx.lifecycle:lifecycle-process` только в `androidMain`); iOS — `UIApplicationWillEnterForeground`/`DidEnterBackground`; desktop — пока пустой поток.
 - Только смена состояния всего приложения (настройки, другое приложение, блокировка). Перекрытие экрана другим экраном приложения — жизненный цикл навигации (UI), сюда не кладём.
-- Потребитель — `BaseViewModel` (`core/ui`): сам берёт `AppLifecycle` из Koin и вызывает у наследников `onAppForeground()` / `onAppBackground()`. Фичи на `AppLifecycle` напрямую не подписываются и Compose-эффекты (`LifecycleResumeEffect` и т.п.) для решений VM не используют.
-- В unit-тестах без Koin подписки нет; чтобы проверить колбэки — `startKoin` с фейковым `AppLifecycle` (пример — `ScanDeviceViewModelTest`).
+- `AppForegroundProvider` (`foregroundReturns: Flow<Unit>` — только переходы фон → передний план) — порт для ViewModel и репозиториев: передаётся в конструктор, реализация `AppLifecycleForegroundProvider` поверх `AppLifecycle`, Koin `single` в `appLifecycleModule`.
+- Потребитель `AppLifecycle` — только `AppLifecycleForegroundProvider`. Фичи на `AppLifecycle` напрямую не подписываются (порт — `AppForegroundProvider`) и Compose-эффекты (`LifecycleResumeEffect` и т.п.) для решений VM не используют.
+- Потребитель `AppForegroundProvider` — `ScanDeviceViewModel` (подписка из `onStart()` на всю жизнь VM); в unit-тестах — фейк порта с `MutableSharedFlow<Unit>` (пример — `ScanDeviceViewModelTest`), Koin не нужен.

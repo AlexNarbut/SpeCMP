@@ -8,6 +8,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
 import ru.alarmtrade.specmp.core.ui.navigation.replaceCurrent
@@ -21,10 +22,10 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.Autost
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareBootGraph
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.CheckStateChecklist
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.CheckStateChrome
@@ -49,16 +50,11 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectEntry
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
-import ru.alarmtrade.specmp.filepicker.rememberFirmwareFilePicker
+import ru.alarmtrade.specmp.filepicker.rememberAppFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 
-/** Куда уйти после закрытия сессии блока. */
 private enum class FastMountExit { BACK, CHOOSE_ANOTHER, ADVANCED_MOUNT }
 
-/**
- * Быстрый монтаж внутри обёртки сессии; экраны других фич — слотами ([fastMountSlots]). Выход закрывает сессию;
- * дальше — назад, снова поиск («Выбрать другой блок») или поиск расширенного монтажа (блок не поддерживает быстрый).
- */
 @Composable
 internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
     var exit by rememberSaveable { mutableStateOf(FastMountExit.BACK) }
@@ -75,12 +71,13 @@ internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
             FirmwareBootGraph(
                 onExit = onExit,
                 onOpenSupportChat = onOpenSupportChat,
-                filePicker = rememberFirmwareFilePicker(),
+                archivePicker = koinInject(),
+                filePicker = rememberAppFirmwareFilePicker(),
                 vehiclePicker = { deviceName, onPick, onPickerBack ->
                     ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-                }
+                },
             )
-        }
+        },
     ) { _, onExit ->
         FastMountEntry(
             onExit = onExit,
@@ -92,7 +89,7 @@ internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
                 exit = FastMountExit.ADVANCED_MOUNT
                 onExit()
             },
-            slots = fastMountSlots(onOpenSupportChat)
+            slots = fastMountSlots(onOpenSupportChat),
         )
     }
 }
@@ -109,10 +106,10 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                         mode = VehicleSelectMode.PICK,
                         catalog = VehicleCatalog.WITH_CONFIGURATIONS,
                         device = VehicleDeviceFilter.Device(request.deviceName),
-                        firmwareCanCode = request.canCode
+                        firmwareCanCode = request.canCode,
                     ),
                     onPick = { car -> onPick(car.toMountCar()) },
-                    onBack = onBack
+                    onBack = onBack,
                 )
             },
             configurationPicker = { request, onPick, onOpenFirmwareUpdate, onBack ->
@@ -120,7 +117,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     request = ConfigurationPickRequest(
                         kind = ConfigurationPickKind.CLOUD,
                         deviceName = request.deviceName,
-                        firmwareCanCode = request.canCode
+                        firmwareCanCode = request.canCode,
                     ),
                     onPick = { source -> (source as? SettingsSource.RemoteConfiguration)?.let { onPick(it.id) } },
                     onOpenFirmwareUpdate = onOpenFirmwareUpdate,
@@ -128,8 +125,11 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
                         ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
                     },
+                    editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
+                        ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
+                    },
                     purpose = ConfigurationPickPurpose.FAST_MOUNT,
-                    cloudCar = ConfigurationPickCar(request.car.id, request.car.title)
+                    cloudCar = ConfigurationPickCar(request.car.id, request.car.title),
                 )
             },
             bypass = { step, onNext ->
@@ -139,7 +139,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     next = AutostartStepNext(step.next.busy, step.next.error),
                     onNext = onNext,
                     onBack = step.onBack,
-                    onOpenSupportChat = onOpenSupportChat
+                    onOpenSupportChat = onOpenSupportChat,
                 )
             },
             clone = { step, onNext ->
@@ -149,7 +149,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     next = AutostartStepNext(step.next.busy, step.next.error),
                     onNext = onNext,
                     onBack = step.onBack,
-                    onOpenSupportChat = onOpenSupportChat
+                    onOpenSupportChat = onOpenSupportChat,
                 )
             },
             systemCheck = { step, checklist, actions ->
@@ -163,10 +163,10 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                         onAnswer = { id, option -> id.toIntOrNull()?.let { actions.onAnswer(it, option) } },
                         chrome = CheckStateChrome(
                             topBar = { onBack -> step.frame.topBar(false, onBack) },
-                            dock = step.frame.dock
+                            dock = step.frame.dock,
                         ),
-                        nextBusy = step.next.busy
-                    )
+                        nextBusy = step.next.busy,
+                    ),
                 )
             },
             fileOpener = MountFileOpener { name, bytes ->
@@ -175,7 +175,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     SupportChatFileOpenResult.NoApp -> false
                     SupportChatFileOpenResult.Failed -> null
                 }
-            }
+            },
         )
     }
 }
@@ -187,10 +187,9 @@ private fun CarSummary.toMountCar(): MountCar = MountCar(
     brand = brand,
     model = model,
     years = if (years.first == years.last) "${years.first}" else "${years.first}–${years.last}",
-    canCode = canCode
+    canCode = canCode,
 )
 
-/** Чек-лист мастера → чек-лист экрана проверки (строгий порядок, зоны авто-заданий). */
 private fun MountChecklist.toCheckState(): CheckStateChecklist = CheckStateChecklist(
     tasks = tasks.map { task ->
         ChecklistTask(
@@ -205,10 +204,10 @@ private fun MountChecklist.toCheckState(): CheckStateChecklist = CheckStateCheck
             zone = task.auto?.zone(),
             guard = task.auto == AutoTaskKind.GUARD,
             options = task.options,
-            active = task.active
+            active = task.active,
         )
     },
-    sequential = true
+    sequential = true,
 )
 
 private fun AutoTaskKind.zone(): Zone? = when (this) {

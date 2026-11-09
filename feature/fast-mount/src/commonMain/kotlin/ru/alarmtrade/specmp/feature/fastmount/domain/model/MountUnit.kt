@@ -1,13 +1,7 @@
 package ru.alarmtrade.specmp.feature.fastmount.domain.model
 
-/** Доступ к блоку на сервере: [granted] — можно монтировать; иначе [message] — причина от сервера. */
 data class UnitAccess(val granted: Boolean, val message: String)
 
-/**
- * Автомобиль, выбранный для монтажа (каталог с конфигурациями).
- *
- * @property canCode CAN-код автомобиля из каталога.
- */
 data class MountCar(val id: Int, val brand: String, val model: String, val years: String, val canCode: String) {
     val title: String get() = listOf(brand, model, years).filter { it.isNotBlank() }.joinToString(" ")
 }

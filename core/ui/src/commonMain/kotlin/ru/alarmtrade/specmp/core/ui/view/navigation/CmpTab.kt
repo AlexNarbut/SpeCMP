@@ -17,7 +17,7 @@ fun CmpTabRow(
     tabs: List<CmpTabItem>,
     onTabSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    scrollable: Boolean = false
+    scrollable: Boolean = false,
 ) {
     val tabContent: @Composable () -> Unit = {
         tabs.forEachIndexed { index, tab ->
@@ -25,7 +25,7 @@ fun CmpTabRow(
                 selected = selectedTabIndex == index,
                 onClick = { onTabSelect(index) },
                 text = { CmpText(text = tab.title) },
-                icon = tab.icon
+                icon = tab.icon,
             )
         }
     }
@@ -34,13 +34,13 @@ fun CmpTabRow(
         ScrollableTabRow(
             selectedTabIndex = selectedTabIndex,
             modifier = modifier,
-            tabs = tabContent
+            tabs = tabContent,
         )
     } else {
         TabRow(
             selectedTabIndex = selectedTabIndex,
             modifier = modifier,
-            tabs = tabContent
+            tabs = tabContent,
         )
     }
 }

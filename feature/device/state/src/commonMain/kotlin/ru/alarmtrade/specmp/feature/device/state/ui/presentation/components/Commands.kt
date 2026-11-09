@@ -97,20 +97,15 @@ private const val HOLD_MILLIS = 1_000L
 private const val CONFIRM_HOLD_MILLIS = 2_000L
 private const val HINT_MILLIS = 1_800L
 
-/** Удержание кнопки: [pressed] — палец на кнопке (полоса/кольцо заполняется), [hint] — отпустили раньше времени. */
 @Stable
 internal class HoldState {
     var pressed by mutableStateOf(false)
     var hint by mutableStateOf(false)
 
-    /** Чья кнопка удерживается (общее состояние колонки пульта — прогресс рисуется на силуэте). */
     var command by mutableStateOf<StateCommand?>(null)
 }
 
-/**
- * Команда отправляется удержанием [millis] (защита от случайного нажатия). Отпустили раньше — подсказка
- * «Держите 1 с». Для TalkBack — обычное действие «нажать».
- */
+/** Отправка удержанием [millis] — защита от случайного нажатия; для TalkBack — обычное действие «нажать». */
 @Composable
 internal fun Modifier.holdToFire(
     enabled: Boolean,
@@ -118,7 +113,7 @@ internal fun Modifier.holdToFire(
     label: String,
     state: HoldState,
     owner: StateCommand? = null,
-    onFire: () -> Unit
+    onFire: () -> Unit,
 ): Modifier {
     val fire by rememberUpdatedState(onFire)
     return this
@@ -155,7 +150,6 @@ internal fun Modifier.holdToFire(
         }
 }
 
-/** Прогресс удержания 0…1 (только отрисовка; команду шлёт жест). */
 @Composable
 internal fun holdProgress(state: HoldState, millis: Long): Float {
     val progress = remember { Animatable(0f) }
@@ -193,15 +187,15 @@ internal fun commandPainter(command: StateCommand): Painter = painterResource(
         StateCommand.SERVICE_MODE_ON,
         StateCommand.SERVICE_MODE_OFF,
         StateCommand.PROGRAM_MODE_ON,
-        StateCommand.PROGRAM_MODE_OFF -> modeIcon(command)
+        StateCommand.PROGRAM_MODE_OFF,
+        -> modeIcon(command)
 
         StateCommand.PANIC -> Res.drawable.devicestate_cmd_beaper
 
         StateCommand.LIGHT_WAY -> Res.drawable.devicestate_cmd_light_way
-    }
+    },
 )
 
-/** Режимы ТО и программирования: свой значок на включение и на выключение (как в старом приложении). */
 private fun modeIcon(command: StateCommand): DrawableResource = when (command) {
     StateCommand.SERVICE_MODE_OFF -> Res.drawable.devicestate_cmd_service_mode_disable
     StateCommand.PROGRAM_MODE_ON -> Res.drawable.devicestate_cmd_program_mode_enable
@@ -209,7 +203,6 @@ private fun modeIcon(command: StateCommand): DrawableResource = when (command) {
     else -> Res.drawable.devicestate_cmd_service_mode_enable
 }
 
-/** Значок команды; при удержании — заполняющееся кольцо, при отправке — вращающееся. */
 @Composable
 private fun RingIcon(command: StateCommand, progress: Float, sending: Boolean, tint: Color, size: Int, iconSize: Int) {
     CmpBox(modifier = Modifier.size(size.dp), contentAlignment = Alignment.Center) {
@@ -220,14 +213,14 @@ private fun RingIcon(command: StateCommand, progress: Float, sending: Boolean, t
                 modifier = Modifier.size(size.dp),
                 progress = progress,
                 strokeWidth = 3.dp,
-                color = tint
+                color = tint,
             )
         }
         CmpIcon(
             painter = commandPainter(command),
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(iconSize.dp)
+            modifier = Modifier.size(iconSize.dp),
         )
     }
 }
@@ -241,25 +234,20 @@ private fun commandLook(command: CommandUi, status: CommandStatus): CommandLook 
         CommandOutcome.DONE -> CommandLook(
             colors.primaryContainer,
             colors.onPrimaryContainer,
-            colors.onPrimaryContainer
+            colors.onPrimaryContainer,
         )
 
         null -> CommandLook(
             background = colors.surfaceContainerHigh,
             content = colors.onSurface,
-            icon = if (command.danger) colors.error else colors.primary
+            icon = if (command.danger) colors.error else colors.primary,
         )
 
         else -> CommandLook(colors.errorContainer, colors.onErrorContainer, colors.onErrorContainer)
     }
 }
 
-/**
- * Кнопка команды: только значок и название, размер постоянный (итог — цветом кнопки и снэкбаром). [compact] —
- * квадрат колонки пульта (короткая подпись), иначе плитка сетки «Все команды». [sharedHold] — удержание общее для
- * колонки пульта: прогресс рисует силуэт машины, а не кольцо у значка. Опасные команды ([CommandUi.danger])
- * открывают лист подтверждения обычным нажатием.
- */
+/** [sharedHold] — удержание общее для колонки пульта: прогресс рисует силуэт машины, а не кольцо у значка. */
 @Composable
 internal fun CommandButton(
     command: CommandUi,
@@ -268,7 +256,7 @@ internal fun CommandButton(
     onFire: (CommandUi) -> Unit,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
-    sharedHold: HoldState? = null
+    sharedHold: HoldState? = null,
 ) {
     val ownHold = remember(command.command) { HoldState() }
     val hold = sharedHold ?: ownHold
@@ -292,7 +280,7 @@ internal fun CommandButton(
             .testTag(COMMAND_TAG_PREFIX + command.command.name.lowercase())
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
     ) {
         RingIcon(
             command = command.command,
@@ -300,7 +288,7 @@ internal fun CommandButton(
             sending = sending,
             tint = if (active) look.icon else look.icon.copy(alpha = DISABLED_ALPHA),
             size = if (compact) 44 else 52,
-            iconSize = if (compact) 38 else 44
+            iconSize = if (compact) 38 else 44,
         )
         CmpText(
             text = label,
@@ -308,7 +296,7 @@ internal fun CommandButton(
             fontWeight = FontWeight.SemiBold,
             color = look.content,
             textAlign = TextAlign.Center,
-            maxLines = if (compact) 1 else 2
+            maxLines = if (compact) 1 else 2,
         )
     }
 }
@@ -317,7 +305,6 @@ private val CompactHeight = 84.dp
 private val TileHeight = 104.dp
 private const val DISABLED_ALPHA = 0.38f
 
-/** Опасная команда: обычное нажатие открывает лист подтверждения (удержание — уже там). */
 private fun Modifier.dangerTap(enabled: Boolean, label: String, onClick: () -> Unit): Modifier = this
     .semantics {
         role = Role.Button
@@ -338,7 +325,6 @@ private fun Modifier.dangerTap(enabled: Boolean, label: String, onClick: () -> U
         }
     }
 
-/** Сетка всех команд (вкладка «Подробно», нижний лист). */
 @Composable
 internal fun CommandsGrid(
     commands: List<CommandUi>,
@@ -346,7 +332,7 @@ internal fun CommandsGrid(
     enabled: Boolean,
     columns: Int,
     onFire: (CommandUi) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         commands.chunked(columns).forEach { row ->
@@ -357,7 +343,7 @@ internal fun CommandsGrid(
                         status = status(command),
                         enabled = enabled,
                         onFire = onFire,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
                 repeat(columns - row.size) { CmpBox(modifier = Modifier.weight(1f)) }
@@ -366,7 +352,6 @@ internal fun CommandsGrid(
     }
 }
 
-/** Нижний лист «Все команды». */
 @Composable
 internal fun AllCommandsSheet(
     commands: List<CommandUi>,
@@ -374,7 +359,7 @@ internal fun AllCommandsSheet(
     enabled: Boolean,
     columns: Int,
     onFire: (CommandUi) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     CmpBottomSheet(onDismissRequest = onDismiss) {
         CmpColumn(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, bottom = 20.dp)) {
@@ -382,12 +367,12 @@ internal fun AllCommandsSheet(
                 CmpText(
                     text = stringResource(Strings.string.devicestate_commands_title_sheet),
                     fontSize = 22.sp,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 CmpIconButton(
                     onClick = onDismiss,
                     icon = CmpIcons.Close,
-                    contentDescription = stringResource(Strings.string.devicestate_commands_a11y_close)
+                    contentDescription = stringResource(Strings.string.devicestate_commands_a11y_close),
                 )
             }
             CommandsGrid(
@@ -396,16 +381,12 @@ internal fun AllCommandsSheet(
                 enabled = enabled,
                 columns = columns,
                 onFire = onFire,
-                modifier = Modifier.padding(end = 8.dp, top = 4.dp)
+                modifier = Modifier.padding(end = 8.dp, top = 4.dp),
             )
         }
     }
 }
 
-/**
- * Лист подтверждения опасной команды: пояснение, у запуска — живые проверки из текущего снимка (нейтраль / «P»,
- * ручник, капот; информационные, запуск не блокируют), удержание 2 с.
- */
 @Composable
 internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = cmpThemeColors()
@@ -413,21 +394,21 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
     CmpBottomSheet(onDismissRequest = onDismiss) {
         CmpColumn(
             modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CmpRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 CmpBox(
                     modifier = Modifier.size(56.dp).background(colors.errorContainer, CircleShape),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CmpIcon(
                         painter = commandPainter(command),
                         contentDescription = null,
                         tint = colors.onErrorContainer,
-                        modifier = Modifier.size(42.dp)
+                        modifier = Modifier.size(42.dp),
                     )
                 }
                 CmpText(
@@ -436,9 +417,9 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
                             Strings.string.devicestate_danger_title_start
                         } else {
                             Strings.string.devicestate_danger_title_panic
-                        }
+                        },
                     ),
-                    fontSize = 22.sp
+                    fontSize = 22.sp,
                 )
             }
             CmpText(
@@ -447,9 +428,9 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
                         Strings.string.devicestate_danger_msg_start
                     } else {
                         Strings.string.devicestate_danger_msg_panic
-                    }
+                    },
                 ),
-                fontSize = 16.sp
+                fontSize = 16.sp,
             )
             if (start && vehicle != null) StartChecks(vehicle)
             HoldBar(
@@ -458,14 +439,14 @@ internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfir
                         Strings.string.devicestate_danger_btn_hold_start
                     } else {
                         Strings.string.devicestate_danger_btn_hold_panic
-                    }
+                    },
                 ),
-                onDone = onConfirm
+                onDone = onConfirm,
             )
             CmpOutlinedButton(
                 text = stringResource(Strings.string.devicestate_danger_btn_cancel),
                 onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             )
         }
     }
@@ -477,39 +458,38 @@ private fun StartChecks(vehicle: VehicleState) {
     val checks = listOf(
         Zone.NEUTRAL to (vehicle.zone(Zone.NEUTRAL) == ZoneValue.ON),
         Zone.HANDBRAKE to (vehicle.zone(Zone.HANDBRAKE) == ZoneValue.ON),
-        Zone.HOOD to (vehicle.zone(Zone.HOOD) == ZoneValue.OFF)
+        Zone.HOOD to (vehicle.zone(Zone.HOOD) == ZoneValue.OFF),
     )
     CmpColumn(
         modifier = Modifier
             .fillMaxWidth()
             .background(colors.surfaceContainerHigh, RoundedCornerShape(16.dp))
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
         checks.forEach { (zone, ok) ->
             CmpRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 CmpIcon(
                     icon = if (ok) CmpIcons.CheckCircle else CmpIcons.ErrorOutline,
                     contentDescription = null,
                     tint = if (ok) colors.primary else colors.error,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
                 CmpText(text = stringResource(zone.label), fontSize = 16.sp, modifier = Modifier.weight(1f))
                 CmpText(
                     text = zoneValueText(zone, vehicle.zone(zone)),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (ok) colors.onSurface else colors.error
+                    color = if (ok) colors.onSurface else colors.error,
                 )
             }
         }
     }
 }
 
-/** Полоса подтверждения: удерживайте 2 с, полоса заполняется. */
 @Composable
 private fun HoldBar(text: String, onDone: () -> Unit) {
     val colors = cmpThemeColors()
@@ -528,14 +508,14 @@ private fun HoldBar(text: String, onDone: () -> Unit) {
             .background(colors.errorContainer, shape)
             .holdToFire(enabled = true, millis = CONFIRM_HOLD_MILLIS, label = text, state = hold, onFire = onDone)
             .testTag(CONFIRM_HOLD_TAG),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpBox(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxWidth(progress)
                 .heightIn(min = 64.dp)
-                .background(colors.error, shape)
+                .background(colors.error, shape),
         )
         CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             val content = if (progress > HALF) colors.onError else colors.onErrorContainer
@@ -543,7 +523,7 @@ private fun HoldBar(text: String, onDone: () -> Unit) {
                 icon = CmpIcons.TouchApp,
                 contentDescription = null,
                 tint = content,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
             CmpText(text = label, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = content)
         }
@@ -552,7 +532,6 @@ private fun HoldBar(text: String, onDone: () -> Unit) {
 
 private const val HALF = 0.5f
 
-/** Колонка основных команд пульта (охрана, снятие, запуск/стоп, багажник, паника) + «Все команды». */
 @Composable
 internal fun PrimaryCommands(
     commands: List<CommandUi>,
@@ -560,7 +539,7 @@ internal fun PrimaryCommands(
     enabled: Boolean,
     hold: HoldState,
     onFire: (CommandUi) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         commands.filter { it.primary }.forEach { command ->
@@ -571,7 +550,7 @@ internal fun PrimaryCommands(
                 onFire = onFire,
                 compact = true,
                 sharedHold = hold,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

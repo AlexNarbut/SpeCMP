@@ -59,11 +59,11 @@ class FastMountGallery {
         images = listOf(
             MountImage("CAN — разъём за бардачком", "", null, ""),
             MountImage("Питание +12 В — предохранитель F44", "", null, ""),
-            MountImage("Масса — болт под рулевой колонкой", "", null, "")
+            MountImage("Масса — болт под рулевой колонкой", "", null, ""),
         ),
         keyBypass = true,
         slave = true,
-        questions = emptyList()
+        questions = emptyList(),
     )
     private val ready = FastMountState(
         fixed = fixed,
@@ -72,7 +72,7 @@ class FastMountGallery {
         car = car,
         configuration = configuration,
         plan = fastMountPlan(configuration, ConnectionTransport.BLE),
-        summary = SummaryLoad.Ready
+        summary = SummaryLoad.Ready,
     )
 
     private fun master(step: FastMountStep?, master: MasterState = MasterState()) =
@@ -88,8 +88,8 @@ class FastMountGallery {
             "F3c-check-factory",
             ready.copy(
                 check = UnitCheck.Done(UnitVerdict.FactoryCan),
-                unit = unit.copy(canCode = "0000", canFactory = true)
-            )
+                unit = unit.copy(canCode = "0000", canFactory = true),
+            ),
         )
         render("F3d-check-no-access", ready.copy(check = UnitCheck.Done(UnitVerdict.NoAccess(""))))
         render("F3-checking", ready.copy(check = UnitCheck.Checking))
@@ -100,8 +100,8 @@ class FastMountGallery {
             ready.copy(
                 screen = WizardScreen.SUMMARY,
                 fixed = fixed.copy(transport = ConnectionTransport.USB),
-                plan = fastMountPlan(configuration, ConnectionTransport.USB)
-            )
+                plan = fastMountPlan(configuration, ConnectionTransport.USB),
+            ),
         )
         render("FV-vehicle-slot", ready.copy(screen = WizardScreen.VEHICLE))
     }
@@ -114,14 +114,14 @@ class FastMountGallery {
         render("F7b-write-error", master(FastMountStep.WRITING_SETTINGS, MasterState(error = FastMountError.Unknown)))
         render(
             "F8a-mount-downloading",
-            master(FastMountStep.MOUNT, MasterState(mountMap = MountMapState.Downloading))
+            master(FastMountStep.MOUNT, MasterState(mountMap = MountMapState.Downloading)),
         )
         render(
             "F8b-mount-ready-toast",
             master(
                 FastMountStep.MOUNT,
-                MasterState(mountMap = MountMapState.Ready(ByteArray(3_400_000)), toast = WizardToast.SETTINGS_WRITTEN)
-            )
+                MasterState(mountMap = MountMapState.Ready(ByteArray(3_400_000)), toast = WizardToast.SETTINGS_WRITTEN),
+            ),
         )
         render("F8c-mount-map-error", master(FastMountStep.MOUNT, MasterState(mountMap = MountMapState.Failed)))
         render("F9-reboot", master(FastMountStep.MOUNT, MasterState(reboot = RebootWait(FastMountStep.MOUNT))))
@@ -129,7 +129,7 @@ class FastMountGallery {
         render("F11-slave", master(FastMountStep.SLAVE, MasterState(slaveDone = true, cloneNeeded = false)))
         render(
             "F13a-review",
-            master(FastMountStep.FEEDBACK, MasterState(cloneNeeded = false, mountMinutes = 84, rating = 4))
+            master(FastMountStep.FEEDBACK, MasterState(cloneNeeded = false, mountMinutes = 84, rating = 4)),
         )
         render(
             "F17-review-error",
@@ -139,9 +139,9 @@ class FastMountGallery {
                     cloneNeeded = false,
                     rating = 5,
                     feedback = "Всё по карте",
-                    error = FastMountError.Step(FastMountFailure.FeedbackRequired)
-                )
-            )
+                    error = FastMountError.Step(FastMountFailure.FeedbackRequired),
+                ),
+            ),
         )
         render("F14-done", master(FastMountStep.FINISH, MasterState(cloneNeeded = false)))
     }
@@ -165,7 +165,7 @@ private fun Wizard(state: FastMountState) {
         onDialogDismiss = {},
         onToastHide = {},
         onExit = {},
-        rebootSecondsOverride = 12
+        rebootSecondsOverride = 12,
     )
 }
 
@@ -173,7 +173,7 @@ private fun Wizard(state: FastMountState) {
 private fun SlotStub(name: String) {
     CmpBox(
         modifier = Modifier.fillMaxSize().background(cmpThemeColors().surfaceContainerHigh),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CmpText(text = "Экран фичи: $name")
     }

@@ -53,15 +53,9 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settin
 private const val CHANGED_TINT_ALPHA = 0.5f
 private const val FUNCTIONS_MAX_LINES = 2
 
-/** Входы, выходы и переключаемые выходы — строка канала, а не обычная строка настройки. */
 internal val Setting.isChannel: Boolean
     get() = this is InputSetting || this is OutputSetting || this is SwitchOutputSetting
 
-/**
- * Строка канала (вход / выход / переключаемый выход): номер, имя канала, полярность (+/−) или тип контакта (НО/НЗ),
- * провода (цвет изоляции и пин), ниже — назначенные функции. Справа: у переключаемого выхода — переключатель (вся
- * строка переключает), у входа/выхода — смена типа контакта / полярности одним нажатием или замок.
- */
 @Composable
 internal fun ChannelRow(
     setting: Setting,
@@ -69,12 +63,11 @@ internal fun ChannelRow(
     path: String?,
     actions: SettingRowActions,
     infoButton: @Composable () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
     val channel = setting.channelOrNull ?: return
     val toggle = (setting as? SwitchOutputSetting)?.let { SettingValue.SwitchOutput(!it.value.enabled) }
-    // Переключаемый выход — переключается всей строкой; вход/выход — открывает окно функций.
     val onClick: () -> Unit = if (toggle != null) {
         { actions.onValueChange(setting.id, toggle) }
     } else {
@@ -88,14 +81,14 @@ internal fun ChannelRow(
             .heightIn(min = 56.dp)
             .clickable(role = if (toggle != null) Role.Switch else Role.Button, onClick = onClick)
             .padding(end = 4.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         infoButton()
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             CmpFlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                itemVerticalAlignment = Alignment.CenterVertically
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 if (setting.number.isNotEmpty()) {
                     CmpText(text = setting.number, style = CmpTextStyle.BodyLarge, color = colors.onSurfaceVariant)
@@ -104,7 +97,7 @@ internal fun ChannelRow(
                     text = settingTitle(setting.name, channel),
                     style = CmpTextStyle.BodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface
+                    color = colors.onSurface,
                 )
                 ChannelBadge(setting)
                 if (changed) ChangedChip()
@@ -116,7 +109,7 @@ internal fun ChannelRow(
                     style = CmpTextStyle.BodyLarge,
                     color = if (functions.isEmpty()) colors.onSurfaceVariant else colors.primary,
                     maxLines = FUNCTIONS_MAX_LINES,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             if (path != null) {
@@ -127,7 +120,6 @@ internal fun ChannelRow(
     }
 }
 
-/** Тип контакта входа или полярность выхода. */
 @Composable
 private fun ChannelBadge(setting: Setting) {
     when (setting) {
@@ -150,7 +142,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
     when (setting) {
         is SwitchOutputSetting -> CmpBox(
             modifier = Modifier.size(width = 64.dp, height = 48.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             CmpSwitch(checked = setting.value.enabled, onCheckedChange = null)
         }
@@ -161,7 +153,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                 icon = CmpIcons.SwapHoriz,
                 contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_contact),
                 tint = colors.primary,
-                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
+                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id)),
             )
         }
 
@@ -171,7 +163,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                 icon = CmpIcons.SwapHoriz,
                 contentDescription = stringResource(Strings.string.settings_io_a11y_toggle_polarity),
                 tint = colors.primary,
-                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id))
+                modifier = Modifier.size(48.dp).testTag(SettingsTestTags.channelToggle(setting.id)),
             )
         } else {
             CmpBox(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -179,7 +171,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
                     icon = CmpIcons.Lock,
                     contentDescription = stringResource(Strings.string.settings_io_a11y_locked),
                     tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -188,10 +180,7 @@ private fun Trailing(setting: Setting, actions: SettingRowActions) {
     }
 }
 
-/**
- * Полярность выхода для показа (как в старом приложении): неизменяемая — по умолчанию из устройства; изменяемая —
- * текущая, а если не задана — по умолчанию.
- */
+/** Неизменяемая — по умолчанию из устройства; изменяемая — текущая, а если не задана — по умолчанию. */
 internal val OutputSetting.shownPolarity: Polarity
     get() = when {
         !canEditPolarity -> defaultPolarity
@@ -199,10 +188,6 @@ internal val OutputSetting.shownPolarity: Polarity
         else -> value.value.polarity
     }
 
-/**
- * Назначенные функции через запятую; `""` — не назначено. У входа/выхода — по текущему значению (меняется в окне
- * функций), у переключаемого выхода — только показ, пустой список не выводится (`null`).
- */
 private fun functionsOf(setting: Setting): String? = when (setting) {
     is InputSetting -> setting.availableLogics.filter { setting.value.value.isEnabled(it) }.joinToString { it.name }
     is OutputSetting -> setting.availableLogics.filter { setting.value.value.isEnabled(it) }.joinToString { it.name }
@@ -210,22 +195,18 @@ private fun functionsOf(setting: Setting): String? = when (setting) {
     else -> null
 }
 
-/**
- * Тип контакта входа можно менять, только если блок его сообщает: не заданный тип (`UNDEFINED`) — у входа нет
- * NO/NC (флага в SDK нет — признак по значению).
- */
+/** Флага в SDK нет: не заданный тип (`UNDEFINED`) значит, что у входа нет NO/NC. */
 internal val InputSetting.canEditContactType: Boolean
     get() = value.value.type != InputContactType.UNDEFINED
 
-/** NO ↔ NC. */
 private fun InputValue.toggled() = copy(
     type = when (type) {
         InputContactType.NORMALLY_OPEN -> InputContactType.NORMALLY_CLOSED
         else -> InputContactType.NORMALLY_OPEN
-    }
+    },
 )
 
 /** − ↔ +; не заданная полярность становится «+» (после «−» по умолчанию). */
 private fun OutputValue.toggled() = copy(
-    polarity = if (polarity == Polarity.MINUS) Polarity.PLUS else Polarity.MINUS
+    polarity = if (polarity == Polarity.MINUS) Polarity.PLUS else Polarity.MINUS,
 )
