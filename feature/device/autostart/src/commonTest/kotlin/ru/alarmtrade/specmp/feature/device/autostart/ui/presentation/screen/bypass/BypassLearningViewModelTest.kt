@@ -177,6 +177,28 @@ class BypassLearningViewModelTest {
     }
 
     @Test
+    fun `sdk failure on a step with live connection is a start error`() = test {
+        val vm = started()
+        repository.send(BypassEvent.Step(BypassStep(BypassStepKind.WAIT, BypassSubject.LEARNING)))
+        repository.fail()
+        runCurrent()
+        assertEquals(BypassPhase.Finished(BypassResult.Error(BypassError.START_FAILED)), vm.state.value.phase)
+        vm.onStartClick()
+        runCurrent()
+        assertEquals(2, repository.runs)
+    }
+
+    @Test
+    fun `sdk failure after connection loss keeps the interrupted start`() = test {
+        val vm = started()
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        runCurrent()
+        repository.fail()
+        runCurrent()
+        assertEquals(BypassPhase.Start(interrupted = true), vm.state.value.phase)
+    }
+
+    @Test
     fun `back on start leaves at once`() = test {
         val vm = viewModel()
         vm.onBack()

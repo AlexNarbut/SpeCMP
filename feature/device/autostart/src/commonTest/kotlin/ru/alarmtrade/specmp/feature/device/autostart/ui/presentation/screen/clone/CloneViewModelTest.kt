@@ -25,8 +25,10 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeCloneRepository
@@ -89,7 +91,7 @@ class CloneViewModelTest {
 
     @Test
     fun `unknown attempts still allow start`() = test {
-        repository.attempts = null
+        repository.attempts = Response.Error(IllegalStateException("offline"))
         val vm = viewModel()
         assertEquals(CloneAttempts.Unknown, vm.state.value.attempts)
         vm.onStartClick()
@@ -99,7 +101,7 @@ class CloneViewModelTest {
 
     @Test
     fun `zero attempts block start`() = test {
-        repository.attempts = 0
+        repository.attempts = Response.Success(0)
         val vm = viewModel()
         vm.onStartClick()
         assertNull(vm.state.value.dialog)
@@ -134,7 +136,7 @@ class CloneViewModelTest {
     @Test
     fun `result refreshes attempts`() = test {
         val vm = started()
-        repository.attempts = 2
+        repository.attempts = Response.Success(2)
         repository.send(CloneEvent.Finished(CloneResult.Completed(already = false)))
         runCurrent()
         assertEquals(ClonePhase.Finished(CloneResult.Completed(already = false)), vm.state.value.phase)
@@ -190,7 +192,7 @@ class CloneViewModelTest {
     @Test
     fun `wrong pin shows pin dialog and reruns with entered pin`() = test {
         val vm = started()
-        repository.send(CloneEvent.WrongPin)
+        repository.fail(CloneProcedureFailure.WRONG_PIN)
         runCurrent()
         val dialog = assertIs<CloneDialog.Pin>(vm.state.value.dialog)
         assertFalse(dialog.pin.wrong, "silent SDK attempt is not a wrong entered PIN")
@@ -199,10 +201,24 @@ class CloneViewModelTest {
     @Test
     fun `sdk failure with live connection is an unknown error`() = test {
         val vm = started()
-        repository.send(CloneEvent.Failure)
+        repository.fail(CloneProcedureFailure.UNKNOWN)
         runCurrent()
         val result = assertIs<CloneResult.Failed>(assertIs<ClonePhase.Finished>(vm.state.value.phase).result)
         assertEquals(CloneFailure.UNKNOWN, result.failure)
+    }
+
+    @Test
+    fun `retry after an sdk failure runs the procedure again`() = test {
+        val vm = started()
+        repository.send(CloneEvent.Stage(CloneStage.READING))
+        repository.fail(CloneProcedureFailure.UNKNOWN)
+        runCurrent()
+        assertIs<ClonePhase.Finished>(vm.state.value.phase)
+        vm.onStartClick()
+        vm.onConfirm()
+        runCurrent()
+        assertEquals(2, repository.runs)
+        assertEquals(ClonePhase.Running(CloneStage.PREPARING), vm.state.value.phase)
     }
 
     @Test
@@ -217,7 +233,7 @@ class CloneViewModelTest {
     @Test
     fun `entered pin is saved and the procedure reruns`() = test {
         val vm = started()
-        repository.send(CloneEvent.WrongPin)
+        repository.fail(CloneProcedureFailure.WRONG_PIN)
         runCurrent()
         assertEquals(15.seconds, assertIs<CloneDialog.Pin>(vm.state.value.dialog).pin.lockedFor)
         time += 16.seconds

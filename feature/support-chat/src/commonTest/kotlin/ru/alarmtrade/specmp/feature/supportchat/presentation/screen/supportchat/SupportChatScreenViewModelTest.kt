@@ -39,6 +39,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFi
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
@@ -591,6 +592,18 @@ class SupportChatScreenViewModelTest {
         assertEquals(2, repository.sessionCount)
         assertEquals(SupportChatConnection.Online, viewModel.state.value.connection)
         assertEquals(listOf("Recovered"), viewModel.state.value.messages.map { it.text })
+    }
+
+    @Test
+    fun `unavailable session ends the session offline`() = runChatTest {
+        repository.sessionUnavailable = true
+        val viewModel = createViewModel()
+
+        val state = viewModel.state.value
+        assertFalse(state.isSessionActive)
+        assertEquals(SupportChatConnection.Offline, state.connection)
+        assertEquals(LCEState.Error(SupportChatError.HistoryUnavailable), state.history)
+        assertEquals(1, repository.releasedSessionCount)
     }
 
     @Test

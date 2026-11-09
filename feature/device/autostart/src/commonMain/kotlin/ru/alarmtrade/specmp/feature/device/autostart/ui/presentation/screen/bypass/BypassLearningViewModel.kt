@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassError
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassResult
@@ -144,18 +145,24 @@ class BypassLearningViewModel(
         reduce { copy(phase = BypassPhase.Running(), dialog = null) }
         // До итогового события (итог, сбой): после него работа заканчивается — «Повторить» не упрётся в неё.
         repository.learn()
-            .transformWhile { event ->
-                emit(event)
-                event is BypassEvent.Step
+            .transformWhile { step ->
+                emit(step)
+                step is Response.Success && step.value is BypassEvent.Step
             }
             .flowOn(dispatchers.io)
-            .collect { event ->
-                when (event) {
-                    is BypassEvent.Step -> reduce { copy(phase = BypassPhase.Running(event.step)) }
-                    is BypassEvent.Finished -> reduce { copy(phase = BypassPhase.Finished(event.result)) }
-                    BypassEvent.Failure -> finishIfConnected(BypassResult.Error(BypassError.START_FAILED))
+            .collect { step ->
+                when (step) {
+                    is Response.Success -> onEvent(step.value)
+                    is Response.Error -> finishIfConnected(BypassResult.Error(BypassError.START_FAILED))
                 }
             }
+    }
+
+    private fun onEvent(event: BypassEvent) {
+        when (event) {
+            is BypassEvent.Step -> reduce { copy(phase = BypassPhase.Running(event.step)) }
+            is BypassEvent.Finished -> reduce { copy(phase = BypassPhase.Finished(event.result)) }
+        }
     }
 
     // Сбой при живой связи — ошибка; при обрыве экран уже вернулся на старт (onConnectionLost).

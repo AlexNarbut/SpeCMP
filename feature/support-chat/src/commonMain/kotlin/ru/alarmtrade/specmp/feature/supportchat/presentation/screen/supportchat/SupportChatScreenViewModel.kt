@@ -237,14 +237,19 @@ class SupportChatScreenViewModel(
     // region Соединение
 
     // Сессия живёт, пока VM её собирает (уход с экрана отпускает заявку в SDK); в фоне заявка держится —
-    // SDK сам ждёт сеть и переподключается. Поток завершается только после `Unavailable`.
+    // SDK сам ждёт сеть и переподключается. Поток завершается только ошибкой (сессию не удалось начать).
     private fun startSession() {
         reduce { copy(isSessionActive = true) }
         launchReplacing(SESSION_KEY) {
             try {
                 repository.session()
                     .flowOn(dispatchers.io)
-                    .collect { handleEvent(it) }
+                    .collect { step ->
+                        when (step) {
+                            is Response.Success -> handleEvent(step.value)
+                            is Response.Error -> handleSessionUnavailable(step.exception)
+                        }
+                    }
             } finally {
                 reduce { copy(isSessionActive = false) }
             }
@@ -280,10 +285,13 @@ class SupportChatScreenViewModel(
                 requeueUnconfirmed()
             }
 
-            SupportChatConnectionState.Unavailable -> logger.d { "Chat session unavailable" }
-
             SupportChatConnectionState.Connecting -> Unit
         }
+    }
+
+    private fun handleSessionUnavailable(error: Throwable) {
+        logger.d(error) { "Chat session unavailable" }
+        reduce { withSessionUnavailable() }
     }
 
     // Отправленные в сокет, но без эха, при обрыве считаем недоставленными: до ping-таймаута

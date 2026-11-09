@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassLearningException
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureException
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -65,24 +68,26 @@ internal class FakeConnectionRepository : DeviceConnectionRepository {
 
 /** Clone: события процедуры шлёт тест ([events]); каждый запуск — новый канал. */
 internal class FakeCloneRepository : CloneRepository {
-    var attempts: Int? = 3
+    var attempts: Response<Int?> = Response.Success(3)
     var attemptsCalls = 0
     var runs = 0
-    var events = Channel<CloneEvent>(Channel.UNLIMITED)
+    var events = Channel<Response<CloneEvent>>(Channel.UNLIMITED)
         private set
 
-    override suspend fun attempts(): Int? {
+    override suspend fun attempts(): Response<Int?> {
         attemptsCalls++
         return attempts
     }
 
-    override fun run(): Flow<CloneEvent> {
+    override fun run(): Flow<Response<CloneEvent>> {
         runs++
         events = Channel(Channel.UNLIMITED)
         return events.receiveAsFlow()
     }
 
-    fun send(vararg event: CloneEvent) = event.forEach { events.trySend(it) }
+    fun send(vararg event: CloneEvent) = event.forEach { events.trySend(Response.Success(it)) }
+
+    fun fail(failure: CloneProcedureFailure) = events.trySend(Response.Error(CloneProcedureException(failure)))
 
     fun finish() = events.close()
 }
@@ -90,16 +95,18 @@ internal class FakeCloneRepository : CloneRepository {
 /** Обход: шаги шлёт тест ([events]); каждый запуск — новый канал. */
 internal class FakeBypassRepository : BypassLearningRepository {
     var runs = 0
-    var events = Channel<BypassEvent>(Channel.UNLIMITED)
+    var events = Channel<Response<BypassEvent>>(Channel.UNLIMITED)
         private set
 
-    override fun learn(): Flow<BypassEvent> {
+    override fun learn(): Flow<Response<BypassEvent>> {
         runs++
         events = Channel(Channel.UNLIMITED)
         return events.receiveAsFlow()
     }
 
-    fun send(vararg event: BypassEvent) = event.forEach { events.trySend(it) }
+    fun send(vararg event: BypassEvent) = event.forEach { events.trySend(Response.Success(it)) }
+
+    fun fail() = events.trySend(Response.Error(BypassLearningException()))
 }
 
 internal class FakeProgramModeRepository : ProgramModeRepository {

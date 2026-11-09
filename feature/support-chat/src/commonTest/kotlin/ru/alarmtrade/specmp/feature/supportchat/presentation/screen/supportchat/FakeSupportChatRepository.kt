@@ -18,6 +18,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryC
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatUnavailableException
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
 /**
@@ -35,7 +36,7 @@ class FakeSupportChatRepository : SupportChatRepository {
     // false — сессия остаётся в Connecting, пока тест не вызовет connect().
     var autoConnect = true
 
-    // true — сессию не удаётся начать (Unavailable, поток завершается).
+    // true — сессию не удаётся начать (ошибка, поток завершается).
     var sessionUnavailable = false
 
     // Страница истории на любой запрос; null — ответ loadHistoryError.
@@ -74,17 +75,17 @@ class FakeSupportChatRepository : SupportChatRepository {
         private set
     private var activeOutgoingCalls = 0
 
-    override fun session(): Flow<SupportChatEvent> = channelFlow {
+    override fun session(): Flow<Response<SupportChatEvent>> = channelFlow {
         sessionCount++
         connectionCalls.add(ACQUIRE_CALL)
         try {
-            send(SupportChatEvent.Connection(SupportChatConnectionState.Connecting))
+            send(Response.Success(SupportChatEvent.Connection(SupportChatConnectionState.Connecting)))
             if (sessionUnavailable) {
-                send(SupportChatEvent.Connection(SupportChatConnectionState.Unavailable))
+                send(Response.Error(SupportChatUnavailableException()))
                 return@channelFlow
             }
-            launch(start = CoroutineStart.UNDISPATCHED) { events.collect { send(it) } }
-            if (autoConnect) send(SupportChatEvent.Connection(SupportChatConnectionState.Ready))
+            launch(start = CoroutineStart.UNDISPATCHED) { events.collect { send(Response.Success(it)) } }
+            if (autoConnect) send(Response.Success(SupportChatEvent.Connection(SupportChatConnectionState.Ready)))
             awaitCancellation()
         } finally {
             releasedSessionCount++

@@ -59,16 +59,28 @@ sealed interface CloneResult {
     data class Failed(val failure: CloneFailure, val tips: List<String> = emptyList()) : CloneResult
 }
 
-/** Событие процедуры Clone. */
+/**
+ * Событие процедуры Clone. Итог — [Finished]; процедура, не дошедшая до итога, — `Response.Error` с
+ * [CloneProcedureException].
+ */
 sealed interface CloneEvent {
     /** @property inQueue на [CloneStage.CALCULATING]: задача ещё в очереди сервера (иначе — обрабатывается). */
     data class Stage(val stage: CloneStage, val inQueue: Boolean = false) : CloneEvent
 
     data class Finished(val result: CloneResult) : CloneEvent
+}
 
+/** Почему процедура Clone оборвалась без итога. */
+enum class CloneProcedureFailure {
     /** PIN программирования неверный (BLE): нужен ввод PIN и повтор. */
-    data object WrongPin : CloneEvent
+    WRONG_PIN,
 
     /** Сбой SDK без статуса; обрыв связи или ошибка — решает ViewModel по состоянию сессии. */
-    data object Failure : CloneEvent
+    UNKNOWN,
 }
+
+class CloneProcedureException(val failure: CloneProcedureFailure, cause: Throwable? = null) :
+    Exception("Clone procedure failed: $failure", cause)
+
+fun Throwable.toCloneProcedureFailure(): CloneProcedureFailure =
+    (this as? CloneProcedureException)?.failure ?: CloneProcedureFailure.UNKNOWN

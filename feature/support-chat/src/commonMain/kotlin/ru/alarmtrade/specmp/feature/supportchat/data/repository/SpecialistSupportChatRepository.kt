@@ -23,6 +23,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryCursor
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatHistoryPage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
+import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatUnavailableException
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
 class SpecialistSupportChatRepository(
@@ -34,8 +35,8 @@ class SpecialistSupportChatRepository(
 
     private val messageMapper = SupportChatMessageMapper()
 
-    override fun session(): Flow<SupportChatEvent> = channelFlow {
-        send(SupportChatEvent.Connection(SupportChatConnectionState.Connecting))
+    override fun session(): Flow<Response<SupportChatEvent>> = channelFlow {
+        send(Response.Success(SupportChatEvent.Connection(SupportChatConnectionState.Connecting)))
 
         // Профиль — часть сессии: нужен маппингу «моё / чужое», получаем один раз.
         val profile = when (val response = accountRepository.currentProfile()) {
@@ -43,7 +44,7 @@ class SpecialistSupportChatRepository(
 
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to resolve chat profile" }
-                send(SupportChatEvent.Connection(SupportChatConnectionState.Unavailable))
+                send(Response.Error(SupportChatUnavailableException(response.exception)))
                 return@channelFlow
             }
         }
@@ -51,7 +52,9 @@ class SpecialistSupportChatRepository(
         launch {
             chatInteractor.getChatEventsFlowUseCase.execute().collect { response ->
                 when (response) {
-                    is SpecialistResponse.Success -> response.value.toSupportChatEvent(profile)?.let { send(it) }
+                    is SpecialistResponse.Success -> response.value.toSupportChatEvent(profile)?.let {
+                        send(Response.Success(it))
+                    }
 
                     // Обрывы отражает состояние соединения; ошибка в потоке событий — только лог.
                     is SpecialistResponse.Error -> logger.d(response.exception) { "Chat event error" }
@@ -63,7 +66,7 @@ class SpecialistSupportChatRepository(
         chatInteractor.chatSessionFlowUseCase.execute().collect { response ->
             when (response) {
                 is SpecialistResponse.Success -> response.value.toDomain()?.let {
-                    send(SupportChatEvent.Connection(it))
+                    send(Response.Success(SupportChatEvent.Connection(it)))
                 }
 
                 is SpecialistResponse.Error -> logger.d(response.exception) { "Chat connection state error" }

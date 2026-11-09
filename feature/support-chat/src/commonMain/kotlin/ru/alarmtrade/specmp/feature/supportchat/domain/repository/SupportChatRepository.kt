@@ -18,9 +18,10 @@ interface SupportChatRepository {
      * Чат-сессия: пока поток собирается, SDK держит соединение; отмена сбора его отпускает.
      *
      * Поток не завершается сам: обрывы и переподключения приходят как `Connection(state)`.
-     * Исключение — `Connection(Unavailable)` (сессию не удалось начать): финал, поток завершается.
+     * Исключение — `Response.Error` с `SupportChatUnavailableException` (сессию не удалось начать): финал, поток
+     * завершается.
      */
-    fun session(): Flow<SupportChatEvent>
+    fun session(): Flow<Response<SupportChatEvent>>
 
     /**
      * Страница истории: [cursor] `null` — самая новая. Не зависит от состояния соединения.

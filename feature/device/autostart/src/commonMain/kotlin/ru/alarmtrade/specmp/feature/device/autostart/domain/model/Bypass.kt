@@ -92,12 +92,14 @@ sealed interface BypassResult {
     data class Error(val error: BypassError, val code: Int? = null) : BypassResult
 }
 
-/** Событие потока обучения. */
+/**
+ * Событие потока обучения. Итог — [Finished]; сбой SDK без статуса — `Response.Error` с [BypassLearningException].
+ */
 sealed interface BypassEvent {
     data class Step(val step: BypassStep) : BypassEvent
 
     data class Finished(val result: BypassResult) : BypassEvent
-
-    /** Сбой SDK без статуса; что это — обрыв связи или ошибка, решает ViewModel по состоянию сессии. */
-    data object Failure : BypassEvent
 }
+
+/** Сбой SDK без статуса; что это — обрыв связи или ошибка, решает ViewModel по состоянию сессии. */
+class BypassLearningException(cause: Throwable? = null) : Exception("Bypass learning failed", cause)

@@ -19,7 +19,4 @@ sealed interface SupportChatConnectionState {
 
     /** Сервер отверг авторизацию. SDK подключится сам после повторного входа. */
     data object AuthFailed : SupportChatConnectionState
-
-    /** Сессию не удалось начать (не получен профиль). Финал: поток `session()` завершается. */
-    data object Unavailable : SupportChatConnectionState
 }

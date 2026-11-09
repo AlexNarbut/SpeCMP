@@ -8,8 +8,10 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneFailure
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.toCloneProcedureFailure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
@@ -23,9 +25,9 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDevic
  * Экран «Процедура Clone»: попытки → подтверждение → [CloneRepository.run] по этапам → итог.
  *
  * Обрыв связи на процессе: работа отменяется ([launchOnDevice]), экран возвращается на старт с причиной (D2): до
- * вычисления на сервере попытка точно цела, позже — могла списаться, счётчик перечитывается. Неверный PIN (BLE) — из
- * потока SDK: диалог PIN, повтор с введённым PIN. На этапах записи выход запрещён. Процедура живёт, пока жива VM, а не
- * пока экран подписан на state.
+ * вычисления на сервере попытка точно цела, позже — могла списаться, счётчик перечитывается. Неверный PIN (BLE) —
+ * ошибка потока SDK: диалог PIN, повтор с введённым PIN. На этапах записи выход запрещён. Процедура живёт, пока жива
+ * VM, а не пока экран подписан на state.
  */
 class CloneViewModel(
     deviceSession: DeviceSession,
@@ -54,8 +56,11 @@ class CloneViewModel(
     }
 
     private suspend fun refreshAttempts() {
-        val attempts = withContext(dispatchers.io) { repository.attempts() }
-        reduce { copy(attempts = attempts?.let(CloneAttempts::Known) ?: CloneAttempts.Unknown) }
+        val attempts = when (val response = withContext(dispatchers.io) { repository.attempts() }) {
+            is Response.Success -> response.value?.let(CloneAttempts::Known) ?: CloneAttempts.Unknown
+            is Response.Error -> CloneAttempts.Unknown
+        }
+        reduce { copy(attempts = attempts) }
     }
 
     private fun onConnectionLost() {
@@ -136,22 +141,30 @@ class CloneViewModel(
             // До итогового события (итог, неверный PIN, сбой): после него работа заканчивается —
             // повтор не упрётся в неё.
             repository.run()
-                .transformWhile { event ->
-                    emit(event)
-                    event is CloneEvent.Stage
+                .transformWhile { step ->
+                    emit(step)
+                    step is Response.Success && step.value is CloneEvent.Stage
                 }
                 .flowOn(dispatchers.io)
-                .collect { event -> onEvent(event, pinTries) }
+                .collect { step ->
+                    when (step) {
+                        is Response.Success -> onEvent(step.value)
+                        is Response.Error -> onFailure(step.exception.toCloneProcedureFailure(), pinTries)
+                    }
+                }
         }
     }
 
-    private fun onEvent(event: CloneEvent, pinTries: Int) {
+    private fun onEvent(event: CloneEvent) {
         when (event) {
             is CloneEvent.Stage -> reduce { copy(phase = ClonePhase.Running(event.stage, event.inQueue)) }
-
             is CloneEvent.Finished -> finish(event.result)
+        }
+    }
 
-            CloneEvent.WrongPin -> {
+    private fun onFailure(failure: CloneProcedureFailure, pinTries: Int) {
+        when (failure) {
+            CloneProcedureFailure.WRONG_PIN -> {
                 currentState.deviceId?.let(pinCooldown::start)
                 // Неверный — только введённый PIN; молчаливая попытка SDK (сохранённый или 1111) — просто запрос PIN.
                 reduce {
@@ -161,7 +174,7 @@ class CloneViewModel(
             }
 
             // Сбой при живой связи — ошибка; при обрыве экран уже вернулся на старт (onConnectionLost).
-            CloneEvent.Failure -> if (currentDevice != null) finish(CloneResult.Failed(CloneFailure.UNKNOWN))
+            CloneProcedureFailure.UNKNOWN -> if (currentDevice != null) finish(CloneResult.Failed(CloneFailure.UNKNOWN))
         }
     }
 

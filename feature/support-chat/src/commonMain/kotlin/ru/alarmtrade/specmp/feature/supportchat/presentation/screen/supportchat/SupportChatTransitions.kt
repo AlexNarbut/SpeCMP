@@ -37,14 +37,14 @@ internal fun SupportChatScreenState.withConnection(state: SupportChatConnectionS
             hasConnectionIssue = true,
             isChatAuthFailed = state == SupportChatConnectionState.AuthFailed,
         )
-
-        // Показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии).
-        SupportChatConnectionState.Unavailable -> copy(
-            connection = SupportChatConnection.Offline,
-            hasConnectionIssue = true,
-            history = if (history is LCEState.Content) history else LCEState.Error(SupportChatError.HistoryUnavailable),
-        )
     }
+
+/** Сессию не удалось начать: показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии). */
+internal fun SupportChatScreenState.withSessionUnavailable(): SupportChatScreenState = copy(
+    connection = SupportChatConnection.Offline,
+    hasConnectionIssue = true,
+    history = if (history is LCEState.Content) history else LCEState.Error(SupportChatError.HistoryUnavailable),
+)
 
 /** Пока первая страница не получена — первичная загрузка (скелетон), дальше — тихое обновление. */
 internal fun SupportChatScreenState.withFirstPageLoading(): SupportChatScreenState = copy(
