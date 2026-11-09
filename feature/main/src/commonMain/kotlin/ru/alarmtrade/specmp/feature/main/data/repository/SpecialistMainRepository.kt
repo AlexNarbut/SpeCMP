@@ -15,10 +15,7 @@ import ru.alarmtrade.specialist.domain.appUpdates.SettingsUpdatingStatus
 import ru.alarmtrade.specialist.domain.appUpdates.UpdateVersionInformation
 import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specialist.domain.user.UserCommercial
-import ru.alarmtrade.specialist.interactors.appUpdates.AppUpdatesInteractor
 import ru.alarmtrade.specialist.interactors.appUpdates.requests.AppUpdateRequest
-import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
-import ru.alarmtrade.specialist.interactors.user.UserInteractor
 import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
@@ -26,6 +23,7 @@ import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
+import ru.alarmtrade.specmp.feature.main.data.datasource.MainDataSource
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
@@ -34,10 +32,8 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 
 internal class SpecialistMainRepository(
-    private val appUpdatesInteractor: AppUpdatesInteractor,
-    private val userInteractor: UserInteractor,
+    private val dataSource: MainDataSource,
     private val accountRepository: AccountRepository,
-    private val chatInteractor: ChatInteractor,
     private val appVersionProvider: AppVersionProvider,
 ) : MainRepository {
 
@@ -48,7 +44,7 @@ internal class SpecialistMainRepository(
         accountRepository.currentProfile().map { MainUserProfile(name = it.name, email = it.email) }
 
     override suspend fun currentSettingsVersion(): Response<Long?> =
-        when (val response = appUpdatesInteractor.getCurrentSettingsVersionUseCase.execute()) {
+        when (val response = dataSource.currentSettingsVersion()) {
             is SpecialistResponse.Success -> Response.Success(response.value.long)
 
             is SpecialistResponse.Error ->
@@ -68,7 +64,7 @@ internal class SpecialistMainRepository(
         // мимо Response-контракта, safeFlowRun конвертирует это в Response.Error.
         emitAll(
             safeFlowRun {
-                appUpdatesInteractor.synchronizeSettingsVersionUseCase.execute()
+                dataSource.synchronizeSettingsVersion()
                     .map { response -> response.toDatabaseSyncStatusResponse() }
             },
         )
@@ -76,7 +72,7 @@ internal class SpecialistMainRepository(
 
     override suspend fun checkAppUpdate(): Response<MainAppUpdateCheckResult> {
         val request = AppUpdateRequest(currentVersion = appVersionProvider.current().code)
-        return appUpdatesInteractor.checkForAppUpdatesUseCase.execute(request).toResponse().mapIfSuccess { value ->
+        return dataSource.checkForAppUpdates(request).toResponse().mapIfSuccess { value ->
             when (value) {
                 is AppUpdatesResponse.UpdateAvailable -> value.updateVersionInformation.toUpdateCheckResult()
                 is AppUpdatesResponse.NoUpdates -> Response.Success(MainAppUpdateCheckResult.UpToDate)
@@ -85,10 +81,10 @@ internal class SpecialistMainRepository(
     }
 
     override suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures> =
-        userInteractor.getUserAppFeaturesUseCase.execute().toResponse().map { it.toMainUserAppFeatures() }
+        dataSource.userAppFeatures().toResponse().map { it.toMainUserAppFeatures() }
 
     override suspend fun currentUserCommercial(): Response<MainUserCommercial> =
-        userInteractor.getUserCommercialUseCase.execute().toResponse().map { it.toMainUserCommercial() }
+        dataSource.userCommercial().toResponse().map { it.toMainUserCommercial() }
 
     // Specialist SDK не отдаёт Flow по чату, поэтому наблюдение эмулируется
     // периодическим опросом one-shot use case'ов (как observeIsLoggedIn в feature/auth-state).
@@ -100,7 +96,7 @@ internal class SpecialistMainRepository(
     }
 
     private suspend fun chatAvailability(): Response<Boolean> =
-        chatInteractor.isAvailableUseCase.execute().toResponse().map { it.isAvailable() }
+        dataSource.chatAvailability().toResponse().map { it.isAvailable() }
 
     private fun SpecialistResponse<SettingsUpdatingStatus>.toDatabaseSyncStatusResponse():
         Response<MainDatabaseSyncStatus> =

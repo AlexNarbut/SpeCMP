@@ -209,6 +209,39 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
   от которого зависит `remember`, — его ключ. Дефолт параметра composable допустим только из `CompositionLocal`.
 - Замер длительностей и таймауты — `TimeSource.Monotonic`, правило его не трогает.
 
+## Тестирование репозиториев
+
+У каждой реализации репозитория (класс `..data..` с супертипом `*Repository`: `Specialist*Repository`,
+`Settings*Repository`) есть тест в тестовом source set своего модуля, который использует класс по имени в коде — не
+только в `import`, KDoc или строке (Konsist `repository-impl-tested`; непокрытые пока — во временном allowlist
+`UNTESTED_REPOSITORIES` правила). Тест — не заглушка ради правила; минимум:
+
+- **успешный путь**: ответ SDK → доменная модель (`Response.Success` с ожидаемым значением, для потоков — ожидаемая
+  последовательность);
+- **ошибка SDK → `Response.Error`** с нужным типом: общая ошибка (`SpecialistResponse.Error.Network(IOException)`,
+  `NetworkIsNotAvailableException`) — `exception.appError` (`ApiError.NoConnection`…), предметная (`AuthFailure`,
+  `UserIsNotConfirmed`) — исключение SDK как есть или доменный результат, если репозиторий его так трактует;
+- **ключевые операции**: что уходит в SDK (нормализованный запрос), порядок шагов (синхронизация клиента до входа),
+  особые ветки (`settingsVersion not found` → `null`), поток, бросивший исключение, → последний `Response.Error`.
+
+Источники в тесте:
+
+- **SDK AlarmTrade — через `*DataSource`.** Интеракторы SDK — `final` с `internal`-конструктором от DI SDK, их не
+  создать и не подменить; поэтому репозиторий получает не интерактор, а `internal interface <Фича>DataSource` из
+  `data/datasource`. Его реализация `Specialist<Фича>DataSource` в том же файле — только делегирование в
+  интерактор (`authInteractor.loginUseCase.execute(request)`), без ветвлений и маппинга: принимает запросы SDK и
+  возвращает `SpecialistResponse<SdkType>`/`Flow<SpecialistResponse<…>>`. Вся логика — сборка запроса, маппинг SDK →
+  domain, `toResponse()`, особые ветки — остаётся в репозитории и тестируется с локальным фейком источника
+  (`FakeLoginDataSource`). Модели и ответы SDK (`User`, `SettingsUpdatingStatus`, `SpecialistResponse.Error.*`)
+  создаются в тесте напрямую. Привязка — в Koin-модуле фичи: `singleOf(::SpecialistLoginDataSource) bind
+  LoginDataSource::class`. Эталоны — `SpecialistLoginRepositoryTest`, `SpecialistMainRepositoryTest`,
+  `SpecialistAccountRepositoryTest`.
+- **Хранилище настроек** (`Settings*Repository`) — `Settings` в памяти (сейчас `InMemorySettings` в тестах
+  `support-chat`; общий дублёр — в `core:testing`, когда понадобится второму модулю).
+- **Другие репозитории фичи** — общий фейк из `*:testing`, если он есть («Тестовые дублёры»), иначе локальная
+  реализация интерфейса в тестовом source set (`FakeAccountRepository` в `feature/main`).
+- **Время, поллинг** — `runTest` с виртуальным временем: интервал опроса проверяется по `currentTime`.
+
 ## Тестовые дублёры
 
 Сначала — общий фейк из модуля тестовых дублёров, своя реализация интерфейса — только под особое поведение теста.
@@ -547,8 +580,8 @@ sealed interface MainDatabaseSyncStatus {
 
 ## Data — репозитории
 
-`feature/<name>/data/repository` — реализации контрактов; единственное место фичи, где живут
-прямые вызовы SDK и маппинг SDK-типов в domain-модели.
+`feature/<name>/data/repository` — реализации контрактов; единственное место фичи, где живёт маппинг SDK-типов в
+domain-модели. Прямые вызовы SDK — в `data/datasource` (`Specialist*DataSource`, только делегирование).
 
 ```kotlin
 // ✅ Правильно — граница с бросающим кодом оборачивается хелпером из ResponseExt
@@ -587,6 +620,9 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
   (`SpecialistLoginRepository : LoginRepository`), реализует свой интерфейс (Konsist `repository-impl`) и `internal`
   (`impl-visibility`, как и любой `*Impl`). Создаёт её только Koin-модуль фичи (`koin-wiring`), см. «Внедрение
   зависимостей».
+- **SDK — через `*DataSource`.** Репозиторий не держит интерактор SDK: вызовы идут через `internal interface
+  <Фича>DataSource` (`data/datasource`) с реализацией-делегатом `Specialist<Фича>DataSource`, иначе репозиторий не
+  протестировать (см. «Тестирование репозиториев»).
 - ВСЕ suspend-функции в репозиториях ДОЛЖНЫ возвращать `Response<T>`.
 - НИКОГДА не бросать исключения из репозиториев (detekt `ThrowInRepository`: в файлах `*Repository`/`*UseCase`
   `throw`, `error()`, `check`/`require*`, `!!` — только внутри `safeRun { }`/`safeResponseRun { }` или звена цепочки,

@@ -7,7 +7,7 @@
 - `domain`, `data`, `presentation` и DI живут в `commonMain`; app-level инициализация `SpecialistApp` и platform-specific `AppDeviceInformation` — в `core/specialist`.
 - `LoginRepository` описывает auth-операции (`login`, `signUp`, `resetPassword`, `resendActivationEmail`) и возвращает `Response<T>`. Session-операции (`observeIsLoggedIn`, `logout`) здесь не живут — они в `feature/auth-state`.
 - ViewModel вызывает `LoginRepository` напрямую, управляет dispatcher boundary и клиентской валидацией submit-flow.
-- Репозиторий получает только нужные SDK interactors и device information provider, не создаёт `SpecialistApp` и не содержит platform-specific DI.
+- Вызовы SDK (`AuthInteractor`, `SpecialistInitializer.syncClientInfo`) — в `data/datasource/LoginDataSource` (`SpecialistLoginDataSource` — только делегирование); `SpecialistLoginRepository` получает `LoginDataSource`, собирает запросы и маппит ошибки (`UserIsNotConfirmed` → `LoginResult.ActivationRequired`), тест — `SpecialistLoginRepositoryTest` (`docs/patterns.md`, «Тестирование репозиториев»). Репозиторий не создаёт `SpecialistApp` и не содержит platform-specific DI.
 - Успешный вход не навигирует сам: смену зоны выполняет `feature/auth-state`, увидев обновление состояния сессии; ViewModel только сбрасывает форму.
 - Корень флоу — `LoginNavGraph` (`presentation/navigation`): собственный nav3-граф с маршрутами `LoginRoute` / `RegistrationRoute` / `ForgotPasswordRoute`, общий chrome снаружи `NavDisplay` (см. `docs/navigation.md`).
 - Локалью фича не управляет и переключателя языка на экранах входа нет: язык выбирается в «Настройках» после входа (`feature/app-settings`, см. `docs/localization.md`).

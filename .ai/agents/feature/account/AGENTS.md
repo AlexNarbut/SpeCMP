@@ -2,4 +2,4 @@
 
 - Логическая фича: профиль текущего аккаунта (identity) — `domain` + `data` + DI (`accountModule`), без UI. Будущий экран профиля — парный модуль `feature/account-ui` (пара `<name>` + `<name>-ui`, `docs/architecture.md`).
 - `AccountRepository.currentProfile(): Response<AccountProfile>` (`name`, `email`) — общий источник identity для фич (`feature/main`, `feature/support-chat`): фичи подключают `:feature:account`, а не дублируют `userInteractor.getUserUseCase` и не кэшируют профиль полем (`docs/patterns.md`, «Состояние сессии и смена аккаунта»).
-- `SpecialistAccountRepository` — тонкий: без кэша, маппинг SDK-типов внутри data-слоя, ошибка — `Response.Error` через общий `toResponse()` (`core/specialist`). SDK-интерактор `userInteractor` — из `SpecialistModule` (`core/specialist`).
+- `SpecialistAccountRepository` — тонкий: без кэша, маппинг SDK-типов внутри data-слоя, ошибка — `Response.Error` через общий `toResponse()` (`core/specialist`). SDK — через `data/datasource/AccountDataSource` (`SpecialistAccountDataSource` над `userInteractor` из `SpecialistModule`, `core/specialist`); тест — `SpecialistAccountRepositoryTest`.

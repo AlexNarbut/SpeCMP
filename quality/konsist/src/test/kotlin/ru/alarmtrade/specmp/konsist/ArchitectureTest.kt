@@ -193,6 +193,23 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `repository implementation is covered by a test of its module`() {
+        val testCodeByModule = Konsist.scopeFromProject().files
+            .filter { it.sourceSetName.endsWith("test", ignoreCase = true) }
+            .groupBy({ it.moduleName }, { it.codeWithoutHeaderCommentsAndStrings() })
+        classes.filter { it.isRepositoryImplementation() && it.name !in UNTESTED_REPOSITORIES }
+            .assertTrue(
+                testName = "repository-impl-tested",
+                additionalMessage = "У реализации репозитория (Specialist*Repository, Settings*Repository, " +
+                    "*RepositoryImpl) есть тест в тестовом source set того же модуля, который использует класс по " +
+                    "имени в коде (не в import, KDoc или строке). docs/patterns.md, «Тестирование репозиториев»",
+            ) { impl ->
+                val reference = Regex("""\b${impl.name}\b""")
+                testCodeByModule[impl.containingFile.moduleName].orEmpty().any { reference.containsMatchIn(it) }
+            }
+    }
+
+    @Test
     fun `implementations are constructed only in Koin modules`() {
         val implementations = classes.filter { it.isImplementation() }.map { it.name }.toSet()
         scope.files.filterNot { it.inLayer("di") }
@@ -634,8 +651,33 @@ private fun KoParentDeclaration.simpleName(): String =
     name.substringBefore('<').substringBefore('(').trim().substringAfterLast('.')
 
 // Р8: реализации репозиториев названы по источнику (Specialist*Repository), поэтому ищем по супертипу.
-private fun KoClassDeclaration.isImplementation(): Boolean = name.endsWith(IMPL) ||
-    (resideInPackage("..data..") && parents().any { it.simpleName().endsWith(REPOSITORY) })
+private fun KoClassDeclaration.isImplementation(): Boolean = name.endsWith(IMPL) || isRepositoryImplementation()
+
+private fun KoClassDeclaration.isRepositoryImplementation(): Boolean =
+    resideInPackage("..data..") && parents().any { it.simpleName().endsWith(REPOSITORY) }
+
+// Временный allowlist репозиториев без теста: имя убирается, когда у репозитория появляется тест.
+private val UNTESTED_REPOSITORIES = setOf(
+    "SpecialistCloudConfigurationsRepository",
+    "SpecialistDeviceModelsRepository",
+    "SpecialistLocalConfigurationsRepository",
+    "SpecialistVehicleCatalogRepository",
+    "SettingsRecentVehiclesRepository",
+    "SpecialistAuthStateRepository",
+    "SpecialistAdvancedMountRepository",
+    "SpecialistSupportChatRepository",
+    "SpecialistDeviceConnectionRepository",
+    "SpecialistDeviceSessionRepository",
+    "SpecialistProgramModeRepository",
+    "SpecialistDeviceSettingsRepository",
+    "SpecialistDeviceStateRepository",
+    "SpecialistFastMountRepository",
+    "SpecialistFirmwareRepository",
+    "SpecialistFirmwareUpdateRepository",
+    "SpecialistSerialFirmwareRepository",
+    "SpecialistBypassLearningRepository",
+    "SpecialistCloneRepository",
+)
 
 // Composition roots и платформенные обёртки: имя модуля Konsist — путь от корня репозитория до src/.
 private val APP_MODULES = setOf(
@@ -859,9 +901,12 @@ private val QUALIFIED_NAME = Regex("""\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+""")
 
 // Квалифицированные имена в коде файла: без package/import, комментариев (включая KDoc) и строковых литералов.
 private fun KoFileDeclaration.qualifiedReferences(): List<String> = QUALIFIED_NAME
-    .findAll(text.stripCommentsAndStrings().lineSequence().filterNot { it.isHeaderLine() }.joinToString("\n"))
+    .findAll(codeWithoutHeaderCommentsAndStrings())
     .map { it.value }
     .toList()
+
+private fun KoFileDeclaration.codeWithoutHeaderCommentsAndStrings(): String =
+    text.stripCommentsAndStrings().lineSequence().filterNot { it.isHeaderLine() }.joinToString("\n")
 
 private fun String.isHeaderLine(): Boolean = trimStart().let { it.startsWith("package ") || it.startsWith("import ") }
 
