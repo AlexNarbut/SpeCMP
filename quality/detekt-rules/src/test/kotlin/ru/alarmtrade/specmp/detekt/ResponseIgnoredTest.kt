@@ -19,10 +19,10 @@ class ResponseIgnoredTest {
         }
 
         inline fun <T> Response<T>.onError(action: (Throwable) -> Unit): Response<T> = this
-        inline fun <T> Response<T>.onSuccess(action: (T) -> Unit): Response<T> = this
-        inline fun <R> safeRun(log: Boolean = true, block: () -> R): Response<R> = Response.Success(block())
-        inline fun <R> safeResponseRun(log: Boolean = true, block: () -> Response<R>): Response<R> = block()
-        fun <T> Response<T>.getOrNull(): T? = (this as? Response.Success)?.value
+        inline fun <T, R> Response<T>.map(transform: (T) -> R): Response<R> = this as Response<R>
+        inline fun <R> safeRun(block: () -> R): Response<R> = Response.Success(block())
+        inline fun <R> safeResponseRun(block: () -> Response<R>): Response<R> = block()
+        fun <T> Response<T>.getValueIfSuccess(): T? = (this as? Response.Success)?.value
 
         suspend fun <T> withContext(context: Any, block: suspend () -> T): T = block()
         fun safeLaunch(context: Any, block: suspend () -> Unit) = Unit
@@ -73,8 +73,7 @@ class ResponseIgnoredTest {
             class Sample(private val repository: Repository, private val io: Any) {
                 suspend fun onErrorChain() {
                     repository.save("a").onError { log("failed") }
-                    repository.save("b").onSuccess { log("ok") }.onError { log("failed") }
-                    repository.peek().onSuccess { log("ok") }
+                    repository.peek().map { it + 1 }.onError { log("failed") }
                 }
                 suspend fun assigned() {
                     val response = repository.save("c")
@@ -100,12 +99,12 @@ class ResponseIgnoredTest {
                 }
                 fun safeRunStatement() {
                     safeRun { log("may throw") }
-                    safeResponseRun(log = false) { repository.peek() }
+                    safeResponseRun { repository.peek() }
                 }
                 fun notResponse() {
                     runCatching { log("x") }
-                    buildList { add(repository.peek().getOrNull()) }
-                    repository.peek().getOrNull()
+                    buildList { add(repository.peek().getValueIfSuccess()) }
+                    repository.peek().getValueIfSuccess()
                 }
             }
         """.trimIndent()

@@ -635,8 +635,8 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
   протестировать (см. «Тестирование репозиториев»).
 - ВСЕ suspend-функции в репозиториях ДОЛЖНЫ возвращать `Response<T>`.
 - НИКОГДА не бросать исключения из репозиториев (detekt `ThrowInRepository`: в файлах `*Repository`/`*UseCase`
-  `throw`, `error()`, `check`/`require*`, `!!` — только внутри `safeRun { }`/`safeResponseRun { }` или звена цепочки,
-  оканчивающейся `.asResponseFlow()`; проброс `CancellationException` разрешён).
+  `throw`, `error()`, `check`/`require*`, `!!` — только внутри `safeRun { }`/`safeResponseRun { }`/`safeFlowRun { }` (включая
+  операторы потока внутри `safeFlowRun`); проброс `CancellationException` разрешён).
 - **Контракт результата: `Response` не теряется молча** (detekt `ResponseIgnored`, `ResponseGetOrThrow`). Результат
   вызова либо используется (присваивание, `return`, `when`, условие), либо обрабатывается на месте: во ViewModel
   ошибка — в state или эффект (`when`/`collectIntoState(onError)`); в фоне и при уборке (`finally`, закрытие сессии,
@@ -653,7 +653,8 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
   нужна только на границе с кодом, который реально может бросить: HTTP/DB-клиент, парсинг,
   файловый I/O, коллекция «сырого» Flow, SDK-вызов без Response-контракта.
 - Ветвление и трансформации `Response` — через расширения `ResponseExt` (по одному имени на операцию:
-  `map`, `mapIfSuccess`, `mapIfError`, `onError`, `getValueIfSuccess`; новое — только под реальный вызов),
+  `map`, `mapIfSuccess`, `mapIfError`, `onError`, `getValueIfSuccess`; новое — только под реальный вызов, Konsist
+  `core-helper-usage`),
   а не ручной `when`, когда расширение выражает то же самое. Одинаковая конвертация
   SDK-Response → `Response`, повторённая в нескольких методах, выносится в одно приватное
   расширение репозитория (`private fun <T> SdkResponse<T>.toResponse(): Response<T>`),

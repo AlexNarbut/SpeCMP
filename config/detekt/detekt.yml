@@ -70,7 +70,7 @@ specmp:
   DirectClockUsage:
     active: true
     excludes: ['**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**', '**/core/common/**/time/**', '**/core/ui/**/time/LocalClock.kt']
-  # В *Repository/*UseCase бросать — только внутри safeRun/safeResponseRun/asResponseFlow.
+  # В *Repository/*UseCase бросать — только внутри safeRun/safeResponseRun/safeFlowRun.
   ThrowInRepository:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']

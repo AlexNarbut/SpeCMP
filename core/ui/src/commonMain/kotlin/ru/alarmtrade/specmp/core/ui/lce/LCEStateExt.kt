@@ -20,9 +20,6 @@ inline fun <T, E, R> LCEState<T, E>.mapContent(mapper: (T) -> R): LCEState<R, E>
 val <T> LCEState<T, *>.content: T?
     get() = (this as? LCEState.Content)?.content
 
-val LCEState<*, *>.isLoading: Boolean
-    get() = this is LCEState.Loading
-
 val LCEState<*, *>.isContent: Boolean
     get() = this is LCEState.Content
 

@@ -29,8 +29,8 @@ import org.jetbrains.kotlin.psi.psiUtil.parents
 /**
  * Репозиторий и use case не бросают (docs/patterns.md, «Контракт результата»): в файле, объявляющем класс
  * (не интерфейс) `*Repository` (реализации `Specialist*Repository`)/`*RepositoryImpl`/`*UseCase`, `throw`, `error()`, `check`/`checkNotNull`/`require`/`requireNotNull` и `!!` допустимы
- * только внутри границы, превращающей исключение в `Response`: лямбда `safeRun { }`/`safeResponseRun { }` (в том
- * числе тело `= safeRun { }`) и лямбда звена `flow`-цепочки, которая оканчивается `.asResponseFlow()`. Private-хелпер,
+ * только внутри границы, превращающей исключение в `Response`: лямбда `safeRun { }`/`safeResponseRun { }`/
+ * `safeFlowRun { }` (в том числе тело `= safeRun { }` и лямбды операторов потока внутри `safeFlowRun`). Private-хелпер,
  * вызываемый из `safeRun`, правило не видит — он возвращает `null`/`Response`, а бросает уже лямбда.
  *
  * Проброс отмены разрешён везде: `catch (ce: CancellationException) { throw ce }` и
@@ -70,7 +70,7 @@ class ThrowInRepository(config: Config) :
         report(
             Finding(
                 Entity.from(element),
-                "$what в ${owner.name} вне safeRun/safeResponseRun/asResponseFlow: репозиторий и use case " +
+                "$what в ${owner.name} вне safeRun/safeResponseRun/safeFlowRun: репозиторий и use case " +
                     "не бросают. Верните Response.Error (return@safeResponseRun Response.Error(…)) или null " +
                     "из хелпера и бросайте внутри лямбды safeRun { } (docs/patterns.md, «Контракт результата»).",
             ),
@@ -88,19 +88,7 @@ class ThrowInRepository(config: Config) :
         else -> null
     }
 
-    private fun KtCallExpression.isBoundary(): Boolean {
-        if (calleeExpression?.text in BOUNDARY_CALLS) return true
-        var link: PsiElement = this
-        val parent = link.parent
-        if (parent is KtQualifiedExpression && parent.selectorExpression == link) link = parent
-        while (true) {
-            val outer = link.parent as? KtQualifiedExpression ?: return false
-            if (outer.receiverExpression != link) return false
-            val selector = outer.selectorExpression as? KtCallExpression
-            if (selector?.calleeExpression?.text == AS_RESPONSE_FLOW) return true
-            link = outer
-        }
-    }
+    private fun KtCallExpression.isBoundary(): Boolean = calleeExpression?.text in BOUNDARY_CALLS
 
     private fun KtThrowExpression.isCancellationRethrow(): Boolean {
         val name = (thrownExpression as? KtNameReferenceExpression)?.getReferencedName() ?: return false
@@ -121,8 +109,7 @@ class ThrowInRepository(config: Config) :
     private companion object {
         val SUFFIXES = listOf("Repository", "RepositoryImpl", "UseCase")
         val THROWING_CALLS = setOf("error", "check", "checkNotNull", "require", "requireNotNull")
-        val BOUNDARY_CALLS = setOf("safeRun", "safeResponseRun")
-        const val AS_RESPONSE_FLOW = "asResponseFlow"
+        val BOUNDARY_CALLS = setOf("safeRun", "safeResponseRun", "safeFlowRun")
         const val CANCELLATION_EXCEPTION = "CancellationException"
     }
 }

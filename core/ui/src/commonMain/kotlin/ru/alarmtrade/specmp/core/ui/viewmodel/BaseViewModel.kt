@@ -123,7 +123,7 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
     protected fun <T> Flow<T>.collectIntoState(reducer: S.(T) -> S): Job =
         bind(this) { value -> reduce { reducer(value) } }
 
-    /** После `Error` поток от `asResponseFlow` завершён; «Повторить» — [reload]. */
+    /** После `Error` поток от `safeFlowRun` завершён; «Повторить» — [reload]. */
     protected fun <T> Flow<Response<T>>.collectIntoState(onError: S.(Throwable) -> S, reducer: S.(T) -> S): Job =
         bind(this) { response ->
             when (response) {

@@ -14,8 +14,8 @@ import org.jetbrains.kotlin.psi.KtQualifiedExpression
 
 /**
  * `response.getOrThrow()` в прод-коде (docs/patterns.md, «Контракт результата»): ошибка `Response` снова становится
- * исключением мимо контракта. Ветвиться по `Response` — `when`/`onSuccess`/`onError`/`fold`/`map*`, значение
- * с запасным — `getOrNull()`/`getOrElse()`. Тесты исключены в detekt.yml.
+ * исключением мимо контракта. Ветвиться по `Response` — `when`/`onError`/`map*`, значение с запасным —
+ * `getValueIfSuccess()`. Тесты исключены в detekt.yml.
  *
  * Ресивер сверяется по типу (`Response` и подтипы), `kotlin.Result.getOrThrow()` не трогается. Требует type
  * resolution: в задачах detekt без классов правило молчит (как RedundantSafeRun).
@@ -36,7 +36,7 @@ class ResponseGetOrThrow(config: Config) :
             Finding(
                 Entity.from(expression),
                 "getOrThrow() на Response превращает ошибку в исключение: ветвитесь по Response " +
-                    "(when/onSuccess/onError/fold/map*) или берите getOrNull()/getOrElse() " +
+                    "(when/onError/map*) или берите getValueIfSuccess() " +
                     "(docs/patterns.md, «Контракт результата»).",
             ),
         )

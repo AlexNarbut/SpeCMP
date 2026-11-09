@@ -45,20 +45,21 @@ class ThrowInRepositoryTest {
     }
 
     @Test
-    fun `allows throwing inside safeRun, safeResponseRun, asResponseFlow chains and qualified check calls`() {
+    fun `allows throwing inside safeRun, safeResponseRun, safeFlowRun and qualified check calls`() {
         val code = """
             internal class AuthRepositoryImpl : AuthRepository {
                 override suspend fun send(): Response<String> = safeRun {
                     val token = client.token() ?: error("No token")
                     token.let { requireNotNull(it) }
                 }
-                override suspend fun pack(): Response<Pack> = safeResponseRun(log = false) {
+                override suspend fun pack(): Response<Pack> = safeResponseRun {
                     Response.Success(cached ?: error("empty"))
                 }
-                override fun observe(): Flow<Response<List<Event>>> = queries.all()
-                    .asFlow()
-                    .map { rows -> rows.map { row -> row.toEvent(action = row.action ?: error("unknown")) } }
-                    .asResponseFlow()
+                override suspend fun observe(): Flow<Response<List<Event>>> = safeFlowRun {
+                    source.events().map { rows ->
+                        rows.map { row -> row.toEvent(action = row.action ?: error("unknown")) }
+                    }
+                }
                 fun validate(input: Input): Boolean = validator.check(input)
             }
         """.trimIndent()

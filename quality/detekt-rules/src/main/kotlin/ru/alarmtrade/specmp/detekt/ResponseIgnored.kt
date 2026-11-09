@@ -19,8 +19,8 @@ import org.jetbrains.kotlin.psi.KtQualifiedExpression
  * `intent { }`), веткой `if` без `else`, `withContext(io) { repo.x() }` оператором, `x.also { … }`.
  *
  * Обработкой считается: значение используется (присваивание, `return`, аргумент, условие, `when`, expression-body,
- * результат лямбды не-`Unit`); цепочка оканчивается `onSuccess`/`onError` — решение
- * видно на месте (в том числе последней строкой лямбды обёртки: `withContext(io) { x.onError { } }`); оператор
+ * результат лямбды не-`Unit`); цепочка оканчивается `onError` — решение видно
+ * на месте (в том числе последней строкой лямбды обёртки: `withContext(io) { x.onError { } }`); оператор
  * `safeRun { }`/`safeResponseRun { }` — сознательный «поймать и проглотить» на границе (логирует сам).
  * «Огонь и забудь» — `.onError { logger.w(it) { … } }`.
  *
@@ -43,7 +43,7 @@ class ResponseIgnored(config: Config) :
             Finding(
                 Entity.from(outer),
                 "Результат Response отброшен: ошибка теряется молча. Обработайте её — " +
-                    "`.onError { logger.w(it) { … } }`, when/onSuccess, ошибка в state/эффект — или используйте " +
+                    "`.onError { logger.w(it) { … } }`, when, ошибка в state/эффект — или используйте " +
                     "значение (docs/patterns.md, «Контракт результата»).",
             ),
         )
@@ -72,7 +72,7 @@ class ResponseIgnored(config: Config) :
     }
 
     private companion object {
-        val HANDLED = setOf("onSuccess", "onError", "safeRun", "safeResponseRun")
+        val HANDLED = setOf("onError", "safeRun", "safeResponseRun")
         val RESPONSE = ClassId(FqName("ru.alarmtrade.specmp.core.common"), Name.identifier("Response"))
     }
 }

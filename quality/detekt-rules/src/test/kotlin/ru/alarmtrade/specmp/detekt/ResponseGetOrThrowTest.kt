@@ -22,7 +22,7 @@ class ResponseGetOrThrowTest {
             is Response.Success -> value
             is Response.Error -> throw exception
         }
-        fun <T> Response<T>.getOrNull(): T? = (this as? Response.Success)?.value
+        fun <T> Response<T>.getValueIfSuccess(): T? = (this as? Response.Success)?.value
 
         interface UserRepository {
             suspend fun user(id: String): Response<String>
@@ -47,7 +47,7 @@ class ResponseGetOrThrowTest {
     fun `does not report Result getOrThrow and other Response accessors`() {
         val code = prelude + "\n" + """
             class Sample(private val repository: UserRepository) {
-                suspend fun a(id: String): String? = repository.user(id).getOrNull()
+                suspend fun a(id: String): String? = repository.user(id).getValueIfSuccess()
                 fun b(result: Result<Int>): Int = result.getOrThrow()
                 fun c(): Int = runCatching { 1 }.getOrThrow()
             }

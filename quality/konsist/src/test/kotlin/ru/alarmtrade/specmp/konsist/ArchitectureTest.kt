@@ -195,7 +195,7 @@ class ArchitectureTest {
     @Test
     fun `repository implementation is covered by a test of its module`() {
         val testCodeByModule = Konsist.scopeFromProject().files
-            .filter { it.sourceSetName.endsWith("test", ignoreCase = true) }
+            .filter { it.isTestSource }
             .groupBy({ it.moduleName }, { it.codeWithoutHeaderCommentsAndStrings() })
         classes.filter { it.isRepositoryImplementation() }
             .assertTrue(
@@ -206,6 +206,36 @@ class ArchitectureTest {
             ) { impl ->
                 val reference = Regex("""\b${impl.name}\b""")
                 testCodeByModule[impl.containingFile.moduleName].orEmpty().any { reference.containsMatchIn(it) }
+            }
+    }
+
+    @Test
+    fun `core common and lce helpers have callers`() {
+        val usageFiles = Konsist.scopeFromProject().files
+            .filter { it.isCore || it.isFeature || it.moduleName in APP_MODULES }
+            .map { file ->
+                UsageFile(
+                    path = file.path,
+                    moduleName = file.moduleName,
+                    isTest = file.isTestSource,
+                    packageName = file.packagee?.name.orEmpty(),
+                    imports = file.imports.map { it.name }.toSet(),
+                    code = file.codeWithoutHeaderCommentsAndStrings(),
+                )
+            }
+        val message = "Публичная top-level функция/свойство core/common и core/ui/lce вызывается вне своего файла " +
+            "(production или тесты других модулей; собственные тесты модуля не считаются). Мёртвый хелпер удаляется " +
+            "вместе с его тестом. docs/patterns.md, «Core»"
+        val helperFiles = scope.files.filter { it.isSharedHelperFile }
+        helperFiles.flatMap { it.functions(includeNested = false, includeLocal = false) }
+            .filter { it.hasPublicOrDefaultModifier && !it.hasActualModifier }
+            .assertTrue(testName = "core-helper-usage", additionalMessage = message) {
+                usageFiles.references(it.name, it.containingFile)
+            }
+        helperFiles.flatMap { it.properties(includeNested = false) }
+            .filter { it.hasPublicOrDefaultModifier && !it.hasActualModifier }
+            .assertTrue(testName = "core-helper-usage", additionalMessage = message) {
+                usageFiles.references(it.name, it.containingFile)
             }
     }
 
@@ -669,6 +699,37 @@ private val APP_MODULES = setOf(
 private val KoFileDeclaration.isCore get() = moduleName.startsWith("core/")
 private val KoFileDeclaration.isFeature get() = moduleName.startsWith("feature/")
 private val KoFileDeclaration.isTestingModule get() = moduleName.endsWith("/testing")
+
+private val KoFileDeclaration.isTestSource get() = sourceSetName.endsWith("test", ignoreCase = true)
+
+private val KoFileDeclaration.isSharedHelperFile
+    get() = moduleName == "core/common" ||
+        (moduleName == "core/ui" && packagee?.name?.startsWith("$ROOT.core.ui.lce") == true)
+
+private class UsageFile(
+    val path: String,
+    val moduleName: String,
+    val isTest: Boolean,
+    val packageName: String,
+    val imports: Set<String>,
+    val code: String,
+)
+
+// Имя целым словом в коде без import, комментариев и строк, и файл видит хелпер (тот же пакет или import): иначе
+// общие имена (`isLoading`, `map`) засчитываются чужими объявлениями. Свой файл и тесты своего модуля — не в счёт.
+private fun List<UsageFile>.references(name: String, declaringFile: KoFileDeclaration): Boolean {
+    val reference = Regex("""\b${Regex.escape(name)}\b""")
+    val helperPackage = declaringFile.packagee?.name.orEmpty()
+    return any { file ->
+        file.path != declaringFile.path &&
+            !(file.isTest && file.moduleName == declaringFile.moduleName) &&
+            (
+                file.packageName == helperPackage || "$helperPackage.$name" in file.imports ||
+                    "$helperPackage.*" in file.imports
+                ) &&
+            reference.containsMatchIn(file.code)
+    }
+}
 
 private val projectRoot: File = generateSequence(File("").absoluteFile) { it.parentFile }
     .first { File(it, "settings.gradle.kts").isFile }
