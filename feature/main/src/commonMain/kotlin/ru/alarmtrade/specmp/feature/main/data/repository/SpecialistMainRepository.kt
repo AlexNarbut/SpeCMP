@@ -33,7 +33,7 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 
-class SpecialistMainRepository(
+internal class SpecialistMainRepository(
     private val appUpdatesInteractor: AppUpdatesInteractor,
     private val userInteractor: UserInteractor,
     private val accountRepository: AccountRepository,

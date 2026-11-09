@@ -23,7 +23,7 @@ import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 
-class SpecialistAdvancedMountRepository(
+internal class SpecialistAdvancedMountRepository(
     private val verificationInteractor: VerificationInteractor,
     private val chatInteractor: ChatInteractor,
     private val userInteractor: UserInteractor,

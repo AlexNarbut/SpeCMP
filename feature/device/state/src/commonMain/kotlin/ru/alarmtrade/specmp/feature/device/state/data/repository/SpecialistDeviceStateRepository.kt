@@ -34,7 +34,7 @@ import ru.alarmtrade.specmp.feature.device.state.domain.repository.DeviceStateRe
  * [DeviceStateRepository] над `BluetoothAlarmDeviceInteractor`: поток `getDeviceTelemetryStateFlowUseCase`
  * + `start/stopRequestingDeviceStateUseCase` (период 3 с задан в SDK) и `sendControlCommandUseCase`.
  */
-class SpecialistDeviceStateRepository(
+internal class SpecialistDeviceStateRepository(
     private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : DeviceStateRepository {
 

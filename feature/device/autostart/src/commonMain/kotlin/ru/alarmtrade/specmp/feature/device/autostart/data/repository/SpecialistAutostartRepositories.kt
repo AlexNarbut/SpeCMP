@@ -25,7 +25,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepo
  * [BypassLearningRepository] над `learnBypassFlowUseCase` (SDK сам пишет лог событий обучения на сервер).
  * Поток кончается на итоге или на первой ошибке SDK (`BypassLearningException`).
  */
-class SpecialistBypassLearningRepository(
+internal class SpecialistBypassLearningRepository(
     private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : BypassLearningRepository {
 
@@ -48,8 +48,9 @@ class SpecialistBypassLearningRepository(
 }
 
 /** [CloneRepository] над `makeCloneProcedureFlowUseCase` и `getAvailableCloneAttemptsUseCase`. */
-class SpecialistCloneRepository(private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor) :
-    CloneRepository {
+internal class SpecialistCloneRepository(
+    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
+) : CloneRepository {
 
     override suspend fun attempts(): Response<Int?> {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull() ?: return interactorUnavailable()

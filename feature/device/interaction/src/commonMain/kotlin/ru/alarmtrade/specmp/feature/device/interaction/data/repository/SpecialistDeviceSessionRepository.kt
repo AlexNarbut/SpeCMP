@@ -42,7 +42,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceS
  * Реализация [DeviceSessionRepository] над `bluetoothAlarmDeviceInteractor` — он работает с текущей
  * сессией SDK независимо от транспорта (BLE/USB). Интерактор резолвится лениво, как в соседних репозиториях.
  */
-class SpecialistDeviceSessionRepository(
+internal class SpecialistDeviceSessionRepository(
     private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
     private val appUpdatesInteractor: () -> AppUpdatesInteractor,
 ) : DeviceSessionRepository {

@@ -114,7 +114,7 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 
 ### core/specialist
 - Пакет: `ru.alarmtrade.specmp.core.specialist`
-- `specialistModule` — Koin-модуль инициализации `SpecialistApp`
+- `di/specialistModule` — Koin-модуль инициализации `SpecialistApp`
 - Регистрирует app-level SDK singleton и конкретные SDK interactors для feature-модулей
 - Содержит platform-specific сборку `AppDeviceInformation` для Specialist SDK
 - Связывает `AppVersionProvider` (`core/common`) с версией от платформы — её читают Specialist SDK и экраны

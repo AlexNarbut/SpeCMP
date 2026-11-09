@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.core.specialist
+package ru.alarmtrade.specmp.core.specialist.di
 
 import org.koin.core.module.Module
 import org.koin.dsl.module

@@ -10,14 +10,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import ru.alarmtrade.specmp.core.common.di.commonModule
-import ru.alarmtrade.specmp.core.lifecycle.appLifecycleModule
+import ru.alarmtrade.specmp.core.lifecycle.di.appLifecycleModule
 import ru.alarmtrade.specmp.core.localization.di.localizationModule
 import ru.alarmtrade.specmp.core.localization.prepareAppLocale
 import ru.alarmtrade.specmp.core.permissions.BindEffect
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.permissions.permissionsModule
 import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
-import ru.alarmtrade.specmp.core.specialist.specialistModules
+import ru.alarmtrade.specmp.core.specialist.di.specialistModules
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface

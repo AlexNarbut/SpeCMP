@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
  * [FirmwareRepository] над `deviceInformationInteractor`, `firmwareFilesInteractor` и `remoteFilesInteractor`
  * (скачивание файла версии); интеракторы — лениво.
  */
-class SpecialistFirmwareRepository(
+internal class SpecialistFirmwareRepository(
     private val deviceInformation: () -> DeviceInformationInteractor,
     private val firmwareFiles: () -> FirmwareFilesInteractor,
     private val files: () -> RemoteFilesInteractor,

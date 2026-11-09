@@ -12,7 +12,7 @@ import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 
-class SpecialistAuthStateRepository(private val authInteractor: AuthInteractor) : AuthStateRepository {
+internal class SpecialistAuthStateRepository(private val authInteractor: AuthInteractor) : AuthStateRepository {
 
     // Состояние сессии SDK держит в хранилище токенов: вход и выход меняют его сразу, без опроса.
     override fun observeIsLoggedIn(): Flow<Response<Boolean>> = flow {

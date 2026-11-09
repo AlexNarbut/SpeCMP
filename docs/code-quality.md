@@ -305,6 +305,11 @@ ViewModel через несколько composable, эффекты читают 
 | `feature-data-isolation` | фича не импортирует data другой фичи |
 | `layer-placement` | класс `*Repository` (реализация, `Specialist*Repository`) — в `data/repository`; `*DataSource` — `data/datasource`; `*Coordinator`/`*Controller` — интерфейс в `domain/service` |
 | `repository-in-domain` | интерфейс `*Repository` фичи — в `domain` |
+| `repository-impl` | класс `*Repository`/`*RepositoryImpl` реализует интерфейс, которым оканчивается его имя (`SpecialistFooRepository : FooRepository`) |
+| `data-visibility` | декларации верхнего уровня в `..data..` — `internal`/`private` |
+| `impl-visibility` | реализации — `*Impl` и классы `..data..` с супертипом `*Repository` (`Specialist*Repository`) — `internal`/`private` |
+| `koin-wiring` | реализацию (`*Impl`, класс `..data..` с супертипом `*Repository`) создаёт (`Foo(…)`, `::Foo`) только пакет `di` |
+| `koin-module` | Koin-модуль (свойство типа `Module` или `= module {…}`) — `val <name>Module` в пакете `di` |
 | `domain-model-purity` | `domain/model`: только `val`, read-only коллекции, без `@Serializable` |
 | `serializable-placement` | `@Serializable` — в `..data..`, `..navigation..`, у `NavKey` и типов аргументов маршрутов |
 | `composable-in-presentation` | `@Composable` фичи — только в `presentation` |
@@ -320,8 +325,7 @@ ViewModel через несколько composable, эффекты читают 
 | `view-model-constructor` | у наследника `BaseViewModel` не больше 12 параметров первичного конструктора |
 | `no-service-locator` | Koin как сервис-локатор — `org.koin.core.component.*` (`KoinComponent`, `inject`, `get`), `org.koin.core.context.*` (`GlobalContext`, `startKoin`, `loadKoinModules`), `org.koin.mp.KoinPlatformTools`/`KoinPlatform`, `org.koin.java.KoinJavaComponent`, `org.koin.compose.getKoin`, `org.koin.core.Koin`, `org.koin.android.ext.android.*` — импортом (включая алиас) или полным именем — только пакеты `..di..`, composition roots и обёртки (`composeApp`, `flasherApp`, `androidApp`, `desktopApp`, `flasherAndroidApp`, `flasherDesktopApp`) и файлы с Android-компонентом, который создаёт система (`Activity`/`Application`/`Service`/`BroadcastReceiver`/`Worker`/`Initializer`…). Нарушение — декларация верхнего уровня (подавление — `@Suppress` на ней), импорт со звёздочкой и неиспользованный импорт — сам импорт. `koinInject` в composable — не это правило (этап 4) |
 
-Остальные правила BabySteps (видимость `*Impl`, `koin-module`,
-`mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
+Остальные правила BabySteps (`mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
 Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
 Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.
 
@@ -378,6 +382,7 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | Конструктор ViewModel — не больше 12 параметров | Konsist `view-model-constructor` | ✅ |
 | Импорт `androidx.lifecycle.ViewModel` — только `core/ui` (база) | detekt `ForbiddenImport` | ✅ |
 | Koin как сервис-локатор — только `di`, composition roots и обёртки, Android-компоненты | Konsist `no-service-locator` | ✅ |
+| `..data..` и реализации (`*Impl`, `Specialist*Repository`) — `internal`; реализацию создаёт только Koin-модуль; Koin-модули — `val *Module` в `di` | Konsist `data-visibility`, `impl-visibility`, `repository-impl`, `koin-wiring`, `koin-module` | ✅ |
 | `MutableStateFlow` меняется только `update { }` | detekt `StateFlowValueMutation` | ✅ |
 | Граница с бросающим кодом — `safeRun`, не `runCatching`; лог — Kermit, не `println` | detekt `ForbiddenRunCatching`, `ForbiddenPrintln` | ✅ |
 | Направления импортов между модулями, пакет = модуль, слои domain/data/presentation | Konsist `module-direction`, `module-package`, `domain-isolation`, `presentation-isolation`, `data-isolation`, `feature-data-isolation`; graph-assert | ✅ |

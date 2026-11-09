@@ -40,7 +40,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountReposit
  * [FastMountRepository] над `FastMountInteractor` SDK. Интеракторы — лениво: недоступный на платформе не должен
  * ронять создание репозитория.
  */
-class SpecialistFastMountRepository(
+internal class SpecialistFastMountRepository(
     private val fastMount: () -> FastMountInteractor,
     private val configurations: () -> ConfigurationInteractor,
     private val deviceInformation: () -> DeviceInformationInteractor,

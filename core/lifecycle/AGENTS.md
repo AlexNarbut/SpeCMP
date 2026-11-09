@@ -3,7 +3,7 @@
 
 # core/lifecycle
 
-- Область: жизненный цикл **приложения** для слоя ViewModel — `AppLifecycle` (`events: Flow<AppLifecycleEvent>`), события `FOREGROUND` / `BACKGROUND`, Koin-модуль `appLifecycleModule` (подключён в `composeApp/App.kt`).
+- Область: жизненный цикл **приложения** для слоя ViewModel — `AppLifecycle` (`events: Flow<AppLifecycleEvent>`), события `FOREGROUND` / `BACKGROUND`, Koin-модуль `di/appLifecycleModule` (подключён в `composeApp/App.kt` и `flasherApp/FlasherApp.kt`).
 - Платформы: Android — `ProcessLifecycleOwner` (`ON_START`/`ON_STOP`, стартовое состояние не эмитится; зависимость `androidx.lifecycle:lifecycle-process` только в `androidMain`); iOS — `UIApplicationWillEnterForeground`/`DidEnterBackground`; desktop — пока пустой поток.
 - Только смена состояния всего приложения (настройки, другое приложение, блокировка). Перекрытие экрана другим экраном приложения — жизненный цикл навигации (UI), сюда не кладём.
 - `AppForegroundProvider` (`foregroundReturns: Flow<Unit>` — только переходы фон → передний план) — порт для ViewModel и репозиториев: передаётся в конструктор, реализация `AppLifecycleForegroundProvider` поверх `AppLifecycle`, Koin `single` в `appLifecycleModule`.

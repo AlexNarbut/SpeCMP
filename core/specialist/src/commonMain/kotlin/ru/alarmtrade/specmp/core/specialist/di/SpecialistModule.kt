@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.core.specialist
+package ru.alarmtrade.specmp.core.specialist.di
 
 import org.koin.dsl.module
 import ru.alarmtrade.common.core.configuration.CommonConfigurator
@@ -13,6 +13,11 @@ import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
+import ru.alarmtrade.specmp.core.specialist.SilentLocationProvider
+import ru.alarmtrade.specmp.core.specialist.SpecialistConfigurationLanguageStore
+import ru.alarmtrade.specmp.core.specialist.SpecialistDeviceInformationProvider
+import ru.alarmtrade.specmp.core.specialist.SpecialistInitializer
+import ru.alarmtrade.specmp.core.specialist.createSpecialistDeviceInformation
 
 /** [AppVersionProvider] добавляет [specialistModules]: версию знает только платформа. */
 val specialistModule = module {

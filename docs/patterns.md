@@ -480,6 +480,11 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
 
 **Правила:**
 
+- **Видимость и имя реализации.** Всё в пакетах `..data..` — `internal`/`private` (Konsist `data-visibility`): наружу
+  модуля видны только контракты domain. Реализация репозитория называется по источнику — `Specialist<Интерфейс>`
+  (`SpecialistLoginRepository : LoginRepository`), реализует свой интерфейс (Konsist `repository-impl`) и `internal`
+  (`impl-visibility`, как и любой `*Impl`). Создаёт её только Koin-модуль фичи (`koin-wiring`), см. «Внедрение
+  зависимостей».
 - ВСЕ suspend-функции в репозиториях ДОЛЖНЫ возвращать `Response<T>`.
 - НИКОГДА не бросать исключения из репозиториев (detekt `ThrowInRepository`: в файлах `*Repository`/`*UseCase`
   `throw`, `error()`, `check`/`require*`, `!!` — только внутри `safeRun { }`/`safeResponseRun { }` или звена цепочки,
@@ -1103,14 +1108,14 @@ val text = when (error) {
 ```kotlin
 // composeApp/.../App.kt
 KoinApplication(application = {
-    modules(commonModule, specialistModule, loginModule)
+    modules(commonModule, *specialistModules(versionName, versionCode).toTypedArray(), loginModule)
 }) {
     AppTheme(onThemeChange) { AppNavigation() }
 }
 
 // DI-модуль в feature/*/di/
 val myFeatureModule = module {
-    singleOf(::MyRepositoryImpl) bind MyRepository::class
+    singleOf(::SpecialistMyRepository) bind MyRepository::class
     viewModelOf(::MyViewModel)
 }
 
@@ -1122,6 +1127,10 @@ val dep = koinInject<MyDependency>()
 **Правила:**
 
 - `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
+- **Koin-модуль — `val <name>Module` в пакете `di`** (Konsist `koin-module`), включая `core/*`
+  (`core/lifecycle/di/AppLifecycleModule.kt`, `core/specialist/di/SpecialistModule.kt`).
+- **Реализацию (`*Impl`, `Specialist*Repository`) создаёт только Koin-модуль** (Konsist `koin-wiring`): `Foo(…)` или
+  `::Foo` вне пакета `di` — ручная сборка графа в обход DI; остальной код получает абстракцию конструктором.
 - **Один Koin-модуль на gradle-модуль, в его корневом пакете `di/`** (`feature/<name>/…/<name>/di/<Name>Module.kt`). Не заводить `ui/di`, `data/di` внутри модуля: ViewModel и репозитории одного gradle-модуля регистрируются вместе. Отдельный UI-модуль Koin бывает только у отдельного gradle-модуля `<name>-ui`.
 - App-level инфраструктура и SDK-контейнеры регистрируются в `core/*`/`composeApp`,
   не в фиче — см. раздел «Core».

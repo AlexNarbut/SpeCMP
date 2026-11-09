@@ -28,7 +28,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
  * [DeviceSettingsRepository] над `alarmDeviceSettingsInteractor` (сессии настроек по `SettingsPath`) и
  * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво.
  */
-class SpecialistDeviceSettingsRepository(
+internal class SpecialistDeviceSettingsRepository(
     private val settingsInteractor: () -> AlarmDeviceSettingsInteractor,
     private val alarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : DeviceSettingsRepository {

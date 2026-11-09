@@ -32,7 +32,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceC
  * ([resolveOrNull]): недоступный на платформе транспорт не роняет создание репозитория;
  * попытка подключения по нему возвращает [Response.Error].
  */
-class SpecialistDeviceConnectionRepository(
+internal class SpecialistDeviceConnectionRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
     private val usbConnectorInteractor: () -> UsbConnectorInteractor,
     private val serialConnectorInteractor: () -> SerialConnectorInteractor,

@@ -22,7 +22,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarg
  * [FirmwareUpdateRepository] над `bluetoothAlarmDeviceInteractor`: основная программа и Bluetooth-модуль обновляются
  * разными потоками SDK. Файл по `url` SDK скачивает сам — это стадия [FirmwareUpdateProgress.Preparing].
  */
-class SpecialistFirmwareUpdateRepository(
+internal class SpecialistFirmwareUpdateRepository(
     private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
 ) : FirmwareUpdateRepository {
 

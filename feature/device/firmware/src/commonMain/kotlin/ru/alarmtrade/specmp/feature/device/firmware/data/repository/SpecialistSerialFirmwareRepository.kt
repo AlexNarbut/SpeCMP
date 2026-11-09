@@ -31,7 +31,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirm
  * [SerialFirmwareRepository] над `bluetoothAlarmDeviceInteractor.updateSerialDeviceFirmwareFlowUseCase` (обновление
  * `.frm` в текущей serial-сессии SDK). Интерактор — лениво: на iOS COM-порт в SDK не реализован.
  */
-class SpecialistSerialFirmwareRepository(private val alarmDevice: () -> BluetoothAlarmDeviceInteractor) :
+internal class SpecialistSerialFirmwareRepository(private val alarmDevice: () -> BluetoothAlarmDeviceInteractor) :
     SerialFirmwareRepository {
 
     override suspend fun readFileInfo(path: String): Response<FrmFileInfo> = safeResponseRun {

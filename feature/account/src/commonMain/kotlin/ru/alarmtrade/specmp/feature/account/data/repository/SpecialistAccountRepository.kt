@@ -8,7 +8,7 @@ import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
 import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
 
-class SpecialistAccountRepository(private val userInteractor: UserInteractor) : AccountRepository {
+internal class SpecialistAccountRepository(private val userInteractor: UserInteractor) : AccountRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 

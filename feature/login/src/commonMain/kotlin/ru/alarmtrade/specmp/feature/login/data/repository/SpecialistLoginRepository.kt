@@ -18,7 +18,7 @@ import ru.alarmtrade.specmp.feature.login.domain.model.ResetPasswordCredentials
 import ru.alarmtrade.specmp.feature.login.domain.model.SignUpCredentials
 import ru.alarmtrade.specmp.feature.login.domain.repository.LoginRepository
 
-class SpecialistLoginRepository(
+internal class SpecialistLoginRepository(
     private val authInteractor: AuthInteractor,
     private val specialistInitializer: SpecialistInitializer,
 ) : LoginRepository {

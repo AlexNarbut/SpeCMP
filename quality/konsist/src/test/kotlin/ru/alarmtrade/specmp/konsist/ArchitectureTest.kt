@@ -6,8 +6,10 @@ import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.declaration.KoFunctionDeclaration
 import com.lemonappdev.konsist.api.declaration.KoInterfaceDeclaration
+import com.lemonappdev.konsist.api.declaration.KoParentDeclaration
 import com.lemonappdev.konsist.api.declaration.KoPropertyDeclaration
 import com.lemonappdev.konsist.api.declaration.combined.KoClassAndInterfaceAndObjectDeclaration
+import com.lemonappdev.konsist.api.provider.modifier.KoVisibilityModifierProvider
 import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 import org.junit.jupiter.api.Test
@@ -137,6 +139,77 @@ class ArchitectureTest {
                 role = "репозитория (interface *Repository, интерфейсы domain/repository)",
                 docs = "docs/patterns.md, «Контракты репозиториев»",
             )
+    }
+
+    @Test
+    fun `data declarations are not public`() {
+        libraryFiles.filter { it.inLayer("data") }
+            .flatMap { it.declarations(includeNested = false, includeLocal = false) }
+            .filterIsInstance<KoVisibilityModifierProvider>()
+            .assertTrue(
+                testName = "data-visibility",
+                additionalMessage = "Декларации верхнего уровня в ..data.. — internal/private: наружу модуля видны " +
+                    "только контракты domain, привязка — в Koin-модуле. docs/patterns.md, «Data — репозитории»",
+            ) { it.hasInternalModifier || it.hasPrivateModifier }
+    }
+
+    @Test
+    fun `implementations are not public`() {
+        classes.filter { it.isImplementation() && (it.containingFile.isCore || it.containingFile.isFeature) }
+            .assertTrue(
+                testName = "impl-visibility",
+                additionalMessage = "Реализация (*Impl, класс в ..data.., реализующий *Repository, — " +
+                    "Specialist*Repository) — internal: снаружи видна только абстракция, привязка — в Koin-модуле. " +
+                    "docs/patterns.md, «Data — репозитории»",
+            ) { it.hasInternalModifier || it.hasPrivateModifier }
+    }
+
+    @Test
+    fun `repository implementation implements its repository`() {
+        classes.filter { it.name.removeSuffix(IMPL).endsWith(REPOSITORY) }
+            .assertTrue(
+                testName = "repository-impl",
+                additionalMessage = "Класс *Repository реализует свой интерфейс: имя = <источник><Интерфейс> " +
+                    "(SpecialistFooRepository : FooRepository) или FooRepositoryImpl : FooRepository. " +
+                    "docs/patterns.md, «Data — репозитории»",
+            ) { klass ->
+                klass.parents().map { it.simpleName() }
+                    .any { it.endsWith(REPOSITORY) && klass.name.removeSuffix(IMPL).endsWith(it) }
+            }
+    }
+
+    @Test
+    fun `implementations are constructed only in Koin modules`() {
+        val implementations = classes.filter { it.isImplementation() }.map { it.name }.toSet()
+        scope.files.filterNot { it.inLayer("di") }
+            .flatMap { file ->
+                file.classesAndInterfacesAndObjects(includeNested = false) +
+                    file.functions(includeNested = false, includeLocal = false) +
+                    file.properties(includeNested = false)
+            }
+            .assertFalse(
+                testName = "koin-wiring",
+                additionalMessage =
+                    "Реализацию (*Impl, Specialist*Repository) создаёт только Koin-модуль (пакет di): " +
+                        "Foo(…) или ::Foo вне di — ручная сборка графа в обход DI. Остальной код получает абстракцию " +
+                        "конструктором. docs/patterns.md, «Внедрение зависимостей»",
+            ) { declaration ->
+                val code = declaration.text.stripCommentsAndStrings()
+                (CONSTRUCTOR_CALL.findAll(code) + CONSTRUCTOR_REFERENCE.findAll(code))
+                    .map { it.groupValues[1] }
+                    .any { it.endsWith(IMPL) || it in implementations }
+            }
+    }
+
+    @Test
+    fun `Koin modules are declared in di and named Module`() {
+        scope.files.flatMap { it.properties(includeNested = false) }
+            .filter { it.type?.name == "Module" || KOIN_MODULE_INITIALIZER.containsMatchIn(it.text) }
+            .assertTrue(
+                testName = "koin-module",
+                additionalMessage = "Koin-модуль — val <name>Module в пакете di. docs/patterns.md, " +
+                    "«Внедрение зависимостей»",
+            ) { it.name.endsWith("Module") && it.resideInPackage("..di..") }
     }
 
     @Test
@@ -356,6 +429,21 @@ class ArchitectureTest {
 }
 
 private const val REPOSITORY = "Repository"
+private const val IMPL = "Impl"
+
+private val KOIN_MODULE_INITIALIZER = Regex("""=\s*(lazyModule|module)\s*[({]""")
+
+// Вызов конструктора или ссылка на него; объявление `class Foo(` — не создание.
+private val CONSTRUCTOR_CALL = Regex("""(?<!\bclass )\b([A-Z]\w*)\s*\(""")
+private val CONSTRUCTOR_REFERENCE = Regex("""::([A-Z]\w*)\b""")
+
+// Имя супертипа у Konsist — как написано: с пакетом и аргументами типа.
+private fun KoParentDeclaration.simpleName(): String =
+    name.substringBefore('<').substringBefore('(').trim().substringAfterLast('.')
+
+// Р8: реализации репозиториев названы по источнику (Specialist*Repository), поэтому ищем по супертипу.
+private fun KoClassDeclaration.isImplementation(): Boolean = name.endsWith(IMPL) ||
+    (resideInPackage("..data..") && parents().any { it.simpleName().endsWith(REPOSITORY) })
 
 // Composition roots и платформенные обёртки: имя модуля Konsist — путь от корня репозитория до src/.
 private val APP_MODULES = setOf(

@@ -32,7 +32,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceSca
  * недоступный на платформе транспорт (BLE на desktop, USB и COM на iOS) даёт пустой список,
  * а не роняет создание графа/репозитория.
  */
-class SpecialistDeviceScanRepository(
+internal class SpecialistDeviceScanRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
     private val usbConnectorInteractor: () -> UsbConnectorInteractor,
     private val serialConnectorInteractor: () -> SerialConnectorInteractor,

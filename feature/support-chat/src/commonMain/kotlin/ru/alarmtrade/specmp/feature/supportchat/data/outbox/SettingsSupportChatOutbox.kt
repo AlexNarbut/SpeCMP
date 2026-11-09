@@ -22,7 +22,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOut
  * интенты экрана). Очередь мала (единицы сообщений), поэтому полная перезапись
  * списка проще и надёжнее диффов. Диспетчер выбирает вызывающий.
  */
-class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOutbox {
+internal class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOutbox {
 
     private val mutex = Mutex()
     private val json = Json { ignoreUnknownKeys = true }

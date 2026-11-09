@@ -17,7 +17,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationCar
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 
 /** [CloudConfigurationsRepository] над `configurationInteractor`. Интерактор — лениво. */
-class SpecialistCloudConfigurationsRepository(private val interactor: () -> ConfigurationInteractor) :
+internal class SpecialistCloudConfigurationsRepository(private val interactor: () -> ConfigurationInteractor) :
     CloudConfigurationsRepository {
 
     override suspend fun byCar(carId: Int, deviceName: String): Response<List<CloudConfigurationSummary>> {

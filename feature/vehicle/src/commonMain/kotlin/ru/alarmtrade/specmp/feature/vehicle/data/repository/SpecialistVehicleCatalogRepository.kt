@@ -36,7 +36,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepo
  * модели блока, группы не поддерживаются). Подсистемы модели блока — `deviceInformationInteractor`.
  * Интеракторы — лениво: недоступный на платформе не роняет создание репозитория.
  */
-class SpecialistVehicleCatalogRepository(
+internal class SpecialistVehicleCatalogRepository(
     private val cars: () -> CarsInteractor,
     private val configurations: () -> ConfigurationInteractor,
     private val deviceInformation: () -> DeviceInformationInteractor,

@@ -13,7 +13,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SystemsOrd
 private const val KEY_SYSTEMS_ORDER = "systems_order"
 
 /** [FirmwareArchivePreferences] в именованном хранилище приложения (`AppSettingsFactory`). */
-class SettingsFirmwareArchivePreferences(private val settings: Settings) : FirmwareArchivePreferences {
+internal class SettingsFirmwareArchivePreferences(private val settings: Settings) : FirmwareArchivePreferences {
 
     // Неизвестное (из будущей версии) значение — по умолчанию, а не падение.
     private val stored = MutableStateFlow(

@@ -12,7 +12,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 private const val KEY_TREE_WIDTH_DP = "tree_width_dp"
 
 /** [DeviceSettingsPreferences] в именованном хранилище приложения (`AppSettingsFactory`). */
-class SettingsDeviceSettingsPreferences(private val settings: Settings) : DeviceSettingsPreferences {
+internal class SettingsDeviceSettingsPreferences(private val settings: Settings) : DeviceSettingsPreferences {
 
     private val stored = MutableStateFlow(safeRun { settings.getIntOrNull(KEY_TREE_WIDTH_DP) })
     override val treeWidthDp: StateFlow<Response<Int?>> = stored.asStateFlow()

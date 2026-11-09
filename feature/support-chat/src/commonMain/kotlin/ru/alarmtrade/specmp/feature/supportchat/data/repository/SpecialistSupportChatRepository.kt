@@ -26,7 +26,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFi
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatUnavailableException
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
-class SpecialistSupportChatRepository(
+internal class SpecialistSupportChatRepository(
     private val chatInteractor: ChatInteractor,
     private val accountRepository: AccountRepository,
 ) : SupportChatRepository {

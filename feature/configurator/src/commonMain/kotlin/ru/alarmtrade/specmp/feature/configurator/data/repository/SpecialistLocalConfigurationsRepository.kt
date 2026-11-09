@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
  * SDK создаёт запись с заводскими настройками модели, настройки источника копируются в неё следом; не скопировались —
  * запись удаляется. Страницы SDK идут по id по возрастанию — читаются все и сортируются здесь.
  */
-class SpecialistLocalConfigurationsRepository(
+internal class SpecialistLocalConfigurationsRepository(
     private val interactor: () -> LocalSettingsConfigurationInteractor,
     private val settings: DeviceSettingsRepository,
 ) : LocalConfigurationsRepository {
