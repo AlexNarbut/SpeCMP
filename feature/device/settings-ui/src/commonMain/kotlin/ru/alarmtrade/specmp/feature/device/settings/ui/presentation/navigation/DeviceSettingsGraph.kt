@@ -199,7 +199,7 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
     LaunchedEffect(slots.filePicker) { slots.filePicker.results.collect(viewModel::onFilePicked) }
     // Каждый эффект — в своей корутине: тост «Сохранено» с «Открыть» висит до 10 с, и выход по «назад» (тоже эффект)
     // не должен ждать, пока он закроется. Тосты всё равно идут по очереди — их упорядочивает snackbarHostState.
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         scope.launch { handleEffect(effect, viewModel, slots, snackbarHostState) }
     }
 

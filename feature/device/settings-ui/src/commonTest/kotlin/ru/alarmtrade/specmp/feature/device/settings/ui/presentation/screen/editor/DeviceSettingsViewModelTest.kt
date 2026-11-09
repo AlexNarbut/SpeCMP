@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -69,6 +70,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
@@ -163,7 +165,6 @@ class DeviceSettingsViewModelTest {
             preferences,
             cars,
             session,
-            backgroundScope,
             dispatchers,
         )
             .also { viewModels += it }
@@ -201,7 +202,7 @@ class DeviceSettingsViewModelTest {
         repository.snapshotTree = tree.replace(shock.copy(value = SettingValue.Switch(true)))
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onLoadRequest()
         assertEquals(SettingsDialog.LoadSources, vm.state.value.dialog)
@@ -410,7 +411,7 @@ class DeviceSettingsViewModelTest {
     fun `write saves to the device, resets changes and reports the count`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         vm.onValueChange(11, SettingValue.Switch(true))
         settle()
 
@@ -442,7 +443,7 @@ class DeviceSettingsViewModelTest {
     fun `exit with changes asks for confirmation, without changes exits`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onExitRequest()
         runCurrent()
@@ -585,7 +586,7 @@ class DeviceSettingsViewModelTest {
     fun `factory reset asks for confirmation, resets the unit and reads the menu again`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         vm.onValueChange(11, SettingValue.Switch(true))
         settle()
 
@@ -607,7 +608,7 @@ class DeviceSettingsViewModelTest {
     fun `repeated taps do not repeat a reset, a write with exit or a copy`() = test {
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onResetRequest()
         vm.onResetConfirm()
@@ -654,7 +655,7 @@ class DeviceSettingsViewModelTest {
         sessionRepository.device = singleCanDevice
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onSettingClick(61)
         assertNull(vm.state.value.editing)
@@ -670,7 +671,7 @@ class DeviceSettingsViewModelTest {
         sessionRepository.device = singleCanDevice
         val vm = viewModel()
         val effects = mutableListOf<DeviceSettingsEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         vm.onValueChange(11, SettingValue.Switch(true))
         settle()
 
@@ -690,6 +691,119 @@ class DeviceSettingsViewModelTest {
         settle()
 
         assertEquals(listOf(12), vm.state.value.searchHits.map { it.node.id })
+    }
+
+    @Test
+    fun `typed query reaches the state together with its hits`() = test {
+        val vm = viewModel()
+        vm.onSearchQueryChange("3.2.4")
+        runCurrent()
+
+        assertEquals("", vm.state.value.searchQuery)
+        assertTrue(vm.state.value.searchHits.isEmpty())
+
+        settle()
+        assertEquals("3.2.4", vm.state.value.searchQuery)
+        assertEquals(listOf(12), vm.state.value.searchHits.map { it.node.id })
+    }
+
+    @Test
+    fun `configuration is read once and does not follow the unit connection`() = test {
+        val vm = viewModel(SettingsSource.LocalConfiguration(3, "DX-9X", "Моя"))
+        assertEquals(tree, vm.root())
+
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        settle()
+        sessionRepository.link.value = DeviceLinkState.READY
+        settle()
+
+        assertEquals(listOf(true), repository.openReloads)
+        assertNull(vm.state.value.header)
+    }
+
+    @Test
+    fun `configuration to write is compared once after the first read, not after a reconnect`() = test {
+        val owned = SettingsSource.LocalConfiguration(5, "DX-9X", "Нива")
+        val vm = viewModel(options = SettingsEditorOptions(loadOnOpen = owned))
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+
+        sessionRepository.link.value = DeviceLinkState.DISCONNECTED
+        settle()
+        sessionRepository.link.value = DeviceLinkState.READY
+        settle()
+
+        assertNull(vm.state.value.diff)
+        assertEquals(listOf<SettingsSource>(owned), repository.snapshotSources)
+        assertEquals(1, repository.discarded.size)
+    }
+
+    @Test
+    fun `dismissed compare discards its snapshot`() = test {
+        val vm = viewModel()
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+
+        vm.onDiffDismiss()
+        settle()
+
+        assertNull(vm.state.value.diff)
+        assertEquals(1, repository.discarded.size)
+    }
+
+    @Test
+    fun `failed car caption is not requested again on every change`() = test {
+        cars.summaryFails = true
+        val vm = viewModel()
+        vm.onValueChange(11, SettingValue.Switch(true))
+        settle()
+        vm.onValueChange(12, SettingValue.Integer(60))
+        settle()
+
+        assertEquals(listOf(17), cars.summaryCalls)
+        assertTrue(vm.state.value.cars.isEmpty())
+    }
+
+    @Test
+    fun `export keeps saving until the system save answers, then discards the snapshot`() = test {
+        val vm = viewModel(SettingsSource.RemoteConfiguration(7, "DX-9X", "Облачная"))
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
+        vm.onValueChange(12, SettingValue.Integer(60))
+        settle()
+
+        vm.onExportRequest()
+        settle()
+
+        val export = assertIs<DeviceSettingsEffect.ExportFile>(effects.last())
+        assertEquals("snapshot.dxs", export.path)
+        assertTrue(vm.state.value.isSaving)
+        assertTrue(repository.discarded.isEmpty())
+
+        vm.onFileExported(SettingsFileSaveResult.Saved("Облачная.dxs"))
+        settle()
+
+        assertFalse(vm.state.value.isSaving)
+        assertEquals(1, repository.discarded.size)
+        assertEquals(DeviceSettingsEffect.FileSaved("Облачная.dxs"), effects.last())
+        // Облачная конфигурация не сохраняет себя: после «как…» правки считаются сохранёнными.
+        assertTrue(vm.state.value.changedIds.isEmpty())
+    }
+
+    @Test
+    fun `cleared editor closes its session and discards leftover snapshots`() = test {
+        val vm = viewModel()
+        vm.onLoadSourcePick(LoadSourceKind.DEFAULTS)
+        settle()
+        assertIs<DiffState.Ready>(vm.state.value.diff)
+
+        assertTrue(SettingsSource.Device !in repository.closed)
+
+        ViewModelStore().apply { put("settings", vm) }.clear()
+        settle()
+
+        assertEquals(SettingsSource.Device, repository.closed.last())
+        assertEquals(1, repository.discarded.size)
     }
 }
 
@@ -730,6 +844,10 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
     override suspend fun close(source: SettingsSource): Response<Unit> {
         closed += source
         return Response.Success(Unit)
+    }
+
+    override fun discardSession(source: SettingsSource) {
+        closed += source
     }
 
     override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> {
@@ -854,6 +972,8 @@ private class FakeCars : VehicleCatalogRepository {
     val rio = CarSummary(21, "Kia", "Rio", "IV", 2017..2020, "7001", null)
     val solaris = CarSummary(22, "Hyundai", "Solaris", "II", 2017..2020, "7002", null)
     var fail = false
+    val summaryCalls = mutableListOf<Int>()
+    var summaryFails = false
 
     override suspend fun findByCanCode(
         canCode: String,
@@ -867,7 +987,10 @@ private class FakeCars : VehicleCatalogRepository {
     }
 
     override suspend fun summary(carId: Int): Response<CarSummary> =
-        listOf(polo, rio, solaris).firstOrNull { it.id == carId }?.let { Response.Success(it) }
+        listOf(polo, rio, solaris).also { summaryCalls += carId }.takeUnless { summaryFails }.orEmpty().firstOrNull {
+            it.id ==
+                carId
+        }?.let { Response.Success(it) }
             ?: Response.Error(IllegalStateException("no car"))
 
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> = unused()

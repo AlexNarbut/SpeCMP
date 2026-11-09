@@ -30,8 +30,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 
 /**
  * [DeviceSettingsRepository] над `alarmDeviceSettingsInteractor` (сессии настроек по `SettingsPath`) и
- * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво; [appScope] — удаление снимков,
- * переживающее экран.
+ * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво; [appScope] — закрытие сессий и удаление
+ * снимков, переживающие экран.
  */
 class SpecialistDeviceSettingsRepository(
     private val settingsInteractor: () -> AlarmDeviceSettingsInteractor,
@@ -53,6 +53,10 @@ class SpecialistDeviceSettingsRepository(
         return interactor.closeDeviceSettingsUseCase
             .execute(CloseDeviceSettingsRequest(source.toPath(), saveChanges = false))
             .toResponse()
+    }
+
+    override fun discardSession(source: SettingsSource) {
+        appScope.launch(dispatchers.io) { close(source) }
     }
 
     override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> {

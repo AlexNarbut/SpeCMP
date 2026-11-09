@@ -20,6 +20,9 @@ interface DeviceSettingsRepository {
     /** Закрыть сессию без сохранения правок. */
     suspend fun close(source: SettingsSource): Response<Unit>
 
+    /** [close] в фоне приложения: переживает экран, который его вызвал (закрытие редактора). */
+    fun discardSession(source: SettingsSource)
+
     /** Изменить значение настройки в сессии; ответ — настройка с новым значением. */
     suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting>
 

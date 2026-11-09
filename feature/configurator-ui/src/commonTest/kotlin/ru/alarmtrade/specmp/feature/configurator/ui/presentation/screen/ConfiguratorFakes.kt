@@ -170,6 +170,8 @@ internal class FakeSettingsRepository : DeviceSettingsRepository {
 
     override suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File> = snapshot
 
+    override fun discardSession(source: SettingsSource) = Unit
+
     override fun discardSnapshot(snapshot: SettingsSource.File) {
         discarded += snapshot
     }

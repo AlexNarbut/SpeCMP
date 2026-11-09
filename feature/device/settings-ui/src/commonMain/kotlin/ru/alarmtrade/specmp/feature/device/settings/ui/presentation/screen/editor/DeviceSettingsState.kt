@@ -55,6 +55,21 @@ internal data class DeviceSettingsState(
     val isApplying: Boolean = false,
     /** Сохраняем (в конфигурацию, файл, «Мои») — блокирующий прогресс. */
     val isSaving: Boolean = false,
+    /** Набираемый запрос: в [searchQuery] попадает вместе с результатом (после debounce), а не на каждый символ. */
+    val searchInput: String = "",
+    /** «Как было», «загружено» и правило «изменено» — см. [SettingsChangeTracker]. */
+    val changes: SettingsChangeTracker = SettingsChangeTracker(),
+    /** Конфигурация, которую загрузить сразу после первого чтения меню блока («Записать в блок» из конфигуратора). */
+    val pendingLoad: SettingsSource? = null,
+    /** Снимок для «Что изменится» (временный файл); после загрузки или отмены — удаляется. */
+    val previewSnapshot: SettingsSource.File? = null,
+    /** Снимок, отданный системному сохранению файла (до ответа `onFileExported`). */
+    val pendingExport: PendingExport? = null,
+    /**
+     * `carId`, подпись к которым уже запрашивалась в этом чтении меню (в том числе неудачно — без сети запрос не
+     * повторяется на каждую правку).
+     */
+    val requestedCarIds: Set<Int> = emptySet(),
 ) {
     val changedCount: Int get() = changedIds.size
 
@@ -119,6 +134,9 @@ internal data class SaveForm(
     val deviceName: String,
     val exitAfter: Boolean = false,
 )
+
+/** Снимок [snapshot] у системного сохранения файла; [exitAfter] — выйти из редактора после сохранения. */
+internal data class PendingExport(val snapshot: SettingsSource.File, val exitAfter: Boolean)
 
 /** Шапка: модель и номер блока; [singleCanCode] — код единой CAN-прошивки, если она есть. */
 internal data class SettingsHeader(val deviceName: String, val deviceId: Long, val singleCanCode: String?)
@@ -193,34 +211,6 @@ internal sealed interface SaveRetry {
     data class Mine(val form: SaveForm) : SaveRetry
     data object File : SaveRetry
     data class Source(val exitAfter: Boolean) : SaveRetry
-}
-
-/** One-shot события экрана. */
-internal sealed interface DeviceSettingsEffect {
-    data class Written(val count: Int) : DeviceSettingsEffect
-    data object SetValueFailed : DeviceSettingsEffect
-    data object ResetDone : DeviceSettingsEffect
-    data class Exit(val target: ExitTarget) : DeviceSettingsEffect
-
-    /** Конфигурация подставлена в редактор: [count] изменений (0 — настройки уже совпадали). */
-    data class Loaded(val count: Int) : DeviceSettingsEffect
-
-    /** Открыть системный выбор файла настроек. */
-    data object PickFile : DeviceSettingsEffect
-
-    /** Отдать готовый файл [path] пользователю через системное сохранение под именем [fileName]. */
-    data class ExportFile(val path: String, val fileName: String) : DeviceSettingsEffect
-
-    data class FileSaved(val name: String) : DeviceSettingsEffect
-
-    /** Сохранено в «Мои конфигурации» — тост с «Открыть». */
-    data class SavedToMine(val configuration: SettingsSource.LocalConfiguration) : DeviceSettingsEffect
-
-    /** Правки сохранены в источник (конфигурацию, файл). */
-    data object Saved : DeviceSettingsEffect
-
-    /** «Записать в блок»: открыть редактор блока с загрузкой [source]. */
-    data class WriteToDevice(val source: SettingsSource) : DeviceSettingsEffect
 }
 
 /** Куда уходим из настроек: назад (корень монтажа) или в «Проверку прошивок» (единая CAN-прошивка). */
