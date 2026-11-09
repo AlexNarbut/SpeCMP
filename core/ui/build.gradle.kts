@@ -14,8 +14,6 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
-            // Жизненный цикл приложения для LegacyBaseViewModel (onAppForeground / onAppBackground)
-            implementation(project(":core:lifecycle"))
             // Сохранённая тема приложения (AppThemeStore)
             implementation(libs.multiplatformSettings)
 
@@ -51,11 +49,6 @@ kotlin {
 
             // Material Kolor
             implementation(libs.materialKolor)
-
-            // DI
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
         }
 
         androidMain.dependencies {

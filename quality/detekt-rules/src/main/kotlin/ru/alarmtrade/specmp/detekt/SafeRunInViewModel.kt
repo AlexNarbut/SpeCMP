@@ -24,7 +24,7 @@ class SafeRunInViewModel(config: Config) :
         super.visitCallExpression(expression)
         val callee = expression.calleeExpression?.text
         if (callee != SAFE_RUN && callee != SAFE_RESPONSE_RUN) return
-        if (expression.parents.any { it is KtClass && it.isViewModel() && !it.isLegacyViewModel() }) {
+        if (expression.parents.any { it is KtClass && it.isViewModel() }) {
             report(Finding(Entity.from(expression), "$callee $MESSAGE"))
         }
     }

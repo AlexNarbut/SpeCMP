@@ -15,8 +15,7 @@ specmp:
   StateFlowValueMutation:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
-  # Правила ViewModel (docs/patterns.md, «BaseViewModel»): прежние базы LegacyBaseViewModel/LegacyBaseDeviceViewModel
-  # и их прямые наследники пропускаются (quality/detekt-rules, LegacyViewModels.kt) до подэтапа 2n.
+  # Правила ViewModel (docs/patterns.md, «BaseViewModel») — без исключений для наследников.
   # Корутины ViewModel — только intent/safeLaunch; сами они живут в BaseViewModel.
   ViewModelScopeLaunch:
     active: true
@@ -72,6 +71,7 @@ complexity:
   LongMethod:
     active: true
     allowedLines: 120
+  # Наборы колбэков экрана (*Actions) длинные по построению; порог конструктора ViewModel — Konsist view-model-constructor.
   LongParameterList:
     active: false
   CyclomaticComplexMethod:

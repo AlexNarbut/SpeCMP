@@ -28,7 +28,7 @@ class ViewModelFileContents(config: Config) :
     override fun visitKtFile(file: KtFile) {
         super.visitKtFile(file)
         val declarations = file.declarations
-        if (declarations.none { it is KtClass && it.isViewModel() && !it.isLegacyViewModel() }) return
+        if (declarations.none { it is KtClass && it.isViewModel() }) return
         declarations
             .filterIsInstance<KtNamedDeclaration>()
             .filter { it is KtClassOrObject || it is KtTypeAlias }

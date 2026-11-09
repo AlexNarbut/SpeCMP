@@ -116,14 +116,4 @@ class ViewModelFileContentsTest {
 
         assertEquals(0, rule.lint(code).size)
     }
-
-    @Test
-    fun `skips a file whose ViewModel is on a legacy base`() {
-        val code = """
-            class FooViewModel : LegacyBaseViewModel()
-            data class FooState(val count: Int = 0)
-        """.trimIndent()
-
-        assertEquals(0, rule.lint(code).size)
-    }
 }

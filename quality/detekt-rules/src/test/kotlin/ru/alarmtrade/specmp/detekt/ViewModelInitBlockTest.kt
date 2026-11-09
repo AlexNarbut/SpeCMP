@@ -94,18 +94,4 @@ class ViewModelInitBlockTest {
 
         assertEquals(0, rule.lint(code).size)
     }
-
-    @Test
-    fun `skips legacy bases and their direct subclasses`() {
-        val code = """
-            abstract class LegacyBaseViewModel : ViewModel() {
-                init { observe() }
-            }
-            class FooViewModel : LegacyBaseDeviceViewModel(session) {
-                init { load() }
-            }
-        """.trimIndent()
-
-        assertEquals(0, rule.lint(code).size)
-    }
 }

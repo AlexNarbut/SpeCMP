@@ -12,8 +12,8 @@
 - Предпочитать `commonMain`; `expect`/`actual` — только для по-настоящему платформо-специфичного кода.
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
 - **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
-- **ViewModel — только через `BaseViewModel`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`), корутины — через `safeLaunch` — см. «BaseViewModel».
-- **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`; до переноса VM — `LegacyBaseDeviceViewModel` там же): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
+- **ViewModel — только через `BaseViewModel<S, E>`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`): наружу `state`, `sideEffect` и интенты `onXxx()`, state меняется только `reduce`, эффекты — `postSideEffect`, корутины — `intent`/`safeLaunch`/`launchReplacing`, стартовая работа — `onStart()` — см. «BaseViewModel».
+- **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
@@ -26,7 +26,7 @@
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
 - **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()`: в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
-- **Сессия экрана — `init {}` / `onCleared()` per-entry VM**, без `DisposableEffect`, полей-`Job` и `var`-флагов, которые пишутся с разных диспетчеров — см. «Жизненный цикл ViewModel и сессии».
+- **Время жизни работы VM задаёт место запуска**: `collectIntoState` — пока экран подписан, `onStart()` — один раз, `launchReplacing(key)`/`launchOnDevice(key)` — всю жизнь VM, дольше экрана — репозиторий со скоупом приложения; без `init {}`, `DisposableEffect`, полей-`Job` и `var` — см. «Жизненный цикл ViewModel и сессии».
 - **У каждого флага загрузки — гарантированный сброс; ошибка первой загрузки ≠ пустой экран; «нечего делать» ≠ `Success`** — см. «Корректность state».
 - **Код проходит `./gradlew spotlessCheck` и `./gradlew detektCheck` без замечаний** (строка ≤ 120, без `runCatching`/`!!`/`println`, generic `catch` только на границах) — см. «Что проверяют анализаторы (Spotless + detekt)» и [`code-quality.md`](code-quality.md).
 
@@ -76,23 +76,19 @@
   `MutableStateFlow` / `StateFlow` — горячие, для них эти операторы бессмысленны:
 
 ```kotlin
-// ✅ Холодный Flow (combine) — нужен flowOn + stateIn
-val state: StateFlow<DashboardState> = combine(
-    _profile, _transactions
-) { profile, transactions ->
-    DashboardState(profile, transactions)
-}
+// ✅ Холодный Flow (combine) — flowOn на upstream; во VM — привязка к state базы
+combine(select { systems }, select { query }, ::systemRows)
     .flowOn(dispatchers.default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), DashboardState())
+    .collectIntoState { content -> copy(content = content) }
 
-// ✅ MutableStateFlow — уже горячий, просто asStateFlow()
+// ✅ MutableStateFlow держателя состояния (репозиторий) — уже горячий, наружу asStateFlow()
 private val _state = MutableStateFlow(MyState())
 val state: StateFlow<MyState> = _state.asStateFlow()
 
 // ❌ Неправильно — flowOn/stateIn на горячем StateFlow
 val state = _state
     .flowOn(dispatchers.default)   // бессмысленно
-    .stateIn(viewModelScope, ...)  // лишнее
+    .stateIn(scope, ...)           // лишнее
 ```
 
 ## Диспетчеры (AppDispatchers)
@@ -121,24 +117,23 @@ val state = _state
 
 **Что не должно работать на Main:** вызовы SDK/сети/BLE/БД (включая `suspend`-методы SDK, которые
 «выглядят» асинхронными — внутри может быть блокирующий вызов), обход больших деревьев и сортировка/
-фильтрация списков. Производные списки экрана (фильтр по поиску, сортировка) считаются в `combine`
-перед `.flowOn(dispatchers.default)` и кладутся в state готовыми полями (`MineState.withLists()`),
-а не `get()`-свойствами, которые пересчитываются на Main при каждом чтении из Compose.
+фильтрация больших списков. Производные списки экрана (фильтр по поиску, сортировка) кладутся в state готовыми
+полями, а не `get()`-свойствами, которые пересчитываются на Main при каждом чтении из Compose: небольшие — в том же
+`reduce`, что и их входы (`MineState.withLists()`), тяжёлые — `combine(select { … }).flowOn(dispatchers.default)
+.collectIntoState { … }` (`FirmwareSystemsViewModel`).
 
 **Хардкод запрещён** — иначе нельзя подменить в тестах:
 
 ```kotlin
 // ✅ Правильно — через инжектированный AppDispatchers
-class MyViewModel(private val dispatchers: AppDispatchers) : BaseViewModel() {
-    val state = coldFlow
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), initial)
+class MyViewModel(private val dispatchers: AppDispatchers) : BaseViewModel<MyState, Nothing>(MyState()) {
+    override suspend fun onStart() {
+        coldFlow.flowOn(dispatchers.default).collectIntoState { value -> copy(value = value) }
+    }
 }
 
 // ❌ Неправильно — хардкод
-val state = coldFlow
-    .flowOn(Dispatchers.Default)
-    .stateIn(...)
+coldFlow.flowOn(Dispatchers.Default).collectIntoState { … }
 
 // Тесты: подмена на UnconfinedTestDispatcher()
 val testDispatchers = AppDispatchers(
@@ -289,7 +284,7 @@ internal sealed interface SourceKey {
 | Модуль | Что даёт фичам |
 |--------|----------------|
 | `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища) |
-| `core/ui` | `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel`, `sideEffectFlow`/`collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
+| `core/ui` | `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel<S, E>`, `collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
 | `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`SpecialistAppVersionProvider`, device info) |
 | `core/network` | HTTP-движки Ktor (для SDK и Coil), `NetworkMonitor` |
 | `core/localization` | `AppLocale`, чтение/применение локали |
@@ -520,7 +515,7 @@ override fun observeChatAvailability(): Flow<Response<Boolean>> = flow {
 
 - **ViewModel зон авторизации живут одну сессию**: `AuthStateNavGraph` оборачивает и авторизованную,
   и неавторизованную зону в `ViewModelScope(name, session)` (`core/ui`), поэтому каждый вход/выход
-  получает новые VM — их загрузка при старте (`launchOnFirstStart`) выполняется заново, формы входа и
+  получает новые VM — их загрузка при старте (`onStart()`) выполняется заново, формы входа и
   регистрации пустые. Сбрасывать state VM «на логаут» вручную (`reset()` из `DisposableEffect`) не
   нужно; своё хранилище VM для зоны, переживающей смену аккаунта, не заводить (`docs/navigation.md`).
 
@@ -574,77 +569,152 @@ presentation/screen/<screen>/
 
 ### BaseViewModel
 
-> **Миграция (этап 2).** Новая база — `BaseViewModel<S, E>(initialState)` (`state`/`sideEffect`, `onStart()`,
-> `reduce`, `postSideEffect`, `intent`, `launchReplacing`/`cancelLaunched`, `collectIntoState`, `select`, `reload`);
-> на ней действуют правила detekt `ViewModel*`/`SafeRunInViewModel` и Konsist `view-model*`. Описанное ниже — прежняя
-> база, переименованная в `LegacyBaseViewModel` (и `LegacyBaseDeviceViewModel` в `device/presentation-core`; новая база блока — `BaseDeviceViewModel<S, E>` там же): VM переносятся
-> по подэтапам, после чего раздел переписывается под новую базу. Возвраты приложения на передний план для новых VM —
-> порт `AppForegroundProvider` (`core/lifecycle`) в конструкторе, а не `onAppForeground()`.
+Все ViewModel фич наследуются от `BaseViewModel<S, E>` (`core/ui`, пакет `ru.alarmtrade.specmp.core.ui.viewmodel`), а
+не от androidx `ViewModel` напрямую — импорт `androidx.lifecycle.ViewModel` вне `core/ui` запрещён detekt
+(`ForbiddenImport`). VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>` (`feature/device/presentation-core`,
+см. ниже). `S` — `XxxState`, `E` — `XxxEffect`/`XxxSideEffect` или `Nothing` (detekt `ViewModelContractNames`).
 
-**Все ViewModel фич наследуются от `BaseViewModel`** (`core/ui`, пакет
-`ru.alarmtrade.specmp.core.ui.viewmodel`), а не от androidx `ViewModel` напрямую — импорт
-`androidx.lifecycle.ViewModel` вне `core/ui` запрещён detekt (`ForbiddenImport`). Что даёт:
+| Член | Что делает |
+|---|---|
+| `val state: StateFlow<S>` | единственный state экрана: `stateIn(WhileSubscribed(5 s))` поверх приватного `MutableStateFlow`; первая подписка запускает `onStart()` |
+| `val sideEffect: SharedFlow<E>` | one-shot эффекты (`replay = 0`, буфер 16, `DROP_OLDEST`); экран без эффектов — `E = Nothing` |
+| `protected open suspend fun onStart()` | стартовая работа вместо `init`: один раз за жизнь VM, при первой подписке UI на `state`, отдельной корутиной (цепочку state не держит) |
+| `protected val currentState: S` | текущее значение state для чтения в интентах |
+| `protected fun reduce(transform: S.() -> S)` | единственный способ изменить state (атомарный `update`) |
+| `protected fun postSideEffect(effect: E)` | эффект в `sideEffect` |
+| `protected fun intent(block): Job` / `safeLaunch(block)` / `safeLaunch(context, block)` | запуск корутины с `CoroutineExceptionHandler` базы (необработанное исключение — в лог, не падение) |
+| `protected fun <T> Flow<T>.collectIntoState(reducer: S.(T) -> S): Job` | привязка потока к state: каждое значение — через `reduce`; собирается, только пока экран подписан на `state` (с тем же запасом 5 с), и перезапускается при возврате |
+| `protected fun <T> Flow<Response<T>>.collectIntoState(onError, reducer): Job` | то же для `Flow<Response<T>>`; `onError` обязателен (без него вызов не компилируется — перегрузка `@Deprecated(ERROR)`) |
+| `protected fun <T> select(selector: S.() -> T): Flow<T>` | часть state как вход подписки (`distinctUntilChanged`): `select { query }.flatMapLatest { … }.collectIntoState { … }` |
+| `protected fun reload()` | переподписывает все привязки `collectIntoState` («Повторить» для реактивных источников) |
+| `protected fun launchReplacing(key, context, block): Job` / `cancelLaunched(key)` | одна корутина на ключ, живёт с VM (не с подпиской): новый запуск отменяет прежний с тем же ключом; замена полю `var job: Job?` |
+| `protected suspend fun repeatOnSubscription(block)` | работа без state на время подписки экрана (сброс разового состояния при возврате, поток событий → `postSideEffect`) |
+| `protected suspend fun executeWithProceedLock(needSkipAnother = true, block)` | взаимоисключение под общим mutex VM: `true` — дубль пропускается (двойной клик), `false` — выполняется следом; от отмены не защищает |
+| `protected val logger` | Kermit-логгер с тегом по имени класса; свой `Logger.withTag` не создавать |
 
-- **`safeLaunch { }`** (есть перегрузка с `CoroutineContext`) — вместо `viewModelScope.launch`:
-  в контекст добавлен `CoroutineExceptionHandler`, логирующий необработанные исключения.
-  `viewModelScope` напрямую используется только для `stateIn`.
-- **`logger`** (protected, тег = имя класса) — свой `Logger.withTag(...)` во VM не создавать.
-- **`executeWithProceedLock { }`** — взаимоисключение операций под общим для VM mutex'ом:
-  по умолчанию пропускает вызов, пока выполняется предыдущий (защита от дублей);
-  с `needSkipAnother = false` — сериализует (дожидается и выполняет следом).
-  От отмены он НЕ защищает — block живёт в корутине вызывающего.
+Пример — `AppSettingsViewModel` (`feature/app-settings`):
 
-**Время жизни эффекта = место, где он живёт.** Куда положить запуск работы — определяется
-требуемым временем жизни эффекта:
+```kotlin
+internal class AppSettingsViewModel(
+    private val localeStore: AppLocaleStore,
+    private val restarter: AppRestarter,
+    private val configurationLanguages: ConfigurationLanguageStore,
+    private val dispatchers: AppDispatchers,
+) : BaseViewModel<AppSettingsState, Nothing>(AppSettingsState(current = localeStore.current())) {
 
-- **Эффект живёт ровно столько, сколько screen/VM** → `init {}` во VM честен. Примеры: лог
-  «открыт экран», старт подписки, которую надо убить вместе с VM (`viewModelScope` сделает сам).
-  Повторный запуск при пересоздании VM — не баг, а согласованность: новый инстанс = новая жизнь.
-- **Эффект привязан к подписке UI на state (init-стадия экрана)** → `launchOnFirstStart { … }` на
-  цепочке state — см. «Запуск работы на старте экрана».
-- **Эффект должен пережить экран / выполниться один раз за сессию процесса** → выносим из VM:
-  VM не может это гарантировать (пересоздание при навигации, process death). Место — app-scoped
-  singleton (репозиторий/контроллер/use-case) с идемпотентным `start()` (guard «уже запущен»:
-  `if (job != null) return`), владеющий собственным `CoroutineScope`. Пример в проекте:
-  наблюдение сессии в `feature/auth-state` — `AuthStateRepository` зарегистрирован как Koin
-  single, его `observeIsLoggedIn()` собирает app-level `AuthStateViewModel` в composition root,
-  а не VM отдельного экрана.
-- Эмит one-shot эффектов (навигация/снекбар) из `init` запрещён отдельно
-  (см. «One-shot события»).
+    override suspend fun onStart() {
+        val language = withContext(dispatchers.io) { configurationLanguages.current() }
+        reduce { copy(configurationLanguage = language) }
+    }
+
+    fun onLocaleSelect(locale: AppLocale) {
+        reduce { copy(selected = locale) }                 // UI-флаги — поля state, не отдельные MutableStateFlow
+    }
+
+    fun onConfigurationLanguageSelect(language: ConfigurationLanguage) {
+        intent { executeWithProceedLock(needSkipAnother = false) { saveConfigurationLanguage(language) } }
+    }
+}
+```
+
+Правила (все с проверкой, [`code-quality.md`](code-quality.md), «Правило → проверка»):
+
+- **Публичный API — только `state`, `sideEffect` и интенты** (detekt `ViewModelPublicApi`). Интент — `fun onXxx(...)`
+  с блочным телом и результатом `Unit`, не `suspend`: у `fun onSave() = intent { }` выведен `Job`, поэтому
+  `fun onSave() { intent { … } }`. Нельзя: публичные `val`/`var` (включая параметры конструктора), функции-запросы
+  (`fun onBackRequest(): Boolean`) — решение VM отдаёт полем state или эффектом (`onBack()` ставит диалог или шлёт
+  `Close`). `internal` считается публичным, `override` не проверяются.
+- **State — один, и всё состояние VM — в нём.** Своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`mutableStateOf`
+  у VM нет (Konsist `view-model-owns-no-flows`): вход подписки (запрос поиска, фильтр, выбранный элемент) — поле state +
+  `select { }`; «Повторить» подписки — `reload()`, загрузки — перезапуск того же `launchReplacing(key)`.
+- **Нет `var`-свойств и изменяемых коллекций** (detekt `ViewModelMutableProperty`, включая `private`/`lateinit`,
+  вложенные классы и конструктор): служебное между интентами (фаза процесса, номер попытки, снимок для сравнения) —
+  поле state; корутина «перезапустить/отменить» — `launchReplacing(key)`/`cancelLaunched(key)`.
+- **Без `init { }`** (detekt `ViewModelInitBlock`) — стартовая работа в `onStart()`, синхронный посев — в начальном
+  state (`BaseViewModel(initialState)`, функция от параметров конструктора: `VehicleSelectRequest.initialState()`).
+- **Корутины — `intent`/`safeLaunch`/`launchReplacing`**, не `viewModelScope.launch`/`async`/`flow.launchIn(viewModelScope)`
+  (detekt `ViewModelScopeLaunch`).
+- **`safeRun`/`safeResponseRun` во VM нет** (detekt `SafeRunInViewModel`): бросающий код оборачивает репозиторий, VM
+  ветвится по `Response`.
+- **Производные поля считаются в том же `reduce`, что и их входы** (`copy(order = order).withLists()`), иначе на кадр
+  state расходится сам с собой. Чистые переходы state больших VM — в файлах рядом (`*Transitions.kt`, `*Machine.kt`),
+  они тестируются без VM.
+- **Файл VM содержит только VM** (detekt `ViewModelFileContents`, см. «Файлы экрана»); private-хелперы — вложенными
+  private-типами или top-level функциями в отдельном файле.
+- **Конструктор — не больше 12 параметров** (Konsist `view-model-constructor`): разросшуюся VM делим по поведению.
+
+#### Зависимости ViewModel
+
+Параметры конструктора VM (и аргументы их дженериков) — только из разрешающего списка (Konsist
+`view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
+(аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (до переноса main-safety в репозитории),
+`AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`;
+Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data, типы SDK, `Flow`, `CoroutineScope`,
+функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
+
+#### `BaseDeviceViewModel<S, E>`
+
+`BaseDeviceViewModel(deviceSession, initialState)` (`feature/device/presentation-core`) добавляет работу с блоком:
+`connectedDevice`/`connectedDeviceName` (потоки для `collectIntoState`), `currentDevice` (снимок), `launchOnDevice { }`
+(без связи не стартует, при обрыве отменяется) и `launchOnDevice(key) { }` (то же с заменой по ключу, отмена —
+`cancelLaunched(key)`), `onEachDeviceReady { }`/`onDeviceLost { }` — из `onStart()`, живут с VM. Свои
+`deviceSession.state.map { … Ready … }` не писать. Пример — `CloneViewModel` (`feature/device/autostart`):
+
+```kotlin
+override suspend fun onStart() {
+    onEachDeviceReady(::onDeviceReady)                      // на каждое (пере)подключение
+    onDeviceLost(::onConnectionLost)                        // процесс уже отменён — вернуть экран на старт
+    pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CloneDialog.Pin } })
+        .collectIntoState { lock -> withPinLock(lock) }
+}
+
+fun onExitConfirm() {
+    if (currentState.locked) return
+    cancelLaunched(PROCEDURE)
+    reduce { copy(phase = ClonePhase.Start(), dialog = null) }
+}
+
+private fun run(pinTries: Int = 0) {
+    launchOnDevice(PROCEDURE) {                             // процесс живёт с VM, а не с подпиской экрана
+        reduce { copy(phase = ClonePhase.Running(CloneStage.PREPARING)) }
+        repository.run().transformWhile { … }.collect { event -> reduce { … } }
+    }
+}
+```
 
 ### Жизненный цикл ViewModel и сессии
 
-Каждый `NavDisplay` подключает `rememberViewModelStoreNavEntryDecorator()` (см.
-`docs/navigation.md`), поэтому `koinViewModel()` отдаёт **per-entry** инстанс: VM живёт ровно
-столько, сколько запись бэкстека. Новый вход на экран = новый инстанс = чистое состояние.
+Каждый `NavDisplay` подключает `rememberViewModelStoreNavEntryDecorator()` (см. `docs/navigation.md`), поэтому
+`koinViewModel()` отдаёт **per-entry** инстанс: VM живёт ровно столько, сколько запись бэкстека. Новый вход на экран =
+новый инстанс = чистое состояние.
 
-- **Сессия экрана** (подписка на сокет, открытие чата) открывается в `init {}` и закрывается в
-  `onCleared()`. Не нужны: `DisposableEffect` в nav-графе, методы `onScreenOpened()`/
-  `onScreenDisposed()`, ручной сброс `_state` при входе, поля-`Job` для «текущей сессии».
-- **Работа, переживающая экран** (в том числе из `onCleared()`, когда `viewModelScope` уже отменён), —
-  в репозитории/сервисе со скоупом приложения (`get(appScopeQualifier)` из `core:common`); VM зовёт его
-  обычный (не `suspend`) метод. `CoroutineScope` в конструктор VM не передаётся (`view-model-dependencies`).
-  Пример — `DeviceSettingsRepository.discardSnapshot`.
-- **`var`-поля VM не пишутся с разных диспетчеров.** Коллектор на `dispatchers.io`, который
-  пишет `var job`/`var flag`, а main — те же поля из интентов, — гонка (потерянная отмена, два
-  параллельных цикла). Изменяемое состояние — в `MutableStateFlow` (`update {}`) или сериализация
-  через `executeWithProceedLock`; остальные поля main-confined.
-- **Одно поле `Job` — одна роль.** Поле, в котором по очереди живут «переподключение» и
-  «закрытие сокета», молча отменяет одну операцию другой. Лучше, чтобы поля-`Job` не было вовсе.
-- **Самодельные барьеры** («флаг `rerunRequested` + `while`», «`if (busy) return`») не пишутся —
-  есть `executeWithProceedLock` (`needSkipAnother = true` — пропустить дубль, `false` —
-  выполнить следом).
-- **Зависимости — в конструктор, не параметром интента.** `onDownload(item, saver)`, где `saver`
-  приходит из UI, прячет зависимость VM от DI и тестов; платформенный порт передаётся через
-  конструктор (`parametersOf` из `composeApp`).
-- **`WhileSubscribed` — только когда останавливать безопасно.** Для поллинга — да. Для сессии
-  (сокет) — нет: `collectAsStateWithLifecycle` + `WhileSubscribed(5.seconds)` погасит соединение
-  через 5 секунд после блокировки экрана. Время жизни сессии = время жизни VM.
-- **Не открывать/закрывать сессию в `onStart`/`onCompletion` потока.** `Flow.onStart` выполняется
-  **до** подписки на upstream — hot-событие без replay, опубликованное во время открытия,
-  потеряется. `onCompletion` при отмене вызывается в отменённом контексте — suspend-`close()`
-  сразу бросит `CancellationException` (нужен `withContext(NonCancellable)`). Порядок «сначала
-  подписка, потом открытие» явно задаётся в `init {}`.
+**Время жизни работы = место, где она живёт:**
+
+| Сколько должна жить работа | Где | Пример |
+|---|---|---|
+| Пока экран подписан на state (поллинг, подписка на источник, «свежесть» при возврате) | `collectIntoState` / `safeLaunch { repeatOnSubscription { … } }` в `onStart` | поллинг чата в `MainScreenViewModel`, отсчёт PIN `lockedFor(...)` |
+| Один раз за жизнь VM (первичная загрузка) | тело `onStart()` | `MainScreenViewModel.initialRefresh()` |
+| Всю жизнь VM, с повтором/заменой (загрузка с «Повторить», процесс, сессия) | `launchReplacing(key)` из `onStart`/интента | `CloudListViewModel.load()`, сессия `SupportChatScreenViewModel` |
+| Работа с блоком, отменяемая обрывом связи | `launchOnDevice(key)` | процесс `CloneViewModel`, `BypassLearningViewModel` |
+| Дольше экрана (в т.ч. из `onCleared()`) | репозиторий/сервис со скоупом приложения (`get(appScopeQualifier)`), VM зовёт его обычный (не `suspend`) метод | `DeviceSettingsRepository.discardSession(source)` |
+
+- **Процесс не зависит от подписки на state.** Прошивка, клонирование, обучение, сессия чата идут в `launchReplacing`/
+  `launchOnDevice`, а не в `collectIntoState`: иначе через 5 с после ухода приложения в фон (`WhileSubscribed`)
+  процесс отменится. VM-тест на это — «экран без подписчика 10 s — прогресс продолжается».
+- **`CoroutineScope` в конструктор VM не передаётся** (`view-model-dependencies`): работа, переживающая экран, — в
+  репозитории.
+- **Не нужны:** `DisposableEffect` в nav-графе, методы `onScreenOpened()`/`onScreenDisposed()`, ручной сброс state при
+  входе, поля-`Job`, самодельные барьеры («флаг + `while`», «`if (busy) return`» вне state) — есть `launchReplacing` и
+  `executeWithProceedLock`. «Процесс уже идёт» — по фазе в state (`if (phase is Running) return`).
+- **Возврат приложения на передний план** — порт `AppForegroundProvider` (`core/lifecycle`) в конструкторе:
+  `foregroundProvider.foregroundReturns` собирается из `onStart` (`ScanDeviceViewModel`). Compose-эффекты
+  (`LifecycleResumeEffect`) для решений VM не используются.
+- **Зависимости — в конструктор, не параметром интента.** Платформенный порт передаётся через конструктор
+  (`parametersOf` из `composeApp`).
+- **Не открывать/закрывать сессию в `onStart`/`onCompletion` потока.** `Flow.onStart` выполняется **до** подписки на
+  upstream — hot-событие без replay, опубликованное во время открытия, потеряется; `onCompletion` при отмене вызывается
+  в отменённом контексте — suspend-`close()` сразу бросит `CancellationException`. Закрытие при уходе — `finally` в
+  корутине сессии или метод репозитория со скоупом приложения.
 
 ### LCEState — ViewModel + Compose
 
@@ -658,257 +728,98 @@ presentation/screen/<screen>/
   `state.dismissError()`. Своих `Loading/Ready/Failed`-иерархий в фичах не заводим.
 
 ```kotlin
-// ViewModel
-class UserViewModel(
-    private val repository: UserRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
-    private val _state = MutableStateFlow<LCEState<User, ProfileError>>(LCEState.None)
-    val state: StateFlow<LCEState<User, ProfileError>> = _state.asStateFlow()
+// CloudListViewModel (feature/configurator-ui): загрузка живёт с VM, «Повторить» перезапускает тот же ключ
+override suspend fun onStart() {
+    load()
+}
 
-    fun load(id: String) {
-        safeLaunch {
-            _state.update { LCEState.Loading }
-            val response = withContext(dispatchers.io) { repository.fetchUser(id) }
-            _state.update { response.asLCEState(ProfileError::from) }
-        }
+fun onRetry() {
+    load()
+}
+
+private fun load() {
+    launchReplacing(LOAD_KEY) {
+        reduce { copy(list = LCEState.Loading).withLists() }
+        val response = withContext(dispatchers.io) { cloud.byCar(carId, deviceName) }
+        reduce { copy(list = response.asLCEState(ConfiguratorError::from)).withLists() }
     }
 }
 
-// Compose UI — исчерпывающий when, ошибка → локализованная строка
-when (val user = state.value) {
+// Compose UI (схема) — исчерпывающий when, ошибка → локализованная строка, «Повторить» → интент
+when (val list = state.list) {
     LCEState.None, LCEState.Loading -> CmpCircularProgressIndicator()
-    is LCEState.Content -> UserCard(user.content)
-    is LCEState.Error -> ErrorBox(user.error.text(Strings.string.profile_common_error_load))
+    is LCEState.Content -> CloudList(list.content)
+    is LCEState.Error -> ErrorBox(list.error, onRetry = viewModel::onRetry)
 }
 ```
 
-### State экрана: множественные LCEState
+### State экрана: несколько источников
 
-Когда экрану нужно несколько независимых асинхронных данных, каждое оборачивается в отдельный `LCEState` внутри
-общего State (тип ошибки — один на фичу):
+Когда экрану нужно несколько независимых асинхронных данных, каждое — отдельный `LCEState` внутри общего State
+(тип ошибки — один на фичу), а загрузки идут параллельно:
 
-```kotlin
-@Immutable
-data class DashboardState(
-    val profile: LCEState<ProfileContent, DashboardError> = LCEState.None,
-    val transactions: LCEState<List<Transaction>, DashboardError> = LCEState.None,
-)
-```
-
-#### Императивный подход — загрузка по запросу
-
-Подходит когда данные грузятся **по запросу** (one-shot). Каждое поле грузится в своём `safeLaunch` — параллельно:
+- **Загрузка по запросу** — каждое поле своей корутиной (`safeLaunch`/`launchReplacing`) или `async` внутри одной
+  (`MainScreenViewModel.initialRefresh()`: профиль, функции и коммерческие данные — `awaitAll`, скелетон снимается в
+  `finally`). Зависимый запрос — последовательно в одной корутине (`currentState.profile.content?.let { … }`).
+- **Реактивные источники** — привязка в `onStart`; входы из state — `select`, маппинг — до `flowOn(dispatchers.default)`:
 
 ```kotlin
-fun loadData() {
-    safeLaunch {
-        _state.update { it.copy(profile = LCEState.Loading) }
-        val response = withContext(dispatchers.io) { profileRepo.getProfile() }
-        _state.update { it.copy(profile = response.asLCEState(DashboardError::from).mapContent { p -> p.toContent() }) }
-    }
-    safeLaunch {
-        _state.update { it.copy(transactions = LCEState.Loading) }
-        val response = withContext(dispatchers.io) { transactionsRepo.getTransactions() }
-        _state.update { it.copy(transactions = response.asLCEState(DashboardError::from)) }
-    }
+// FirmwareSystemsViewModel (feature/device/firmware): строки списка пересчитываются в фоне из полей state
+override suspend fun onStart() {
+    combine(select { systems }, select { query }, select { expanded }, select { order }, ::systemRows)
+        .flowOn(dispatchers.default)
+        .collectIntoState { content -> copy(content = content) }
+    executeWithProceedLock { load() }
 }
 ```
 
-Когда второй запрос зависит от результата первого — последовательно в одном `safeLaunch`
-(`_state.value.profile.content?.let { … }`).
+- Независимые источники, которые пишут в разные поля, — отдельные привязки, а не один `combine`.
+- Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять `.onStart { emit(<initial>) }`,
+  иначе `combine` не эмитит, пока не ответят все источники.
+- **Поток, отдающий state целиком (`{ mapped -> mapped }`), — единственный источник state.** Иначе привязка
+  копирует только свои поля (`copy(content = content)`), чтобы следующее значение не затёрло UI-флаги и свежий ввод.
+- **Поллинг не держать ручными `Job` во VM.** Репозиторий отдаёт `Flow<Response<T>>` (см. «Data — репозитории»), VM
+  привязывает его к state — база сама остановит сбор без подписчика и запустит заново при возврате.
+- Свой `stateIn(…)` во VM не нужен: state даёт база. `SharingStarted.Lazily`/`Eagerly` — только для app-scoped
+  держателей состояния (репозиториев), не для экранов.
 
-#### Реактивный подход — combine / zip + stateIn
+### Запуск работы на старте экрана — `onStart`, а не `LaunchedEffect`
 
-Когда репозитории возвращают `Flow` (реактивные источники, подписки на БД, поллинг, WebSocket), вместо ручного управления `MutableStateFlow<LCEState<T, E>>` лучше **комбинировать Flow-ы** и преобразовывать в `StateFlow`.
-
-| Оператор | Когда использовать |
-|----------|-------------------|
-| `combine` | Источники эмитят **независимо**, нужно последнее значение от каждого |
-| `zip` | Источники эмитят **попарно**, нужно дождаться значения от каждого |
-
-```kotlin
-class DashboardViewModel(
-    profileRepo: ProfileRepository,        // Flow<Response<Profile>>
-    transactionsRepo: TransactionsRepository, // Flow<Response<List<Transaction>>>
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
-
-    val state: StateFlow<DashboardState> = combine(
-        profileRepo.observeProfile(),
-        transactionsRepo.observeTransactions(),
-    ) { profileResponse, transactionsResponse ->
-        DashboardState(
-            profile = profileResponse.asLCEState(DashboardError::from),
-            transactions = transactionsResponse.asLCEState(DashboardError::from),
-        )
-    }
-        .flowOn(dispatchers.default)  // маппинг НЕ на Main потоке
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeout = 5.seconds),
-            initialValue = DashboardState()
-        )
-}
-```
-
-Смешанный вариант (часть данных one-shot, часть реактивно) — см. пример в
-«Запуск работы на старте экрана»: one-shot источники пишут в `_state`, реактивные
-комбинируются с ним в общий `StateFlow`.
-
-#### Выбор SharingStarted-стратегии
-
-| Стратегия | Поведение | Когда использовать |
-|-----------|-----------|-------------------|
-| `WhileSubscribed(stopTimeout)` | Активен пока есть подписчики + таймаут после отписки | **По умолчанию для экранов.** Экономит ресурсы при уходе с экрана, `stopTimeout = 5.seconds` — стандартное значение (переживает поворот экрана) |
-| `Lazily` | Стартует при первом подписчике, **никогда не останавливается** | Источник со значением на всю жизнь VM: фоновый кэш, подписка, флаг из репозитория (init-загрузка — `launchOnFirstStart`) |
-| `Eagerly` | Стартует немедленно при создании | Критичные данные, нужные сразу (редко используется) |
+Первичную загрузку данных экрана НЕ запускать из UI (`LaunchedEffect(Unit) { vm.load() }` — запрещено): такой запуск
+завязан на композицию, а не на подписку на state, требует метода-интента «для старта» во VM и guard-флагов от
+повторных вызовов. Триггер «экран начал слушать state» уже есть — подписка на `StateFlow`; база вешает на него
+`onStart()` (один раз за жизнь VM).
 
 ```kotlin
-// ✅ Экран — отписываемся при уходе
-.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), initial)
-
-// ✅ Однократная работа / фоновый кэш — живёт пока жива ViewModel
-.stateIn(viewModelScope, SharingStarted.Lazily, initial)
-```
-
-#### Запуск работы на старте экрана — `onStart`, а не `LaunchedEffect`
-
-Первичную загрузку данных экрана НЕ запускать из UI (`LaunchedEffect(Unit) { vm.load() }` — запрещено):
-такой запуск завязан на композицию, а не на подписку на state, требует метода-интента «для старта»
-во VM и guard-флагов от повторных вызовов при каждом входе в композицию. Composable side-effect'ы —
-только для чисто UI-нужд и проброса события в метод VM (например
-`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`), но не для самой бизнес-логики;
-реакции на действия пользователя — явный метод-интент VM (`onRetryClicked()`).
-
-Триггер «экран реально начал слушать state» уже существует — это подписка на `StateFlow`.
-Init-стадия оформляется хелпером **`launchOnFirstStart { … }`** из `BaseViewModel` на цепочке state перед
-`stateIn`: блок запускается отдельной корутиной VM при первом старте цепочки и ровно один раз за жизнь VM
-(внутри — `Job` с `CoroutineStart.LAZY`, `onStart { job.start() }`; `start()` идемпотентен). Без `var`-флагов,
-методов «startIfNeeded» и фиктивных источников `flow { load(); emit(Unit) }.stateIn(Lazily)` в `combine`.
-
-Почему не голый `onStart { load() }`:
-- он **блокирует цепочку**: `combine` начинает собирать только после выхода из `onStart`, поэтому `Loading`,
-  записанный в `_state` во время загрузки, экран не увидит — увидит сразу результат;
-- он **повторяется на каждый перезапуск** `WhileSubscribed` — возврат на экран (или из фона) после stopTimeout
-  перезагрузит данные.
-
-```kotlin
-class MainScreenViewModel(
-    private val mainRepository: MainRepository,
-    private val dispatchers: AppDispatchers,
-) : BaseViewModel() {
-
-    private val _state = MutableStateFlow(MainScreenState())  // isInitialLoading = true
-
-    // Периодический источник: репозиторий отдаёт Flow<Response<T>>,
-    // ручные Job + onCleared во VM не нужны
-    private val chatAvailability: Flow<LCEState<Boolean, MainError>> = mainRepository
-        .observeChatAvailability()
+// MainScreenViewModel (feature/main)
+override suspend fun onStart() {
+    // Поллинг чата живёт, пока экран подписан на state: при возврате перезапускается с None.
+    mainRepository.observeChatAvailability()
         .map { response -> response.asLCEState(MainError::from) }
         .flowOn(dispatchers.io)
-        .onStart { emit(LCEState.None) }  // combine не ждёт первый ответ сети
-
-    val state: StateFlow<MainScreenState> = combine(_state, chatAvailability) { state, chat ->
-        state.copy(chatAvailabilityState = chat)
-    }
-        .launchOnFirstStart { initialRefresh() }  // один раз за жизнь VM, не блокирует цепочку
-        .onStart { resetTransientState() }       // на каждый (пере)запуск шаринга
-        .flowOn(dispatchers.default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), _state.value)
-
-    private suspend fun initialRefresh() {
-        try {
-            coroutineScope {
-                awaitAll(async { loadUserProfile() }, async { loadUserAppFeatures() })  // пишут в _state
-            }
-        } finally {
-            _state.update { it.copy(isInitialLoading = false) }  // скелетон убирается и при сбое
-        }
-    }
+        .onStart { emit(LCEState.None) }
+        .collectIntoState { chatAvailability -> copy(chatAvailabilityState = chatAvailability).withActions() }
+    safeLaunch { repeatOnSubscription { resetLogoutTransientState() } }   // на каждый возврат на экран
+    initialRefresh()                                                       // один раз за жизнь VM
 }
 ```
 
-**Порядок объявлений важен:** свойства инициализируются сверху вниз, поэтому источники
-(`chatAvailability`) объявляются **до** `state` — иначе `combine` захватит ещё не инициализированное (null)
-поле и упадёт в runtime. Блок `launchOnFirstStart` выполняется позже (при подписке), ему порядок не важен.
-
-**`onStart` vs `onSubscription`:**
-
-| Оператор | Куда ставится | Когда срабатывает | Для чего |
-|----------|---------------|-------------------|----------|
-| `launchOnFirstStart` | на холодную цепочку state **до** `stateIn` | один раз за жизнь VM — при первом старте шаринга | init-загрузка экрана, потоки перезагрузки (`retries.collectLatest { load() }`) |
-| `onStart` | на холодную цепочку **до** `stateIn` | при (пере)запуске шаринга: первый подписчик после простоя (`WhileSubscribed`) либо единожды (`Lazily`) | сброс transient-state при возврате на экран, эмит начального значения в источник; не для долгой работы |
-| `onSubscription` | на **горячий** `SharedFlow`/`StateFlow` (после `stateIn` / на `MutableSharedFlow`) | на **каждого** нового подписчика | редкие случаи «действие на каждую подписку»; для init не годится — несколько коллекторов (второй `collectAsState`, пересоздание composition) повторят действие |
-
-**Правила:**
-
-- **Один раз за жизнь VM** → `launchOnFirstStart` (пример выше), не guard-флаг и не фиктивный источник.
-  `stateIn(Lazily)` — только для источников с настоящим значением (флаг из репозитория, подписка на всю жизнь VM).
-  **На каждый (пере)запуск шаринга** (сброс transient-state, обновление «свежести» при возврате
-  на экран) → `onStart` на общей цепочке перед `stateIn(WhileSubscribed)` — он сработает повторно,
-  когда подписчики вернулись после stopTimeout. `onSubscription` — только когда действие осознанно
-  нужно на каждую подписку.
-- Лямбда `onStart` не должна блокировать цепочку долгой suspend-работой: долгие загрузки — в
-  `launchOnFirstStart` или через `safeLaunch`.
-- **Поллинг не держать ручными `Job` во VM.** Репозиторий отдаёт `Flow<Response<T>>`
-  (см. «Data — репозитории»), VM комбинирует его в state. `WhileSubscribed` сам останавливает
-  поллинг, когда экран никто не слушает, и перезапускает при возврате — `Job`-поля и `onCleared`
-  не нужны.
-- Источник для `combine` без мгновенного первого значения (сеть, поллинг) — дополнять
-  `.onStart { emit(<initial>) }`, иначе `combine` не эмитит, пока не ответят все источники.
-- **Повтор/перезагрузка — тот же поток загрузок, а не второй `safeLaunch`.** Триггеры (`MutableSharedFlow`
-  «повторить», изменения хранилища) сливаются в один поток, `collectLatest { load() }` отменяет
-  устаревшую загрузку — гонки двух параллельных загрузок нет:
-  ```kotlin
-  private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-  val state = combine(_state, …) { … }
-      .launchOnFirstStart {
-          merge(repository.changes, retryRequests).onStart { emit(Unit) }.collectLatest { load() }  // пишет в _state
-      }
-      .flowOn(dispatchers.default)
-      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), _state.value)
-  fun onRetry() { retryRequests.tryEmit(Unit) }
-  ```
-- **Снимки чужого state не копировать в `_state`.** Значение из `deviceSession.state` и т.п.
-  комбинируется в `state` как источник; внутри интентов читать `deviceSession.state.value`, а не
-  поле, скопированное в `init`.
-- Ресурсы, открытые на время загрузки (`settings.open/close`), закрываются в `finally` — загрузку
-  может отменить `mapLatest` или уход VM.
-- **Тесты VM с `stateIn`:** `state.value` обновляется, только пока есть подписчик — тест
-  подписывается (`backgroundScope.launch { vm.state.collect {} }`), а `Dispatchers.setMain` —
-  `UnconfinedTestDispatcher`, чтобы источники отработали без `advanceUntilIdle()` на каждом шаге.
-
-**Запрещено, без исключений (частые «оправдания», которые не работают):**
-
-- `LaunchedEffect(Unit) { viewModel.start() }` / `init()` / `load()` / `prepareX()` — **запрещено**,
-  даже если метод назван не «load». Переименование init-хука не делает его легальным: любой
-  запуск работы VM из composition side-effect нарушает правило. Триггер — подписка на `state`.
-- **«Это платформенно-зависимо, поэтому можно через `LaunchedEffect`»** — нет. Composition
-  side-effects (`LaunchedEffect`/`DisposableEffect`) допустимы **только** для (а) привязки
-  платформенных объектов, живущих в композиции (напр. `BindEffect` для `PermissionsController`),
-  и (б) проброса UI-события/сигнала в метод-интент VM (`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`).
-  Запуск собственного жизненного цикла/загрузки VM сюда не входит — привязка контроллера и старт
-  работы VM это разные вещи.
-- **Начальный шаг/режим экрана как чистая функция от входа/платформы — это НЕ «работа», а начальное
-  значение состояния.** Вычисляй его в конструкторе VM (инициализация `MutableStateFlow`), а не
-  через `start()`-интент. Реактивные источники, завязанные на этот шаг (скан, подписки), стартуют
-  сами при первой подписке на `state` (`flatMapLatest`/`combine` + `stateIn(WhileSubscribed/Lazily)`).
-
-```kotlin
-// ❌ Плохо — init-хук через LaunchedEffect, даже под именем start()
-// VM:
-fun start() { if (started) return; started = true; _step.value = if (…) Scanning else Rationale }
-// UI:
-LaunchedEffect(Unit) { viewModel.start() }
-
-// ✅ Хорошо — начальный шаг = начальное состояние; скан реактивен и стартует по подписке
-private val _step = MutableStateFlow(if (requirements.isEmpty()) Scanning else Rationale)
-private val devices = _step.flatMapLatest { if (it is Scanning) scan() else flowOf(None) }
-val state = combine(_step, devices, …) { … }.stateIn(scope, WhileSubscribed(5.seconds), initial)
-// реакция на действие пользователя — явный интент (это не init-загрузка):
-fun onAllowClicked(controller: PermissionsController) { … }
-```
+- **Не `init {}`** — он работает при создании VM, а не при показе экрана: VM, созданная без подписчика (быстрая
+  навигация, превью), уже грузит данные.
+- **Не голый `onStart { load() }` на цепочке потока** — он блокирует цепочку до конца загрузки (`Loading` экран не
+  увидит) и повторяется на каждый перезапуск `WhileSubscribed`.
+- **`onStart()` стартует на Main, dispatcher переключает вызываемый код**: IO — `withContext(dispatchers.io)`, маппинг —
+  `dispatchers.default`, подписка — `flowOn` на холодном upstream. Привязки `collectIntoState` не подвешивают `onStart` —
+  у каждой своя корутина; долгую разовую работу — после привязок или в `intent { }`.
+- **Начальный шаг/режим экрана как чистая функция от входа/платформы — не «работа», а начальное state**
+  (`BaseViewModel(initialState)`); реактивные источники, завязанные на шаг, строятся через `select { step }`.
+- Composition side-effects (`LaunchedEffect`/`DisposableEffect`) допустимы **только** для привязки платформенных
+  объектов, живущих в композиции (`BindEffect` для `PermissionsController`), и проброса UI-события в интент VM
+  (`LaunchedEffect(isDark) { vm.onSystemDarkChanged(isDark) }`). Переименование init-хука (`start()`, `prepareX()`) не
+  делает его легальным.
+- **Тесты VM подписываются на state, как экран:** `backgroundScope.launch { vm.state.collect {} }`
+  (`Dispatchers.setMain(UnconfinedTestDispatcher())`), иначе `onStart` не запустится и `state.value` останется
+  начальным. Процесс, который должен жить без подписчика, проверяется отпиской и `advanceTimeBy` дольше 5 с.
 
 ### Корректность state
 
@@ -924,10 +835,10 @@ fun onAllowClicked(controller: PermissionsController) { … }
 
 ```kotlin
 // Ошибка истории
-if (_state.value.history is LCEState.Content) {
-    emitEffect(Effect.PageLoadFailed)                            // лента остаётся, тост
+if (currentState.history is LCEState.Content) {
+    postSideEffect(SupportChatEffect.HistoryLoadFailed)           // лента остаётся, тост
 } else {
-    _state.update { it.copy(history = LCEState.Error(ChatError.from(e))) } // полноэкранная ошибка + Retry
+    reduce { copy(history = LCEState.Error(ChatError.from(e))) }  // полноэкранная ошибка + Retry
 }
 // Живое сообщение во время первой загрузки само переводит history в Content —
 // поэтому полноэкранная ошибка уже не затрёт ленту.
@@ -951,9 +862,9 @@ if (_state.value.history is LCEState.Content) {
   (state или composable), а не дублируется в двух — копии разойдутся молча.
 - **Инварианты держит state, а не UI.** Порядок списка, дедупликация поддерживаются при вставке в
   state; сортировка в composable на каждом рендере — лишняя работа и второй источник истины.
-- **Check-then-act на `_state.value` не атомарен.** `if (_state.value.busy) return` + отдельный
-  `update` пропускают два быстрых нажатия. Проверка и запись — внутри одного `update {}` либо через
-  `executeWithProceedLock`.
+- **Check-then-act на `currentState` не атомарен между корутинами.** `if (currentState.busy) return` + отдельный
+  `reduce` после `suspend`-вызова пропускают два быстрых нажатия. Проверка и запись — внутри одного `reduce {}`
+  (синхронно в интенте, до запуска корутины) либо через `executeWithProceedLock`.
 - **Сетевые вызовы из частых UI-событий — пачкой.** Видимость элементов, ввод текста, скролл — не
   повод для запроса на каждое событие: UI отдаёт пачку (`onMessagesVisible(ids)`), VM батчит с
   debounce, если контракт принимает список.
@@ -964,37 +875,44 @@ if (_state.value.history is LCEState.Content) {
 
 ### One-shot события (Effects)
 
-Навигация, snackbar'ы и прочие одноразовые события из ViewModel в UI — **только через `MutableSharedFlow`**. `Channel` + `receiveAsFlow()` в проекте не используем.
-
-Механизм изолирован в `core/ui` — `ru.alarmtrade.specmp.core.ui.effect`: фабрика `sideEffectFlow()` для emit-стороны и composable `collectSideEffect { }` для lifecycle-aware сбора. Руками `LaunchedEffect` + `repeatOnLifecycle` в фичах не писать.
+Навигация, snackbar'ы и прочие одноразовые события из ViewModel в UI — поток `sideEffect` базы: VM шлёт событие
+`postSideEffect(...)`, экран собирает его `collectSideEffect { }` (`core/ui`, `ru.alarmtrade.specmp.core.ui.effect`).
+Своих `MutableSharedFlow`/`Channel` для эффектов во VM нет (Konsist `view-model-owns-no-flows`); руками
+`LaunchedEffect` + `repeatOnLifecycle` в фичах не пишем.
 
 ```kotlin
-// ViewModel — emit через sideEffectFlow()
-class LoginViewModel(...) : BaseViewModel() {
-
-    private val _effect = sideEffectFlow<LoginEffect>()   // extraBufferCapacity = 1, replay = 0
-    val effect: SharedFlow<LoginEffect> = _effect.asSharedFlow()
-
-    private fun emitEffect(effect: LoginEffect) {
-        _effect.tryEmit(effect)
-    }
+// MainScreenEffect.kt
+sealed interface MainScreenEffect {
+    data class Navigate(val target: MainNavigationTarget) : MainScreenEffect
 }
 
-// UI — сбор через collectSideEffect
-viewModel.effect.collectSideEffect { effect ->
+// MainScreenViewModel.kt
+fun onSettingsClicked() {
+    reduce { copy(isMenuOpen = false) }
+    postSideEffect(MainScreenEffect.Navigate(MainNavigationTarget.Settings))
+}
+
+// MainScreen.kt
+viewModel.sideEffect.collectSideEffect { effect ->
     when (effect) {
-        is LoginEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+        is MainScreenEffect.Navigate -> onNavigateToFeature(effect.target)
     }
 }
 ```
 
 **Правила:**
 
-- `sideEffectFlow()` фиксирует стандартную конфигурацию (`replay = 0`, буфер 16, `DROP_OLDEST`); эмит — через `tryEmit`, он никогда не возвращает `false`. `replay` не задаём (повтор события после пересоздания экрана приведёт к двойной навигации).
-- Обработчик в `collectSideEffect` выполняется последовательно: пока он suspend'ится (`showSnackbar` висит секунды), следующие эффекты ждут в буфере. Буфер это переживает, но обработчик не должен блокироваться бесконечно (ожидание результата другого экрана, `awaitCancellation`).
-- `collectSideEffect` собирает с `repeatOnLifecycle(STARTED)` и `rememberUpdatedState` — подписка приостанавливается в фоне, пересоздание лямбды не перезапускает сбор.
-- Эффекты эмитим только в ответ на действия пользователя, когда экран на переднем плане — коллектор гарантированно активен. Эмит «в пустоту» (до старта коллектора) будет потерян — не эмитить эффекты из `init`.
-- Несколько подписчиков получат одно и то же событие каждый — на эффект подписывается ровно один экран.
+- Тип события — `sealed interface XxxEffect` (или `XxxSideEffect`) в своём файле; даже одно событие — `data object`
+  (`Close`), а не голый `Unit`/`Boolean`. Экран без эффектов — `E = Nothing`.
+- Поток эффектов: `replay = 0` (повтор события после пересоздания экрана — двойная навигация), буфер 16,
+  `DROP_OLDEST` — `postSideEffect` не блокирует и не теряет события, пока обработчик suspend'ится.
+- Обработчик в `collectSideEffect` выполняется последовательно: пока он висит (`showSnackbar` — секунды), следующие
+  эффекты ждут в буфере; бесконечно блокироваться он не должен.
+- `collectSideEffect` собирает с `repeatOnLifecycle(STARTED)` и `rememberUpdatedState` — подписка приостанавливается в
+  фоне, пересоздание лямбды не перезапускает сбор.
+- Эффекты шлём в ответ на действия пользователя, когда экран на переднем плане. Событие, эмитнутое без коллектора
+  (из `onStart` до отрисовки, в фоне), теряется; результат, который нельзя потерять, — поле state.
+- На эффект подписывается ровно один экран.
 
 ### Compose: локальное состояние и стабильность
 

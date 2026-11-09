@@ -52,18 +52,4 @@ class ViewModelScopeLaunchTest {
 
         assertEquals(0, rule.lint(code).size)
     }
-
-    @Test
-    fun `skips legacy bases and their direct subclasses`() {
-        val code = """
-            abstract class LegacyBaseViewModel : ViewModel() {
-                init { viewModelScope.launch { observe() } }
-            }
-            class FooViewModel : LegacyBaseDeviceViewModel(session) {
-                fun load() { viewModelScope.launch { work() } }
-            }
-        """.trimIndent()
-
-        assertEquals(0, rule.lint(code).size)
-    }
 }

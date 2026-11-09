@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.konsist
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.declaration.KoBaseDeclaration
 import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.declaration.KoInterfaceDeclaration
@@ -245,7 +246,7 @@ class ArchitectureTest {
     @Test
     fun `view models extend BaseViewModel, are named ViewModel and live in presentation`() {
         classes.filter { it.name.endsWith(VIEW_MODEL) || it.extendsViewModelBase() }
-            .filterNot { it.name == BASE_VIEW_MODEL || it.isLegacyViewModel() }
+            .filterNot { it.name == BASE_VIEW_MODEL }
             .assertTrue(
                 testName = "view-model",
                 additionalMessage =
@@ -293,19 +294,41 @@ class ArchitectureTest {
             }
     }
 
+    @Test
+    fun `view model constructors take at most 12 parameters`() {
+        classes.filter { it.extendsViewModelBase() }
+            .assertFalse(
+                testName = "view-model-constructor",
+                additionalMessage = "Конструктор ViewModel — не больше $MAX_VIEW_MODEL_PARAMETERS параметров: " +
+                    "разросшуюся VM делим по поведению (отдельная VM на независимый блок экрана, use case/доменный " +
+                    "сервис, реально объединяющий зависимости). docs/patterns.md, «BaseViewModel»",
+            ) { (it.primaryConstructor?.parameters?.size ?: 0) > MAX_VIEW_MODEL_PARAMETERS }
+    }
+
+    @Test
+    fun `service locator is used only in di, composition roots and platform entry points`() {
+        scope.files.filterNot { it.mayUseServiceLocator }
+            .flatMap { it.serviceLocatorUsages() }
+            .assertFalse(
+                testName = "no-service-locator",
+                additionalMessage = "Koin как сервис-локатор (KoinComponent/inject/get, GlobalContext, " +
+                    "KoinPlatformTools, KoinPlatform, startKoin/loadKoinModules, KoinJavaComponent, getKoin) — " +
+                    "только пакеты di, composition roots и платформенные обёртки (${APP_MODULES.joinToString()}) и " +
+                    "Android-компоненты, которые создаёт система (Activity/Application/Service/BroadcastReceiver/" +
+                    "Worker/Initializer). Остальным зависимости приходят конструктором из Koin-модуля. " +
+                    "docs/patterns.md, «Внедрение зависимостей»",
+            ) { true }
+    }
+
     // Имя родителя у Konsist включает аргументы типа: `BaseViewModel<S, E>`; наследники BaseDeviceViewModel — тоже VM.
     private fun KoClassDeclaration.extendsViewModelBase(): Boolean =
         parents(indirectParents = true).any { it.name.substringBefore('<') == BASE_VIEW_MODEL }
-
-    // Миграция ViewModel (этап 2): прежние базы и их прямые наследники пропускаются до подэтапа 2n.
-    private fun KoClassDeclaration.isLegacyViewModel(): Boolean = name in LEGACY_VIEW_MODEL_BASES ||
-        parents().any { it.name.substringBefore('<') in LEGACY_VIEW_MODEL_BASES }
 
     private companion object {
         const val MANAGER = "Manager"
         const val VIEW_MODEL = "ViewModel"
         const val BASE_VIEW_MODEL = "BaseViewModel"
-        val LEGACY_VIEW_MODEL_BASES = setOf("LegacyBaseViewModel", "LegacyBaseDeviceViewModel")
+        const val MAX_VIEW_MODEL_PARAMETERS = 12
         val OWNED_FLOW = Regex(
             """\b(MutableStateFlow|MutableSharedFlow|Channel|sideEffectFlow|mutableStateOf|mutableStateListOf|""" +
                 """mutableStateMapOf|mutableIntStateOf|mutableLongStateOf|mutableFloatStateOf|mutableDoubleStateOf)""" +
@@ -509,3 +532,69 @@ private fun String.isAllowedViewModelDependency(): Boolean {
     val featureLayer = pkg.startsWith("$ROOT.feature.") && ("domain" in segments || "presentation" in segments)
     return this in VIEW_MODEL_DEPENDENCY_TYPES || pkg == "kotlin" || featureLayer
 }
+
+// API Koin для доставания зависимостей вне графа: пакеты (`pkg.`) и отдельные декларации.
+private val SERVICE_LOCATOR_PACKAGES = listOf(
+    "org.koin.core.component.",
+    "org.koin.core.context.",
+    "org.koin.android.ext.android.",
+)
+private val SERVICE_LOCATOR_NAMES = setOf(
+    "org.koin.mp.KoinPlatformTools",
+    "org.koin.mp.KoinPlatform",
+    "org.koin.java.KoinJavaComponent",
+    "org.koin.compose.getKoin",
+    "org.koin.core.Koin",
+)
+
+private fun String.isServiceLocatorName(): Boolean {
+    val name = removeSuffix(".*")
+    return SERVICE_LOCATOR_PACKAGES.any { name.startsWith(it) || "$name." == it } ||
+        SERVICE_LOCATOR_NAMES.any { name == it || name.startsWith("$it.") }
+}
+
+// Компоненты, которые создаёт система: конструктора для DI у них нет.
+private val ANDROID_ENTRY_POINTS = setOf(
+    "Activity",
+    "ComponentActivity",
+    "AppCompatActivity",
+    "FragmentActivity",
+    "Application",
+    "Service",
+    "LifecycleService",
+    "BroadcastReceiver",
+    "ListenableWorker",
+    "CoroutineWorker",
+    "Worker",
+    "Initializer",
+)
+
+private val KoFileDeclaration.mayUseServiceLocator: Boolean
+    get() = inLayer("di") ||
+        moduleName in APP_MODULES ||
+        classes(includeNested = true).any { type ->
+            type.parents().any { it.name.substringBefore('<').substringBefore('(').trim() in ANDROID_ENTRY_POINTS }
+        }
+
+/**
+ * Декларации верхнего уровня, упоминающие API Koin-локатора (по простому имени/алиасу импорта или полным именем), —
+ * чтобы `@Suppress` ставился на объект, а не на файл; импорт со звёздочкой или пакета целиком и неиспользованный
+ * импорт возвращаются самим импортом.
+ */
+private fun KoFileDeclaration.serviceLocatorUsages(): List<KoBaseDeclaration> {
+    val apiImports = imports.filter { it.name.isServiceLocatorName() }
+    val starImports = apiImports.filter { it.name.endsWith(".*") || "${it.name}." in SERVICE_LOCATOR_PACKAGES }
+    val names = (apiImports - starImports.toSet()).map { it.alias?.name ?: it.name.substringAfterLast('.') }.toSet()
+    val usages = (
+        classesAndInterfacesAndObjects(includeNested = false) +
+            functions(includeNested = false, includeLocal = false) +
+            properties(includeNested = false)
+        ).filter { declaration ->
+        val code = declaration.text.stripCommentsAndStrings()
+        QUALIFIED_NAME.findAll(code).any { it.value.isServiceLocatorName() } ||
+            IDENTIFIER.findAll(code).any { it.value in names }
+    }
+    return starImports + usages.ifEmpty { apiImports - starImports.toSet() }
+}
+
+private val IDENTIFIER = Regex("""\b[A-Za-z_]\w*\b""")

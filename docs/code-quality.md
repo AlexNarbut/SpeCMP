@@ -266,14 +266,13 @@ ViewModel через несколько composable, эффекты читают 
 `SpecmpRuleSetProviderTest` проверяет, что каждое правило зарегистрировано и есть в `detekt.yml`. Новое правило:
 класс + тест на `detekt-test` → строка в провайдере и в тесте провайдера → раздел в `detekt.yml` → проверка на
 временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel (`ViewModel*`,
-`SafeRunInViewModel`) включены; на время миграции VM они пропускают прежние базы `LegacyBaseViewModel`/
-`LegacyBaseDeviceViewModel` и их прямых наследников (`LegacyViewModels.kt`; `ViewModelPublicApi` и
-`ViewModelContractNames` смотрят только на `BaseViewModel`/`BaseDeviceViewModel` и Legacy не видят;
-`ViewModelContractNames` пропускает собственные параметры типа промежуточной базы). Правила `Response`, данных и времени
+`SafeRunInViewModel`) включены без исключений для наследников (`ViewModelContractNames` пропускает собственные
+параметры типа промежуточной базы `BaseDeviceViewModel`). Правила `Response`, данных и времени
 перенесены, но выключены (`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
-Осознанно выключено или смягчено: `LongParameterList`, `TooManyFunctions`, `NestedBlockDepth`, `LargeClass`,
+Осознанно выключено или смягчено: `LongParameterList` (наборы колбэков `*Actions` длинные по построению; порог
+конструктора ViewModel — Konsist `view-model-constructor`), `TooManyFunctions`, `NestedBlockDepth`, `LargeClass`,
 `ReturnCount`, `InjectDispatcher`, `AbstractClassCanBeInterface`, `AbstractClassCanBeConcreteClass`, `UseOrEmpty`.
 
 `TooGenericExceptionCaught` не проверяется на границах, где по нашим правилам ловится всё и нормализуется в
@@ -314,10 +313,11 @@ ViewModel через несколько composable, эффекты читают 
 | `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
 | `view-model` | ViewModel наследует `BaseViewModel` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — пакет `presentation` |
 | `view-model-owns-no-flows` | у наследника `BaseViewModel` нет своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`sideEffectFlow`/`mutableStateOf` |
-| `view-model-dependencies` | параметры конструктора VM — domain/presentation фич, `AppDispatchers` (до переноса main-safety), `AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `TimeSource`, `Logger`, типы Kotlin; без функциональных типов и `CoroutineScope` |
+| `view-model-dependencies` | параметры конструктора VM — domain/presentation фич, `AppDispatchers` (до переноса main-safety), `AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `TimeSource`, `Logger`, типы Kotlin; без функциональных типов и `CoroutineScope` |
+| `view-model-constructor` | у наследника `BaseViewModel` не больше 12 параметров первичного конструктора |
+| `no-service-locator` | Koin как сервис-локатор — `org.koin.core.component.*` (`KoinComponent`, `inject`, `get`), `org.koin.core.context.*` (`GlobalContext`, `startKoin`, `loadKoinModules`), `org.koin.mp.KoinPlatformTools`/`KoinPlatform`, `org.koin.java.KoinJavaComponent`, `org.koin.compose.getKoin`, `org.koin.core.Koin`, `org.koin.android.ext.android.*` — импортом (включая алиас) или полным именем — только пакеты `..di..`, composition roots и обёртки (`composeApp`, `flasherApp`, `androidApp`, `desktopApp`, `flasherAndroidApp`, `flasherDesktopApp`) и файлы с Android-компонентом, который создаёт система (`Activity`/`Application`/`Service`/`BroadcastReceiver`/`Worker`/`Initializer`…). Нарушение — декларация верхнего уровня (подавление — `@Suppress` на ней), импорт со звёздочкой и неиспользованный импорт — сам импорт. `koinInject` в composable — не это правило (этап 4) |
 
-Правила `view-model*` на время миграции пропускают `LegacyBaseViewModel`/`LegacyBaseDeviceViewModel` и их прямых
-наследников. Остальные правила BabySteps (контракт репозиториев, видимость `*Impl`, `koin-module`,
+Остальные правила BabySteps (контракт репозиториев, видимость `*Impl`, `koin-module`,
 `mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
 Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
 Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.
@@ -354,6 +354,36 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 Временный allowlist последнего правила (в регэкспе, снимается в подэтапе, где ребро убрано): `configurator-ui` →
 `device:settings-ui`. Регэксп матчит всю строку
 `"<from> -X> <to>"`, поэтому конец имени модуля слева в негативном lookahead — пробел, а не `$`.
+
+---
+
+## Правило → проверка
+
+Правила из [`patterns.md`](patterns.md) держатся проверками, не документом. Новое правило записывается в `patterns.md`
+вместе с id проверки и строкой здесь; проверка включается вместе с исправлением всех нарушений одним изменением.
+Правила `patterns.md` без id — договорённости ревью. ⏳ — правило перенесено из BabySteps, но ещё выключено или не
+написано: включается в подэтапе миграции архитектуры, где убираются его нарушения.
+
+| Правило | Проверка | Статус |
+|---|---|---|
+| Публичный API ViewModel — только `state`, `sideEffect` и интенты с результатом `Unit` (не `suspend`) | detekt `ViewModelPublicApi` | ✅ |
+| У ViewModel нет `var`-свойств и изменяемых коллекций (включая `private`/`lateinit`, вложенные классы и конструктор): служебное — в state, перезапуск корутины — `launchReplacing` | detekt `ViewModelMutableProperty` | ✅ |
+| ViewModel не держит своих `Mutable*Flow`/`Channel`/`mutableStateOf`: входы подписки — поля state + `select { }`, «Повторить» — `reload()`/`launchReplacing` | Konsist `view-model-owns-no-flows` | ✅ |
+| ViewModel — наследник `BaseViewModel<S, E>` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — в `presentation`; дженерики `…State`/`…Effect`\|`…SideEffect`\|`Nothing` | Konsist `view-model`, detekt `ViewModelContractNames` | ✅ |
+| Корутины VM — `intent`/`safeLaunch`/`launchReplacing`, не `viewModelScope.launch`/`launchIn`; без `init { }` (старт — `onStart()`); в файле VM — только VM | detekt `ViewModelScopeLaunch`, `ViewModelInitBlock`, `ViewModelFileContents` | ✅ |
+| Зависимости VM — только из разрешающего списка (domain, presentation, `AppDispatchers`, порты `core`); без `CoroutineScope` и функциональных типов; нет `safeRun` во VM | Konsist `view-model-dependencies`, detekt `SafeRunInViewModel` | ✅ |
+| Конструктор ViewModel — не больше 12 параметров | Konsist `view-model-constructor` | ✅ |
+| Импорт `androidx.lifecycle.ViewModel` — только `core/ui` (база) | detekt `ForbiddenImport` | ✅ |
+| Koin как сервис-локатор — только `di`, composition roots и обёртки, Android-компоненты | Konsist `no-service-locator` | ✅ |
+| `MutableStateFlow` меняется только `update { }` | detekt `StateFlowValueMutation` | ✅ |
+| Граница с бросающим кодом — `safeRun`, не `runCatching`; лог — Kermit, не `println` | detekt `ForbiddenRunCatching`, `ForbiddenPrintln` | ✅ |
+| Направления импортов между модулями, пакет = модуль, слои domain/data/presentation | Konsist `module-direction`, `module-package`, `domain-isolation`, `presentation-isolation`, `data-isolation`, `feature-data-isolation`; graph-assert | ✅ |
+| Раскладка и имена: реализации репозиториев в `data/repository`, интерфейсы в `domain`, `*DataSource` только у репозиториев, нет `*Helper`/`*Utils` | Konsist `layer-placement`, `repository-in-domain`, `data-source-consumers`, `forbidden-suffix` | ✅ |
+| SDK AlarmTrade — только data/di фич и профильные `core/*`; `@Serializable` — data/navigation; модели `domain/model` неизменяемы | Konsist `sdk-confinement`, `serializable-placement`, `domain-model-purity` | ✅ |
+| Члены репозиториев: `suspend` → `Response<T>`, потоки → `Flow<Response<T>>`; репозиторий сам main-safe | Konsist `repository-contract`, detekt `RawFlowFromRepository`, `RepositoryWithContext` | ⏳ этап 3 |
+| Гигиена `Response`: не выбрасывать, не превращать в исключение, не оборачивать повторно; без `throw` в репозиториях | detekt `ResponseIgnored`, `ResponseGetOrThrow`, `RedundantSafeRun`, `ThrowInRepository` | ⏳ этап 3 |
+| «Сейчас» — из внедрённых часов; `Settings()` — только фабрика `core/common` | detekt `DirectClockUsage`, `SettingsInstantiation` | ⏳ этап 3 |
+| Composable не достаёт зависимости из Koin (`koinInject`) | Konsist `composable-injection` | ⏳ этап 4 |
 
 ---
 
