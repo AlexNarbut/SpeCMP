@@ -35,7 +35,7 @@ class ResponseIgnored(config: Config) :
                 Entity.from(outer),
                 "Результат Response отброшен: ошибка теряется молча. Обработайте её — " +
                     "`.onError { logger.w(it) { … } }`, when, ошибка в state/эффект — или используйте " +
-                    "значение (docs/patterns.md, «Контракт результата»).",
+                    "значение (docs/patterns.md, «Data — репозитории»).",
             ),
         )
     }

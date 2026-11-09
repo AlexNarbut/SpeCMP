@@ -31,7 +31,7 @@ class RepositoryWithContext(config: Config) :
                 Entity.from(expression),
                 "withContext в ${owner.name}: переключение диспетчера — в месте вызова " +
                     "(withContext(dispatchers.io) { repository.foo() } во ViewModel), метод репозитория — " +
-                    "safeRun { … } без withContext (docs/patterns.md, «Диспетчеры»).",
+                    "safeRun { … } без withContext (docs/patterns.md, «Диспетчеры (AppDispatchers)»).",
             ),
         )
     }

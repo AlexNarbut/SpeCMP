@@ -1,5 +1,3 @@
-// Раскладка всех экранов мастера (колонка шагов слева) задаётся каркасом один раз — без проброса через каждый экран.
-@file:Suppress("ktlint:compose:compositionlocal-allowlist")
 
 package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components
 
@@ -72,6 +70,7 @@ private const val SPIN_MILLIS = 2_400
 private const val RING_MILLIS = 1_800
 private const val RING_GROW = 0.5f
 
+// Раскладку мастера (колонка шагов слева) задаёт каркас один раз — без проброса через каждый экран.
 internal val LocalWizardWide = staticCompositionLocalOf { false }
 
 internal enum class WizardNav { BACK, LOCK, NONE }

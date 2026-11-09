@@ -42,7 +42,7 @@ class RawFlowFromRepository(config: Config) :
                         "`${declaration.name}` в ${classOrObject.name ?: "репозитории"} отдаёт поток без Response: " +
                             "значения — Response.Success (SDK — toResponse()), " +
                             "ошибка потока — catch → Response.Error " +
-                            "(docs/patterns.md, «Контракты репозиториев»).",
+                            "(docs/patterns.md, «Domain»).",
                     ),
                 )
             }

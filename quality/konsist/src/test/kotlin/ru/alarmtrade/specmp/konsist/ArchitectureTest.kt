@@ -139,7 +139,7 @@ class ArchitectureTest {
             .assertResultContract(
                 testName = "repository-contract",
                 role = "репозитория (interface *Repository, интерфейсы domain/repository)",
-                docs = "docs/patterns.md, «Контракты репозиториев»",
+                docs = "docs/patterns.md, «Domain»",
             )
     }
 
@@ -864,7 +864,7 @@ private fun KoClassAndInterfaceAndObjectDeclaration.isNavKey(): Boolean =
 // `kotlinx.coroutines.flow.StateFlow<Foo>?` → `StateFlow`.
 private fun String.baseTypeName(): String = trim().removeSuffix("?").substringBefore('<').substringAfterLast('.').trim()
 
-// Контракт результата (docs/patterns.md): suspend → Response<…>, Flow/StateFlow/SharedFlow → …<Response<…>>.
+// Контракт (docs/patterns.md, «Domain»): suspend → Response<…>, Flow/StateFlow/SharedFlow → …<Response<…>>.
 // Синхронный член (не suspend, не поток) — нарушение, кроме функции-команды с результатом из syncCommandTypes
 // (у сервисов — Unit/Boolean: start, «закрыть в фоне»); у репозиториев команд нет.
 private fun List<KoInterfaceDeclaration>.assertResultContract(

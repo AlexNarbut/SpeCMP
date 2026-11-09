@@ -33,6 +33,6 @@ class SafeRunInViewModel(config: Config) :
         const val SAFE_RESPONSE_RUN = "safeResponseRun"
         const val MESSAGE =
             "во ViewModel: бросающий вызов оборачивается в data-слое (репозиторий возвращает Response), " +
-                "VM ветвится по Response через ResponseExt (docs/patterns.md, «Слой данных»)."
+                "VM ветвится по Response через ResponseExt (docs/patterns.md, «BaseViewModel»)."
     }
 }

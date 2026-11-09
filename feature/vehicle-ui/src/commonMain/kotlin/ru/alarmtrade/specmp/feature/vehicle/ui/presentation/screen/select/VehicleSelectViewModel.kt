@@ -26,7 +26,6 @@ private const val CAN_CODE_LENGTH = 4
  * Весь путь выбора — в state: поворот и смена ширины окна его не сбрасывают. Каждый уровень грузится своей корутиной
  * (ключ — [CatalogLevel]), новая загрузка уровня отменяет прежнюю.
  */
-@Suppress("TooManyFunctions") // экран с одним state: каждое действие пользователя — свой метод
 internal class VehicleSelectViewModel(
     private val request: VehicleSelectRequest,
     private val repository: VehicleCatalogRepository,
