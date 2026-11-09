@@ -12,13 +12,12 @@ import ru.alarmtrade.devices.domain.errors.FrmFileParsingException
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SerialFirmwareUpdateError
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SerialFirmwareUpdateState
 import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SerialFirmwareUpdateStatus
-import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.requests.UpdateSerialFirmwareRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.common.safeResponseRun
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.FirmwareUpdateDataSource
 import ru.alarmtrade.specmp.feature.device.firmware.data.file.parseFrmFileInfo
 import ru.alarmtrade.specmp.feature.device.firmware.data.file.readFileBytes
 import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toProgress
@@ -28,11 +27,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareF
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
 
-/**
- * [SerialFirmwareRepository] над `bluetoothAlarmDeviceInteractor.updateSerialDeviceFirmwareFlowUseCase` (обновление
- * `.frm` в текущей serial-сессии SDK). Интерактор — лениво: на iOS COM-порт в SDK не реализован.
- */
-internal class SpecialistSerialFirmwareRepository(private val alarmDevice: () -> BluetoothAlarmDeviceInteractor) :
+/** [SerialFirmwareRepository]: обновление `.frm` в текущей serial-сессии SDK. */
+internal class SpecialistSerialFirmwareRepository(private val dataSource: FirmwareUpdateDataSource) :
     SerialFirmwareRepository {
 
     override suspend fun readFileInfo(path: String): Response<FrmFileInfo> = safeResponseRun {
@@ -41,11 +37,6 @@ internal class SpecialistSerialFirmwareRepository(private val alarmDevice: () ->
     }
 
     override fun update(fileName: String, path: String): Flow<Response<SerialFirmwareProgress>> = flow {
-        val interactor = alarmDevice.resolveOrNull()
-        if (interactor == null) {
-            emit(failure(SerialFirmwareFailure.Unknown))
-            return@flow
-        }
         val data = when (val read = safeResponseRun { Response.Success(readFileBytes(path)) }) {
             is Response.Success -> read.value
 
@@ -54,11 +45,13 @@ internal class SpecialistSerialFirmwareRepository(private val alarmDevice: () ->
                 return@flow
             }
         }
-        val request = UpdateSerialFirmwareRequest(fileName, data, BOOT_ENTRY_TIMEOUT_MILLIS)
+        val source = dataSource.updateSerial(UpdateSerialFirmwareRequest(fileName, data, BOOT_ENTRY_TIMEOUT_MILLIS))
+        if (source == null) {
+            emit(failure(SerialFirmwareFailure.Unknown))
+            return@flow
+        }
         var last: Response<SerialFirmwareProgress>? = null
-        val steps = safeFlowRun {
-            interactor.updateSerialDeviceFirmwareFlowUseCase.execute(request).map { it.toResponse() }
-        }.transformWhile { response ->
+        val steps = safeFlowRun { source.map { it.toResponse() } }.transformWhile { response ->
             val step = when (response) {
                 is Response.Success -> response.value.toProgress()
                 is Response.Error -> failure(response.exception.toFailure(), response.exception)

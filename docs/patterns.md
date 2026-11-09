@@ -213,8 +213,8 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 
 У каждой реализации репозитория (класс `..data..` с супертипом `*Repository`: `Specialist*Repository`,
 `Settings*Repository`) есть тест в тестовом source set своего модуля, который использует класс по имени в коде — не
-только в `import`, KDoc или строке (Konsist `repository-impl-tested`; непокрытые пока — во временном allowlist
-`UNTESTED_REPOSITORIES` правила). Тест — не заглушка ради правила; минимум:
+только в `import`, KDoc или строке (Konsist `repository-impl-tested`, без исключений). Тест — не заглушка ради
+правила; минимум:
 
 - **успешный путь**: ответ SDK → доменная модель (`Response.Success` с ожидаемым значением, для потоков — ожидаемая
   последовательность);
@@ -239,7 +239,11 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 - **Ленивый интерактор** (`() -> Interactor`, недоступный на платформе не должен ронять создание) уходит в источник
   вместе с провайдером: метод источника — `interactor.resolveOrNull()?.useCase?.execute(request)`, ответ `null` —
   интерактор недоступен; репозиторий переводит его `toResponseOrUnavailable()` (`core/specialist`: `null` →
-  `interactorUnavailable()`). Тест проверяет и эту ветку (фейк отвечает `null`). Провайдер создаёт Koin-модуль:
+  `interactorUnavailable()`). Тест проверяет и эту ветку (фейк отвечает `null`). Поток над ленивым интерактором —
+  не-`suspend` `Flow<…>?` (`resolveOrNull()?.let { flow { emitAll(…) } }`), репозиторий разбирает `null` внутри своего
+  `flow { }`: `?: flowOf(interactorUnavailable())` или, у процессов (прошивка, обход, Clone), доменное исключение
+  процесса (`FirmwareUpdateException`…). Процессный поток тестируется на успех, ошибку посреди процесса (поток
+  обрывается на ней) и недоступный интерактор. Провайдер создаёт Koin-модуль:
   `single<VehicleCatalogDataSource> { SpecialistVehicleCatalogDataSource(cars = { get() }, …) }`.
 - **Хранилище настроек** (`Settings*Repository`, «недавние» в `Specialist*Repository`) — `InMemorySettings` из
   `core:testing`; повторное открытие — новый репозиторий над тем же `Settings`, битые данные — `putString` мусора.

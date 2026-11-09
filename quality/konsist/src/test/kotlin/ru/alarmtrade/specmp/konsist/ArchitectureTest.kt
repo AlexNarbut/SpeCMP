@@ -197,7 +197,7 @@ class ArchitectureTest {
         val testCodeByModule = Konsist.scopeFromProject().files
             .filter { it.sourceSetName.endsWith("test", ignoreCase = true) }
             .groupBy({ it.moduleName }, { it.codeWithoutHeaderCommentsAndStrings() })
-        classes.filter { it.isRepositoryImplementation() && it.name !in UNTESTED_REPOSITORIES }
+        classes.filter { it.isRepositoryImplementation() }
             .assertTrue(
                 testName = "repository-impl-tested",
                 additionalMessage = "У реализации репозитория (Specialist*Repository, Settings*Repository, " +
@@ -655,16 +655,6 @@ private fun KoClassDeclaration.isImplementation(): Boolean = name.endsWith(IMPL)
 
 private fun KoClassDeclaration.isRepositoryImplementation(): Boolean =
     resideInPackage("..data..") && parents().any { it.simpleName().endsWith(REPOSITORY) }
-
-// Временный allowlist репозиториев без теста: имя убирается, когда у репозитория появляется тест.
-private val UNTESTED_REPOSITORIES = setOf(
-    "SpecialistFastMountRepository",
-    "SpecialistFirmwareRepository",
-    "SpecialistFirmwareUpdateRepository",
-    "SpecialistSerialFirmwareRepository",
-    "SpecialistBypassLearningRepository",
-    "SpecialistCloneRepository",
-)
 
 // Composition roots и платформенные обёртки: имя модуля Konsist — путь от корня репозитория до src/.
 private val APP_MODULES = setOf(

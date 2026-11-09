@@ -350,7 +350,7 @@ ViewModel через несколько composable, эффекты читают 
 | `foreground-usage` | импорт `core.lifecycle` (кроме `core.lifecycle.di`) — только `data`, `di`, файлы ViewModel и сам `core/lifecycle` |
 | `top-level-init-order` | верхнеуровневое свойство не читает свойство, объявленное ниже в файле |
 | `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
-| `repository-impl-tested` | у реализации репозитория (класс `..data..` с супертипом `*Repository`) есть тест в тестовом source set её модуля, использующий класс по имени в коде (не в `import`/KDoc/строке); временный allowlist `UNTESTED_REPOSITORIES` — репозитории, ещё не покрытые тестом |
+| `repository-impl-tested` | у реализации репозитория (класс `..data..` с супертипом `*Repository`) есть тест в тестовом source set её модуля, использующий класс по имени в коде (не в `import`/KDoc/строке); исключений нет |
 | `view-model` | ViewModel наследует `BaseViewModel` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — пакет `presentation` |
 | `view-model-owns-no-flows` | у наследника `BaseViewModel` нет своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`sideEffectFlow`/`mutableStateOf` |
 | `repository-contract` | члены интерфейсов `*Repository` и интерфейсов пакета `domain/repository`: `suspend` → `Response<…>`, `Flow`/`StateFlow`/`SharedFlow` → `…<Response<…>>`; синхронных функций и свойств-не-потоков нет |
@@ -437,7 +437,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | Платформенный `Settings()` — только `core/common/di` (`platformSettings`); в фиче хранилище — только data/di, `*Store` → `*Repository` | detekt `SettingsInstantiation`, Konsist `storage-usage`, `forbidden-suffix` | ✅ |
 | Мапперы `toDomain*` — `internal` в `data/mapper` | Konsist `mapper-placement` | ✅ |
 | `*UseCase` — в `domain/usecase`, оркестрация ≥ 2 зависимостей, только `operator fun invoke` с `Response` | Konsist `use-case-package`, `use-case-contract` | ✅ |
-| У реализации репозитория есть содержательный тест (успех → доменная модель, ошибка SDK → `Response.Error`, ключевые операции); SDK — за `*DataSource` | Konsist `repository-impl-tested` (allowlist непокрытых) | ✅ |
+| У реализации репозитория есть содержательный тест (успех → доменная модель, ошибка SDK → `Response.Error`, ключевые операции); SDK — за `*DataSource` | Konsist `repository-impl-tested` | ✅ |
 | Платформенные возможности (`core.permissions`, порты `presentation/platform`, `core.lifecycle`) — где начинается вызов | Konsist `capability-usage`, `foreground-usage` | ✅ |
 | Лямбда `update`/`getAndUpdate`/`updateAndGet` чистая (без suspend, сервисов, записи в хранилище, emit, launch) | detekt `UpdateLambdaSideEffects` | ✅ |
 | Широкий `catch` в корутине пробрасывает `CancellationException` | detekt `CatchSwallowsCancellation`, `SuspendFunSwallowedCancellation` | ✅ |

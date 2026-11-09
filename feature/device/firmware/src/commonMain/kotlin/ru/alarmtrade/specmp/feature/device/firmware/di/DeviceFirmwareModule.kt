@@ -1,11 +1,16 @@
 package ru.alarmtrade.specmp.feature.device.firmware.di
 
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.FirmwareDataSource
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.FirmwareUpdateDataSource
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.SpecialistFirmwareDataSource
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.SpecialistFirmwareUpdateDataSource
 import ru.alarmtrade.specmp.feature.device.firmware.data.preferences.SettingsFirmwareArchivePreferences
 import ru.alarmtrade.specmp.feature.device.firmware.data.repository.SpecialistFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.data.repository.SpecialistFirmwareUpdateRepository
@@ -33,15 +38,14 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
 private const val FIRMWARE_ARCHIVE_PREFERENCES = "firmwarearchive"
 
 val deviceFirmwareModule = module {
-    single<FirmwareRepository> {
-        // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание репозитория.
-        SpecialistFirmwareRepository(deviceInformation = { get() }, firmwareFiles = { get() }, files = { get() })
+    // Ленивые провайдеры: недоступный на платформе интерактор (COM-порт на iOS) не должен ронять создание источника.
+    single<FirmwareDataSource> {
+        SpecialistFirmwareDataSource(deviceInformation = { get() }, firmwareFiles = { get() }, files = { get() })
     }
-    single<FirmwareUpdateRepository> { SpecialistFirmwareUpdateRepository(bluetoothAlarmDeviceInteractor = { get() }) }
-    // COM-порт (приложение прошивки): на iOS интерактор SDK недоступен — провайдеры ленивые.
-    single<SerialFirmwareRepository> {
-        SpecialistSerialFirmwareRepository(alarmDevice = { get() })
-    }
+    single<FirmwareUpdateDataSource> { SpecialistFirmwareUpdateDataSource(alarmDevice = { get() }) }
+    singleOf(::SpecialistFirmwareRepository) bind FirmwareRepository::class
+    singleOf(::SpecialistFirmwareUpdateRepository) bind FirmwareUpdateRepository::class
+    singleOf(::SpecialistSerialFirmwareRepository) bind SerialFirmwareRepository::class
     // Состояние, привязанное к аккаунту, — чистится при логауте.
     single { FirmwareBootRequester() } bind AuthCloseable::class
     single { FirmwareArchivePicker() }

@@ -18,7 +18,8 @@
   основной программы (`firmwareFilesInteractor`), конфигурация, скачивание карты монтажа (`filesInteractor`), шаги SDK.
   Предметные ошибки SDK — `FastMountException(failure)` в `Response.Error`, в UI — `FastMountError.from`. Поток
   `questions()` холодный, автоответы SDK считаются в подписчике — **ровно один подписчик** (VM, пока идёт проверка
-  системы). `start(configurationId)` перечитывает конфигурацию с сервера (SDK нужен `CarConfiguration`).
+  системы). `start(configurationId)` перечитывает конфигурацию с сервера (SDK нужен `CarConfiguration`). SDK — через
+  `data/datasource/FastMountDataSource` (только делегирование, интеракторы лениво); тест — `SpecialistFastMountRepositoryTest`.
 - Вход: плитка «Быстрый монтаж» → `FastMountSelectionRoute` (`DeviceSelectionNavGraph(alarmsOnly = true)`: не
   сигнализации видны пунктиром с плашкой «Только для сигнализаций», выбрать нельзя) → `FastMountRoute`
   (`composeApp/navigation/FastMountWiring.kt`: `DeviceInteractionHost` + `FastMountEntry(onExit, onChooseAnother,

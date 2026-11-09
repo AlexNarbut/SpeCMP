@@ -1,18 +1,14 @@
 package ru.alarmtrade.specmp.feature.device.firmware.data.repository
 
-import ru.alarmtrade.specialist.interactors.deviceInformation.DeviceInformationInteractor
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceInformationRequest
 import ru.alarmtrade.specialist.interactors.deviceInformation.requests.GetDeviceListInformationRequest
-import ru.alarmtrade.specialist.interactors.files.RemoteFilesInteractor
 import ru.alarmtrade.specialist.interactors.files.requests.DownloadFileRequest
-import ru.alarmtrade.specialist.interactors.firmwareFiles.FirmwareFilesInteractor
 import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwareRequest
 import ru.alarmtrade.specialist.interactors.firmwareFiles.requests.SubsystemFirmwaresRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
-import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
-import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.FirmwareDataSource
 import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toDomain
 import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toKind
 import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toModule
@@ -28,59 +24,42 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 
-/**
- * [FirmwareRepository] над `deviceInformationInteractor`, `firmwareFilesInteractor` и `remoteFilesInteractor`
- * (скачивание файла версии); интеракторы — лениво.
- */
-internal class SpecialistFirmwareRepository(
-    private val deviceInformation: () -> DeviceInformationInteractor,
-    private val firmwareFiles: () -> FirmwareFilesInteractor,
-    private val files: () -> RemoteFilesInteractor,
-) : FirmwareRepository {
+/** [FirmwareRepository]: модули блока и системы из базы устройств, версии прошивок, скачивание файла версии. */
+internal class SpecialistFirmwareRepository(private val dataSource: FirmwareDataSource) : FirmwareRepository {
 
-    override suspend fun modules(deviceName: String, transport: ConnectionTransport): Response<List<FirmwareModule>> {
-        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getDeviceInformation.execute(GetDeviceInformationRequest(deviceName)).toResponse()
+    override suspend fun modules(deviceName: String, transport: ConnectionTransport): Response<List<FirmwareModule>> =
+        dataSource.deviceInformation(GetDeviceInformationRequest(deviceName)).toResponseOrUnavailable()
             .map { information -> information.subsystems.map { it.toModule(transport) } }
-    }
 
     override suspend fun latest(
         moduleId: Long,
         channel: FirmwareChannel,
         can: FirmwareCan?,
-    ): Response<FirmwareVersion> {
-        val interactor = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getLatestSubsystemFirmwareUseCase
-            .execute(
-                SubsystemFirmwareRequest(
-                    subsystemId = moduleId,
-                    type = channel.toSdk(),
-                    canCode = can?.code,
-                    canCodeVersion = can?.version,
-                ),
-            )
-            .toResponse()
-            .map { it.toDomain() }
-    }
+    ): Response<FirmwareVersion> = dataSource
+        .latestFirmware(
+            SubsystemFirmwareRequest(
+                subsystemId = moduleId,
+                type = channel.toSdk(),
+                canCode = can?.code,
+                canCodeVersion = can?.version,
+            ),
+        )
+        .toResponseOrUnavailable()
+        .map { it.toDomain() }
 
-    override suspend fun moduleId(deviceName: String, kind: FirmwareModuleKind): Response<Long?> {
-        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getDeviceInformation.execute(GetDeviceInformationRequest(deviceName)).toResponse()
+    override suspend fun moduleId(deviceName: String, kind: FirmwareModuleKind): Response<Long?> =
+        dataSource.deviceInformation(GetDeviceInformationRequest(deviceName)).toResponseOrUnavailable()
             .map { information -> information.subsystems.firstOrNull { it.type.toKind() == kind }?.id }
-    }
 
     override suspend fun systems(): Response<List<FirmwareSystem>> {
-        val interactor = deviceInformation.resolveOrNull() ?: return interactorUnavailable()
         val request =
             GetDeviceListInformationRequest(name = null, types = emptyList(), pageNumber = 0, pageSize = ALL_SYSTEMS)
-        return interactor.getDeviceListInformation.execute(request).toResponse()
+        return dataSource.deviceList(request).toResponseOrUnavailable()
             .map { devices -> devices.map { it.toSystem() }.filter { it.subsystems.isNotEmpty() } }
     }
 
-    override suspend fun download(url: String): Response<ByteArray> {
-        val interactor = files.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.downloadFileUseCase.execute(DownloadFileRequest(url)).toResponse()
-    }
+    override suspend fun download(url: String): Response<ByteArray> =
+        dataSource.download(DownloadFileRequest(url)).toResponseOrUnavailable()
 
     override suspend fun archivePage(
         moduleId: Long,
@@ -88,22 +67,19 @@ internal class SpecialistFirmwareRepository(
         page: Int,
         pageSize: Int,
         can: FirmwareCan?,
-    ): Response<FirmwareVersionPage> {
-        val interactor = firmwareFiles.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getSubsystemFirmwaresUseCase
-            .execute(
-                SubsystemFirmwaresRequest(
-                    subsystemId = moduleId,
-                    type = channel.toSdk(),
-                    pageNumber = page,
-                    pageSize = pageSize,
-                    canCode = can?.code,
-                    canCodeVersion = can?.version,
-                ),
-            )
-            .toResponse()
-            .map { list -> FirmwareVersionPage(items = list.map { it.toDomain() }, pageNumber = page) }
-    }
+    ): Response<FirmwareVersionPage> = dataSource
+        .firmwares(
+            SubsystemFirmwaresRequest(
+                subsystemId = moduleId,
+                type = channel.toSdk(),
+                pageNumber = page,
+                pageSize = pageSize,
+                canCode = can?.code,
+                canCodeVersion = can?.version,
+            ),
+        )
+        .toResponseOrUnavailable()
+        .map { list -> FirmwareVersionPage(items = list.map { it.toDomain() }, pageNumber = page) }
 }
 
 /** Все системы локальной базы устройств одной страницей (база на телефоне, страницы — фильтр в памяти). */

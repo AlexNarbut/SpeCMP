@@ -5,12 +5,11 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformWhile
-import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.requests.UpdateFirmwareRequest
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.device.firmware.data.datasource.FirmwareUpdateDataSource
 import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateException
@@ -20,12 +19,11 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUp
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 
 /**
- * [FirmwareUpdateRepository] над `bluetoothAlarmDeviceInteractor`: основная программа и Bluetooth-модуль обновляются
- * разными потоками SDK. Файл по `url` SDK скачивает сам — это стадия [FirmwareUpdateProgress.Preparing].
+ * [FirmwareUpdateRepository]: основная программа и Bluetooth-модуль обновляются разными потоками SDK. Файл по `url`
+ * SDK скачивает сам — это стадия [FirmwareUpdateProgress.Preparing].
  */
-internal class SpecialistFirmwareUpdateRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
-) : FirmwareUpdateRepository {
+internal class SpecialistFirmwareUpdateRepository(private val dataSource: FirmwareUpdateDataSource) :
+    FirmwareUpdateRepository {
 
     override fun update(target: BootModeTarget, firmware: FirmwareVersion): Flow<Response<FirmwareUpdateProgress>> =
         run(target, firmware.url)
@@ -35,20 +33,17 @@ internal class SpecialistFirmwareUpdateRepository(
 
     private fun run(target: BootModeTarget, filePathOrUrl: String): Flow<Response<FirmwareUpdateProgress>> = flow {
         emit(Response.Success(FirmwareUpdateProgress.Preparing))
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-        if (interactor == null) {
+        val request = UpdateFirmwareRequest(filePathOrUrl)
+        val source = when (target) {
+            BootModeTarget.MainProgram -> dataSource.updateMainProgram(request)
+            BootModeTarget.BluetoothModule -> dataSource.updateBluetoothModule(request)
+        }
+        if (source == null) {
             emit(failure(FirmwareFailure.Unknown))
             return@flow
         }
-        val request = UpdateFirmwareRequest(filePathOrUrl)
         var last: Response<FirmwareUpdateProgress> = Response.Success(FirmwareUpdateProgress.Preparing)
-        val steps = safeFlowRun {
-            val source = when (target) {
-                BootModeTarget.MainProgram -> interactor.updateAlarmDeviceFirmwareFlowUseCase.execute(request)
-                BootModeTarget.BluetoothModule -> interactor.updateBluetoothFirmwareFlowUseCase.execute(request)
-            }
-            source.map { it.toResponse() }
-        }.transformWhile { response ->
+        val steps = safeFlowRun { source.map { it.toResponse() } }.transformWhile { response ->
             last = when (response) {
                 is Response.Success -> response.value.toProgress()
 
