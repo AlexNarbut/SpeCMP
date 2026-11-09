@@ -43,8 +43,8 @@ interface DeviceSettingsRepository {
      */
     suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File>
 
-    /** Закрыть сессию снимка и удалить его файл. */
-    suspend fun discardSnapshot(snapshot: SettingsSource.File)
+    /** Закрыть сессию снимка и удалить его файл — в фоне приложения: переживает экран, который его вызвал. */
+    fun discardSnapshot(snapshot: SettingsSource.File)
 
     /** Сбросить подключённый блок к заводским настройкам (только [SettingsSource.Device]). */
     suspend fun resetDeviceToFactory(): Response<Unit>

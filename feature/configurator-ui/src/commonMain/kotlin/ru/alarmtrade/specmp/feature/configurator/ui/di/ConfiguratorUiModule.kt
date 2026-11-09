@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.configurator.ui.di
 
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud.CloudCardViewModel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud.CloudListViewModel
@@ -17,7 +16,6 @@ val configuratorUiModule = module {
             configurations = get(),
             settings = get(),
             deviceSession = get(),
-            appScope = get(appScopeQualifier),
             dispatchers = get(),
         )
     }

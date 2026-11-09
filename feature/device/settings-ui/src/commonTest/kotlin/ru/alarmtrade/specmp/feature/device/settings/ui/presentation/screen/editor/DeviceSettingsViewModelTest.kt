@@ -784,7 +784,7 @@ private class FakeSettingsRepository(private val initial: SettingsSection) : Dev
         return Response.Success(SettingsSource.File("snapshot.dxs", deviceName))
     }
 
-    override suspend fun discardSnapshot(snapshot: SettingsSource.File) {
+    override fun discardSnapshot(snapshot: SettingsSource.File) {
         discarded += snapshot
     }
 

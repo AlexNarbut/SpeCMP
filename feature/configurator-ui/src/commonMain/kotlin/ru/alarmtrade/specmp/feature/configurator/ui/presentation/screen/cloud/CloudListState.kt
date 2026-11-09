@@ -23,7 +23,7 @@ internal data class CloudListState(
     val shown: List<CloudConfigurationSummary> = emptyList(),
 )
 
-/** Производные списки — во VM в `combine` на `default`, а не геттером на каждую рекомпозицию на Main. */
+/** Производные списки — во VM один раз на изменение входов, а не геттером на каждую рекомпозицию. */
 internal fun CloudListState.withLists(): CloudListState {
     val all = list.content.orEmpty()
     return copy(

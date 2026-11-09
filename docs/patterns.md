@@ -621,9 +621,10 @@ presentation/screen/<screen>/
 - **Сессия экрана** (подписка на сокет, открытие чата) открывается в `init {}` и закрывается в
   `onCleared()`. Не нужны: `DisposableEffect` в nav-графе, методы `onScreenOpened()`/
   `onScreenDisposed()`, ручной сброс `_state` при входе, поля-`Job` для «текущей сессии».
-- **Suspend-работа из `onCleared()`** — через application-scoped скоуп
-  (`get(appScopeQualifier)` из `core:common`, передаётся в конструктор VM): `viewModelScope` к
-  этому моменту уже отменён.
+- **Работа, переживающая экран** (в том числе из `onCleared()`, когда `viewModelScope` уже отменён), —
+  в репозитории/сервисе со скоупом приложения (`get(appScopeQualifier)` из `core:common`); VM зовёт его
+  обычный (не `suspend`) метод. `CoroutineScope` в конструктор VM не передаётся (`view-model-dependencies`).
+  Пример — `DeviceSettingsRepository.discardSnapshot`.
 - **`var`-поля VM не пишутся с разных диспетчеров.** Коллектор на `dispatchers.io`, который
   пишет `var job`/`var flag`, а main — те же поля из интентов, — гонка (потерянная отмена, два
   параллельных цикла). Изменяемое состояние — в `MutableStateFlow` (`update {}`) или сериализация

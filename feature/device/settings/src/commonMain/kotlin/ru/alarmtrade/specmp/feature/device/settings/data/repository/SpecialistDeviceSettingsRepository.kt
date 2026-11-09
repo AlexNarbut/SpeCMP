@@ -1,6 +1,8 @@
 package ru.alarmtrade.specmp.feature.device.settings.data.repository
 
 import kotlin.random.Random
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import ru.alarmtrade.common.core.usecase.EmptyRequest
 import ru.alarmtrade.common.settings.interaction.model.errors.WrongSettingsSizeException
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.AlarmDeviceSettingsInteractor
@@ -9,6 +11,7 @@ import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CopySet
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.DeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.OpenDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfError
@@ -27,11 +30,14 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 
 /**
  * [DeviceSettingsRepository] над `alarmDeviceSettingsInteractor` (сессии настроек по `SettingsPath`) и
- * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво.
+ * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво; [appScope] — удаление снимков,
+ * переживающее экран.
  */
 class SpecialistDeviceSettingsRepository(
     private val settingsInteractor: () -> AlarmDeviceSettingsInteractor,
     private val alarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
+    private val appScope: CoroutineScope,
+    private val dispatchers: AppDispatchers,
 ) : DeviceSettingsRepository {
 
     override suspend fun open(source: SettingsSource, reload: Boolean): Response<SettingsSection> {
@@ -104,9 +110,11 @@ class SpecialistDeviceSettingsRepository(
         return copy(from, snapshot, saveChanges = true).map { snapshot }
     }
 
-    override suspend fun discardSnapshot(snapshot: SettingsSource.File) {
-        close(snapshot)
-        deleteSettingsScratchFile(snapshot.path)
+    override fun discardSnapshot(snapshot: SettingsSource.File) {
+        appScope.launch(dispatchers.io) {
+            close(snapshot)
+            deleteSettingsScratchFile(snapshot.path)
+        }
     }
 
     override suspend fun resetDeviceToFactory(): Response<Unit> {

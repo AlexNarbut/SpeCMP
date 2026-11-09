@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.settings.di
 
 import org.koin.dsl.module
+import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
 import ru.alarmtrade.specmp.feature.device.settings.data.preferences.SettingsDeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.data.repository.SpecialistDeviceSettingsRepository
@@ -16,7 +17,12 @@ private const val DEVICE_SETTINGS_PREFERENCES = "devicesettings"
 val deviceSettingsModule = module {
     single<DeviceSettingsRepository> {
         // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание репозитория.
-        SpecialistDeviceSettingsRepository(settingsInteractor = { get() }, alarmDeviceInteractor = { get() })
+        SpecialistDeviceSettingsRepository(
+            settingsInteractor = { get() },
+            alarmDeviceInteractor = { get() },
+            appScope = get(appScopeQualifier),
+            dispatchers = get(),
+        )
     }
     // Не привязано к аккаунту (ширина колонки дерева) — переживает логаут.
     single<DeviceSettingsPreferences> {

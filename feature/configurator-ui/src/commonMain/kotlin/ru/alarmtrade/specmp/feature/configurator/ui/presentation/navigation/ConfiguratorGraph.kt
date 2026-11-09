@@ -265,7 +265,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
             }
         }
     }
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is MineEffect.Message -> snackbarHostState.showSnackbar(getString(effect.message.text()))
 
@@ -357,7 +357,7 @@ private fun mineActions(
 private fun ModelsEntry(key: ModelsRoute, backStack: NavBackStack<NavKey>, onBack: () -> Unit) {
     val viewModel = koinViewModel<ModelsViewModel>(parameters = { parametersOf(key.file) })
     val state by viewModel.state.collectAsStateWithLifecycle()
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             // Модель выбрана — вместо выбора модели открывается редактор: «назад» из него ведёт к списку.
             is ModelsEffect.Open -> backStack.replaceCurrent(EditorRoute(effect.source))
@@ -412,7 +412,7 @@ private fun cloudCard(
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is CloudCardEffect.OpenUrl -> safeRun { uriHandler.openUri(effect.url) }
 
