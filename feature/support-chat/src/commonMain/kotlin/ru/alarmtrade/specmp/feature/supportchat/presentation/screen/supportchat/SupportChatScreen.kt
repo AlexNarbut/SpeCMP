@@ -90,7 +90,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 @Composable
 fun SupportChatScreen(
     state: State<SupportChatScreenState>,
-    effect: SharedFlow<SupportChatEffect>,
+    sideEffect: SharedFlow<SupportChatEffect>,
     actions: SupportChatActions,
     modifier: Modifier = Modifier,
 ) {
@@ -111,7 +111,7 @@ fun SupportChatScreen(
     val openNoAppText = stringResource(Strings.string.supportchat_chat_error_open_no_app)
     val savePermissionText = stringResource(Strings.string.supportchat_chat_error_save_permission)
 
-    effect.collectSideEffect { event ->
+    sideEffect.collectSideEffect { event ->
         when (event) {
             is SupportChatEffect.MessageSendFailed -> if (event.canRetry) {
                 val result = snackbarHostState.showSnackbar(sendFailedText, actionLabel = retryLabel)

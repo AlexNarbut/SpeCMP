@@ -50,6 +50,12 @@ data class SupportChatScreenState(
     // Вложения композера — сразу в presentation-модели, маппинг на границе VM.
     val pendingAttachments: ImmutableList<SupportChatUiAttachment> = persistentListOf(),
     val downloadingAttachmentId: String? = null,
+
+    // Служебное VM: сессия собирается (иначе «Повторить» начинает новую), идёт загрузка любой страницы
+    // истории (вторая не запускается), учёт прочтений.
+    val isSessionActive: Boolean = false,
+    val isLoadingHistory: Boolean = false,
+    val readIds: SupportChatReadIds = SupportChatReadIds(),
 ) {
     /** Лента текущего состояния; пустая в None/Loading/Error. */
     val timeline: SupportChatTimeline

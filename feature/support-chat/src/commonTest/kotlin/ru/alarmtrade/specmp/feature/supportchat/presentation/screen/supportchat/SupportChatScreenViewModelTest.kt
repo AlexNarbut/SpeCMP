@@ -7,14 +7,17 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -183,6 +186,42 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `typing indicator hides after timeout counted from the last event`() = runChatTest {
+        val viewModel = createViewModel()
+
+        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", true, isMine = false))
+        runCurrent()
+        advanceTimeBy(3.seconds)
+        repository.emitEvent(SupportChatEvent.TypingChanged("agent@example.com", true, isMine = false))
+        runCurrent()
+        advanceTimeBy(3.seconds)
+        runCurrent()
+        assertEquals("agent@example.com", viewModel.state.value.typingAuthor)
+
+        advanceTimeBy(3.seconds)
+        runCurrent()
+        assertNull(viewModel.state.value.typingAuthor)
+    }
+
+    @Test
+    fun `failed read mark is sent again with the next batch`() = runChatTest {
+        val viewModel = createViewModel()
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 7, text = "First")))
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 8, text = "Second")))
+        advanceUntilIdle()
+        repository.markMessagesAsReadResult = Response.Error(Exception("Network error"))
+
+        viewModel.onMessagesVisible(listOf("7"))
+        advanceUntilIdle()
+        repository.markMessagesAsReadResult = Response.Success(Unit)
+        viewModel.onMessagesVisible(listOf("7", "8"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(listOf(7L), listOf(7L, 8L)), repository.markedAsRead)
+        assertTrue(viewModel.state.value.messages.all { it.status == SupportChatMessageStatus.Read })
+    }
+
+    @Test
     fun `own typing event is ignored`() = runChatTest {
         val viewModel = createViewModel()
 
@@ -332,6 +371,23 @@ class SupportChatScreenViewModelTest {
 
         assertEquals(listOf(null, firstCursor), repository.historyCursors)
         assertEquals(listOf("Older", "Newest"), viewModel.state.value.messages.map { it.text })
+    }
+
+    @Test
+    fun `loadMore is skipped while reconnect reloads the newest page`() = runChatTest {
+        repository.historyPageOnLoad = listOf(incomingMessage(id = 1, text = "Old"))
+        val viewModel = createViewModel()
+        repository.loadDelayMillis = 1_000
+
+        repository.disconnect()
+        runCurrent()
+        repository.connect()
+        runCurrent()
+        viewModel.onLoadMore()
+        advanceUntilIdle()
+
+        assertEquals(listOf<SupportChatHistoryCursor?>(null, null), repository.historyCursors)
+        assertFalse(viewModel.state.value.isLoadingMore)
     }
 
     @Test
@@ -973,6 +1029,25 @@ class SupportChatScreenViewModelTest {
     }
 
     @Test
+    fun `session keeps running while the screen is not subscribed`() = runChatTest {
+        val viewModel = createViewModel(subscribe = false)
+        val subscription = subscribe(viewModel)
+        advanceUntilIdle()
+
+        subscription.cancel()
+        advanceTimeBy(10.seconds)
+        repository.emitEvent(SupportChatEvent.MessageReceived(incomingMessage(id = 1, text = "While away")))
+        advanceUntilIdle()
+        subscribe(viewModel)
+        advanceUntilIdle()
+
+        assertEquals(listOf("While away"), viewModel.state.value.messages.map { it.text })
+        assertEquals(1, repository.sessionCount)
+        assertEquals(0, repository.releasedSessionCount)
+        assertEquals(1, repository.loadHistoryCallCount)
+    }
+
+    @Test
     fun `cancelled view model scope releases the session`() = runChatTest {
         val viewModel = createViewModel()
 
@@ -1039,7 +1114,10 @@ class SupportChatScreenViewModelTest {
         }
     }
 
-    private fun TestScope.createViewModel(advance: Boolean = true): SupportChatScreenViewModel {
+    private fun TestScope.createViewModel(
+        advance: Boolean = true,
+        subscribe: Boolean = true,
+    ): SupportChatScreenViewModel {
         val viewModel = SupportChatScreenViewModel(
             repository = repository,
             dispatchers = dispatchers,
@@ -1049,18 +1127,21 @@ class SupportChatScreenViewModelTest {
             outbox = outbox,
         )
         createdViewModels += viewModel
-        // Экран подписан на state — с этого стартует работа VM (launchOnFirstStart).
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
+        // Экран подписан на state — с этого стартует работа VM (onStart).
+        if (subscribe) subscribe(viewModel)
         if (advance) advanceUntilIdle()
         return viewModel
     }
+
+    private fun TestScope.subscribe(viewModel: SupportChatScreenViewModel): Job =
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
 
     private fun TestScope.collectEffects(viewModel: SupportChatScreenViewModel): List<SupportChatEffect> {
         val effects = mutableListOf<SupportChatEffect>()
         // Unconfined: advanceUntilIdle не выполняет задачи backgroundScope, поэтому
         // коллектор должен получать эффект сразу при tryEmit, без диспатча.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effect.collect { effects.add(it) }
+            viewModel.sideEffect.collect { effects.add(it) }
         }
         return effects
     }

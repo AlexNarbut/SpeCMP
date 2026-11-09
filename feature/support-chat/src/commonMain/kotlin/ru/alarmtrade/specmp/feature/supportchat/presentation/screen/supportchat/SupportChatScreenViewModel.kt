@@ -1,35 +1,19 @@
 package ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat
 
-import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
-import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
@@ -42,7 +26,6 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRep
 import ru.alarmtrade.specmp.feature.supportchat.domain.timeline.SupportChatTimeline
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnection
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.isResendable
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toDomain
@@ -52,17 +35,10 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 
 /**
- * ViewModel экрана чата. Соединением владеет SDK: VM держит сессию, пока жива (уход с экрана
- * отпускает её), отображает состояние соединения и на каждом `Ready` перечитывает первую
- * страницу истории и отправляет очередь. Инварианты ленты держит [SupportChatTimeline],
- * очередь — [SupportChatOutbox].
- *
- * Конкурентность:
- * - события сессии собираются на main (поток репозитория — на io), лента и флаги — только
- *   `_state.update {}`;
- * - загрузка истории — одна за раз ([historyJob], main-confined); прочтения — атомарным [ReadIds];
- * - отправка — [sendMutex]: новые, ретраи и очередь уходят строго по одной;
- * - outbox — явными переходами, собственный мьютекс реализации.
+ * Соединением владеет SDK: VM держит сессию всю свою жизнь (уход с экрана отпускает её), на каждом `Ready`
+ * перечитывает первую страницу истории и отправляет очередь. Инварианты ленты держит [SupportChatTimeline],
+ * очередь — [SupportChatOutbox]. Состояние меняется на main через `reduce`; отправки (новые, ретраи, очередь)
+ * идут строго по одной под `executeWithProceedLock`.
  */
 class SupportChatScreenViewModel(
     private val repository: SupportChatRepository,
@@ -73,36 +49,16 @@ class SupportChatScreenViewModel(
     private val attachmentFiles: SupportChatAttachmentFiles,
     fileOpener: SupportChatFileOpener,
     private val outbox: SupportChatOutbox,
-) : LegacyBaseViewModel() {
-
-    private val _state = MutableStateFlow(SupportChatScreenState())
-
-    // Старт экрана — при первой подписке на state: очередь восстанавливается первой (это самые новые сообщения,
-    // история при своей загрузке встаёт перед ними), затем сессия. Работа живёт всю жизнь VM.
-    val state: StateFlow<SupportChatScreenState> = _state
-        .launchOnFirstStart {
-            restoreOutbox()
-            sessionJob = safeLaunch { collectSession() }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), _state.value)
-
-    private val _effect = sideEffectFlow<SupportChatEffect>()
-    val effect: SharedFlow<SupportChatEffect> = _effect.asSharedFlow()
-
-    private val sendMutex = Mutex()
+) : BaseViewModel<SupportChatScreenState, SupportChatEffect>(SupportChatScreenState()) {
 
     private val transfers = SupportChatAttachmentTransfers(repository, fileSaver, fileOpener, dispatchers)
 
-    // Пишется только из коллектора событий (единственный последовательный контекст).
-    private var typingTimeoutJob: Job? = null
-
-    // Main-confined: сбор сессии и текущая загрузка страницы истории.
-    private var sessionJob: Job? = null
-    private var historyJob: Job? = null
-
-    // Прочтения: отправленные (или в отправке) и ждущие отправки server id — атомарно, одним значением.
-    private val readIds = MutableStateFlow(ReadIds())
-    private var readFlushJob: Job? = null
+    // Очередь восстанавливается первой (это самые новые сообщения, история при своей загрузке встаёт перед ними),
+    // затем сессия.
+    override suspend fun onStart() {
+        restoreOutbox()
+        startSession()
+    }
 
     // region Вложения композера
 
@@ -115,21 +71,17 @@ class SupportChatScreenViewModel(
     }
 
     fun onAttachmentRejected(tooLarge: Boolean) {
-        _effect.tryEmit(SupportChatEffect.AttachmentRejected(tooLarge))
+        postSideEffect(SupportChatEffect.AttachmentRejected(tooLarge))
     }
 
     private fun addPendingAttachment(attachment: SupportChatUiAttachment) {
-        _state.update {
-            it.copy(pendingAttachments = (it.pendingAttachments + attachment).toPersistentList())
-        }
+        reduce { copy(pendingAttachments = (pendingAttachments + attachment).toPersistentList()) }
     }
 
     fun onRemoveAttachment(id: String) {
-        val removed = _state.value.pendingAttachments.firstOrNull { it.id == id } ?: return
-        _state.update { current ->
-            current.copy(pendingAttachments = current.pendingAttachments.filterNot { it.id == id }.toPersistentList())
-        }
-        removed.localPath?.let { path -> safeLaunch { discardFile(path) } }
+        val removed = currentState.pendingAttachments.firstOrNull { it.id == id } ?: return
+        reduce { copy(pendingAttachments = pendingAttachments.filterNot { it.id == id }.toPersistentList()) }
+        removed.localPath?.let { path -> intent { discardFile(path) } }
     }
 
     // endregion
@@ -138,9 +90,9 @@ class SupportChatScreenViewModel(
 
     fun onSend(text: String) {
         // Офлайн-ввод запрещён продуктово; UI выключает композер, VM — страховка.
-        if (!_state.value.isInputEnabled) return
+        if (!currentState.isInputEnabled) return
         val trimmed = text.trim()
-        val attachments = _state.value.pendingAttachments
+        val attachments = currentState.pendingAttachments
         if (trimmed.isEmpty() && attachments.isEmpty()) return
 
         // Контент сообщения эксклюзивен (SDK не поддерживает подпись к вложению):
@@ -151,15 +103,10 @@ class SupportChatScreenViewModel(
             if (trimmed.isNotEmpty()) add(optimisticMessage(timestamp, text = trimmed))
         }
 
-        _state.update {
-            it.copy(
-                history = LCEState.Content(it.timeline.withOptimistic(outgoing)),
-                pendingAttachments = persistentListOf(),
-            )
-        }
+        reduce { withTimeline(timeline.withOptimistic(outgoing)).copy(pendingAttachments = persistentListOf()) }
 
-        safeLaunch {
-            sendMutex.withLock {
+        intent {
+            executeWithProceedLock(needSkipAnother = false) {
                 outgoing.forEach { send(it.id) }
             }
         }
@@ -169,26 +116,24 @@ class SupportChatScreenViewModel(
         // Атомарный переход Failed → Sending: второй тап (или action снекбара
         // параллельно с тапом по пузырю) перехода не получит и ничего не отправит.
         if (!tryTransition(messageId, from = RETRYABLE, to = SupportChatMessageStatus.Sending)) return
-        safeLaunch {
-            sendMutex.withLock { send(messageId) }
+        intent {
+            executeWithProceedLock(needSkipAnother = false) { send(messageId) }
         }
     }
 
     fun onDeleteFailed(messageId: String) {
-        val message = _state.value.timeline.find(messageId) ?: return
+        val message = currentState.timeline.find(messageId) ?: return
         if (!message.isMine || message.serverId != null || message.status != SupportChatMessageStatus.Failed) return
         updateTimeline { it.without(messageId) }
-        safeLaunch { forget(message) }
+        intent { forget(message) }
     }
 
-    /**
-     * Отправка одного сообщения, уже переведённого в `Sending`. Вызывать под [sendMutex].
-     */
+    /** Отправка одного сообщения, уже переведённого в `Sending`. Вызывать под `executeWithProceedLock`. */
     private suspend fun send(messageId: String) {
-        val message = _state.value.timeline.find(messageId) ?: return
+        val message = currentState.timeline.find(messageId) ?: return
         if (message.status != SupportChatMessageStatus.Sending) return
 
-        if (!_state.value.isInputEnabled) {
+        if (!currentState.isInputEnabled) {
             park(message)
             return
         }
@@ -213,7 +158,7 @@ class SupportChatScreenViewModel(
 
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to send message" }
-                if (response.exception.appError == ApiError.NoConnection || !_state.value.isInputEnabled) {
+                if (response.exception.appError == ApiError.NoConnection || !currentState.isInputEnabled) {
                     // Отправку оборвала потеря связи — это не ошибка пользователя:
                     // сообщение ждёт переподключения в очереди.
                     park(message)
@@ -232,7 +177,7 @@ class SupportChatScreenViewModel(
     private suspend fun fail(message: SupportChatMessage) {
         updateStatus(message.id, SupportChatMessageStatus.Failed)
         withContext(dispatchers.io) { outbox.enqueue(message.copy(status = SupportChatMessageStatus.Failed)) }
-        _effect.tryEmit(SupportChatEffect.MessageSendFailed(message.id, canRetry = message.isResendable()))
+        postSideEffect(SupportChatEffect.MessageSendFailed(message.id, canRetry = message.isResendable()))
     }
 
     private fun missingContent(message: SupportChatMessage): Response.Error {
@@ -262,12 +207,12 @@ class SupportChatScreenViewModel(
 
     private fun retryPendingMessages() {
         safeLaunch {
-            sendMutex.withLock {
-                val pending = _state.value.messages
+            executeWithProceedLock(needSkipAnother = false) {
+                val pending = currentState.messages
                     .filter { it.isMine && it.status == SupportChatMessageStatus.Pending }
                     .map { it.id }
                 for (id in pending) {
-                    if (!_state.value.isInputEnabled) break
+                    if (!currentState.isInputEnabled) break
                     if (tryTransition(id, from = PENDING, to = SupportChatMessageStatus.Sending)) {
                         send(id)
                     }
@@ -291,14 +236,19 @@ class SupportChatScreenViewModel(
 
     // region Соединение
 
-    /**
-     * Сессия живёт, пока VM её собирает: отмена `viewModelScope` при уходе с экрана отпускает
-     * соединение в SDK. В фоне заявка держится — SDK сам ждёт сеть и переподключается.
-     */
-    private suspend fun collectSession() {
-        repository.session()
-            .flowOn(dispatchers.io)
-            .collect { handleEvent(it) }
+    // Сессия живёт, пока VM её собирает (уход с экрана отпускает заявку в SDK); в фоне заявка держится —
+    // SDK сам ждёт сеть и переподключается. Поток завершается только после `Unavailable`.
+    private fun startSession() {
+        reduce { copy(isSessionActive = true) }
+        launchReplacing(SESSION_KEY) {
+            try {
+                repository.session()
+                    .flowOn(dispatchers.io)
+                    .collect { handleEvent(it) }
+            } finally {
+                reduce { copy(isSessionActive = false) }
+            }
+        }
     }
 
     private suspend fun handleEvent(event: SupportChatEvent) {
@@ -316,56 +266,23 @@ class SupportChatScreenViewModel(
         }
     }
 
-    /** UI-состояние соединения — прямое отображение состояния SDK. */
     private fun handleConnection(state: SupportChatConnectionState) {
+        reduce { withConnection(state) }
         when (state) {
-            SupportChatConnectionState.Connecting ->
-                _state.update { it.copy(connection = SupportChatConnection.Connecting) }
-
-            SupportChatConnectionState.Ready -> {
-                _state.update {
-                    it.copy(
-                        connection = SupportChatConnection.Online,
-                        hasConnectionIssue = false,
-                        isChatAuthFailed = false,
-                    )
-                }
-                // Пока соединения не было, могли прийти сообщения; очередь — после страницы.
-                loadFirstHistoryPage()
-            }
+            // Пока соединения не было, могли прийти сообщения; очередь — после страницы.
+            SupportChatConnectionState.Ready -> loadFirstHistoryPage()
 
             SupportChatConnectionState.Reconnecting,
             SupportChatConnectionState.WaitingForNetwork,
             SupportChatConnectionState.AuthFailed,
             -> {
                 logger.d { "Chat connection lost: $state" }
-                _state.update {
-                    it.copy(
-                        connection = SupportChatConnection.Offline,
-                        hasConnectionIssue = true,
-                        isChatAuthFailed = state == SupportChatConnectionState.AuthFailed,
-                    )
-                }
                 requeueUnconfirmed()
             }
 
-            SupportChatConnectionState.Unavailable -> {
-                logger.d { "Chat session unavailable" }
-                _state.update {
-                    it.copy(
-                        connection = SupportChatConnection.Offline,
-                        hasConnectionIssue = true,
-                        // Показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии).
-                        history = if (it.history is LCEState.Content) {
-                            it.history
-                        } else {
-                            LCEState.Error(
-                                SupportChatError.HistoryUnavailable,
-                            )
-                        },
-                    )
-                }
-            }
+            SupportChatConnectionState.Unavailable -> logger.d { "Chat session unavailable" }
+
+            SupportChatConnectionState.Connecting -> Unit
         }
     }
 
@@ -373,7 +290,7 @@ class SupportChatScreenViewModel(
     // SDK отвечает Success и в мёртвый сокет. После переподключения они уйдут повторно
     // (at-least-once: дубль возможен, если эхо потерялось, а сообщение дошло).
     private fun requeueUnconfirmed() {
-        val unconfirmed = _state.value.messages.filter {
+        val unconfirmed = currentState.messages.filter {
             it.isMine && it.serverId == null && it.status == SupportChatMessageStatus.Sent
         }
         val requeued = unconfirmed.filter { tryTransition(it.id, from = SENT, to = SupportChatMessageStatus.Pending) }
@@ -384,15 +301,14 @@ class SupportChatScreenViewModel(
     }
 
     private fun handleTypingChanged(authorEmail: String?, isTyping: Boolean) {
-        _state.update { it.copy(typingAuthor = if (isTyping) authorEmail else null) }
-        typingTimeoutJob?.cancel()
-        if (isTyping && authorEmail != null) {
-            typingTimeoutJob = safeLaunch {
-                delay(TYPING_TIMEOUT)
-                _state.update { current ->
-                    if (current.typingAuthor == authorEmail) current.copy(typingAuthor = null) else current
-                }
-            }
+        reduce { copy(typingAuthor = if (isTyping) authorEmail else null) }
+        if (!isTyping || authorEmail == null) {
+            cancelLaunched(TYPING_KEY)
+            return
+        }
+        launchReplacing(TYPING_KEY) {
+            delay(TYPING_TIMEOUT)
+            reduce { if (typingAuthor == authorEmail) copy(typingAuthor = null) else this }
         }
     }
 
@@ -408,14 +324,13 @@ class SupportChatScreenViewModel(
      */
     private fun updateTimelineConfirming(
         transform: (SupportChatTimeline) -> SupportChatTimeline,
-        extra: (SupportChatScreenState) -> SupportChatScreenState = { it },
+        extra: SupportChatScreenState.() -> SupportChatScreenState = { this },
     ): List<SupportChatMessage> {
         var confirmed = emptyList<SupportChatMessage>()
-        _state.update { current ->
-            val before = current.timeline
-            val after = transform(before)
-            confirmed = before.messages.filter { old -> old.serverId == null && after.find(old.id) == null }
-            extra(current.copy(history = LCEState.Content(after)))
+        reduce {
+            val after = transform(timeline)
+            confirmed = timeline.messages.filter { old -> old.serverId == null && after.find(old.id) == null }
+            withTimeline(after).extra()
         }
         return confirmed
     }
@@ -425,49 +340,35 @@ class SupportChatScreenViewModel(
     // region История
 
     fun onLoadMore() {
-        val current = _state.value
+        val current = currentState
         if (!current.isInputEnabled || !current.isInitialHistoryLoaded || !current.hasMoreHistory) return
-        if (historyJob?.isActive == true) return
-        _state.update { it.copy(isLoadingMore = true) }
-        historyJob = safeLaunch { loadHistoryPage(current.historyCursor) }
+        if (current.isLoadingHistory) return
+        reduce { copy(isLoadingMore = true, isLoadingHistory = true) }
+        launchReplacing(HISTORY_KEY) { loadHistoryPage(current.historyCursor) }
     }
 
     fun onHistoryRetry() {
+        val current = currentState
         when {
             // Сессию не удалось начать — начать заново.
-            sessionJob?.isActive != true -> {
-                _state.update { it.copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading) }
-                sessionJob = safeLaunch { collectSession() }
+            !current.isSessionActive -> {
+                reduce { copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading) }
+                startSession()
             }
 
-            !_state.value.isInitialHistoryLoaded -> if (_state.value.isInputEnabled) loadFirstHistoryPage()
+            !current.isInitialHistoryLoaded -> if (current.isInputEnabled) loadFirstHistoryPage()
 
             else -> {
-                _state.update { it.copy(isHistoryPagingFailed = false) }
+                reduce { copy(isHistoryPagingFailed = false) }
                 onLoadMore()
             }
         }
     }
 
-    /**
-     * Самая новая страница — на каждом `Ready`: пока соединения не было, могли прийти
-     * сообщения. Перезапускает текущую загрузку. Пока первая страница не получена —
-     * первичная загрузка (скелетон / полноэкранная ошибка), дальше — тихое обновление.
-     */
+    // Самая новая страница — на каждом `Ready`: заменяет текущую загрузку.
     private fun loadFirstHistoryPage() {
-        historyJob?.cancel()
-        _state.update { current ->
-            current.copy(
-                isLoadingMore = false,
-                // Лента (восстановленный outbox, live-сообщение) остаётся на экране.
-                history = if (!current.isInitialHistoryLoaded && current.history !is LCEState.Content) {
-                    LCEState.Loading
-                } else {
-                    current.history
-                },
-            )
-        }
-        historyJob = safeLaunch { loadHistoryPage(cursor = null) }
+        reduce { withFirstPageLoading() }
+        launchReplacing(HISTORY_KEY) { loadHistoryPage(cursor = null) }
     }
 
     private suspend fun loadHistoryPage(cursor: SupportChatHistoryCursor?) {
@@ -477,18 +378,7 @@ class SupportChatScreenViewModel(
                 val page = response.value
                 val confirmed = updateTimelineConfirming(
                     transform = { it.withHistoryPage(page.messages) },
-                    extra = { current ->
-                        // Повторная первая страница (после переподключения) пагинацию не сбрасывает:
-                        // курсор — номер страницы, новые сообщения сдвигают её только к дублям.
-                        val resetPaging = !isFirstPage || !current.isInitialHistoryLoaded
-                        current.copy(
-                            isInitialHistoryLoaded = true,
-                            isLoadingMore = false,
-                            isHistoryPagingFailed = false,
-                            historyCursor = if (resetPaging) page.nextCursor else current.historyCursor,
-                            hasMoreHistory = if (resetPaging) page.nextCursor != null else current.hasMoreHistory,
-                        )
-                    },
+                    extra = { withHistoryPage(page, isFirstPage) },
                 )
                 confirmed.forEach { forget(it) }
             }
@@ -496,22 +386,11 @@ class SupportChatScreenViewModel(
             is Response.Error -> {
                 logger.d(response.exception) { "Failed to load history page" }
                 var hadContent = false
-                _state.update { current ->
-                    hadContent = current.history is LCEState.Content
-                    current.copy(
-                        isLoadingMore = false,
-                        isHistoryPagingFailed = true,
-                        // Показывать нечего — полноэкранная ошибка с «Повторить».
-                        history = if (hadContent) {
-                            current.history
-                        } else {
-                            LCEState.Error(
-                                SupportChatError.from(response.exception),
-                            )
-                        },
-                    )
+                reduce {
+                    hadContent = history is LCEState.Content
+                    withHistoryError(response.exception)
                 }
-                if (hadContent) _effect.tryEmit(SupportChatEffect.HistoryLoadFailed)
+                if (hadContent) postSideEffect(SupportChatEffect.HistoryLoadFailed)
             }
         }
         // Очередь — после самой новой страницы: дошедшие сообщения уже подтвердила история.
@@ -526,37 +405,47 @@ class SupportChatScreenViewModel(
         // Батчинг: скролл истории отдаёт пачки видимых id — помечаем прочитанными
         // одним сетевым вызовом с debounce, а не запросом на каждое сообщение.
         val idSet = messageIds.toHashSet()
-        val eligibleServerIds = _state.value.messages.mapNotNull { message ->
-            val serverId = message.serverId
-            serverId?.takeIf {
+        val known = currentState.readIds
+        val eligibleServerIds = currentState.messages.mapNotNull { message ->
+            message.serverId?.takeIf {
                 message.id in idSet &&
                     !message.isMine &&
                     message.status != SupportChatMessageStatus.Read &&
-                    serverId !in readIds.value.marked &&
-                    serverId !in readIds.value.pending
+                    !known.isKnown(it)
             }
         }
         if (eligibleServerIds.isEmpty()) return
 
-        readIds.update { it.copy(pending = it.pending + eligibleServerIds) }
-        // Не перезапускаем таймер при непрерывном скролле: flush не реже
-        // одного раза за READ_FLUSH_DELAY.
-        if (readFlushJob?.isActive == true) return
-        readFlushJob = safeLaunch {
-            delay(READ_FLUSH_DELAY)
-            flushReadIds()
+        // Не перезапускаем таймер при непрерывном скролле: flush не реже одного раза за READ_FLUSH_DELAY.
+        var scheduleFlush = false
+        reduce {
+            scheduleFlush = !readIds.isFlushScheduled
+            copy(readIds = readIds.withPending(eligibleServerIds))
+        }
+        if (!scheduleFlush) return
+        intent {
+            try {
+                delay(READ_FLUSH_DELAY)
+                flushReadIds()
+            } finally {
+                reduce { copy(readIds = readIds.copy(isFlushScheduled = false)) }
+            }
         }
     }
 
     private suspend fun flushReadIds() {
-        // Отмечаем как «в работе» сразу (одним атомарным переходом), чтобы не отправить дубль; при ошибке
-        // возвращаем в буфер — следующая видимость доотправит.
-        val ids = readIds.getAndUpdate { it.copy(marked = it.marked + it.pending, pending = emptySet()) }.pending
+        // Отмечаем как «в работе» сразу (одним переходом), чтобы не отправить дубль; при ошибке
+        // возвращаем в буфер — уйдут со следующим батчем.
+        var ids = emptySet<Long>()
+        reduce {
+            ids = readIds.pending
+            copy(readIds = readIds.pendingTaken())
+        }
         if (ids.isEmpty()) return
         val response = withContext(dispatchers.io) { repository.markMessagesAsRead(ids.toList()) }
         if (response is Response.Error) {
             logger.d(response.exception) { "Failed to mark messages as read" }
-            readIds.update { it.copy(marked = it.marked - ids, pending = it.pending + ids) }
+            reduce { copy(readIds = readIds.returned(ids)) }
         }
     }
 
@@ -576,19 +465,21 @@ class SupportChatScreenViewModel(
     }
 
     /**
-     * Одна файловая операция за раз: слот захватывается атомарно в том же update, что и запись (повторный тап по
+     * Одна файловая операция за раз: слот захватывается атомарно в том же reduce, что и запись (повторный тап по
      * тому же или другому вложению не пройдёт), освобождается в finally.
      */
     private fun withFileSlot(attachmentId: String, block: suspend () -> SupportChatEffect?) {
-        val previous = _state.getAndUpdate {
-            if (it.downloadingAttachmentId == null) it.copy(downloadingAttachmentId = attachmentId) else it
+        var acquired = false
+        reduce {
+            acquired = downloadingAttachmentId == null
+            if (acquired) copy(downloadingAttachmentId = attachmentId) else this
         }
-        if (previous.downloadingAttachmentId != null) return
-        safeLaunch {
+        if (!acquired) return
+        intent {
             try {
-                block()?.let(_effect::tryEmit)
+                block()?.let(::postSideEffect)
             } finally {
-                _state.update { it.copy(downloadingAttachmentId = null) }
+                reduce { copy(downloadingAttachmentId = null) }
             }
         }
     }
@@ -604,7 +495,7 @@ class SupportChatScreenViewModel(
     }
 
     private fun updateTimeline(transform: (SupportChatTimeline) -> SupportChatTimeline) {
-        _state.update { current -> current.copy(history = LCEState.Content(transform(current.timeline))) }
+        reduce { withTimeline(transform(timeline)) }
     }
 
     private fun updateStatus(id: String, status: SupportChatMessageStatus) {
@@ -613,43 +504,24 @@ class SupportChatScreenViewModel(
 
     private fun tryTransition(id: String, from: Set<SupportChatMessageStatus>, to: SupportChatMessageStatus): Boolean {
         var transitioned = false
-        _state.update { current ->
-            val next = current.timeline.tryTransition(id, from, to)
+        reduce {
+            val next = timeline.tryTransition(id, from, to)
             transitioned = next != null
-            if (next == null) current else current.copy(history = LCEState.Content(next))
+            if (next == null) this else withTimeline(next)
         }
         return transitioned
     }
 
-    @OptIn(ExperimentalUuidApi::class)
-    private fun optimisticMessage(
-        timestamp: Instant,
-        text: String? = null,
-        attachment: SupportChatAttachment? = null,
-    ): SupportChatMessage = SupportChatMessage(
-        // Глобально уникален: переживает пересоздание VM и процесса (ключ outbox).
-        id = "$LOCAL_ID_PREFIX${Uuid.random()}",
-        serverId = null,
-        text = text,
-        attachment = attachment,
-        time = timestamp,
-        isMine = true,
-        authorEmail = null,
-        status = SupportChatMessageStatus.Sending,
-    )
-
     // endregion
 
     private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
+        const val SESSION_KEY = "session"
+        const val HISTORY_KEY = "history"
+        const val TYPING_KEY = "typing"
         val TYPING_TIMEOUT = 5.seconds
         val READ_FLUSH_DELAY = 300.milliseconds
         val RETRYABLE = setOf(SupportChatMessageStatus.Failed)
         val PENDING = setOf(SupportChatMessageStatus.Pending)
         val SENT = setOf(SupportChatMessageStatus.Sent)
-        const val LOCAL_ID_PREFIX = "local-"
     }
 }
-
-/** Прочтения сообщений: [marked] — отправлены или в отправке, [pending] — ждут отправки (батч с задержкой). */
-private data class ReadIds(val marked: Set<Long> = emptySet(), val pending: Set<Long> = emptySet())

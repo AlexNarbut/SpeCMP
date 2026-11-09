@@ -79,7 +79,7 @@ fun SupportChatEntry(
 
     SupportChatScreen(
         state = state,
-        effect = viewModel.effect,
+        sideEffect = viewModel.sideEffect,
         actions = actions,
     )
 }
