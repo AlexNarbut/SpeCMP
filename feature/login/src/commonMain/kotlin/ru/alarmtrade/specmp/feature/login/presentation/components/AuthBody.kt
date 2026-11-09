@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -104,7 +105,8 @@ private fun AuthCompactBody(
     CmpColumn(
         modifier = modifier
             .fillMaxSize()
-            .fillMaxWidth()
+            .imePadding()
+            .hideKeyboardOnScroll()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -138,7 +140,8 @@ private fun AuthMediumBody(
     CmpColumn(
         modifier = modifier
             .fillMaxSize()
-            .fillMaxWidth()
+            .imePadding()
+            .hideKeyboardOnScroll()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -172,7 +175,8 @@ private fun AuthExpandedBody(
     CmpRow(
         modifier = modifier
             .fillMaxSize()
-            .fillMaxWidth()
+            .imePadding()
+            .hideKeyboardOnScroll()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 56.dp, vertical = 48.dp),
         verticalAlignment = Alignment.CenterVertically,

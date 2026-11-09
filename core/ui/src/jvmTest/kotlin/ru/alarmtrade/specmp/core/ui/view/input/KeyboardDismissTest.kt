@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -15,12 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -120,6 +124,26 @@ class KeyboardDismissTest {
         onNodeWithTag(LIST).performTouchInput { swipeUp() }
 
         onNodeWithTag(FIELD).assertIsNotFocused()
+    }
+
+    @Test
+    fun `focusing a field below the fold keeps focus while the container scrolls it into view`() = runComposeUiTest {
+        setContent {
+            CmpColumn(
+                modifier = Modifier
+                    .height(200.dp)
+                    .hideKeyboardOnScroll()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                CmpBox(modifier = Modifier.fillMaxWidth().height(400.dp))
+                var text by remember { mutableStateOf("") }
+                CmpTextField(value = text, onValueChange = { text = it }, modifier = Modifier.testTag(FIELD))
+            }
+        }
+
+        onNodeWithTag(FIELD).requestFocus()
+
+        onNodeWithTag(FIELD).assertIsFocused().assertIsDisplayed()
     }
 
     @Test

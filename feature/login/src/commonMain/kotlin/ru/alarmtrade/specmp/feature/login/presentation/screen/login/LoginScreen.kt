@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.login.presentation.screen.login
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,6 +32,11 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
+import ru.alarmtrade.specmp.feature.login.presentation.components.formTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.rememberAuthFormTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.rememberNextFieldKeyboardActions
+import ru.alarmtrade.specmp.feature.login.presentation.components.revealsFormTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.submitKeyboardActions
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.subcomponents.ActivationRequiredDialog
 
 @Composable
@@ -51,6 +55,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
 ) {
     val isAuthError = state.isAuthError
+    val formTail = rememberAuthFormTail()
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
@@ -78,6 +83,7 @@ fun LoginScreen(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next,
             ),
+            keyboardActions = rememberNextFieldKeyboardActions(),
             leadingIcon = {
                 CmpIcon(
                     icon = CmpIcons.Email,
@@ -91,14 +97,11 @@ fun LoginScreen(
             onValueChange = onPasswordChange,
             isPasswordVisible = state.isPasswordVisible,
             onPasswordVisibilityChange = onPasswordVisibilityChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().revealsFormTail(formTail),
             enabled = !state.isAuthLoading,
             isError = isAuthError,
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    if (state.canSubmit) onSubmit()
-                },
-            ),
+            imeAction = ImeAction.Go,
+            keyboardActions = submitKeyboardActions(enabled = state.canSubmit, onSubmit = onSubmit),
         )
 
         CmpTextButton(
@@ -115,7 +118,7 @@ fun LoginScreen(
                 stringResource(Strings.string.login_login_btn_submit)
             },
             onClick = onSubmit,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            modifier = Modifier.fillMaxWidth().height(52.dp).formTail(formTail),
             enabled = state.canSubmit,
             isLoading = state.isAuthLoading,
             colors = colors,

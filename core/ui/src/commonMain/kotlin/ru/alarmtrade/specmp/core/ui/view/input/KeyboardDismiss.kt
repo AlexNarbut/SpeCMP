@@ -33,7 +33,10 @@ fun Modifier.clearFocusOnTapOutside(): Modifier = this then ClearFocusOnTapOutsi
 /** Область, тап по которой не снимает фокус ([clearFocusOnTapOutside]): поля ввода, кнопка «Отправить» у поля. */
 fun Modifier.keepFocusOnTap(): Modifier = this then KeepFocusOnTapElement
 
-/** Прокрутка пальцем/колесом вложенного списка снимает фокус и прячет клавиатуру. */
+/**
+ * Прокрутка пальцем/колесом вложенного списка снимает фокус и прячет клавиатуру; программная прокрутка, fling и
+ * bringIntoView (фокус на поле ниже края) — нет.
+ */
 fun Modifier.hideKeyboardOnScroll(): Modifier = this then HideKeyboardOnScrollElement
 
 private data object ClearFocusOnTapOutsideElement : ModifierNodeElement<ClearFocusOnTapOutsideNode>() {
@@ -130,15 +133,33 @@ private class ClearFocusOnTapOutsideNode :
     }
 }
 
+// bringIntoView (фокус поля ниже края) тоже скроллит с источником UserInput: прячем клавиатуру, только пока
+// палец/кнопка мыши прижаты к контейнеру или пришло колесо, иначе фокус на поле сам себя снимал бы.
 private class HideKeyboardOnScrollNode :
     DelegatingNode(),
     NestedScrollConnection,
+    PointerInputModifierNode,
     CompositionLocalConsumerModifierNode {
+
+    private var isPointerDown = false
 
     fun attachToNestedScroll(): HideKeyboardOnScrollNode = apply { delegate(nestedScrollModifierNode(this, null)) }
 
+    override fun onPointerEvent(pointerEvent: PointerEvent, pass: PointerEventPass, bounds: IntSize) {
+        if (pass != PointerEventPass.Initial) return
+        if (pointerEvent.type == PointerEventType.Scroll) {
+            dismissKeyboard()
+        } else {
+            isPointerDown = pointerEvent.changes.any { it.pressed }
+        }
+    }
+
+    override fun onCancelPointerInput() {
+        isPointerDown = false
+    }
+
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-        if (source == NestedScrollSource.UserInput && available != Offset.Zero) dismissKeyboard()
+        if (isPointerDown && source == NestedScrollSource.UserInput && available != Offset.Zero) dismissKeyboard()
         return Offset.Zero
     }
 }
