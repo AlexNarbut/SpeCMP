@@ -61,6 +61,7 @@ class AutostartMappersTest {
     fun dataExchangeThroughAppIsCritical() {
         listOf(
             BypassLearningStatus.LADA_CAN_IMMO_BYPASS,
+            BypassLearningStatus.REQUEST_LADA_VESTA_CAN_PATCH,
             BypassLearningStatus.REQUEST_MED_17_5_25,
             BypassLearningStatus.REQUEST_MED_17_9_63,
             BypassLearningStatus.GTP_AUTHORIZATION_ALGORITHM
@@ -101,6 +102,17 @@ class AutostartMappersTest {
             null
         ).forEach { assertEquals(BypassError.GENERAL, it.toDomain(), "error $it") }
         assertEquals(BypassError.OPTION_NOT_SELECTED, BypassLearningError.BYPASS_OPTION_IS_NOT_SELECTED.toDomain())
+    }
+
+    @Test
+    fun ladaVestaCanPatchHasOwnStepAndError() {
+        val step = assertIs<BypassEvent.Step>(bypass(BypassLearningStatus.REQUEST_LADA_VESTA_CAN_PATCH)).step
+        assertEquals(BypassSubject.LADA_VESTA_CAN, step.subject)
+        val error = bypass(BypassLearningStatus.FINISH_ERROR, BypassLearningError.LADA_VESTA_CAN_PATCH_SEND)
+        assertEquals(
+            BypassResult.Error(BypassError.LADA_VESTA_CAN_PATCH_SEND),
+            assertIs<BypassEvent.Finished>(error).result
+        )
     }
 
     @Test

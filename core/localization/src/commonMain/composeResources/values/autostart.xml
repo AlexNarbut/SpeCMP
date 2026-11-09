@@ -60,6 +60,7 @@
     <string name="autostart_bypass_item_ecu_done">Data exchange with the engine control unit is finished. Please wait</string>
     <string name="autostart_bypass_item_learning">Learning in progress, please wait</string>
     <string name="autostart_bypass_item_critical_lada">LADA CAN immobilizer bypass. Exchanging data with the app.</string>
+    <string name="autostart_bypass_item_critical_lada_vesta">LADA Vesta CAN immobilizer bypass. Sending the firmware patch to the alarm unit. Do not turn off the ignition.</string>
     <string name="autostart_bypass_item_critical_alarm">Exchanging data with the alarm unit.</string>
     <string name="autostart_bypass_item_critical_ecu">Exchanging data with the engine control unit.</string>
     <string name="autostart_instruction_label_forbidden">Don’t:</string>
@@ -135,6 +136,8 @@
     <string name="autostart_bypass_error_no_vin_what">No VIN on the CAN bus.</string>
     <string name="autostart_bypass_error_lada_can_what">No CAN bus communication or the immobilizer is not activated.</string>
     <string name="autostart_bypass_error_lada_can_check">Check the CAN bus connection.</string>
+    <string name="autostart_bypass_error_lada_vesta_patch_what">Failed to send the firmware patch to the alarm unit.</string>
+    <string name="autostart_bypass_error_lada_vesta_patch_check">Check the connection with the unit and repeat learning.</string>
     <string name="autostart_bypass_error_repeat_check">Repeat learning. Always remove the key from the ignition lock when switching the ignition off after each switch-on.</string>
     <string name="autostart_clone_title_screen">Clone procedure</string>
     <string name="autostart_clone_subtitle_start">The unit sends immobilizer data, our server calculates the key, the app writes it to the unit. You just wait.</string>

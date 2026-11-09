@@ -36,6 +36,7 @@ enum class BypassSubject {
     LEARNING,
     LADA_APS,
     LADA_CAN,
+    LADA_VESTA_CAN,
     TOYOTA_DAIHATSU
 }
 
@@ -74,7 +75,8 @@ enum class BypassError {
     MERCEDES_NO_VIN,
     MERCEDES_NO_RESPONSE_0F,
     LADA_CAN_BUS,
-    LADA_REPEAT
+    LADA_REPEAT,
+    LADA_VESTA_CAN_PATCH_SEND
 }
 
 /** Итог обучения. */
