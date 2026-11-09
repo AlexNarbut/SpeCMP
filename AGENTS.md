@@ -39,7 +39,7 @@
 - Compose UI: `docs/ui-kit.md`, `docs/compose-best-prac.md`
 - Navigation: `docs/navigation.md`
 - Локализация / строковые ресурсы: `docs/localization.md`
-- Качество кода (ktlint/compose-rules через Spotless, detekt, git-хуки, хук агентов) — перед коммитом Kotlin-кода: `docs/code-quality.md`
+- Качество кода (ktlint/compose-rules через Spotless, detekt, Konsist, graph-assert, CPD, git-хуки, хук агентов) — перед коммитом Kotlin-кода: `docs/code-quality.md`; соответствие правил `docs/patterns.md` проверкам — `docs/code-quality.md` → «Правило → проверка»
 - UI-тестирование агентами (скилл `ui-test`, `ui.sh`, платформы, правка скилла): `docs/test/ui/index.md`
 - Аудит производительности (скилл `perf-audit`, чек-лист R/V/C, отчёты Compose-компилятора): `.ai/skills/perf-audit/checklist.md`
 - Бенчмарк производительности до/после задачи (скилл `perf-bench`, `bench.sh`, сценарии, вердикт): `docs/test/perf-bench.md`
@@ -80,4 +80,4 @@
 - Обновляй `.ai/rules.md`, если меняются маршрутизация инструкций, структура проекта, обязательные документы для чтения или команды валидации.
 - Обновляй `.ai/agents/**`, если меняются границы подсистемы или локальные правила для конкретной директории.
 - После изменений в `.ai/rules.md`, `.ai/agents/**`, `.ai/skills/**` или `.ai/hooks/*` (хуки агентов, см. `docs/code-quality.md` → «Хуки агентов») запускай `.ai/generate.sh` и коммить результат вместе с источником (`.claude/settings.json`, `.gemini/settings.json`, `.codex/hooks.json` версионируются). Сверка — `.ai/generate.sh --check` (pre-commit хук `ai-generate`).
-- Новая проверка (правило detekt/Konsist, ребро графа, исключение CPD) — описывай её в `docs/code-quality.md` в том же изменении.
+- Новая проверка (правило detekt/Konsist, ребро графа, исключение CPD) — описывай её в `docs/code-quality.md` в том же изменении: правило — в `docs/patterns.md` с id проверки и строкой в «Правило → проверка», подавление архитектурного правила — в «Подавления». История внедрения проверок в нормативные документы не пишется.

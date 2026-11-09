@@ -8,7 +8,7 @@
 
 Каждое правило раскрыто в своём разделе; здесь — короткая памятка.
 
-- Никогда не использовать `material3` / `foundation` напрямую в фичах — только `Cmp*` из `core/ui`.
+- Компоненты Material3 в фичах — только через `Cmp*` из `core/ui` (detekt `ForbiddenImport` на `androidx.compose.material3.*`); визуальные компоненты других библиотек (`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`, layout-примитивы и модификаторы `foundation` — напрямую (`docs/ui-kit.md`).
 - Предпочитать `commonMain`; `expect`/`actual` — только для по-настоящему платформо-специфичного кода.
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
 - **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
@@ -18,13 +18,14 @@
 - **«Сейчас» и часовой пояс — только из внедрённых `Clock`/`TimeZoneSource`, в composable — из `LocalClock`/`LocalTimeZoneSource`** (detekt `DirectClockUsage`, весь production): без `Clock.System`/`TimeZone.currentSystemDefault()` в теле и дефолтах функций — см. «Источник времени».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
 - **Без побочных эффектов в конструкторе** (Konsist `no-constructor-side-effects`): нет `init { }` и корутин в инициализаторах свойств; фоновая работа — идемпотентный `start()` (CAS, `start-once-cas`) доменного сервиса из `AppServicesStarter` — см. «Доменные сервисы».
-- **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
+- **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов (Konsist `domain-isolation`, `domain-model-purity`) — см. «Domain».
+- **Слои и модули — только по направлению зависимостей**: presentation → domain ← data, фича ↛ data и presentation чужой фичи, типы SDK — только data/di (Konsist `module-direction`, `presentation-isolation`, `cross-feature-presentation`, `sdk-confinement`, graph-assert) — см. «Слои и границы модуля».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
 - **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
-- **Стабильность для Compose:** state и presentation-модели — `@Immutable`, domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
-- **У каждого `@Serializable` — `@SerialName("<модуль>.<Класс>")`** — см. «Сериализация».
+- **Стабильность для Compose:** state и presentation-модели — `@Immutable` (Konsist `state-immutable`), domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
+- **`@Serializable` — только форматы данных и маршруты, у каждого — `@SerialName("<модуль>.<Класс>")`** (Konsist `serializable-placement`) — см. «Сериализация».
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
 - **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()`: в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
@@ -57,7 +58,7 @@
   `_flag.update { true }`): одно правило без исключений не даёт «простой» записи со временем
   превратиться в read-modify-write. Атомарный «проверил и записал» — `compareAndSet(expect, update)`.
   Чтение `_state.value` допустимо. Правило — для production-кода; тестовые фейки могут писать `.value`.
-  Проверяется автоматически: detekt `specmp:StateFlowValueMutation` (`detektCheck`, [`code-quality.md`](code-quality.md)).
+  Проверяется автоматически: detekt `StateFlowValueMutation` (`detektCheck`, [`code-quality.md`](code-quality.md)).
 - **Персистентный read-modify-write не атомарен.** Key-value-хранилища
   (Settings / DataStore / SharedPreferences) не дают атомарного «прочитал → изменил → записал»:
   при конкурентных писателях одно из изменений теряется — например,
@@ -340,6 +341,8 @@ import ru.alarmtrade.specmp.core.ui.theme.Color as ThemeColor
 
 ## Сериализация
 
+- **Где:** `@Serializable` — форматы передачи и хранения (пакеты `..data..`), маршруты навигации (`..navigation..`, `NavKey`
+  и типы аргументов маршрутов); в `domain/model` — нет (Konsist `serializable-placement`, `domain-model-purity`).
 - **Каждый `@Serializable`-класс, объект, интерфейс и enum — с `@SerialName`.** Имя по умолчанию — FQN класса:
   оно меняется при переносе в другой пакет или переименовании и участвует в данных — дискриминатор полиморфных
   типов (`NavKey`-маршруты в `SavedStateConfiguration`, sealed-иерархии), сохранённый back stack. С явным именем
@@ -379,11 +382,11 @@ internal sealed interface SourceKey {
 
   | ❌ Нельзя | ✅ Вместо этого |
   |---|---|
-  | `runCatching { }` | `safeRun { }` / `safeResponseRun { }` из `ResponseExt` (раздел «Data — репозитории») |
-  | `println(...)` / `print(...)` | Kermit `Logger` (раздел «Логирование») |
+  | `runCatching { }` (detekt `ForbiddenRunCatching`) | `safeRun { }` / `safeResponseRun { }` из `ResponseExt` (раздел «Data — репозитории») |
+  | `println(...)` / `print(...)` (detekt `ForbiddenPrintln`) | Kermit `Logger` (раздел «Логирование») |
   | `x!!` | `requireNotNull(x) { "что отсутствует" }`, `?:`, `?.let` |
   | `throw IllegalStateException("…")` | `error("…")` / `check(...)` |
-  | `flow.value = x` у `MutableStateFlow` | `flow.update { x }` (раздел «Корутины и Flow»); читать `.value` можно, тестовые фейки — исключение |
+  | `flow.value = x` у `MutableStateFlow` (detekt `StateFlowValueMutation`) | `flow.update { x }` (раздел «Корутины и Flow»); читать `.value` можно, тестовые фейки — исключение |
   | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита |
 
 - **Исключения.** Generic `catch (e: Exception/Throwable)` допустим только на границах (`core/network`,
@@ -407,6 +410,8 @@ internal sealed interface SourceKey {
   таблиц-мапперов допустим `@Suppress("LongMethod", "CyclomaticComplexMethod")`.
 - **Пустое.** Класс без тела — `class X` (не `class X {}`), конструктор без параметров — без `()`,
   файл заканчивается переводом строки.
+- **Порядок верхнеуровневых свойств.** Свойство верхнего уровня не читает свойство, объявленное ниже в том же файле:
+  инициализаторы идут сверху вниз, и чтение даст `null` (на iOS — падение Koin в `includes`) (Konsist `top-level-init-order`).
 - **Подавления** — исключение, ставятся на конкретное место и объединяются в одну аннотацию `@Suppress(...)`;
   правила про файловый и функциональный уровень — в [`code-quality.md`](code-quality.md#подавления).
 
@@ -484,6 +489,29 @@ SDK-ответы проходят `toResponse()` (`core/specialist`), он пр�
 `Common(AppError)`, экран показывает общий текст `AppError.message()` (`core/ui`). Свои «Проверьте интернет»
 на любую ошибку и проверка сети через `NetworkMonitor` во VM не нужны — см. «Ошибки фичи».
 
+### Слои и границы модуля
+
+Раскладка и направления держатся проверками (Konsist, graph-assert; таблица — [`code-quality.md`](code-quality.md),
+«Правило → проверка»):
+
+- **Пакет = модуль**: пакет файла начинается с базового пакета модуля, дефисы схлопываются, суффиксы `-ui`/`-core` —
+  подпакет (`feature/device/presentation-core` → `…feature.device.presentation.core`) (Konsist `module-package`).
+- **Направления модулей**: `core/*` импортирует только `core/*`, фичи — `core/*` и фичи, пакеты composition roots
+  (`composeApp`, `flasherApp`) не импортирует никто (Konsist `module-direction`); на уровне Gradle — graph-assert
+  (`core` ↛ `feature`, от `*-ui` зависят только composition roots, `docs/architecture.md`).
+- **Слои внутри фичи**: domain не видит data/presentation/di, Compose, ресурсы, хранилища, сериализацию и SDK (Konsist
+  `domain-isolation`); пакеты `..data..` импортируются только из data и di фичи, в `core` — не из presentation, в
+  приложениях — только из di (Konsist `presentation-isolation`); data не видит presentation и di (Konsist `data-isolation`).
+- **Чужая фича — только через domain**: data другой фичи не импортируется (Konsist `feature-data-isolation`), presentation
+  другого модуля — тоже (Konsist `cross-feature-presentation`); общий presentation фич устройства —
+  `feature/device/presentation-core`, экран другой фичи — слот (`@Composable`-колбэк), который заполняет composition root.
+- **Роли — в своих пакетах** (Konsist `layer-placement`): реализация репозитория — `data/repository`, `*DataSource` —
+  `data/datasource`, реализация доменного сервиса — `data/service` (или `platform`), интерфейс `*Coordinator`/`*Controller` —
+  `domain/service`; интерфейс `*Repository` фичи — `domain/repository` (Konsist `repository-in-domain`).
+- **SDK AlarmTrade** (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — только data/di фич, `core/specialist`,
+  `core/permissions`, `core/network` и приложения (Konsist `sdk-confinement`).
+- **`@Composable` фичи — только в `presentation`**, включая форматтеры текста (Konsist `composable-in-presentation`).
+
 ## Domain
 
 `feature/<name>/domain` — модели (`domain/model`) и контракты репозиториев (`domain/repository`).
@@ -509,7 +537,8 @@ data class MainUserAppFeatures(
 )
 ```
 
-- **Контракты репозиториев** (Konsist `repository-contract` — интерфейсы `*Repository` и всё в `domain/repository`,
+- **Контракты репозиториев** (интерфейс — в `domain/repository`, Konsist `repository-in-domain`; Konsist
+  `repository-contract` — интерфейсы `*Repository` и всё в `domain/repository`,
   detekt `RawFlowFromRepository` — публичные потоки реализаций): one-shot операции — `suspend fun ...(): Response<T>`;
   процессы со стадиями и периодические источники — `fun ...(): Flow<Response<T>>` (не suspend); других членов нет.
   Синхронный снимок (начальный state VM) — `StateFlow<Response<T>>.value` (`DeviceSettingsPreferences.treeWidthDp`);
@@ -632,7 +661,8 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
   зависимостей».
 - **SDK — через `*DataSource`.** Репозиторий не держит интерактор SDK: вызовы идут через `internal interface
   <Фича>DataSource` (`data/datasource`) с реализацией-делегатом `Specialist<Фича>DataSource`, иначе репозиторий не
-  протестировать (см. «Тестирование репозиториев»).
+  протестировать (см. «Тестирование репозиториев»). `*DataSource` в конструкторе — только у реализации репозитория и
+  составного `*DataSource`: VM, use case и доменные сервисы ходят через репозиторий (Konsist `data-source-consumers`).
 - ВСЕ suspend-функции в репозиториях ДОЛЖНЫ возвращать `Response<T>`.
 - НИКОГДА не бросать исключения из репозиториев (detekt `ThrowInRepository`: в файлах `*Repository`/`*UseCase`
   `throw`, `error()`, `check`/`require*`, `!!` — только внутри `safeRun { }`/`safeResponseRun { }`/`safeFlowRun { }` (включая
@@ -812,7 +842,7 @@ presentation/screen/<screen>/
 
 Все ViewModel фич наследуются от `BaseViewModel<S, E>` (`core/ui`, пакет `ru.alarmtrade.specmp.core.ui.viewmodel`), а
 не от androidx `ViewModel` напрямую — импорт `androidx.lifecycle.ViewModel` вне `core/ui` запрещён detekt
-(`ForbiddenImport`). VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>` (`feature/device/presentation-core`,
+(`ForbiddenImport`); имя — `*ViewModel`, в фиче — пакет `presentation` (Konsist `view-model`). VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>` (`feature/device/presentation-core`,
 см. ниже). `S` — `XxxState`, `E` — `XxxEffect`/`XxxSideEffect` или `Nothing` (detekt `ViewModelContractNames`).
 
 | Член | Что делает |
@@ -943,7 +973,7 @@ private fun run(pinTries: Int = 0) {
   `launchOnDevice`, а не в `collectIntoState`: иначе через 5 с после ухода приложения в фон (`WhileSubscribed`)
   процесс отменится. VM-тест на это — «экран без подписчика 10 s — прогресс продолжается».
 - **`CoroutineScope` в конструктор VM не передаётся** (`view-model-dependencies`): работа, переживающая экран, — в
-  репозитории.
+  доменном сервисе со своим скоупом («Доменные сервисы»).
 - **Не нужны:** `DisposableEffect` в nav-графе, методы `onScreenOpened()`/`onScreenDisposed()`, ручной сброс state при
   входе, поля-`Job`, самодельные барьеры («флаг + `while`», «`if (busy) return`» вне state) — есть `launchReplacing` и
   `executeWithProceedLock`. «Процесс уже идёт» — по фазе в state (`if (phase is Running) return`).
@@ -1022,8 +1052,9 @@ override suspend fun onStart() {
   копирует только свои поля (`copy(content = content)`), чтобы следующее значение не затёрло UI-флаги и свежий ввод.
 - **Поллинг не держать ручными `Job` во VM.** Репозиторий отдаёт `Flow<Response<T>>` (см. «Data — репозитории»), VM
   привязывает его к state — база сама остановит сбор без подписчика и запустит заново при возврате.
-- Свой `stateIn(…)` во VM не нужен: state даёт база. `SharingStarted.Lazily`/`Eagerly` — только для app-scoped
-  держателей состояния (репозиториев), не для экранов.
+- Свой `stateIn(…)` во VM не нужен: state даёт база. `SharingStarted.Lazily` — только для app-scoped держателей
+  состояния (доменных сервисов, репозиториев), не для экранов; `Eagerly` в инициализаторе свойства запрещён
+  (`no-constructor-side-effects`) — работа без подписчиков идёт из `start()` сервиса.
 
 ### Запуск работы на старте экрана — `onStart`, а не `LaunchedEffect`
 
@@ -1279,13 +1310,13 @@ sealed interface ProfileFormError {
 ```kotlin
 // ❌ Плохо — строковый код как контракт VM ↔ UI
 // ViewModel:
-_state.update { it.copy(registrationError = "required_fields") }
+reduce { copy(registrationError = "required_fields") }
 // UI (другой файл, своя копия константы):
 if (state.error == REQUIRED_FIELDS_ERROR) { /* ... */ }
 
 // ✅ Хорошо — типизированная ошибка в state
 enum class RegistrationError { RequiredFields, RequestFailed }
-_state.update { it.copy(error = RegistrationError.RequiredFields) }
+reduce { copy(error = RegistrationError.RequiredFields) }
 // UI:
 val text = when (error) {
     RegistrationError.RequiredFields -> stringResource(Strings.string.login_common_error_required_fields)
@@ -1314,8 +1345,8 @@ val text = when (error) {
 
 ## Внедрение зависимостей — Koin 4.2.2
 
-Инициализация в `composeApp` через `KoinApplication { modules(...) }` в `App()` (не `startKoin`);
-`composeApp` подключает все Koin-модули приложения и является composition root.
+Инициализация в composition root через `KoinApplication { modules(...) }` (не `startKoin`): `App()` в `composeApp`,
+`FlasherApp()` во `flasherApp`; список модулей корня — функция в его пакете `di`.
 
 ```kotlin
 // composeApp/.../App.kt
@@ -1350,7 +1381,8 @@ FirmwareBootGraph(onExit = onExit, onOpenSupportChat = {}, archivePicker = koinI
   конструктора определения есть определение. Платформенные типы и значения, собранные в лямбдах модулей, —
   `extraTypes`; параметры ViewModel из `parametersOf` — `injections` (`definition<Vm>(Param::class)`, internal-классы
   фич — по имени рефлексией). Новый модуль/параметр `parametersOf` — правка списка или теста в том же изменении.
-- `feature/*/di` регистрирует только зависимости конкретной фичи: repositories, mappers, ViewModel.
+- `feature/*/di` регистрирует только зависимости конкретной фичи: репозитории, `*DataSource`, доменные сервисы,
+  ViewModel (мапперы — top-level функции, в DI не регистрируются).
 - **Koin-модуль — `val <name>Module` в пакете `di`** (Konsist `koin-module`), включая `core/*`
   (`core/lifecycle/di/AppLifecycleModule.kt`, `core/specialist/di/SpecialistModule.kt`).
 - **Реализацию (`*Impl`, `Specialist*Repository`) создаёт только Koin-модуль** (Konsist `koin-wiring`): `Foo(…)` или
@@ -1358,12 +1390,16 @@ FirmwareBootGraph(onExit = onExit, onOpenSupportChat = {}, archivePicker = koinI
 - **Один Koin-модуль на gradle-модуль, в его корневом пакете `di/`** (`feature/<name>/…/<name>/di/<Name>Module.kt`). Не заводить `ui/di`, `data/di` внутри модуля: ViewModel и репозитории одного gradle-модуля регистрируются вместе. Отдельный UI-модуль Koin бывает только у отдельного gradle-модуля `<name>-ui`.
 - App-level инфраструктура и SDK-контейнеры регистрируются в `core/*`/`composeApp`,
   не в фиче — см. раздел «Core».
-- Не добавляй use case, если он только прокидывает один вызов в repository. В таком случае
-  ViewModel может зависеть от repository напрямую; отдельный use case нужен только когда он
-  инкапсулирует самостоятельное бизнес-правило или оркестрацию нескольких зависимостей.
+- **Koin как сервис-локатор** (`KoinComponent`/`inject`/`get`, `GlobalContext`, `KoinPlatformTools`…) — только пакеты `di`,
+  composition roots, платформенные обёртки и Android-компоненты, которые создаёт система (Konsist `no-service-locator`);
+  остальной код получает зависимости конструктором.
+- Use case — только для оркестрации ≥ 2 зависимостей (см. «Use case»); один вызов репозитория VM делает напрямую.
 
 Чеклист при добавлении фичи:
 
-1. Добавить зависимость модуля в `composeApp/build.gradle.kts`
-2. Зарегистрировать Koin-модуль в `KoinApplication { modules(...) }` в `App()`
-3. Добавить маршруты в навигацию в `AppNavigation.kt`
+1. Добавить зависимость модуля в `composeApp/build.gradle.kts` (фича устройства, нужная прошивальщику, — и во
+   `flasherApp/build.gradle.kts`).
+2. Добавить Koin-модуль в список корня — `appKoinModules(…)` (`composeApp/.../di/AppKoinModules.kt`; во `flasherApp` —
+   `flasherKoinModules(…)`) и прогнать `AppKoinModulesTest`/`FlasherKoinModulesTest` (`jvmTest` корня).
+3. Доменный сервис со `start()` — слот в `di/AppServicesModule.kt` (и `di/FlasherServicesModule.kt`), см. «Доменные сервисы».
+4. Добавить маршруты в навигацию в `AppNavigation.kt`.

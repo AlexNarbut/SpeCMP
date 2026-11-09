@@ -261,16 +261,14 @@ ViewModel через несколько composable, эффекты читают 
 
 #### Свои правила (`quality/detekt-rules`, набор `specmp`)
 
-Набор из BabySteps (тот же detekt 2.0.0-alpha.6): правила — в `quality/detekt-rules/src/main/kotlin/.../detekt`,
+Правила — в `quality/detekt-rules/src/main/kotlin/.../detekt`,
 регистрация — `SpecmpRuleSetProvider` (+ `META-INF/services`), конфиг — раздел `specmp:` в `detekt.yml`.
 `SpecmpRuleSetProviderTest` проверяет, что каждое правило зарегистрировано и есть в `detekt.yml`. Новое правило:
 класс + тест на `detekt-test` → строка в провайдере и в тесте провайдера → раздел в `detekt.yml` → проверка на
-временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel (`ViewModel*`,
-`SafeRunInViewModel`) включены без исключений для наследников (`ViewModelContractNames` пропускает собственные
-параметры типа промежуточной базы `BaseDeviceViewModel`). `RawFlowFromRepository` (публичный поток реализации
-`*Repository` без `Response`) и `RepositoryWithContext` (исключения структурные: класс со свойством/параметром/супертипом `CoroutineScope` и
-`withContext(NonCancellable)` — без `@Suppress`) включены, как и все остальные правила набора (`Response`, данные, время,
-`SettingsInstantiation`).
+временном нарушителе (`detektCheck` падает) → нарушителя удалить. Все правила набора включены (что каждое держит —
+«Правило → проверка»). Особенности: `ViewModelContractNames` пропускает собственные параметры типа промежуточной базы
+`BaseDeviceViewModel`; у `RepositoryWithContext` исключения структурные — класс со свойством/параметром/супертипом
+`CoroutineScope` и `withContext(NonCancellable)`, без `@Suppress`.
 
 Пакет «гонки и корутины» ([`patterns.md`](patterns.md), «Конкурентность»; тесты вне охвата):
 
@@ -313,7 +311,7 @@ ViewModel через несколько composable, эффекты читают 
 
 ### Konsist (`quality/konsist`)
 
-`ArchitectureTest` (JUnit 5) — порт из BabySteps: Konsist разбирает исходники `core/*`, `feature/*`, composition roots
+`ArchitectureTest` (JUnit 5): Konsist разбирает исходники `core/*`, `feature/*`, composition roots
 (`composeApp`, `flasherApp`) и обёрток без тестовых source set'ов и без модулей тестовых дублёров `*/testing`
 (их `commonMain` — тестовый код). Имя модуля Konsist — путь до `src/`
 (`feature/device/settings-ui`). `testName` правила — его id; сообщение правила ссылается на раздел доков.
@@ -323,7 +321,7 @@ ViewModel через несколько composable, эффекты читают 
 | `module-direction` | `core/*` импортирует только `core/*`, `feature/*` — `core/*` и `feature/*`; пакеты приложений не импортируются |
 | `module-package` | пакет = базовый пакет модуля (`feature/auth-state` → `…feature.authstate`, суффиксы `-ui`/`-core` → `.ui`/`.core`) |
 | `domain-isolation` | `domain` без data/presentation/di, Compose, ресурсов, `core.ui`, multiplatform-settings, сериализации и SDK |
-| `presentation-isolation` | пакеты `..data..` видят только data/di фичи, не-presentation core и di приложений |
+| `presentation-isolation` | пакеты `..data..` импортируются только из data/di фичи, не-presentation кода `core` и di приложений |
 | `data-isolation` | `data` не импортирует presentation и di |
 | `feature-data-isolation` | фича не импортирует data другой фичи |
 | `layer-placement` | класс `*Repository` (реализация, `Specialist*Repository`) — в `data/repository`; `*DataSource` — `data/datasource`; `*Coordinator`/`*Controller` — интерфейс в `domain/service` |
@@ -363,7 +361,6 @@ ViewModel через несколько composable, эффекты читают 
 | `no-service-locator` | Koin как сервис-локатор — `org.koin.core.component.*` (`KoinComponent`, `inject`, `get`), `org.koin.core.context.*` (`GlobalContext`, `startKoin`, `loadKoinModules`), `org.koin.mp.KoinPlatformTools`/`KoinPlatform`, `org.koin.java.KoinJavaComponent`, `org.koin.compose.getKoin`, `org.koin.core.Koin`, `org.koin.android.ext.android.*` — импортом (включая алиас) или полным именем — только пакеты `..di..`, composition roots и обёртки (`composeApp`, `flasherApp`, `androidApp`, `desktopApp`, `flasherAndroidApp`, `flasherDesktopApp`) и файлы с Android-компонентом, который создаёт система (`Activity`/`Application`/`Service`/`BroadcastReceiver`/`Worker`/`Initializer`…). Нарушение — декларация верхнего уровня (подавление — `@Suppress` на ней), импорт со звёздочкой и неиспользованный импорт — сам импорт. `koinInject` в composable — правило `composable-injection` |
 | `composable-injection` | Koin-API для зависимостей в composable — `org.koin.compose.koinInject`, `currentKoinScope`, `LocalKoinScope`, `LocalKoinApplication` (импортом, алиасом, полным именем или звёздочкой `org.koin.compose.*`) — только корни композиции `composeApp`, `flasherApp`; `koinViewModel` разрешён. Фича получает зависимость параметром из корня (`FirmwareBootGraph(archivePicker = …)`, `rememberFirmwareFilePicker(appScope, ioDispatcher)`), через ViewModel или `CompositionLocal`, заданный в корне. Нарушение — декларация верхнего уровня |
 
-Остальные правила BabySteps добавляются в подэтапах миграции, где убираются их нарушения.
 Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
 Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.
 
@@ -408,8 +405,7 @@ lookahead конец имени модуля слева — пробел, а н�
 
 Правила из [`patterns.md`](patterns.md) держатся проверками, не документом. Новое правило записывается в `patterns.md`
 вместе с id проверки и строкой здесь; проверка включается вместе с исправлением всех нарушений одним изменением.
-Правила `patterns.md` без id — договорённости ревью. ⏳ — правило перенесено из BabySteps, но ещё выключено или не
-написано: включается в подэтапе миграции архитектуры, где убираются его нарушения.
+Правила `patterns.md` без id — договорённости ревью.
 
 | Правило | Проверка | Статус |
 |---|---|---|
@@ -420,13 +416,15 @@ lookahead конец имени модуля слева — пробел, а н�
 | Корутины VM — `intent`/`safeLaunch`/`launchReplacing`, не `viewModelScope.launch`/`launchIn`; без `init { }` (старт — `onStart()`); в файле VM — только VM | detekt `ViewModelScopeLaunch`, `ViewModelInitBlock`, `ViewModelFileContents` | ✅ |
 | Зависимости VM — только из разрешающего списка (domain, presentation, `AppDispatchers`, порты `core`); без `CoroutineScope` и функциональных типов; нет `safeRun` во VM | Konsist `view-model-dependencies`, detekt `SafeRunInViewModel` | ✅ |
 | Конструктор ViewModel — не больше 12 параметров | Konsist `view-model-constructor` | ✅ |
-| Импорт `androidx.lifecycle.ViewModel` — только `core/ui` (база) | detekt `ForbiddenImport` | ✅ |
+| Импорт `androidx.lifecycle.ViewModel` — только `core/ui` (база); `androidx.compose.material3.*` — только `core/ui` (компоненты `Cmp*`) | detekt `ForbiddenImport` | ✅ |
 | Koin как сервис-локатор — только `di`, composition roots и обёртки, Android-компоненты | Konsist `no-service-locator` | ✅ |
 | `..data..` и реализации (`*Impl`, `Specialist*Repository`) — `internal`; реализацию создаёт только Koin-модуль; Koin-модули — `val *Module` в `di` | Konsist `data-visibility`, `impl-visibility`, `repository-impl`, `koin-wiring`, `koin-module` | ✅ |
 | Граф Koin корня полон: у параметров конструкторов определений есть определения (или они из `parametersOf`/платформы) | JVM-тесты `composeApp`/`flasherApp` (`AppKoinModulesTest`, `FlasherKoinModulesTest`, koin-test `verify`) | ✅ |
 | `MutableStateFlow` меняется только `update { }` | detekt `StateFlowValueMutation` | ✅ |
 | Граница с бросающим кодом — `safeRun`, не `runCatching`; лог — Kermit, не `println` | detekt `ForbiddenRunCatching`, `ForbiddenPrintln` | ✅ |
 | Направления импортов между модулями, пакет = модуль, слои domain/data/presentation | Konsist `module-direction`, `module-package`, `domain-isolation`, `presentation-isolation`, `data-isolation`, `feature-data-isolation`; graph-assert | ✅ |
+| Чужой presentation фича не использует: общий presentation устройства — `presentation-core`, экраны другой фичи — слот из composition root; от `*-ui` зависят только composition roots | Konsist `cross-feature-presentation`; graph-assert `:feature:.* -X> :feature:.*-ui` | ✅ |
+| Верхнеуровневое свойство не читает свойство, объявленное ниже в файле | Konsist `top-level-init-order` | ✅ |
 | Раскладка и имена: реализации репозиториев в `data/repository`, интерфейсы в `domain`, `*DataSource` только у репозиториев, нет `*Helper`/`*Utils` | Konsist `layer-placement`, `repository-in-domain`, `data-source-consumers`, `forbidden-suffix` | ✅ |
 | SDK AlarmTrade — только data/di фич и профильные `core/*`; `@Serializable` — data/navigation; модели `domain/model` неизменяемы | Konsist `sdk-confinement`, `serializable-placement`, `domain-model-purity` | ✅ |
 | Члены репозиториев (интерфейсы `*Repository` и все интерфейсы `domain/repository`): `suspend` → `Response<T>`, потоки → `Flow`/`StateFlow`/`SharedFlow<Response<T>>`, иных членов нет; публичные потоки реализаций — тоже `Response` | Konsist `repository-contract`, detekt `RawFlowFromRepository` | ✅ |
@@ -447,6 +445,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | `CoroutineScope` — из DI (`serviceScope`) или с явным `cancel()`; `SupervisorJob()` + обработчик; без `GlobalScope`; диспетчеры — `AppDispatchers` | detekt `UnmanagedCoroutineScope`, `GlobalCoroutineUsage`, `InjectDispatcher` | ✅ |
 | `shareIn`/`stateIn` — только в инициализаторе свойства; `async` дожидаются; без `collect` в `collect` | detekt `SharingInsideFunction`, `UnawaitedAsync`, `NestedCollect` | ✅ |
 | Start-once сервис и место с `Mutex`/`tryLock` покрыты стресс-тестом «32 параллельных вызова → эффект один раз» | ревью (эталон `DeviceSessionImplTest`) | — |
+| Тестовые дублёры (`Fake*`/`Stub*`) — только в тестах; модули `*:testing` подключаются только в тестовых source set'ах | Konsist `no-fakes-in-production`, `testing-modules-test-only` | ✅ |
 | Общие хелперы `core/common` и `core.ui.lce` — только под реальный вызов: без вызовов вне своего модуля-тестов удаляются | Konsist `core-helper-usage` | ✅ |
 | Composable не достаёт зависимости из Koin (`koinInject`) — только корни композиции `composeApp`/`flasherApp` | Konsist `composable-injection` | ✅ |
 | UI-state `*State` — `@Immutable`/`@Stable`; `@Composable` фичи — только в `presentation` | Konsist `state-immutable`, `composable-in-presentation` | ✅ |
@@ -489,6 +488,17 @@ lookahead конец имени модуля слева — пробел, а н�
   `lambda-param-in-effect` аннотация на функции **не срабатывает**, работает только файловая:
   `@file:Suppress("ktlint:compose:multiple-emitters-check")`.
 - Не повторяйте `@Suppress` дважды на одной функции: аннотация не повторяемая, объединяйте правила в один вызов.
+
+Действующие подавления архитектурных правил (сверять с `grep -rn 'Suppress("konsist\.\|Suppress("Forbidden' --include='*.kt'`):
+
+| Где | Правило | Причина |
+|---|---|---|
+| `DeviceSession.state`/`reboot`/`transport` (`feature/device/interaction/domain/service`) | Konsist `service-contract` | состояние сервиса в памяти: ошибка связи уже свёрнута в `Disconnected`, `reboot`/`transport` — снимки, не результат операции |
+| `MainViewController.kt` (`composeApp/iosMain`) | detekt `ForbiddenPrintln` | мост логов SDK в консоль Xcode |
+
+Остальные `@Suppress` в коде — стандартные правила detekt (`LongMethod`, `CyclomaticComplexMethod` у плоских таблиц
+`when`, `LongParameterList` у composable-разметки, `MatchingDeclarationName`, `TooGenericExceptionCaught` у платформенных
+пикеров файлов и `LogoutUseCase`) и compose-rules; в тестах `quality/detekt-rules` — правило, которое тест проверяет.
 
 ---
 

@@ -121,6 +121,11 @@ iosMain.dependencies {
 там. На конвенциях — все KMP-модули: `core/*`, `feature/*`, `composeApp`, `flasherApp` (`plugins { id("specmp.kmp.android-jvm");
 id("specmp.kmp.compose") }`). Явный `namespace` — у `composeApp`, `flasherApp` и `-ui`-модулей (`…feature.vehicle.ui`).
 
+Модули тестовых дублёров (`core/testing`, `feature/<x>/testing`) — тоже `specmp.kmp.library`, код в `commonMain`
+(KMP не даёт `testFixtures`); подключаются только в тестовых source set'ах —
+`commonTest.dependencies { implementation(project(":core:testing")) }` (Konsist `testing-modules-test-only`,
+`docs/patterns.md` → «Тестовые дублёры»). Новый модуль — `include` в `settings.gradle.kts` и `.ai/agents/<путь>/AGENTS.md`.
+
 ## Compose-компилятор: конфиг стабильности
 
 Корневой `build.gradle.kts` подключает `config/compose/stability.conf` ко всем модулям с плагином Compose-компилятора

@@ -3,7 +3,10 @@
 ## Концепция
 
 `core/ui` содержит **всю дизайн-систему**: обёртки над Material3 и другими UI-библиотеками.
-Feature-модули и `composeApp` **НИКОГДА не используют** компоненты Material3/Foundation напрямую — только через `Cmp*`-функции из `core/ui`.
+Feature-модули и `composeApp` **НИКОГДА не используют** компоненты Material3 напрямую — только через `Cmp*`-функции из `core/ui`
+(detekt `ForbiddenImport` на `androidx.compose.material3.*` вне `core/ui`). Визуальные компоненты других библиотек
+(`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`; layout-примитивы, модификаторы и формы `foundation`
+(`Box`/`Column`/`Row`, `padding`, `RoundedCornerShape`, `BorderStroke`, `Lazy*`) фичи используют напрямую.
 
 **Зачем:** замена компонента (например, миграция с Material3) требует изменения одного файла в `core/ui`, а не поиска по всему проекту.
 
