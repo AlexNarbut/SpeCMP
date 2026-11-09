@@ -33,9 +33,11 @@
 
 ```
 git commit ──► pre-commit ──► ./gradlew spotlessCheck        (стиль, всё дерево)
+                          ├─► ./gradlew uiAudit              (обходы дизайн-системы против baseline)
                           ├─► config/hooks/check-serial-name.sh (@SerialName у @Serializable, коммитимые .kt)
                           └─► config/hooks/check-strings.py     (строки, ключи, языки — docs/localization.md)
-git push   ──► pre-push   ──► ./gradlew detektCheck          (смысл, весь проект, с type resolution)
+git push   ──► pre-push   ──► ./gradlew detektCheck :quality:konsist:test :quality:detekt-rules:test cpdCheck assertModuleGraph
+                          │                                  (detekt, архитектура, копипаста, граф модулей — весь проект)
                           └─► config/hooks/check-master-from-develop.sh push  (в main/master — только коммиты из develop)
 git merge  ──► pre-merge-commit ──► config/hooks/check-master-from-develop.sh merge (в main/master вливается только develop)
 Агент Edit/Write *.kt ──► scripts/agent-hooks/kotlin-quality.sh ──► Spotless ideHook (только этот файл)
@@ -53,7 +55,7 @@ Claude Bash          ──► scripts/agent-hooks/protect-main.sh   (не вл�
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | версии `detekt`, `spotless`, `ktlint`, `composeRules`, `junit`; плагины `detekt`, `spotless`; `detekt-api`/`detekt-test` для своих правил |
 | [`.editorconfig`](../.editorconfig) | правила ktlint и compose-rules (стиль, отключённые правила, allowlist `CompositionLocal`) |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | только отличия от дефолтов detekt и раздел `specmp:` своих правил |
-| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `serial-name-check`, `strings-check` (pre-commit), `detekt-check`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
+| [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) | локальные хуки `ai-generate`, `spotless-check`, `ui-audit`, `serial-name-check`, `strings-check` (pre-commit), `architecture-checks`, `master-from-develop-push` (pre-push) и `master-from-develop-merge` (pre-merge-commit) |
 | [`config/hooks/check-master-from-develop.sh`](../config/hooks/check-master-from-develop.sh) | в `main`/`master` — только `develop`: `merge` проверяет вливаемую ветку, `push` — что каждый новый коммит достижим из `develop` (или это merge-коммит `develop` → `master`); fast-forward чужой ветки ловит `push` |
 | [`config/hooks/check-strings.py`](../config/hooks/check-strings.py) | строки: только в `core/localization`, формат ключей, одинаковые ключи во всех языках ([`localization.md`](localization.md)) |
 | [`config/hooks/check-serial-name.sh`](../config/hooks/check-serial-name.sh) | у каждого `@Serializable` есть `@SerialName` (`docs/patterns.md`, «Сериализация»); без аргументов — весь репозиторий |
@@ -171,7 +173,7 @@ pre-commit install   # типы хуков (pre-commit, pre-push, pre-merge-comm
   `spotlessCheck`), автофиксимое — диффом «как должно быть» и командой автофикса этого файла.
 - **UI-аудит** — для `feature/**`, `composeApp/**`, `flasherApp/**`: `ui_audit.py --file`, находки файла сверх его
   строки в baseline (см. «UI-аудит»). Нет `python3` — аудит пропускается.
-- detekt, Konsist, CPD хук не запускает (медленно) — они на pre-push и в ручном прогоне перед коммитом.
+- detekt, Konsist, CPD и граф модулей pre-commit не запускает (медленно) — они на pre-push (`architecture-checks`, если в пуше есть `.kt`/`.kts`, `libs.versions.toml`, `config/detekt/`, `quality/`); `jvmTest` и сборка в хуки не входят — по Validation.
 - Отчёт — по каждому файлу с замечаниями (до 60 строк на файл).
 
 Вход и выход:

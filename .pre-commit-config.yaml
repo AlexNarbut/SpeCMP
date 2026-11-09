@@ -24,6 +24,13 @@ repos:
         files: \.(kt|kts)$
         pass_filenames: false
         stages: [pre-commit]
+      - id: ui-audit
+        name: ui-audit (design-system bypasses vs baseline)
+        entry: ./gradlew uiAudit
+        language: system
+        files: \.kt$
+        pass_filenames: false
+        stages: [pre-commit]
       - id: serial-name-check
         name: "@SerialName on every @Serializable (docs/patterns.md)"
         entry: config/hooks/check-serial-name.sh
@@ -37,11 +44,11 @@ repos:
         files: (composeResources/.*\.xml|check-strings\.py)$
         pass_filenames: false
         stages: [pre-commit]
-      - id: detekt-check
-        name: detekt
-        entry: ./gradlew detektCheck
+      - id: architecture-checks
+        name: detekt, Konsist, CPD, module graph, detekt-rules tests
+        entry: ./gradlew --continue detektCheck :quality:konsist:test :quality:detekt-rules:test cpdCheck assertModuleGraph
         language: system
-        files: \.kt$
+        files: (\.(kt|kts)$|gradle/libs\.versions\.toml$|^config/detekt/|^quality/)
         pass_filenames: false
         stages: [pre-push]
       # В main/master — только develop: слияние другой ветки (pre-merge-commit) и пуш коммитов не из develop (pre-push).
