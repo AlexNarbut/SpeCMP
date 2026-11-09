@@ -14,13 +14,12 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
-            // Логика конфигураций (feature/configurator), сессии настроек и редактор (feature/device/settings*)
+            // Логика конфигураций (feature/configurator) и сессии настроек (feature/device/settings); редактор — слот из composeApp
             implementation(project(":feature:configurator"))
             implementation(project(":feature:device:settings"))
-            implementation(project(":feature:device:settings-ui"))
             // Подключён ли блок — «Записать в блок» только при связи
             implementation(project(":feature:device:interaction"))
-            // Общий presentation устройства: база VM блока, диалог PIN
+            // Общий presentation устройства: база VM блока, диалог PIN, компоненты и порты файлов конфигураций
             implementation(project(":feature:device:presentation-core"))
             // Автомобиль облачной конфигурации (CarSummary из каталога)
             implementation(project(":feature:vehicle"))

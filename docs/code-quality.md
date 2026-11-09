@@ -342,7 +342,8 @@ ViewModel через несколько composable, эффекты читают 
 | `storage-usage` | в фиче `com.russhwolf.settings.*` и `core.common.settings.*` — только `data` и `di` |
 | `use-case-package` | `*UseCase` — в `domain/usecase` фичи (в `core` — пакет `usecase`) |
 | `use-case-contract` | `*UseCase` — ≥ 2 зависимостей-ролей в конструкторе (`*Repository`/`*UseCase`/`*Coordinator`/`*Controller`/`*Service`/`*Session`/`*Closeable`, `List<…>` — по элементу) и единственный публичный `operator fun invoke`: `suspend` → `Response`, иначе `Flow`/`StateFlow<Response>` |
-| `capability-usage` | API `core.permissions` (`PermissionsProvider`, `BindEffect`, `permissionsModule`, `blePermissions`) и moko-permissions в фиче — только `data`/`di`/файл ViewModel; порты `presentation/platform` — только presentation своего модуля, `di`, приложения (временно: `configurator-ui` → порты `device:settings-ui`) |
+| `capability-usage` | API `core.permissions` (`PermissionsProvider`, `BindEffect`, `permissionsModule`, `blePermissions`) и moko-permissions в фиче — только `data`/`di`/файл ViewModel; порты `presentation/platform` — только presentation своего модуля, `di`, приложения; общие порты `device:presentation-core` — presentation любой фичи |
+| `cross-feature-presentation` | фича не импортирует `presentation` другого модуля (кроме общего `device:presentation-core`); экраны другой фичи — слот из composition root |
 | `foreground-usage` | импорт `core.lifecycle` (кроме `core.lifecycle.di`) — только `data`, `di`, файлы ViewModel и сам `core/lifecycle` |
 | `top-level-init-order` | верхнеуровневое свойство не читает свойство, объявленное ниже в файле |
 | `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
@@ -389,9 +390,9 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | `:feature:.* -X> :feature:.*-ui` | от `*-ui` зависят только composition roots |
 
 Общий presentation фич устройства — не `-ui`, а `device:presentation-core`: на него правило не распространяется.
-Временный allowlist последнего правила (в регэкспе, снимается в подэтапе, где ребро убрано): `configurator-ui` →
-`device:settings-ui`. Регэксп матчит всю строку
-`"<from> -X> <to>"`, поэтому конец имени модуля слева в негативном lookahead — пробел, а не `$`.
+Экраны другой фичи подключаются слотом (`@Composable`-колбэком) из composition root, импорты — Konsist
+`cross-feature-presentation`. Регэксп правила матчит всю строку `"<from> -X> <to>"`: для исключения через негативный
+lookahead конец имени модуля слева — пробел, а не `$`.
 
 ---
 

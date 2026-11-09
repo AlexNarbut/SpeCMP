@@ -51,9 +51,11 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationEditorEntry
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.DeviceSettingsEntry
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateEntry
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.navigation.FastMountRoute
@@ -290,9 +292,33 @@ private fun AppConfigurator(
         vehiclePicker = { catalog, deviceName, onPick, onPickerBack ->
             ConfiguratorVehicles(catalog, deviceName, onPick, onPickerBack)
         },
+        editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
+            ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
+        },
         filePicker = rememberSettingsFilePicker(),
         fileSaver = rememberSettingsFileSaver(),
         deviceEditor = deviceEditor,
+    )
+}
+
+/** Редактор конфигурации (K5) в графе конфигуратора: CAN-код — из всего каталога под модель конфигурации. */
+@Composable
+internal fun ConfiguratorEditor(
+    source: SettingsSource,
+    fileSaver: SettingsFileSaver,
+    onOpenConfiguration: (SettingsSource.LocalConfiguration) -> Unit,
+    onWriteToDevice: ((SettingsSource) -> Unit)?,
+    onExit: () -> Unit,
+) {
+    ConfigurationEditorEntry(
+        source = source,
+        onExit = onExit,
+        vehiclePicker = { deviceName, onPick, onPickerBack ->
+            ConfiguratorVehicles(VehicleCatalog.ALL, deviceName, onPick, onPickerBack)
+        },
+        fileSaver = fileSaver,
+        onOpenConfiguration = onOpenConfiguration,
+        onWriteToDevice = onWriteToDevice,
     )
 }
 
@@ -322,6 +348,9 @@ private fun DeviceSettingsEditor(
                 onBack = onPickerBack,
                 vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
                     ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
+                },
+                editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
+                    ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
                 },
             )
         },

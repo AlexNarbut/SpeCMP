@@ -36,7 +36,7 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationSummary
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ModelBadge
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ModelBadge
 
 /** Дата и время изменения: «Сегодня, 14:20», «21 октября, 09:05». */
 @Composable

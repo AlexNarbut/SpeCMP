@@ -20,6 +20,9 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.settingsFileName
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
@@ -41,9 +44,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.settingsFileName
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository

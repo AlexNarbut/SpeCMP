@@ -34,6 +34,8 @@ kotlin {
             implementation(project(":feature:device:autostart"))
             implementation(project(":feature:device:state"))
             implementation(project(":feature:device:settings"))
+            // Порты файлов настроек и запрос выбора конфигурации (filepicker, слоты конфигуратора)
+            implementation(project(":feature:device:presentation-core"))
             implementation(project(":feature:vehicle"))
             implementation(project(":feature:vehicle-ui"))
             implementation(project(":feature:configurator"))

@@ -24,10 +24,10 @@ import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.common.file.copyToCache
 import ru.alarmtrade.specmp.core.common.file.queryNameAndSize
 import ru.alarmtrade.specmp.core.common.file.safeFileName
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 
 /**
  * Буфер результатов — на уровне процесса: пока открыт системный пикер, процесс могут убить, и registry доставит

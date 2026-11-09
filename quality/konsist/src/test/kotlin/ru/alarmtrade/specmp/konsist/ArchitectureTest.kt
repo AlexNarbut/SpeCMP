@@ -362,6 +362,22 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `features do not use presentation of other features`() {
+        val message = "presentation чужого модуля фичи (экраны, VM, компоненты, порты) не используется: общий UI — " +
+            "в core/ui, общий presentation фич устройства — в feature/device/presentation-core, экраны другой " +
+            "фичи — слотом (@Composable-колбэком) из composition root. docs/patterns.md, «Feature-модули»"
+        val files = libraryFiles.filter { it.isFeature }
+        files.flatMap { file -> file.imports.filter { it.name.isOtherFeaturePresentation(file) } }
+            .assertFalse(testName = "cross-feature-presentation", additionalMessage = message) { true }
+        files.assertFalse(
+            testName = "cross-feature-presentation",
+            additionalMessage = "$message (полное имя в коде)",
+        ) { file ->
+            file.qualifiedReferences().any { it.isOtherFeaturePresentation(file) }
+        }
+    }
+
+    @Test
     fun `use cases orchestrate dependencies and return Response`() {
         classes.filter { it.name.endsWith(USE_CASE) }
             .assertTrue(
@@ -383,7 +399,8 @@ class ArchitectureTest {
                 additionalMessage = "Платформенные возможности: API core.permissions (PermissionsProvider, " +
                     "BindEffect, permissionsModule, blePermissions) и moko-permissions в фиче — только data, di и " +
                     "ViewModel (значения DeviceAccessRequirement/BlePermissionResult — всем); порты " +
-                    "presentation/platform фичи — только presentation своего модуля, di и composition roots. " +
+                    "presentation/platform фичи — только presentation своего модуля, di и composition roots; " +
+                    "общие порты feature/device/presentation-core — presentation любой фичи. " +
                     "docs/patterns.md, «Платформенные возможности»",
             ) { true }
     }
@@ -963,10 +980,13 @@ private val PERMISSIONS_API = setOf("PermissionsProvider", "BindEffect", "permis
     .map { "$ROOT.core.permissions.$it" }
 private const val MOKO_PERMISSIONS = "dev.icerock.moko.permissions"
 
-// Временное ребро Р2 (configurator-ui → device:settings-ui), как в graph-assert; снимается в 4a.
-private val PLATFORM_PORT_ALLOWLIST = setOf(
-    "feature/configurator-ui" to "$ROOT.feature.device.settings.ui.presentation.platform",
-)
+// Общий presentation фич устройства: компоненты и порты, которые подключают несколько фич.
+private const val SHARED_PRESENTATION_PACKAGE = "$ROOT.feature.device.presentation.core"
+
+private fun String.isOtherFeaturePresentation(file: KoFileDeclaration): Boolean = startsWith("$ROOT.feature.") &&
+    !startsWith(file.basePackage + ".") &&
+    isProjectLayer("presentation") &&
+    !startsWith("$SHARED_PRESENTATION_PACKAGE.")
 
 private fun String.isForbiddenCapabilityImport(file: KoFileDeclaration): Boolean {
     if (!file.isFeature) return false
@@ -980,5 +1000,6 @@ private fun String.isForbiddenCapabilityImport(file: KoFileDeclaration): Boolean
         ?.plus(".platform") ?: return false
     if (!port.startsWith("$ROOT.feature.") || file.inLayer("di")) return false
     val ownPresentation = port.startsWith(file.basePackage + ".") && file.inLayer("presentation")
-    return !ownPresentation && (file.moduleName to port) !in PLATFORM_PORT_ALLOWLIST
+    val sharedPort = port.startsWith("$SHARED_PRESENTATION_PACKAGE.") && file.inLayer("presentation")
+    return !ownPresentation && !sharedPort
 }

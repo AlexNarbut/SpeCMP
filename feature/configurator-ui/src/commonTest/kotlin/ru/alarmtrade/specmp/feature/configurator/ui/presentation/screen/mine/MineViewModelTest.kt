@@ -25,8 +25,8 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.localCon
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDeviceSession
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDispatchers
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
 
 class MineViewModelTest {
 

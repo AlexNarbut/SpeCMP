@@ -638,8 +638,8 @@ Konsist `capability-usage`:
   `blePermissions`), и moko-permissions — в фиче только `data`, `di` и файл ViewModel (`ScanDeviceViewModel`); значения
   (`DeviceAccessRequirement`, `BlePermissionResult`) — всем. Composition roots — свободно.
 - Порты `presentation/platform` фичи (пикеры, сохранение, открытие файлов) — только presentation своего модуля, `di` и
-  composition roots. Временное исключение: `configurator-ui` → порты `device:settings-ui` (Р2, снимается вместе с
-  ребром graph-assert).
+  composition roots. Общие порты фич устройства (файлы настроек `.dxs`: `SettingsFilePicker`/`SettingsFileSaver`) —
+  в `feature/device/presentation-core` (`platform`), их импортирует presentation любой фичи.
 
 ## Доменные сервисы
 

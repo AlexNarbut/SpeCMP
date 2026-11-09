@@ -22,10 +22,10 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.F
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.rememberFirmwareFilePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.CheckStateChecklist
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.CheckStateChrome
@@ -127,6 +127,9 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     onBack = onBack,
                     vehiclePicker = { catalog, deviceName, onCarPick, onCarBack ->
                         ConfiguratorVehicles(catalog, deviceName, onCarPick, onCarBack)
+                    },
+                    editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
+                        ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
                     },
                     purpose = ConfigurationPickPurpose.FAST_MOUNT,
                     cloudCar = ConfigurationPickCar(request.car.id, request.car.title),

@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform
+package ru.alarmtrade.specmp.feature.device.presentation.core.platform
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

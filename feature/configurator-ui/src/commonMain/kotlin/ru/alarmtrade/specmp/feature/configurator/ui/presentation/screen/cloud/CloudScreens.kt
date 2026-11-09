@@ -94,7 +94,7 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.Rati
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.rememberDateTimeText
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.ModelFilterChip
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationInfoDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationInfoDialog
 
 /**
  * K4 список облачных конфигураций автомобиля: «Лучшие / Новые», фильтр по модели блока, карточки с оценкой.

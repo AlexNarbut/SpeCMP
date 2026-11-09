@@ -61,15 +61,14 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.Min
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsEffect
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsScreen
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsViewModel
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickRequest
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.NoSettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationEditorEntry
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.NoSettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
@@ -84,6 +83,19 @@ typealias ConfiguratorVehiclePicker = @Composable (
     deviceName: String?,
     onPick: (CarSummary) -> Unit,
     onBack: () -> Unit,
+) -> Unit
+
+/**
+ * Редактор конфигурации (K5, фича `device:settings-ui`, подключается в `composeApp`). [fileSaver] — «Сохранить в файл»
+ * (в режиме выбора — заглушка), [onOpenConfiguration] — «Открыть» после «Сохранить в мои», [onWriteToDevice] —
+ * «Записать в блок» (`null` — не поддерживается).
+ */
+typealias ConfigurationEditor = @Composable (
+    source: SettingsSource,
+    fileSaver: SettingsFileSaver,
+    onOpenConfiguration: (SettingsSource.LocalConfiguration) -> Unit,
+    onWriteToDevice: ((SettingsSource) -> Unit)?,
+    onExit: () -> Unit,
 ) -> Unit
 
 private val navConfig = SavedStateConfiguration {
@@ -112,6 +124,7 @@ private val navConfig = SavedStateConfiguration {
 fun ConfiguratorEntry(
     onExit: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
+    editor: ConfigurationEditor,
     filePicker: SettingsFilePicker,
     fileSaver: SettingsFileSaver,
     deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)? = null,
@@ -120,6 +133,7 @@ fun ConfiguratorEntry(
         start = MineListRoute,
         onExit = onExit,
         vehiclePicker = vehiclePicker,
+        editor = editor,
         mode = GraphMode.Full(filePicker, fileSaver, deviceEditor),
     )
 }
@@ -135,6 +149,7 @@ fun ConfigurationPickerEntry(
     onOpenFirmwareUpdate: () -> Unit,
     onBack: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
+    editor: ConfigurationEditor,
     purpose: ConfigurationPickPurpose = ConfigurationPickPurpose.LOAD,
     cloudCar: ConfigurationPickCar? = null,
 ) {
@@ -146,6 +161,7 @@ fun ConfigurationPickerEntry(
         },
         onExit = onBack,
         vehiclePicker = vehiclePicker,
+        editor = editor,
         mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose),
     )
 }
@@ -180,6 +196,7 @@ private fun ConfiguratorGraph(
     start: NavKey,
     onExit: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
+    editor: ConfigurationEditor,
     mode: GraphMode,
 ) {
     val backStack = rememberNavBackStack(navConfig, start)
@@ -196,17 +213,14 @@ private fun ConfiguratorGraph(
             entry<ModelsRoute> { key -> Opaque { ModelsEntry(key, backStack, back) } }
             entry<EditorRoute> { key ->
                 val full = mode as? GraphMode.Full
-                ConfigurationEditorEntry(
-                    source = key.source.toSource(),
-                    onExit = back,
-                    vehiclePicker = { deviceName, onPick, onPickerBack ->
-                        vehiclePicker(VehicleCatalog.ALL, deviceName, onPick, onPickerBack)
-                    },
-                    fileSaver = full?.fileSaver ?: NoSaver,
-                    onOpenConfiguration = { opened -> opened.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) } },
-                    onWriteToDevice = full?.deviceEditor?.let {
+                editor(
+                    key.source.toSource(),
+                    full?.fileSaver ?: NoSaver,
+                    { opened -> opened.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) } },
+                    full?.deviceEditor?.let {
                         { source -> source.toKey()?.let { backStack.navigateSafe(DeviceWriteRoute(it)) } }
                     },
+                    back,
                 )
             }
             entry<CloudCarsRoute> { _ ->

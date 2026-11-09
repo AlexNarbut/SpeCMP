@@ -14,12 +14,12 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigur
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.settingsFileName
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.settingsFileName
 
 /**
  * K1 «Мои конфигурации»: список (новые сверху, показ порциями), поиск по названию и описанию и фильтр по модели —

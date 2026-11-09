@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components
+package ru.alarmtrade.specmp.feature.device.presentation.core.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

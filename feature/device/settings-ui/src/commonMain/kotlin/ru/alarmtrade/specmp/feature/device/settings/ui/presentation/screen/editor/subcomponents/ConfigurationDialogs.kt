@@ -58,10 +58,10 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpLinearProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationInfoDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationOptionRow
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationOptionsPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationInfoDialog
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionRow
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionsPanel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.LoadErrorKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.LoadSourceKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SaveForm

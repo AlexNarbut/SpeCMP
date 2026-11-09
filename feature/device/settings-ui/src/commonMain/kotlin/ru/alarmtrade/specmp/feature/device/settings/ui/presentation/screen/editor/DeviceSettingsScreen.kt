@@ -83,13 +83,13 @@ import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ReadOnlyBadge
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.SourceTag
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ReadOnlyBadge
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.SettingsLayout
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.SourceTag
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.settingsLayoutOf
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DescriptionDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.DiffPanel

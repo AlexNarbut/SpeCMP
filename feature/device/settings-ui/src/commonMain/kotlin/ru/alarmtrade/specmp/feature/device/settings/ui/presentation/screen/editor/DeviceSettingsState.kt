@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edit
 
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -11,7 +12,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.accepts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
 /** Состояние редактора настроек: меню, изменения, окно редактирования, диалоги, запись. */

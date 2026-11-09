@@ -101,10 +101,10 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.List
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.MineCard
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.rememberDateTimeText
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationInfoDialog
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionRow
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ConfigurationOptionsPanel
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components.ModelBadge
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationInfoDialog
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationOptionRow
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationOptionsPanel
+import ru.alarmtrade.specmp.feature.device.presentation.core.components.ModelBadge
 
 /**
  * K1 «Мои конфигурации» (и режим выбора для «Загрузить из…» блока). Телефон — список; широкое окно (≥ 600 dp) —

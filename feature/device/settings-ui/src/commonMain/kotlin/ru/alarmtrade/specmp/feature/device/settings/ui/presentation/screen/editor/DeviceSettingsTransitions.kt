@@ -2,13 +2,13 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edit
 
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
+import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickRequest
+import ru.alarmtrade.specmp.feature.device.presentation.core.platform.withoutSettingsExtension
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.deviceNameOrNull
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickRequest
-import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.withoutSettingsExtension
 
 /*
  * Редактор настроек: стартовый state и переходы state без I/O (чистые функции; запросы — во VM).

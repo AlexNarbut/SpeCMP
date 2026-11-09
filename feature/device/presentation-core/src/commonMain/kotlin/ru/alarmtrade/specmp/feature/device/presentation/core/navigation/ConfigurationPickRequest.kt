@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation
+package ru.alarmtrade.specmp.feature.device.presentation.core.navigation
 
 /** Откуда загрузить конфигурацию в редактор блока: «Мои конфигурации» или облако. */
 enum class ConfigurationPickKind { MINE, CLOUD }
