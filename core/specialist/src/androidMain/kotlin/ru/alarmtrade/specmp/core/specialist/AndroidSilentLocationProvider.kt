@@ -6,10 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 
-/**
- * Последнее известное положение из `LocationManager`, только если разрешение уже выдано (его просит поиск BLE на
- * старых Android). Активного запроса координат нет — монтаж не ждёт GPS.
- */
+/** Только при уже выданном разрешении; активного запроса координат нет — монтаж не ждёт GPS. */
 class AndroidSilentLocationProvider(private val context: Context) : SilentLocationProvider {
 
     override suspend fun lastKnown(): Pair<Float, Float>? {

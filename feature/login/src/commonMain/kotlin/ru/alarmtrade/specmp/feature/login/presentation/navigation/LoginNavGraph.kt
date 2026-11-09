@@ -121,7 +121,6 @@ private fun LoginNavDisplay(
         entryDecorators = listOf(
             // Дефолтный декоратор NavDisplay: без него не работает SavedStateHandle.
             rememberSaveableStateHolderNavEntryDecorator(),
-            // Per-entry ViewModelStoreOwner (см. docs/navigation.md).
             rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider<NavKey> {

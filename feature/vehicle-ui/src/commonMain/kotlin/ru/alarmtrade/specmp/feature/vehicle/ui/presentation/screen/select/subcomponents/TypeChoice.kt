@@ -27,10 +27,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeLabel
 
-/**
- * Выбор типа устройства, когда блок не подключён: каталог фильтруется под сигнализацию или микробот.
- * Узкое окно — карточки строками, широкое — две крупные карточки рядом.
- */
 @Composable
 internal fun TypeChoice(wide: Boolean, onPick: (VehicleDeviceType) -> Unit, modifier: Modifier = Modifier) {
     CmpColumn(

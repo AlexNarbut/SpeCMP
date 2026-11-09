@@ -7,7 +7,6 @@ import ru.alarmtrade.specmp.core.lifecycle.AppLifecycle
 import ru.alarmtrade.specmp.core.lifecycle.AppLifecycleForegroundProvider
 import ru.alarmtrade.specmp.core.lifecycle.platformAppLifecycle
 
-/** Koin-модуль `core:lifecycle`, подключается в composition root. */
 val appLifecycleModule: Module = module {
     single<AppLifecycle> { platformAppLifecycle() }
     single<AppForegroundProvider> { AppLifecycleForegroundProvider(get()) }

@@ -18,7 +18,6 @@ private const val LOCAL_ID_PREFIX = "local-"
 internal fun SupportChatScreenState.withTimeline(timeline: SupportChatTimeline): SupportChatScreenState =
     copy(history = LCEState.Content(timeline))
 
-/** UI-состояние соединения — прямое отображение состояния SDK. */
 internal fun SupportChatScreenState.withConnection(state: SupportChatConnectionState): SupportChatScreenState =
     when (state) {
         SupportChatConnectionState.Connecting -> copy(connection = SupportChatConnection.Connecting)
@@ -39,7 +38,6 @@ internal fun SupportChatScreenState.withConnection(state: SupportChatConnectionS
         )
     }
 
-/** Сессию не удалось начать: показывать нечего — полноэкранная ошибка с «Повторить» (перезапуск сессии). */
 internal fun SupportChatScreenState.withSessionUnavailable(): SupportChatScreenState = copy(
     connection = SupportChatConnection.Offline,
     hasConnectionIssue = true,

@@ -17,7 +17,7 @@ private val MenuItemMinHeight = 48.dp
 private val MenuMinWidth = 260.dp
 private val CheckSlot = 20.dp
 
-/** Выпадающее меню у якоря (кнопка, чип): вызывать внутри контейнера якоря. */
+/** Вызывать внутри контейнера якоря. */
 @Composable
 fun CmpDropdownMenu(
     expanded: Boolean,
@@ -33,7 +33,6 @@ fun CmpDropdownMenu(
     )
 }
 
-/** Пункт меню ≥ 48 dp; у выбранного слева галочка (у остальных — пустое место того же размера, текст не «пляшет»). */
 @Composable
 fun CmpDropdownMenuItem(text: String, onClick: () -> Unit, selected: Boolean, modifier: Modifier = Modifier) {
     DropdownMenuItem(
@@ -50,7 +49,6 @@ fun CmpDropdownMenuItem(text: String, onClick: () -> Unit, selected: Boolean, mo
     )
 }
 
-/** Пункт меню действия ≥ 48 dp: иконка слева (необязательна), неактивный пункт — приглушён и не нажимается. */
 @Composable
 fun CmpDropdownMenuItem(
     text: String,

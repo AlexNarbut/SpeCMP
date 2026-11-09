@@ -12,10 +12,6 @@ interface MainRepository {
     suspend fun currentUserProfile(): Response<MainUserProfile>
     suspend fun currentSettingsVersion(): Response<Long?>
 
-    /**
-     * Процесс синхронизации базы настроек: стадии [MainDatabaseSyncStatus.InProgress],
-     * завершается одним из [MainDatabaseSyncStatus.Finished].
-     */
     fun synchronizeSettingsVersion(): Flow<Response<MainDatabaseSyncStatus>>
     suspend fun checkAppUpdate(): Response<MainAppUpdateCheckResult>
     suspend fun currentUserAppFeatures(): Response<MainUserAppFeatures>

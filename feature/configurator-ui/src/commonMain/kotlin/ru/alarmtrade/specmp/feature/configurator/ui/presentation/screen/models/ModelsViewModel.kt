@@ -14,11 +14,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
-/**
- * K2 выбор модели блока: «С нуля» (заводские настройки модели) или модель для файла `.dxs` (K3 — модели в файле нет).
- * Сверху — модель подключённого блока и недавние; поиск по названию. Файл проверяется чтением в выбранной модели:
- * не открылся — «повреждён или для другой модели», выбрать другую.
- */
+/** Файл `.dxs` проверяется чтением в выбранной модели: не открылся — выбрать другую. */
 internal class ModelsViewModel(
     private val file: SourceKey.File?,
     private val models: DeviceModelsRepository,
@@ -55,7 +51,6 @@ internal class ModelsViewModel(
         reduce { copy(fileError = null) }
     }
 
-    /** «✕» у недавней модели: убрать из списка. */
     fun onRecentRemove(deviceName: String) {
         updateRecent { models.removeRecent(deviceName) }
     }
@@ -66,7 +61,6 @@ internal class ModelsViewModel(
             postSideEffect(ModelsEffect.Open(SourceKey.Defaults(deviceName)))
             return
         }
-        // Файл уже проверяется — повторный выбор не запускает вторую проверку.
         if (currentState.checking) return
         reduce { copy(checking = true) }
         val key = file.copy(deviceName = deviceName)
@@ -94,7 +88,6 @@ internal class ModelsViewModel(
         }
     }
 
-    /** Недавние — хранилище (Settings + JSON, атомарно само): правка на io, в state — новый список. */
     private fun updateRecent(change: suspend () -> Response<List<String>>) {
         intent {
             when (val recent = withContext(dispatchers.io) { change() }) {

@@ -61,14 +61,8 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.CardPane
 
-/** Ширина панели карточки, от которой её шапка и матрица — в широком варианте. */
 private val CardWideMinWidth = 640.dp
 
-/**
- * Широкое окно. Medium — колонки «Марки · Модели» (комплектации раскрываются под моделью), карточка — на всё
- * окно с крошками. Expanded — колонки и карточка справа; при ширине ≥ 1400 dp — третья колонка «Комплектации».
- * Поиск по CAN — колонка результатов (+ карточка справа на Expanded).
- */
 @Composable
 internal fun WideCatalog(
     state: VehicleSelectState,
@@ -105,11 +99,9 @@ internal fun WideCatalog(
     }
 }
 
-/** Срез для колонок каталога и поиска: без карточки, диалогов и фильтра. */
 private fun VehicleSelectState.forCatalog(): VehicleSelectState =
     copy(card = LCEState.None, cardUi = CardUi(), dialog = null, filterDraft = null, picking = false)
 
-/** Срез для колонки карточки (с крошками): без списков каталога и ввода поиска по названию. */
 private fun VehicleSelectState.forCard(): VehicleSelectState = copy(
     query = "",
     brands = LCEState.None,
@@ -216,7 +208,6 @@ private fun RowScope.NameColumns(
     if (expanded) CmpVerticalDivider()
 }
 
-/** Третья колонка «Комплектации» (Expanded от 1400 dp). */
 @Composable
 private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
     Column(title = stringResource(Strings.string.vehicle_catalog_title_trims), modifier = Modifier.width(260.dp)) {
@@ -311,7 +302,6 @@ private fun Card(state: VehicleSelectState, actions: VehicleSelectActions, wide:
     )
 }
 
-/** Колонка каталога: заголовок и содержимое. */
 @Composable
 private fun Column(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     CmpColumn(modifier = modifier.fillMaxHeight()) {

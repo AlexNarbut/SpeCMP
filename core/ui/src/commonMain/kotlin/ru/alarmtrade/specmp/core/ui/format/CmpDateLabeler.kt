@@ -13,14 +13,7 @@ import ru.alarmtrade.specmp.core.localization.resources.common_date_label_today
 import ru.alarmtrade.specmp.core.localization.resources.common_date_label_yesterday
 import ru.alarmtrade.specmp.core.ui.time.currentToday
 
-/**
- * Общий лейблер дат (U-26): «Сегодня»/«Вчера»/«14 марта», год добавляется,
- * если он не текущий. Месяцы и примитивные даты — общие строки core/ui
- * (правило 2 docs/localization.md); язык — языка запуска (смена языка перезапускает приложение).
- *
- * Возвращает запомненную лямбду, чтобы фичи вызывали её из некомпозабельных
- * контекстов (например, из remember-блоков построения списков).
- */
+/** Лямбда запомнена — её можно вызывать и вне композиции (remember-блоки списков). */
 @Composable
 fun rememberCmpDateLabeler(): (LocalDate) -> String {
     val todayLabel = stringResource(Strings.string.common_date_label_today)

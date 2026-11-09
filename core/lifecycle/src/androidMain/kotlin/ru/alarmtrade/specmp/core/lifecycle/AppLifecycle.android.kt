@@ -11,10 +11,7 @@ import kotlinx.coroutines.flow.flowOn
 
 internal actual fun platformAppLifecycle(): AppLifecycle = ProcessAppLifecycle
 
-/**
- * `ProcessLifecycleOwner`: `ON_START` — приложение снова видно, `ON_STOP` — ушло в фон (Android шлёт его с задержкой
- * ~700 мс, чтобы не срабатывать на смену конфигурации).
- */
+/** `ON_STOP` Android шлёт с задержкой ~700 мс, чтобы не срабатывать на смену конфигурации. */
 private object ProcessAppLifecycle : AppLifecycle {
 
     override val events: Flow<AppLifecycleEvent> = callbackFlow {

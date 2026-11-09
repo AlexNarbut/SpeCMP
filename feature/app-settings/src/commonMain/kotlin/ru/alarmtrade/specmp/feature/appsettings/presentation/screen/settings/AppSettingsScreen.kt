@@ -109,7 +109,6 @@ private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit, mo
     }
 }
 
-/** Язык конфигураций: применяется сразу, без кнопки и перезапуска. */
 @Composable
 private fun ConfigurationLanguageSection(state: AppSettingsState, onSelect: (ConfigurationLanguage) -> Unit) {
     CmpText(

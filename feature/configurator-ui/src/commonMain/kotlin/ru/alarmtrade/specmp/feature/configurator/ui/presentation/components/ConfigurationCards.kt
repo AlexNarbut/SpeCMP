@@ -38,7 +38,6 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ModelBadge
 
-/** Дата и время изменения: «Сегодня, 14:20», «21 октября, 09:05». */
 @Composable
 internal fun rememberDateTimeText(): (LocalDateTime) -> String {
     val dateLabel = rememberCmpDateLabeler()
@@ -47,7 +46,6 @@ internal fun rememberDateTimeText(): (LocalDateTime) -> String {
     }
 }
 
-/** Оценка облачной конфигурации: «★ 4». Нет оценок — ничего. */
 @Composable
 internal fun RatingLabel(rating: Int?, modifier: Modifier = Modifier) {
     rating ?: return
@@ -67,7 +65,6 @@ internal fun RatingLabel(rating: Int?, modifier: Modifier = Modifier) {
     }
 }
 
-/** Карточка «моей» конфигурации: название, модель, дата изменения, описание (2 строки), меню ⋮. */
 @Composable
 internal fun MineCard(
     item: LocalConfiguration,
@@ -122,7 +119,6 @@ internal fun MineCard(
     }
 }
 
-/** Карточка облачной конфигурации в списке: название, описание, автомобиль, модель, автор и дата, оценка. */
 @Composable
 internal fun CloudItemCard(
     item: CloudConfigurationSummary,
@@ -163,7 +159,6 @@ internal fun CloudItemCard(
     }
 }
 
-/** Автомобиль, модель блока, «Видна только вам», автор · дата. */
 @Composable
 internal fun CloudMeta(item: CloudConfigurationSummary, dateText: (LocalDateTime) -> String) {
     val colors = cmpThemeColors()

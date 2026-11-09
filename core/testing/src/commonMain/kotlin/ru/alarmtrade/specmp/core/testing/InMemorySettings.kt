@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.core.testing
 
 import com.russhwolf.settings.Settings
 
-/** Тестовое хранилище: map в памяти, семантика как у платформенного Settings. */
 class InMemorySettings : Settings {
     private val values = mutableMapOf<String, Any>()
 

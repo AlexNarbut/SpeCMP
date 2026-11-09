@@ -14,18 +14,13 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
-            // Логика конфигураций (feature/configurator) и сессии настроек (feature/device/settings); редактор — слот из composeApp
             implementation(project(":feature:configurator"))
             implementation(project(":feature:device:settings"))
-            // Подключён ли блок — «Записать в блок» только при связи
             implementation(project(":feature:device:interaction"))
-            // Общий presentation устройства: база VM блока, диалог PIN, компоненты и порты файлов конфигураций
             implementation(project(":feature:device:presentation-core"))
-            // Автомобиль облачной конфигурации (CarSummary из каталога)
             implementation(project(":feature:vehicle"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
-            // Nav3-граф конфигуратора (см. docs/navigation.md)
             implementation(libs.compose.nav3)
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
 

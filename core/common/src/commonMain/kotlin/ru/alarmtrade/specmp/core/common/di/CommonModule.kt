@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.core.common.di
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.datetime.Clock
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -9,7 +8,6 @@ import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
 import ru.alarmtrade.specmp.core.common.time.TimeZoneSource
 
-/** Qualifier для application-scoped [CoroutineScope]: переживает ViewModel и экраны. */
 val appScopeQualifier = named("appScope")
 
 val commonModule = module {

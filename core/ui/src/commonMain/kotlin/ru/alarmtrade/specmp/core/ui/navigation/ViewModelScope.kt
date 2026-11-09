@@ -9,14 +9,8 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
- * ViewModel поддерева [content] живут, пока не сменится [scopeKey], а не пока поддерево в композиции.
- *
- * Уход поддерева из композиции (смена экрана авторизации) VM не очищает — иначе их не пережил бы и поворот экрана.
- * Поэтому границу задаёт ключ: новый [scopeKey] (например, номер сессии аккаунта) очищает VM прежнего, а пересоздание
- * Activity при том же ключе их сохраняет. Включая VM записей nav3 (`rememberViewModelStoreNavEntryDecorator` хранит
- * их в ближайшем [LocalViewModelStoreOwner]).
- *
- * [name] — своё хранилище на каждую зону: соседние зоны (обе видны во время перехода) не очищают VM друг друга.
+ * VM поддерева живут до смены [scopeKey], а не пока оно в композиции — иначе их не пережил бы поворот экрана.
+ * [name] — своё хранилище на зону: соседние зоны во время перехода не очищают VM друг друга.
  */
 @Composable
 fun ViewModelScope(name: String, scopeKey: Any, content: @Composable () -> Unit) {

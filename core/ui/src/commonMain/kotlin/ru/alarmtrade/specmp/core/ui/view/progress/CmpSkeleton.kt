@@ -19,10 +19,6 @@ import androidx.compose.ui.unit.dp
 private const val SKELETON_PERIOD_MS = 700
 private const val SKELETON_MIN_ALPHA = 0.45f
 
-/**
- * Заглушка загрузки (скелетон): пульсирующий блок цвета surface-container-highest. Размер задаёт [modifier]
- * (ширина/высота строки текста, картинки), форма — [shape].
- */
 @Composable
 fun CmpSkeleton(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(8.dp)) {
     val transition = rememberInfiniteTransition(label = "skeleton")

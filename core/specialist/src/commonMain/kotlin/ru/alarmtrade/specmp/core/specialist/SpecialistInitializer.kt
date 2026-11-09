@@ -22,17 +22,8 @@ import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 
 /**
- * Начальная настройка Specialist SDK (по образцу `RootViewModel` настольного приложения): информация о клиенте,
- * язык приложения, язык конфигураций. App-scoped: [start] идемпотентен, работает в своём скоупе и переживает экраны;
- * пока он не закончил, [ready] = `false` — корень приложения не показывает UI, чтобы первые запросы уходили
- * с правильным языком и клиентом.
- *
- * - Клиент: актуальная [AppDeviceInformation][ru.alarmtrade.common.app.domain.AppDeviceInformation] сравнивается с
- *   сохранённой и сохраняется, если пусто или отличается (например, после обновления приложения). Идентификатор
- *   клиента — UUID, созданный при первом запуске и сохранённый в пользовательских настройках SDK.
- * - Язык приложения — от него зависят тексты, которые сервер отдаёт на нужном языке (названия модулей, описания
- *   прошивок). Без сохранённого языка SDK запрашивает английский.
- * - Язык конфигураций автомобилей — сохранённый, иначе язык приложения; дальше меняется своей настройкой.
+ * Начальная настройка SDK (клиент, язык приложения, язык конфигураций); пока она не закончилась, [ready] = `false` —
+ * корень не показывает UI, чтобы первые запросы ушли с правильным языком и клиентом.
  */
 class SpecialistInitializer(
     private val interactor: AppDeviceInformationInteractor,
@@ -43,15 +34,11 @@ class SpecialistInitializer(
 
     private val _ready = MutableStateFlow(false)
 
-    /** Начальная настройка закончена (успешно или нет): UI можно показывать. */
     val ready: StateFlow<Boolean> = _ready.asStateFlow()
 
     private val started = MutableStateFlow(false)
 
-    /**
-     * Запустить начальную настройку с языком [languageTag] (`ru` / `en`); повторный вызов ничего не делает. Язык
-     * меняется только перезапуском приложения — отдельной синхронизации смены языка нет.
-     */
+    /** Повторный вызов ничего не делает; язык меняется только перезапуском приложения. */
     fun start(languageTag: String) {
         if (!started.compareAndSet(expect = false, update = true)) return
         scope.launch {
@@ -66,10 +53,7 @@ class SpecialistInitializer(
         }
     }
 
-    /**
-     * Информация о клиенте: сохранить, если пусто или отличается от актуальной. Вызывается при старте и перед входом
-     * (логином и повторной отправкой письма активации).
-     */
+    /** Вызывается при старте и перед входом (логин, повторная отправка письма активации). */
     @OptIn(ExperimentalUuidApi::class)
     suspend fun syncClientInfo(): Response<Unit> {
         val actual = deviceInformationProvider.create().copy(deviceId = clientId())

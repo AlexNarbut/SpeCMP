@@ -158,8 +158,6 @@ class MainScreenViewModel(
         reduce { copy(userCommercialState = response.asLCEState(MainError::from)).withActions() }
     }
 
-    // Синхронизация — процесс: стадии зеркалятся в state по мере эмита,
-    // поток всегда завершается одним из MainDatabaseSyncStatus.Finished.
     private suspend fun refreshDatabaseVersion() {
         reduce { copy(databaseSyncState = LCEState.Loading) }
 

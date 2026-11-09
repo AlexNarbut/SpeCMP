@@ -35,7 +35,6 @@ import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 
-/** Ошибка загрузки уровня: сбой связи (общий заголовок) или отказ сервера, с «Повторить». */
 @Composable
 internal fun LoadFailed(
     error: CatalogError,
@@ -61,7 +60,6 @@ internal fun LoadFailed(
     }
 }
 
-/** Фильтр функций отсеял всё на уровне — «Сбросить фильтр». */
 @Composable
 internal fun FilteredOut(
     onReset: () -> Unit,
@@ -80,7 +78,6 @@ internal fun FilteredOut(
     }
 }
 
-/** Кнопка действия в блоке состояния (52 dp, от 200 dp). */
 @Composable
 internal fun StateAction(text: String, onClick: () -> Unit, primary: Boolean = false) {
     val modifier = Modifier.heightIn(min = 52.dp).width(220.dp).let {
@@ -93,7 +90,6 @@ internal fun StateAction(text: String, onClick: () -> Unit, primary: Boolean = f
     }
 }
 
-/** Скелетон списка: [count] строк с квадратной миниатюрой; [thumb] — строка с подписью (модели, результаты). */
 @Composable
 internal fun SkeletonRows(count: Int, modifier: Modifier = Modifier, thumb: Boolean = false) {
     CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {

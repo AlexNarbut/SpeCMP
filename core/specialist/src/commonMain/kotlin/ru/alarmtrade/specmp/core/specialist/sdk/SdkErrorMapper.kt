@@ -28,11 +28,8 @@ import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.PlatformError
 
 /**
- * Приводит общую ошибку из SDK к [AppException]; прочие ошибки (предметные ошибки фичи) возвращает как есть.
- *
- * Типизированные исключения SDK распознаются везде. Сырые исключения ktor/платформы (DNS, connect, обрыв)
- * SDK отдаёт без обёртки — их распознаём только в [SpecialistResponse.Error.Network]: `IOException`
- * бывает и у USB/serial, это не «нет интернета».
+ * Прочие ошибки возвращает как есть. Сырые исключения ktor/платформы распознаются только в
+ * [SpecialistResponse.Error.Network]: `IOException` бывает и у USB/serial, это не «нет интернета».
  */
 internal fun SpecialistResponse.Error.toAppException(): Throwable {
     val error = exception.sdkAppError()
@@ -40,9 +37,6 @@ internal fun SpecialistResponse.Error.toAppException(): Throwable {
     return error?.let { AppException(it, exception) } ?: exception
 }
 
-/**
- * Общая ошибка для типизированного исключения SDK (в том числе пойманного не из `Response`); null — не общая.
- */
 fun Throwable.sdkAppError(): AppError? = when (this) {
     is NetworkIsNotAvailableException, is NetworkNotConnectedError -> ApiError.NoConnection
     is NetworkTimeoutException -> ApiError.Timeout

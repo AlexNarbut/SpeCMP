@@ -32,12 +32,8 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectViewModel
 
 /**
- * Точка входа «Выбор автомобиля» (каталог и карточка автомобиля). Подключается через слоты навигации в
- * `composeApp` (главная, расширенный монтаж, настройки блока).
- *
- * @param onPick выбранный автомобиль (только [VehicleSelectMode.PICK]); закрыть экран — дело вызывающего.
- * @param onOpenFirmwareArchive открыть архив прошивок с CAN-кодом (режим просмотра); `null` — кнопки нет.
- * @param onOpenUserManual открыть народную карту; `null` — строки без перехода.
+ * [onPick] — только в [VehicleSelectMode.PICK], закрыть экран — дело вызывающего; `null` у [onOpenFirmwareArchive] и
+ * [onOpenUserManual] — без кнопки и перехода.
  */
 @Composable
 fun VehicleSelectEntry(

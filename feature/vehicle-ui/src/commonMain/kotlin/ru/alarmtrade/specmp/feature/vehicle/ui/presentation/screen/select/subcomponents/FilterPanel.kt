@@ -33,10 +33,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.groupLabel
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 
-/**
- * Фильтр групп функций: черновик отдельно от применённого (закрытие без «Применить» фильтр не меняет).
- * Узкое окно — шторка, широкое — диалог.
- */
+/** Черновик отдельно от применённого: закрытие без «Применить» фильтр не меняет. */
 @Composable
 internal fun FilterPanel(draft: Set<CarFeatureGroup>, wide: Boolean, actions: VehicleSelectActions) {
     if (wide) {

@@ -54,10 +54,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardAc
 private const val NOTE_COLLAPSE_CHARS = 140
 private const val NOTE_COLLAPSED_LINES = 3
 
-/**
- * Шапка карточки (вариант B): фото 4:3 сбоку и название; узкая — полоса CAN-кода и бейджи строками во всю
- * ширину, широкая — три плитки CAN-код · Блокировка · Обход. Ниже — «Прошивки для CAN» (просмотр) и «Важно».
- */
 @Composable
 internal fun CardHeader(
     card: CarCard,
@@ -159,7 +155,6 @@ internal fun CardHeader(
     }
 }
 
-/** CAN-код: подпись, код моноширинным крупно, «копировать». */
 @Composable
 private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -217,7 +212,6 @@ private fun CanCode(code: String, tile: Boolean, onCopy: () -> Unit, modifier: M
     }
 }
 
-/** «Важно»: первое примечание в 3 строки; «Показать полностью» — если примечаний два или текст длинный. */
 @Composable
 private fun Notes(notes: List<String>, expanded: Boolean, onToggle: () -> Unit) {
     val colors = cmpThemeColors()

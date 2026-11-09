@@ -5,7 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 
-/** Источник настроек в ключе маршрута (сериализуется — переживает пересоздание back stack). */
 @Serializable
 @SerialName("configurator-ui.SourceKey")
 internal sealed interface SourceKey {
@@ -42,37 +41,31 @@ internal fun SettingsSource.toKey(): SourceKey? = when (this) {
     is SettingsSource.Defaults -> SourceKey.Defaults(deviceName)
 }
 
-/** K1 «Мои конфигурации». */
 @Serializable
 @SerialName("configurator-ui.MineListRoute")
 internal data object MineListRoute : NavKey
 
-/** K2 выбор модели: «С нуля» (`file == null`) или модель для файла `.dxs` (K3). */
+/** `file == null` — «С нуля». */
 @Serializable
 @SerialName("configurator-ui.ModelsRoute")
 internal data class ModelsRoute(val file: SourceKey.File? = null) : NavKey
 
-/** K5 редактор конфигурации. */
 @Serializable
 @SerialName("configurator-ui.EditorRoute")
 internal data class EditorRoute(val source: SourceKey) : NavKey
 
-/** K4 шаг 1: каталог автомобилей с конфигурациями. */
 @Serializable
 @SerialName("configurator-ui.CloudCarsRoute")
 internal data object CloudCarsRoute : NavKey
 
-/** K4 шаг 2: конфигурации автомобиля. */
 @Serializable
 @SerialName("configurator-ui.CloudListRoute")
 internal data class CloudListRoute(val carId: Int, val carTitle: String) : NavKey
 
-/** K4 шаг 3: карточка облачной конфигурации. */
 @Serializable
 @SerialName("configurator-ui.CloudCardRoute")
 internal data class CloudCardRoute(val id: Int, val title: String) : NavKey
 
-/** «Записать в блок»: редактор подключённого блока с загрузкой конфигурации. */
 @Serializable
 @SerialName("configurator-ui.DeviceWriteRoute")
 internal data class DeviceWriteRoute(val source: SourceKey) : NavKey

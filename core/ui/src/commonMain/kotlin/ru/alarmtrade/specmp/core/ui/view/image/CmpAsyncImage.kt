@@ -25,12 +25,7 @@ import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
 import coil3.decode.DataSource
 
-/**
- * Единый `ImageLoader` приложения (U-1): memory/disk-кэш и сетевой стек
- * Coil переиспользуются всеми экранами. Провайдится из composition root
- * (`composeApp/App.kt`) через [ProvideCmpImageLoader]; без провайдера
- * Cmp*-обёртки построят дефолтный загрузчик на текущей композиции.
- */
+/** Без провайдера Cmp*-обёртки построят дефолтный загрузчик на текущей композиции. */
 val LocalCmpImageLoader = staticCompositionLocalOf<ImageLoader?> { null }
 
 @Composable
@@ -50,10 +45,6 @@ private fun cmpImageLoader(): ImageLoader {
     return rememberCmpImageLoader()
 }
 
-/**
- * Обёртка над Coil `AsyncImage` — единая точка загрузки изображений для фич.
- * Замена/обновление Coil затрагивает только `core/ui`, не фичи (U-2).
- */
 @Composable
 fun CmpAsyncImage(
     model: Any?,
@@ -73,20 +64,12 @@ fun CmpAsyncImage(
     )
 }
 
-/**
- * Scope для [CmpSubcomposeAsyncImage]: отдаёт painter общего супертипа
- * [Painter] и intrinsic-размер, чтобы потребители не зависели от типов Coil.
- */
 @Immutable
 class CmpSubcomposeAsyncImageScope internal constructor(internal val asyncPainter: AsyncImagePainter) {
     val painter: Painter get() = asyncPainter
     val intrinsicSize: Size get() = asyncPainter.intrinsicSize
 }
 
-/**
- * Обёртка над Coil `SubcomposeAsyncImage` для сценариев, где UI зависит от
- * состояния загрузки (placeholder по пропорциям картинки и т.п.).
- */
 @Composable
 fun CmpSubcomposeAsyncImage(
     model: Any?,
@@ -107,16 +90,9 @@ fun CmpSubcomposeAsyncImage(
 
 private const val IMAGE_FADE_MS = 220
 
-/** Фаза загрузки картинки с заглушкой. */
 private enum class ImagePhase { LOADING, SUCCESS, ERROR }
 
-/**
- * Картинка по url с заглушкой: [placeholder] показывается, пока картинка грузится, и вместо неё, если загрузка
- * не удалась. Размер задаёт [modifier] — раскладка не прыгает.
- *
- * Без субкомпозиции (`AsyncImage` + `onState`) — дёшево в строках списков; проявление — только для картинок не из
- * memory-кэша, чтобы при скролле обратно они не мигали.
- */
+/** Без субкомпозиции — дёшево в строках списков; проявление только не из memory-кэша, чтобы при скролле не мигали. */
 @Composable
 fun CmpAsyncImageWithPlaceholder(
     model: Any?,

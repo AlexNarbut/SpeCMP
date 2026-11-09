@@ -34,7 +34,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcom
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.modelItems
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.subcomponents.trimItems
 
-/** Экран выбора автомобиля без ViewModel: каркас, тело по раскладке, фильтр, диалоги, просмотр фото. */
 @Composable
 internal fun VehicleSelectContent(
     state: VehicleSelectState,
@@ -70,7 +69,6 @@ internal fun VehicleSelectContent(
     }
 }
 
-/** Ключ шага узкой раскладки: смена ключа — плавный переход, у каждого шага своя прокрутка. */
 private fun VehicleSelectState.compactKey(): Any = when (compactStep()) {
     CompactStep.BRANDS -> "brands"
     CompactStep.MODELS -> "models-${selection.brand?.id}"
@@ -79,7 +77,6 @@ private fun VehicleSelectState.compactKey(): Any = when (compactStep()) {
     CompactStep.CARD -> "card-${selection.carId}"
 }
 
-/** Узкое окно: шаги «марки → модели → комплектации → карточка» (или поиск по CAN → карточка). */
 @Composable
 private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions) {
     val step = state.compactStep()
@@ -130,7 +127,6 @@ private fun CompactBody(state: VehicleSelectState, actions: VehicleSelectActions
     }
 }
 
-/** Ограничение ширины содержимого на широком окне (карточка на Medium). */
 internal val CardMaxWidth = 840.dp
 
 @Composable

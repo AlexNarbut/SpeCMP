@@ -19,7 +19,6 @@ data class SignUpCredentials(
     }
 
     private companion object {
-        // Правила зафиксированы в дизайне auth-флоу (design/features/auth).
         val EMAIL_REGEX = Regex("""^[^\s@]+@[^\s@]+\.[^\s@]+$""")
         val PHONE_REGEX = Regex("""^[+\d][\d\s()-]{5,}$""")
         const val MIN_PASSWORD_LENGTH = 6

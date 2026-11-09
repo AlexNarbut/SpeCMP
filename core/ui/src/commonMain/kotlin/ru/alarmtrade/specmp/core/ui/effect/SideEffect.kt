@@ -11,15 +11,9 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-/*
- * One-shot события (навигация, snackbar и т.п.) из ViewModel в UI — `docs/patterns.md`, «One-shot события (Effects)».
- * Emit-сторона — `postSideEffect` в `BaseViewModel`, сбор в Compose — [collectSideEffect].
- */
-
 /**
- * Поток эффектов `BaseViewModel`: `replay = 0` — повтор события после пересоздания экрана не нужен (иначе двойная
- * навигация). Буфер больше одного: обработчик в [collectSideEffect] может надолго suspend'иться (показ снекбара), и
- * эффекты, эмитнутые в это время, не должны теряться; при переполнении отбрасываются самые старые.
+ * replay = 0 — повтор после пересоздания экрана дал бы двойную навигацию; буфер > 1 — обработчик может надолго
+ * suspend'иться (снекбар), при переполнении отбрасываются самые старые.
  */
 internal fun <T> sideEffectFlow(): MutableSharedFlow<T> = MutableSharedFlow(
     replay = 0,
@@ -29,24 +23,7 @@ internal fun <T> sideEffectFlow(): MutableSharedFlow<T> = MutableSharedFlow(
 
 private const val SIDE_EFFECT_BUFFER = 16
 
-/**
- * Lifecycle-aware сбор one-shot эффектов в Compose.
- *
- * Подписка активна только пока экран в состоянии не ниже [minActiveState] и
- * приостанавливается при уходе в фон — событие, эмитнутое «в пустоту», теряется
- * (поэтому эмитить эффекты только в ответ на действия пользователя, не из `init`).
- *
- * [onEffect] оборачивается в [rememberUpdatedState], поэтому пересоздание лямбды при
- * рекомпозиции НЕ перезапускает сбор, но вызывается всегда её актуальная версия.
- *
- * ```kotlin
- * viewModel.sideEffect.collectSideEffect { effect ->
- *     when (effect) {
- *         is LoginEffect.NavigateBack -> onBack()
- *     }
- * }
- * ```
- */
+/** Сбор только пока экран не ниже [minActiveState]: эффект, эмитнутый в фоне, теряется. */
 @Composable
 fun <T> Flow<T>.collectSideEffect(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,

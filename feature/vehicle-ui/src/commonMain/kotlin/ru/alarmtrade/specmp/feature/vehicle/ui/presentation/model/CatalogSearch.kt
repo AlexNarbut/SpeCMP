@@ -7,15 +7,14 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.ComboS
 
 private val whitespace = Regex("\\s+")
 
-/** Название содержит запрос (без учёта регистра); пустой запрос — подходит всё. */
 internal fun matchesQuery(name: String, query: String): Boolean {
     val q = query.trim()
     return q.isEmpty() || name.contains(q, ignoreCase = true)
 }
 
 /**
- * «Марка модель» на уровне марок: запрос начинается с полного имени марки и пробела (самое длинное совпадение —
- * «Land Rover», а не «Land»), либо первое слово — начало имени ровно одной марки. Иначе — `null`.
+ * Самое длинное совпадение имени марки и пробел («Land Rover», а не «Land»), либо первое слово — начало имени ровно
+ * одной марки.
  */
 internal fun detectCombo(query: String, brands: List<CarBrand>): ComboSearch? {
     val q = query.trim().lowercase()
@@ -30,5 +29,4 @@ internal fun detectCombo(query: String, brands: List<CarBrand>): ComboSearch? {
     return ComboSearch(single, tokens.drop(1).joinToString(" "))
 }
 
-/** Запрос из одних цифр — похоже на CAN-код. */
 internal fun looksLikeCanCode(query: String): Boolean = query.trim().let { it.isNotEmpty() && it.all(Char::isDigit) }

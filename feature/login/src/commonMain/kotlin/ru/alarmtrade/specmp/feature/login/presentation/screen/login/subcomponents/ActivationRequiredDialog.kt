@@ -48,7 +48,6 @@ fun ActivationRequiredDialog(
         },
         text = {
             CmpColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                // Один текстовый слот: сообщение заменяется по состоянию отправки.
                 CmpText(
                     text = when {
                         resendSucceeded ->

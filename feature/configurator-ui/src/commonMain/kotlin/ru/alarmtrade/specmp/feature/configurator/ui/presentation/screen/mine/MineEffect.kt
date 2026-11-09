@@ -6,7 +6,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 internal sealed interface MineEffect {
     data class Message(val message: MineMessage) : MineEffect
 
-    /** Копия создана — тост с «Открыть». */
     data class Copied(val configuration: SettingsSource.LocalConfiguration) : MineEffect
 
     data class ExportFile(val path: String, val fileName: String) : MineEffect

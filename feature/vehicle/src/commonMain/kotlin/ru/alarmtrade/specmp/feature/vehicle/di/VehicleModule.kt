@@ -13,10 +13,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepo
 
 private const val VEHICLE_PREFERENCES = "vehicles"
 
-/**
- * Koin-модуль логической фичи `feature/vehicle`: каталог автомобилей и недавние.
- * SDK-интеракторы берутся из `core/specialist`.
- */
 val vehicleModule = module {
     single<VehicleCatalogDataSource> {
         // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание источника.

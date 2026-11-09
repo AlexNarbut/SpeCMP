@@ -32,10 +32,8 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 
 /**
- * [VehicleCatalogRepository] над SDK ([VehicleCatalogDataSource]): каталог [VehicleCatalog.ALL] — `carsInteractor`
- * (фильтр по подсистемам устройства и группам функций), [VehicleCatalog.WITH_CONFIGURATIONS] —
- * `configurationInteractor` (фильтр по модели блока, группы не поддерживаются). Подсистемы модели блока —
- * `deviceInformationInteractor`.
+ * [VehicleCatalog.ALL] — `carsInteractor` (фильтр по подсистемам и группам функций),
+ * [VehicleCatalog.WITH_CONFIGURATIONS] — `configurationInteractor` (фильтр по модели блока, без групп).
  */
 internal class SpecialistVehicleCatalogRepository(private val dataSource: VehicleCatalogDataSource) :
     VehicleCatalogRepository {

@@ -23,11 +23,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/**
- * Чип: подпись с необязательной иконкой, высота 48 dp (вся площадь — цель нажатия). [selected] — активный
- * (secondary-container, например применённый фильтр). [onClear] — отдельная кнопка «✕» справа (сбросить),
- * её нажатие не вызывает [onClick]. Длинная подпись обрезается многоточием в одну строку.
- */
+/** Нажатие [onClear] не вызывает [onClick]. */
 @Composable
 fun CmpChip(
     text: String,

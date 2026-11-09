@@ -22,7 +22,6 @@ kotlin {
     }
 }
 
-// Все строки приложения: composeResources/values*/<префикс фичи>.xml → Strings.string.<ключ>
 compose.resources {
     publicResClass = true
     packageOfResClass = "ru.alarmtrade.specmp.core.localization.resources"

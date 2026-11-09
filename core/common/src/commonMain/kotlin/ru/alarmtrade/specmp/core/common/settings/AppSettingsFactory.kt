@@ -3,13 +3,8 @@ package ru.alarmtrade.specmp.core.common.settings
 import com.russhwolf.settings.Settings
 
 /**
- * Фабрика именованных key-value хранилищ приложения.
- *
- * Общие settings — app-level инфраструктура: фичи не создают `Settings()` сами,
- * а получают именованное хранилище через DI. Все хранилища живут в одном
- * платформенном `Settings` (no-arg), изоляция — префиксом ключа `"<name>."`:
- * [Settings.clear] и [Settings.keys] именованного хранилища затрагивают только
- * его собственные ключи.
+ * Все хранилища — в одном платформенном `Settings`, изоляция префиксом ключа `"<name>."`: [Settings.clear] и
+ * [Settings.keys] именованного хранилища затрагивают только его ключи.
  */
 class AppSettingsFactory(private val root: Settings) {
 

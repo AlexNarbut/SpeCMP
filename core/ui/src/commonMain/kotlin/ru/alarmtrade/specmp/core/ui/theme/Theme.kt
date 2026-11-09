@@ -93,10 +93,7 @@ private val DarkColorScheme = darkColorScheme(
 
 val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }
 
-/**
- * Тема приложения. Тёмная/светлая — выбор пользователя из [themeStore] (переключатель меняет [LocalThemeIsDark] и
- * сохраняется), а пока не выбирали — как в системе. Без хранилища (галереи, тесты) — всегда как в системе.
- */
+/** Тёмная/светлая — сохранённый выбор из [themeStore]; пока не выбирали или без хранилища — как в системе. */
 @Composable
 fun AppTheme(
     onThemeChange: @Composable (isDark: Boolean) -> Unit,

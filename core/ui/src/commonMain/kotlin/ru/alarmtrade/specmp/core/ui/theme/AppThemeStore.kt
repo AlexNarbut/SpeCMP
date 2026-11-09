@@ -2,10 +2,7 @@ package ru.alarmtrade.specmp.core.ui.theme
 
 import ru.alarmtrade.specmp.core.common.di.platformSettings
 
-/**
- * Тема, выбранная пользователем (переключатель в боковом меню), между запусками. Интерфейсом — чтобы галереи и
- * тесты рисовали тему без сохранённого выбора ([AppTheme] без хранилища следует за системой).
- */
+/** Интерфейс — чтобы галереи и тесты рисовали тему без сохранённого выбора. */
 interface AppThemeStore {
     /** Сохранённый выбор: `true` — тёмная, `false` — светлая, `null` — не выбирали (как в системе). */
     fun savedIsDark(): Boolean?

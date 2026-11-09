@@ -34,15 +34,8 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatConnectionBanner
 
 /**
- * Компактная плашка соединения поверх ленты: не сдвигает сообщения и не мигает.
- *
- * - Короткие обрывы не показываются: плашка появляется, только если проблема держится
- *   дольше [SHOW_DELAY] (переподключение после пикера и мелкие обрывы проходят
- *   незаметно). Скрывается сразу, как соединение восстановлено.
- * - Попытки переподключения не меняют плашку: [SupportChatConnectionBanner.Reconnecting]
- *   держится до `Online` (см. `SupportChatScreenState.connectionBanner`).
- *
- * Действий нет — переподключение автоматическое (VM).
+ * Короткие обрывы не показываются: плашка появляется, только если проблема держится дольше [SHOW_DELAY];
+ * скрывается сразу после восстановления.
  */
 @Composable
 internal fun SupportChatConnectionStatus(

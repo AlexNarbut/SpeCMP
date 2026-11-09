@@ -15,15 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 
-/**
- * Типографические роли (U-6): маппинг на `MaterialTheme.typography` внутри
- * обёртки, чтобы фичи не задавали размеры числами и шкала шрифтов не
- * расходилась между экранами.
- */
 enum class CmpTextStyle {
     Title,
 
-    /** Крупный основной текст (bodyLarge, 16 sp): строки списков настроек, пункты выбора. */
     BodyLarge,
     Body,
     Caption,
@@ -72,10 +66,6 @@ fun CmpText(
     }
 }
 
-/**
- * Текст со стилями внутри строки ([AnnotatedString]: подсветка совпадения поиска, моноширинный код).
- * Роль [style] — как у строкового [CmpText].
- */
 @Composable
 fun CmpText(
     text: AnnotatedString,

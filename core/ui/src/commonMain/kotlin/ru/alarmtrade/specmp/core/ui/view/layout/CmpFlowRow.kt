@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-/** Строка с переносом: элементы, не влезающие по ширине, уходят на следующую строку. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CmpFlowRow(

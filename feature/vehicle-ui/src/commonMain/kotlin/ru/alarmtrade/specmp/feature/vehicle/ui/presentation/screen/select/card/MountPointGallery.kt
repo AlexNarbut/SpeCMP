@@ -52,7 +52,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.VehicleTestTags
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.CarPhoto
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.PHOTO_RATIO
 
-/** Точка подключения: «← Все точки подключения», тип и название, галерея фото, описание. */
 @Composable
 internal fun MountPointDetail(
     point: MountPoint,
@@ -91,7 +90,6 @@ internal fun MountPointDetail(
     }
 }
 
-/** Галерея: пейджер (свайп), стрелки, «3 из 7», миниатюры; тап по фото — полноэкранный просмотр. */
 @Composable
 private fun Gallery(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit, onFullScreen: () -> Unit) {
     val count = point.photos.size
@@ -175,7 +173,6 @@ private fun Counter(index: Int, count: Int, modifier: Modifier = Modifier) {
     )
 }
 
-/** Полноэкранный просмотр фото точки: зум, листание стрелками и свайпом, «3 из 7», подпись, «✕». */
 @Composable
 internal fun PhotoViewer(point: MountPoint, photo: Int, onPhotoChange: (Int) -> Unit, onClose: () -> Unit) {
     val count = point.photos.size

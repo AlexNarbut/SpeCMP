@@ -1,24 +1,7 @@
 package ru.alarmtrade.specmp.core.ui.view.icon
 
-/**
- * Единый каталог иконок дизайн-системы.
- *
- * Enum хранит только имя. Для получения `ImageVector` используйте
- * `@Composable` расширение [imageVector] (см. `CmpIconsResolver.kt`):
- *
- * ```kotlin
- * CmpIcon(icon = CmpIcons.ArrowBack, contentDescription = "Назад")
- * // или напрямую:
- * val iv = CmpIcons.Lock.imageVector()
- * ```
- *
- * Все иконки резолвятся из material-icons (констант, без ресурсов).
- * Чтобы добавить новую — добавь элемент сюда и ветку в [imageVector].
- * Брендовые/кастомные иконки подключай через compose resources и
- * `CmpIcon(painter = ...)`.
- */
+/** Новая иконка — элемент здесь и ветка в [imageVector] (`CmpIconsResolver.kt`). */
 enum class CmpIcons {
-    // ── Navigation ──────────────────────────────────────────
     ArrowBack,
     ArrowForward,
     ArrowDropDown,
@@ -31,7 +14,6 @@ enum class CmpIcons {
     Close,
     Home,
 
-    // ── Actions ─────────────────────────────────────────────
     Add,
     Remove,
     Edit,
@@ -49,7 +31,6 @@ enum class CmpIcons {
     Pause,
     Build,
 
-    // ── Content ─────────────────────────────────────────────
     Favorite,
     FavoriteBorder,
     Star,
@@ -57,7 +38,6 @@ enum class CmpIcons {
     List,
     Tag,
 
-    // ── Communication ───────────────────────────────────────
     Email,
     Phone,
     Call,
@@ -66,12 +46,10 @@ enum class CmpIcons {
     Forum,
     SupportAgent,
 
-    // ── User ────────────────────────────────────────────────
     Person,
     AccountCircle,
     Face,
 
-    // ── Status ──────────────────────────────────────────────
     Info,
     Warning,
     AlertTriangle,
@@ -89,18 +67,15 @@ enum class CmpIcons {
     FactCheck,
     MenuBook,
 
-    // ── Places ──────────────────────────────────────────────
     LocationOn,
     Place,
 
-    // ── Content / Files ─────────────────────────────────────
     AttachFile,
     Image,
     Description,
     DoneAll,
     Download,
 
-    // ── Devices / Connectivity ──────────────────────────────
     Bluetooth,
     BluetoothSearching,
     BluetoothDisabled,
@@ -112,7 +87,6 @@ enum class CmpIcons {
     TouchApp,
     Link,
 
-    // ── Firmware / update ───────────────────────────────────
     SystemUpdate,
     History,
     FolderOpen,
@@ -123,7 +97,6 @@ enum class CmpIcons {
     CloudOff,
     Inventory2,
 
-    // ── Конфигурации ────────────────────────────────────────
     Cloud,
     Save,
     SaveAs,
@@ -133,7 +106,6 @@ enum class CmpIcons {
     ErrorOutline,
     PriorityHigh,
 
-    // ── Vehicles ────────────────────────────────────────────
     DirectionsCar,
     FilterList,
     FilterAlt,
@@ -150,7 +122,6 @@ enum class CmpIcons {
     Cable,
     PhotoLibrary,
 
-    // ── Vehicle state (проверка состояния) ─────────────────
     SensorDoor,
     Luggage,
     Key,
@@ -174,7 +145,6 @@ enum class CmpIcons {
     Autorenew,
     Redo,
 
-    // ── Other ───────────────────────────────────────────────
     Settings,
     DateRange,
     Schedule,
@@ -187,7 +157,6 @@ enum class CmpIcons {
     Moon,
     Sun,
 
-    // ── Быстрый монтаж ──────────────────────────────────────
     StarBorder,
     RestartAlt,
     CloudDone,

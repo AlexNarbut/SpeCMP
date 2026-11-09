@@ -17,10 +17,6 @@ enum class CmpSnackbarDuration { Short, Long, Indefinite }
 
 enum class CmpSnackbarResult { Dismissed, ActionPerformed }
 
-/**
- * Wrapper around [SnackbarHostState] — feature modules interact only with this class,
- * never with the material3 type directly.
- */
 class CmpSnackbarHostState {
     internal val delegate = SnackbarHostState()
 

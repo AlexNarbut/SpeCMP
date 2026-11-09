@@ -11,12 +11,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpDialog
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 
-/**
- * Действия с документом по тапу: «Открыть» (во внешнем приложении) и «Скачать»
- * (в «Загрузки»). Файл скачивается только после выбора пользователя. «Скачать»
- * есть только у вложения с url — своё неподтверждённое вложение можно лишь открыть
- * из локальной копии.
- */
+/** Файл скачивается только после выбора; «Скачать» есть только у вложения с url. */
 @Composable
 internal fun SupportChatDocumentActionsDialog(
     attachment: SupportChatUiAttachment,

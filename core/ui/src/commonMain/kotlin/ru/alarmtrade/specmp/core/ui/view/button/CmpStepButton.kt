@@ -33,16 +33,12 @@ import kotlinx.coroutines.launch
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/** Задержка до автоповтора при удержании и период повтора. */
 private const val REPEAT_DELAY_MS = 400L
 private const val REPEAT_PERIOD_MS = 80L
 private const val PRESSED_OVERLAY_ALPHA = 0.12f
 private const val DISABLED_ALPHA = 0.38f
 
-/**
- * Крупная кнопка шага (−/+, ▲/▼) для числовых значений: срабатывает сразу при нажатии, при удержании —
- * повторяет [onStep] (через 400 мс, затем каждые 80 мс). Для TalkBack/VoiceOver — обычная кнопка.
- */
+/** Срабатывает сразу при нажатии, при удержании повторяет [onStep]. */
 @Composable
 fun CmpStepButton(
     icon: CmpIcons,

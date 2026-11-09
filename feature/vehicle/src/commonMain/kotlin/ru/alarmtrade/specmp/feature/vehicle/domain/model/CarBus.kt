@@ -1,9 +1,6 @@
 package ru.alarmtrade.specmp.feature.vehicle.domain.model
 
-/**
- * Шина (интерфейс), по которой блок читает статус или управляет функцией. Все значения SDK `CarBusGroup`;
- * код сервера, которого SDK не знает, — [UNKNOWN] (функция всё равно показывается).
- */
+/** Код сервера, которого SDK не знает, — [UNKNOWN] (функция всё равно показывается). */
 enum class CarBus(val family: BusFamily) {
     CAN1(BusFamily.CAN),
     CAN2(BusFamily.CAN),
@@ -24,5 +21,4 @@ enum class CarBus(val family: BusFamily) {
     UNKNOWN(BusFamily.UNKNOWN),
 }
 
-/** Семейство шин — цвет чипа; номер шины — в подписи. */
 enum class BusFamily { CAN, CAN_FD, LIN, BEAN, IMO, UNKNOWN }

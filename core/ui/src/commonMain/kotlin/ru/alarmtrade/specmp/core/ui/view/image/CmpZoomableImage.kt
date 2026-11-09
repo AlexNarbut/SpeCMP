@@ -18,10 +18,6 @@ import androidx.compose.ui.layout.ContentScale
 private const val MAX_ZOOM = 5f
 private const val DOUBLE_TAP_ZOOM = 2.5f
 
-/**
- * Картинка по URL с масштабированием: щипок (до ×5), двойной тап — приблизить/вернуть, перетаскивание при
- * увеличении. Масштаб сбрасывается при смене [model]. Для полноэкранного просмотра фото.
- */
 @Composable
 fun CmpZoomableImage(model: Any?, contentDescription: String?, modifier: Modifier = Modifier) {
     var scale by remember(model) { mutableFloatStateOf(1f) }

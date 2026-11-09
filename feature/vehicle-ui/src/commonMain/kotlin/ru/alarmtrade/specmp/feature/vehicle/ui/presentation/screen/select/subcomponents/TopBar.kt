@@ -36,10 +36,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.typeLabel
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
 
-/**
- * Шапка: «назад», заголовок по режиму («Выберите автомобиль» / «Автомобили»), подзаголовок — модель блока и
- * CAN-код прошивки или выбранный тип устройства; справа — чип типа устройства (широкое окно) и фильтр функций.
- */
 @Composable
 internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSelectActions) {
     val mode = state.mode
@@ -76,7 +72,7 @@ internal fun TopBar(state: VehicleSelectState, wide: Boolean, actions: VehicleSe
     )
 }
 
-/** Модель блока и CAN-код прошивки или выбранный тип (на узком окне тип виден чипом под поиском — не дублируем). */
+/** На узком окне тип виден чипом под поиском — здесь не дублируем. */
 @Composable
 private fun subtitle(state: VehicleSelectState, wide: Boolean): String? {
     val mode = state.mode

@@ -7,7 +7,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 
-/** Действия экрана выбора автомобиля (колбэки ViewModel) — одним объектом, чтобы не тянуть десятки параметров. */
 @Immutable
 internal class VehicleSelectActions(
     val onBack: () -> Unit,
@@ -34,7 +33,6 @@ internal class VehicleSelectActions(
     val card: CardActions,
 )
 
-/** Действия карточки автомобиля. */
 @Immutable
 internal class CardActions(
     val onTabSelect: (CardTab) -> Unit,
@@ -54,5 +52,4 @@ internal class CardActions(
     val onMismatchConfirm: () -> Unit,
 )
 
-/** Куда ведёт крошка. */
 internal enum class CrumbTarget { TOP, BRAND, MODEL }

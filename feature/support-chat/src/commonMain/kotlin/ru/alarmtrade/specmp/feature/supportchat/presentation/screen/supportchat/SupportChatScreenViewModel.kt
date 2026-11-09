@@ -36,16 +36,12 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 
 /**
- * Соединением владеет SDK: VM держит сессию всю свою жизнь (уход с экрана отпускает её), на каждом `Ready`
- * перечитывает первую страницу истории и отправляет очередь. Инварианты ленты держит [SupportChatTimeline],
- * очередь — [SupportChatOutbox]. Состояние меняется на main через `reduce`; отправки (новые, ретраи, очередь)
- * идут строго по одной под `executeWithProceedLock`.
+ * Сессию VM держит всю свою жизнь; на каждом `Ready` перечитывает первую страницу истории и отправляет очередь.
+ * Отправки (новые, ретраи, очередь) идут строго по одной под `executeWithProceedLock`.
  */
 class SupportChatScreenViewModel(
     private val repository: SupportChatRepository,
     private val dispatchers: AppDispatchers,
-    // Платформенные порты из composeApp: зависимости конструктора, передаются
-    // через parametersOf при создании VM.
     fileSaver: SupportChatFileSaver,
     private val attachmentFiles: SupportChatAttachmentFiles,
     fileOpener: SupportChatFileOpener,
@@ -61,8 +57,6 @@ class SupportChatScreenViewModel(
         restoreOutbox()
         startSession()
     }
-
-    // region Вложения композера
 
     fun onImagePicked(file: SupportChatPickedFile) {
         addPendingAttachment(file.toUiAttachment(SupportChatUiAttachment.Kind.Image))
@@ -85,10 +79,6 @@ class SupportChatScreenViewModel(
         reduce { copy(pendingAttachments = pendingAttachments.filterNot { it.id == id }.toPersistentList()) }
         removed.localPath?.let { path -> intent { discardFile(path) } }
     }
-
-    // endregion
-
-    // region Отправка
 
     fun onSend(text: String) {
         // Офлайн-ввод запрещён продуктово; UI выключает композер, VM — страховка.
@@ -130,7 +120,7 @@ class SupportChatScreenViewModel(
         intent { forget(message) }
     }
 
-    /** Отправка одного сообщения, уже переведённого в `Sending`. Вызывать под `executeWithProceedLock`. */
+    /** Сообщение уже в `Sending`; вызывать под `executeWithProceedLock`. */
     private suspend fun send(messageId: String) {
         val message = currentState.timeline.find(messageId) ?: return
         if (message.status != SupportChatMessageStatus.Sending) return
@@ -223,8 +213,6 @@ class SupportChatScreenViewModel(
         }
     }
 
-    // Сообщение покинуло ленту (эхо заменило оптимистичное, пользователь удалил):
-    // запись очереди и локальная копия вложения больше не нужны.
     private suspend fun forget(message: SupportChatMessage) {
         updateOutbox { remove(message.id) }
         message.attachment?.localPath?.let { discardFile(it) }
@@ -233,10 +221,6 @@ class SupportChatScreenViewModel(
     private suspend fun discardFile(path: String) {
         withContext(dispatchers.io) { attachmentFiles.discard(path) }
     }
-
-    // endregion
-
-    // region Соединение
 
     // Сессия живёт, пока VM её собирает (уход с экрана отпускает заявку в SDK); в фоне заявка держится —
     // SDK сам ждёт сеть и переподключается. Поток завершается только ошибкой (сессию не удалось начать).
@@ -263,7 +247,6 @@ class SupportChatScreenViewModel(
             is SupportChatEvent.Connection -> handleConnection(event.state)
 
             is SupportChatEvent.TypingChanged -> {
-                // Своё событие набора (SDK эхит его обратно) не рисуем.
                 if (!event.isMine) handleTypingChanged(event.authorEmail, event.isTyping)
             }
 
@@ -296,9 +279,8 @@ class SupportChatScreenViewModel(
         reduce { withSessionUnavailable() }
     }
 
-    // Отправленные в сокет, но без эха, при обрыве считаем недоставленными: до ping-таймаута
-    // SDK отвечает Success и в мёртвый сокет. После переподключения они уйдут повторно
-    // (at-least-once: дубль возможен, если эхо потерялось, а сообщение дошло).
+    // Отправленные без эха при обрыве считаем недоставленными: до ping-таймаута SDK отвечает Success и в мёртвый сокет.
+    // После переподключения уйдут повторно (at-least-once).
     private fun requeueUnconfirmed() {
         val unconfirmed = currentState.messages.filter {
             it.isMine && it.serverId == null && it.status == SupportChatMessageStatus.Sent
@@ -329,11 +311,7 @@ class SupportChatScreenViewModel(
         confirmed.forEach { forget(it) }
     }
 
-    /**
-     * Применяет [transform] к ленте и возвращает оптимистичные сообщения, которые
-     * исчезли из неё — их заменило серверное (эхо или страница истории): запись
-     * очереди и локальная копия вложения больше не нужны.
-     */
+    /** Возвращает оптимистичные сообщения, которые заменило серверное (эхо или страница истории). */
     private fun updateTimelineConfirming(
         transform: (SupportChatTimeline) -> SupportChatTimeline,
         extra: SupportChatScreenState.() -> SupportChatScreenState = { this },
@@ -347,10 +325,6 @@ class SupportChatScreenViewModel(
         return confirmed
     }
 
-    // endregion
-
-    // region История
-
     fun onLoadMore() {
         val current = currentState
         if (!current.isInputEnabled || !current.isInitialHistoryLoaded || !current.hasMoreHistory) return
@@ -362,7 +336,6 @@ class SupportChatScreenViewModel(
     fun onHistoryRetry() {
         val current = currentState
         when {
-            // Сессию не удалось начать — начать заново.
             !current.isSessionActive -> {
                 reduce { copy(connection = SupportChatConnection.Connecting, history = LCEState.Loading) }
                 startSession()
@@ -409,13 +382,8 @@ class SupportChatScreenViewModel(
         if (isFirstPage) retryPendingMessages()
     }
 
-    // endregion
-
-    // region Прочтение
-
     fun onMessagesVisible(messageIds: List<String>) {
-        // Батчинг: скролл истории отдаёт пачки видимых id — помечаем прочитанными
-        // одним сетевым вызовом с debounce, а не запросом на каждое сообщение.
+        // Батч: пачки видимых при скролле id — одним сетевым вызовом с debounce.
         val idSet = messageIds.toHashSet()
         val known = currentState.readIds
         val eligibleServerIds = currentState.messages.mapNotNull { message ->
@@ -461,16 +429,11 @@ class SupportChatScreenViewModel(
         }
     }
 
-    // endregion
-
-    // region Скачивание
-
     fun onDownloadAttachment(attachment: SupportChatUiAttachment) {
         if (attachment.url == null) return
         withFileSlot(attachment.id) { transfers.download(attachment) }
     }
 
-    /** Открыть вложение во внешнем приложении (индикатор — тот же слот, что у скачивания). */
     fun onOpenAttachment(attachment: SupportChatUiAttachment) {
         if (attachment.localPath == null && attachment.url == null) return
         withFileSlot(attachment.id) { transfers.open(attachment) }
@@ -495,10 +458,6 @@ class SupportChatScreenViewModel(
             }
         }
     }
-
-    // endregion
-
-    // region Внутреннее
 
     private suspend fun restoreOutbox() {
         val restored = when (val response = withContext(dispatchers.io) { outbox.load() }) {
@@ -538,8 +497,6 @@ class SupportChatScreenViewModel(
         }
         return transitioned
     }
-
-    // endregion
 
     private companion object {
         const val SESSION_KEY = "session"

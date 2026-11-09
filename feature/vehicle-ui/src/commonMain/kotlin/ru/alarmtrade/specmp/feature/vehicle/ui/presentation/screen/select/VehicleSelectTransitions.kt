@@ -4,12 +4,8 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.detectCombo
 
-/*
- * Переходы по каталогу — чистые функции над state (тестируются без VM). VM только отменяет устаревшие загрузки и
- * шлёт эффекты; решения «куда шагнуть» — здесь.
- */
+// Переходы — чистые функции над state (тестируются без VM); VM только отменяет устаревшие загрузки и шлёт эффекты.
 
-/** Крошки: к маркам (или результатам CAN-поиска), к моделям марки, к комплектациям модели. */
 internal fun VehicleSelectState.withCrumb(target: CrumbTarget): VehicleSelectState {
     val next = when (target) {
         CrumbTarget.TOP -> CatalogSelection()
@@ -25,10 +21,7 @@ internal fun VehicleSelectState.withCrumb(target: CrumbTarget): VehicleSelectSta
     )
 }
 
-/**
- * Закрыть карточку: из CAN-поиска и недавних — к началу; из каталога — к комплектациям модели, а если комплектация
- * одна и окно узкое — сразу к моделям (экрана из одной строки нет).
- */
+/** Комплектация одна и окно узкое — сразу к моделям (экрана из одной строки нет). */
 internal fun VehicleSelectState.withCardClosed(layout: VehicleLayout): VehicleSelectState {
     val next = when (selection.cardSource) {
         CardSource.CAN, CardSource.RECENT -> CatalogSelection()
@@ -54,7 +47,6 @@ internal fun VehicleSelectState.catalogStepBack(layout: VehicleLayout): VehicleS
     }
 }
 
-/** Сброс выбранного типа устройства: каталог — с экрана выбора типа. */
 internal fun VehicleSelectState.withTypeReset(): VehicleSelectState = copy(
     deviceType = null,
     selection = CatalogSelection(),
@@ -69,8 +61,8 @@ internal fun VehicleSelectState.withTypeReset(): VehicleSelectState = copy(
 )
 
 /**
- * «Марка модель» в поиске по названию на уровне марок — вместе с запросом: марка распознана по загруженным маркам,
- * без неё модели комбо-поиска сбрасываются. Вне этого уровня state не меняется.
+ * Марка распознаётся по загруженным маркам; без неё модели комбо-поиска сбрасываются. Вне уровня марок state
+ * не меняется.
  */
 internal fun VehicleSelectState.withDetectedCombo(): VehicleSelectState {
     if (searchMode != SearchMode.NAME || selection.brand != null) return this

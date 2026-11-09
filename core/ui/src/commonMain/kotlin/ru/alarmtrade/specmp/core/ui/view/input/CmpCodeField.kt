@@ -29,11 +29,7 @@ import androidx.compose.ui.unit.sp
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/**
- * Поле короткого цифрового кода по ячейкам (CAN-код — 4 цифры): цифровая клавиатура, ввод отбрасывает не-цифры и
- * лишнее сверх [length]. Рамка активной ячейки — primary, [isError] — все ячейки error. «✕» очищает поле
- * ([clearContentDescription]). [label] — подпись поля для доступности.
- */
+/** Ввод отбрасывает не-цифры и всё сверх [length]. */
 @Composable
 fun CmpCodeField(
     value: String,

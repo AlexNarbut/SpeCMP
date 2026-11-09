@@ -1,14 +1,6 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.model
 
-/**
- * Статус доставки сообщения.
- *
- * Семантика выстроена вокруг МОИХ сообщений: `Sending`/`Pending`/`Failed`
- * и переход `Sent → Read` по событию `MessagesRead`. У входящих статус — лишь
- * факт `wasRead` от сервера на момент получения; логика прочтения входящих
- * (`onMessagesVisible`) опирается на `isMine`, а не на этот статус (A-7).
- * UI иконку доставки рисует только при `isMine`.
- */
+/** Семантика — для моих сообщений; у входящих статус — лишь `wasRead` на момент получения. */
 enum class SupportChatMessageStatus {
     Sending,
     Sent,

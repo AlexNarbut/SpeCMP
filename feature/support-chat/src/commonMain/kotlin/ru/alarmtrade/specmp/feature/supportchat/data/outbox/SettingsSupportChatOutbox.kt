@@ -15,12 +15,8 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageS
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
 
 /**
- * Outbox в именованном хранилище `multiplatform-settings` (JSON одной строкой).
- *
- * Каждая операция — read-modify-write под [mutex]: key-value хранилище не даёт
- * атомарности, а переходы приходят из разных корутин (коллектор событий и
- * интенты экрана). Очередь мала (единицы сообщений), поэтому полная перезапись
- * списка проще и надёжнее диффов. Диспетчер выбирает вызывающий.
+ * Каждая операция — read-modify-write под [mutex]: хранилище не атомарно, а переходы приходят из разных корутин.
+ * Очередь мала — полная перезапись списка проще и надёжнее диффов.
  */
 internal class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOutbox {
 

@@ -21,10 +21,6 @@ fun CmpBox(
     )
 }
 
-/**
- * Вариант «только прямоугольник»: нужен закрашенный бокс без контента —
- * пустая content-лямбда у полной обёртки выглядит как недочёт API (U-18).
- */
 @Composable
 fun CmpBox(modifier: Modifier = Modifier) {
     Box(modifier = modifier)

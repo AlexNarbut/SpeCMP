@@ -26,16 +26,11 @@ import ru.alarmtrade.specmp.core.ui.view.badge.CmpDot
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/** Элемент хлебных крошек; [marked] — показать точку «есть изменения». */
 data class CmpBreadcrumb(val label: String, val marked: Boolean = false)
 
 private const val COLLAPSED_MARK = "…"
 
-/**
- * Хлебные крошки: путь от корня к текущему месту. Последний элемент — текущий (не нажимается), остальные —
- * переход по [onItemClick] с индексом в [items]. Если элементов больше [maxVisible] — начало сворачивается в «…».
- * Строка прокручивается по горизонтали и держит конец пути в виде; высота элемента — 48 dp.
- */
+/** Последний элемент — текущий (не нажимается); больше [maxVisible] — начало сворачивается в «…». */
 @Composable
 fun CmpBreadcrumbs(
     items: List<CmpBreadcrumb>,

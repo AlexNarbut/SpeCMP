@@ -19,10 +19,6 @@ import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigur
 
 private const val CONFIGURATOR_PREFERENCES = "configurator"
 
-/**
- * Koin-модуль логической фичи `feature/configurator`: «Мои конфигурации», облачные конфигурации, модели блоков.
- * SDK-интеракторы — из `core/specialist`, сессии настроек — из `feature/device/settings`.
- */
 val configuratorModule = module {
     // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание источника.
     single<LocalConfigurationsDataSource> { SpecialistLocalConfigurationsDataSource(interactor = { get() }) }

@@ -6,14 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOf
 
-/*
- * Расширения [Response] — по одному имени на операцию (docs/patterns.md, «Response»):
- * - доступ: getValueIfSuccess;
- * - трансформации: map (значение), mapIfSuccess (следующий шаг, сам возвращает Response), mapIfError;
- * - побочное действие на ошибке: onError;
- * - безопасные обёртки бросающего кода: safeRun, safeResponseRun, safeFlowRun.
- */
-
 fun <T> Response<T>.getValueIfSuccess(): T? = if (this is Response.Success) value else null
 
 inline fun <T, R> Response<T>.map(transform: (T) -> R): Response<R> = when (this) {

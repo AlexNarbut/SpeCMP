@@ -20,12 +20,10 @@ import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.screen.main.MainScreen
 
-/** App-level ключ авторизованной зоны (стартовый маршрут). */
 @Serializable
 @SerialName("main.MainRoute")
 data object MainRoute : NavKey
 
-/** Внутренний маршрут графа — главный экран. */
 @Serializable
 @SerialName("main.HomeRoute")
 internal data object HomeRoute : NavKey
@@ -38,13 +36,7 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Nav3-граф фичи `main` (публичный вход для `composeApp`). Собственный `NavDisplay`
- * с per-entry `ViewModelStore` и своим back stack — расширяется новыми экранами фичи
- * без изменений в `composeApp`. Тему берёт из `LocalThemeIsDark`.
- *
- * @param onNavigateToFeature переход в другую фичу приложения (решает `composeApp`).
- */
+/** [onNavigateToFeature] — переход в другую фичу приложения (решает `composeApp`). */
 @Composable
 fun MainNavGraph(onNavigateToFeature: (MainNavigationTarget) -> Unit) {
     val backStack = rememberNavBackStack(navConfig, HomeRoute)

@@ -45,10 +45,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBus
 
 private const val TINT_ALPHA = 0.14f
 
-/**
- * Чип шины: цвет — семейство (14 % заливка + рамка 2 dp), номер шины — подписью. «Неизвестно» — пунктирный
- * контур без заливки. Подпись целиком, чип переносится в строке целиком.
- */
 @Composable
 internal fun BusChip(bus: CarBus, modifier: Modifier = Modifier) {
     val color = busColor(bus.family, cmpDomainColors())

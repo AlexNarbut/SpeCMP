@@ -7,10 +7,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 
-/**
- * Маршрут выбора автомобиля для app-level графа (`composeApp`): экран — [VehicleSelectEntry] с [request].
- * Сериализуется своё зеркало запроса ([RequestKey]): domain-модели каталога формата хранения не знают.
- */
+/** Сериализуется своё зеркало запроса ([RequestKey]): domain-модели каталога формата хранения не знают. */
 @Serializable
 @SerialName("vehicle-ui.VehicleSelectRoute")
 data class VehicleSelectRoute internal constructor(private val key: RequestKey) : NavKey {

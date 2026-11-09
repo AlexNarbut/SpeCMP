@@ -11,10 +11,7 @@ import ru.alarmtrade.specmp.core.specialist.mapper.toDomain
 import ru.alarmtrade.specmp.core.specialist.mapper.toSdk
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 
-/**
- * [ConfigurationLanguageStore] над хранилищем SDK: SDK сам подставляет сохранённый язык во все запросы каталога
- * и конфигураций. Начальное значение — язык приложения ([SpecialistInitializer]).
- */
+/** SDK сам подставляет сохранённый язык во все запросы каталога и конфигураций. */
 internal class SpecialistConfigurationLanguageStore(private val interactor: AppDeviceInformationInteractor) :
     ConfigurationLanguageStore {
 

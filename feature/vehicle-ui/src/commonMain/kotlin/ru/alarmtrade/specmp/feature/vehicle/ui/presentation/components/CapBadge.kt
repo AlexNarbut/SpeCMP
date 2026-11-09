@@ -37,7 +37,6 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCapability
 private const val SUCCESS_TINT = 0.22f
 private const val SUCCESS_ICON_MIX = 0.3f
 
-/** Примечание возможности (HTML) или `null`. */
 internal val CarCapability.note: String?
     get() = when (this) {
         CarCapability.NoData -> null
@@ -45,10 +44,6 @@ internal val CarCapability.note: String?
         is CarCapability.NotSupported -> note
     }
 
-/**
- * Бейдж возможности автомобиля: цвет + иконка + текст («поддерживается» / «не поддерживается» / «нет данных»).
- * Есть примечание — иконка ⓘ, нажатие открывает его. [tile] — плитка (широкое окно), иначе строка во всю ширину.
- */
 @Composable
 internal fun CapBadge(
     label: String,

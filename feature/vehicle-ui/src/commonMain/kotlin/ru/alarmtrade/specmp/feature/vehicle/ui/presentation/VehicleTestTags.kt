@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.vehicle.ui.presentation
 
-/** `testTag` экрана выбора автомобиля для UI-тестов (id — id сервера). */
 internal object VehicleTestTags {
     const val TYPE_CHIP = "vehicle_type_chip"
     const val FILTER = "vehicle_filter"

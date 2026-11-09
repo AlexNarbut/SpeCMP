@@ -4,14 +4,7 @@ import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatPickedFile
 
-/**
- * Presentation-модель вложения для UI (U-12).
- *
- * Доменный `SupportChatAttachment` — sealed-иерархия; передавать его параметром
- * composable напрямую компилятор считает нестабильным. Плоская @Immutable-модель
- * маппится на границе экрана; `url`/`localPath`/`mimeType`/`sizeBytes`
- * nullability совпадает с доменной семантикой (см. SupportChatAttachment).
- */
+/** Плоская `@Immutable`-модель: доменная sealed-иерархия параметром composable нестабильна. */
 @Immutable
 data class SupportChatUiAttachment(
     val id: String,
@@ -25,9 +18,6 @@ data class SupportChatUiAttachment(
     enum class Kind { Image, Document }
 }
 
-/**
- * Маппинг доменного вложения в presentation-модель на границе UI.
- */
 fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this) {
     is SupportChatAttachment.Image -> SupportChatUiAttachment(
         id = id,
@@ -50,7 +40,6 @@ fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this
     )
 }
 
-/** Обратный маппинг: вложение композера → доменное вложение исходящего сообщения. */
 fun SupportChatUiAttachment.toAttachment(): SupportChatAttachment = when (kind) {
     SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
         id = id,
@@ -69,10 +58,7 @@ fun SupportChatUiAttachment.toAttachment(): SupportChatAttachment = when (kind) 
     )
 }
 
-/**
- * Выбранный файл → чип композера. Тип задаёт источник выбора, а не содержимое:
- * картинка, выбранная как документ, уходит документом.
- */
+/** Тип задаёт источник выбора: картинка, выбранная как документ, уходит документом. */
 fun SupportChatPickedFile.toUiAttachment(kind: SupportChatUiAttachment.Kind): SupportChatUiAttachment =
     SupportChatUiAttachment(
         id = id,

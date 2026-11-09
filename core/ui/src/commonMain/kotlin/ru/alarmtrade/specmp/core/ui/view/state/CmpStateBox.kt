@@ -25,14 +25,8 @@ import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/** Тон блока состояния: ошибка (error-container) или нейтральное (пусто, ничего не найдено). */
 enum class CmpStateTone { Neutral, Error }
 
-/**
- * Блок состояния вместо содержимого: иконка в круге, заголовок, пояснение и действия ([actions]: «Повторить»,
- * «Сбросить фильтр»…) по центру, ширина до 420 dp. [compact] — меньше отступы и иконка (колонки широкого окна).
- * Ошибка объявляется экранным диктором (live region).
- */
 @Composable
 fun CmpStateBox(
     icon: CmpIcons,

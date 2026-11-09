@@ -54,9 +54,8 @@ fun CmpClickableSurface(
     tonalElevation: Dp = 0.dp,
     shadowElevation: Dp = 0.dp,
     border: BorderStroke? = null,
-    // false отключает невидимую M3-инфляцию layout-бокса до 48dp touch target.
-    // Использовать только для плотных составных контролов (segmented control и т.п.),
-    // где размер таргета задаёт сам контрол.
+    // false — без M3-инфляции до 48dp touch target: только для плотных составных контролов,
+    // где таргет задаёт сам контрол.
     enforceMinimumTouchTarget: Boolean = true,
     content: @Composable () -> Unit,
 ) {

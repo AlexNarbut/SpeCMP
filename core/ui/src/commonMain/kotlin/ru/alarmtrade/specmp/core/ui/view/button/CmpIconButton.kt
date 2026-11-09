@@ -8,12 +8,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/**
- * Иконочная кнопка. Принимает **только иконку** — из каталога [CmpIcons]
- * (предпочтительно) или произвольный [ImageVector]. Произвольный
- * `@Composable`-контент сознательно не поддерживается: содержимое
- * иконочной кнопки должно быть иконкой, а не любым UI.
- */
 @Composable
 fun CmpIconButton(
     onClick: () -> Unit,

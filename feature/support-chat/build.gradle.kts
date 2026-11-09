@@ -13,10 +13,8 @@ kotlin {
             implementation(project(":core:ui"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
-            // LifecycleEventEffect: проброс ON_START/ON_STOP экрана в VM (автопереподключение)
             implementation(libs.androidx.lifecycle.runtime)
 
-            // Nav3-граф фичи (см. docs/navigation.md)
             implementation(libs.compose.nav3)
             implementation(libs.kotlinx.serialization.json)
 

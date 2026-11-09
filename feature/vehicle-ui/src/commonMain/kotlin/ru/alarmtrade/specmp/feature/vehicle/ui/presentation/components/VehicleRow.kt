@@ -23,11 +23,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
-/**
- * Строка каталога: [lead] (логотип, фото, иконка), название и подпись, справа шеврон или [trailing].
- * Нажимается вся строка. [action] — кнопка под текстом («Выбрать»), чтобы название не переносилось.
- * [content] — содержимое под строкой (раскрытые комплектации модели).
- */
+/** [action] — кнопка под текстом, чтобы название не переносилось. */
 @Composable
 internal fun VehicleRow(
     title: AnnotatedString,

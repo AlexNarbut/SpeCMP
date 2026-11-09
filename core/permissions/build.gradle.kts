@@ -6,10 +6,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.compose.runtime)
-            // Типы permissions-common (PermissionsController, Permission, PermissionState,
-            // DeniedException/DeniedAlwaysException) — публичны для фич-потребителей.
+            // api: типы permissions-common — в публичном API для фич
             api(libs.alarmtrade.permissions)
-            // DI: PermissionsProvider регистрируется через Koin-модуль permissionsModule()
             implementation(libs.koin.core)
         }
 

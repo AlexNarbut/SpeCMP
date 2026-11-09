@@ -6,10 +6,6 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 
-/**
- * Поле поиска: лупа слева, «очистить» справа, когда есть текст. Одна строка.
- * [clearContentDescription] — подпись кнопки очистки для доступности.
- */
 @Composable
 fun CmpSearchField(
     value: String,

@@ -88,7 +88,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Search
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleSelectState
 
-/** Список уровня каталога: прокрутка, отступы. */
 @Composable
 internal fun CatalogList(
     modifier: Modifier = Modifier,
@@ -128,9 +127,6 @@ internal fun <T> LazyListScope.levelState(
     }
 }
 
-// ── Марки ──────────────────────────────────────────────────────
-
-/** Марки: недавние (если [showRecent]), поиск «марка модель», буквы-разделители, состояния пустоты. */
 internal fun LazyListScope.brandItems(
     state: VehicleSelectState,
     actions: VehicleSelectActions,
@@ -296,8 +292,6 @@ internal fun BrandRow(brand: CarBrand, query: String, selected: Boolean, onClick
     )
 }
 
-// ── Модели ─────────────────────────────────────────────────────
-
 /** Модели выбранной марки; [accordion] — комплектации раскрываются под выбранной моделью (широкое окно). */
 internal fun LazyListScope.modelItems(
     state: VehicleSelectState,
@@ -386,8 +380,6 @@ internal fun ModelRow(
     )
 }
 
-// ── Комплектации ───────────────────────────────────────────────
-
 /** Комплектации выбранной модели; [inline] — под моделью в аккордеоне (без фильтра поиском). */
 internal fun LazyListScope.trimItems(state: VehicleSelectState, actions: VehicleSelectActions, inline: Boolean) {
     val model = state.selection.model ?: return
@@ -472,8 +464,6 @@ internal fun PickButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     )
 }
 
-// ── Поиск по CAN-коду ──────────────────────────────────────────
-
 internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleSelectActions, compact: Boolean) {
     if (state.canCode.length < CAN_LENGTH) {
         fadeItem("can-enter") {
@@ -523,8 +513,6 @@ internal fun LazyListScope.canItems(state: VehicleSelectState, actions: VehicleS
 }
 
 private const val CAN_LENGTH = 4
-
-// ── Общее ──────────────────────────────────────────────────────
 
 @Composable
 internal fun SectionTitle(text: String, modifier: Modifier = Modifier) {

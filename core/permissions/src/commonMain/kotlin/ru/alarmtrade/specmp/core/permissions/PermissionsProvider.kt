@@ -8,24 +8,14 @@ import ru.alarmtrade.permissions.common.PermissionState
 import ru.alarmtrade.permissions.common.PermissionsController
 import ru.alarmtrade.permissions.common.RequestCanceledException
 
-/**
- * App-scoped доступ к moko [PermissionsController] и списку BLE-разрешений платформы.
- * Регистрируется в DI через [permissionsModule]; контроллер биндится один раз в корне
- * приложения (`BindEffect`), а фичам инжектится напрямую (ViewModel сам проверяет доступ).
- */
+/** Контроллер биндится один раз в корне приложения (`BindEffect`), фичам инжектится напрямую. */
 interface PermissionsProvider {
     fun getController(): PermissionsController
     fun getBlePermission(): List<Permission>
 
-    /**
-     * Включены ли службы геолокации, если это требуется для BLE-скана на платформе.
-     * Android < 12 (API < 31): BLE-скан работает только при включённой геолокации →
-     * реальная проверка. Android 12+ (`BLUETOOTH_SCAN neverForLocation`) и desktop/iOS —
-     * геолокация не требуется → всегда `true`.
-     */
+    /** Android < 12: BLE-скан работает только с включённой геолокацией; на остальных платформах — всегда `true`. */
     fun isLocationEnabled(): Boolean
 
-    /** Открыть системные настройки геолокации (для случая выключенной службы). */
     fun openLocationSettings()
 
     /** Открыть системные настройки Bluetooth, если платформа это позволяет (иначе no-op). */
@@ -37,13 +27,8 @@ interface PermissionsProvider {
     /** Включён ли Bluetooth-адаптер (без BLE / со своим системным UI — всегда true). */
     fun isBluetoothEnabled(): Boolean = platformBluetoothEnabled()
 
-    /** Открыть системные настройки приложения (разрешение отклонено навсегда). */
     fun openAppSettings() = getController().openAppSettings()
 
-    /**
-     * Запросить недостающие BLE-разрешения. Результат — без типов библиотеки разрешений: фичам они не нужны.
-     * Отмена корутины пробрасывается.
-     */
     suspend fun requestBlePermissions(): BlePermissionResult {
         val controller = getController()
         getBlePermission().forEach { permission ->
@@ -63,12 +48,11 @@ interface PermissionsProvider {
     }
 }
 
-/** Итог запроса BLE-разрешений. [Denied.canOpenSettings] — отклонено навсегда: исправить можно только в настройках. */
+/** [Denied.canOpenSettings] — отклонено навсегда: исправить можно только в настройках. */
 sealed interface BlePermissionResult {
     data object Granted : BlePermissionResult
 
     data class Denied(val canOpenSettings: Boolean) : BlePermissionResult
 }
 
-/** Koin-модуль с платформенной реализацией [PermissionsProvider]. */
 expect fun permissionsModule(): Module

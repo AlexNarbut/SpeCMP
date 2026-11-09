@@ -10,7 +10,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 
-/** Название с подсветкой первого совпадения [query] (без учёта регистра): жирный + primary. */
 @Composable
 internal fun highlighted(text: String, query: String): AnnotatedString {
     val color = cmpThemeColors().primary

@@ -16,8 +16,7 @@ import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 
 @Composable
 internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = Modifier) {
-    // drawWithCache: раскладка тайлов и градиент считаются один раз на размер,
-    // а не на каждый проход фазы Draw (U-19).
+    // drawWithCache: раскладка тайлов и градиент — один раз на размер, а не на каждый проход Draw.
     val drawCacheColors = colors
     Canvas(
         modifier = modifier.drawWithCache {
@@ -72,7 +71,6 @@ internal fun SupportChatWallpaper(colors: CmpThemeColors, modifier: Modifier = M
             }
         },
     ) {
-        // Весь контент рисуется через drawWithCache-обёртку выше.
     }
 }
 

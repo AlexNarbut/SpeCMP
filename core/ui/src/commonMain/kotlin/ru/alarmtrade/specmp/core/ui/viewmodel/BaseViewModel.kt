@@ -141,7 +141,6 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
     protected fun <T> Flow<Response<T>>.collectIntoState(reducer: S.(Response<T>) -> S): Job =
         bind(this) { value -> reduce { reducer(value) } }
 
-    /** Пример: `select { query }.flatMapLatest { … }.collectIntoState { … }`; перезапускается вместе с привязкой. */
     protected fun <T> select(selector: S.() -> T): Flow<T> = _state.map { it.selector() }.distinctUntilChanged()
 
     /** Переподписывает все привязки [collectIntoState]. */

@@ -9,10 +9,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 
-/**
- * K4 список облачных конфигураций автомобиля [carId]: приходит целиком; сортировка «Лучшие / Новые», фильтр по модели
- * блока — локально. [deviceName] — модель блока, под которую запрашивать (пусто — все модели).
- */
+/** Список приходит целиком: сортировка и фильтр по модели — локально; [deviceName] пусто — все модели. */
 internal class CloudListViewModel(
     private val carId: Int,
     private val deviceName: String,

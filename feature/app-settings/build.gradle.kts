@@ -13,7 +13,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
-            // Nav3-граф фичи (см. docs/navigation.md)
             implementation(libs.compose.nav3)
             implementation(libs.kotlinx.serialization.json)
 

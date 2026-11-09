@@ -96,10 +96,6 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.ModelFilterChip
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationInfoDialog
 
-/**
- * K4 список облачных конфигураций автомобиля: «Лучшие / Новые», фильтр по модели блока, карточки с оценкой.
- * Широкое окно (≥ 600 dp) — список слева, карточка выбранной справа ([detail]).
- */
 @Composable
 internal fun CloudListScreen(
     state: CloudListState,
@@ -235,7 +231,7 @@ private fun CloudListContent(
     }
 }
 
-/** Действия карточки облачной конфигурации. Пустое действие — кнопки нет. */
+/** Пустое действие — кнопки нет. */
 @Immutable
 internal class CloudCardActions(
     val onRetry: () -> Unit,
@@ -246,19 +242,14 @@ internal class CloudCardActions(
     val onSaveChange: (String, String) -> Unit,
     val onSaveSubmit: () -> Unit,
     val onSaveDismiss: () -> Unit,
-    /** Выбор для загрузки в редактор блока (режим выбора). */
     val onLoad: ((CloudConfiguration) -> Unit)?,
-    /** «Открыть настройки» — просмотр в редакторе. */
     val onOpenSettings: ((CloudConfiguration) -> Unit)?,
-    /** «Записать в блок» (при подключённом блоке). */
     val onWrite: ((CloudConfiguration) -> Unit)?,
-    /** Переход к обновлению прошивки при несовпадении CAN-кода. */
     val onOpenFirmwareUpdate: (() -> Unit)?,
     /** Выбор для быстрого монтажа: [onLoad] — «Выбрать», без «Сохранить в мои». */
     val selectForMount: Boolean = false,
 )
 
-/** Экран карточки (телефон): шапка с «назад» и [CloudCardContent]. */
 @Composable
 internal fun CloudCardScreen(
     state: CloudCardState,
@@ -286,10 +277,6 @@ internal fun CloudCardScreen(
     }
 }
 
-/**
- * Карточка облачной конфигурации: шапка (название, описание, автомобиль, модель, автор, дата, оценка), полное описание
- * («Показать полностью»), CAN-код и предупреждение о прошивке, монтажная карта, вложения, действия.
- */
 @Composable
 internal fun CloudCardContent(state: CloudCardState, actions: CloudCardActions) {
     CmpBox(modifier = Modifier.fillMaxSize()) {
@@ -471,7 +458,6 @@ private fun CardActions(state: CloudCardState, card: CloudConfiguration, actions
     }
 }
 
-/** Превью вложения: картинка или значок PDF, подпись (2 строки). */
 @Composable
 private fun AttachmentTile(attachment: ConfigurationAttachment, index: Int, onClick: () -> Unit) {
     val colors = cmpThemeColors()
@@ -510,7 +496,6 @@ private fun AttachmentTile(attachment: ConfigurationAttachment, index: Int, onCl
     }
 }
 
-/** Просмотр картинки-вложения с зумом. */
 @Composable
 private fun AttachmentViewer(attachment: ConfigurationAttachment, onClose: () -> Unit) {
     CmpFullScreenDialog(onDismissRequest = onClose) {

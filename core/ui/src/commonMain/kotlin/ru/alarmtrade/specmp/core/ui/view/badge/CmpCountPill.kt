@@ -18,18 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Маркер «есть изменения»: цветная точка. По умолчанию — tertiary (цвет несохранённых правок).
- */
 @Composable
 fun CmpDot(modifier: Modifier = Modifier, size: Dp = 10.dp, color: Color = Color.Unspecified) {
     val fill = if (color != Color.Unspecified) color else MaterialTheme.colorScheme.tertiary
     Box(modifier.size(size).background(fill, CircleShape))
 }
 
-/**
- * Счётчик-«таблетка»: точка + число (например, сколько настроек раздела изменено). Высота 28 dp.
- */
 @Composable
 fun CmpCountPill(count: Int, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme

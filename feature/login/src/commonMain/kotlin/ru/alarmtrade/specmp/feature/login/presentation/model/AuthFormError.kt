@@ -9,17 +9,11 @@ import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.login_common_error_required_fields
 import ru.alarmtrade.specmp.core.ui.error.message
 
-/**
- * Типизированная ошибка submit-флоу auth-форм.
- * UI сам маппит значение в stringResource конкретного экрана (см. docs/patterns.md).
- */
 sealed interface AuthFormError {
     data object RequiredFields : AuthFormError
 
-    /** Сервер отклонил запрос (неверные данные и т.п.). */
     data object Rejected : AuthFormError
 
-    /** Общая ошибка приложения (нет связи, сервер не отвечает…) — текст общий. */
     data class Common(val error: AppError) : AuthFormError
 
     /** Виноват ввод — поля формы подсвечиваются; при общей ошибке поля не виноваты. */
@@ -30,7 +24,7 @@ sealed interface AuthFormError {
     }
 }
 
-/** Текст ошибки; [rejected] — фраза экрана для отказа сервера. */
+/** [rejected] — фраза экрана для отказа сервера. */
 @Composable
 fun AuthFormError.text(rejected: StringResource): String = when (this) {
     AuthFormError.RequiredFields -> stringResource(Strings.string.login_common_error_required_fields)

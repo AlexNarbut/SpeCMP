@@ -19,8 +19,7 @@ private const val SUPPORT_CHAT_SETTINGS = "supportchat"
 val supportChatModule = module {
     singleOf(::SpecialistSupportChatDataSource) bind SupportChatDataSource::class
     singleOf(::SpecialistSupportChatRepository) bind SupportChatRepository::class
-    // Outbox дополнительно регистрируется как AuthCloseable: LogoutUseCase
-    // очищает очередь при смене аккаунта.
+    // Outbox — ещё и AuthCloseable: LogoutUseCase очищает очередь при смене аккаунта.
     single {
         SettingsSupportChatOutbox(get<AppSettingsFactory>().create(SUPPORT_CHAT_SETTINGS))
     } bind SupportChatOutbox::class bind AuthCloseable::class

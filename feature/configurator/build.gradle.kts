@@ -8,7 +8,6 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:specialist"))
-            // Сессии настроек SDK: копирование настроек в «Мои конфигурации»
             implementation(project(":feature:device:settings"))
 
             implementation(libs.kotlinx.coroutines.core)

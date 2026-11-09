@@ -40,7 +40,6 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
     }
 
     fun onSubmit() {
-        // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
         if (currentState.registrationState is LCEState.Loading) return
         val credentials = currentState.toCredentials()
 

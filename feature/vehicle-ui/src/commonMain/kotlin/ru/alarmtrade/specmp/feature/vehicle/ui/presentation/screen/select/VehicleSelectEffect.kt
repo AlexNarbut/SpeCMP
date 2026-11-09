@@ -8,6 +8,5 @@ internal sealed interface VehicleSelectEffect {
     data object Exit : VehicleSelectEffect
     data class CanCopied(val code: String) : VehicleSelectEffect
 
-    /** «Выбрать» не удалось (данные автомобиля не получены). */
     data class PickFailed(val error: CatalogError) : VehicleSelectEffect
 }

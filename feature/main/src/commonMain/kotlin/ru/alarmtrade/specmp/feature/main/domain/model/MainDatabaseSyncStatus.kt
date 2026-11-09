@@ -1,11 +1,6 @@
 package ru.alarmtrade.specmp.feature.main.domain.model
 
-/**
- * Обобщённые под-состояния процесса синхронизации базы настроек.
- *
- * Поток синхронизации проходит стадии [InProgress] и всегда завершается
- * одним из [Finished]-состояний (SDK-стадии маппятся в data-слое).
- */
+/** Поток синхронизации проходит [InProgress] и всегда завершается одним из [Finished]. */
 sealed interface MainDatabaseSyncStatus {
 
     sealed interface InProgress : MainDatabaseSyncStatus {

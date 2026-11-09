@@ -23,11 +23,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatError
 
-/**
- * Полноэкранная ошибка первой загрузки истории: показывается ровно тогда,
- * когда ленты нет (history = LCEState.Error). Ошибки последующей пагинации
- * сюда не попадают — они уходят тостом, лента остаётся на экране.
- */
+/** Только когда ленты нет; ошибки последующей пагинации уходят тостом. */
 @Composable
 internal fun SupportChatErrorState(
     error: SupportChatError,

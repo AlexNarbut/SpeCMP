@@ -44,7 +44,6 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     }
 
     fun onSubmit() {
-        // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
         if (currentState.authState is LCEState.Loading) return
         val credentials = currentState.toCredentials()
         // Пустые поля — ошибка формы до запроса, а не «сервер отклонил».
@@ -72,7 +71,6 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     }
 
     fun onResendActivationEmail() {
-        // Запрос уже идёт — повторное нажатие не отправляет его второй раз.
         if (currentState.activationResendState is LCEState.Loading) return
         val credentials = currentState.toCredentials()
         if (!credentials.isValid()) {

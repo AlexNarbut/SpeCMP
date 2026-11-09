@@ -35,7 +35,6 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Capabi
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardActions
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.VehicleDialog
 
-/** Диалоги карточки: примечание к возможности (шторка на узком окне, диалог на широком), несовпадение CAN. */
 @Composable
 internal fun VehicleDialogs(dialog: VehicleDialog, wide: Boolean, actions: CardActions) {
     when (dialog) {

@@ -13,10 +13,7 @@ import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
 import ru.alarmtrade.specmp.feature.configurator.data.datasource.DeviceModelsDataSource
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
 
-/**
- * [DeviceModelsRepository]: модели с заводскими настройками — `deviceInformationInteractor` (с сервера), недавние —
- * JSON-список в именованном хранилище приложения (битые данные — пустой список).
- */
+/** Недавние — JSON-список в именованном хранилище (битые данные — пустой список). */
 internal class SpecialistDeviceModelsRepository(private val dataSource: DeviceModelsDataSource, settings: Settings) :
     DeviceModelsRepository {
 

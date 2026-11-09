@@ -9,11 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * [NetworkMonitor] поверх `ConnectivityManager` (нужен `ACCESS_NETWORK_STATE`).
- *
- * Учитывает блокировку сети процессу в фоне (Android 15+, `onBlockedStatusChanged`): сокет в фоне
- * рвёт ОС, и без этого сигнала переподключение крутилось бы впустую. Колбэк регистрируется на всё
- * время жизни процесса — экземпляр должен быть синглтоном.
+ * Учитывает блокировку сети процессу в фоне (Android 15+): иначе переподключение крутилось бы впустую.
+ * Колбэк регистрируется на всё время жизни процесса — экземпляр должен быть синглтоном.
  */
 class AndroidNetworkMonitor(context: Context) : NetworkMonitor {
     private val connectivityManager =

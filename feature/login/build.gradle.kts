@@ -14,7 +14,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
 
-            // Nav3-граф фичи (см. docs/navigation.md)
             implementation(libs.compose.nav3)
             implementation(libs.kotlinx.serialization.json)
 
@@ -35,7 +34,6 @@ kotlin {
     }
 }
 
-// Ресурсы фичи — только картинки (drawable); строки — в core/localization (docs/localization.md)
 compose.resources {
     publicResClass = false
     generateResClass = always

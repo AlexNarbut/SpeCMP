@@ -26,7 +26,6 @@ data class MainScreenState(
     val userCommercialState: LCEState<MainUserCommercial, MainError> = LCEState.None,
     val appUpdateState: LCEState<MainAppUpdateCheckResult, MainError> = LCEState.None,
     val chatAvailabilityState: LCEState<Boolean, MainError> = LCEState.None,
-    /** Карточки главной по фичам пользователя, коммерции и доступности чата — считаются во VM (`withActions`). */
     val visibleActions: List<MainHomeAction> = MainHomeAction.visibleActions(),
     val logoutState: LCEState<Unit, MainError> = LCEState.None,
 ) {
@@ -85,7 +84,6 @@ data class MainScreenState(
         get() = logoutState is LCEState.Loading
 }
 
-/** Производное: видимые карточки — во VM при смене фич, коммерции и доступности чата, а не в теле composable. */
 internal fun MainScreenState.withActions(): MainScreenState = copy(
     visibleActions = MainHomeAction.visibleActions(
         features = appFeatures,

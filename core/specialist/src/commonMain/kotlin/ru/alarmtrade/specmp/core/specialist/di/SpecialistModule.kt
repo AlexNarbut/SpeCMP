@@ -63,30 +63,20 @@ val specialistModule = module {
     single { get<SpecialistApp>().userInteractor }
     single { get<SpecialistApp>().chatInteractor }
     single { get<SpecialistApp>().filesInteractor }
-    // Device connection interactors (feature/device/*): скан и сессии BLE/USB,
-    // операции с подключённым alarm-устройством.
     single { get<SpecialistApp>().bluetoothConnectorInteractor }
     single { get<SpecialistApp>().usbConnectorInteractor }
-    // COM-порт (приложение прошивки): скан портов и serial-сессия блока. На iOS в SDK — TODO(), резолвить лениво.
+    // На iOS в SDK — TODO(): резолвить лениво.
     single { get<SpecialistApp>().serialConnectorInteractor }
     single { get<SpecialistApp>().bluetoothAlarmDeviceInteractor }
-    // Проверка подключённого блока на сервере (feature/advanced-mount).
     single { get<SpecialistApp>().verificationInteractor }
-    // Прошивка блока (feature/device/firmware): модули блока и версии прошивок с сервера.
     single { get<SpecialistApp>().deviceInformationInteractor }
     single { get<SpecialistApp>().firmwareFilesInteractor }
-    // Расширенные настройки блока (feature/device/settings): сессии настроек по SettingsPath.
     single { get<SpecialistApp>().alarmDeviceSettingsInteractor }
-    // Каталог автомобилей (feature/vehicle): марки, модели, карточки, поиск по CAN-коду.
     single { get<SpecialistApp>().carsInteractor }
-    // Каталог автомобилей с готовыми конфигурациями (feature/vehicle) и сами конфигурации.
     single { get<SpecialistApp>().configurationInteractor }
-    // «Мои конфигурации» настроек в хранилище приложения (feature/configurator).
     single { get<SpecialistApp>().localConfigurationInteractor }
-    // Мастер быстрого монтажа (feature/fast-mount): шаги, вопросы проверки системы, отзыв.
     single { get<SpecialistApp>().fastMountInteractor }
     single { SpecialistInitializer(get(), get(), get(appScopeQualifier)) }
-    // Язык конфигураций — настройка приложения (feature/app-settings).
     single<ConfigurationLanguageStore> { SpecialistConfigurationLanguageStore(get()) }
     single<SpecialistDeviceInformationProvider> {
         SpecialistDeviceInformationProvider { createSpecialistDeviceInformation() }

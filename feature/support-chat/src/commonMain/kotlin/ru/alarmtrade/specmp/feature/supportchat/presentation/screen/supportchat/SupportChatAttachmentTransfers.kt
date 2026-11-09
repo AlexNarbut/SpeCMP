@@ -12,10 +12,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaveResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 
-/**
- * Скачивание и открытие вложений чата (отдельная от ленты ответственность VM). Результат — эффект для экрана,
- * `null` — сообщать нечего (открыто или пользователь отменил системный диалог). Индикатор и запуск — у VM.
- */
+/** `null` — сообщать нечего (открыто или пользователь отменил системный диалог). */
 internal class SupportChatAttachmentTransfers(
     private val repository: SupportChatRepository,
     private val fileSaver: SupportChatFileSaver,
@@ -24,7 +21,6 @@ internal class SupportChatAttachmentTransfers(
 ) {
     private val logger = Logger.withTag("SupportChatAttachmentTransfers")
 
-    /** Скачать вложение в «Загрузки». */
     suspend fun download(attachment: SupportChatUiAttachment): SupportChatEffect? {
         val url = attachment.url ?: return null
         return when (val response = withContext(dispatchers.io) { repository.downloadFile(url) }) {
@@ -63,12 +59,8 @@ internal class SupportChatAttachmentTransfers(
     private suspend fun save(fileName: String, bytes: ByteArray): SupportChatEffect? =
         when (val result = withContext(dispatchers.io) { fileSaver.saveToDownloads(fileName, bytes) }) {
             is SupportChatFileSaveResult.Saved -> SupportChatEffect.AttachmentDownloaded(result.path)
-
-            // Пользователь сам отменил системный диалог — не ошибка.
             SupportChatFileSaveResult.Cancelled -> null
-
             SupportChatFileSaveResult.PermissionDenied -> SupportChatEffect.AttachmentSavePermissionDenied
-
             SupportChatFileSaveResult.Failed -> SupportChatEffect.AttachmentDownloadFailed
         }
 }

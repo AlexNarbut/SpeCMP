@@ -20,10 +20,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
-/**
- * K4 карточка облачной конфигурации: полное описание, монтажная карта, вложения, CAN-код (из настроек конфигурации)
- * и предупреждение, если он не совпадает с единой CAN-прошивкой блока (`firmwareCanCode`); «Сохранить в мои».
- */
 internal class CloudCardViewModel(
     private val id: Int,
     firmwareCanCode: String?,

@@ -19,11 +19,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
 /**
- * [LocalConfigurationsRepository] над `localConfigurationInteractor` (записи хранилища,
- * [LocalConfigurationsDataSource]) и сессиями настроек ([DeviceSettingsRepository.copy] — настройки записи).
- *
- * SDK создаёт запись с заводскими настройками модели, настройки источника копируются в неё следом; не скопировались —
- * запись удаляется. Страницы SDK идут по id по возрастанию — читаются все и сортируются здесь.
+ * SDK создаёт запись с заводскими настройками модели, настройки источника копируются следом; не скопировались — запись
+ * удаляется. Страницы SDK идут по id по возрастанию — читаются все и сортируются здесь.
  */
 internal class SpecialistLocalConfigurationsRepository(
     private val dataSource: LocalConfigurationsDataSource,

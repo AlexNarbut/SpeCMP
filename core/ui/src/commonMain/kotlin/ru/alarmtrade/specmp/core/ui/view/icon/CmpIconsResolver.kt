@@ -147,308 +147,152 @@ import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 
-/**
- * Резолвит [CmpIcons] enum в [ImageVector] из material-icons (без IO).
- */
 @Suppress("CyclomaticComplexMethod", "LongMethod") // таблица-маппер enum → ImageVector
 @Composable
 fun CmpIcons.imageVector(): ImageVector = when (this) {
-    // Navigation
     CmpIcons.ArrowBack -> Icons.AutoMirrored.Filled.ArrowBack
-
     CmpIcons.ArrowForward -> Icons.AutoMirrored.Filled.ArrowForward
-
     CmpIcons.ArrowDropDown -> Icons.Filled.ArrowDropDown
-
     CmpIcons.ChevronLeft -> Icons.AutoMirrored.Filled.KeyboardArrowLeft
-
     CmpIcons.ChevronRight -> Icons.AutoMirrored.Filled.KeyboardArrowRight
-
     CmpIcons.KeyboardArrowDown -> Icons.Filled.KeyboardArrowDown
-
     CmpIcons.KeyboardArrowUp -> Icons.Filled.KeyboardArrowUp
-
     CmpIcons.Menu -> Icons.Filled.Menu
-
     CmpIcons.MoreVert -> Icons.Filled.MoreVert
-
     CmpIcons.Close -> Icons.Filled.Close
-
     CmpIcons.Home -> Icons.Filled.Home
-
-    // Actions
     CmpIcons.Add -> Icons.Filled.Add
-
     CmpIcons.Remove -> Icons.Filled.Remove
-
     CmpIcons.Edit -> Icons.Filled.Edit
-
     CmpIcons.Create -> Icons.Filled.Create
-
     CmpIcons.Delete -> Icons.Filled.Delete
-
     CmpIcons.Search -> Icons.Filled.Search
-
     CmpIcons.Refresh -> Icons.Filled.Refresh
-
     CmpIcons.Share -> Icons.Filled.Share
-
     CmpIcons.Send -> Icons.AutoMirrored.Filled.Send
-
     CmpIcons.Done -> Icons.Filled.Done
-
     CmpIcons.Check -> Icons.Filled.Check
-
     CmpIcons.CheckCircle -> Icons.Filled.CheckCircle
-
     CmpIcons.Clear -> Icons.Filled.Clear
-
     CmpIcons.PlayArrow -> Icons.Filled.PlayArrow
-
     CmpIcons.Pause -> Icons.Filled.Pause
-
     CmpIcons.Build -> Icons.Filled.Build
-
-    // Content
     CmpIcons.Favorite -> Icons.Filled.Favorite
-
     CmpIcons.FavoriteBorder -> Icons.Filled.FavoriteBorder
-
     CmpIcons.Star -> Icons.Filled.Star
-
     CmpIcons.ThumbUp -> Icons.Filled.ThumbUp
-
     CmpIcons.List -> Icons.AutoMirrored.Filled.List
-
     CmpIcons.Tag -> Icons.Filled.Sell
-
     CmpIcons.AttachFile -> Icons.Filled.AttachFile
-
     CmpIcons.Image -> Icons.Filled.Image
-
     CmpIcons.Description -> Icons.Filled.Description
-
     CmpIcons.DoneAll -> Icons.Filled.DoneAll
-
     CmpIcons.Download -> Icons.Filled.Download
-
-    // Communication
     CmpIcons.Email -> Icons.Filled.Email
-
     CmpIcons.Phone -> Icons.Filled.Phone
-
     CmpIcons.Call -> Icons.Filled.Call
-
     CmpIcons.Notifications -> Icons.Filled.Notifications
-
     CmpIcons.Mic -> Icons.Filled.Mic
-
     CmpIcons.Forum -> Icons.Filled.Forum
-
     CmpIcons.SupportAgent -> Icons.Filled.SupportAgent
-
-    // User
     CmpIcons.Person -> Icons.Filled.Person
-
     CmpIcons.AccountCircle -> Icons.Filled.AccountCircle
-
     CmpIcons.Face -> Icons.Filled.Face
-
-    // Status
     CmpIcons.Info -> Icons.Filled.Info
-
     CmpIcons.Warning -> Icons.Filled.Warning
-
     CmpIcons.AlertTriangle -> Icons.Filled.Warning
-
     CmpIcons.AlertCircle -> Icons.Filled.Error
-
     CmpIcons.Lock -> Icons.Filled.Lock
-
     CmpIcons.SwapHoriz -> Icons.Filled.SwapHoriz
-
     CmpIcons.Visibility -> Icons.Filled.Visibility
-
     CmpIcons.VisibilityOff -> Icons.Filled.VisibilityOff
-
     CmpIcons.WifiOff -> Icons.Filled.WifiOff
-
     CmpIcons.HourglassTop -> Icons.Filled.HourglassTop
-
     CmpIcons.SyncLock -> Icons.Filled.SyncLock
-
     CmpIcons.Block -> Icons.Filled.Block
-
     CmpIcons.Hearing -> Icons.Filled.Hearing
-
     CmpIcons.Replay -> Icons.Filled.Replay
-
     CmpIcons.FactCheck -> Icons.AutoMirrored.Filled.FactCheck
-
     CmpIcons.MenuBook -> Icons.AutoMirrored.Filled.MenuBook
-
-    // Places
     CmpIcons.LocationOn -> Icons.Filled.LocationOn
-
     CmpIcons.Place -> Icons.Filled.Place
-
-    // Devices / Connectivity
     CmpIcons.Bluetooth -> Icons.Filled.Bluetooth
-
     CmpIcons.BluetoothSearching -> Icons.Filled.BluetoothSearching
-
     CmpIcons.BluetoothDisabled -> Icons.Filled.BluetoothDisabled
-
     CmpIcons.Usb -> Icons.Filled.Usb
-
     CmpIcons.Sensors -> Icons.Filled.Sensors
-
     CmpIcons.Memory -> Icons.Filled.Memory
-
     CmpIcons.VpnKey -> Icons.Filled.VpnKey
-
     CmpIcons.SearchOff -> Icons.Filled.SearchOff
-
     CmpIcons.TouchApp -> Icons.Filled.TouchApp
-
     CmpIcons.Link -> Icons.Filled.Link
-
-    // Other
     CmpIcons.Settings -> Icons.Filled.Settings
-
     CmpIcons.DateRange -> Icons.Filled.DateRange
-
     CmpIcons.Schedule -> Icons.Filled.Schedule
-
     CmpIcons.ShoppingCart -> Icons.Filled.ShoppingCart
-
     CmpIcons.ExitToApp -> Icons.AutoMirrored.Filled.ExitToApp
-
     CmpIcons.DarkMode -> Icons.Filled.DarkMode
-
     CmpIcons.LightMode -> Icons.Filled.LightMode
-
     CmpIcons.NightsStay -> Icons.Filled.NightsStay
-
     CmpIcons.Lightbulb -> Icons.Filled.Lightbulb
-
     CmpIcons.Moon -> Icons.Filled.NightsStay
-
     CmpIcons.Sun -> Icons.Filled.WbSunny
-
     CmpIcons.SystemUpdate -> Icons.Filled.SystemUpdate
-
     CmpIcons.History -> Icons.Filled.History
-
     CmpIcons.FolderOpen -> Icons.Filled.FolderOpen
-
     CmpIcons.PowerSettingsNew -> Icons.Filled.PowerSettingsNew
-
     CmpIcons.LinkOff -> Icons.Filled.LinkOff
-
     CmpIcons.Sync -> Icons.Filled.Sync
-
     CmpIcons.ArrowCircleUp -> Icons.Filled.ArrowCircleUp
-
     CmpIcons.CloudOff -> Icons.Filled.CloudOff
-
     CmpIcons.Inventory2 -> Icons.Filled.Inventory2
-
     CmpIcons.Cloud -> Icons.Filled.Cloud
-
     CmpIcons.Save -> Icons.Filled.Save
-
     CmpIcons.SaveAs -> Icons.Filled.SaveAs
-
     CmpIcons.Upload -> Icons.Filled.Upload
-
     CmpIcons.Factory -> Icons.Filled.Factory
-
     CmpIcons.RecordVoiceOver -> Icons.Filled.RecordVoiceOver
-
     CmpIcons.ErrorOutline -> Icons.Filled.ErrorOutline
-
     CmpIcons.PriorityHigh -> Icons.Filled.PriorityHigh
-
     CmpIcons.DirectionsCar -> Icons.Filled.DirectionsCar
-
     CmpIcons.FilterList -> Icons.Filled.FilterList
-
     CmpIcons.FilterAlt -> Icons.Filled.FilterAlt
-
     CmpIcons.FilterAltOff -> Icons.Filled.FilterAltOff
-
     CmpIcons.Pin -> Icons.Filled.Pin
-
     CmpIcons.ContentCopy -> Icons.Filled.ContentCopy
-
     CmpIcons.Security -> Icons.Filled.Security
-
     CmpIcons.SettingsRemote -> Icons.Filled.SettingsRemote
-
     CmpIcons.PictureAsPdf -> Icons.Filled.PictureAsPdf
-
     CmpIcons.Groups -> Icons.Filled.Groups
-
     CmpIcons.OpenInNew -> Icons.AutoMirrored.Filled.OpenInNew
-
     CmpIcons.Cancel -> Icons.Filled.Cancel
-
     CmpIcons.HelpOutline -> Icons.AutoMirrored.Filled.HelpOutline
-
     CmpIcons.Cable -> Icons.Filled.Cable
-
     CmpIcons.PhotoLibrary -> Icons.Filled.PhotoLibrary
-
     CmpIcons.SensorDoor -> Icons.Filled.SensorDoor
-
     CmpIcons.Luggage -> Icons.Filled.Luggage
-
     CmpIcons.Key -> Icons.Filled.Key
-
     CmpIcons.PauseCircle -> Icons.Filled.PauseCircle
-
     CmpIcons.PanTool -> Icons.Filled.PanTool
-
     CmpIcons.LocalParking -> Icons.Filled.LocalParking
-
     CmpIcons.Highlight -> Icons.Filled.Highlight
-
     CmpIcons.Vibration -> Icons.Filled.Vibration
-
     CmpIcons.DirectionsWalk -> Icons.AutoMirrored.Filled.DirectionsWalk
-
     CmpIcons.ScreenRotation -> Icons.Filled.ScreenRotation
-
     CmpIcons.SyncProblem -> Icons.Filled.SyncProblem
-
     CmpIcons.LockOpen -> Icons.Filled.LockOpen
-
     CmpIcons.GppGood -> Icons.Filled.GppGood
-
     CmpIcons.NotificationsActive -> Icons.Filled.NotificationsActive
-
     CmpIcons.DeveloperBoard -> Icons.Filled.DeveloperBoard
-
     CmpIcons.EvStation -> Icons.Filled.EvStation
-
     CmpIcons.LocalFireDepartment -> Icons.Filled.LocalFireDepartment
-
     CmpIcons.Videocam -> Icons.Filled.Videocam
-
     CmpIcons.VolumeUp -> Icons.AutoMirrored.Filled.VolumeUp
-
     CmpIcons.TaskAlt -> Icons.Filled.TaskAlt
-
     CmpIcons.Autorenew -> Icons.Filled.Autorenew
-
     CmpIcons.Redo -> Icons.AutoMirrored.Filled.Redo
-
     CmpIcons.StarBorder -> Icons.Filled.StarBorder
-
     CmpIcons.RestartAlt -> Icons.Filled.RestartAlt
-
     CmpIcons.CloudDone -> Icons.Filled.CloudDone
-
     CmpIcons.CloudSync -> Icons.Filled.CloudSync
 }

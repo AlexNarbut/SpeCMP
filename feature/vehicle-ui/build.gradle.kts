@@ -14,11 +14,9 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
-            // Логика каталога автомобилей (feature/vehicle)
             implementation(project(":feature:vehicle"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
-            // NavigationBackHandler: системный «назад» внутри экрана (шаги каталога)
             implementation(libs.compose.nav3)
 
             implementation(libs.kotlinx.serialization.json)
@@ -37,7 +35,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
             implementation(project(":core:testing"))
         }
-        // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs)
         }

@@ -12,7 +12,6 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationSummary
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 
-/** [CloudConfigurationsRepository] над `configurationInteractor` (через [CloudConfigurationsDataSource]). */
 internal class SpecialistCloudConfigurationsRepository(private val dataSource: CloudConfigurationsDataSource) :
     CloudConfigurationsRepository {
 

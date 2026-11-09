@@ -13,13 +13,9 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesRepository
 
-/**
- * [RecentVehiclesRepository] в именованном хранилище приложения: JSON-список на каталог. Битые данные — пустой
- * список.
- */
+/** Битые данные — пустой список. */
 internal class SettingsRecentVehiclesRepository(settings: Settings) : RecentVehiclesRepository {
 
-    // Отдельный список (и замок) на каталог.
     private val lists = VehicleCatalog.entries.associateWith { catalog ->
         RecentList<CarSummary, Int>(
             max = RecentVehiclesRepository.MAX_RECENT,

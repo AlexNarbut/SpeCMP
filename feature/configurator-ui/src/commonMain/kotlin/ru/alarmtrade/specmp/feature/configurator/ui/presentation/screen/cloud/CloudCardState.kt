@@ -12,7 +12,6 @@ internal data class CloudCardState(
     val canCode: String? = null,
     val firmwareCanCode: String? = null,
     val descriptionExpanded: Boolean = false,
-    /** Открытое вложение-картинка (просмотр с зумом). */
     val viewer: ConfigurationAttachment? = null,
     val saveForm: CloudSaveForm? = null,
     val busy: Boolean = false,

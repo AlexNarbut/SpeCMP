@@ -4,10 +4,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-/**
- * Theme colors as plain [Color] values — no Material3 types exposed.
- * Feature modules use [cmpThemeColors] instead of importing [MaterialTheme] directly.
- */
 data class CmpThemeColors(
     val background: Color,
     val onBackground: Color,

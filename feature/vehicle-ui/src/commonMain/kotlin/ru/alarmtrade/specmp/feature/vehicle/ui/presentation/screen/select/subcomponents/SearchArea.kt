@@ -58,10 +58,6 @@ private const val CAN_CODE_LENGTH = 4
 private val FIELD_HEIGHT = 56.dp
 private val HINT_HEIGHT = 24.dp
 
-/**
- * Зона поиска: сегменты «По названию | По CAN-коду» (кроме каталога конфигураций) и поле запроса либо
- * 4 ячейки CAN-кода. [wide] — сегменты и поле в одну строку.
- */
 @Composable
 internal fun SearchArea(
     state: VehicleSelectState,
@@ -133,10 +129,7 @@ private fun NameField(state: VehicleSelectState, actions: VehicleSelectActions, 
     }
 }
 
-/**
- * Поле поиска и строка подсказки под ним фиксированной высоты в обоих режимах — переключение «По названию /
- * По CAN-коду» не сдвигает список под зоной поиска.
- */
+/** Высота фиксирована в обоих режимах — переключение режима поиска не сдвигает список под ним. */
 @Composable
 private fun InputSlot(modifier: Modifier, hint: @Composable () -> Unit, field: @Composable () -> Unit) {
     CmpColumn(modifier = modifier) {
@@ -193,10 +186,7 @@ private fun CanHint(state: VehicleSelectState, fromFirmware: Boolean) {
     }
 }
 
-/**
- * Крошки пути и чип фильтра (узкое окно — под поиском; карточка на Medium — над ней). [typeChip] — чип типа
- * устройства на узком окне (в шапке ему не хватает места).
- */
+/** [typeChip] — чип типа устройства на узком окне (в шапке ему не хватает места). */
 @Composable
 internal fun CrumbsBar(
     state: VehicleSelectState,
@@ -238,7 +228,6 @@ internal fun FilterChip(count: Int, actions: VehicleSelectActions) {
     )
 }
 
-/** Крошки: подпись и куда ведёт (`null` — текущий уровень, не нажимается). */
 @Composable
 private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> {
     val selection = state.selection
@@ -269,5 +258,4 @@ private fun crumbs(state: VehicleSelectState): List<Pair<String, CrumbTarget?>> 
     return items.mapIndexed { index, item -> if (index == items.lastIndex) item.first to null else item }
 }
 
-/** Уровень, ещё не загруженный, — для подсказок «пусто». */
 internal fun <T> LCEState<List<T>, CatalogError>.isEmptyReady(): Boolean = content?.isEmpty() == true

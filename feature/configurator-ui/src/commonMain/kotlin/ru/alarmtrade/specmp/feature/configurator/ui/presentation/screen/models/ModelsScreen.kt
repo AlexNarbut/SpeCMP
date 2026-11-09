@@ -60,7 +60,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.ConfiguratorTestTags
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.text
 
-/** K2 выбор модели блока: подключённый блок и недавние сверху, поиск, все модели. */
 @Composable
 internal fun ModelsScreen(
     state: ModelsState,
@@ -197,7 +196,6 @@ private fun ModelsList(
     }
 }
 
-/** Группа моделей; [onRemove] — «✕» справа у каждой (недавние). */
 private fun LazyListScope.group(
     title: StringResource,
     names: List<String>,

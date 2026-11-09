@@ -17,13 +17,10 @@ internal data class CloudListState(
     val modelFilter: String? = null,
     /** Выбранная (широкое окно — карточка справа). */
     val selectedId: Int? = null,
-    /** Модели в списке — варианты фильтра. Производное — [withLists]. */
     val models: List<String> = emptyList(),
-    /** Список после фильтра по модели и сортировки. Производное — [withLists]. */
     val shown: List<CloudConfigurationSummary> = emptyList(),
 )
 
-/** Производные списки — во VM один раз на изменение входов, а не геттером на каждую рекомпозицию. */
 internal fun CloudListState.withLists(): CloudListState {
     val all = list.content.orEmpty()
     return copy(

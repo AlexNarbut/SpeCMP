@@ -21,13 +21,10 @@ internal enum class SearchMode { NAME, CAN }
 /** Откуда открыта карточка — от этого зависит «назад» на узком окне. */
 internal enum class CardSource { CATALOG, CAN, RECENT }
 
-/** Уровень каталога, который можно перезагрузить «Повторить». */
 internal enum class CatalogLevel { BRANDS, MODELS, TRIMS, COMBO, CAN, CARD }
 
-/** Вкладки карточки (показываются только непустые). */
 internal enum class CardTab { FEATURES, MOUNT_POINTS, SCHEMES, MAPS, USER_MANUALS }
 
-/** Раскладка по ширине окна. */
 internal enum class VehicleLayout {
     COMPACT,
     MEDIUM,
@@ -37,11 +34,9 @@ internal enum class VehicleLayout {
     val isWide: Boolean get() = this != COMPACT
 }
 
-/** Выбранный путь в каталоге. */
 internal data class CatalogSelection(
     val brand: CarBrand? = null,
     val model: CarModel? = null,
-    /** Комплектация, чья карточка открыта. */
     val carId: Int? = null,
     val cardSource: CardSource = CardSource.CATALOG,
 )
@@ -49,7 +44,6 @@ internal data class CatalogSelection(
 /** Поиск «марка модель» на уровне марок: марка распознана, [rest] — фильтр её моделей. */
 internal data class ComboSearch(val brand: CarBrand, val rest: String)
 
-/** Что открыто внутри карточки. */
 internal data class CardUi(
     val tab: CardTab? = null,
     /** Открытая точка подключения (индекс), `null` — список точек. */
@@ -61,10 +55,8 @@ internal data class CardUi(
 )
 
 internal sealed interface VehicleDialog {
-    /** Примечание к возможности автомобиля. */
     data class CapabilityNote(val kind: CapabilityKind, val capability: CarCapability) : VehicleDialog
 
-    /** Выбранный автомобиль не совпадает по CAN-коду с прошивкой блока. */
     data class CanMismatch(val car: CarSummary, val firmwareCanCode: String) : VehicleDialog
 }
 
@@ -100,7 +92,6 @@ internal data class VehicleSelectState(
     val showTypeChoice: Boolean get() = mode.typeSelectable && deviceType == null
 }
 
-/** Стартовый state экрана: параметры запроса, тип устройства из него и CAN-код прошивки в поиске. */
 internal fun VehicleSelectRequest.initialState(): VehicleSelectState {
     val configurationsOnly = catalog == VehicleCatalog.WITH_CONFIGURATIONS
     return VehicleSelectState(
@@ -116,12 +107,10 @@ internal fun VehicleSelectRequest.initialState(): VehicleSelectState {
     )
 }
 
-/** Постоянные параметры экрана из запроса. */
 internal data class VehicleSelectModeUi(
     val pick: Boolean,
     /** Каталог «с конфигурациями»: без поиска по CAN-коду и фильтра функций. */
     val configurationsOnly: Boolean,
-    /** Тип устройства выбирается пользователем (чип «Сигнализация ▾» в шапке). */
     val typeSelectable: Boolean,
     val deviceName: String?,
     val firmwareCanCode: String?,
@@ -130,7 +119,6 @@ internal data class VehicleSelectModeUi(
     val filterAvailable: Boolean get() = !configurationsOnly
 }
 
-/** Шаг узкой раскладки — выводится из state. */
 internal enum class CompactStep { BRANDS, MODELS, TRIMS, CAN, CARD }
 
 internal fun VehicleSelectState.compactStep(): CompactStep = when {

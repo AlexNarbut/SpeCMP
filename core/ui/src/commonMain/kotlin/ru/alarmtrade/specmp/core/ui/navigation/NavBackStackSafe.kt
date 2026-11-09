@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.core.ui.navigation
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 
-/** Текущий (верхний) маршрут back stack. */
 val <T : NavKey> NavBackStack<T>.currentRoute: T?
     get() = lastOrNull()
 
@@ -19,7 +18,7 @@ fun <T : NavKey> NavBackStack<T>.replaceCurrent(route: T) {
     add(route)
 }
 
-/** Безопасный pop: снимает верхний маршрут только если в стеке больше одного. Возвращает, был ли pop. */
+/** Не снимает последний маршрут; возвращает, был ли pop. */
 fun <T : NavKey> NavBackStack<T>.popSafe(): Boolean {
     if (size <= 1) return false
     removeAt(size - 1)

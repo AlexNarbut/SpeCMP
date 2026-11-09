@@ -5,11 +5,8 @@ import ru.alarmtrade.specmp.core.common.ConfigurationLanguage
 import ru.alarmtrade.specmp.core.localization.AppLocale
 
 /**
- * Настройки приложения. [current] — язык этого запуска, [selected] — выбранный в списке (применяется кнопкой
- * «Применить» после подтверждения: язык меняется только перезапуском).
- *
- * @property configurationLanguage язык конфигураций (применяется сразу); `null` — ещё читается или не прочитался.
- * @property configurationLanguageError смена языка конфигураций не сохранилась — прежний язык остался.
+ * [current] — язык этого запуска, [selected] — выбранный в списке (применяется перезапуском).
+ * [configurationLanguage] `null` — ещё читается или не прочитался.
  */
 @Immutable
 internal data class AppSettingsState(
@@ -23,7 +20,6 @@ internal data class AppSettingsState(
 }
 
 internal enum class AppSettingsDialog {
-    /** «Сменить язык? Приложение перезапустится». */
     CONFIRM,
 
     /** Платформа не перезапускается сама (iOS, desktop): язык применится после ручного перезапуска. */

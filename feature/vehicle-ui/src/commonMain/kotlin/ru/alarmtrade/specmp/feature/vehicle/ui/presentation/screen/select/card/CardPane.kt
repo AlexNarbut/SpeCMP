@@ -56,10 +56,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CardUi
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.CatalogLevel
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.tabs
 
-/**
- * Карточка автомобиля с загрузкой: скелетон, ошибка с «Повторить», готовая карточка. [wide] — раскладка
- * шапки и матрицы функций для ширины самой панели; [pick] — закреплённая снизу кнопка «Выбрать».
- */
+/** [wide] — раскладка шапки и матрицы по ширине самой панели; [pick] — закреплённая снизу кнопка «Выбрать». */
 @Composable
 internal fun CardPane(
     card: LCEState<CarCard, CatalogError>,
@@ -73,7 +70,6 @@ internal fun CardPane(
     modifier: Modifier = Modifier,
     padding: Dp = 16.dp,
 ) {
-    // Скелетон → карточка / ошибка — затуханием, а не резкой подменой.
     FadeContent(targetState = card, contentKey = { it::class }, modifier = modifier) { shown ->
         CardPaneState(shown, ui, groups, wide, pick, actions, onRetry, onPick, padding)
     }
@@ -182,7 +178,7 @@ private fun CardContent(
     }
 }
 
-/** Вкладки, кроме «Функций» (те — элементами списка карточки, см. [featureItems]). */
+/** «Функции» — не здесь: они элементами списка карточки ([featureItems]). */
 @Composable
 private fun TabBody(card: CarCard, tab: CardTab, ui: CardUi, actions: CardActions) {
     when (tab) {
@@ -237,7 +233,6 @@ private fun NoTabs(modifier: Modifier = Modifier) {
     }
 }
 
-/** «Выбрать · Toyota Camry 2.5 AT» — закреплена под карточкой. */
 @Composable
 private fun PickBar(card: CarCard, padding: Dp, onPick: (Int) -> Unit) {
     val colors = cmpThemeColors()
@@ -260,7 +255,6 @@ private fun PickBar(card: CarCard, padding: Dp, onPick: (Int) -> Unit) {
     }
 }
 
-/** Скелетон карточки: фото, две строки, плитка CAN, два бейджа. */
 @Composable
 internal fun CardSkeleton(wide: Boolean, modifier: Modifier = Modifier) {
     CmpColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {

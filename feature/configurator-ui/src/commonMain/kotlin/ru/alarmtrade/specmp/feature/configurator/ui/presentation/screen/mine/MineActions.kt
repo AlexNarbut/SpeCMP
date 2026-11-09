@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 
-/** Действия K1; навигационные — снаружи (граф). */
 @Immutable
 internal class MineActions(
     val onBack: () -> Unit,

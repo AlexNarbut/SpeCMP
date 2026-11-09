@@ -23,12 +23,8 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 private const val CAN_CODE_LENGTH = 4
 
 /**
- * Выбор автомобиля: каталог «марка → модель → комплектация → карточка», поиск по названию (локально по уровню)
- * и по CAN-коду, фильтр групп функций (на сервере), недавние.
- *
- * Весь путь выбора — в state, поэтому поворот и смена ширины окна его не сбрасывают; шаг узкой раскладки
- * выводится из state, «назад» решает [onBack] по раскладке. Каждый уровень грузится своей корутиной (ключ —
- * [CatalogLevel]), новая загрузка уровня отменяет прежнюю; ошибка уровня не сбрасывает выбор (повтор — [onRetry]).
+ * Весь путь выбора — в state: поворот и смена ширины окна его не сбрасывают. Каждый уровень грузится своей корутиной
+ * (ключ — [CatalogLevel]), новая загрузка уровня отменяет прежнюю.
  */
 @Suppress("TooManyFunctions") // экран с одним state: каждое действие пользователя — свой метод
 internal class VehicleSelectViewModel(
@@ -45,8 +41,6 @@ internal class VehicleSelectViewModel(
         }
         if (!currentState.showTypeChoice) loadBrands()
     }
-
-    // ── Тип устройства ─────────────────────────────────────────
 
     fun onTypePick(type: VehicleDeviceType) {
         cancelAll()
@@ -65,8 +59,6 @@ internal class VehicleSelectViewModel(
         loadBrands()
         if (currentState.searchMode == SearchMode.CAN) searchCan()
     }
-
-    // ── Поиск ──────────────────────────────────────────────────
 
     fun onSearchModeChange(mode: SearchMode) {
         if (mode == currentState.searchMode) return
@@ -104,8 +96,6 @@ internal class VehicleSelectViewModel(
         searchCan()
     }
 
-    // ── Каталог ────────────────────────────────────────────────
-
     fun onBrandPick(brand: CarBrand) {
         val current = currentState
         val reuse = current.combo?.brand?.id == brand.id && current.comboModels is LCEState.Content
@@ -124,10 +114,7 @@ internal class VehicleSelectViewModel(
         if (!reuse) loadModels(brand.id)
     }
 
-    /**
-     * Модель: грузятся комплектации, единственная — сразу карточка. На широком окне повторный тап по раскрытой
-     * модели сворачивает её ([wide]).
-     */
+    /** Единственная комплектация — сразу карточка; на широком окне повторный тап по раскрытой модели сворачивает её. */
     fun onModelPick(model: CarModel, wide: Boolean) {
         val current = currentState
         if (wide && current.selection.model?.id == model.id && current.selection.carId == null) {
@@ -151,7 +138,6 @@ internal class VehicleSelectViewModel(
         loadTrims(model.id, openSingle = true)
     }
 
-    /** Крошки: вернуться к маркам (или к результатам CAN-поиска), к моделям марки, к комплектациям модели. */
     fun onCrumb(target: CrumbTarget) {
         cancelLaunched(CatalogLevel.CARD)
         reduce { withCrumb(target) }
@@ -169,7 +155,6 @@ internal class VehicleSelectViewModel(
         openCard(car.id, CardSource.RECENT)
     }
 
-    /** «✕» у недавнего автомобиля: убрать из списка (из каталога он никуда не девается). */
     fun onRecentRemove(car: CarSummary) {
         updateRecent { recentRepository.remove(request.catalog, car.id) }
     }
@@ -185,8 +170,6 @@ internal class VehicleSelectViewModel(
             CatalogLevel.CARD -> s.selection.carId?.let { loadCard(it) }
         }
     }
-
-    // ── Фильтр функций ─────────────────────────────────────────
 
     fun onFilterOpen() {
         reduce { copy(filterDraft = groups) }
@@ -214,8 +197,6 @@ internal class VehicleSelectViewModel(
     fun onFilterClear() {
         applyGroups(emptySet())
     }
-
-    // ── Карточка ───────────────────────────────────────────────
 
     fun onTabSelect(tab: CardTab) {
         updateCardUi { copy(tab = tab, point = null, photo = 0) }
@@ -269,9 +250,6 @@ internal class VehicleSelectViewModel(
         reduce { copy(dialog = null) }
     }
 
-    // ── Выбор ──────────────────────────────────────────────────
-
-    /** «Выбрать» в строке комплектации, результате CAN-поиска или в карточке. */
     fun onPick(carId: Int) {
         val current = currentState
         if (!current.mode.pick || current.picking) return
@@ -301,9 +279,6 @@ internal class VehicleSelectViewModel(
         finishPick(dialog.car)
     }
 
-    // ── Назад ──────────────────────────────────────────────────
-
-    /** Системный «назад»: шаг назад внутри экрана по раскладке, на верхнем уровне — выход. */
     fun onBack(layout: VehicleLayout) {
         val s = currentState
         val pointOpen = s.selection.carId != null && s.cardUi.tab == CardTab.MOUNT_POINTS && s.cardUi.point != null
@@ -317,7 +292,6 @@ internal class VehicleSelectViewModel(
         }
     }
 
-    /** «Назад» по каталогу: на узком окне — на уровень выше, потом к выбору типа, потом выход. */
     private fun backFromCatalog(layout: VehicleLayout) {
         val s = currentState
         when {
@@ -326,8 +300,6 @@ internal class VehicleSelectViewModel(
             else -> postSideEffect(VehicleSelectEffect.Exit)
         }
     }
-
-    // ── Внутреннее ─────────────────────────────────────────────
 
     private fun closeCard(layout: VehicleLayout) {
         cancelLaunched(CatalogLevel.CARD)
@@ -353,7 +325,6 @@ internal class VehicleSelectViewModel(
         postSideEffect(VehicleSelectEffect.Picked(car))
     }
 
-    /** Запомнить автомобиль в «недавних» (хранилище атомарно само; Settings — на io); в state — готовый список. */
     private fun rememberRecent(car: CarSummary) {
         updateRecent { recentRepository.push(request.catalog, car) }
     }

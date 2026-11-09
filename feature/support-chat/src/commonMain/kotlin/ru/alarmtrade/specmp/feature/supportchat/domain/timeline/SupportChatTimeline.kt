@@ -6,18 +6,8 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
 
 /**
- * Лента сообщений чата — неизменяемое значение с инвариантами, которые держатся
- * здесь, а не в местах вызова:
- *
- * 1. **Порядок** — по возрастанию `time` (стабильно: равные сохраняют порядок вставки).
- * 2. **Уникальность** — серверное сообщение встречается один раз по `serverId`
- *    независимо от автора: повторная доставка заменяет, а не дублирует (иначе
- *    дубликат ключа в `LazyColumn`).
- * 3. **Эхо — FIFO**: серверное эхо моего сообщения заменяет самое раннее
- *    неподтверждённое оптимистичное с тем же содержимым, затем — той же формы.
- *
- * Все операции — чистые функции без корутин; конкурентность — забота вызывающего
- * (VM меняет ленту только внутри `MutableStateFlow.update {}`).
+ * Инварианты: порядок по `time` (стабильно), серверное сообщение — один раз по `serverId` (иначе дубль ключа в
+ * `LazyColumn`), эхо моего заменяет самое раннее ожидающее с тем же содержимым, затем — той же формы (FIFO).
  */
 class SupportChatTimeline private constructor(val messages: List<SupportChatMessage>) {
 
@@ -26,10 +16,8 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
     fun find(id: String): SupportChatMessage? = messages.firstOrNull { it.id == id }
 
     /**
-     * Страница истории: известные по `serverId` сообщения не дублируются, а мои
-     * серверные сообщения заменяют неподтверждённые оптимистичные (FIFO, как эхо) —
-     * после рестарта восстановленное из outbox сообщение, которое на самом деле
-     * дошло, не будет отправлено повторно.
+     * Мои серверные сообщения заменяют неподтверждённые оптимистичные (FIFO): восстановленное из outbox сообщение,
+     * которое на самом деле дошло, не уйдёт повторно.
      */
     fun withHistoryPage(page: List<SupportChatMessage>): SupportChatTimeline {
         val known = messages.mapNotNullTo(HashSet()) { it.serverId }
@@ -37,9 +25,8 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
         if (fresh.isEmpty()) return this
         val working = messages.toMutableList()
         fresh.sortedBy { it.time }.forEach { message ->
-            // Старое моё сообщение с тем же текстом («ок» неделю назад) — не эхо
-            // свежего неотправленного: сервер не может получить его раньше, чем
-            // мы его создали (с запасом на расхождение часов устройства и сервера).
+            // Старое моё сообщение с тем же текстом — не эхо свежего: сервер не мог получить его раньше,
+            // чем мы его создали (с запасом на расхождение часов устройства и сервера).
             val echoIndex = if (message.isMine) {
                 working.indexOfEcho(message) { optimistic -> message.time >= optimistic.time - CLOCK_SKEW }
             } else {
@@ -50,7 +37,6 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
         return SupportChatTimeline(sorted(working))
     }
 
-    /** Живое сообщение: замена по `serverId`, иначе FIFO-эхо моего, иначе вставка. */
     fun withIncoming(message: SupportChatMessage): SupportChatTimeline {
         val sameServer = message.serverId?.let { serverId ->
             messages.indexOfFirst { it.serverId == serverId }
@@ -68,7 +54,6 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
         return SupportChatTimeline(sorted(updated))
     }
 
-    /** Оптимистичные исходящие (порядок списка сохраняется при равном времени). */
     fun withOptimistic(outgoing: List<SupportChatMessage>): SupportChatTimeline {
         if (outgoing.isEmpty()) return this
         return SupportChatTimeline(sorted(messages + outgoing))
@@ -78,7 +63,6 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
         it.copy(status = status)
     }
 
-    /** Перевод статусов по серверным id (событие «прочитано»). */
     fun withRead(serverIds: Collection<Long>): SupportChatTimeline {
         if (serverIds.isEmpty()) return this
         val ids = serverIds.toHashSet()
@@ -93,12 +77,7 @@ class SupportChatTimeline private constructor(val messages: List<SupportChatMess
         )
     }
 
-    /**
-     * Атомарный (в пределах одного `update {}`) переход статуса: возвращает новую
-     * ленту, только если сообщение сейчас в одном из [from]. `null` — переход не
-     * состоялся (уже отправляется, уже отправлено, нет такого сообщения): вызывающий
-     * не должен ничего отправлять. Защита от двойного ретрая.
-     */
+    /** `null` — сообщение не в одном из [from] (уже отправляется, отправлено, нет): защита от двойного ретрая. */
     fun tryTransition(
         id: String,
         from: Set<SupportChatMessageStatus>,
@@ -151,9 +130,8 @@ private fun SupportChatMessage.isAwaitingEcho(): Boolean = isMine && serverId ==
 private fun SupportChatMessage.contentMatches(other: SupportChatMessage): Boolean =
     text == other.text && attachment?.name == other.attachment?.name
 
-// Сервер может переименовать вложение — тогда сопоставляем по форме контента. Только
-// вложения: у текста «форма» совпадает всегда, и чужой мой текст из окна CLOCK_SKEW
-// «подтвердил» бы ожидающий — тот удалился бы из очереди, так и не уйдя на сервер.
+// Сервер может переименовать вложение — сопоставляем по форме. Только вложения: у текста форма совпадает всегда,
+// и чужой мой текст из окна CLOCK_SKEW «подтвердил» бы ожидающий, так и не ушедший на сервер.
 private fun SupportChatMessage.shapeMatches(other: SupportChatMessage): Boolean {
     if (text.isNullOrBlank() != other.text.isNullOrBlank()) return false
     val a = attachment ?: return false

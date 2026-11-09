@@ -6,9 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-/**
- * @param progress null means indeterminate
- */
+/** [progress] = null — неопределённый индикатор. */
 @Composable
 fun CmpLinearProgressIndicator(
     modifier: Modifier = Modifier,

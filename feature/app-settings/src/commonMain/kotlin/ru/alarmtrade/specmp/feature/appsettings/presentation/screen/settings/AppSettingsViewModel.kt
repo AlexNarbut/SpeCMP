@@ -10,14 +10,6 @@ import ru.alarmtrade.specmp.core.localization.AppLocale
 import ru.alarmtrade.specmp.core.localization.AppLocaleStore
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 
-/**
- * Настройки приложения.
- *
- * - Язык приложения сохраняется и применяется перезапуском (docs/localization.md, «Язык приложения»); где платформа
- *   сама не перезапускается — просим перезапустить вручную.
- * - Язык конфигураций — сразу: SDK подставляет сохранённый язык в каждый запрос каталога и конфигураций, поэтому
- *   экраны конфигуратора и быстрого монтажа, открытые после смены, получают конфигурации на новом языке.
- */
 internal class AppSettingsViewModel(
     private val localeStore: AppLocaleStore,
     private val restarter: AppRestarter,

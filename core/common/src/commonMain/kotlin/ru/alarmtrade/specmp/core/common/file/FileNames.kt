@@ -1,12 +1,6 @@
 package ru.alarmtrade.specmp.core.common.file
 
-/**
- * Имена файлов приходят извне (сервер, системный пикер) и используются в путях файловой системы — поэтому перед
- * записью:
- * - только basename: `../`, абсолютные пути и разделители каталогов срезаются;
- * - запрещённые в Windows/Android/iOS символы и управляющие коды → `_`;
- * - пустое/точечное имя → [fallback]; длина ограничена [MAX_NAME_LENGTH].
- */
+/** Только basename; запрещённые символы и управляющие коды → `_`; пустое/точечное имя → [fallback]. */
 fun safeFileName(name: String, fallback: String = DEFAULT_FALLBACK_NAME): String {
     val baseName = name.substringAfterLast('/').substringAfterLast('\\')
     val cleaned = buildString {
@@ -22,10 +16,7 @@ fun safeFileName(name: String, fallback: String = DEFAULT_FALLBACK_NAME): String
     return if (extension.isEmpty()) cleaned.take(MAX_NAME_LENGTH) else "$stem.$extension"
 }
 
-/**
- * Имя, не занятое в целевом каталоге: `report.pdf` → `report (1).pdf` → …
- * Существующий файл пользователя не перезаписывается молча.
- */
+/** `report.pdf` → `report (1).pdf` → …: существующий файл не перезаписывается. */
 fun uniqueFileName(name: String, exists: (String) -> Boolean): String {
     if (!exists(name)) return name
     val extension = name.substringAfterLast('.', "")

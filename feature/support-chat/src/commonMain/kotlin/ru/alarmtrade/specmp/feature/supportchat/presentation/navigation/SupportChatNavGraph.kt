@@ -27,18 +27,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 @SerialName("support-chat.SupportChatRoute")
 data object SupportChatRoute : NavKey
 
-/**
- * Точка входа фичи: размещается как entry внутри `MainNavGraph`
- * (`composeApp/navigation/AppNavigation.kt`). Собственный nav3-граф фичи не
- * создаётся — экран один; per-entry `ViewModelStoreOwner` даёт декоратор
- * `rememberViewModelStoreNavEntryDecorator()` этого графа, поэтому VM живёт
- * ровно столько, сколько запись бэкстека (см. `docs/navigation.md`).
- *
- * VM создаётся здесь, а не в `composeApp`: экран и его интенты — внутренняя
- * кухня фичи, composeApp передаёт только платформенные порты. Сейвер и порт
- * локальных файлов — зависимости конструктора VM (`parametersOf`); они не
- * должны держать Activity-контекст — VM переживает пересоздание Activity.
- */
+/** Порты не должны держать Activity-контекст: VM переживает пересоздание Activity. */
 @Composable
 fun SupportChatEntry(
     onBack: () -> Unit,
@@ -54,8 +43,7 @@ fun SupportChatEntry(
     val currentOnBack by rememberUpdatedState(onBack)
     val currentPicker by rememberUpdatedState(filePicker)
 
-    // Проброс результатов платформенного пикера в VM. Поток, а не колбэк: на Android
-    // результат может прийти уже в новый процесс (см. SupportChatFilePicker).
+    // Поток, а не колбэк: на Android результат пикера может прийти уже в новый процесс.
     LaunchedEffect(filePicker, viewModel) {
         filePicker.results.collect { viewModel.onPickerResult(it) }
     }

@@ -39,7 +39,6 @@ internal class SpecialistMainRepository(
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
-    // Ожидаемые ошибки SDK не логируются здесь: это Response.Error, их показывает VM (docs/patterns.md, «Логирование»).
     override suspend fun currentUserProfile(): Response<MainUserProfile> =
         accountRepository.currentProfile().map { MainUserProfile(name = it.name, email = it.email) }
 
@@ -48,9 +47,8 @@ internal class SpecialistMainRepository(
             is SpecialistResponse.Success -> Response.Success(response.value.long)
 
             is SpecialistResponse.Error ->
-                // SDK не даёт типизированной ошибки: пустая БД (свежая установка) приходит как
-                // Exception(NO_SETTINGS_VERSION) — валидное «версии ещё нет», а не сбой. Сменит SDK текст —
-                // свежая установка станет ошибкой синхронизации: проверять при обновлении SDK.
+                // SDK не даёт типа ошибки: свежая установка — Exception(NO_SETTINGS_VERSION), «версии ещё нет».
+                // Сменит SDK текст — это станет ошибкой синхронизации: проверять при обновлении SDK.
                 if (response.exception.message == NO_SETTINGS_VERSION) {
                     logger.d { "Settings version not stored yet (fresh install)" }
                     Response.Success(null)
@@ -60,8 +58,7 @@ internal class SpecialistMainRepository(
         }
 
     override fun synchronizeSettingsVersion(): Flow<Response<MainDatabaseSyncStatus>> = flow {
-        // Единственное место с безопасной обёрткой: SDK-Flow может бросить
-        // мимо Response-контракта, safeFlowRun конвертирует это в Response.Error.
+        // SDK-Flow может бросить мимо Response-контракта — safeFlowRun переводит это в Response.Error.
         emitAll(
             safeFlowRun {
                 dataSource.synchronizeSettingsVersion()
@@ -86,8 +83,7 @@ internal class SpecialistMainRepository(
     override suspend fun currentUserCommercial(): Response<MainUserCommercial> =
         dataSource.userCommercial().toResponse().map { it.toMainUserCommercial() }
 
-    // Specialist SDK не отдаёт Flow по чату, поэтому наблюдение эмулируется
-    // периодическим опросом one-shot use case'ов (как observeIsLoggedIn в feature/auth-state).
+    // SDK не отдаёт Flow по чату — наблюдение эмулируется опросом.
     override fun observeChatAvailability(): Flow<Response<Boolean>> = flow {
         while (currentCoroutineContext().isActive) {
             emit(chatAvailability())
@@ -145,7 +141,6 @@ internal class SpecialistMainRepository(
     private companion object {
         val CHAT_AVAILABILITY_POLL_INTERVAL = 10.seconds
 
-        /** Текст ошибки SDK «версии базы ещё нет» (свежая установка) — типа у неё нет. */
         const val NO_SETTINGS_VERSION = "settingsVersion not found"
     }
 }

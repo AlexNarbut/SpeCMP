@@ -47,7 +47,6 @@ internal class AndroidPermissionsProvider(private val applicationContext: Contex
     }
 }
 
-// get() резолвит android.content.Context, зарегистрированный composition root'ом.
 actual fun permissionsModule(): Module = module {
     single<PermissionsProvider> { AndroidPermissionsProvider(get()) }
 }

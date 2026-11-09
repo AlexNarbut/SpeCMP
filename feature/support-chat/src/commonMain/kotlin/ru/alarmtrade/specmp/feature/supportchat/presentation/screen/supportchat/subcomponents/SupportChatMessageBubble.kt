@@ -90,7 +90,6 @@ internal fun SupportChatMessageBubble(
         }
 
         CmpSurface(
-            // Пузырь обтягивает контент, но не шире maxWidthFraction от колонки чата.
             modifier = Modifier.maxWidthFraction(maxWidthFraction),
             shape = bubbleShape(isMine = isMine),
             color = if (isMine) colors.primaryContainer else colors.surfaceContainerLow,
@@ -141,9 +140,8 @@ internal fun SupportChatMessageBubble(
             }
         }
 
-        // Действия неотправленного сообщения — явные кнопки под пузырём, а не
-        // кликабельный пузырь: не конфликтуют с тапом по картинке и озвучиваются
-        // скринридером как кнопки.
+        // Действия — явные кнопки под пузырём, а не кликабельный пузырь: не конфликтуют с тапом по картинке
+        // и озвучиваются скринридером как кнопки.
         if (message.canDelete) {
             FailedMessageActions(
                 canRetry = message.canRetry,
@@ -305,7 +303,6 @@ private fun SupportChatAttachmentContent(
     }
 }
 
-// Скачивание — только для входящих вложений (от поддержки) с известным url.
 private fun SupportChatUiAttachment.downloadAction(
     isMine: Boolean,
     onDownloadAttachment: (SupportChatUiAttachment) -> Unit,
@@ -413,7 +410,6 @@ private fun SupportChatImageAttachment(
                     ),
                 )
                 .then(
-                    // Без источника (ни url, ни локального файла) смотреть нечего.
                     if (source != null) Modifier.clickable { onClick(source) } else Modifier,
                 ),
             contentAlignment = Alignment.Center,
@@ -497,8 +493,7 @@ private fun documentMetadata(name: String, mimeType: String?, sizeBytes: Long?):
     }
 }
 
-// Единицы и десятичный разделитель — часть перевода: шаблон `%1$s.%2$s MB`
-// в EN и `%1$s,%2$s МБ` в RU лежат в ресурсах (U-22), в Kotlin только арифметика.
+// Единицы и десятичный разделитель — часть перевода (`%1$s.%2$s MB` / `%1$s,%2$s МБ`), в Kotlin только арифметика.
 @Composable
 private fun formatFileSize(sizeBytes: Long): String {
     val kilobyte = 1_024L

@@ -8,7 +8,6 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud.Cl
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.mine.MineViewModel
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.models.ModelsViewModel
 
-/** Koin-модуль экранов конфигуратора. Репозитории — из `feature/configurator` и `feature/device/settings`. */
 val configuratorUiModule = module {
     viewModel { (pickDeviceName: String?) ->
         MineViewModel(

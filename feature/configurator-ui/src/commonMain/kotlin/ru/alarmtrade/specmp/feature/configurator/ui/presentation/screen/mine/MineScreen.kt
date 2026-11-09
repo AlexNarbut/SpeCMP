@@ -106,10 +106,6 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.components.Configur
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ConfigurationOptionsPanel
 import ru.alarmtrade.specmp.feature.device.presentation.core.components.ModelBadge
 
-/**
- * K1 «Мои конфигурации» (и режим выбора для «Загрузить из…» блока). Телефон — список; широкое окно (≥ 600 dp) —
- * список слева и карточка выбранной справа.
- */
 @Composable
 internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostState: CmpSnackbarHostState) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -184,7 +180,6 @@ private fun MineToolbar(state: MineState, actions: MineActions) {
     }
 }
 
-/** Чип-фильтр по модели блока: «Все модели ▾» / «DX-9X ✕»; варианты — модели из списка. */
 @Composable
 internal fun ModelFilterChip(models: List<String>, selected: String?, onSelect: (String?) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
@@ -313,7 +308,6 @@ private fun EmptyState(state: MineState, actions: MineActions) {
     }
 }
 
-// Кнопки создания в пустом состоянии — во всю ширину колонки CmpStateBox (до 420 dp) и выше обычных.
 private val CreateButtonModifier = Modifier.fillMaxWidth().height(52.dp)
 
 @Composable
@@ -323,7 +317,6 @@ private fun MineList(state: MineState, items: List<LocalConfiguration>, actions:
     val shown = items.take(state.shown)
     val hasMore = shown.size < items.size
     val loadMore by rememberUpdatedState(actions.onLoadMore)
-    // Подгрузка порциями: до конца показанного осталось меньше 3 карточек.
     LaunchedEffect(listState, hasMore) {
         if (!hasMore) return@LaunchedEffect
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
@@ -355,7 +348,6 @@ private fun MineList(state: MineState, items: List<LocalConfiguration>, actions:
     }
 }
 
-/** Карточка выбранной конфигурации справа (широкое окно). */
 @Composable
 private fun MineDetail(state: MineState, actions: MineActions) {
     val colors = cmpThemeColors()
@@ -503,7 +495,6 @@ private fun MineDialogs(state: MineState, actions: MineActions, wide: Boolean) {
     }
 }
 
-/** Меню ⋮ карточки: название и описание, копия, в файл, «Записать в блок» (при подключённом блоке), удалить. */
 @Composable
 private fun ItemMenu(item: LocalConfiguration, canWrite: Boolean, wide: Boolean, actions: MineActions) {
     val copyName = stringResource(Strings.string.configurator_common_format_copy_name, item.name)

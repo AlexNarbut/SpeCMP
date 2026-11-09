@@ -53,20 +53,14 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.BusChip
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.components.VehicleRow
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.groupLabel
 
-/** Доля столбца названия функции на широком окне (столбцы шин — по 1). */
 private const val FEATURE_NAME_WEIGHT = 1.2f
 
-/** Функции по группам в порядке [CarFeatureGroup.entries]; пустые группы не входят. */
 internal fun featuresByGroup(features: List<CarFeature>): List<Pair<CarFeatureGroup, List<CarFeature>>> {
     val byGroup = features.groupBy { it.group }
     return CarFeatureGroup.entries.mapNotNull { group -> byGroup[group]?.let { group to it } }
 }
 
-/**
- * Вкладка «Функции» (матрица B) элементами списка карточки: группы со счётчиком и сворачиванием; у функции —
- * «Чтение» и «Управление» с чипами шин (узкое окно — строками под названием, широкое — два столбца); внизу —
- * предупреждение. Каждая функция — отдельный элемент: при открытии карточки композируются только видимые.
- */
+/** Каждая функция — отдельный элемент списка: при открытии карточки композируются только видимые. */
 @Suppress("LongParameterList") // разметка вкладки: всё приходит из CardContent
 internal fun LazyListScope.featureItems(
     groups: List<Pair<CarFeatureGroup, List<CarFeature>>>,
@@ -78,7 +72,6 @@ internal fun LazyListScope.featureItems(
     padding: Dp,
     onGroupToggle: (CarFeatureGroup) -> Unit,
 ) {
-    // Отступ между элементами вкладки — как у прежней колонки (spacedBy 10).
     val itemPadding = Modifier.padding(start = padding, end = padding, top = 10.dp)
     item(key = "features-intro") {
         CmpColumn(modifier = Modifier.padding(start = padding, end = padding, top = 14.dp)) {
@@ -106,7 +99,6 @@ internal fun LazyListScope.featureItems(
     item(key = "features-warning") { FeaturesWarning(modifier = itemPadding) }
 }
 
-/** Легенда вкладки, признак фильтра по группам и пустой результат фильтра. */
 @Composable
 private fun FeaturesIntro(shown: Int, total: Int, filtered: Boolean) {
     val colors = cmpThemeColors()
@@ -224,7 +216,6 @@ private fun FeatureRow(feature: CarFeature, wide: Boolean, modifier: Modifier = 
     }
 }
 
-/** Подпись («Чтение»/«Управление», на широком окне — в заголовке столбца) и чипы шин; пусто — «—». */
 @Composable
 private fun BusList(label: String?, buses: List<CarBus>, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -254,7 +245,6 @@ private fun BusList(label: String?, buses: List<CarBus>, modifier: Modifier = Mo
     }
 }
 
-/** Заголовки столбцов матрицы на широком окне. */
 @Composable
 internal fun FeaturesColumnsHeader() {
     val colors = cmpThemeColors()
@@ -280,7 +270,6 @@ internal fun FeaturesColumnsHeader() {
     }
 }
 
-/** Плитка-иконка строки вкладки (точки подключения, PDF, народные карты). */
 @Composable
 internal fun TileIcon(icon: CmpIcons, background: Color, tint: Color) {
     CmpBox(
@@ -291,7 +280,6 @@ internal fun TileIcon(icon: CmpIcons, background: Color, tint: Color) {
     }
 }
 
-/** Список точек подключения: тип, фото. */
 @Composable
 internal fun MountPointsList(points: List<MountPoint>, onOpen: (Int) -> Unit) {
     val colors = cmpThemeColors()
@@ -312,7 +300,6 @@ internal fun MountPointsList(points: List<MountPoint>, onOpen: (Int) -> Unit) {
     }
 }
 
-/** Документы PDF (схемы, карты монтажа): открываются системным просмотрщиком. */
 @Composable
 internal fun DocumentsList(documents: List<CarDocument>, onOpen: (String) -> Unit) {
     val colors = cmpThemeColors()
@@ -333,7 +320,6 @@ internal fun DocumentsList(documents: List<CarDocument>, onOpen: (String) -> Uni
     }
 }
 
-/** Народные карты; без экрана инструкций ([onOpen] `null`) строки без перехода. */
 @Composable
 internal fun UserManualsList(manuals: List<UserManualRef>, onOpen: ((Int) -> Unit)?) {
     val colors = cmpThemeColors()

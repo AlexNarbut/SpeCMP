@@ -214,7 +214,6 @@ private fun SupportChatScaffold(
                         contentDescription = stringResource(Strings.string.supportchat_common_a11y_back),
                     )
                 },
-                // Выравнивание заголовка — свойство раскладки, а не платформы.
                 style = if (layoutMode == SupportChatLayoutMode.Compact) {
                     CmpTopAppBarStyle.Small
                 } else {
@@ -236,11 +235,7 @@ private fun SupportChatScaffold(
     }
 }
 
-/**
- * Каркас тела экрана. Значение state здесь не читается: каждая секция (баннер,
- * лента, композер) читает только своё — индикатор набора или прогресс
- * скачивания не рекомпозируют композер, а символ ввода — ленту.
- */
+/** Значение state здесь не читается: каждая секция читает только своё и не рекомпозирует соседей. */
 @Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun SupportChatBody(
@@ -519,18 +514,8 @@ private fun SupportChatMessageList(
 }
 
 /**
- * Новое сообщение внизу ленты. `LazyColumn` держит позицию по первому видимому
- * ключу, поэтому вставка в индекс 0 (reverseLayout) уходит под нижний край.
- *
- * - Своя отправка ([scrollToNewestRequests] растёт по кнопке «Отправить») — всегда
- *   возвращаем к последним сообщениям, где бы ни был пользователь. Триггер —
- *   счётчик, а не ключ: серверное эхо меняет ключ и отменило бы начатую прокрутку.
- * - Входящее — только если пользователь был у последних сообщений (порог 2: прежний
- *   нижний элемент после вставки сдвигается на индекс 1, при индикаторе набора — на 2);
- *   читающего историю не дёргаем.
- *
- * Анимация мягкая: издалека сначала мгновенный переход на несколько элементов от низа,
- * затем плавно до конца — без долгого пролёта через всю историю.
+ * Своя отправка — всегда к последним сообщениям (триггер — счётчик: эхо меняет ключ); входящее — только если
+ * пользователь был у последних (порог 2: вставка в индекс 0 при reverseLayout сдвигает прежний низ).
  */
 @Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
@@ -556,13 +541,8 @@ private suspend fun LazyListState.softScrollToNewest() {
 }
 
 /**
- * Пагинация: reverseLayout — «верх истории» это конец списка. Снапшот включает
- * условия загрузки, а не только `canScrollForward`: если страница не заполнила
- * экран, триггер сработает снова, когда изменится state (новая страница,
- * `isLoadingMore → false`), без ожидания скролла пользователя.
- *
- * После ошибки автоповтора нет — только когда пользователь заново доскроллил
- * до конца истории (переход `atHistoryEnd: false → true`).
+ * Снапшот включает условия загрузки, а не только `canScrollForward`: неполная страница перезапускает триггер
+ * без скролла. После ошибки — только когда пользователь заново доскроллил до конца истории.
  */
 @Composable
 private fun SupportChatPaginationEffect(
@@ -601,12 +581,7 @@ private data class PaginationSnapshot(
     val messageCount: Int,
 )
 
-/**
- * Видимые сообщения — пачкой во VM (батч + debounce read-отметок там). Снапшот —
- * дешёвая пара индексов, а не список ключей на каждый кадр скролла; ключи
- * собираются только при смене видимого диапазона и фильтруются по префиксу
- * сообщений (разделители дат и индикатор набора — не сообщения).
- */
+/** Снапшот — пара индексов, а не список ключей на каждый кадр; ключи собираются при смене диапазона. */
 @Composable
 private fun SupportChatVisibilityEffect(listState: LazyListState, onMessagesVisible: (List<String>) -> Unit) {
     val currentOnVisible by rememberUpdatedState(onMessagesVisible)
@@ -627,13 +602,7 @@ private fun SupportChatVisibilityEffect(listState: LazyListState, onMessagesVisi
     }
 }
 
-/**
- * Элементы списка в отображаемом порядке (newest-first; экран использует
- * `reverseLayout = true`, поэтому index 0 — внизу, индикатор набора — первым).
- *
- * Порядок `messages` держит `SupportChatTimeline`: здесь только разворот и
- * перевод времени в пояс устройства, без сортировки на каждом построении.
- */
+/** Newest-first (`reverseLayout`): только разворот и перевод времени в пояс устройства, без сортировки. */
 internal fun buildListItems(
     messages: List<SupportChatMessage>,
     dateLabeler: (LocalDate) -> String,

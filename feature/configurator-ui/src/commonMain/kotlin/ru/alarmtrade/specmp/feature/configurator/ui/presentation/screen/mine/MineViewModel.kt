@@ -22,11 +22,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 
 /**
- * K1 «Мои конфигурации»: список (новые сверху, показ порциями), поиск по названию и описанию и фильтр по модели —
- * по загруженному списку; действия карточки: название и описание, копия, сохранение в файл, удаление.
- *
- * `pickDeviceName` — режим выбора для загрузки в редактор блока: фильтр по модели блока включён сразу (его можно
- * снять — другая модель загрузится с предупреждением).
+ * `pickDeviceName` — режим выбора для редактора блока: фильтр по модели включён сразу (снять можно — другая модель
+ * загрузится с предупреждением).
  */
 internal class MineViewModel(
     pickDeviceName: String?,
@@ -92,12 +89,10 @@ internal class MineViewModel(
         reduceLists { copy(query = "", modelFilter = null, shown = MineState.PAGE_SIZE) }
     }
 
-    /** Прокрутка к концу показанного — следующая порция. */
     fun onLoadMore() {
         reduce { copy(shown = shown + MineState.PAGE_SIZE) }
     }
 
-    /** Выбор в списке (широкое окно — карточка справа). */
     fun onSelect(id: Long) {
         reduce { copy(selectedId = id) }
     }
@@ -135,7 +130,6 @@ internal class MineViewModel(
         }
     }
 
-    /** «Создать копию»: [name] — «Копия — …». */
     fun onCopy(item: LocalConfiguration, name: String) {
         runAction(MineMessage.COPIED) {
             val source = item.toSource()
@@ -161,7 +155,6 @@ internal class MineViewModel(
         runAction(MineMessage.DELETED) { configurations.delete(item.id) }
     }
 
-    /** «Сохранить в файл»: снимок записи во временный `.dxs` → системное сохранение. */
     fun onExport(item: LocalConfiguration) {
         if (!startBusy()) return
         intent {
@@ -197,8 +190,8 @@ internal class MineViewModel(
     }
 
     /**
-     * Действие с записью — одно за раз: «занято» ставится сразу, повторный тап (копия, экспорт, удаление) его застанет
-     * и ничего не сделает. `false` — уже занято. Интенты приходят с Main — проверка и установка не разделяются.
+     * Одно действие с записью за раз: «занято» ставится сразу, повторный тап его застанет. `false` — уже занято.
+     * Интенты приходят с Main — проверка и установка не разделяются.
      */
     private fun startBusy(): Boolean {
         if (currentState.busy) return false

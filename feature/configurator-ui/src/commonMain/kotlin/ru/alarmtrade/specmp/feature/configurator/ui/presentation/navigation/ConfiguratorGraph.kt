@@ -73,11 +73,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
 
-/**
- * Выбор автомобиля из каталога (фича `vehicle-ui`, подключается в `composeApp`): [VehicleCatalog.WITH_CONFIGURATIONS] —
- * облачные конфигурации (K4), [VehicleCatalog.ALL] — CAN-код в редакторе. `deviceName == null` — каталог для всех
- * моделей блока.
- */
+/** `deviceName == null` — каталог для всех моделей блока. */
 typealias ConfiguratorVehiclePicker = @Composable (
     catalog: VehicleCatalog,
     deviceName: String?,
@@ -85,11 +81,7 @@ typealias ConfiguratorVehiclePicker = @Composable (
     onBack: () -> Unit,
 ) -> Unit
 
-/**
- * Редактор конфигурации (K5, фича `device:settings-ui`, подключается в `composeApp`). [fileSaver] — «Сохранить в файл»
- * (в режиме выбора — заглушка), [onOpenConfiguration] — «Открыть» после «Сохранить в мои», [onWriteToDevice] —
- * «Записать в блок» (`null` — не поддерживается).
- */
+/** `onWriteToDevice == null` — «Записать в блок» не поддерживается. */
 typealias ConfigurationEditor = @Composable (
     source: SettingsSource,
     fileSaver: SettingsFileSaver,
@@ -112,14 +104,7 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Конфигуратор (точка A — плитка на главной): «Мои конфигурации» (K1), выбор модели (K2) и файла (K3), облачные
- * конфигурации (K4), редактор конфигурации (K5).
- *
- * @param deviceEditor «Записать в блок»: редактор подключённого блока с загрузкой конфигурации (подключается в
- *   `composeApp` вместе с обёрткой сессии устройства); `null` — не поддерживается. Пункт виден только при связи
- *   с блоком.
- */
+/** [deviceEditor] `null` — «Записать в блок» не поддерживается; пункт виден только при связи с блоком. */
 @Composable
 fun ConfiguratorEntry(
     onExit: () -> Unit,
@@ -138,10 +123,6 @@ fun ConfiguratorEntry(
     )
 }
 
-/**
- * Выбор конфигурации для «Загрузить из…» в редакторе блока (K7): «Мои» под модель блока или облако (каталог под модель
- * блока → список → карточка «Загрузить в редактор»). Подключается в `composeApp` в слот `configurationPicker`.
- */
 @Composable
 fun ConfigurationPickerEntry(
     request: ConfigurationPickRequest,
@@ -166,13 +147,11 @@ fun ConfigurationPickerEntry(
     )
 }
 
-/** Зачем выбирают конфигурацию: загрузить в редактор блока или для быстрого монтажа (кнопка «Выбрать»). */
 enum class ConfigurationPickPurpose { LOAD, FAST_MOUNT }
 
 /** Автомобиль, уже выбранный вызывающим: облако открывается сразу списком конфигураций для него. */
 data class ConfigurationPickCar(val id: Int, val title: String)
 
-/** Конфигуратор целиком или выбор конфигурации для загрузки в блок. */
 private sealed interface GraphMode {
     class Full(
         val filePicker: SettingsFilePicker,
@@ -248,9 +227,7 @@ private fun ConfiguratorGraph(
     )
 }
 
-/**
- * Непрозрачный фон записи: на переходе NavDisplay новая запись едет поверх старой, и без фона старая просвечивает.
- */
+/** Непрозрачный фон записи: на переходе NavDisplay без него старая запись просвечивает. */
 @Composable
 private fun Opaque(content: @Composable () -> Unit) {
     CmpBox(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) { content() }
@@ -410,7 +387,7 @@ private fun CloudListEntry(key: CloudListRoute, backStack: NavBackStack<NavKey>,
     }
 }
 
-/** VM карточки облачной конфигурации [id] (своя на id — правая панель меняет выбранную) и её действия. */
+/** Своя VM на [id]: правая панель меняет выбранную. */
 @Composable
 private fun cloudCard(
     id: Int,
@@ -477,7 +454,6 @@ private fun MineMessage.text() = when (this) {
     MineMessage.FAILED -> Strings.string.configurator_common_msg_failed
 }
 
-/** Сохранение файла недоступно (режим выбора). */
 private object NoSaver : SettingsFileSaver {
     override suspend fun save(sourcePath: String, fileName: String) = SettingsFileSaveResult.Cancelled
 }
