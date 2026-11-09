@@ -30,12 +30,9 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
@@ -45,6 +42,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperat
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 class FirmwareFileViewModelTest {
 
@@ -75,7 +74,7 @@ class FirmwareFileViewModelTest {
     )
 
     private val repository = FakeFirmwareRepository()
-    private val sessionRepository = FakeSessionRepository(device)
+    private val sessionRepository = FakeDeviceSessionRepository(device)
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
     private val requester = FirmwareBootRequester()
@@ -98,13 +97,7 @@ class FirmwareFileViewModelTest {
 
     private fun TestScope.viewModel(): FirmwareFileViewModel {
         val dispatchers = testDispatchers(dispatcher)
-        session = createDeviceSession(
-            sessionRepository,
-            FakeConnectionRepository(),
-            dispatchers,
-            backgroundScope.coroutineContext,
-        ).also { it.start() }
-        session.attach(ConnectionTransport.BLE)
+        session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val vm = FirmwareFileViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()

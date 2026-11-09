@@ -27,16 +27,15 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareE
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 class SerialFirmwareViewModelTest {
 
@@ -67,7 +66,7 @@ class SerialFirmwareViewModelTest {
         }
     }
 
-    private lateinit var sessionRepository: FakeSessionRepository
+    private lateinit var sessionRepository: FakeDeviceSessionRepository
     private lateinit var session: DeviceSession
 
     @BeforeTest
@@ -80,17 +79,9 @@ class SerialFirmwareViewModelTest {
 
     private fun TestScope.viewModel(repository: SerialFirmwareRepository): SerialFirmwareViewModel {
         val dispatchers = testDispatchers(dispatcher)
-        sessionRepository = FakeSessionRepository(bootDevice)
+        sessionRepository = FakeDeviceSessionRepository(bootDevice)
         session =
-            createDeviceSession(
-                sessionRepository,
-                FakeConnectionRepository(),
-                dispatchers,
-                backgroundScope.coroutineContext,
-            ).also {
-                it.start()
-            }
-        session.attach(ConnectionTransport.SERIAL)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.SERIAL)
         // Хост держит сессию горячей, пока открыт экран устройства.
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { session.state.collect {} }
         return SerialFirmwareViewModel(repository, session, dispatchers).also { vm ->

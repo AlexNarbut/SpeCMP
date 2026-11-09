@@ -1,7 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.interaction.di
 
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -17,6 +16,10 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.Program
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+
+// Скоуп сессии — отдельной записью: тесты других модулей (`interaction:testing`) подменяют его на дочерний к
+// `backgroundScope`, реализация сессии остаётся internal.
+val deviceSessionScopeQualifier = named("deviceSessionScope")
 
 /**
  * Koin-модуль логической фичи `feature/device/interaction`: подключение, сессия и устройство.
@@ -35,7 +38,8 @@ val deviceInteractionModule = module {
     single<DeviceSessionRepository> {
         SpecialistDeviceSessionRepository(bluetoothAlarmDeviceInteractor = { get() }, appUpdatesInteractor = { get() })
     }
-    single { createDeviceSession(get(), get(), get()) }
+    single(deviceSessionScopeQualifier) { serviceScope(get<AppDispatchers>().io, logTag = "DeviceSession") }
+    single<DeviceSession> { DeviceSessionImpl(get(), get(), get(deviceSessionScopeQualifier)) }
     // Блокировка ввода PIN программирования (по блоку): общая для прошивки и режима программирования.
     // Состояние аккаунта — чистится при логауте.
     single { ServicePinCooldown() } bind AuthCloseable::class
@@ -43,16 +47,3 @@ val deviceInteractionModule = module {
     single<ProgramModeRepository> { SpecialistProgramModeRepository(bluetoothAlarmDeviceInteractor = { get() }) }
     factory { ProgramModeEntry(get(), get(), get()) }
 }
-
-// Реализация internal, а VM-тестам других модулей нужна настоящая сессия поверх фейковых репозиториев;
-// parentContext — только для тестов (привязка скоупа к backgroundScope).
-fun createDeviceSession(
-    sessionRepository: DeviceSessionRepository,
-    connectionRepository: DeviceConnectionRepository,
-    dispatchers: AppDispatchers,
-    parentContext: CoroutineContext = EmptyCoroutineContext,
-): DeviceSession = DeviceSessionImpl(
-    sessionRepository,
-    connectionRepository,
-    serviceScope(dispatchers.io, logTag = "DeviceSession", parent = parentContext),
-)

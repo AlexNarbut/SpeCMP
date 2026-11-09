@@ -3,9 +3,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
@@ -22,18 +19,9 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUp
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileExporter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveTarget
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
 internal class FakeFirmwareRepository : FirmwareRepository {
     var modulesResult: Response<List<FirmwareModule>> = Response.Success(emptyList())
@@ -117,66 +105,6 @@ internal class FakeFirmwareRepository : FirmwareRepository {
         archiveDelayMillis[page]?.let { delay(it) }
         return archivePages[page] ?: Response.Error(IllegalStateException("no page"))
     }
-}
-
-internal class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
-    val link = MutableStateFlow(DeviceLinkState.READY)
-
-    /** Ответы readBluetoothModule по порядку; последний повторяется. */
-    var bluetoothVersions: List<Response<BluetoothModule>> = listOf(
-        Response.Success(
-            BluetoothModule(
-                BluetoothModuleMode.MAIN,
-                BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14"),
-            ),
-        ),
-    )
-    var bluetoothReads = 0
-
-    /** Ответы setBootMode по порядку; последний повторяется. */
-    var bootResults: List<Response<BootModeResult>> = listOf(Response.Success(BootModeResult.Entered))
-    var bootCalls = 0
-    val bootTargets = mutableListOf<BootModeTarget>()
-    val pins = mutableListOf<ServicePin>()
-
-    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
-    override suspend fun readBluetoothModule() = bluetoothVersions[minOf(bluetoothReads++, bluetoothVersions.lastIndex)]
-    override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
-    override suspend fun readImei(): Response<String> = Response.Success("")
-    override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
-    var reconnectCount = 0
-    override suspend fun reconnect(): Response<Unit> {
-        reconnectCount++
-        return Response.Success(Unit)
-    }
-    override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-
-    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
-        bootTargets += target
-        return bootResults[minOf(bootCalls++, bootResults.lastIndex)]
-    }
-
-    /** Ответы exitBootMode по порядку; последний повторяется. */
-    var exitResults: List<Response<Unit>> = listOf(Response.Success(Unit))
-    var exitCalls = 0
-    val exitTargets = mutableListOf<BootModeTarget>()
-
-    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> {
-        exitTargets += target
-        return exitResults[minOf(exitCalls++, exitResults.lastIndex)]
-    }
-
-    override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
-        pins += pin
-        return Response.Success(Unit)
-    }
-}
-
-internal class FakeConnectionRepository : DeviceConnectionRepository {
-    override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
 }
 
 /** Процесс обновления из тестов: шаги подаются в [progress]; параметры запуска запоминаются. */

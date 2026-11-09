@@ -1,15 +1,8 @@
 package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.datetime.LocalDateTime
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationSummary
 import ru.alarmtrade.specmp.feature.configurator.domain.model.ConfigurationCar
@@ -17,17 +10,8 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -38,14 +22,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSetting
 internal val testTime = LocalDateTime(2026, 10, 21, 14, 20)
 
 internal val testDevice = AlarmDevice(1, "DX-9X", "3.57", DeviceOperationMode.MAIN, emptySet(), can = null)
-
-internal fun TestScope.testDeviceSession(link: MutableStateFlow<DeviceLinkState>, dispatcher: TestDispatcher) =
-    createDeviceSession(
-        FakeDeviceSessionRepository(link),
-        FakeDeviceConnectionRepository,
-        testDispatchers(dispatcher),
-        backgroundScope.coroutineContext,
-    ).also { it.start() }
 
 internal fun cloudSummary(id: Int, deviceName: String = "DX-9X", rating: Int? = null, day: Int = 1) =
     CloudConfigurationSummary(
@@ -179,26 +155,4 @@ internal class FakeSettingsRepository :
     }
 
     override suspend fun resetDeviceToFactory(): Response<Unit> = Response.Success(Unit)
-}
-
-private class FakeDeviceSessionRepository(private val link: Flow<DeviceLinkState>) : DeviceSessionRepository {
-    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
-    override suspend fun readBluetoothModule(): Response<BluetoothModule> =
-        Response.Error(IllegalStateException("usb only"))
-    override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(testDevice)
-    override suspend fun readImei(): Response<String> = Response.Success("")
-    override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
-    override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
-        Response.Success(BootModeResult.Entered)
-    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
-    override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
-}
-
-private object FakeDeviceConnectionRepository : DeviceConnectionRepository {
-    override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
 }

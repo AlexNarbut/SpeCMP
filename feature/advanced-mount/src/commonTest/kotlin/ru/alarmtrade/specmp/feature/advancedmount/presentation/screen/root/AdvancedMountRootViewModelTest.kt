@@ -13,11 +13,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -35,20 +32,14 @@ import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AdvancedMountRootViewModelTest {
@@ -63,33 +54,6 @@ class AdvancedMountRootViewModelTest {
         features = setOf(DeviceFeature.FIRMWARE_UPDATE, DeviceFeature.SETTINGS, DeviceFeature.CLONE),
         can = null,
     )
-
-    private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
-        val link = MutableStateFlow(DeviceLinkState.READY)
-        var bootModeCount = 0
-        override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
-        override suspend fun readBluetoothModule(): Response<BluetoothModule> =
-            Response.Error(IllegalStateException("usb only"))
-        override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
-        override suspend fun readImei(): Response<String> = Response.Success("351756051523999")
-        override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
-        override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-        override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
-            bootModeCount++
-            return Response.Success(BootModeResult.Entered)
-        }
-        override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
-        override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
-    }
-
-    private class FakeConnectionRepository : DeviceConnectionRepository {
-        override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> =
-            emptyFlow()
-        override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-        override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-        override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
-    }
 
     private class FakeMountRepository : AdvancedMountRepository {
         var access: Response<DeviceAccess> = Response.Success(DeviceAccess(hasAccess = true, message = ""))
@@ -114,7 +78,7 @@ class AdvancedMountRootViewModelTest {
         override suspend fun isProductInfoEnabled(): Response<Boolean> = Response.Success(true)
     }
 
-    private val sessionRepository = FakeSessionRepository(device)
+    private val sessionRepository = FakeDeviceSessionRepository(device)
     private val mountRepository = FakeMountRepository()
 
     @BeforeTest
@@ -137,15 +101,7 @@ class AdvancedMountRootViewModelTest {
     private fun TestScope.viewModel(): Pair<AdvancedMountRootViewModel, MutableList<AdvancedMountRootEffect>> {
         val dispatchers = testDispatchers(dispatcher)
         val session =
-            createDeviceSession(
-                sessionRepository,
-                FakeConnectionRepository(),
-                dispatchers,
-                backgroundScope.coroutineContext,
-            ).also {
-                it.start()
-            }
-        session.attach(ConnectionTransport.USB)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.USB)
         val vm = AdvancedMountRootViewModel(session, mountRepository, dispatchers).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<AdvancedMountRootEffect>()
@@ -235,7 +191,7 @@ class AdvancedMountRootViewModelTest {
             listOf<AdvancedMountRootEffect>(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE)),
             effects,
         )
-        assertEquals(0, sessionRepository.bootModeCount)
+        assertEquals(0, sessionRepository.bootCalls)
     }
 
     @Test

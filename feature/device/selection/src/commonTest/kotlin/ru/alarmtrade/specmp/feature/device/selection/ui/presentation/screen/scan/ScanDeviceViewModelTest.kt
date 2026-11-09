@@ -8,7 +8,9 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -20,10 +22,13 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.testing.FakeAppForegroundProvider
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceConnectionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
@@ -51,13 +56,14 @@ class ScanDeviceViewModelTest {
 
     private val foregroundProvider = FakeAppForegroundProvider()
 
-    private fun deviceSession(connection: FakeDeviceConnectionRepository) =
-        createDeviceSession(FakeDeviceSessionRepository(), connection, dispatchers()).also { it.start() }.also {
-            lastSession =
-                it
-        }
+    // Связь в тестах поиска не поднимается: сессия только запоминает транспорт.
+    private fun TestScope.deviceSession(connection: FakeDeviceConnectionRepository) = testDeviceSession(
+        FakeDeviceSessionRepository(link = MutableStateFlow(DeviceLinkState.DISCONNECTED)),
+        connection,
+        dispatcher = testDispatcher,
+    ).also { lastSession = it }
 
-    private fun viewModel(
+    private fun TestScope.viewModel(
         scan: FakeDeviceScanRepository = FakeDeviceScanRepository(),
         connection: FakeDeviceConnectionRepository = FakeDeviceConnectionRepository(),
         permissions: FakePermissionsProvider = FakePermissionsProvider(),

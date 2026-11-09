@@ -32,18 +32,17 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeCloneRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeConnectionRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CloneViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
-    private val sessionRepository = FakeSessionRepository()
+    private val sessionRepository = FakeDeviceSessionRepository()
     private val repository = FakeCloneRepository()
     private val time = TestTimeSource()
     private val cooldown = ServicePinCooldown(time)
@@ -67,15 +66,7 @@ class CloneViewModelTest {
     private fun TestScope.viewModel(fromBypass: Boolean = false, subscribe: Boolean = true): CloneViewModel {
         val dispatchers = testDispatchers(dispatcher)
         val session =
-            createDeviceSession(
-                sessionRepository,
-                FakeConnectionRepository(),
-                dispatchers,
-                backgroundScope.coroutineContext,
-            ).also {
-                it.start()
-            }
-        session.attach(ConnectionTransport.BLE)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val vm = CloneViewModel(session, repository, cooldown, dispatchers, fromBypass).also { viewModels += it }
         if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }

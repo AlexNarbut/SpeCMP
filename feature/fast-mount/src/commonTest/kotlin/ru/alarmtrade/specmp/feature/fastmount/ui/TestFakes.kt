@@ -3,25 +3,12 @@ package ru.alarmtrade.specmp.feature.fastmount.ui
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
@@ -46,40 +33,6 @@ internal fun testDevice(
     can = can,
     modelInDatabase = modelInDatabase,
 )
-
-internal class FakeSessionRepository(var device: AlarmDevice = testDevice()) : DeviceSessionRepository {
-    val link = MutableStateFlow(DeviceLinkState.READY)
-
-    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
-    override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Success(
-        BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX-9X", "1.0", "1.14")),
-    )
-    override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
-    override suspend fun readImei(): Response<String> = Response.Success("")
-    override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
-    override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
-        Response.Success(BootModeResult.Entered)
-    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
-    override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
-}
-
-internal class FakeConnectionRepository : DeviceConnectionRepository {
-    override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
-}
-
-internal class FakeProgramModeRepository : ProgramModeRepository {
-    var exits = 0
-    override suspend fun enter(): Response<ProgramModeResult> = Response.Success(ProgramModeResult.ENTERED)
-    override suspend fun exit(): Response<Unit> {
-        exits++
-        return Response.Success(Unit)
-    }
-}
 
 internal fun question(id: Int, automatic: Boolean = false) = MountQuestion(
     id = id,

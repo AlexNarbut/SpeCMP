@@ -25,13 +25,15 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.testing.testDispatchers
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeProgramModeRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
@@ -39,10 +41,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountFile
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountTaskStatus
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
-import ru.alarmtrade.specmp.feature.fastmount.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.FakeFastMountRepository
-import ru.alarmtrade.specmp.feature.fastmount.ui.FakeProgramModeRepository
-import ru.alarmtrade.specmp.feature.fastmount.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.question
 import ru.alarmtrade.specmp.feature.fastmount.ui.testConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.ui.testDevice
@@ -51,7 +50,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.testDevice
 class FastMountViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
-    private val sessionRepository = FakeSessionRepository()
+    private val sessionRepository = FakeDeviceSessionRepository(testDevice())
     private val repository = FakeFastMountRepository()
     private val programMode = FakeProgramModeRepository()
     private val viewModels = mutableListOf<FastMountViewModel>()
@@ -76,15 +75,7 @@ class FastMountViewModelTest {
     private fun TestScope.viewModel(transport: ConnectionTransport = ConnectionTransport.USB): FastMountViewModel {
         val dispatchers = testDispatchers(dispatcher)
         session =
-            createDeviceSession(
-                sessionRepository,
-                FakeConnectionRepository(),
-                dispatchers,
-                backgroundScope.coroutineContext,
-            ).also {
-                it.start()
-            }
-        session.attach(transport)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
         val vm = FastMountViewModel(session, repository, programMode, dispatchers).also { viewModels += it }
         // Экран подписан на state — с этого стартует работа VM (onStart).
         stateCollectors += backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }

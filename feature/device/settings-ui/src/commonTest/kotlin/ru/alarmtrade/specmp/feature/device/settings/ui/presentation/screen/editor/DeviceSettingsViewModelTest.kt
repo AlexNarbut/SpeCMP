@@ -35,19 +35,13 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.ConfigurationPickKind
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
@@ -131,7 +125,7 @@ class DeviceSettingsViewModelTest {
     private val can get() = CanCodeSetting(61, "6.1", "CAN-код", null, SettingValue.Can(CanCode("2154", 17)))
 
     private val repository = FakeSettingsRepository(tree)
-    private val sessionRepository = FakeSessionRepository(device)
+    private val sessionRepository = FakeDeviceSessionRepository(device)
     private val preferences = FakePreferences()
     private val singleCanDevice = device.copy(can = CanInfo(firmwareVersion = "1.0", code = "2154", isFactory = false))
     private val cars = FakeCars()
@@ -156,17 +150,8 @@ class DeviceSettingsViewModelTest {
         options: SettingsEditorOptions = SettingsEditorOptions(),
     ): DeviceSettingsViewModel {
         val dispatchers = testDispatchers(dispatcher)
-        val session =
-            createDeviceSession(
-                sessionRepository,
-                FakeConnectionRepository(),
-                dispatchers,
-                backgroundScope.coroutineContext,
-            ).also {
-                it.start()
-            }
         // USB: без чтения Bluetooth-модуля при подключении.
-        session.attach(ConnectionTransport.USB)
+        val session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.USB)
         val vm = DeviceSettingsViewModel(
             source,
             options,
@@ -956,22 +941,6 @@ private class FakeLocalConfigurations : LocalConfigurationsRepository {
     override suspend fun delete(id: Long): Response<Unit> = Response.Success(Unit)
 }
 
-private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
-    val link = MutableStateFlow(DeviceLinkState.READY)
-
-    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
-    override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException())
-    override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
-    override suspend fun readImei(): Response<String> = Response.Success("")
-    override suspend fun syncDeviceDatabase(): Response<Unit> = Response.Success(Unit)
-    override suspend fun reconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun disconnect(): Response<Unit> = Response.Success(Unit)
-    override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> =
-        Response.Success(BootModeResult.Entered)
-    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = Response.Success(Unit)
-    override suspend fun setServicePin(pin: ServicePin): Response<Unit> = Response.Success(Unit)
-}
-
 private class FakePreferences : DeviceSettingsPreferences {
     override val treeWidthDp = MutableStateFlow<Response<Int?>>(Response.Success(null))
     var width: Int?
@@ -1018,13 +987,6 @@ private class FakeCars : VehicleCatalogRepository {
     override suspend fun card(carId: Int, groups: Set<CarFeatureGroup>): Response<CarCard> = unused()
 
     private fun unused(): Response.Error = Response.Error(UnsupportedOperationException("not used by settings"))
-}
-
-private class FakeConnectionRepository : DeviceConnectionRepository {
-    override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
-    override suspend fun closeSessions(): Response<Unit> = Response.Success(Unit)
 }
 
 private const val SETTLE_PASSES = 5

@@ -18,6 +18,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testAlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 class BaseDeviceViewModelTest {
 
@@ -32,11 +35,12 @@ class BaseDeviceViewModelTest {
 
     @Test
     fun `device work is cancelled on loss, lost and ready callbacks rerun`() = runTest(dispatcher) {
-        val viewModel = DeviceProbeViewModel(testDeviceSession(link, dispatcher))
+        val viewModel =
+            DeviceProbeViewModel(testDeviceSession(FakeDeviceSessionRepository(link = link), dispatcher = dispatcher))
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
         viewModel.onReadCurrent()
-        assertEquals(testDevice, viewModel.state.value.current)
+        assertEquals(testAlarmDevice, viewModel.state.value.current)
 
         val cancelled = CompletableDeferred<Unit>()
         viewModel.onWork {
@@ -60,14 +64,15 @@ class BaseDeviceViewModelTest {
         link.value = DeviceLinkState.READY
         advanceUntilIdle()
         // Сессия стартует не в Ready — первый lost до подключения.
-        assertEquals(listOf("lost", "ready:1", "lost", "ready:1"), viewModel.state.value.events)
+        assertEquals(listOf("lost", "ready:77", "lost", "ready:77"), viewModel.state.value.events)
         viewModel.onWork {}
         assertEquals(true, viewModel.state.value.launched)
     }
 
     @Test
     fun `keyed device work replaces the previous one and is cancelled on loss`() = runTest(dispatcher) {
-        val viewModel = DeviceProbeViewModel(testDeviceSession(link, dispatcher))
+        val viewModel =
+            DeviceProbeViewModel(testDeviceSession(FakeDeviceSessionRepository(link = link), dispatcher = dispatcher))
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
 

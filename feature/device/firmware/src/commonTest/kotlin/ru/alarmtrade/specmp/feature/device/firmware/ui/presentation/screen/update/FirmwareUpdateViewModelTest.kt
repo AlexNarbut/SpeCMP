@@ -34,15 +34,12 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
-import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -54,6 +51,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkSt
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 class FirmwareUpdateViewModelTest {
 
@@ -89,7 +88,7 @@ class FirmwareUpdateViewModelTest {
         FirmwareVersion(0, value, LocalDate(2026, 10, 14), description, "https://fw/$value")
 
     private val repository = FakeFirmwareRepository()
-    private val sessionRepository = FakeSessionRepository(bootDevice)
+    private val sessionRepository = FakeDeviceSessionRepository(bootDevice)
     private val updateRepository = FakeUpdateRepository()
     private val requester = FirmwareBootRequester()
     private val picker = FirmwareArchivePicker()
@@ -115,13 +114,7 @@ class FirmwareUpdateViewModelTest {
         transport: ConnectionTransport = ConnectionTransport.USB,
     ): Pair<FirmwareUpdateViewModel, MutableList<FirmwareUpdateEffect>> {
         val dispatchers = testDispatchers(dispatcher)
-        session = createDeviceSession(
-            sessionRepository,
-            FakeConnectionRepository(),
-            dispatchers,
-            backgroundScope.coroutineContext,
-        ).also { it.start() }
-        session.attach(transport)
+        session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
         val vm = FirmwareUpdateViewModel(session, repository, updateRepository, requester, picker, dispatchers)
             .also { viewModels += it }
         stateCollectors += backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }

@@ -33,11 +33,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassSubject
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeBypassRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeConnectionRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeProgramModeRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeSessionRepository
-import ru.alarmtrade.specmp.feature.device.autostart.ui.testDevice
-import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
@@ -45,13 +40,20 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkSt
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeProgramModeRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testAlarmDevice
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BypassLearningViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
-    private val sessionRepository = FakeSessionRepository(
-        testDevice.copy(features = setOf(DeviceFeature.CLONE), can = CanInfo("1.0", "VWPOLO20", isFactory = false)),
+    private val sessionRepository = FakeDeviceSessionRepository(
+        testAlarmDevice.copy(
+            features = setOf(DeviceFeature.CLONE),
+            can = CanInfo("1.0", "VWPOLO20", isFactory = false),
+        ),
     )
     private val repository = FakeBypassRepository()
     private val programMode = FakeProgramModeRepository()
@@ -77,15 +79,7 @@ class BypassLearningViewModelTest {
     private fun TestScope.viewModel(subscribe: Boolean = true): BypassLearningViewModel {
         val dispatchers = testDispatchers(dispatcher)
         val session =
-            createDeviceSession(
-                sessionRepository,
-                FakeConnectionRepository(),
-                dispatchers,
-                backgroundScope.coroutineContext,
-            ).also {
-                it.start()
-            }
-        session.attach(ConnectionTransport.BLE)
+            testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
         val vm = BypassLearningViewModel(session, repository, entry, cooldown, dispatchers).also { viewModels += it }
         if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }

@@ -26,8 +26,10 @@ import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeClou
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeLocalConfigurations
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeSettingsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloudSummary
-import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDeviceSession
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -71,7 +73,7 @@ class CloudCardViewModelTest {
             cloud = cloud,
             settings = settings,
             configurations = configurations,
-            deviceSession = testDeviceSession(link, dispatcher),
+            deviceSession = testDeviceSession(FakeDeviceSessionRepository(testDevice, link), dispatcher = dispatcher),
             dispatchers = testDispatchers(dispatcher),
         )
         val effects = mutableListOf<CloudCardEffect>()

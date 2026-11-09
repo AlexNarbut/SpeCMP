@@ -23,8 +23,10 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeLocalConfigurations
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeSettingsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.localConfiguration
-import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDeviceSession
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 
@@ -52,7 +54,7 @@ class MineViewModelTest {
             configurations = configurations,
             settings = settings,
             sessions = settings,
-            deviceSession = testDeviceSession(link, dispatcher),
+            deviceSession = testDeviceSession(FakeDeviceSessionRepository(testDevice, link), dispatcher = dispatcher),
             dispatchers = testDispatchers(dispatcher),
         )
         val effects = mutableListOf<MineEffect>()

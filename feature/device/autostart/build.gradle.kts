@@ -42,6 +42,7 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(project(":core:testing"))
+            implementation(project(":feature:device:interaction:testing"))
         }
         // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {

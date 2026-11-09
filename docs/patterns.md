@@ -222,12 +222,17 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
 | `AppDispatchers` | `testDispatchers(dispatcher)` — один диспетчер на `io`/`default`/`main` | `:core:testing` |
 | `kotlinx.datetime.Clock` | `FixedClock(instant)` (`instant` — `var`) | `:core:testing` |
 | `AppForegroundProvider` | `FakeAppForegroundProvider` (`foregroundReturns` — `MutableSharedFlow`, тест делает `emit(Unit)`) | `:core:testing` |
+| `DeviceSessionRepository` | `FakeDeviceSessionRepository(device, link)` — связь `link`, сценарные ответы списками, счётчики | `:feature:device:interaction:testing` |
+| `DeviceConnectionRepository` | `FakeDeviceConnectionRepository(states, …)` — статусы подключения, счётчики подключений/закрытий | `:feature:device:interaction:testing` |
+| `ProgramModeRepository` | `FakeProgramModeRepository` (`results` по порядку, `calls`/`exits`) | `:feature:device:interaction:testing` |
+| `DeviceSession` | `testDeviceSession(repo, conn, dispatcher, transport)` — настоящая сессия, `start()` и `attach` уже сделаны | `:feature:device:interaction:testing` |
 
 - Пояс фейка не требует: `TimeZoneSource.fixed(tz)` (`core/common`).
 - Расширять общий фейк параметром/состоянием, а не копировать в тест; поведение одного теста (запись аргументов,
   сценарные ответы) — локальный фейк; неиспользуемые члены локального фейка — `error("not used")`.
-- Фейки контрактов фичи — в `feature/<x>/testing` рядом с владельцем. Модули, от которых зависит `core/testing`
-  (`core/common`, `core/lifecycle`), его не подключают — цикл через тестовую конфигурацию; у них локальные дублёры.
+- Фейки контрактов фичи — в `feature/<x>/testing` рядом с владельцем. Модули, от которых зависит модуль дублёров
+  (`core/common`, `core/lifecycle` для `core/testing`; сама `feature/device/interaction` для своего `testing`), его не
+  подключают — цикл через тестовую конфигурацию; у них локальные дублёры.
 - Модули `*/testing`: production-правила Konsist к ним не применяются, тестовые исключения detekt —
   `**/testing/src/**`, CPD — проверяет.
 
@@ -672,8 +677,10 @@ Konsist `capability-usage`:
   Состояние сервиса в памяти, которое не может «упасть» (`DeviceSession.state` — ошибка связи уже свёрнута в
   `Disconnected`, `reboot`, `transport`), — `StateFlow<T>` с `@Suppress("konsist.service-contract")` и причиной.
   «Дождаться» — отдельный `suspend`-член с `Response` (`close()` + `closeAndAwait()`), не `Job` наружу.
-- **Реализацию для тестов других модулей** отдаёт фабрика в `di` (`createDeviceSession(…)`): реализация `internal`,
-  а VM-тестам нужна настоящая сессия поверх фейковых репозиториев.
+- **Реализацию для тестов других модулей** собирает модуль тестовых дублёров через Koin-модуль фичи: реализация
+  `internal`, а VM-тестам нужна настоящая сессия поверх фейковых репозиториев. Скоуп сервиса — отдельная Koin-запись
+  (`deviceSessionScopeQualifier`), тест подменяет её, репозитории и скоуп (`testDeviceSession(…)` из
+  `:feature:device:interaction:testing`, уже после `start()`). Публичных фабрик «только для тестов» в `di` нет.
 
 ### Без побочных эффектов в конструкторе
 

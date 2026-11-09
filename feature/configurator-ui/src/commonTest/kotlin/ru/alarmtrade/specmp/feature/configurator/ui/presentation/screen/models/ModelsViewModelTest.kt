@@ -22,8 +22,10 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.navigation.SourceKey
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeModelsRepository
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.FakeSettingsRepository
-import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDeviceSession
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.testDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
+import ru.alarmtrade.specmp.feature.device.interaction.testing.FakeDeviceSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.testing.testDeviceSession
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 
 class ModelsViewModelTest {
@@ -42,7 +44,13 @@ class ModelsViewModelTest {
 
     private fun TestScope.viewModel(file: SourceKey.File? = null): Pair<ModelsViewModel, List<ModelsEffect>> {
         val vm =
-            ModelsViewModel(file, models, settings, testDeviceSession(link, dispatcher), testDispatchers(dispatcher))
+            ModelsViewModel(
+                file,
+                models,
+                settings,
+                testDeviceSession(FakeDeviceSessionRepository(testDevice, link), dispatcher = dispatcher),
+                testDispatchers(dispatcher),
+            )
         val effects = mutableListOf<ModelsEffect>()
         backgroundScope.launch { vm.state.collect {} }
         backgroundScope.launch { vm.sideEffect.collect { effects += it } }
