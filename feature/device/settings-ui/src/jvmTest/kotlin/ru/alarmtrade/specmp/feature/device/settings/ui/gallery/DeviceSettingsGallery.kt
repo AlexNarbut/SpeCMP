@@ -57,6 +57,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsPage
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
@@ -286,16 +287,18 @@ class DeviceSettingsGallery {
                 snackbarHostState = remember { CmpSnackbarHostState() },
             ) { layout ->
                 val marks = RowMarks(state.changedIds, state.sectionChanges, state.cars)
-                if (search) {
-                    SearchPane(state.searchQuery, state.searchHits, marks, layout.isWide, {}, noRowActions)
-                } else {
-                    SectionEntry(
-                        state.menu.content,
-                        marks,
-                        path.lastOrNull(),
-                        layout,
-                        noRowActions,
-                    )
+                SettingsPage(state, SettingsLocation(path, search), layout, noActions) {
+                    if (search) {
+                        SearchPane(state.searchQuery, state.searchHits, marks, layout.isWide, {}, noRowActions)
+                    } else {
+                        SectionEntry(
+                            state.menu.content,
+                            marks,
+                            path.lastOrNull(),
+                            layout,
+                            noRowActions,
+                        )
+                    }
                 }
             }
         }

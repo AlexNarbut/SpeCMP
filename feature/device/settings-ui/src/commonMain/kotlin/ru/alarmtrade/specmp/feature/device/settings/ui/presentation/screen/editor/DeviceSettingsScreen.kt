@@ -6,14 +6,19 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -125,10 +130,17 @@ internal fun DeviceSettingsContent(
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val layout = settingsLayoutOf(maxWidth)
         val windowWidth = maxWidth
+        val ready = state.menu is LCEState.Content
+        val topBarInPage = ready && !layout.isWide
         CmpScaffold(
-            topBar = { TopBar(state, location, actions) },
+            topBar = { if (!topBarInPage) TopBar(state, showActions = ready, actions) },
             bottomBar = { WriteBar(state, actions) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
+            contentWindowInsets = if (topBarInPage) {
+                WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+            } else {
+                WindowInsets.systemBars
+            },
         ) { padding ->
             CmpColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
                 when (val menu = state.menu) {
@@ -177,11 +189,32 @@ private fun ReadyBody(
                 onDragStop = { actions.onTreeWidthChange(treeWidth.value.roundToInt()) },
             )
         }
-        CmpColumn(modifier = Modifier.weight(1f).fillMaxSize().background(cmpThemeColors().background)) {
-            if (!layout.isWide && !location.isSearch) Crumbs(root, state, location, actions)
-            // Переход между разделами (запись едет из-за края) не рисуется поверх дерева и крошек.
-            CmpBox(modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds()) { pane(layout) }
+        // Переход между разделами (запись едет из-за края) не рисуется поверх дерева.
+        CmpBox(modifier = Modifier.weight(1f).fillMaxHeight().clipToBounds()) { pane(layout) }
+    }
+}
+
+/**
+ * Непрозрачная страница записи графа. На узкой раскладке панель и крошки — свои у каждой записи: iOS push/pop
+ * двигает и затемняет их вместе со страницей. На широкой панель общая (над деревом) и от записи не зависит.
+ */
+@Composable
+internal fun SettingsPage(
+    state: DeviceSettingsState,
+    location: SettingsLocation,
+    layout: SettingsLayout,
+    actions: DeviceSettingsActions,
+    content: @Composable () -> Unit,
+) {
+    CmpColumn(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) {
+        val root = state.menu.content
+        if (!layout.isWide) {
+            CmpBox(modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))) {
+                TopBar(state, showActions = !location.isSearch && root != null, actions)
+            }
+            if (!location.isSearch && root != null) Crumbs(root, state, location, actions)
         }
+        CmpBox(modifier = Modifier.weight(1f).fillMaxWidth()) { content() }
     }
 }
 
@@ -214,15 +247,15 @@ private fun TreeResizeHandle(onDrag: (Dp) -> Unit, onDragStop: () -> Unit) {
 }
 
 @Composable
-private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actions: DeviceSettingsActions) {
+private fun TopBar(state: DeviceSettingsState, showActions: Boolean, actions: DeviceSettingsActions) {
     val header = state.header
     if (state.source.kind != SourceKind.DEVICE) {
-        ConfigurationTopBar(state, location, actions)
+        ConfigurationTopBar(state, showActions, actions)
         return
     }
     SettingsTopBar(
         state = state,
-        location = location,
+        showActions = showActions,
         actions = actions,
         title = { CmpText(text = stringResource(Strings.string.settings_editor_title_screen)) },
         subtitle = header?.let { device ->
@@ -249,15 +282,11 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
 }
 
 @Composable
-private fun ConfigurationTopBar(
-    state: DeviceSettingsState,
-    location: SettingsLocation,
-    actions: DeviceSettingsActions,
-) {
+private fun ConfigurationTopBar(state: DeviceSettingsState, showActions: Boolean, actions: DeviceSettingsActions) {
     val source = state.source
     SettingsTopBar(
         state = state,
-        location = location,
+        showActions = showActions,
         actions = actions,
         title = {
             CmpText(
@@ -294,7 +323,7 @@ private fun ConfigurationTopBar(
 @Composable
 private fun SettingsTopBar(
     state: DeviceSettingsState,
-    location: SettingsLocation,
+    showActions: Boolean,
     actions: DeviceSettingsActions,
     title: @Composable () -> Unit,
     subtitle: (@Composable () -> Unit)?,
@@ -310,7 +339,7 @@ private fun SettingsTopBar(
             )
         },
         actions = {
-            if (!location.isSearch && state.menu is LCEState.Content) {
+            if (showActions) {
                 CmpIconButton(
                     onClick = actions.onSearch,
                     modifier = Modifier.testTag(SettingsTestTags.SEARCH_OPEN),

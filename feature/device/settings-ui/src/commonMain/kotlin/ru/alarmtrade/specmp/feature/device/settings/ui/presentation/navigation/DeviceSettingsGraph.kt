@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +38,6 @@ import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarDuration
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
@@ -63,6 +61,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsEditorOptions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsPage
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.firstSectionId
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
@@ -369,10 +368,12 @@ private fun SettingsWithNav(
             ),
             entryProvider = entryProvider<NavKey> {
                 entry<SettingsSectionRoute> { key ->
-                    EntryBackground { SectionEntry(root, marks, key.sectionId, layout, rowActions) }
+                    SettingsPage(state, sectionLocation(root, key.sectionId), layout, actions) {
+                        SectionEntry(root, marks, key.sectionId, layout, rowActions)
+                    }
                 }
                 entry<SettingsSearchRoute> { _ ->
-                    EntryBackground {
+                    SettingsPage(state, SearchLocation, layout, actions) {
                         SearchPane(
                             query = state.searchQuery,
                             hits = state.searchHits,
@@ -388,15 +389,6 @@ private fun SettingsWithNav(
     }
 }
 
-/**
- * Непрозрачный фон записи: на переходе NavDisplay новая запись едет поверх старой, и без фона строки старой
- * просвечивают сквозь новую.
- */
-@Composable
-private fun EntryBackground(content: @Composable () -> Unit) {
-    CmpBox(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) { content() }
-}
-
 @Composable
 internal fun SectionEntry(
     root: SettingsSection?,
@@ -410,6 +402,14 @@ internal fun SectionEntry(
     val id = sectionId ?: firstSectionId(root).takeIf { layout.isWide }
     val section = id?.let { root.findNode(it) as? SettingsSection } ?: root
     SectionPane(section = section, marks = marks, wide = layout.isWide, actions = actions)
+}
+
+private val SearchLocation = SettingsLocation(sectionPath = emptyList(), isSearch = true)
+
+/** Своя локация у каждой записи: уходящая при pop запись уже не в back stack, но рисует свои панель и крошки. */
+private fun sectionLocation(root: SettingsSection?, sectionId: Int?): SettingsLocation {
+    val path = sectionId?.let { id -> root?.pathTo(id).orEmpty().map { it.id } + id }.orEmpty()
+    return SettingsLocation(sectionPath = path, isSearch = false)
 }
 
 private fun NavBackStack<NavKey>.location(): SettingsLocation = SettingsLocation(
