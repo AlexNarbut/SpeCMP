@@ -38,8 +38,9 @@ specmp:
   ViewModelMutableProperty:
     active: true
     excludes: ['**/core/ui/**/navigation/ViewModelScope.kt']
+  # Диспетчер выбирает вызывающий (VM/точка входа); исключения — класс со своим CoroutineScope, withContext(NonCancellable).
   RepositoryWithContext:
-    active: false
+    active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
   # Не оборачивать в safeRun/safeResponseRun то, что уже возвращает Response; требует type resolution.
   RedundantSafeRun:

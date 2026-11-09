@@ -233,7 +233,10 @@ internal class DeviceSettingsViewModel(
     /** Ширина колонки дерева изменена перетаскиванием (по окончании) — запоминается для следующих входов. */
     fun onTreeWidthChange(widthDp: Int) {
         reduce { copy(treeWidthDp = widthDp) }
-        intent { preferences.setTreeWidthDp(widthDp).onError { logger.w(it) { "Tree width was not saved" } } }
+        intent {
+            withContext(dispatchers.io) { preferences.setTreeWidthDp(widthDp) }
+                .onError { logger.w(it) { "Tree width was not saved" } }
+        }
     }
 
     fun onSearchQueryChange(query: String) {

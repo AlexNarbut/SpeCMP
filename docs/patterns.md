@@ -97,16 +97,23 @@ val state = _state
 
 | Диспетчер | Назначение |
 |-----------|-----------|
-| `dispatchers.io` | Сеть, БД, файловый I/O — во ViewModel вокруг вызова repository |
+| `dispatchers.io` | SDK, сеть, `Settings`, файловый I/O — **в месте вызова** (обычно VM) вокруг вызова репозитория |
 | `dispatchers.default` | Маппинг, комбинация, CPU-работа — в `flowOn()`, `withContext()` |
 | `dispatchers.main` | UI-обновления (обычно не нужен явно — `viewModelScope` уже на Main) |
 
-**Где переключать контекст.** Диспетчер переключаем **в месте вызова** — обычно во ViewModel:
-`withContext(dispatchers.io) { repository.foo() }`. Репозитории **не** оборачивают свои методы
-в `withContext` — это прячет переключение от вызывающего кода. Единственное исключение —
-`AppDispatchers` внутри менеджера/репозитория допустим, когда у него есть собственная,
-не зависимая от UI фоновая логика (пуллинг, периодическая синхронизация): такая работа живёт
-в доменном объекте и сама владеет своим диспетчером.
+**Где переключать контекст.** Диспетчер выбирает **вызывающая сторона** — ViewModel или точка входа
+(platform-делегат, обработчик файла, `*Entry`): `withContext(dispatchers.io) { repository.foo() }`, у потока —
+`.flowOn(dispatchers.io)` после `repository.foo()`. Репозитории и `*DataSource` **не** оборачивают свои методы
+в `withContext` — это прячет переключение от вызывающего; suspend-метод — голый `safeRun { }`/`safeResponseRun { }`
+(detekt `RepositoryWithContext`: классы `*Repository`, в т.ч. `Specialist*Repository`, `*RepositoryImpl`,
+`*DataSource`). Вызов репозитория из VM без `withContext`/`flowOn` — ошибка, даже если метод «быстрый»: внутри SDK,
+`Settings` (`commit()` на Android) или файл.
+
+Исключение — объект, который **сам хранит состояние и сам запускает фоновую работу в собственном `CoroutineScope`**
+(сессии, контроллеры с app-scope: `DeviceSession`, `DeviceSettingsSessionControllerImpl`): он переключает диспетчер
+внутри, вызывающий его вызов **не** оборачивает. Правило распознаёт такой класс структурно — свойство, параметр
+конструктора или супертип `CoroutineScope`; `@Suppress` не нужен. `withContext(NonCancellable)` (suspend-уборка
+в `finally` после отмены) — не выбор диспетчера и разрешён везде.
 
 **`withContext` внутри `flow {}` vs `flowOn`.** Внутри `flow {}` `withContext` можно — для вычисления
 значения (`val recent = withContext(dispatchers.io) { models.recent() }`, затем `emit(recent)`).
@@ -665,7 +672,7 @@ internal class AppSettingsViewModel(
 
 Параметры конструктора VM (и аргументы их дженериков) — только из разрешающего списка (Konsist
 `view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
-(аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (до переноса main-safety в репозитории),
+(аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
 `AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`;
 Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data, типы SDK, `Flow`, `CoroutineScope`,
 функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.

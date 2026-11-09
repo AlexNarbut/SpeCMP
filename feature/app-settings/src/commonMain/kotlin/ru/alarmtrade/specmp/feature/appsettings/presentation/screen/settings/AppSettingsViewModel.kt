@@ -40,10 +40,13 @@ internal class AppSettingsViewModel(
 
     fun onConfirm() {
         val locale = currentState.selected
-        localeStore.save(locale)
-        // Android перезапускает процесс (сюда не вернёмся); iOS/desktop — no-op, язык применится со следующего запуска.
-        if (!restarter.restart()) {
-            reduce { copy(current = locale, dialog = AppSettingsDialog.RESTART_MANUALLY) }
+        intent {
+            withContext(dispatchers.io) { localeStore.save(locale) }
+            // Android перезапускает процесс (сюда не вернёмся); iOS/desktop — no-op,
+            // язык применится со следующего запуска.
+            if (!restarter.restart()) {
+                reduce { copy(current = locale, dialog = AppSettingsDialog.RESTART_MANUALLY) }
+            }
         }
     }
 

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master
 
 import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -290,7 +291,7 @@ class FastMountViewModel(
     }
 
     private suspend fun collectSteps() {
-        repository.steps().collect { response ->
+        repository.steps().flowOn(dispatchers.io).collect { response ->
             when (response) {
                 is Response.Success -> onStep(response.value)
                 is Response.Error -> logger.w(response.exception) { "Fast mount state error" }
@@ -477,7 +478,7 @@ class FastMountViewModel(
     // region Проверка системы
 
     private suspend fun collectQuestions() {
-        repository.questions().collect { response ->
+        repository.questions().flowOn(dispatchers.io).collect { response ->
             when (response) {
                 is Response.Success -> onQuestions(response.value)
                 is Response.Error -> logger.w(response.exception) { "Questions error" }

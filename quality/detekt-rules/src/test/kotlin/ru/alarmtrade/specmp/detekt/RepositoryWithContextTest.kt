@@ -11,17 +11,17 @@ class RepositoryWithContextTest {
     @Test
     fun `reports withContext in repositories and data sources, including nested code`() {
         val code = """
-            internal class SleepRepositoryImpl(private val dispatchers: AppDispatchers) : SleepRepository {
+            internal class SpecialistAuthRepository(private val dispatchers: AppDispatchers) : AuthRepository {
                 override suspend fun save(): Response<Unit> = safeRun { withContext(dispatchers.io) { write() } }
                 private val reader = object : Reader {
                     override suspend fun read() = withContext(dispatchers.io) { 1 }
                 }
             }
-            class EntitlementRepository(private val dispatchers: AppDispatchers) {
+            class EntitlementRepositoryImpl(private val dispatchers: AppDispatchers) {
                 suspend fun refresh() = withContext(dispatchers.io) { }
             }
-            internal class SleepRemoteDataSource(private val dispatchers: AppDispatchers) {
-                suspend fun load() = withContext(dispatchers.io) { }
+            internal class CatalogRemoteDataSource(private val dispatchers: AppDispatchers) {
+                suspend fun load() = withContext(NonCancellable + dispatchers.io) { }
             }
         """.trimIndent()
 
@@ -38,6 +38,40 @@ class RepositoryWithContextTest {
                 suspend operator fun invoke() = withContext(dispatchers.default) { }
             }
             suspend fun entryPoint() = withContext(dispatchers.io) { }
+        """.trimIndent()
+
+        assertEquals(0, rule.lint(code).size)
+    }
+
+    @Test
+    fun `does not report repositories that own a coroutine scope`() {
+        val code = """
+            internal class SpecialistSessionRepository(
+                private val appScope: CoroutineScope,
+                private val dispatchers: AppDispatchers,
+            ) {
+                fun discard() { appScope.launch { withContext(dispatchers.io) { } } }
+            }
+            internal class PollingDataSource(private val dispatchers: AppDispatchers) {
+                private val scope: kotlinx.coroutines.CoroutineScope = CoroutineScope(dispatchers.io)
+                suspend fun refresh() = withContext(dispatchers.io) { }
+            }
+            internal class ScopedRepository(dispatchers: AppDispatchers) : CoroutineScope by MainScope() {
+                suspend fun refresh() = withContext(dispatchers.io) { }
+            }
+        """.trimIndent()
+
+        assertEquals(0, rule.lint(code).size)
+    }
+
+    @Test
+    fun `does not report NonCancellable cleanup`() {
+        val code = """
+            internal class SpecialistDeviceStateRepository {
+                fun states() = flow {
+                    try { emit(1) } finally { withContext(NonCancellable) { stop() } }
+                }
+            }
         """.trimIndent()
 
         assertEquals(0, rule.lint(code).size)

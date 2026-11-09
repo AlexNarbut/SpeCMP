@@ -268,7 +268,8 @@ ViewModel через несколько composable, эффекты читают 
 временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel (`ViewModel*`,
 `SafeRunInViewModel`) включены без исключений для наследников (`ViewModelContractNames` пропускает собственные
 параметры типа промежуточной базы `BaseDeviceViewModel`). `RawFlowFromRepository` (публичный поток реализации
-`*Repository` без `Response`) включён; остальные правила `Response`, данных и времени перенесены, но выключены
+`*Repository` без `Response`) и `RepositoryWithContext` (исключения структурные: класс со свойством/параметром/супертипом `CoroutineScope` и
+`withContext(NonCancellable)` — без `@Suppress`) включены; остальные правила `Response`, данных и времени перенесены, но выключены
 (`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
@@ -315,7 +316,7 @@ ViewModel через несколько composable, эффекты читают 
 | `view-model` | ViewModel наследует `BaseViewModel` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — пакет `presentation` |
 | `view-model-owns-no-flows` | у наследника `BaseViewModel` нет своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`sideEffectFlow`/`mutableStateOf` |
 | `repository-contract` | члены интерфейсов `*Repository` и интерфейсов пакета `domain/repository`: `suspend` → `Response<…>`, `Flow`/`StateFlow`/`SharedFlow` → `…<Response<…>>`; синхронных функций и свойств-не-потоков нет |
-| `view-model-dependencies` | параметры конструктора VM — domain/presentation фич, `AppDispatchers` (до переноса main-safety), `AppRestarter`, `AppVersionProvider`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `TimeSource`, `Logger`, типы Kotlin; без функциональных типов и `CoroutineScope` |
+| `view-model-dependencies` | параметры конструктора VM — domain/presentation фич, `AppDispatchers` (диспетчер выбирает VM — [`patterns.md`](patterns.md), «Диспетчеры»), `AppRestarter`, `AppVersionProvider`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `TimeSource`, `Logger`, типы Kotlin; без функциональных типов и `CoroutineScope` |
 | `view-model-constructor` | у наследника `BaseViewModel` не больше 12 параметров первичного конструктора |
 | `no-service-locator` | Koin как сервис-локатор — `org.koin.core.component.*` (`KoinComponent`, `inject`, `get`), `org.koin.core.context.*` (`GlobalContext`, `startKoin`, `loadKoinModules`), `org.koin.mp.KoinPlatformTools`/`KoinPlatform`, `org.koin.java.KoinJavaComponent`, `org.koin.compose.getKoin`, `org.koin.core.Koin`, `org.koin.android.ext.android.*` — импортом (включая алиас) или полным именем — только пакеты `..di..`, composition roots и обёртки (`composeApp`, `flasherApp`, `androidApp`, `desktopApp`, `flasherAndroidApp`, `flasherDesktopApp`) и файлы с Android-компонентом, который создаёт система (`Activity`/`Application`/`Service`/`BroadcastReceiver`/`Worker`/`Initializer`…). Нарушение — декларация верхнего уровня (подавление — `@Suppress` на ней), импорт со звёздочкой и неиспользованный импорт — сам импорт. `koinInject` в composable — не это правило (этап 4) |
 
@@ -383,7 +384,7 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | Раскладка и имена: реализации репозиториев в `data/repository`, интерфейсы в `domain`, `*DataSource` только у репозиториев, нет `*Helper`/`*Utils` | Konsist `layer-placement`, `repository-in-domain`, `data-source-consumers`, `forbidden-suffix` | ✅ |
 | SDK AlarmTrade — только data/di фич и профильные `core/*`; `@Serializable` — data/navigation; модели `domain/model` неизменяемы | Konsist `sdk-confinement`, `serializable-placement`, `domain-model-purity` | ✅ |
 | Члены репозиториев (интерфейсы `*Repository` и все интерфейсы `domain/repository`): `suspend` → `Response<T>`, потоки → `Flow`/`StateFlow`/`SharedFlow<Response<T>>`, иных членов нет; публичные потоки реализаций — тоже `Response` | Konsist `repository-contract`, detekt `RawFlowFromRepository` | ✅ |
-| Репозиторий сам main-safe | detekt `RepositoryWithContext` | ⏳ этап 3 |
+| Диспетчер выбирает вызывающий (VM/точка входа): в `*Repository`/`*DataSource` нет `withContext`, кроме класса со своим `CoroutineScope` и `withContext(NonCancellable)` | detekt `RepositoryWithContext` | ✅ |
 | Гигиена `Response`: не выбрасывать, не превращать в исключение, не оборачивать повторно; без `throw` в репозиториях и use case | detekt `ResponseIgnored`, `ResponseGetOrThrow`, `RedundantSafeRun`, `ThrowInRepository` | ✅ |
 | «Сейчас» — из внедрённых часов; `Settings()` — только фабрика `core/common` | detekt `DirectClockUsage`, `SettingsInstantiation` | ⏳ этап 3 |
 | Composable не достаёт зависимости из Koin (`koinInject`) | Konsist `composable-injection` | ⏳ этап 4 |
