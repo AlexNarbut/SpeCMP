@@ -6,6 +6,7 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AuthCloseable
+import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistProgramModeRepository
@@ -43,10 +44,15 @@ val deviceInteractionModule = module {
     factory { ProgramModeEntry(get(), get(), get()) }
 }
 
-// Реализация internal, а VM-тестам других модулей нужна настоящая сессия поверх фейковых репозиториев.
+// Реализация internal, а VM-тестам других модулей нужна настоящая сессия поверх фейковых репозиториев;
+// parentContext — только для тестов (привязка скоупа к backgroundScope).
 fun createDeviceSession(
     sessionRepository: DeviceSessionRepository,
     connectionRepository: DeviceConnectionRepository,
     dispatchers: AppDispatchers,
     parentContext: CoroutineContext = EmptyCoroutineContext,
-): DeviceSession = DeviceSessionImpl(sessionRepository, connectionRepository, dispatchers, parentContext)
+): DeviceSession = DeviceSessionImpl(
+    sessionRepository,
+    connectionRepository,
+    serviceScope(dispatchers.io, logTag = "DeviceSession", parent = parentContext),
+)

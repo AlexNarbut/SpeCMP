@@ -51,4 +51,10 @@ internal class CounterViewModel(
     fun send(message: String) {
         postSideEffect(CounterEffect(message))
     }
+
+    // Стресс-тест зовёт напрямую с потоков Dispatchers.Default, мимо viewModelScope (Main).
+    @Suppress("ViewModelPublicApi")
+    suspend fun proceedSkippingAnother(block: suspend () -> Unit) {
+        executeWithProceedLock(needSkipAnother = true, block = block)
+    }
 }

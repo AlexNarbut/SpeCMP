@@ -29,6 +29,16 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("ResponseIgnored") to ::ResponseIgnored,
             RuleName("DirectClockUsage") to ::DirectClockUsage,
             RuleName("ThrowInRepository") to ::ThrowInRepository,
+            RuleName("UpdateLambdaSideEffects") to ::UpdateLambdaSideEffects,
+            RuleName("CatchSwallowsCancellation") to ::CatchSwallowsCancellation,
+            RuleName("MutexIsLockedCheck") to ::MutexIsLockedCheck,
+            RuleName("NestedSameMutexLock") to ::NestedSameMutexLock,
+            RuleName("SuspendInsideSynchronized") to ::SuspendInsideSynchronized,
+            RuleName("SharedMutableStateInSingleton") to ::SharedMutableStateInSingleton,
+            RuleName("UnmanagedCoroutineScope") to ::UnmanagedCoroutineScope,
+            RuleName("SharingInsideFunction") to ::SharingInsideFunction,
+            RuleName("UnawaitedAsync") to ::UnawaitedAsync,
+            RuleName("NestedCollect") to ::NestedCollect,
         ),
     )
 

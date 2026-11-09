@@ -10,6 +10,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
@@ -147,8 +149,9 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
         reloadRequests.update { it + 1 }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun <T> bind(flow: Flow<T>, onValue: (T) -> Unit): Job = safeLaunch {
-        repeatOnSubscription { reloadRequests.collectLatest { flow.collect { value -> onValue(value) } } }
+        repeatOnSubscription { reloadRequests.flatMapLatest { flow }.collect { value -> onValue(value) } }
     }
 
     /** Отменяет [block], когда у [state] не остаётся подписчиков, и запускает заново при следующей подписке. */

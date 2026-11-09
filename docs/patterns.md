@@ -93,6 +93,41 @@ val state = _state
     .stateIn(scope, ...)           // лишнее
 ```
 
+
+### Конкурентность
+
+Пакет правил «гонки и корутины» (detekt, набор `specmp`; production-код, тесты вне охвата):
+
+- **Scope сервиса создаёт DI** — `serviceScope(dispatcher, logTag)` (`core.common.coroutines`: `SupervisorJob()` +
+  диспетчер + обработчик, логирующий необработанное исключение) передаётся в конструктор (`DeviceSessionImpl(…, scope)`,
+  `appScope` в `commonModule`); scope живёт столько же, сколько синглтон Koin, тест передаёт свой
+  (`serviceScope(dispatcher, parent = backgroundScope.coroutineContext)`). `CoroutineScope(…)` вне пакета `di` — только
+  короткоживущий с явным `scope.cancel()` по завершении (ресивер, мост: scope на одно действие + `cancel()` в
+  `finally`); контекст всегда с `SupervisorJob()` и обработчиком — detekt `UnmanagedCoroutineScope`. `GlobalScope` —
+  нет (detekt `GlobalCoroutineUsage`).
+- **Нет голых `var` и изменяемых коллекций в разделяемых объектах**: у класса со своим `CoroutineScope` и у сервисов
+  data-слоя (`..data..`, `*Repository`/`*Coordinator`/`*Controller`/`*Session`/`*Impl`) состояние — `MutableStateFlow`
+  + `update { }`/`compareAndSet`; поле, которое читают и пишут строго под `Mutex`, — `@Suppress` с причиной (detekt
+  `SharedMutableStateInSingleton`). Локальные `var` в функциях не в счёт.
+- **Лямбда `update`/`getAndUpdate`/`updateAndGet` — чистая функция**: при CAS-конфликте она выполняется повторно. Без
+  suspend-вызовов, вызовов чужих репозиториев/сервисов, записи в хранилище, `emit`/`tryEmit`/`postSideEffect`,
+  `launch`; значение считается в `update`, эффект — до или после (detekt `UpdateLambdaSideEffects`).
+- **`Mutex` нереентерабелен и проверяется только атомарно**: `withLock` того же мьютекса внутри `withLock` (в т. ч.
+  через свой метод) — deadlock (detekt `NestedSameMutexLock`); «уже занято → выйти» — `tryLock()`, не `isLocked`
+  (detekt `MutexIsLockedCheck`); suspend-вызов под блокирующей блокировкой потока (`synchronized`, `Lock.lock()`…
+  `unlock()`) запрещён (detekt `SuspendInsideSynchronized`).
+- **Отмену не глотать**: широкий `catch (Throwable/Exception)` в корутине вокруг suspend-вызова — только с пробросом
+  `CancellationException` (отдельный `catch` выше, `if (e is CancellationException) throw e`, `ensureActive()`);
+  обычно — `safeRun { }` (detekt `CatchSwallowsCancellation`, стандартный `SuspendFunSwallowedCancellation`).
+- **Горячий поток — один на объект**: `shareIn`/`stateIn` только в инициализаторе свойства, не в функции/геттере
+  (detekt `SharingInsideFunction`); `async { }` всегда дожидаются (`await`/`awaitAll`), «огонь и забудь» — `launch`
+  (detekt `UnawaitedAsync`); потоки комбинируются `flatMapLatest`/`combine`, без `collect` внутри `collect` (detekt
+  `NestedCollect`).
+- **Стресс-тест на гонку**: у каждого start-once сервиса и места с `Mutex`/`tryLock` — тест «32 параллельных вызова
+  на `Dispatchers.Default` → эффект ровно один раз / без потерь / без пересечения» (`AppServicesStarterTest`,
+  `DeviceSessionImplTest` — `start()` и `sessionMutex`, `BaseViewModelTest` — `executeWithProceedLock`,
+  `RecentListTest`).
+
 ## Диспетчеры (AppDispatchers)
 
 `AppDispatchers` инжектится через Koin и используется **вместо** прямых обращений к `Dispatchers.*`.
@@ -112,8 +147,8 @@ val state = _state
 `Settings` (`commit()` на Android) или файл.
 
 Исключение — объект, который **сам хранит состояние и сам запускает фоновую работу в собственном `CoroutineScope`**
-(сессии, контроллеры с app-scope: `DeviceSessionImpl`, `DeviceSettingsSessionControllerImpl`): он переключает диспетчер
-внутри, вызывающий его вызов **не** оборачивает. Правило распознаёт такой класс структурно — свойство, параметр
+(сессии, контроллеры с app-scope: `DeviceSessionImpl`, `DeviceSettingsSessionControllerImpl`; scope приходит из DI —
+«Конкурентность»): он переключает диспетчер внутри, вызывающий его вызов **не** оборачивает. Правило распознаёт такой класс структурно — свойство, параметр
 конструктора или супертип `CoroutineScope`; `@Suppress` не нужен. `withContext(NonCancellable)` (suspend-уборка
 в `finally` после отмены) — не выбор диспетчера и разрешён везде.
 

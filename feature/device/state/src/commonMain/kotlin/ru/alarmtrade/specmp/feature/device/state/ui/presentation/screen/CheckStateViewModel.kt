@@ -6,12 +6,13 @@ import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -72,12 +73,16 @@ class CheckStateViewModel(
     }
 
     private suspend fun poll() {
-        connectedDevice.collectLatest { device ->
-            if (device != null) {
-                reduce { copy(lastSnapshot = timeSource.markNow()) }
-                repository.states().flowOn(dispatchers.io).collect(::onResponse)
+        connectedDevice
+            .flatMapLatest { device ->
+                if (device == null) {
+                    emptyFlow()
+                } else {
+                    repository.states().flowOn(dispatchers.io)
+                        .onStart { reduce { copy(lastSnapshot = timeSource.markNow()) } }
+                }
             }
-        }
+            .collect(::onResponse)
     }
 
     private fun staleSecondsSince(mark: TimeMark): Flow<Int?> = flow {

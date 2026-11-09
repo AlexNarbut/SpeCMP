@@ -270,12 +270,34 @@ ViewModel через несколько composable, эффекты читают 
 параметры типа промежуточной базы `BaseDeviceViewModel`). `RawFlowFromRepository` (публичный поток реализации
 `*Repository` без `Response`) и `RepositoryWithContext` (исключения структурные: класс со свойством/параметром/супертипом `CoroutineScope` и
 `withContext(NonCancellable)` — без `@Suppress`) включены, как и все остальные правила набора (`Response`, данные, время,
-`SettingsInstantiation`). Подавление своего
+`SettingsInstantiation`).
+
+Пакет «гонки и корутины» ([`patterns.md`](patterns.md), «Конкурентность»; тесты вне охвата):
+
+| Правило | Что ловит |
+|---|---|
+| `UpdateLambdaSideEffects` | в лямбде `MutableStateFlow.update/getAndUpdate/updateAndGet` (через `inline`-лямбды): suspend-вызов, вызов чужого `*Repository`/`*DataSource`/`*Coordinator`/`*Controller`/`*Scheduler`/`*Service`/`*Api`/`*Tracker`, запись `put…/set…/remove…/save…/write…` у `*Settings`/`*Store`/`*Storage`/`*Preferences`/`*Cache`, `emit/tryEmit/send/trySend/postSideEffect`, `launch/async/launchIn`; метод своего класса — на один уровень |
+| `CatchSwallowsCancellation` | `catch (Throwable/Exception/RuntimeException/IllegalStateException)` в корутине, `try` которого содержит suspend-вызов, без проброса `CancellationException` |
+| `MutexIsLockedCheck` | чтение `Mutex.isLocked` |
+| `NestedSameMutexLock` | `m.withLock` внутри `m.withLock` в одной функции (в т. ч. через свой метод); внутри `launch`/`async` — не считается |
+| `SuspendInsideSynchronized` | suspend-вызов между `lock()` и `unlock()` (`java.util.concurrent.locks.Lock`), в `synchronized { }`/`@Synchronized` |
+| `SharedMutableStateInSingleton` | `var` и `val` с изменяемой коллекцией у класса со своим `CoroutineScope` или сервиса data-слоя (`..data..`, `*Repository`/`*Coordinator`/`*Controller`/`*Session`/`*Impl`) |
+| `UnmanagedCoroutineScope` | `CoroutineScope(…)` вне пакета `di` без `<holder>.cancel()`; контекст без `SupervisorJob()` или обработчика — в том числе в `di`; фабрика `core/common/coroutines/ServiceScope.kt` исключена |
+| `SharingInsideFunction` | `.shareIn`/`.stateIn` в теле функции или геттера |
+| `UnawaitedAsync` | `async { }` оператором или в неиспользуемой переменной |
+| `NestedCollect` | `collect`/`collectLatest` внутри лямбды `collect`/`collectLatest` |
+
+`UpdateLambdaSideEffects`, `CatchSwallowsCancellation`, `MutexIsLockedCheck`, `SuspendInsideSynchronized`,
+`UnawaitedAsync` требуют type resolution (в `iosMain` молчат), остальные — по именам. Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
 Осознанно выключено или смягчено: `LongParameterList` (наборы колбэков `*Actions` длинные по построению; порог
 конструктора ViewModel — Konsist `view-model-constructor`), `TooManyFunctions`, `NestedBlockDepth`, `LargeClass`,
-`ReturnCount`, `InjectDispatcher`, `AbstractClassCanBeInterface`, `AbstractClassCanBeConcreteClass`, `UseOrEmpty`.
+`ReturnCount`, `AbstractClassCanBeInterface`, `AbstractClassCanBeConcreteClass`, `UseOrEmpty`.
+
+Корутины (раздел `coroutines`): `GlobalCoroutineUsage` и `SuspendFunSwallowedCancellation` включены (в detekt 2.0
+выключены по умолчанию), `InjectDispatcher` включён везде, кроме самого `AppDispatchers.kt` (диспетчеры — из DI);
+`SleepInsteadOfDelay`, `RedundantSuspendModifier`, `SuspendFunWithFlowReturnType` включены по умолчанию.
 
 `TooGenericExceptionCaught` не проверяется на границах, где по нашим правилам ловится всё и нормализуется в
 `Response.Error`: `core/network` и safe*-хелперы `core/common/.../ResponseExt.kt` (`safeRun`, `safeResponseRun`,
@@ -407,6 +429,13 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | Мапперы `toDomain*` — `internal` в `data/mapper` | Konsist `mapper-placement` | ✅ |
 | `*UseCase` — в `domain/usecase`, оркестрация ≥ 2 зависимостей, только `operator fun invoke` с `Response` | Konsist `use-case-package`, `use-case-contract` | ✅ |
 | Платформенные возможности (`core.permissions`, порты `presentation/platform`, `core.lifecycle`) — где начинается вызов | Konsist `capability-usage`, `foreground-usage` | ✅ |
+| Лямбда `update`/`getAndUpdate`/`updateAndGet` чистая (без suspend, сервисов, записи в хранилище, emit, launch) | detekt `UpdateLambdaSideEffects` | ✅ |
+| Широкий `catch` в корутине пробрасывает `CancellationException` | detekt `CatchSwallowsCancellation`, `SuspendFunSwallowedCancellation` | ✅ |
+| `Mutex`: без `isLocked` и без вложенного `withLock` того же мьютекса; без suspend под `lock()`/`synchronized` | detekt `MutexIsLockedCheck`, `NestedSameMutexLock`, `SuspendInsideSynchronized` | ✅ |
+| Нет `var`/изменяемых коллекций в объектах со своим scope и сервисах data-слоя | detekt `SharedMutableStateInSingleton` | ✅ |
+| `CoroutineScope` — из DI (`serviceScope`) или с явным `cancel()`; `SupervisorJob()` + обработчик; без `GlobalScope`; диспетчеры — `AppDispatchers` | detekt `UnmanagedCoroutineScope`, `GlobalCoroutineUsage`, `InjectDispatcher` | ✅ |
+| `shareIn`/`stateIn` — только в инициализаторе свойства; `async` дожидаются; без `collect` в `collect` | detekt `SharingInsideFunction`, `UnawaitedAsync`, `NestedCollect` | ✅ |
+| Start-once сервис и место с `Mutex`/`tryLock` покрыты стресс-тестом «32 параллельных вызова → эффект один раз» | ревью (эталон `DeviceSessionImplTest`) | — |
 | Composable не достаёт зависимости из Koin (`koinInject`) | Konsist `composable-injection` | ⏳ этап 4 |
 
 ---

@@ -5,15 +5,22 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import ru.alarmtrade.specmp.core.common.AppDispatchers
+import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -733,8 +740,7 @@ class DeviceSessionImplTest {
         val session = DeviceSessionImpl(
             FakeDeviceSessionRepository(),
             FakeDeviceConnectionRepository(),
-            AppDispatchers(dispatcher, dispatcher, dispatcher),
-            backgroundScope.coroutineContext,
+            serviceScope(dispatcher, parent = backgroundScope.coroutineContext),
         )
         val reboots = mutableListOf<DeviceReboot?>()
         backgroundScope.launch { session.reboot.collect { reboots += it } }
@@ -772,5 +778,53 @@ class DeviceSessionImplTest {
         val session = testSession(connection = connection)
 
         assertEquals(error, session.closeAndAwait())
+    }
+
+    @Test
+    fun `parallel start launches the reboot publisher once`() = runTest {
+        val scope = serviceScope(Dispatchers.Default, parent = backgroundScope.coroutineContext)
+        val session = DeviceSessionImpl(FakeDeviceSessionRepository(), FakeDeviceConnectionRepository(), scope)
+        val before = scope.coroutineContext.job.children.count()
+
+        withContext(Dispatchers.Default) {
+            repeat(PARALLEL_CALLS) { launch { session.start() } }
+        }
+
+        assertEquals(before + 1, scope.coroutineContext.job.children.count())
+    }
+
+    @Test
+    fun `parallel close and reconnect never overlap under the session mutex`() = runTest {
+        val inFlight = MutableStateFlow(0)
+        val maxInFlight = MutableStateFlow(0)
+        val tracked: suspend () -> Unit = {
+            val current = inFlight.updateAndGet { it + 1 }
+            maxInFlight.update { maxOf(it, current) }
+            delay(1)
+            inFlight.update { it - 1 }
+        }
+        val repository = FakeDeviceSessionRepository().apply { onReconnect = tracked }
+        val connection = FakeDeviceConnectionRepository().apply { onClose = tracked }
+        val session = DeviceSessionImpl(
+            repository,
+            connection,
+            serviceScope(Dispatchers.Default, parent = backgroundScope.coroutineContext),
+        )
+
+        withContext(Dispatchers.Default) {
+            repeat(PARALLEL_CALLS) {
+                launch {
+                    session.attach(ConnectionTransport.BLE)
+                    session.reconnectNow()
+                }
+                launch { session.closeAndAwait() }
+            }
+        }
+
+        assertEquals(1, maxInFlight.value)
+    }
+
+    private companion object {
+        const val PARALLEL_CALLS = 32
     }
 }

@@ -6,16 +6,19 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -24,6 +27,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.Response
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -301,10 +305,35 @@ class BaseViewModelTest {
         assertEquals(listOf("first done", "second cancelled"), log)
     }
 
+    @Test
+    fun `executeWithProceedLock skipping another runs the block once under parallel calls`() = runTest {
+        val vm = CounterViewModel()
+        val gate = CompletableDeferred<Unit>()
+        val runs = MutableStateFlow(0)
+        val finished = MutableStateFlow(0)
+
+        withContext(Dispatchers.Default) {
+            repeat(PARALLEL_CALLS) {
+                launch {
+                    vm.proceedSkippingAnother {
+                        runs.update { it + 1 }
+                        gate.await()
+                    }
+                    finished.update { it + 1 }
+                }
+            }
+            finished.first { it == PARALLEL_CALLS - 1 }
+            gate.complete(Unit)
+        }
+
+        assertEquals(1, runs.value)
+    }
+
     private fun TestScope.subscribe(vm: CounterViewModel): Job =
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
 
     private companion object {
+        const val PARALLEL_CALLS = 32
         val STOP_TIMEOUT_PASSED = 5.seconds + 1.milliseconds
     }
 }

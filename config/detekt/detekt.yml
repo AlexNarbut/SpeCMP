@@ -74,6 +74,47 @@ specmp:
   ThrowInRepository:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Пакет «гонки и корутины» (docs/patterns.md, «Конкурентность», «Корутины и Flow»); тесты вне охвата.
+  # Лямбда update/getAndUpdate/updateAndGet чистая (повторяется при CAS-конфликте): без suspend, репозиториев/сервисов, emit, launch.
+  UpdateLambdaSideEffects:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Широкий catch в корутине пробрасывает CancellationException (обычно — safeRun).
+  CatchSwallowsCancellation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Mutex.isLocked — check-then-act; ровно один в полёте — tryLock(), очередь — withLock.
+  MutexIsLockedCheck:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Mutex нереентерабелен: withLock того же мьютекса внутри withLock — deadlock.
+  NestedSameMutexLock:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Suspend-вызов под synchronized/Lock/@Synchronized; вокруг suspend-работы — Mutex.withLock.
+  SuspendInsideSynchronized:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # var и изменяемые коллекции в объектах со своим CoroutineScope и сервисах data-слоя; поле под Mutex — @Suppress с причиной.
+  SharedMutableStateInSingleton:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # CoroutineScope(…) — в DI (serviceScope) или с явным cancel(); контекст — SupervisorJob() + обработчик исключений.
+  UnmanagedCoroutineScope:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/core/common/**/coroutines/ServiceScope.kt']
+  # shareIn/stateIn — только в инициализаторе свойства, не в функции.
+  SharingInsideFunction:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Deferred из async { } дожидается await/awaitAll; без результата — launch.
+  UnawaitedAsync:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Без collect внутри collect: потоки комбинируются flatMapLatest/combine.
+  NestedCollect:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
 
 complexity:
   LongMethod:
@@ -104,8 +145,18 @@ exceptions:
       - 'ParseException'
 
 coroutines:
+  # Фоновая работа — в своём scope (serviceScope из DI), не в GlobalScope (docs/patterns.md, «Конкурентность»).
+  # В detekt 2.0 правило выключено по умолчанию.
+  GlobalCoroutineUsage:
+    active: true
+  # runCatching/suspend-вызов в лямбде runCatching глотает CancellationException (в detekt 2.0 выключено по умолчанию);
+  # SleepInsteadOfDelay, RedundantSuspendModifier, SuspendFunWithFlowReturnType включены по умолчанию.
+  SuspendFunSwallowedCancellation:
+    active: true
+  # Диспетчеры приходят через AppDispatchers (DI); дефолты Dispatchers.IO/Default живут только в нём.
   InjectDispatcher:
-    active: false
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/core/common/**/AppDispatchers.kt']
 
 naming:
   FunctionNaming:

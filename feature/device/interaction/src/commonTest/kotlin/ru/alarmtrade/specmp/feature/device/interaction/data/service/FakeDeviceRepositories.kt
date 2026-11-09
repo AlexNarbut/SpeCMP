@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -43,8 +43,7 @@ internal fun TestScope.testSession(
     return DeviceSessionImpl(
         repository,
         connection,
-        AppDispatchers(dispatcher, dispatcher, dispatcher),
-        backgroundScope.coroutineContext,
+        serviceScope(dispatcher, parent = backgroundScope.coroutineContext),
     ).also { it.start() }
 }
 
@@ -127,8 +126,12 @@ internal class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLink
     /** Не null — reconnect «висит», пока его не завершат. */
     var reconnectGate: CompletableDeferred<Unit>? = null
 
+    /** Вызывается на каждый reconnect (стресс-тесты: учёт параллельных вызовов). */
+    var onReconnect: suspend () -> Unit = {}
+
     override suspend fun reconnect(): Response<Unit> {
         reconnectCount++
+        onReconnect()
         reconnectGate?.await()
         return Response.Success(Unit)
     }
@@ -165,8 +168,11 @@ internal class FakeDeviceConnectionRepository : DeviceConnectionRepository {
     override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
     var closeResult: Response<Unit> = Response.Success(Unit)
 
+    var onClose: suspend () -> Unit = {}
+
     override suspend fun closeSessions(): Response<Unit> {
         closeCount++
+        onClose()
         return closeResult
     }
 }

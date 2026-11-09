@@ -1,15 +1,10 @@
 package ru.alarmtrade.specmp.feature.device.interaction.data.service
 
 import co.touchlab.kermit.Logger
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.TimeSource
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,7 +24,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.onError
@@ -51,23 +45,15 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 /**
  * Закрытие сессии и переподключение BLE сериализованы [sessionMutex]: закрытие не переплетается с идущим
  * `reconnect()`, а новое подключение (через [closeAndAwait]) не стартует до конца закрытия.
- *
- * @param parentContext родитель скоупа — только для тестов (привязка к `backgroundScope`).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DeviceSessionImpl(
     private val sessionRepository: DeviceSessionRepository,
     private val connectionRepository: DeviceConnectionRepository,
-    dispatchers: AppDispatchers,
-    parentContext: CoroutineContext = EmptyCoroutineContext,
+    private val scope: CoroutineScope,
 ) : DeviceSession {
 
     private val logger = Logger.withTag(LOG_TAG)
-
-    private val scope = CoroutineScope(
-        parentContext + SupervisorJob(parentContext[Job]) + dispatchers.io +
-            CoroutineExceptionHandler { _, throwable -> logger.e(throwable) { "Unhandled session exception" } },
-    )
 
     private val sessionMutex = Mutex()
 

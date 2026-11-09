@@ -58,8 +58,9 @@ suspend inline fun <R> safeFlowRun(noinline block: suspend () -> Flow<Response<R
     block().catch { e ->
         emit(Response.Error(e, e.message))
     }
+} catch (e: CancellationException) {
+    throw e
 } catch (e: Throwable) {
-    if (e is CancellationException) throw e
     Logger.e(e) { "safeFlowRun: ${e.message}" }
     flowOf(Response.Error(e, e.message))
 }
