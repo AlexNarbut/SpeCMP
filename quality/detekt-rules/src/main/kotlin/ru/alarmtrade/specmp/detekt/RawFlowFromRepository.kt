@@ -23,14 +23,14 @@ import org.jetbrains.kotlin.psi.psiUtil.isPrivate
 
 /**
  * Публичная функция/свойство класса, реализующего интерфейс `*Repository`, отдаёт поток без `Response`:
- * `Flow<T>`/`StateFlow<T>`/`SharedFlow<T>`, где `T` — не `Response` (docs/patterns.md, «Контракт результата»).
- * Ловит реализации с любым именем (`FirebaseAuthRepository`, `NoOp…`, декораторы), а не только `*RepositoryImpl`;
+ * `Flow<T>`/`StateFlow<T>`/`SharedFlow<T>`, где `T` — не `Response` (docs/patterns.md, «Контракты репозиториев»).
+ * Ловит реализации с любым именем (`Specialist*Repository`, `Settings*`, декораторы), а не только `*RepositoryImpl`;
  * интерфейсы проверяет Konsist `repository-contract`.
  *
  * Требует type resolution: в задачах detekt без классов правило молчит (как StateFlowValueMutation).
  */
 class RawFlowFromRepository(config: Config) :
-    Rule(config, "Поток репозитория — Flow<Response<T>>: оберните источник в asResponseFlow()/asResponseStateFlow()."),
+    Rule(config, "Поток репозитория — Flow<Response<T>>: значения — Response.Success, ошибка — Response.Error."),
     RequiresAnalysisApi {
 
     override fun visitClassOrObject(classOrObject: KtClassOrObject) {
@@ -47,8 +47,9 @@ class RawFlowFromRepository(config: Config) :
                     Finding(
                         Entity.atName(declaration),
                         "`${declaration.name}` в ${classOrObject.name ?: "репозитории"} отдаёт поток без Response: " +
-                            "оберните источник в asResponseFlow()/asResponseStateFlow() " +
-                            "(docs/patterns.md, «Слой данных → Контракт результата»).",
+                            "значения — Response.Success (SDK — toResponse()), " +
+                            "ошибка потока — catch → Response.Error " +
+                            "(docs/patterns.md, «Контракты репозиториев»).",
                     ),
                 )
             }

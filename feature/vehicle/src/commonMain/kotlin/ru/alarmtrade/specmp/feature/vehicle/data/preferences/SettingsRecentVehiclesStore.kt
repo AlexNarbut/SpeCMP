@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import ru.alarmtrade.specmp.core.common.RecentList
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -32,13 +33,14 @@ class SettingsRecentVehiclesStore(settings: Settings) : RecentVehiclesStore {
         )
     }
 
-    override fun recent(catalog: VehicleCatalog): List<CarSummary> = lists.getValue(catalog).all()
+    override suspend fun recent(catalog: VehicleCatalog): Response<List<CarSummary>> =
+        safeRun { lists.getValue(catalog).all() }
 
-    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): List<CarSummary> =
-        lists.getValue(catalog).push(car)
+    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): Response<List<CarSummary>> =
+        safeRun { lists.getValue(catalog).push(car) }
 
-    override suspend fun remove(catalog: VehicleCatalog, carId: Int): List<CarSummary> =
-        lists.getValue(catalog).remove(carId)
+    override suspend fun remove(catalog: VehicleCatalog, carId: Int): Response<List<CarSummary>> =
+        safeRun { lists.getValue(catalog).remove(carId) }
 
     private fun VehicleCatalog.key() = "recent_${name.lowercase()}"
 

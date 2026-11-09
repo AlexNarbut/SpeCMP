@@ -7,6 +7,8 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessageStatus
@@ -25,20 +27,23 @@ class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOut
     private val mutex = Mutex()
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun load(): List<SupportChatMessage> = mutex.withLock { read() }.map { it.toMessage() }
+    override suspend fun load(): Response<List<SupportChatMessage>> =
+        safeRun { mutex.withLock { read() }.map { it.toMessage() } }
 
-    override suspend fun enqueue(message: SupportChatMessage) {
-        val entry = message.toEntry() ?: return
-        mutex.withLock {
-            val entries = read()
-            val index = entries.indexOfFirst { it.clientId == entry.clientId }
-            write(
-                if (index == -1) entries + entry else entries.toMutableList().apply { set(index, entry) },
-            )
+    override suspend fun enqueue(message: SupportChatMessage): Response<Unit> {
+        val entry = message.toEntry() ?: return Response.Success(Unit)
+        return safeRun {
+            mutex.withLock {
+                val entries = read()
+                val index = entries.indexOfFirst { it.clientId == entry.clientId }
+                write(
+                    if (index == -1) entries + entry else entries.toMutableList().apply { set(index, entry) },
+                )
+            }
         }
     }
 
-    override suspend fun markSent(clientId: String) {
+    override suspend fun markSent(clientId: String): Response<Unit> = safeRun {
         mutex.withLock {
             val entries = read()
             val index = entries.indexOfFirst { it.clientId == clientId }
@@ -52,7 +57,7 @@ class SettingsSupportChatOutbox(private val settings: Settings) : SupportChatOut
         }
     }
 
-    override suspend fun remove(clientId: String) {
+    override suspend fun remove(clientId: String): Response<Unit> = safeRun {
         mutex.withLock {
             val entries = read()
             if (entries.any { it.clientId == clientId }) {

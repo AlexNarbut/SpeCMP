@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.selection.di
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.device.selection.data.repository.SpecialistDeviceScanRepository
+import ru.alarmtrade.specmp.feature.device.selection.data.transport.supportedDeviceTransports
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.ScanDeviceViewModel
 
@@ -30,6 +31,7 @@ val deviceSelectionModule = module {
             get(),
             get(),
             get(),
+            supportedTransports = supportedDeviceTransports(),
             serialEnabled = serialEnabled,
             alarmsOnly = alarmsOnly,
         )

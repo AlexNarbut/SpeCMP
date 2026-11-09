@@ -73,6 +73,7 @@ class ScanDeviceViewModelTest {
         permissions,
         foregroundProvider,
         dispatchers(),
+        scan.transports,
         serialEnabled,
     )
 

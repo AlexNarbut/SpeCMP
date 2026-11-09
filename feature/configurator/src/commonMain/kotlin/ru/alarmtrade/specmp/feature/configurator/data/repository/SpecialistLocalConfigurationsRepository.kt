@@ -30,8 +30,8 @@ class SpecialistLocalConfigurationsRepository(
     private val settings: DeviceSettingsRepository,
 ) : LocalConfigurationsRepository {
 
-    private val _changes = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    override val changes: Flow<Unit> = _changes.asSharedFlow()
+    private val _changes = MutableSharedFlow<Response<Unit>>(extraBufferCapacity = 1)
+    override val changes: Flow<Response<Unit>> = _changes.asSharedFlow()
 
     override suspend fun all(): Response<List<LocalConfiguration>> {
         val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
@@ -70,7 +70,7 @@ class SpecialistLocalConfigurationsRepository(
             }
 
             is Response.Success -> {
-                _changes.tryEmit(Unit)
+                _changes.tryEmit(Response.Success(Unit))
                 Response.Success(target)
             }
         }
@@ -100,7 +100,7 @@ class SpecialistLocalConfigurationsRepository(
     override suspend fun delete(id: Long): Response<Unit> {
         val sdk = interactor.resolveOrNull() ?: return interactorUnavailable()
         return sdk.deleteLocalConfigurationUseCase.execute(LocalConfigurationRequest(id)).toResponse().also {
-            if (it is Response.Success) _changes.tryEmit(Unit)
+            if (it is Response.Success) _changes.tryEmit(Response.Success(Unit))
         }
     }
 

@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareArchivePreferences
@@ -22,7 +24,9 @@ class FirmwareSystemsViewModel(
     private val repository: FirmwareRepository,
     private val preferences: FirmwareArchivePreferences,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel<FirmwareSystemsState, Nothing>(FirmwareSystemsState(order = preferences.systemsOrder())) {
+) : BaseViewModel<FirmwareSystemsState, Nothing>(
+    FirmwareSystemsState(order = preferences.systemsOrder.value.getValueIfSuccess() ?: SystemsOrder.Added),
+) {
 
     override suspend fun onStart() {
         combine(select { systems }, select { query }, select { expanded }, select { order }, ::systemRows)
@@ -56,7 +60,10 @@ class FirmwareSystemsViewModel(
     fun onOrderSelect(order: SystemsOrder) {
         if (currentState.order == order) return
         reduce { copy(order = order) }
-        intent { withContext(dispatchers.io) { preferences.setSystemsOrder(order) } }
+        intent {
+            withContext(dispatchers.io) { preferences.setSystemsOrder(order) }
+                .onError { logger.w(it) { "Systems order was not saved" } }
+        }
     }
 
     /** Нажатие на систему (без поиска): раскрыть / свернуть подсистемы. */

@@ -21,7 +21,6 @@ import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.core.specialist.supportedConnectionTypes
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
-import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
@@ -40,12 +39,6 @@ class SpecialistDeviceScanRepository(
 ) : DeviceScanRepository {
 
     private val connectionTypes: Set<DeviceConnectionType> = supportedConnectionTypes()
-
-    override fun supportedTransports(): Set<DeviceTransport> = buildSet {
-        if (DeviceConnectionType.BLUETOOTH in connectionTypes) add(DeviceTransport.BLE)
-        if (DeviceConnectionType.USB in connectionTypes) add(DeviceTransport.USB)
-        if (DeviceConnectionType.SERIAL in connectionTypes) add(DeviceTransport.SERIAL)
-    }
 
     override fun scanBluetooth(): Flow<Response<List<ScannedDevice.Ble>>> = flow {
         if (DeviceConnectionType.BLUETOOTH !in connectionTypes) {

@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.supportchat.domain.repository
 
 import ru.alarmtrade.specmp.core.common.AuthCloseable
+import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
 
 /**
@@ -22,17 +23,17 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatMessage
  */
 interface SupportChatOutbox : AuthCloseable {
 
-    suspend fun load(): List<SupportChatMessage>
+    suspend fun load(): Response<List<SupportChatMessage>>
 
     /** Добавить или обновить запись (ключ — `message.id`). Только `Pending`/`Failed`. */
-    suspend fun enqueue(message: SupportChatMessage)
+    suspend fun enqueue(message: SupportChatMessage): Response<Unit>
 
     /**
      * SDK принял сообщение, эха ещё нет. Обновляет **только существующую** запись:
      * если эхо успело прийти раньше и запись уже удалена, она не воскреснет.
      */
-    suspend fun markSent(clientId: String)
+    suspend fun markSent(clientId: String): Response<Unit>
 
     /** Сообщение подтверждено серверным эхом или удалено пользователем. */
-    suspend fun remove(clientId: String)
+    suspend fun remove(clientId: String): Response<Unit>
 }

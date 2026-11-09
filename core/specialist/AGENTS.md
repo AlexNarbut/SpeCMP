@@ -4,7 +4,7 @@
 # core/specialist
 
 - Граница приложения с внешним Specialist SDK (`ru.alarmtrade.common:specialist`): `SpecialistModule` создаёт `SpecialistApp` (конфиг с диспетчерами) и регистрирует SDK-интеракторы как Koin-синглтоны (`authInteractor`, `userInteractor`, `chatInteractor`, `filesInteractor`, `deviceInformationInteractor` и `firmwareFilesInteractor` для прошивки, `serialConnectorInteractor` — COM-порт и др.).
-- Composition root подключает модули через `specialistModules(appVersionName, appVersionCode)`: `specialistModule` + `SpecialistAppVersionProvider` с версией от платформы.
+- Composition root подключает модули через `specialistModules(appVersionName, appVersionCode)`: `specialistModule` + `AppVersionProvider` (`core/common`) с версией от платформы.
 - `supportedConnectionTypes()` — транспорты платформы: Android — BLE + USB + `SERIAL` (COM через OTG), desktop — USB + `SERIAL`, iOS — только BLE (COM в SDK — `TODO()`, `serialConnectorInteractor` резолвить только лениво). `SERIAL` в поиске включает только приложение прошивки (`DeviceSelectionNavGraph(serialEnabled = true)`); `serialConnectorInteractor` использует `feature/device/interaction` (`connectSerial`, закрытие сессии).
 - Перед созданием `SpecialistApp` модуль передаёт SDK монитор сети: `getOrNull<NetworkMonitor>()` (из `core/network`, кладёт корень приложения) → адаптер → `CommonConfigurator.networkMonitor`. Без него SDK считает сеть всегда доступной и не видит блокировку сети в фоне Android 15. Нет монитора (desktop) — дефолт SDK.
 - Сетевые логи SDK выключены во всех сборках (`SpecialistConfig.Network(logLevel = NONE, logWebSocketFrames = false)`): SDK не маскирует тела ответов (переписка) и query (email).

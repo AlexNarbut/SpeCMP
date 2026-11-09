@@ -29,7 +29,7 @@ class FakeDeviceScanRepository(
     ble: List<ScannedDevice.Ble> = emptyList(),
     usb: List<ScannedDevice.Usb> = emptyList(),
     private val serial: List<ScannedDevice.Serial> = emptyList(),
-    private val transports: Set<DeviceTransport> = setOf(DeviceTransport.BLE, DeviceTransport.USB),
+    val transports: Set<DeviceTransport> = setOf(DeviceTransport.BLE, DeviceTransport.USB),
     private val bleResponse: Response<List<ScannedDevice.Ble>> = Response.Success(ble),
     private val usbResponse: Response<List<ScannedDevice.Usb>> = Response.Success(usb),
 ) : DeviceScanRepository {
@@ -37,7 +37,6 @@ class FakeDeviceScanRepository(
     var bleScanStarts: Int = 0
         private set
 
-    override fun supportedTransports(): Set<DeviceTransport> = transports
     override fun scanBluetooth(): Flow<Response<List<ScannedDevice.Ble>>> = flow {
         bleScanStarts++
         emit(bleResponse)
@@ -113,7 +112,7 @@ class FakePermissionsProvider(
 
 /** Сессия устройства в тестах поиска не подписывается — связь и чтение блока не нужны. */
 class FakeDeviceSessionRepository : DeviceSessionRepository {
-    override fun linkState(): Flow<DeviceLinkState> = flowOf(DeviceLinkState.DISCONNECTED)
+    override fun linkState(): Flow<Response<DeviceLinkState>> = flowOf(Response.Success(DeviceLinkState.DISCONNECTED))
     override suspend fun readBluetoothModule(): Response<BluetoothModule> =
         Response.Error(IllegalStateException("not used"))
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Error(IllegalStateException("not used"))

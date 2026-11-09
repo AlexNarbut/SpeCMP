@@ -40,11 +40,12 @@ class SpecialistDeviceModelsRepository(private val interactor: () -> DeviceInfor
             .map { names -> names.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() } }
     }
 
-    override fun recent(): List<String> = recent.all()
+    override suspend fun recent(): Response<List<String>> = safeRun { recent.all() }
 
-    override suspend fun pushRecent(deviceName: String): List<String> = recent.push(deviceName)
+    override suspend fun pushRecent(deviceName: String): Response<List<String>> = safeRun { recent.push(deviceName) }
 
-    override suspend fun removeRecent(deviceName: String): List<String> = recent.remove(deviceName)
+    override suspend fun removeRecent(deviceName: String): Response<List<String>> =
+        safeRun { recent.remove(deviceName) }
 
     private companion object {
         const val RECENT_KEY = "recent_models"

@@ -18,6 +18,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -29,6 +30,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
@@ -68,6 +70,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation.ConfigurationPickKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
@@ -160,6 +163,7 @@ class DeviceSettingsViewModelTest {
         val vm = DeviceSettingsViewModel(
             source,
             options,
+            repository,
             repository,
             local,
             preferences,
@@ -808,7 +812,9 @@ class DeviceSettingsViewModelTest {
 }
 
 /** Сессия SDK в памяти: правки меняют дерево и попадают в unsaved (SDK не убирает вернувшиеся значения). */
-private class FakeSettingsRepository(private val initial: SettingsSection) : DeviceSettingsRepository {
+private class FakeSettingsRepository(private val initial: SettingsSection) :
+    DeviceSettingsRepository,
+    DeviceSettingsSessionController {
     var current = initial
     val unsaved = mutableSetOf<Int>()
     var openResult: Response<SettingsSection>? = null
@@ -922,7 +928,7 @@ private class FakeLocalConfigurations : LocalConfigurationsRepository {
     /** Пока не завершён — создание «идёт» (проверка повторных нажатий). */
     var gate: CompletableDeferred<Unit>? = null
 
-    override val changes: Flow<Unit> = emptyFlow()
+    override val changes: Flow<Response<Unit>> = emptyFlow()
 
     override suspend fun all(): Response<List<LocalConfiguration>> = Response.Success(emptyList())
 
@@ -946,7 +952,7 @@ private class FakeLocalConfigurations : LocalConfigurationsRepository {
 private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
     val link = MutableStateFlow(DeviceLinkState.READY)
 
-    override fun linkState(): Flow<DeviceLinkState> = link
+    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
     override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Error(IllegalStateException())
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
     override suspend fun readImei(): Response<String> = Response.Success("")
@@ -960,10 +966,16 @@ private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepo
 }
 
 private class FakePreferences : DeviceSettingsPreferences {
-    var width: Int? = null
-    override fun treeWidthDp(): Int? = width
-    override fun setTreeWidthDp(width: Int) {
+    override val treeWidthDp = MutableStateFlow<Response<Int?>>(Response.Success(null))
+    var width: Int?
+        get() = treeWidthDp.value.getValueIfSuccess()
+        set(value) {
+            treeWidthDp.value = Response.Success(value)
+        }
+
+    override suspend fun setTreeWidthDp(width: Int): Response<Unit> {
         this.width = width
+        return Response.Success(Unit)
     }
 }
 

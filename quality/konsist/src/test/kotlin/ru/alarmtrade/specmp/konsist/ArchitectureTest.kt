@@ -4,7 +4,9 @@ import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.declaration.KoBaseDeclaration
 import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
+import com.lemonappdev.konsist.api.declaration.KoFunctionDeclaration
 import com.lemonappdev.konsist.api.declaration.KoInterfaceDeclaration
+import com.lemonappdev.konsist.api.declaration.KoPropertyDeclaration
 import com.lemonappdev.konsist.api.declaration.combined.KoClassAndInterfaceAndObjectDeclaration
 import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
@@ -124,6 +126,17 @@ class ArchitectureTest {
                 additionalMessage = "Интерфейс *Repository фичи — контракт domain: feature/<name>/domain/repository, " +
                     "реализация — в data/repository. docs/patterns.md, «Domain»",
             ) { it.resideInPackage("..domain..") }
+    }
+
+    @Test
+    fun `repository members return Response`() {
+        scope.interfaces(includeNested = true)
+            .filter { it.name.endsWith(REPOSITORY) || it.resideInPackage("..domain.repository..") }
+            .assertResultContract(
+                testName = "repository-contract",
+                role = "репозитория (interface *Repository, интерфейсы domain/repository)",
+                docs = "docs/patterns.md, «Контракты репозиториев»",
+            )
     }
 
     @Test
@@ -283,8 +296,9 @@ class ArchitectureTest {
                 additionalMessage = "Тип параметра конструктора ViewModel (и аргументы его дженериков) — из " +
                     "разрешённого списка: domain фич (*Repository, *UseCase, доменные сервисы и модели), " +
                     "presentation (аргументы маршрута, порты presentation/platform), core: AppDispatchers " +
-                    "(до переноса main-safety в репозитории), AppRestarter, AppForegroundProvider, " +
-                    "PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore; Kotlin: примитивы, коллекции, " +
+                    "(до переноса main-safety в репозитории), AppRestarter, AppVersionProvider, " +
+                    "AppForegroundProvider, PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore; Kotlin: " +
+                    "примитивы, коллекции, " +
                     "TimeSource; Logger. " +
                     "Нельзя: data, SDK, Flow, CoroutineScope, функциональные типы. docs/patterns.md, «BaseViewModel»",
             ) { parameter ->
@@ -443,6 +457,38 @@ private fun KoClassAndInterfaceAndObjectDeclaration.isNavKey(): Boolean =
 // `kotlinx.coroutines.flow.StateFlow<Foo>?` → `StateFlow`.
 private fun String.baseTypeName(): String = trim().removeSuffix("?").substringBefore('<').substringAfterLast('.').trim()
 
+private fun List<KoInterfaceDeclaration>.assertResultContract(testName: String, role: String, docs: String) {
+    val functions: List<KoBaseDeclaration> = flatMap { it.functions(includeNested = false, includeLocal = false) }
+    val properties: List<KoBaseDeclaration> = flatMap { it.properties(includeNested = false) }
+    (functions + properties).assertTrue(
+        testName = testName,
+        additionalMessage = "Члены $role: suspend → Response<…>, Flow/StateFlow/SharedFlow → …<Response<…>>. " +
+            "Иных членов нет: синхронный снимок — StateFlow<Response<T>>.value, чтение/запись — " +
+            "suspend … Response<T>. $docs",
+    ) {
+        when (it) {
+            is KoFunctionDeclaration ->
+                if (it.hasSuspendModifier) {
+                    it.returnType?.text?.baseTypeName() == RESPONSE
+                } else {
+                    it.returnType?.text.isFlowType() && it.returnType?.text.isResponseFlow()
+                }
+
+            is KoPropertyDeclaration -> it.type?.text.isFlowType() && it.type?.text.isResponseFlow()
+
+            else -> true
+        }
+    }
+}
+
+private const val RESPONSE = "Response"
+private val FLOW_TYPES = setOf("Flow", "StateFlow", "SharedFlow")
+
+private fun String?.isFlowType(): Boolean = this != null && baseTypeName() in FLOW_TYPES
+
+private fun String?.isResponseFlow(): Boolean =
+    this != null && substringAfter('<').substringBeforeLast('>').baseTypeName() == RESPONSE
+
 private val QUALIFIED_NAME = Regex("""\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+""")
 
 // Квалифицированные имена в коде файла: без package/import, комментариев (включая KDoc) и строковых литералов.
@@ -517,6 +563,7 @@ private fun KoFileDeclaration.qualifiedTypeName(reference: String): String {
 private val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.common.AppDispatchers",
     "$ROOT.core.common.AppRestarter",
+    "$ROOT.core.common.AppVersionProvider",
     "$ROOT.core.lifecycle.AppForegroundProvider",
     "$ROOT.core.permissions.PermissionsProvider",
     "$ROOT.core.localization.AppLocaleStore",

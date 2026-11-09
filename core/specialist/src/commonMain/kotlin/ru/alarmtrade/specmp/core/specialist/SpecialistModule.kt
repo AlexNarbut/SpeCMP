@@ -9,15 +9,16 @@ import ru.alarmtrade.specialist.SpecialistApp
 import ru.alarmtrade.specialist.SpecialistConfig
 import ru.alarmtrade.specialist.network.NetworkLogLevel
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 
-/** [SpecialistAppVersionProvider] добавляет [specialistModules]: версию знает только платформа. */
+/** [AppVersionProvider] добавляет [specialistModules]: версию знает только платформа. */
 val specialistModule = module {
     single {
         val dispatchers: AppDispatchers = get()
-        val appVersionProvider: SpecialistAppVersionProvider = get()
+        val appVersionProvider: AppVersionProvider = get()
 
         CommonConfigurator.commonProvider = object : ProvideCommon {
             override fun buildVersion(): Int = appVersionProvider.current().code

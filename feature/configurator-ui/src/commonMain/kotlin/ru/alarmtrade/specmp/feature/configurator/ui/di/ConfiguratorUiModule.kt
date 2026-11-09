@@ -15,6 +15,7 @@ val configuratorUiModule = module {
             pickDeviceName = pickDeviceName,
             configurations = get(),
             settings = get(),
+            sessions = get(),
             deviceSession = get(),
             dispatchers = get(),
         )

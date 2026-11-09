@@ -20,9 +20,6 @@ interface DeviceSettingsRepository {
     /** Закрыть сессию без сохранения правок. */
     suspend fun close(source: SettingsSource): Response<Unit>
 
-    /** [close] в фоне приложения: переживает экран, который его вызвал (закрытие редактора). */
-    fun discardSession(source: SettingsSource)
-
     /** Изменить значение настройки в сессии; ответ — настройка с новым значением. */
     suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting>
 
@@ -42,12 +39,9 @@ interface DeviceSettingsRepository {
     /**
      * Снимок настроек [from] во временном файле, прочитанный моделью [deviceName] — так их увидит блок этой модели
      * (сравнение «Что изменится» перед загрузкой в блок, в том числе другой модели). Сессия [from] не закрывается.
-     * Снимок открывается как обычный источник; после — [discardSnapshot].
+     * Снимок открывается как обычный источник; после — `DeviceSettingsSessionController.discardSnapshot`.
      */
     suspend fun snapshot(from: SettingsSource, deviceName: String): Response<SettingsSource.File>
-
-    /** Закрыть сессию снимка и удалить его файл — в фоне приложения: переживает экран, который его вызвал. */
-    fun discardSnapshot(snapshot: SettingsSource.File)
 
     /** Сбросить подключённый блок к заводским настройкам (только [SettingsSource.Device]). */
     suspend fun resetDeviceToFactory(): Response<Unit>

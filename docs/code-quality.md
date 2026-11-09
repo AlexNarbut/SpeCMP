@@ -267,8 +267,9 @@ ViewModel через несколько composable, эффекты читают 
 класс + тест на `detekt-test` → строка в провайдере и в тесте провайдера → раздел в `detekt.yml` → проверка на
 временном нарушителе (`detektCheck` падает) → нарушителя удалить. Правила ViewModel (`ViewModel*`,
 `SafeRunInViewModel`) включены без исключений для наследников (`ViewModelContractNames` пропускает собственные
-параметры типа промежуточной базы `BaseDeviceViewModel`). Правила `Response`, данных и времени
-перенесены, но выключены (`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
+параметры типа промежуточной базы `BaseDeviceViewModel`). `RawFlowFromRepository` (публичный поток реализации
+`*Repository` без `Response`) включён; остальные правила `Response`, данных и времени перенесены, но выключены
+(`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
 Осознанно выключено или смягчено: `LongParameterList` (наборы колбэков `*Actions` длинные по построению; порог
@@ -313,11 +314,12 @@ ViewModel через несколько composable, эффекты читают 
 | `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
 | `view-model` | ViewModel наследует `BaseViewModel` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — пакет `presentation` |
 | `view-model-owns-no-flows` | у наследника `BaseViewModel` нет своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`sideEffectFlow`/`mutableStateOf` |
-| `view-model-dependencies` | параметры конструктора VM — domain/presentation фич, `AppDispatchers` (до переноса main-safety), `AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `TimeSource`, `Logger`, типы Kotlin; без функциональных типов и `CoroutineScope` |
+| `repository-contract` | члены интерфейсов `*Repository` и интерфейсов пакета `domain/repository`: `suspend` → `Response<…>`, `Flow`/`StateFlow`/`SharedFlow` → `…<Response<…>>`; синхронных функций и свойств-не-потоков нет |
+| `view-model-dependencies` | параметры конструктора VM — domain/presentation фич, `AppDispatchers` (до переноса main-safety), `AppRestarter`, `AppVersionProvider`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `TimeSource`, `Logger`, типы Kotlin; без функциональных типов и `CoroutineScope` |
 | `view-model-constructor` | у наследника `BaseViewModel` не больше 12 параметров первичного конструктора |
 | `no-service-locator` | Koin как сервис-локатор — `org.koin.core.component.*` (`KoinComponent`, `inject`, `get`), `org.koin.core.context.*` (`GlobalContext`, `startKoin`, `loadKoinModules`), `org.koin.mp.KoinPlatformTools`/`KoinPlatform`, `org.koin.java.KoinJavaComponent`, `org.koin.compose.getKoin`, `org.koin.core.Koin`, `org.koin.android.ext.android.*` — импортом (включая алиас) или полным именем — только пакеты `..di..`, composition roots и обёртки (`composeApp`, `flasherApp`, `androidApp`, `desktopApp`, `flasherAndroidApp`, `flasherDesktopApp`) и файлы с Android-компонентом, который создаёт система (`Activity`/`Application`/`Service`/`BroadcastReceiver`/`Worker`/`Initializer`…). Нарушение — декларация верхнего уровня (подавление — `@Suppress` на ней), импорт со звёздочкой и неиспользованный импорт — сам импорт. `koinInject` в composable — не это правило (этап 4) |
 
-Остальные правила BabySteps (контракт репозиториев, видимость `*Impl`, `koin-module`,
+Остальные правила BabySteps (видимость `*Impl`, `koin-module`,
 `mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
 Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
 Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.
@@ -380,7 +382,8 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | Направления импортов между модулями, пакет = модуль, слои domain/data/presentation | Konsist `module-direction`, `module-package`, `domain-isolation`, `presentation-isolation`, `data-isolation`, `feature-data-isolation`; graph-assert | ✅ |
 | Раскладка и имена: реализации репозиториев в `data/repository`, интерфейсы в `domain`, `*DataSource` только у репозиториев, нет `*Helper`/`*Utils` | Konsist `layer-placement`, `repository-in-domain`, `data-source-consumers`, `forbidden-suffix` | ✅ |
 | SDK AlarmTrade — только data/di фич и профильные `core/*`; `@Serializable` — data/navigation; модели `domain/model` неизменяемы | Konsist `sdk-confinement`, `serializable-placement`, `domain-model-purity` | ✅ |
-| Члены репозиториев: `suspend` → `Response<T>`, потоки → `Flow<Response<T>>`; репозиторий сам main-safe | Konsist `repository-contract`, detekt `RawFlowFromRepository`, `RepositoryWithContext` | ⏳ этап 3 |
+| Члены репозиториев (интерфейсы `*Repository` и все интерфейсы `domain/repository`): `suspend` → `Response<T>`, потоки → `Flow`/`StateFlow`/`SharedFlow<Response<T>>`, иных членов нет; публичные потоки реализаций — тоже `Response` | Konsist `repository-contract`, detekt `RawFlowFromRepository` | ✅ |
+| Репозиторий сам main-safe | detekt `RepositoryWithContext` | ⏳ этап 3 |
 | Гигиена `Response`: не выбрасывать, не превращать в исключение, не оборачивать повторно; без `throw` в репозиториях | detekt `ResponseIgnored`, `ResponseGetOrThrow`, `RedundantSafeRun`, `ThrowInRepository` | ⏳ этап 3 |
 | «Сейчас» — из внедрённых часов; `Settings()` — только фабрика `core/common` | detekt `DirectClockUsage`, `SettingsInstantiation` | ⏳ этап 3 |
 | Composable не достаёт зависимости из Koin (`koinInject`) | Konsist `composable-injection` | ⏳ этап 4 |

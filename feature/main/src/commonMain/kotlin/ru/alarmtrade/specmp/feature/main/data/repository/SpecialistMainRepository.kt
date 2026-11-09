@@ -19,16 +19,14 @@ import ru.alarmtrade.specialist.interactors.appUpdates.AppUpdatesInteractor
 import ru.alarmtrade.specialist.interactors.appUpdates.requests.AppUpdateRequest
 import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.interactors.user.UserInteractor
+import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.common.safeFlowRun
-import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersion
-import ru.alarmtrade.specmp.core.specialist.SpecialistAppVersionProvider
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppVersion
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
@@ -40,13 +38,10 @@ class SpecialistMainRepository(
     private val userInteractor: UserInteractor,
     private val accountRepository: AccountRepository,
     private val chatInteractor: ChatInteractor,
-    private val appVersionProvider: SpecialistAppVersionProvider,
+    private val appVersionProvider: AppVersionProvider,
 ) : MainRepository {
 
     private val logger = Logger.withTag(this::class.simpleName.orEmpty())
-
-    override val appVersion: MainAppVersion
-        get() = appVersionProvider.current().toMainAppVersion()
 
     // Ожидаемые ошибки SDK не логируются здесь: это Response.Error, их показывает VM (docs/patterns.md, «Логирование»).
     override suspend fun currentUserProfile(): Response<MainUserProfile> =
@@ -80,7 +75,7 @@ class SpecialistMainRepository(
     }
 
     override suspend fun checkAppUpdate(): Response<MainAppUpdateCheckResult> {
-        val request = AppUpdateRequest(currentVersion = appVersion.code)
+        val request = AppUpdateRequest(currentVersion = appVersionProvider.current().code)
         return appUpdatesInteractor.checkForAppUpdatesUseCase.execute(request).toResponse().mapIfSuccess { value ->
             when (value) {
                 is AppUpdatesResponse.UpdateAvailable -> value.updateVersionInformation.toUpdateCheckResult()
@@ -135,7 +130,7 @@ class SpecialistMainRepository(
     private fun UpdateVersionInformation.toUpdateCheckResult(): Response<MainAppUpdateCheckResult> {
         val versionName = version.trim()
 
-        return if (versionName.isBlank() || versionInt <= appVersion.code) {
+        return if (versionName.isBlank() || versionInt <= appVersionProvider.current().code) {
             Response.Success(MainAppUpdateCheckResult.UpToDate)
         } else {
             Response.Success(MainAppUpdateCheckResult.Available(versionName = versionName))
@@ -146,11 +141,6 @@ class SpecialistMainRepository(
         hasCanScanner = UserAppFeature.CAN_SCANNER in this,
         hasOrdersRequest = UserAppFeature.ORDERS_REQUEST in this,
         hasProductSearch = UserAppFeature.PRODUCT_SEARCH in this,
-    )
-
-    private fun SpecialistAppVersion.toMainAppVersion(): MainAppVersion = MainAppVersion(
-        name = name,
-        code = code,
     )
 
     private fun UserCommercial?.toMainUserCommercial(): MainUserCommercial =

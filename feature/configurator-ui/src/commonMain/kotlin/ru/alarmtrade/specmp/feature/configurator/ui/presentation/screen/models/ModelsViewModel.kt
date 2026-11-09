@@ -28,8 +28,10 @@ internal class ModelsViewModel(
 
     override suspend fun onStart() {
         connectedDeviceName.collectIntoState { connected -> copy(connected = connected) }
-        val recent = withContext(dispatchers.io) { models.recent() }
-        reduce { copy(recent = recent) }
+        when (val recent = withContext(dispatchers.io) { models.recent() }) {
+            is Response.Success -> reduce { copy(recent = recent.value) }
+            is Response.Error -> logger.w(recent.exception) { "Recent models read failed" }
+        }
         // Под тем же замком, что и «Повторить»: первая загрузка и повтор не идут параллельно.
         executeWithProceedLock { load() }
     }
@@ -92,10 +94,12 @@ internal class ModelsViewModel(
     }
 
     /** Недавние — хранилище (Settings + JSON, атомарно само): правка на io, в state — новый список. */
-    private fun updateRecent(change: suspend () -> List<String>) {
+    private fun updateRecent(change: suspend () -> Response<List<String>>) {
         intent {
-            val recent = withContext(dispatchers.io) { change() }
-            reduce { copy(recent = recent) }
+            when (val recent = withContext(dispatchers.io) { change() }) {
+                is Response.Success -> reduce { copy(recent = recent.value) }
+                is Response.Error -> logger.w(recent.exception) { "Recent models update failed" }
+            }
         }
     }
 }

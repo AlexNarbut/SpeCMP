@@ -21,12 +21,12 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.AppVersion
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.authstate.domain.repository.AuthStateRepository
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
-import ru.alarmtrade.specmp.feature.main.domain.model.MainAppVersion
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserCommercial
@@ -45,6 +45,7 @@ class MainScreenViewModelTest {
     private fun createViewModel() = MainScreenViewModel(
         LogoutUseCase(authRepository, emptyList()),
         repository,
+        { AppVersion(name = "1.0", code = 1) },
         AppDispatchers(dispatcher, dispatcher, dispatcher),
     )
 
@@ -129,8 +130,6 @@ class MainScreenViewModelTest {
     private class FakeMainRepository : MainRepository {
         var features = MainUserAppFeatures()
         val chatAvailability = MutableStateFlow<Response<Boolean>>(Response.Success(false))
-
-        override val appVersion = MainAppVersion(name = "1.0", code = 1)
 
         override suspend fun currentUserProfile(): Response<MainUserProfile> =
             Response.Success(MainUserProfile(name = "Ivan", email = "ivan@example.com"))

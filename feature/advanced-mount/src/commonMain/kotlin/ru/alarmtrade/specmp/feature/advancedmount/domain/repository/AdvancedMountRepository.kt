@@ -13,7 +13,7 @@ interface AdvancedMountRepository {
     fun observeUnreadChatCount(): Flow<Response<Int>>
 
     /** Доступен ли удалённый монтаж (специалист может подключиться к блоку); открывает чат при подписке. */
-    fun remoteMountAvailable(): Flow<Boolean>
+    fun remoteMountAvailable(): Flow<Response<Boolean>>
 
     /** Включён ли у пользователя «Поиск товара» (кнопка «Информация о товаре»). */
     suspend fun isProductInfoEnabled(): Response<Boolean>

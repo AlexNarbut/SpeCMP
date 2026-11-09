@@ -117,7 +117,7 @@ Koin-модуль (`<name>Module` — repository/interactors, `<name>UiModule` �
 - `specialistModule` — Koin-модуль инициализации `SpecialistApp`
 - Регистрирует app-level SDK singleton и конкретные SDK interactors для feature-модулей
 - Содержит platform-specific сборку `AppDeviceInformation` для Specialist SDK
-- Содержит `SpecialistAppVersionProvider` для единой передачи версии приложения в Specialist SDK
+- Связывает `AppVersionProvider` (`core/common`) с версией от платформы — её читают Specialist SDK и экраны
 - `feature/*` не создают `SpecialistApp` самостоятельно и зависят только от нужных SDK interactors
 
 ### core/ui

@@ -317,7 +317,7 @@ class VehicleSelectViewModelTest {
         runCurrent()
 
         assertEquals(listOf<VehicleSelectEffect>(VehicleSelectEffect.Picked(FakeCatalog.camrySummary)), effects)
-        assertEquals(listOf(FakeCatalog.camrySummary), recent.recent(VehicleCatalog.ALL))
+        assertEquals(listOf(FakeCatalog.camrySummary), recent.items(VehicleCatalog.ALL))
     }
 
     @Test
@@ -480,15 +480,17 @@ private class FakeCatalog : VehicleCatalogRepository {
 private class FakeRecent : RecentVehiclesStore {
     private val items = mutableMapOf<VehicleCatalog, List<CarSummary>>()
 
-    override fun recent(catalog: VehicleCatalog): List<CarSummary> = items[catalog].orEmpty()
+    fun items(catalog: VehicleCatalog): List<CarSummary> = items[catalog].orEmpty()
 
-    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): List<CarSummary> {
-        items[catalog] = (listOf(car) + recent(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
+    override suspend fun recent(catalog: VehicleCatalog): Response<List<CarSummary>> = Response.Success(items(catalog))
+
+    override suspend fun push(catalog: VehicleCatalog, car: CarSummary): Response<List<CarSummary>> {
+        items[catalog] = (listOf(car) + items(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
         return recent(catalog)
     }
 
-    override suspend fun remove(catalog: VehicleCatalog, carId: Int): List<CarSummary> {
-        items[catalog] = recent(catalog).filter { it.id != carId }
+    override suspend fun remove(catalog: VehicleCatalog, carId: Int): Response<List<CarSummary>> {
+        items[catalog] = items(catalog).filter { it.id != carId }
         return recent(catalog)
     }
 }

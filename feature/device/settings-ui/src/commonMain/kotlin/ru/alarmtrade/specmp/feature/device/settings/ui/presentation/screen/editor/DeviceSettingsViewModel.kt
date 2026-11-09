@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
@@ -37,6 +38,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFilePickResult
@@ -55,7 +57,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepo
  *   поменять соседние настройки); изменённые — пересечение `unsavedIds` SDK с настройками, чьё значение отличается от
  *   снимка «как было» ([SettingsChangeTracker]): возврат исходного значения снимает подсветку.
  * - Запись ([onWrite]) — `save`; после успеха снимок «как было» = текущее меню.
- * - Сессия SDK закрывается в [onCleared] в фоне приложения (`discardSession` репозитория).
+ * - Сессия SDK закрывается в [onCleared] в фоне приложения (`DeviceSettingsSessionController.discardSession`).
  * - Конфигурации: «Загрузить из…» (блок) — снимок источника в модели блока → «Что изменится» → копирование в сессию
  *   блока (без записи; SDK не отмечает скопированное как изменённое — изменённые после загрузки считает
  *   [SettingsChangeTracker.withLoaded]); «Сохранить в…» — «Мои конфигурации» или файл (снимок → системное
@@ -69,6 +71,7 @@ internal class DeviceSettingsViewModel(
     private val source: SettingsSource,
     options: SettingsEditorOptions,
     private val repository: DeviceSettingsRepository,
+    private val sessions: DeviceSettingsSessionController,
     private val localConfigurations: LocalConfigurationsRepository,
     private val preferences: DeviceSettingsPreferences,
     private val carsRepository: VehicleCatalogRepository,
@@ -76,7 +79,7 @@ internal class DeviceSettingsViewModel(
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<DeviceSettingsState, DeviceSettingsEffect>(
     deviceSession,
-    initialSettingsState(source, options, preferences.treeWidthDp()),
+    initialSettingsState(source, options, preferences.treeWidthDp.value.getValueIfSuccess()),
 ) {
 
     private val followsDevice = source.capabilities.followsDeviceConnection
@@ -230,7 +233,7 @@ internal class DeviceSettingsViewModel(
     /** Ширина колонки дерева изменена перетаскиванием (по окончании) — запоминается для следующих входов. */
     fun onTreeWidthChange(widthDp: Int) {
         reduce { copy(treeWidthDp = widthDp) }
-        preferences.setTreeWidthDp(widthDp)
+        intent { preferences.setTreeWidthDp(widthDp).onError { logger.w(it) { "Tree width was not saved" } } }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -427,7 +430,7 @@ internal class DeviceSettingsViewModel(
                 logger.w(it.exception) { "Configuration snapshot failed: ${it.message}" }
             }
             (next as? Response.Error)?.let { logger.w(it.exception) { "Configuration read failed: ${it.message}" } }
-            (snapshot as? Response.Success)?.let { repository.discardSnapshot(it.value) }
+            (snapshot as? Response.Success)?.let { sessions.discardSnapshot(it.value) }
             reduce { withPreviewFailed(from, closeAfter) }
             return
         }
@@ -454,7 +457,7 @@ internal class DeviceSettingsViewModel(
         try {
             executeWithProceedLock(needSkipAnother = false) { copyIntoSource(snapshot, total) }
         } finally {
-            repository.discardSnapshot(snapshot)
+            sessions.discardSnapshot(snapshot)
             reduce { copy(isApplying = false) }
         }
     }
@@ -494,7 +497,7 @@ internal class DeviceSettingsViewModel(
     private fun discardPreview() {
         val snapshot = currentState.previewSnapshot ?: return
         reduce { copy(previewSnapshot = null) }
-        repository.discardSnapshot(snapshot)
+        sessions.discardSnapshot(snapshot)
     }
 
     // ── Сохранение (K6) и конфигурации (K5) ───────────────────────────────────────────────────────────────────
@@ -604,7 +607,7 @@ internal class DeviceSettingsViewModel(
     fun onFileExported(result: SettingsFileSaveResult) {
         val done = currentState.pendingExport ?: return
         reduce { copy(pendingExport = null, isSaving = false) }
-        repository.discardSnapshot(done.snapshot)
+        sessions.discardSnapshot(done.snapshot)
         when (result) {
             is SettingsFileSaveResult.Saved -> intent {
                 if (savesAsNew()) commit()
@@ -804,9 +807,9 @@ internal class DeviceSettingsViewModel(
         if (followsDevice) launchOnDevice(block) else intent(block)
 
     override fun onCleared() {
-        repository.discardSession(source)
+        sessions.discardSession(source)
         listOfNotNull(currentState.previewSnapshot, currentState.pendingExport?.snapshot)
-            .forEach(repository::discardSnapshot)
+            .forEach(sessions::discardSnapshot)
         super.onCleared()
     }
 

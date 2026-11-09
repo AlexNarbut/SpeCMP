@@ -16,6 +16,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.platform.settingsFileName
 
@@ -30,6 +31,7 @@ internal class MineViewModel(
     pickDeviceName: String?,
     private val configurations: LocalConfigurationsRepository,
     private val settings: DeviceSettingsRepository,
+    private val sessions: DeviceSettingsSessionController,
     deviceSession: DeviceSession,
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<MineState, MineEffect>(
@@ -46,7 +48,7 @@ internal class MineViewModel(
     // collectLatest отменяет устаревшую загрузку — старый ответ не затрёт новый; «Повторить» перезапускает поток.
     private fun observeList() {
         launchReplacing(LIST_KEY) {
-            configurations.changes.onStart { emit(Unit) }.collectLatest { load() }
+            configurations.changes.onStart { emit(Response.Success(Unit)) }.collectLatest { load() }
         }
     }
 
@@ -206,7 +208,7 @@ internal class MineViewModel(
     fun onFileExported(result: SettingsFileSaveResult) {
         val snapshot = currentState.exportSnapshot ?: return
         reduce { copy(exportSnapshot = null, busy = false) }
-        settings.discardSnapshot(snapshot)
+        sessions.discardSnapshot(snapshot)
         when (result) {
             is SettingsFileSaveResult.Saved -> postSideEffect(MineEffect.FileSaved(result.name))
             SettingsFileSaveResult.Failed -> postSideEffect(MineEffect.Message(MineMessage.FAILED))
@@ -243,7 +245,7 @@ internal class MineViewModel(
     }
 
     override fun onCleared() {
-        currentState.exportSnapshot?.let(settings::discardSnapshot)
+        currentState.exportSnapshot?.let(sessions::discardSnapshot)
         super.onCleared()
     }
 

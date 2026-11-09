@@ -39,8 +39,10 @@ internal class VehicleSelectViewModel(
 ) : BaseViewModel<VehicleSelectState, VehicleSelectEffect>(request.initialState()) {
 
     override suspend fun onStart() {
-        val recent = withContext(dispatchers.io) { recentStore.recent(request.catalog) }
-        reduce { copy(recent = recent) }
+        when (val recent = withContext(dispatchers.io) { recentStore.recent(request.catalog) }) {
+            is Response.Success -> reduce { copy(recent = recent.value) }
+            is Response.Error -> logger.w(recent.exception) { "Recent vehicles read failed" }
+        }
         if (!currentState.showTypeChoice) loadBrands()
     }
 
@@ -356,10 +358,12 @@ internal class VehicleSelectViewModel(
         updateRecent { recentStore.push(request.catalog, car) }
     }
 
-    private fun updateRecent(change: suspend () -> List<CarSummary>) {
+    private fun updateRecent(change: suspend () -> Response<List<CarSummary>>) {
         intent {
-            val recent = withContext(dispatchers.io) { change() }
-            reduce { copy(recent = recent) }
+            when (val recent = withContext(dispatchers.io) { change() }) {
+                is Response.Success -> reduce { copy(recent = recent.value) }
+                is Response.Error -> logger.w(recent.exception) { "Recent vehicles update failed" }
+            }
         }
     }
 

@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.datetime.LocalDateTime
@@ -32,6 +33,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 
 internal val testTime = LocalDateTime(2026, 10, 21, 14, 20)
 
@@ -74,17 +76,17 @@ internal class FakeModelsRepository : DeviceModelsRepository {
         return models
     }
 
-    override fun recent(): List<String> = recentList.toList()
+    override suspend fun recent(): Response<List<String>> = Response.Success(recentList.toList())
 
-    override suspend fun pushRecent(deviceName: String): List<String> {
+    override suspend fun pushRecent(deviceName: String): Response<List<String>> {
         recentList.remove(deviceName)
         recentList.add(0, deviceName)
-        return recentList.toList()
+        return Response.Success(recentList.toList())
     }
 
-    override suspend fun removeRecent(deviceName: String): List<String> {
+    override suspend fun removeRecent(deviceName: String): Response<List<String>> {
         recentList.remove(deviceName)
-        return recentList.toList()
+        return Response.Success(recentList.toList())
     }
 }
 
@@ -102,7 +104,7 @@ internal class FakeCloudRepository : CloudConfigurationsRepository {
 }
 
 internal class FakeLocalConfigurations : LocalConfigurationsRepository {
-    override val changes = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    override val changes = MutableSharedFlow<Response<Unit>>(extraBufferCapacity = 1)
     var items: Response<List<LocalConfiguration>> = Response.Success(emptyList())
     var allCalls = 0
     var created: Response<SettingsSource.LocalConfiguration> =
@@ -138,7 +140,9 @@ internal class FakeLocalConfigurations : LocalConfigurationsRepository {
     }
 }
 
-internal class FakeSettingsRepository : DeviceSettingsRepository {
+internal class FakeSettingsRepository :
+    DeviceSettingsRepository,
+    DeviceSettingsSessionController {
     var open: Response<SettingsSection> = Response.Success(SettingsSection(0, "", "", null, emptyList()))
     var snapshot: Response<SettingsSource.File> = Response.Success(SettingsSource.File("/tmp/snapshot.dxs", "DX-9X"))
     val opened = mutableListOf<SettingsSource>()
@@ -180,7 +184,7 @@ internal class FakeSettingsRepository : DeviceSettingsRepository {
 }
 
 private class FakeDeviceSessionRepository(private val link: Flow<DeviceLinkState>) : DeviceSessionRepository {
-    override fun linkState(): Flow<DeviceLinkState> = link
+    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
     override suspend fun readBluetoothModule(): Response<BluetoothModule> =
         Response.Error(IllegalStateException("usb only"))
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(testDevice)

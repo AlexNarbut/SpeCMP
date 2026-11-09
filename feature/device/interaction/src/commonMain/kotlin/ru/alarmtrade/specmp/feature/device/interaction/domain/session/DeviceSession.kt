@@ -28,6 +28,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -110,7 +111,10 @@ class DeviceSession(
     val transport: StateFlow<ConnectionTransport?> = _transport.asStateFlow()
 
     val state: StateFlow<DeviceSessionState> = merge(
-        sessionRepository.linkState().distinctUntilChanged().map { SessionEvent.Link(it) },
+        sessionRepository.linkState()
+            .map { it.getValueIfSuccess() ?: DeviceLinkState.DISCONNECTED }
+            .distinctUntilChanged()
+            .map { SessionEvent.Link(it) },
         modeRefreshes.map { SessionEvent.RefreshMode },
     )
         .transformLatest { event ->

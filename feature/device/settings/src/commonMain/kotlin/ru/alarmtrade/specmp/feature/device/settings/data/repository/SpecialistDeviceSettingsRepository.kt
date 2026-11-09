@@ -1,8 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.settings.data.repository
 
 import kotlin.random.Random
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import ru.alarmtrade.common.core.usecase.EmptyRequest
 import ru.alarmtrade.common.settings.interaction.model.errors.WrongSettingsSizeException
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.AlarmDeviceSettingsInteractor
@@ -11,7 +9,6 @@ import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CopySet
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.DeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.OpenDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
-import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfError
@@ -19,7 +16,6 @@ import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
-import ru.alarmtrade.specmp.feature.device.settings.data.files.deleteSettingsScratchFile
 import ru.alarmtrade.specmp.feature.device.settings.data.files.settingsScratchDirectory
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -30,14 +26,11 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSett
 
 /**
  * [DeviceSettingsRepository] над `alarmDeviceSettingsInteractor` (сессии настроек по `SettingsPath`) и
- * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво; [appScope] — закрытие сессий и удаление
- * снимков, переживающие экран.
+ * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво.
  */
 class SpecialistDeviceSettingsRepository(
     private val settingsInteractor: () -> AlarmDeviceSettingsInteractor,
     private val alarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
-    private val appScope: CoroutineScope,
-    private val dispatchers: AppDispatchers,
 ) : DeviceSettingsRepository {
 
     override suspend fun open(source: SettingsSource, reload: Boolean): Response<SettingsSection> {
@@ -53,10 +46,6 @@ class SpecialistDeviceSettingsRepository(
         return interactor.closeDeviceSettingsUseCase
             .execute(CloseDeviceSettingsRequest(source.toPath(), saveChanges = false))
             .toResponse()
-    }
-
-    override fun discardSession(source: SettingsSource) {
-        appScope.launch(dispatchers.io) { close(source) }
     }
 
     override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> {
@@ -112,13 +101,6 @@ class SpecialistDeviceSettingsRepository(
         val path = "${settingsScratchDirectory()}/snapshot-${Random.nextLong().toULong().toString(16)}.dxs"
         val snapshot = SettingsSource.File(path, deviceName)
         return copy(from, snapshot, saveChanges = true).map { snapshot }
-    }
-
-    override fun discardSnapshot(snapshot: SettingsSource.File) {
-        appScope.launch(dispatchers.io) {
-            close(snapshot)
-            deleteSettingsScratchFile(snapshot.path)
-        }
     }
 
     override suspend fun resetDeviceToFactory(): Response<Unit> {

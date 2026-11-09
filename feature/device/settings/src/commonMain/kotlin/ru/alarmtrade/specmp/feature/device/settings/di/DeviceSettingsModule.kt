@@ -5,8 +5,10 @@ import ru.alarmtrade.specmp.core.common.di.appScopeQualifier
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
 import ru.alarmtrade.specmp.feature.device.settings.data.preferences.SettingsDeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.data.repository.SpecialistDeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.data.service.DeviceSettingsSessionControllerImpl
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 
 private const val DEVICE_SETTINGS_PREFERENCES = "devicesettings"
 
@@ -20,9 +22,10 @@ val deviceSettingsModule = module {
         SpecialistDeviceSettingsRepository(
             settingsInteractor = { get() },
             alarmDeviceInteractor = { get() },
-            appScope = get(appScopeQualifier),
-            dispatchers = get(),
         )
+    }
+    single<DeviceSettingsSessionController> {
+        DeviceSettingsSessionControllerImpl(repository = get(), appScope = get(appScopeQualifier), dispatchers = get())
     }
     // Не привязано к аккаунту (ширина колонки дерева) — переживает логаут.
     single<DeviceSettingsPreferences> {

@@ -55,13 +55,14 @@ class ScanDeviceViewModel(
     private val permissionsProvider: PermissionsProvider,
     private val foregroundProvider: AppForegroundProvider,
     private val dispatchers: AppDispatchers,
+    supportedTransports: Set<DeviceTransport>,
     serialEnabled: Boolean = false,
     /** Поиск для быстрого монтажа: BLE-устройства, которые не сигнализации, видны, но недоступны. */
     private val alarmsOnly: Boolean = false,
 ) : BaseViewModel<ScanDeviceState, ScanDeviceEffect>(
     ScanDeviceState(
         requirements = permissionsProvider.deviceAccessRequirements(),
-        supportedTransports = scanRepository.supportedTransports()
+        supportedTransports = supportedTransports
             .filter { it != DeviceTransport.SERIAL || serialEnabled }
             .toSet(),
     ),

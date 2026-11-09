@@ -137,6 +137,18 @@ class DeviceSessionTest {
     }
 
     @Test
+    fun `link error is treated as disconnect`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository, FakeDeviceConnectionRepository())
+        backgroundScope.launch { session.state.collect {} }
+        advanceUntilIdle()
+
+        repository.linkErrors.emit(Response.Error(IllegalStateException("sdk")))
+
+        assertEquals(DeviceSessionState.Disconnected, session.state.value)
+    }
+
+    @Test
     fun `link loss and restore`() = runTest(UnconfinedTestDispatcher()) {
         val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
         val session = testSession(repository, FakeDeviceConnectionRepository())

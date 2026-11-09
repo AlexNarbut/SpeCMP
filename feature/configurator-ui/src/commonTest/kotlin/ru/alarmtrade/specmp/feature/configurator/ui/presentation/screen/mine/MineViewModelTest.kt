@@ -51,6 +51,7 @@ class MineViewModelTest {
             pickDeviceName = pickDeviceName,
             configurations = configurations,
             settings = settings,
+            sessions = settings,
             deviceSession = testDeviceSession(link, dispatcher),
             dispatchers = testDispatchers(dispatcher),
         )
@@ -88,7 +89,7 @@ class MineViewModelTest {
         assertEquals(camry, vm.state.value.selected)
 
         configurations.items = Response.Success(listOf(niva))
-        configurations.changes.tryEmit(Unit)
+        configurations.changes.tryEmit(Response.Success(Unit))
 
         assertEquals(listOf(niva), vm.state.value.filtered)
         assertNull(vm.state.value.selectedId)

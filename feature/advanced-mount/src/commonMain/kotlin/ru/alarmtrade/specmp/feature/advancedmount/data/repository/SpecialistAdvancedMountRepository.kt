@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
-import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.interactors.chat.requests.ConnectChatRequest
@@ -47,18 +46,15 @@ class SpecialistAdvancedMountRepository(
         }
     }
 
-    override fun remoteMountAvailable(): Flow<Boolean> = flow {
+    override fun remoteMountAvailable(): Flow<Response<Boolean>> = flow {
         // Статус удалённого монтажа приходит по каналу чата — открываем его, как старое приложение.
         chatInteractor.openChatUseCase.execute(ConnectChatRequest())
-        emitAll(
-            chatInteractor.isAvailableRemoteMountFlowUseCase.execute()
-                .map { response -> (response as? SpecialistResponse.Success)?.value ?: false },
-        )
+        emitAll(chatInteractor.isAvailableRemoteMountFlowUseCase.execute().map { it.toResponse() })
     }
         .catch { e ->
             if (e is CancellationException) throw e
             logger.e(e) { "Remote mount availability failed" }
-            emit(false)
+            emit(Response.Error(e))
         }
 
     override suspend fun isProductInfoEnabled(): Response<Boolean> =

@@ -52,7 +52,7 @@ specmp:
     active: true
     excludes: ['**/core/ui/**/viewmodel/BaseViewModel.kt', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
   RawFlowFromRepository:
-    active: false
+    active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
   ResponseGetOrThrow:
     active: false

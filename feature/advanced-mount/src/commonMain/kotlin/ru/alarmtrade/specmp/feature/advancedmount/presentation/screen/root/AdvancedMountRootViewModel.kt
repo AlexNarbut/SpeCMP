@@ -49,7 +49,7 @@ class AdvancedMountRootViewModel(
             select { content.content is MountAccess.Ready }.first { it }
             repository.remoteMountAvailable()
                 .flowOn(dispatchers.io)
-                .collect { available -> reduce { copy(remoteAvailable = available) } }
+                .collect { available -> reduce { copy(remoteAvailable = available.getValueIfSuccess() ?: false) } }
         }
         // Кнопка «Информация о товаре» — один раз за жизнь VM.
         safeLaunch {

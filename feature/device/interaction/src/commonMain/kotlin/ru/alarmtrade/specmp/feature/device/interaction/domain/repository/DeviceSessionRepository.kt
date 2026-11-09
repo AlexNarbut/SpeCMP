@@ -15,8 +15,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
  * [DeviceSession][ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession].
  */
 interface DeviceSessionRepository {
-    /** Поток состояния связи текущей сессии; ошибки SDK — как [DeviceLinkState.DISCONNECTED]. */
-    fun linkState(): Flow<DeviceLinkState>
+    /** Поток состояния связи текущей сессии; ошибку SDK владелец сессии считает [DeviceLinkState.DISCONNECTED]. */
+    fun linkState(): Flow<Response<DeviceLinkState>>
 
     /** BLE: прочитать Bluetooth-модуль (мануфактура + режим) — до чтения основной программы. */
     suspend fun readBluetoothModule(): Response<BluetoothModule>

@@ -50,7 +50,7 @@ internal fun testDevice(
 internal class FakeSessionRepository(var device: AlarmDevice = testDevice()) : DeviceSessionRepository {
     val link = MutableStateFlow(DeviceLinkState.READY)
 
-    override fun linkState(): Flow<DeviceLinkState> = link
+    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
     override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Success(
         BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX-9X", "1.0", "1.14")),
     )

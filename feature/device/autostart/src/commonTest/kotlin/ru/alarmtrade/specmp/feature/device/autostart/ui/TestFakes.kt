@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
@@ -41,7 +42,7 @@ internal class FakeSessionRepository(var device: AlarmDevice = testDevice) : Dev
     val link = MutableStateFlow(DeviceLinkState.READY)
     val pins = mutableListOf<ServicePin>()
 
-    override fun linkState(): Flow<DeviceLinkState> = link
+    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
     override suspend fun readBluetoothModule(): Response<BluetoothModule> = Response.Success(
         BluetoothModule(BluetoothModuleMode.MAIN, BluetoothManufacturer("1", "BT", "DX4G", "1.0", "1.14")),
     )

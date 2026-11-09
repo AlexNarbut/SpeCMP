@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
@@ -138,7 +139,7 @@ internal class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRep
     val bootTargets = mutableListOf<BootModeTarget>()
     val pins = mutableListOf<ServicePin>()
 
-    override fun linkState(): Flow<DeviceLinkState> = link
+    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
     override suspend fun readBluetoothModule() = bluetoothVersions[minOf(bluetoothReads++, bluetoothVersions.lastIndex)]
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
     override suspend fun readImei(): Response<String> = Response.Success("")

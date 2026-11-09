@@ -12,6 +12,7 @@ import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatAttachment
@@ -140,7 +141,7 @@ class SupportChatScreenViewModel(
 
         // Запись очереди — до отправки: Success от SDK не подтверждает доставку, а
         // процесс может умереть посреди загрузки. Удалит запись только серверное эхо.
-        withContext(dispatchers.io) { outbox.enqueue(message.copy(status = SupportChatMessageStatus.Pending)) }
+        updateOutbox { enqueue(message.copy(status = SupportChatMessageStatus.Pending)) }
 
         val response = when {
             !message.isResendable() -> missingContent(message)
@@ -153,7 +154,7 @@ class SupportChatScreenViewModel(
                 // «Ушло в сокет», а не «доставлено»: запись остаётся до эха. Если эхо
                 // успело раньше, markSent не воскресит удалённую запись.
                 updateStatus(messageId, SupportChatMessageStatus.Sent)
-                withContext(dispatchers.io) { outbox.markSent(messageId) }
+                updateOutbox { markSent(messageId) }
             }
 
             is Response.Error -> {
@@ -171,12 +172,12 @@ class SupportChatScreenViewModel(
 
     private suspend fun park(message: SupportChatMessage) {
         updateStatus(message.id, SupportChatMessageStatus.Pending)
-        withContext(dispatchers.io) { outbox.enqueue(message.copy(status = SupportChatMessageStatus.Pending)) }
+        updateOutbox { enqueue(message.copy(status = SupportChatMessageStatus.Pending)) }
     }
 
     private suspend fun fail(message: SupportChatMessage) {
         updateStatus(message.id, SupportChatMessageStatus.Failed)
-        withContext(dispatchers.io) { outbox.enqueue(message.copy(status = SupportChatMessageStatus.Failed)) }
+        updateOutbox { enqueue(message.copy(status = SupportChatMessageStatus.Failed)) }
         postSideEffect(SupportChatEffect.MessageSendFailed(message.id, canRetry = message.isResendable()))
     }
 
@@ -224,7 +225,7 @@ class SupportChatScreenViewModel(
     // Сообщение покинуло ленту (эхо заменило оптимистичное, пользователь удалил):
     // запись очереди и локальная копия вложения больше не нужны.
     private suspend fun forget(message: SupportChatMessage) {
-        withContext(dispatchers.io) { outbox.remove(message.id) }
+        updateOutbox { remove(message.id) }
         message.attachment?.localPath?.let { discardFile(it) }
     }
 
@@ -304,7 +305,9 @@ class SupportChatScreenViewModel(
         val requeued = unconfirmed.filter { tryTransition(it.id, from = SENT, to = SupportChatMessageStatus.Pending) }
         if (requeued.isEmpty()) return
         safeLaunch(dispatchers.io) {
-            requeued.forEach { outbox.enqueue(it.copy(status = SupportChatMessageStatus.Pending)) }
+            requeued.forEach { message ->
+                outbox.enqueue(message.copy(status = SupportChatMessageStatus.Pending)).onError(::logOutboxFailure)
+            }
         }
     }
 
@@ -497,9 +500,24 @@ class SupportChatScreenViewModel(
     // region Внутреннее
 
     private suspend fun restoreOutbox() {
-        val restored = withContext(dispatchers.io) { outbox.load() }
+        val restored = when (val response = withContext(dispatchers.io) { outbox.load() }) {
+            is Response.Success -> response.value
+
+            is Response.Error -> {
+                logOutboxFailure(response.exception)
+                return
+            }
+        }
         if (restored.isEmpty()) return
         updateTimeline { it.withOptimistic(restored) }
+    }
+
+    private suspend fun updateOutbox(change: suspend SupportChatOutbox.() -> Response<Unit>) {
+        withContext(dispatchers.io) { outbox.change() }.onError(::logOutboxFailure)
+    }
+
+    private fun logOutboxFailure(e: Throwable) {
+        logger.w(e) { "Support chat outbox write failed" }
     }
 
     private fun updateTimeline(transform: (SupportChatTimeline) -> SupportChatTimeline) {

@@ -285,7 +285,7 @@ internal sealed interface SourceKey {
 |--------|----------------|
 | `core/common` | `Response<T>` + `ResponseExt` (`safeRun`, `map*`, `getValueIfSuccess`, …), `AppDispatchers` — обязательная зависимость каждой фичи; `AuthCloseable`, `appScopeQualifier` (app-scoped `CoroutineScope`), `AppSettingsFactory` (именованные key-value хранилища) |
 | `core/ui` | `LCEState<T, E>` + ext, `AppError.message()`, `BaseViewModel<S, E>`, `collectSideEffect`, тема (`AppTheme`, `cmpThemeColors`), `Cmp*` UI Kit, `CmpIcons` |
-| `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`SpecialistAppVersionProvider`, device info) |
+| `core/specialist` | интеграция Specialist SDK: инициализация, провайдеры (`AppVersionProvider` из `core/common`, device info) |
 | `core/network` | HTTP-движки Ktor (для SDK и Coil), `NetworkMonitor` |
 | `core/localization` | `AppLocale`, чтение/применение локали |
 
@@ -371,8 +371,14 @@ data class MainUserAppFeatures(
 )
 ```
 
-- **Контракты репозиториев:** one-shot операции — `suspend fun ...(): Response<T>`;
-  процессы со стадиями и периодические источники — `fun ...(): Flow<Response<T>>` (не suspend).
+- **Контракты репозиториев** (Konsist `repository-contract` — интерфейсы `*Repository` и всё в `domain/repository`,
+  detekt `RawFlowFromRepository` — публичные потоки реализаций): one-shot операции — `suspend fun ...(): Response<T>`;
+  процессы со стадиями и периодические источники — `fun ...(): Flow<Response<T>>` (не suspend); других членов нет.
+  Синхронный снимок (начальный state VM) — `StateFlow<Response<T>>.value` (`DeviceSettingsPreferences.treeWidthDp`);
+  сигнал «изменилось» — тоже `Flow<Response<Unit>>`. Константа платформы или сборки — не член репозитория: значение
+  из DI (`supportedDeviceTransports()` в фабрике VM, `AppVersionProvider`). Синхронная команда «в фоне приложения»,
+  которую зовут из `onCleared`/`finally`, — доменный сервис (`domain/service`, `DeviceSettingsSessionController`),
+  а не репозиторий.
   Процесс описывается собственной sealed-иерархией под-состояний с гарантированным финалом; **неудача процесса —
   последний `Response.Error`, а не стадия `Failed`**: типизированная причина — доменное исключение
   (`FirmwareUpdateException(failure)`), VM достаёт её расширением (`toFirmwareFailure()`, чужое исключение — `Unknown`).
@@ -700,7 +706,7 @@ private fun run(pinTries: Int = 0) {
 | Один раз за жизнь VM (первичная загрузка) | тело `onStart()` | `MainScreenViewModel.initialRefresh()` |
 | Всю жизнь VM, с повтором/заменой (загрузка с «Повторить», процесс, сессия) | `launchReplacing(key)` из `onStart`/интента | `CloudListViewModel.load()`, сессия `SupportChatScreenViewModel` |
 | Работа с блоком, отменяемая обрывом связи | `launchOnDevice(key)` | процесс `CloneViewModel`, `BypassLearningViewModel` |
-| Дольше экрана (в т.ч. из `onCleared()`) | репозиторий/сервис со скоупом приложения (`get(appScopeQualifier)`), VM зовёт его обычный (не `suspend`) метод | `DeviceSettingsRepository.discardSession(source)` |
+| Дольше экрана (в т.ч. из `onCleared()`) | доменный сервис со скоупом приложения (`get(appScopeQualifier)`), VM зовёт его обычный (не `suspend`) метод | `DeviceSettingsSessionController.discardSession(source)` |
 
 - **Процесс не зависит от подписки на state.** Прошивка, клонирование, обучение, сессия чата идут в `launchReplacing`/
   `launchOnDevice`, а не в `collectIntoState`: иначе через 5 с после ухода приложения в фон (`WhileSubscribed`)

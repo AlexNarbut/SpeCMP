@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -30,7 +31,7 @@ internal fun TestScope.testDeviceSession(link: MutableStateFlow<DeviceLinkState>
     )
 
 private class FakeDeviceSessionRepository(private val link: Flow<DeviceLinkState>) : DeviceSessionRepository {
-    override fun linkState(): Flow<DeviceLinkState> = link
+    override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
     override suspend fun readBluetoothModule(): Response<BluetoothModule> =
         Response.Error(IllegalStateException("usb only"))
     override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(testDevice)

@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -43,7 +44,7 @@ class DeviceInteractionViewModelTest {
     private val link = MutableStateFlow(DeviceLinkState.READY)
     private var readDevice = device
     private val sessionRepository = object : DeviceSessionRepository {
-        override fun linkState(): Flow<DeviceLinkState> = link
+        override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
         override suspend fun readBluetoothModule(): Response<BluetoothModule> =
             Response.Error(IllegalStateException("usb only"))
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(readDevice)

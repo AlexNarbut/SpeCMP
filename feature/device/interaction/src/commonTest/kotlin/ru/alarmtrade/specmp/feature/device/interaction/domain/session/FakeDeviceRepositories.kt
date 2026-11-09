@@ -3,8 +3,11 @@ package ru.alarmtrade.specmp.feature.device.interaction.domain.session
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import ru.alarmtrade.specmp.core.common.AppDispatchers
@@ -61,7 +64,10 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
     var readCount = 0
         private set
 
-    override fun linkState(): Flow<DeviceLinkState> = link
+    /** Ошибки потока связи SDK — поверх [link]. */
+    val linkErrors = MutableSharedFlow<Response.Error>()
+
+    override fun linkState(): Flow<Response<DeviceLinkState>> = merge(link.map { Response.Success(it) }, linkErrors)
 
     /** Ответ readBluetoothModule (BLE). */
     var bluetoothModule: Response<BluetoothModule> = Response.Success(

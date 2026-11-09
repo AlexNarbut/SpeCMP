@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothManufacturerData
 import ru.alarmtrade.bluetoothControl.domain.bluetooth.alarmDevice.BluetoothOperationMode
-import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.devices.interactors.alarmDeviceInteractor.requests.SetPcBasePinRequest
 import ru.alarmtrade.specialist.domain.alarmDevice.information.AlarmDeviceOperationMode
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemFeature
@@ -48,25 +47,22 @@ class SpecialistDeviceSessionRepository(
     private val appUpdatesInteractor: () -> AppUpdatesInteractor,
 ) : DeviceSessionRepository {
 
-    override fun linkState(): Flow<DeviceLinkState> = flow {
+    override fun linkState(): Flow<Response<DeviceLinkState>> = flow {
         val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
         if (interactor == null) {
-            emit(DeviceLinkState.DISCONNECTED)
+            emit(Response.Success(DeviceLinkState.DISCONNECTED))
             return@flow
         }
         // Поток текущей сессии SDK: сам переключается на новую сессию после закрытия прежней (поток конкретной
         // сессии после её закрытия молчит, и долгоживущий подписчик не увидел бы новое подключение).
         emitAll(
             interactor.observeCurrentSessionConnectionStateUseCase.execute().map { response ->
-                when (response) {
-                    is SpecialistResponse.Success -> response.value.toDomain()
-                    is SpecialistResponse.Error -> DeviceLinkState.DISCONNECTED
-                }
+                response.toResponse().map { it.toDomain() }
             },
         )
     }.catch { e ->
         if (e is CancellationException) throw e
-        emit(DeviceLinkState.DISCONNECTED)
+        emit(Response.Error(e))
     }
 
     override suspend fun readBluetoothModule(): Response<BluetoothModule> {

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -30,11 +31,12 @@ import ru.alarmtrade.specmp.feature.main.presentation.platform.isMainAppUpdateSu
 class MainScreenViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val mainRepository: MainRepository,
+    appVersionProvider: AppVersionProvider,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<MainScreenState, MainScreenEffect>(
     MainScreenState(
         isAppUpdateSupported = isMainAppUpdateSupported(),
-        appVersionName = mainRepository.appVersion.name,
+        appVersionName = appVersionProvider.current().name,
     ),
 ) {
 

@@ -8,7 +8,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 /** «Мои конфигурации» в хранилище SDK. */
 interface LocalConfigurationsRepository {
     /** Сигнал «список изменился» (создание, переименование, удаление) — списки перечитываются. */
-    val changes: Flow<Unit>
+    val changes: Flow<Response<Unit>>
 
     /** Все конфигурации пользователя, новые (по дате изменения) сверху. */
     suspend fun all(): Response<List<LocalConfiguration>>

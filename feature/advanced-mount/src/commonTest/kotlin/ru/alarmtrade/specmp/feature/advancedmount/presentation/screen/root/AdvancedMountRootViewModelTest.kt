@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
@@ -66,7 +67,7 @@ class AdvancedMountRootViewModelTest {
     private class FakeSessionRepository(var device: AlarmDevice) : DeviceSessionRepository {
         val link = MutableStateFlow(DeviceLinkState.READY)
         var bootModeCount = 0
-        override fun linkState(): Flow<DeviceLinkState> = link
+        override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }
         override suspend fun readBluetoothModule(): Response<BluetoothModule> =
             Response.Error(IllegalStateException("usb only"))
         override suspend fun readDevice(): Response<AlarmDevice> = Response.Success(device)
@@ -108,7 +109,8 @@ class AdvancedMountRootViewModelTest {
                 delay(60_000)
             }
         }
-        override fun remoteMountAvailable(): Flow<Boolean> = flowOf(true)
+        var remote: Flow<Response<Boolean>> = flowOf(Response.Success(true))
+        override fun remoteMountAvailable(): Flow<Response<Boolean>> = remote
         override suspend fun isProductInfoEnabled(): Response<Boolean> = Response.Success(true)
     }
 
@@ -158,6 +160,14 @@ class AdvancedMountRootViewModelTest {
         val content = assertIs<MountAccess.Ready>(state.content.content)
         assertEquals(false, content.unsupported)
         assertTrue(MountSection.CLONE in content.sections)
+    }
+
+    @Test
+    fun `remote mount error is shown as unavailable`(): TestResult = test {
+        mountRepository.remote = flowOf(Response.Success(true), Response.Error(IllegalStateException("chat closed")))
+        val (vm, _) = viewModel()
+
+        assertEquals(false, vm.state.value.remoteAvailable)
     }
 
     @Test
