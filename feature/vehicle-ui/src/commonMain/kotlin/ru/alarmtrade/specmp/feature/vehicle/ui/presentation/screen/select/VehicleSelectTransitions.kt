@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select
 
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.detectCombo
 
 /*
  * Переходы по каталогу — чистые функции над state (тестируются без VM). VM только отменяет устаревшие загрузки и
@@ -66,3 +67,13 @@ internal fun VehicleSelectState.withTypeReset(): VehicleSelectState = copy(
     card = LCEState.None,
     canResults = LCEState.None,
 )
+
+/**
+ * «Марка модель» в поиске по названию на уровне марок — вместе с запросом: марка распознана по загруженным маркам,
+ * без неё модели комбо-поиска сбрасываются. Вне этого уровня state не меняется.
+ */
+internal fun VehicleSelectState.withDetectedCombo(): VehicleSelectState {
+    if (searchMode != SearchMode.NAME || selection.brand != null) return this
+    val detected = brands.content?.let { detectCombo(query, it) }
+    return copy(combo = detected, comboModels = if (detected == null) LCEState.None else comboModels)
+}

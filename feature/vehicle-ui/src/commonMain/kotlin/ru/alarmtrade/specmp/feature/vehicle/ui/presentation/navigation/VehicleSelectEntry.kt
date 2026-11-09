@@ -61,7 +61,7 @@ fun VehicleSelectEntry(
     val currentOnPick by rememberUpdatedState(onPick)
     val currentOnBack by rememberUpdatedState(onBack)
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is VehicleSelectEffect.Picked -> currentOnPick(effect.car)
 

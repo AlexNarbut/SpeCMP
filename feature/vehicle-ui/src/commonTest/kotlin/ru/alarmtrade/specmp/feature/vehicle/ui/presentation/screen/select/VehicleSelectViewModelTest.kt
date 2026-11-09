@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -46,7 +47,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 
 class VehicleSelectViewModelTest {
 
-    // Unconfined: state — stateIn поверх _state, значение доходит сразу после интента (без runCurrent в каждом шаге).
+    // Unconfined: значение state доходит сразу после интента (без runCurrent в каждом шаге).
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeCatalog()
     private val recent = FakeRecent()
@@ -80,7 +81,7 @@ class VehicleSelectViewModelTest {
             dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher),
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         // Как экран: state стартует работу по подписке (stateIn).
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         advanceUntilIdle()
@@ -187,6 +188,24 @@ class VehicleSelectViewModelTest {
     }
 
     @Test
+    fun `a newer brand pick cancels the stale models load`() = test {
+        val stale = CompletableDeferred<Unit>()
+        repository.modelGates[FakeCatalog.toyota.id] = stale
+        val (vm, _) = viewModel()
+        vm.onBrandPick(FakeCatalog.toyota)
+        advanceUntilIdle()
+        assertEquals(LCEState.Loading, vm.s.models)
+
+        vm.onBrandPick(FakeCatalog.kia)
+        advanceUntilIdle()
+        stale.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(FakeCatalog.kia, vm.s.selection.brand)
+        assertEquals(FakeCatalog.kiaModels, vm.s.models.content)
+    }
+
+    @Test
     fun `connection failure is kept as a network error`() = test {
         repository.failure = AppException(ApiError.NoConnection, IllegalStateException("offline"))
         repository.failBrands = true
@@ -230,6 +249,20 @@ class VehicleSelectViewModelTest {
         assertEquals(FakeCatalog.toyota, vm.s.selection.brand)
         assertEquals(FakeCatalog.camry, vm.s.selection.model)
         assertNull(vm.s.combo)
+    }
+
+    @Test
+    fun `clearing the brand and model query drops the combo`() = test {
+        val (vm, _) = viewModel()
+        vm.onQueryChange("toyota cam")
+        advanceUntilIdle()
+        assertEquals(FakeCatalog.models, vm.s.comboModels.content)
+
+        vm.onQueryChange("")
+
+        assertEquals("", vm.s.query)
+        assertNull(vm.s.combo)
+        assertEquals(LCEState.None, vm.s.comboModels)
     }
 
     @Test
@@ -376,14 +409,17 @@ private class FakeCatalog : VehicleCatalogRepository {
     var failBrands = false
     var failModels = false
     var failure: Throwable = IllegalStateException("server")
+    val modelGates = mutableMapOf<Int, CompletableDeferred<Unit>>()
 
     override suspend fun brands(query: CatalogQuery): Response<List<CarBrand>> {
         brandQueries += query
         return if (failBrands) error() else Response.Success(brands)
     }
 
-    override suspend fun models(query: CatalogQuery, brandId: Int): Response<List<CarModel>> =
-        if (failModels) error() else Response.Success(models)
+    override suspend fun models(query: CatalogQuery, brandId: Int): Response<List<CarModel>> {
+        modelGates[brandId]?.await()
+        return if (failModels) error() else Response.Success(if (brandId == kia.id) kiaModels else models)
+    }
 
     override suspend fun trims(query: CatalogQuery, modelId: Int): Response<List<CarTrim>> =
         Response.Success(if (modelId == camry.id) camryTrims else listOf(corollaTrim))
@@ -414,7 +450,9 @@ private class FakeCatalog : VehicleCatalogRepository {
 
     companion object {
         val toyota = CarBrand(1, "Toyota", null)
-        val brands = listOf(CarBrand(2, "Kia", null), toyota)
+        val kia = CarBrand(2, "Kia", null)
+        val brands = listOf(kia, toyota)
+        val kiaModels = listOf(CarModel(20, "Rio", null, 2015..2020))
         val camry = CarModel(10, "Camry", null, 2017..2023)
         val corolla = CarModel(11, "Corolla", null, 2018..2022)
         val models = listOf(camry, corolla)

@@ -9,8 +9,12 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarModel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarTrim
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
+import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
+import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 
 internal enum class SearchMode { NAME, CAN }
 
@@ -96,6 +100,22 @@ internal data class VehicleSelectState(
     val showTypeChoice: Boolean get() = mode.typeSelectable && deviceType == null
 }
 
+/** Стартовый state экрана: параметры запроса, тип устройства из него и CAN-код прошивки в поиске. */
+internal fun VehicleSelectRequest.initialState(): VehicleSelectState {
+    val configurationsOnly = catalog == VehicleCatalog.WITH_CONFIGURATIONS
+    return VehicleSelectState(
+        mode = VehicleSelectModeUi(
+            pick = mode == VehicleSelectMode.PICK,
+            configurationsOnly = configurationsOnly,
+            typeSelectable = device == null,
+            deviceName = (device as? VehicleDeviceFilter.Device)?.deviceName,
+            firmwareCanCode = firmwareCanCode,
+        ),
+        deviceType = (device as? VehicleDeviceFilter.Type)?.type,
+        canCode = firmwareCanCode.takeUnless { configurationsOnly }.orEmpty(),
+    )
+}
+
 /** Постоянные параметры экрана из запроса. */
 internal data class VehicleSelectModeUi(
     val pick: Boolean,
@@ -108,15 +128,6 @@ internal data class VehicleSelectModeUi(
 ) {
     val canSearchAvailable: Boolean get() = !configurationsOnly
     val filterAvailable: Boolean get() = !configurationsOnly
-}
-
-internal sealed interface VehicleSelectEffect {
-    data class Picked(val car: CarSummary) : VehicleSelectEffect
-    data object Exit : VehicleSelectEffect
-    data class CanCopied(val code: String) : VehicleSelectEffect
-
-    /** «Выбрать» не удалось (данные автомобиля не получены). */
-    data class PickFailed(val error: CatalogError) : VehicleSelectEffect
 }
 
 /** Шаг узкой раскладки — выводится из state. */
