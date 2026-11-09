@@ -21,9 +21,10 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.lifecycle.AppForegroundProvider
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
@@ -59,7 +60,10 @@ class ScanDeviceViewModelTest {
     }
 
     private fun deviceSession(connection: FakeDeviceConnectionRepository) =
-        DeviceSession(FakeDeviceSessionRepository(), connection, dispatchers()).also { lastSession = it }
+        createDeviceSession(FakeDeviceSessionRepository(), connection, dispatchers()).also { it.start() }.also {
+            lastSession =
+                it
+        }
 
     private fun viewModel(
         scan: FakeDeviceScanRepository = FakeDeviceScanRepository(),

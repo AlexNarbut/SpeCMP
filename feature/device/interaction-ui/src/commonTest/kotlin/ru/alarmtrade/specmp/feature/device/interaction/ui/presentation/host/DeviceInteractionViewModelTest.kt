@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -34,7 +35,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessio
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 class DeviceInteractionViewModelTest {
 
@@ -69,12 +70,12 @@ class DeviceInteractionViewModelTest {
         }
     }
 
-    private fun TestScope.session() = DeviceSession(
+    private fun TestScope.session() = createDeviceSession(
         sessionRepository,
         connectionRepository,
         AppDispatchers(dispatcher, dispatcher, dispatcher),
         backgroundScope.coroutineContext,
-    )
+    ).also { it.start() }
 
     private fun TestScope.viewModel(session: DeviceSession = session()): DeviceInteractionViewModel {
         val viewModel = DeviceInteractionViewModel(session)

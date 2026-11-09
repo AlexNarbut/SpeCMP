@@ -35,6 +35,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.domain.model.DeviceAccess
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -48,7 +49,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperat
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AdvancedMountRootViewModelTest {
@@ -137,7 +137,14 @@ class AdvancedMountRootViewModelTest {
     private fun TestScope.viewModel(): Pair<AdvancedMountRootViewModel, MutableList<AdvancedMountRootEffect>> {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+            createDeviceSession(
+                sessionRepository,
+                FakeConnectionRepository(),
+                dispatchers,
+                backgroundScope.coroutineContext,
+            ).also {
+                it.start()
+            }
         session.attach(ConnectionTransport.USB)
         val vm = AdvancedMountRootViewModel(session, mountRepository, dispatchers).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }

@@ -35,6 +35,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.CheckDialog
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
@@ -42,7 +43,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 
 class FirmwareFileViewModelTest {
@@ -97,12 +98,12 @@ class FirmwareFileViewModelTest {
 
     private fun TestScope.viewModel(): FirmwareFileViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
-        session = DeviceSession(
+        session = createDeviceSession(
             sessionRepository,
             FakeConnectionRepository(),
             dispatchers,
             backgroundScope.coroutineContext,
-        )
+        ).also { it.start() }
         session.attach(ConnectionTransport.BLE)
         val vm = FirmwareFileViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }

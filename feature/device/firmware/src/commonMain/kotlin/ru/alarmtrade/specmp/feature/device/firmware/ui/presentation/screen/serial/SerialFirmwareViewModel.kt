@@ -14,7 +14,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.Fir
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceOrNull
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /**
  * Прошивка блока по COM-порту: «Обновить из файла» → разбор заголовка `.frm` → подтверждение с версиями блока и

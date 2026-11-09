@@ -6,6 +6,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /** Исход входа в режим программирования. */
 enum class ProgramModeEntryResult {

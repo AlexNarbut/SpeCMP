@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /** База VM, работающих с подключённым блоком; контракт — `feature/device/AGENTS.md`. */
 abstract class BaseDeviceViewModel<S : Any, E : Any>(protected val deviceSession: DeviceSession, initialState: S) :

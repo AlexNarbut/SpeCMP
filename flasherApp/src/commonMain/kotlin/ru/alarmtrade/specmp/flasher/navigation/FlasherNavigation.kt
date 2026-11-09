@@ -30,7 +30,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.file.
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.serial.SerialFirmwareScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareSources
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph

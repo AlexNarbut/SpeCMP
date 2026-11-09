@@ -16,6 +16,7 @@
 - **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
 - **Репозитории возвращают `Response<T>` и никогда не бросают** — см. «Data — репозитории».
+- **Без побочных эффектов в конструкторе** (Konsist `no-constructor-side-effects`): нет `init { }` и корутин в инициализаторах свойств; фоновая работа — идемпотентный `start()` (CAS, `start-once-cas`) доменного сервиса из `AppServicesStarter` — см. «Доменные сервисы».
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов — см. «Domain».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
@@ -110,7 +111,7 @@ val state = _state
 `Settings` (`commit()` на Android) или файл.
 
 Исключение — объект, который **сам хранит состояние и сам запускает фоновую работу в собственном `CoroutineScope`**
-(сессии, контроллеры с app-scope: `DeviceSession`, `DeviceSettingsSessionControllerImpl`): он переключает диспетчер
+(сессии, контроллеры с app-scope: `DeviceSessionImpl`, `DeviceSettingsSessionControllerImpl`): он переключает диспетчер
 внутри, вызывающий его вызов **не** оборачивает. Правило распознаёт такой класс структурно — свойство, параметр
 конструктора или супертип `CoroutineScope`; `@Suppress` не нужен. `withContext(NonCancellable)` (suspend-уборка
 в `finally` после отмены) — не выбор диспетчера и разрешён везде.
@@ -536,6 +537,39 @@ override fun observeChatAvailability(): Flow<Response<Boolean>> = flow {
     }
 }
 ```
+
+## Доменные сервисы
+
+Объект, который держит состояние процесса приложения или работает дольше экрана (сессия устройства, уборка сессий
+настроек), — доменный сервис: интерфейс в `domain/service`, реализация `*Impl` — `internal` в `data/service`,
+`single` в Koin-модуле фичи (`DeviceSession` → `DeviceSessionImpl`, `DeviceSettingsSessionController` →
+`DeviceSettingsSessionControllerImpl`). Чистая логика без своего скоупа и I/O (`ServicePinCooldown`,
+`ProgramModeEntry` в `interaction/domain/session`) сервисом не оформляется.
+
+- **Контракт** (Konsist `service-contract`): `suspend` → `Response<T>`, потоки → `…<Response<T>>`, синхронная
+  функция — только команда с результатом `Unit`/`Boolean` (`start()`, `close()`, «закрыть в фоне» из `onCleared`).
+  Состояние сервиса в памяти, которое не может «упасть» (`DeviceSession.state` — ошибка связи уже свёрнута в
+  `Disconnected`, `reboot`, `transport`), — `StateFlow<T>` с `@Suppress("konsist.service-contract")` и причиной.
+  «Дождаться» — отдельный `suspend`-член с `Response` (`close()` + `closeAndAwait()`), не `Job` наружу.
+- **Реализацию для тестов других модулей** отдаёт фабрика в `di` (`createDeviceSession(…)`): реализация `internal`,
+  а VM-тестам нужна настоящая сессия поверх фейковых репозиториев.
+
+### Без побочных эффектов в конструкторе
+
+Создание объекта (Koin-резолв — на любом потоке, в непредсказуемый момент) ничего не запускает (Konsist
+`no-constructor-side-effects`, весь production): нет `init { }`, инициализаторы свойств не запускают корутин —
+`launch`/`async`/`launchIn` (кроме `CoroutineStart.LAZY`), `shareIn`/`stateIn` с `SharingStarted.Eagerly`. Создать
+`CoroutineScope`, `MutableStateFlow`, `stateIn(WhileSubscribed)` — можно; геттер и `by lazy` исполняются не в
+конструкторе. Белый список `init` — платформенные мониторы сети (`AndroidNetworkMonitor`, `IosNetworkMonitor`):
+синхронная регистрация колбэка в ОС.
+
+- **Состояние, производное от потока**, — `stateIn(WhileSubscribed)` (`DeviceSession.state`: горячий, пока есть
+  подписчики).
+- **Реакция без подписчиков** — `start()` доменного сервиса со своим скоупом (`DeviceSessionImpl.start()` публикует
+  `reboot`). Сервисы запускает `AppServicesStarter` (`core/common`; слоты — `appServicesModule` в `composeApp`,
+  `flasherServicesModule` во `flasherApp`, `start()` — из корня композиции): новый process-wide сервис — новый слот.
+- **`start()` идемпотентен через CAS** (Konsist `start-once-cas`): guard — `MutableStateFlow(false).compareAndSet(false,
+  true)`, не `var started`/`var job` (check-then-set при параллельном `start()` запустит работу дважды).
 
 ## Состояние сессии и смена аккаунта
 

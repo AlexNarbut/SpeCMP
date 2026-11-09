@@ -20,7 +20,7 @@ import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntryResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown

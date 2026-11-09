@@ -12,7 +12,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 /**
  * Фасад над текущей сессией SDK (`bluetoothAlarmDeviceInteractor` обслуживает и BLE, и USB):
  * состояние связи и чтение блока. Тонкий: решения о повторах/переходах — в
- * [DeviceSession][ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession].
+ * [DeviceSession][ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession].
  */
 interface DeviceSessionRepository {
     /** Поток состояния связи текущей сессии; ошибку SDK владелец сессии считает [DeviceLinkState.DISCONNECTED]. */

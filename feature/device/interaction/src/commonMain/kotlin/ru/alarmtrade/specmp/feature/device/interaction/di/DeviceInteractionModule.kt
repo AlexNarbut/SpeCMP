@@ -1,15 +1,19 @@
 package ru.alarmtrade.specmp.feature.device.interaction.di
 
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistProgramModeRepository
+import ru.alarmtrade.specmp.feature.device.interaction.data.service.DeviceSessionImpl
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 
@@ -30,7 +34,7 @@ val deviceInteractionModule = module {
     single<DeviceSessionRepository> {
         SpecialistDeviceSessionRepository(bluetoothAlarmDeviceInteractor = { get() }, appUpdatesInteractor = { get() })
     }
-    single { DeviceSession(get(), get(), get()) }
+    single { createDeviceSession(get(), get(), get()) }
     // Блокировка ввода PIN программирования (по блоку): общая для прошивки и режима программирования.
     // Состояние аккаунта — чистится при логауте.
     single { ServicePinCooldown() } bind AuthCloseable::class
@@ -38,3 +42,11 @@ val deviceInteractionModule = module {
     single<ProgramModeRepository> { SpecialistProgramModeRepository(bluetoothAlarmDeviceInteractor = { get() }) }
     factory { ProgramModeEntry(get(), get(), get()) }
 }
+
+// Реализация internal, а VM-тестам других модулей нужна настоящая сессия поверх фейковых репозиториев.
+fun createDeviceSession(
+    sessionRepository: DeviceSessionRepository,
+    connectionRepository: DeviceConnectionRepository,
+    dispatchers: AppDispatchers,
+    parentContext: CoroutineContext = EmptyCoroutineContext,
+): DeviceSession = DeviceSessionImpl(sessionRepository, connectionRepository, dispatchers, parentContext)

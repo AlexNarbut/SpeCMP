@@ -37,12 +37,12 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.testDevice
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeature
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 
@@ -77,7 +77,14 @@ class BypassLearningViewModelTest {
     private fun TestScope.viewModel(subscribe: Boolean = true): BypassLearningViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+            createDeviceSession(
+                sessionRepository,
+                FakeConnectionRepository(),
+                dispatchers,
+                backgroundScope.coroutineContext,
+            ).also {
+                it.start()
+            }
         session.attach(ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
         val vm = BypassLearningViewModel(session, repository, entry, cooldown, dispatchers).also { viewModels += it }

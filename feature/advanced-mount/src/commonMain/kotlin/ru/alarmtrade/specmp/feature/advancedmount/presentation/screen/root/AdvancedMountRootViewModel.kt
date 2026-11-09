@@ -16,7 +16,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSectio
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.toSections
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
 /**

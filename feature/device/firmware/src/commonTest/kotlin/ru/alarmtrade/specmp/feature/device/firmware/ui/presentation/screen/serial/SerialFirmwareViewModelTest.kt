@@ -31,11 +31,12 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FileError
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 class SerialFirmwareViewModelTest {
 
@@ -81,7 +82,14 @@ class SerialFirmwareViewModelTest {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         sessionRepository = FakeSessionRepository(bootDevice)
         session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+            createDeviceSession(
+                sessionRepository,
+                FakeConnectionRepository(),
+                dispatchers,
+                backgroundScope.coroutineContext,
+            ).also {
+                it.start()
+            }
         session.attach(ConnectionTransport.SERIAL)
         // Хост держит сессию горячей, пока открыт экран устройства.
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { session.state.collect {} }

@@ -26,9 +26,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Autostart
@@ -76,7 +76,14 @@ class CheckStateViewModelTest {
     private fun TestScope.viewModel(fastMount: Boolean = false): CheckStateViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+            createDeviceSession(
+                sessionRepository,
+                FakeConnectionRepository(),
+                dispatchers,
+                backgroundScope.coroutineContext,
+            ).also {
+                it.start()
+            }
         session.attach(ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
         val vm = CheckStateViewModel(session, repository, entry, programMode, cooldown, dispatchers, fastMount, time)

@@ -142,6 +142,18 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `service members return Response`() {
+        scope.interfaces(includeNested = true)
+            .filter { it.name.isServiceName() || it.resideInPackage("..domain.service..") }
+            .assertResultContract(
+                testName = "service-contract",
+                role = "доменного сервиса (interface *Coordinator/*Controller, интерфейсы domain/service)",
+                docs = "docs/patterns.md, «Доменные сервисы»",
+                syncCommandTypes = SERVICE_SYNC_COMMAND_TYPES,
+            )
+    }
+
+    @Test
     fun `data declarations are not public`() {
         libraryFiles.filter { it.inLayer("data") }
             .flatMap { it.declarations(includeNested = false, includeLocal = false) }
@@ -407,6 +419,36 @@ class ArchitectureTest {
             ) { true }
     }
 
+    @Test
+    fun `classes have no constructor side effects`() {
+        classes.assertFalse(
+            testName = "no-constructor-side-effects",
+            additionalMessage = "Создание объекта (Koin-резолв) без побочных эффектов: нет init { } и запуска " +
+                "корутин в инициализаторах свойств (launch/async/launchIn без CoroutineStart.LAZY, shareIn/stateIn " +
+                "c SharingStarted.Eagerly). Данные — лениво при подписке (WhileSubscribed, onStart), фоновые " +
+                "реакции — start() доменного сервиса из AppServicesStarter. init разрешён только платформенным " +
+                "мониторам (${INIT_ALLOWED_CLASSES.joinToString()}) для синхронной регистрации в ОС, корутины — " +
+                "никому. docs/patterns.md, «Без побочных эффектов в конструкторе»",
+        ) { klass ->
+            (klass.initBlocks.isNotEmpty() && klass.name !in INIT_ALLOWED_CLASSES) ||
+                klass.properties(includeNested = false).any { it.launchesOnConstruction() }
+        }
+    }
+
+    @Test
+    fun `start-once services guard start with CAS`() {
+        classes.filter { klass ->
+            klass.functions(includeNested = false, includeLocal = false)
+                .any { it.name == "start" && it.parameters.isEmpty() }
+        }.assertFalse(
+            testName = "start-once-cas",
+            additionalMessage = "Класс с start() не держит guard в var-свойстве (Job, Boolean, инициализатор " +
+                "true/false/launch): check-then-set на var при параллельном start() запускает работу дважды. Guard — " +
+                "MutableStateFlow(false).compareAndSet(false, true); с stop() — MutableStateFlow<Job?> + " +
+                "compareAndSet(null, job). docs/patterns.md, «Без побочных эффектов в конструкторе»",
+        ) { klass -> klass.properties(includeNested = false).any { it.isVar && it.isStartGuard() } }
+    }
+
     // Имя родителя у Konsist включает аргументы типа: `BaseViewModel<S, E>`; наследники BaseDeviceViewModel — тоже VM.
     private fun KoClassDeclaration.extendsViewModelBase(): Boolean =
         parents(indirectParents = true).any { it.name.substringBefore('<') == BASE_VIEW_MODEL }
@@ -545,22 +587,34 @@ private fun KoClassAndInterfaceAndObjectDeclaration.isNavKey(): Boolean =
 // `kotlinx.coroutines.flow.StateFlow<Foo>?` → `StateFlow`.
 private fun String.baseTypeName(): String = trim().removeSuffix("?").substringBefore('<').substringAfterLast('.').trim()
 
-private fun List<KoInterfaceDeclaration>.assertResultContract(testName: String, role: String, docs: String) {
+// Контракт результата (docs/patterns.md): suspend → Response<…>, Flow/StateFlow/SharedFlow → …<Response<…>>.
+// Синхронный член (не suspend, не поток) — нарушение, кроме функции-команды с результатом из syncCommandTypes
+// (у сервисов — Unit/Boolean: start, «закрыть в фоне»); у репозиториев команд нет.
+private fun List<KoInterfaceDeclaration>.assertResultContract(
+    testName: String,
+    role: String,
+    docs: String,
+    syncCommandTypes: Set<String> = emptySet(),
+) {
     val functions: List<KoBaseDeclaration> = flatMap { it.functions(includeNested = false, includeLocal = false) }
     val properties: List<KoBaseDeclaration> = flatMap { it.properties(includeNested = false) }
+    val syncRule = if (syncCommandTypes.isEmpty()) {
+        " Иных членов нет: синхронный снимок — StateFlow<Response<T>>.value, чтение/запись — suspend … Response<T>."
+    } else {
+        " Синхронная функция — только команда с результатом ${syncCommandTypes.joinToString("/")}; " +
+            "данные — suspend … Response<T> или поток, синхронных свойств-не-потоков нет."
+    }
     (functions + properties).assertTrue(
         testName = testName,
-        additionalMessage = "Члены $role: suspend → Response<…>, Flow/StateFlow/SharedFlow → …<Response<…>>. " +
-            "Иных членов нет: синхронный снимок — StateFlow<Response<T>>.value, чтение/запись — " +
-            "suspend … Response<T>. $docs",
+        additionalMessage = "Члены $role: suspend → Response<…>, Flow/StateFlow/SharedFlow → …<Response<…>>." +
+            "$syncRule $docs",
     ) {
         when (it) {
-            is KoFunctionDeclaration ->
-                if (it.hasSuspendModifier) {
-                    it.returnType?.text?.baseTypeName() == RESPONSE
-                } else {
-                    it.returnType?.text.isFlowType() && it.returnType?.text.isResponseFlow()
-                }
+            is KoFunctionDeclaration -> when {
+                it.hasSuspendModifier -> it.returnType?.text?.baseTypeName() == RESPONSE
+                it.returnType?.text.isFlowType() -> it.returnType?.text.isResponseFlow()
+                else -> it.syncResultType() in syncCommandTypes
+            }
 
             is KoPropertyDeclaration -> it.type?.text.isFlowType() && it.type?.text.isResponseFlow()
 
@@ -568,6 +622,33 @@ private fun List<KoInterfaceDeclaration>.assertResultContract(testName: String, 
         }
     }
 }
+
+// Результат синхронной функции как написан (без `kotlin.`); без явного типа — Unit, кроме выводимого из
+// expression body (тип неизвестен — не команда). `Boolean?` — не команда.
+private fun KoFunctionDeclaration.syncResultType(): String? =
+    returnType?.text?.trim()?.removePrefix("kotlin.") ?: UNIT.takeUnless { hasExpressionBody }
+
+private const val UNIT = "Unit"
+private val SERVICE_SYNC_COMMAND_TYPES = setOf(UNIT, "Boolean")
+
+// Платформенные мониторы сети регистрируют колбэк ОС синхронно при создании.
+private val INIT_ALLOWED_CLASSES = setOf("AndroidNetworkMonitor", "IosNetworkMonitor")
+
+// Инициализатор свойства исполняется в конструкторе; геттер, `by lazy` и LAZY-корутина до start() — нет.
+private fun KoPropertyDeclaration.launchesOnConstruction(): Boolean {
+    if (hasGetter || delegateName == "lazy") return false
+    val code = text.stripCommentsAndStrings()
+    return CONSTRUCTOR_LAUNCH.containsMatchIn(code) && LAZY_START !in code
+}
+
+private val CONSTRUCTOR_LAUNCH = Regex("""\b(launch|async|launchIn)\s*[({]|SharingStarted\.Eagerly\b""")
+private const val LAZY_START = "CoroutineStart.LAZY"
+
+private val START_GUARD_TYPES = setOf("Job", "Boolean")
+private val START_GUARD_INITIALIZER = Regex("""^(true|false)$|\b(launch|launchIn)\b""")
+
+private fun KoPropertyDeclaration.isStartGuard(): Boolean = type?.text?.baseTypeName() in START_GUARD_TYPES ||
+    value?.stripCommentsAndStrings()?.trim()?.let(START_GUARD_INITIALIZER::containsMatchIn) == true
 
 private const val RESPONSE = "Response"
 private val FLOW_TYPES = setOf("Flow", "StateFlow", "SharedFlow")

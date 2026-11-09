@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.lifecycle.AppForegroundProvider
 import ru.alarmtrade.specmp.core.permissions.BlePermissionResult
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
@@ -23,7 +24,7 @@ import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceConnectionState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceKind
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.DeviceTransport
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
@@ -86,7 +87,7 @@ class ScanDeviceViewModel(
         safeLaunch { foregroundProvider.foregroundReturns.collect { recheckOnForeground() } }
         // Прошлая сессия могла не закрыться (или ещё закрывается после выхода из flow устройства):
         // подключённое устройство не рекламируется и не появится в поиске — дожидаемся закрытия.
-        deviceSession.close().join()
+        closeSession()
         checkPermissionsExclusively()
     }
 
@@ -218,7 +219,7 @@ class ScanDeviceViewModel(
             // Дожидаемся, пока отменённое подключение отпустит lock; новое «Подключить» до конца закрытия
             // пропускается. Сначала закрыть сессию, затем вернуться к поиску (он стартует заново).
             executeWithProceedLock(needSkipAnother = false) {
-                deviceSession.close().join()
+                closeSession()
                 reduce { copy(step = ScanStep.Scanning) }
             }
         }
@@ -252,7 +253,7 @@ class ScanDeviceViewModel(
                 deviceSession.attach(connection)
                 postSideEffect(ScanDeviceEffect.SessionCreated)
             } else {
-                deviceSession.close().join()
+                closeSession()
                 reduce { copy(step = ScanStep.Scanning) }
             }
         }
@@ -339,6 +340,10 @@ class ScanDeviceViewModel(
             ?: (serialResponse as? Response.Error)
         // Экран рисует Error как продолжающийся поиск.
         return if (error != null) LCEState.Error(ScanError.from(error.exception)) else LCEState.Loading
+    }
+
+    private suspend fun closeSession() {
+        deviceSession.closeAndAwait().onError { logger.w(it) { "Failed to close device session" } }
     }
 
     private companion object {

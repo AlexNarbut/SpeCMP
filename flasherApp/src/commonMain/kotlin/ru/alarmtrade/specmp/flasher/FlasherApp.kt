@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
+import ru.alarmtrade.specmp.core.common.AppServicesStarter
 import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.lifecycle.di.appLifecycleModule
 import ru.alarmtrade.specmp.core.localization.di.localizationModule
@@ -27,6 +28,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModul
 import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
+import ru.alarmtrade.specmp.flasher.di.flasherServicesModule
 import ru.alarmtrade.specmp.flasher.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.flasher.navigation.FlasherNavigation
 
@@ -49,6 +51,7 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
                 add(localizationModule)
                 add(permissionsModule())
                 add(appLifecycleModule)
+                add(flasherServicesModule)
                 add(authStateModule)
                 add(loginModule)
                 add(deviceSelectionModule)
@@ -60,6 +63,10 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
     }) {
         // Привязка PermissionsController к жизненному циклу корневой активити — один раз на приложение.
         BindEffect(koinInject<PermissionsProvider>().getController())
+
+        // Process-wide сервисы (сессия устройства и т. п.): start() идемпотентен, работа — в их собственных скоупах.
+        val appServicesStarter = koinInject<AppServicesStarter>()
+        LaunchedEffect(Unit) { appServicesStarter.start() }
 
         // Начальная настройка SDK: app-scoped и идемпотентна; UI — после неё (см. App() основного приложения).
         val specialistInitializer = koinInject<SpecialistInitializer>()

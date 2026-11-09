@@ -1,16 +1,18 @@
-package ru.alarmtrade.specmp.feature.device.interaction.domain.session
+package ru.alarmtrade.specmp.feature.device.interaction.data.service
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
@@ -21,8 +23,9 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkSt
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 
-class DeviceSessionTest {
+class DeviceSessionImplTest {
 
     @Test
     fun `ready link reads device`() = runTest(UnconfinedTestDispatcher()) {
@@ -168,7 +171,7 @@ class DeviceSessionTest {
         val connection = FakeDeviceConnectionRepository()
         val session = testSession(FakeDeviceSessionRepository(), connection)
 
-        session.close().join()
+        session.closeAndAwait()
 
         assertEquals(1, connection.closeCount)
     }
@@ -182,7 +185,7 @@ class DeviceSessionTest {
         session.attach(ConnectionTransport.USB)
         assertEquals(ConnectionTransport.USB, session.transport.value)
 
-        session.close().join()
+        session.closeAndAwait()
         assertNull(session.transport.value)
         assertEquals(1, connection.closeCount)
     }
@@ -266,7 +269,7 @@ class DeviceSessionTest {
         assertNull(session.reboot.value)
 
         session.expectReboot(DeviceReboot.ToMain)
-        session.close().join()
+        session.closeAndAwait()
         assertNull(session.reboot.value)
     }
 
@@ -421,13 +424,13 @@ class DeviceSessionTest {
         advanceTimeBy(1_001)
         assertEquals(1, repository.reconnectCount)
 
-        val closing = session.close()
+        val closing = backgroundScope.async { session.closeAndAwait() }
         runCurrent()
         assertNull(session.transport.value)
         assertEquals(0, connection.closeCount)
 
         gate.complete(Unit)
-        closing.join()
+        assertEquals(Response.Success(Unit), closing.await())
         assertEquals(1, connection.closeCount)
     }
 
@@ -599,7 +602,175 @@ class DeviceSessionTest {
         assertEquals(Response.Success(Unit), session.reconnectNow())
         assertEquals(1, repository.reconnectCount)
 
-        session.close().join()
+        session.closeAndAwait()
         assertNull(session.reconnectNow())
+    }
+
+    @Test
+    fun `refresh mode rereads the block on a ready link without showing Connecting`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
+            val repository = FakeDeviceSessionRepository(DeviceLinkState.READY).apply {
+                readResults = listOf(Response.Success(bootDevice))
+            }
+            val session = testSession(repository)
+            session.attach(ConnectionTransport.SERIAL)
+            val states = mutableListOf<DeviceSessionState>()
+            backgroundScope.launch { session.state.collect { states += it } }
+            runCurrent()
+            assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+            states.clear()
+
+            repository.readResults = listOf(Response.Success(testDevice))
+            session.refreshMode()
+            runCurrent()
+
+            assertEquals(listOf<DeviceSessionState>(DeviceSessionState.Ready(testDevice)), states)
+        }
+
+    @Test
+    fun `refresh mode keeps the state when the block does not answer`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.SERIAL)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        val reads = repository.readCount
+
+        repository.readResults = listOf(Response.Error(IllegalStateException("no answer")))
+        session.refreshMode()
+        advanceTimeBy(5_000)
+        runCurrent()
+
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        assertEquals(reads + 3, repository.readCount)
+        assertEquals(0, repository.disconnectCount)
+    }
+
+    @Test
+    fun `refresh mode is ignored while the link is not ready`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.CONNECTING)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.USB)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+
+        session.refreshMode()
+        runCurrent()
+
+        assertEquals(DeviceSessionState.Connecting, session.state.value)
+        assertEquals(0, repository.readCount)
+    }
+
+    @Test
+    fun `state is reset after the last subscriber leaves`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.USB)
+        val subscriber = backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+
+        subscriber.cancel()
+        advanceTimeBy(4_000)
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        advanceTimeBy(1_001)
+        assertEquals(DeviceSessionState.Connecting, session.state.value)
+
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+        assertEquals(DeviceSessionState.Ready(testDevice), session.state.value)
+        assertEquals(2, repository.readCount)
+    }
+
+    @Test
+    fun `firmware transfer outside the bootloader does not hold the mode`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        session.attach(ConnectionTransport.BLE)
+        backgroundScope.launch { session.state.collect {} }
+        runCurrent()
+
+        session.beginFirmwareTransfer()
+        val bootDevice = testDevice.copy(mode = DeviceOperationMode.BOOT)
+        repository.readResults = listOf(Response.Success(bootDevice))
+        repository.link.value = DeviceLinkState.DISCONNECTED
+        repository.link.value = DeviceLinkState.READY
+        runCurrent()
+
+        assertEquals(DeviceSessionState.FirmwareBoot(bootDevice), session.state.value)
+    }
+
+    @Test
+    fun `reboot is published to observers`() = runTest(UnconfinedTestDispatcher()) {
+        val session = testSession()
+        val reboots = mutableListOf<DeviceReboot?>()
+        backgroundScope.launch { session.reboot.collect { reboots += it } }
+
+        session.expectReboot(DeviceReboot.Restart)
+        session.cancelReboot()
+
+        assertEquals(listOf(null, DeviceReboot.Restart, null), reboots)
+    }
+
+    @Test
+    fun `device commands are passed to the repository`() = runTest(UnconfinedTestDispatcher()) {
+        val repository = FakeDeviceSessionRepository(DeviceLinkState.READY)
+        val session = testSession(repository)
+        val pin = requireNotNull(ServicePin.parseOrNull("1234"))
+
+        assertEquals(repository.imei, session.readImei())
+        assertEquals(Response.Success(Unit), session.exitBootMode(BootModeTarget.MainProgram))
+        assertEquals(Response.Success(Unit), session.setServicePin(pin))
+
+        assertEquals(listOf(BootModeTarget.MainProgram), repository.exitTargets)
+        assertEquals(listOf(pin), repository.savedPins)
+    }
+
+    @Test
+    fun `reboot is published only after start and start is idempotent`() = runTest(UnconfinedTestDispatcher()) {
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val session = DeviceSessionImpl(
+            FakeDeviceSessionRepository(),
+            FakeDeviceConnectionRepository(),
+            AppDispatchers(dispatcher, dispatcher, dispatcher),
+            backgroundScope.coroutineContext,
+        )
+        val reboots = mutableListOf<DeviceReboot?>()
+        backgroundScope.launch { session.reboot.collect { reboots += it } }
+
+        session.expectReboot(DeviceReboot.ToBoot)
+        assertNull(session.reboot.value)
+
+        session.start()
+        session.start()
+        assertEquals(DeviceReboot.ToBoot, session.reboot.value)
+        session.cancelReboot()
+
+        assertEquals(listOf(null, DeviceReboot.ToBoot, null), reboots)
+    }
+
+    @Test
+    fun `close does not wait and closes in the background`() = runTest(UnconfinedTestDispatcher()) {
+        val connection = FakeDeviceConnectionRepository().apply {
+            closeResult = Response.Error(IllegalStateException("sdk"))
+        }
+        val session = testSession(connection = connection)
+        session.attach(ConnectionTransport.USB)
+
+        session.close()
+        runCurrent()
+
+        assertNull(session.transport.value)
+        assertEquals(1, connection.closeCount)
+    }
+
+    @Test
+    fun `close and await returns the close result`() = runTest(UnconfinedTestDispatcher()) {
+        val error = Response.Error(IllegalStateException("sdk"))
+        val connection = FakeDeviceConnectionRepository().apply { closeResult = error }
+        val session = testSession(connection = connection)
+
+        assertEquals(error, session.closeAndAwait())
     }
 }

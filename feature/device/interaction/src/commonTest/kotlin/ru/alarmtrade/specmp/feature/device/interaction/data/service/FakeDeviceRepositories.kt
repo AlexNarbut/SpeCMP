@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.interaction.domain.session
+package ru.alarmtrade.specmp.feature.device.interaction.data.service
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -25,7 +25,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
-val testDevice = AlarmDevice(
+internal val testDevice = AlarmDevice(
     systemId = 1076884189,
     systemName = "DX4G",
     firmwareVersion = "3.57",
@@ -35,20 +35,20 @@ val testDevice = AlarmDevice(
 )
 
 /** Сессия на тестовом планировщике; скоуп сессии — дочерний к `backgroundScope` (гасится в конце теста). */
-fun TestScope.testSession(
+internal fun TestScope.testSession(
     repository: DeviceSessionRepository = FakeDeviceSessionRepository(),
     connection: DeviceConnectionRepository = FakeDeviceConnectionRepository(),
-): DeviceSession {
+): DeviceSessionImpl {
     val dispatcher = UnconfinedTestDispatcher(testScheduler)
-    return DeviceSession(
+    return DeviceSessionImpl(
         repository,
         connection,
         AppDispatchers(dispatcher, dispatcher, dispatcher),
         backgroundScope.coroutineContext,
-    )
+    ).also { it.start() }
 }
 
-val testManufacturer = BluetoothManufacturer(
+internal val testManufacturer = BluetoothManufacturer(
     serialNumber = "123456",
     firmwareName = "BT-DX4G",
     deviceName = "DX4G",
@@ -56,7 +56,8 @@ val testManufacturer = BluetoothManufacturer(
     mainFirmwareVersion = "2.15",
 )
 
-class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DISCONNECTED) : DeviceSessionRepository {
+internal class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DISCONNECTED) :
+    DeviceSessionRepository {
     val link = MutableStateFlow(initial)
 
     /** Ответы readDevice по порядку; последний повторяется. */
@@ -155,15 +156,17 @@ class FakeDeviceSessionRepository(initial: DeviceLinkState = DeviceLinkState.DIS
     }
 }
 
-class FakeDeviceConnectionRepository : DeviceConnectionRepository {
+internal class FakeDeviceConnectionRepository : DeviceConnectionRepository {
     var closeCount = 0
         private set
 
     override fun connectBle(deviceId: String, timeoutMillis: Long): Flow<Response<DeviceConnectionState>> = emptyFlow()
     override fun connectUsb(deviceId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
     override fun connectSerial(portId: String): Flow<Response<DeviceConnectionState>> = emptyFlow()
+    var closeResult: Response<Unit> = Response.Success(Unit)
+
     override suspend fun closeSessions(): Response<Unit> {
         closeCount++
-        return Response.Success(Unit)
+        return closeResult
     }
 }

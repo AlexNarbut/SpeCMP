@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
+import ru.alarmtrade.specmp.core.common.AppServicesStarter
 import ru.alarmtrade.specmp.core.common.di.commonModule
 import ru.alarmtrade.specmp.core.lifecycle.di.appLifecycleModule
 import ru.alarmtrade.specmp.core.localization.di.localizationModule
@@ -24,6 +25,7 @@ import ru.alarmtrade.specmp.core.ui.theme.DefaultAppThemeStore
 import ru.alarmtrade.specmp.core.ui.view.image.ProvideCmpImageLoader
 import ru.alarmtrade.specmp.core.ui.view.image.rememberCmpImageLoader
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.di.appServicesModule
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.feature.account.di.accountModule
 import ru.alarmtrade.specmp.feature.advancedmount.di.advancedMountModule
@@ -67,6 +69,7 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
                 add(localizationModule)
                 add(permissionsModule())
                 add(appLifecycleModule)
+                add(appServicesModule)
                 add(authStateModule)
                 add(loginModule)
                 add(mainModule)
@@ -93,6 +96,10 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
         // Привязка PermissionsController к жизненному циклу корневой активити — один раз
         // на всё приложение (контроллер app-scoped, инжектится во ViewModel фич).
         BindEffect(koinInject<PermissionsProvider>().getController())
+
+        // Process-wide сервисы (сессия устройства и т. п.): start() идемпотентен, работа — в их собственных скоупах.
+        val appServicesStarter = koinInject<AppServicesStarter>()
+        LaunchedEffect(Unit) { appServicesStarter.start() }
 
         // Начальная настройка SDK (клиент, язык, язык конфигураций): app-scoped, идемпотентна; UI — после неё,
         // чтобы первые запросы шли с правильным языком. Эффект только запускает её (работает в своём скоупе).

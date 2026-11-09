@@ -10,7 +10,7 @@ enum class DeviceConnectionState {
 
     /**
      * Сессия установлена — дальше устройством владеет
-     * [DeviceSession][ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession].
+     * [DeviceSession][ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession].
      */
     CONNECTED,
 

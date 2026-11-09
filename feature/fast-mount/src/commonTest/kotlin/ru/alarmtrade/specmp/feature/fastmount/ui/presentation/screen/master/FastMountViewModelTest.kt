@@ -25,12 +25,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.CanInfo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountDeviceClass
@@ -75,7 +76,14 @@ class FastMountViewModelTest {
     private fun TestScope.viewModel(transport: ConnectionTransport = ConnectionTransport.USB): FastMountViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+            createDeviceSession(
+                sessionRepository,
+                FakeConnectionRepository(),
+                dispatchers,
+                backgroundScope.coroutineContext,
+            ).also {
+                it.start()
+            }
         session.attach(transport)
         val vm = FastMountViewModel(session, repository, programMode, dispatchers).also { viewModels += it }
         // Экран подписан на state — с этого стартует работа VM (onStart).

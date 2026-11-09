@@ -17,6 +17,7 @@ import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.DeviceModelsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -27,7 +28,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperat
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -42,12 +42,12 @@ internal val testDevice = AlarmDevice(1, "DX-9X", "3.57", DeviceOperationMode.MA
 internal fun testDispatchers(dispatcher: TestDispatcher) = AppDispatchers(dispatcher, dispatcher, dispatcher)
 
 internal fun TestScope.testDeviceSession(link: MutableStateFlow<DeviceLinkState>, dispatcher: TestDispatcher) =
-    DeviceSession(
+    createDeviceSession(
         FakeDeviceSessionRepository(link),
         FakeDeviceConnectionRepository,
         testDispatchers(dispatcher),
         backgroundScope.coroutineContext,
-    )
+    ).also { it.start() }
 
 internal fun cloudSummary(id: Int, deviceName: String = "DX-9X", rating: Int? = null, day: Int = 1) =
     CloudConfigurationSummary(

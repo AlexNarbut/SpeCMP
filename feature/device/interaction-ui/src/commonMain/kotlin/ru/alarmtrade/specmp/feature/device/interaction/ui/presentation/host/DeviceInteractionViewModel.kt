@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host
 
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /**
  * VM обёртки flow работы с устройством: состояние сессии + последний блок в рабочем режиме

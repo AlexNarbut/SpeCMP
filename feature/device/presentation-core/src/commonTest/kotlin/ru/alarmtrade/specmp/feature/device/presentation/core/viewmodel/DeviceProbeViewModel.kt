@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel
 
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 internal class DeviceProbeViewModel(deviceSession: DeviceSession) :
     BaseDeviceViewModel<DeviceProbeState, Nothing>(deviceSession, DeviceProbeState()) {

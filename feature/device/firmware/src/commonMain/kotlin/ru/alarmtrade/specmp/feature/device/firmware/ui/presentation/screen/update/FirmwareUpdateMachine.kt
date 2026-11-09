@@ -23,7 +23,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmw
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /*
  * Машина состояний экрана обновления — данные процесса и связи ([UpdateCore]) и чистые функции «данные → фаза и state

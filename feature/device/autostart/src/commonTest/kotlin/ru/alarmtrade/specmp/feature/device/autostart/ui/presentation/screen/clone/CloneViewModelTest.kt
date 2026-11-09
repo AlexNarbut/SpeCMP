@@ -34,9 +34,9 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeCloneRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.FakeSessionRepository
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -67,7 +67,14 @@ class CloneViewModelTest {
     private fun TestScope.viewModel(fromBypass: Boolean = false, subscribe: Boolean = true): CloneViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
         val session =
-            DeviceSession(sessionRepository, FakeConnectionRepository(), dispatchers, backgroundScope.coroutineContext)
+            createDeviceSession(
+                sessionRepository,
+                FakeConnectionRepository(),
+                dispatchers,
+                backgroundScope.coroutineContext,
+            ).also {
+                it.start()
+            }
         session.attach(ConnectionTransport.BLE)
         val vm = CloneViewModel(session, repository, cooldown, dispatchers, fromBypass).also { viewModels += it }
         if (subscribe) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }

@@ -42,6 +42,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.Firmwa
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -52,7 +53,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceLinkState
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 class FirmwareUpdateViewModelTest {
 
@@ -114,12 +115,12 @@ class FirmwareUpdateViewModelTest {
         transport: ConnectionTransport = ConnectionTransport.USB,
     ): Pair<FirmwareUpdateViewModel, MutableList<FirmwareUpdateEffect>> {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
-        session = DeviceSession(
+        session = createDeviceSession(
             sessionRepository,
             FakeConnectionRepository(),
             dispatchers,
             backgroundScope.coroutineContext,
-        )
+        ).also { it.start() }
         session.attach(transport)
         val vm = FirmwareUpdateViewModel(session, repository, updateRepository, requester, picker, dispatchers)
             .also { viewModels += it }

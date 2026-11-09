@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -18,17 +19,16 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperat
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 internal val testDevice = AlarmDevice(1, "DX4G", "3.57", DeviceOperationMode.MAIN, emptySet(), can = null)
 
 internal fun TestScope.testDeviceSession(link: MutableStateFlow<DeviceLinkState>, dispatcher: TestDispatcher) =
-    DeviceSession(
+    createDeviceSession(
         FakeDeviceSessionRepository(link),
         FakeDeviceConnectionRepository,
         AppDispatchers(dispatcher, dispatcher, dispatcher),
         backgroundScope.coroutineContext,
-    )
+    ).also { it.start() }
 
 private class FakeDeviceSessionRepository(private val link: Flow<DeviceLinkState>) : DeviceSessionRepository {
     override fun linkState(): Flow<Response<DeviceLinkState>> = link.map { Response.Success(it) }

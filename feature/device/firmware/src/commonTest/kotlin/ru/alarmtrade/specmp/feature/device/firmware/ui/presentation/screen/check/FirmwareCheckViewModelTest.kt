@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeConnectionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeSessionRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
+import ru.alarmtrade.specmp.feature.device.interaction.di.createDeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -47,7 +48,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperationMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
+import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 
 class FirmwareCheckViewModelTest {
@@ -116,12 +117,12 @@ class FirmwareCheckViewModelTest {
         subscribed: Boolean = true,
     ): FirmwareCheckViewModel {
         val dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher)
-        session = DeviceSession(
+        session = createDeviceSession(
             sessionRepository,
             FakeConnectionRepository(),
             dispatchers,
             backgroundScope.coroutineContext,
-        )
+        ).also { it.start() }
         session.attach(transport)
         val vm = FirmwareCheckViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
         if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
