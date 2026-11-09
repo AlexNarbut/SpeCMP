@@ -11,8 +11,8 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassSubject
 
 /**
- * Статус обучения SDK → событие. Критичные ожидания (решение D1 задачи) — LADA CAN, MED17, GTP: в них приложение
- * передаёт данные, обрыв связи срывает обучение.
+ * Статус обучения SDK → событие. Критичные ожидания (решение D1 задачи) — LADA CAN, LADA Vesta CAN, MED17, GTP:
+ * в них приложение передаёт данные, обрыв связи срывает обучение.
  */
 @Suppress("CyclomaticComplexMethod") // таблица соответствий статус SDK → событие
 internal fun BypassLearningState.toEvent(): BypassEvent = when (bypassStatus) {
@@ -76,6 +76,9 @@ internal fun BypassLearningState.toEvent(): BypassEvent = when (bypassStatus) {
 
     BypassLearningStatus.LADA_CAN_IMMO_BYPASS -> step(BypassStepKind.CRITICAL, BypassSubject.LADA_CAN)
 
+    BypassLearningStatus.REQUEST_LADA_VESTA_CAN_PATCH ->
+        step(BypassStepKind.CRITICAL, BypassSubject.LADA_VESTA_CAN)
+
     BypassLearningStatus.LADA_APS_IMMO_BYPASS -> step(BypassStepKind.INSTRUCTION, BypassSubject.LADA_APS)
 
     BypassLearningStatus.LEARN_TOYOTA_DAIHATSU -> step(BypassStepKind.INSTRUCTION, BypassSubject.TOYOTA_DAIHATSU)
@@ -136,6 +139,8 @@ internal fun BypassLearningError?.toDomain(): BypassError = when (this) {
     BypassLearningError.LADA_CAN_BUS_CONNECTION_ERROR -> BypassError.LADA_CAN_BUS
 
     BypassLearningError.LADA_REPEAT_LEARNING -> BypassError.LADA_REPEAT
+
+    BypassLearningError.LADA_VESTA_CAN_PATCH_SEND -> BypassError.LADA_VESTA_CAN_PATCH_SEND
 
     // Без своего текста (в т.ч. новые в SDK): общая ошибка «проверьте настройки».
     BypassLearningError.DEFAULT,

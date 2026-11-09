@@ -15,6 +15,8 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_i
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_key_used_what
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_lada_can_check
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_lada_can_what
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_lada_vesta_patch_check
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_lada_vesta_patch_what
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_new_selected_what
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_new_unsupported_what
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_no_response_what
@@ -33,6 +35,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_t
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_critical_alarm
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_critical_ecu
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_critical_lada
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_critical_lada_vesta
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_ecu
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_ecu_done
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_item_engine_start
@@ -121,7 +124,7 @@ internal fun BypassStep.illustration(): AutostartIllustration {
 
         BypassSubject.LEARNING -> AutostartIllustration.LEARNING
 
-        BypassSubject.LADA_APS, BypassSubject.LADA_CAN -> AutostartIllustration.LADA
+        BypassSubject.LADA_APS, BypassSubject.LADA_CAN, BypassSubject.LADA_VESTA_CAN -> AutostartIllustration.LADA
 
         BypassSubject.TOYOTA_DAIHATSU -> AutostartIllustration.TOYOTA
     }
@@ -178,6 +181,8 @@ internal fun BypassStep.text(): StringResource? {
         BypassSubject.LEARNING -> txt.autostart_bypass_item_learning
 
         BypassSubject.LADA_CAN -> txt.autostart_bypass_item_critical_lada
+
+        BypassSubject.LADA_VESTA_CAN -> txt.autostart_bypass_item_critical_lada_vesta
 
         BypassSubject.LADA_APS, BypassSubject.TOYOTA_DAIHATSU -> null
     }
@@ -244,6 +249,9 @@ internal fun BypassError.texts(): ErrorTexts = when (this) {
         ErrorTexts(txt.autostart_bypass_error_lada_can_what, txt.autostart_bypass_error_lada_can_check)
 
     BypassError.LADA_REPEAT -> ErrorTexts(null, txt.autostart_bypass_error_repeat_check)
+
+    BypassError.LADA_VESTA_CAN_PATCH_SEND ->
+        ErrorTexts(txt.autostart_bypass_error_lada_vesta_patch_what, txt.autostart_bypass_error_lada_vesta_patch_check)
 }
 
 /** Ключ в пункте инструкции LADA: красный — обучающий, чёрный — рабочий. */

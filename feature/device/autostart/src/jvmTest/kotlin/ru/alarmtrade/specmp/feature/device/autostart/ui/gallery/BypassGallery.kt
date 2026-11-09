@@ -54,6 +54,10 @@ class BypassGallery {
     fun criticalLadaCan() = render("08_critical_lada_can", step(BypassStepKind.CRITICAL, BypassSubject.LADA_CAN))
 
     @Test
+    fun criticalLadaVestaCan() =
+        render("08_critical_lada_vesta_can", step(BypassStepKind.CRITICAL, BypassSubject.LADA_VESTA_CAN))
+
+    @Test
     fun instructionLada() = render("09_instruction_lada", step(BypassStepKind.INSTRUCTION, BypassSubject.LADA_APS))
 
     @Test
@@ -77,6 +81,10 @@ class BypassGallery {
 
     @Test
     fun errorVagCode() = render("16_error_vag_code", result(BypassResult.Error(BypassError.VAG_ECU_EXCHANGE, 7)))
+
+    @Test
+    fun errorLadaVestaPatch() =
+        render("16_error_lada_vesta_patch", result(BypassResult.Error(BypassError.LADA_VESTA_CAN_PATCH_SEND)))
 
     @Test
     fun exit() = render(
