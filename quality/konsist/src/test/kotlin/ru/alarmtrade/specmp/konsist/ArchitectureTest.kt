@@ -654,7 +654,7 @@ class ArchitectureTest {
         const val BASE_VIEW_MODEL = "BaseViewModel"
         const val MAX_VIEW_MODEL_PARAMETERS = 12
         val OWNED_FLOW = Regex(
-            """\b(MutableStateFlow|MutableSharedFlow|Channel|sideEffectFlow|mutableStateOf|mutableStateListOf|""" +
+            """\b(MutableStateFlow|MutableSharedFlow|Channel|mutableStateOf|mutableStateListOf|""" +
                 """mutableStateMapOf|mutableIntStateOf|mutableLongStateOf|mutableFloatStateOf|mutableDoubleStateOf)""" +
                 """\s*(<[^()]*>)?\s*\(""",
         )

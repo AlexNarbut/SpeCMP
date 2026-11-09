@@ -7,23 +7,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
- * replay = 0 — повтор после пересоздания экрана дал бы двойную навигацию; буфер > 1 — обработчик может надолго
- * suspend'иться (снекбар), при переполнении отбрасываются самые старые.
+ * Сбор только пока экран не ниже [minActiveState]; обработчики идут по очереди, поэтому [onEffect] не ждёт UI —
+ * снекбар и прочее ожидание пользователя запускаются в `rememberCoroutineScope()` (detekt `SideEffectAwaitsUi`).
  */
-internal fun <T> sideEffectFlow(): MutableSharedFlow<T> = MutableSharedFlow(
-    replay = 0,
-    extraBufferCapacity = SIDE_EFFECT_BUFFER,
-    onBufferOverflow = BufferOverflow.DROP_OLDEST,
-)
-
-private const val SIDE_EFFECT_BUFFER = 16
-
-/** Сбор только пока экран не ниже [minActiveState]: эффект, эмитнутый в фоне, теряется. */
 @Composable
 fun <T> Flow<T>.collectSideEffect(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,

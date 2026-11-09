@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -30,8 +31,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -92,7 +94,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 @Composable
 fun SupportChatScreen(
     state: State<SupportChatScreenState>,
-    sideEffect: SharedFlow<SupportChatEffect>,
+    sideEffect: Flow<SupportChatEffect>,
     actions: SupportChatActions,
     modifier: Modifier = Modifier,
 ) {
@@ -113,30 +115,33 @@ fun SupportChatScreen(
     val openNoAppText = stringResource(Strings.string.supportchat_chat_error_open_no_app)
     val savePermissionText = stringResource(Strings.string.supportchat_chat_error_save_permission)
 
+    val scope = rememberCoroutineScope()
     sideEffect.collectSideEffect { event ->
-        when (event) {
-            is SupportChatEffect.MessageSendFailed -> if (event.canRetry) {
-                val result = snackbarHostState.showSnackbar(sendFailedText, actionLabel = retryLabel)
-                if (result == CmpSnackbarResult.ActionPerformed) actions.onRetry(event.messageId)
-            } else {
-                snackbarHostState.showSnackbar(sendNoFileText)
+        scope.launch {
+            when (event) {
+                is SupportChatEffect.MessageSendFailed -> if (event.canRetry) {
+                    val result = snackbarHostState.showSnackbar(sendFailedText, actionLabel = retryLabel)
+                    if (result == CmpSnackbarResult.ActionPerformed) actions.onRetry(event.messageId)
+                } else {
+                    snackbarHostState.showSnackbar(sendNoFileText)
+                }
+
+                SupportChatEffect.HistoryLoadFailed -> snackbarHostState.showSnackbar(historyLoadFailedText)
+
+                is SupportChatEffect.AttachmentDownloaded -> snackbarHostState.showSnackbar(downloadSuccessText)
+
+                SupportChatEffect.AttachmentDownloadFailed -> snackbarHostState.showSnackbar(downloadFailedText)
+
+                is SupportChatEffect.AttachmentRejected -> snackbarHostState.showSnackbar(
+                    if (event.tooLarge) attachmentTooLargeText else attachFailedText,
+                )
+
+                is SupportChatEffect.AttachmentOpenFailed -> snackbarHostState.showSnackbar(
+                    if (event.noApp) openNoAppText else openFailedText,
+                )
+
+                SupportChatEffect.AttachmentSavePermissionDenied -> snackbarHostState.showSnackbar(savePermissionText)
             }
-
-            SupportChatEffect.HistoryLoadFailed -> snackbarHostState.showSnackbar(historyLoadFailedText)
-
-            is SupportChatEffect.AttachmentDownloaded -> snackbarHostState.showSnackbar(downloadSuccessText)
-
-            SupportChatEffect.AttachmentDownloadFailed -> snackbarHostState.showSnackbar(downloadFailedText)
-
-            is SupportChatEffect.AttachmentRejected -> snackbarHostState.showSnackbar(
-                if (event.tooLarge) attachmentTooLargeText else attachFailedText,
-            )
-
-            is SupportChatEffect.AttachmentOpenFailed -> snackbarHostState.showSnackbar(
-                if (event.noApp) openNoAppText else openFailedText,
-            )
-
-            SupportChatEffect.AttachmentSavePermissionDenied -> snackbarHostState.showSnackbar(savePermissionText)
         }
     }
     var viewerImageSource by remember { mutableStateOf<String?>(null) }

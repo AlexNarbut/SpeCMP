@@ -129,15 +129,17 @@ class FirmwareUpdateViewModelTest {
     }
 
     /** Блок в загрузчике, выбрана версия и подтверждено обновление: процесс запущен, прогресс подаётся из теста. */
-    private fun TestScope.startedUpdate(): FirmwareUpdateViewModel {
+    private fun TestScope.startedUpdate(): FirmwareUpdateViewModel = startedUpdateWithEffects().first
+
+    private fun TestScope.startedUpdateWithEffects(): Pair<FirmwareUpdateViewModel, MutableList<FirmwareUpdateEffect>> {
         prepareMain()
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61", "notes"))
-        val (vm, _) = viewModel()
+        val (vm, effects) = viewModel()
         vm.onDownloadClick()
         runCurrent()
         vm.onConfirmUpdate()
         runCurrent()
-        return vm
+        return vm to effects
     }
 
     private fun linkDrop() {
@@ -585,9 +587,7 @@ class FirmwareUpdateViewModelTest {
 
     @Test
     fun `back is ignored during the process and leaves at once after an error`() = test {
-        val vm = startedUpdate()
-        val effects = mutableListOf<FirmwareUpdateEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
+        val (vm, effects) = startedUpdateWithEffects()
 
         vm.onBackClick()
         runCurrent()
