@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update
 
-import kotlinx.coroutines.flow.update
+import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
@@ -11,21 +11,29 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareCan
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
+import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
+import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 /*
- * Машина состояний экрана обновления — данные процесса ([Core]) и чистые функции «состояние процесса + сессия блока →
- * фаза и state экрана». Без VM и корутин: тестируются напрямую. VM меняет [Core] интентами и событиями сессии/SDK.
+ * Машина состояний экрана обновления — данные процесса и связи ([UpdateCore]) и чистые функции «данные → фаза и state
+ * экрана». Без VM и корутин: тестируются напрямую. VM меняет [UpdateCore] интентами и событиями сессии/SDK, а поля
+ * экрана пересчитываются в том же `reduce` ([toState]).
  */
 
-internal class Profile(
+/** Блок в загрузчике: что обновляем, его данные и подсистемы. */
+@Immutable
+class BootBlock(
     val kind: UpdateProfile,
     /** Что обновляем и чем выходим из загрузчика — основная программа или Bluetooth-модуль. */
     val target: BootModeTarget,
@@ -44,9 +52,10 @@ internal class Profile(
     val factoryCan: Boolean = false,
 )
 
-internal data class Core(
+@Immutable
+data class UpdateCore(
     val stage: UpdatePhase = UpdatePhase.Loading,
-    val profile: Profile? = null,
+    val profile: BootBlock? = null,
     val selectedModuleId: Long? = null,
     val channel: FirmwareChannel = FirmwareChannel.RELEASE,
     val candidate: FirmwareVersion? = null,
@@ -62,6 +71,9 @@ internal data class Core(
     val linkDropped: Boolean = false,
     /** Поток обновления SDK ещё идёт (не закончился и не сдался). */
     val running: Boolean = false,
+    val session: DeviceSessionState = DeviceSessionState.Disconnected,
+    /** Ожидаемая перезагрузка блока ([DeviceSession.reboot]). */
+    val reboot: DeviceReboot? = null,
 ) {
     /** Выбран модуль «основная программа сигнализации»: только у него прошивки под CAN-код. */
     val isAlarmMain: Boolean
@@ -79,7 +91,79 @@ internal sealed interface UpdateSource {
     data class File(val path: String) : UpdateSource
 }
 
-internal fun toState(core: Core, session: DeviceSessionState, reboot: DeviceReboot?): FirmwareUpdateState {
+/** Что известно о блоке в загрузчике до запроса подсистем. */
+internal data class BootSource(
+    val kind: UpdateProfile,
+    val target: BootModeTarget,
+    val deviceName: String,
+    val title: String,
+    val current: String,
+    val can: FirmwareCan? = null,
+    val factoryCan: Boolean = false,
+)
+
+internal fun DeviceSessionState.bootSource(): BootSource? = when (this) {
+    is DeviceSessionState.FirmwareBoot -> BootSource(
+        UpdateProfile.Main,
+        BootModeTarget.MainProgram,
+        device.systemName,
+        device.title,
+        device.displayFirmwareVersion,
+        // CAN — как блок сообщает его в загрузчике; не сообщил — ищем по всем версиям.
+        can = device.can.toFirmwareCan(),
+        factoryCan = device.can?.isFactory == true,
+    )
+
+    is DeviceSessionState.BluetoothBoot -> BootSource(
+        UpdateProfile.Bluetooth,
+        BootModeTarget.BluetoothModule,
+        manufacturer.firmwareName,
+        manufacturer.deviceName,
+        manufacturer.mainFirmwareVersion,
+    )
+
+    else -> null
+}
+
+/** Подсистемы блока прочитаны: выбор модуля сохраняется, если он среди них; «Загрузка» сменяется выбором источника. */
+internal fun UpdateCore.withBlock(
+    source: BootSource,
+    modules: List<FirmwareModule>,
+    transport: ConnectionTransport,
+): UpdateCore = copy(
+    profile = BootBlock(
+        source.kind,
+        source.target,
+        source.deviceName,
+        source.title,
+        source.current,
+        modules,
+        canExit = transport == ConnectionTransport.BLE,
+        overBle = transport == ConnectionTransport.BLE,
+        can = source.can,
+        factoryCan = source.factoryCan,
+    ),
+    selectedModuleId = selectedModuleId?.takeIf { id -> modules.any { it.id == id } } ?: modules.firstOrNull()?.id,
+    stage = if (stage == UpdatePhase.Loading) {
+        if (modules.isEmpty()) UpdatePhase.DataError else UpdatePhase.Source
+    } else {
+        stage
+    },
+)
+
+internal fun FirmwareBootRequest?.initialUpdateState(
+    session: DeviceSessionState,
+    reboot: DeviceReboot?,
+): FirmwareUpdateState = UpdateCore(
+    selectedModuleId = this?.moduleId,
+    channel = this?.channel ?: FirmwareChannel.RELEASE,
+    session = session,
+    reboot = reboot,
+).toState()
+
+/** State экрана из [core]: поля экрана выводятся из данных процесса и связи. */
+internal fun UpdateCore.toState(): FirmwareUpdateState {
+    val core = this
     val profile = core.profile
     val modules = profile?.modules.orEmpty()
     val selected = modules.indexOfFirst { it.id == core.selectedModuleId }.coerceAtLeast(0)
@@ -91,7 +175,7 @@ internal fun toState(core: Core, session: DeviceSessionState, reboot: DeviceRebo
         UpdateProfile.Main, null -> profile?.deviceTitle.orEmpty()
     }
     return FirmwareUpdateState(
-        phase = phaseOf(core, session, reboot),
+        phase = phaseOf(core),
         profile = profile?.kind ?: UpdateProfile.Main,
         deviceTitle = title,
         moduleTitles = modules.map { it.displayTitle },
@@ -101,15 +185,16 @@ internal fun toState(core: Core, session: DeviceSessionState, reboot: DeviceRebo
         confirm = confirmOf(core, current),
         sourceError = core.sourceError,
         exitDialog = core.exitDialog,
-        inBoot = session.isBoot,
+        inBoot = core.session.isBoot,
         canExitBoot = profile?.canExit == true,
         exitError = core.exitError,
         fileError = core.fileError,
         blockCan = blockCanOf(profile),
+        core = core,
     )
 }
 
-private fun blockCanOf(profile: Profile?): BlockCanUi? {
+private fun blockCanOf(profile: BootBlock?): BlockCanUi? {
     if (profile?.kind != UpdateProfile.Main) return null
     val can = profile.can
     return when {
@@ -119,7 +204,7 @@ private fun blockCanOf(profile: Profile?): BlockCanUi? {
     }
 }
 
-private fun confirmOf(core: Core, current: String?): ConfirmUi? {
+private fun confirmOf(core: UpdateCore, current: String?): ConfirmUi? {
     val blockCan = blockCanOf(core.profile)
     core.localFile?.let { file ->
         return ConfirmUi(current, file.name, description = "", older = false, localFile = true)
@@ -137,7 +222,9 @@ private fun confirmOf(core: Core, current: String?): ConfirmUi? {
     }
 }
 
-internal fun phaseOf(core: Core, session: DeviceSessionState, reboot: DeviceReboot?): UpdatePhase {
+internal fun phaseOf(core: UpdateCore): UpdatePhase {
+    val session = core.session
+    val reboot = core.reboot
     val inBoot = session.isBoot
     val linkDown = session.isLinkDown
     return when {
@@ -155,7 +242,7 @@ internal fun phaseOf(core: Core, session: DeviceSessionState, reboot: DeviceRebo
 }
 
 // Передачу Bluetooth-модуля SDK продолжит после переподключения — это не потеря связи.
-private fun linkDownPhase(core: Core): UpdatePhase {
+private fun linkDownPhase(core: UpdateCore): UpdatePhase {
     val stage = core.stage
     return if (core.resumable && stage is UpdatePhase.Transfer) {
         stage.copy(reconnecting = true)

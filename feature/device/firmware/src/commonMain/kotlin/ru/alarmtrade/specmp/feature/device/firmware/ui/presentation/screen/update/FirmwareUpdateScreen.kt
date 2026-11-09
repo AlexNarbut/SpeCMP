@@ -90,7 +90,7 @@ fun FirmwareUpdateScreen(
     val viewModel = koinViewModel<FirmwareUpdateViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.effect.collectSideEffect { effect ->
+    viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             FirmwareUpdateEffect.OpenSupportChat -> onOpenSupportChat()
             is FirmwareUpdateEffect.OpenArchive -> onOpenArchive(effect.args)

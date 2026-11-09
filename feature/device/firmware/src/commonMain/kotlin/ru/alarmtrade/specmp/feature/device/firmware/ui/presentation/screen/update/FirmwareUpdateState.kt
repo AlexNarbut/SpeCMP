@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.upda
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 
 /** Фазы экрана «Обновление прошивки» (блок в загрузчике). Часть выводится из связи, а не из действий пользователя. */
 sealed interface UpdatePhase {
@@ -84,6 +83,8 @@ data class FirmwareUpdateState(
     val fileError: FileError? = null,
     /** CAN-прошивка блока на выборе источника (только основная программа блока с единой CAN-прошивкой). */
     val blockCan: BlockCanUi? = null,
+    /** Данные процесса и связи; поля экрана выше считаются из них ([toState]). */
+    val core: UpdateCore = UpdateCore(),
 ) {
     /** «Назад» заблокирован (замок): процесс идёт, и блок нельзя бросить на полпути. */
     val locked: Boolean
@@ -157,15 +158,3 @@ class FirmwareUpdateActions(
     val onExitDialogDismiss: () -> Unit = {},
     val onExitConfirm: () -> Unit = {},
 )
-
-/** Одноразовые события экрана обновления. */
-sealed interface FirmwareUpdateEffect {
-    /** Открыть чат техподдержки («Написать в поддержку» на ошибке). */
-    data object OpenSupportChat : FirmwareUpdateEffect
-
-    /** Открыть архив прошивок выбранного модуля и канала. */
-    data class OpenArchive(val args: FirmwareArchiveRequest) : FirmwareUpdateEffect
-
-    /** Выйти из режима обновления (закрыть сессию и flow). */
-    data object Exit : FirmwareUpdateEffect
-}

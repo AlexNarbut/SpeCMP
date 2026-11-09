@@ -10,6 +10,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -92,6 +93,7 @@ class FirmwareUpdateViewModelTest {
     private val requester = FirmwareBootRequester()
     private val picker = FirmwareArchivePicker()
     private val viewModels = mutableListOf<FirmwareUpdateViewModel>()
+    private val stateCollectors = mutableListOf<Job>()
     private lateinit var session: DeviceSession
 
     @BeforeTest
@@ -121,9 +123,9 @@ class FirmwareUpdateViewModelTest {
         session.attach(transport)
         val vm = FirmwareUpdateViewModel(session, repository, updateRepository, requester, picker, dispatchers)
             .also { viewModels += it }
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        stateCollectors += backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         val effects = mutableListOf<FirmwareUpdateEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
         runCurrent()
         return vm to effects
     }
@@ -390,6 +392,44 @@ class FirmwareUpdateViewModelTest {
         assertNull(vm.state.value.confirm)
     }
 
+    @Test
+    fun `update keeps running while nobody watches the screen`() = test {
+        val vm = startedUpdate()
+        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(10))
+        runCurrent()
+        stateCollectors.forEach { it.cancel() }
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        // Процесс без подписчика state не отменён: поток SDK по-прежнему собирается.
+        assertEquals(1, updateRepository.progress.subscriptionCount.value)
+        updateRepository.progress.emit(FirmwareUpdateProgress.Sending(80))
+        updateRepository.progress.emit(FirmwareUpdateProgress.Verifying)
+        runCurrent()
+
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        assertEquals(UpdatePhase.Verify, vm.state.value.phase)
+        assertEquals(1, updateRepository.calls.size)
+    }
+
+    @Test
+    fun `version picked in the archive while the screen is covered goes to the confirmation`() = test {
+        prepareMain()
+        val (vm, _) = viewModel()
+        stateCollectors.forEach { it.cancel() }
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        picker.pick(version("3.55"))
+        runCurrent()
+
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
+        runCurrent()
+        assertEquals(UpdatePhase.Confirm, vm.state.value.phase)
+        assertEquals("3.55", vm.state.value.confirm?.newVersion)
+    }
+
     /** Блок с Bluetooth-модулем в загрузчике (BLE), версия подтверждена, передача идёт. */
     private fun TestScope.startedBluetoothTransfer(): FirmwareUpdateViewModel {
         sessionRepository.bluetoothVersions = listOf(
@@ -540,7 +580,7 @@ class FirmwareUpdateViewModelTest {
     fun `back is ignored during the process and leaves at once after an error`() = test {
         val vm = startedUpdate()
         val effects = mutableListOf<FirmwareUpdateEffect>()
-        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
 
         vm.onBackClick()
         runCurrent()

@@ -1,36 +1,20 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update
 
-import androidx.lifecycle.viewModelScope
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.updateIf
-import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
-import ru.alarmtrade.specmp.core.ui.viewmodel.LegacyBaseViewModel
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
+import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
@@ -38,14 +22,10 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.Firmwa
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceSessionState
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
-import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSession
 
 /**
@@ -64,56 +44,38 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.DeviceSess
  * ([DeviceSession.beginFirmwareTransfer]). Обрыв на других стадиях
  * (и после того, как SDK сдался) прерывает обновление: после возврата блока в загрузчик экран снова на выборе
  * источника; если блок после применения вернулся в загрузчике — ошибка.
+ *
+ * Процесс, связь и выбор в архиве живут всю жизнь VM, а не подписку на state: обновление идёт, пока экран перекрыт
+ * архивом или приложение свёрнуто.
  */
 class FirmwareUpdateViewModel(
     private val deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
     private val updateRepository: FirmwareUpdateRepository,
     bootRequester: FirmwareBootRequester,
-    archivePicker: FirmwareArchivePicker,
+    private val archivePicker: FirmwareArchivePicker,
     private val dispatchers: AppDispatchers,
-) : LegacyBaseViewModel() {
+) : BaseViewModel<FirmwareUpdateState, FirmwareUpdateEffect>(
+    // Модуль и канал — из запроса входа в загрузчик, забираются при создании VM.
+    bootRequester.take().initialUpdateState(deviceSession.state.value, deviceSession.reboot.value),
+) {
 
-    // Начальное состояние — из запроса входа в загрузчик (модуль и канал), при создании VM.
-    private val core: MutableStateFlow<Core> = bootRequester.take().let { request ->
-        MutableStateFlow(
-            Core(
-                selectedModuleId = request?.moduleId,
-                channel = request?.channel ?: FirmwareChannel.RELEASE,
-            ),
-        )
+    private val core: UpdateCore get() = currentState.core
+
+    override suspend fun onStart() {
+        safeLaunch {
+            combine(deviceSession.state, deviceSession.reboot, ::Pair).collect { (session, reboot) ->
+                reduceCore { copy(session = session, reboot = reboot) }
+            }
+        }
+        // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
+        safeLaunch { archivePicker.picks.collect(::onArchivePicked) }
+        deviceSession.state.collectLatest(::onSession)
     }
 
-    // Запуск (и отмена, `null`) обновления: collectLatest отменяет предыдущий процесс сам, без поля-Job.
-    private val updateRequests = MutableSharedFlow<UpdateSource?>(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
-
-    val state: StateFlow<FirmwareUpdateState> = combine(
-        core,
-        deviceSession.state,
-        deviceSession.reboot,
-    ) { core, session, reboot -> toState(core, session, reboot) }
-        // Всё живёт всю жизнь VM (обновление идёт и пока экран перекрыт архивом). Подписки на запросы — до первого
-        // запроса (UNDISPATCHED): у SharedFlow без replay запрос без подписчика потерялся бы.
-        .launchOnFirstStart {
-            launch(start = CoroutineStart.UNDISPATCHED) {
-                updateRequests.collectLatest { source -> if (source != null) runUpdate(source) }
-            }
-            // Версия из архива: экран архива лежит поверх, эта ViewModel под ним жива и ждёт выбор.
-            launch(start = CoroutineStart.UNDISPATCHED) { archivePicker.picks.collect(::onArchivePicked) }
-            deviceSession.state.collectLatest { onSession(it) }
-        }
-        .flowOn(dispatchers.default)
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            toState(core.value, deviceSession.state.value, deviceSession.reboot.value),
-        )
-
-    private val _effect = sideEffectFlow<FirmwareUpdateEffect>()
-    val effect: SharedFlow<FirmwareUpdateEffect> = _effect.asSharedFlow()
+    private fun reduceCore(transform: UpdateCore.() -> UpdateCore) {
+        reduce { core.transform().toState() }
+    }
 
     // ───── связь ─────
 
@@ -122,11 +84,11 @@ class FirmwareUpdateViewModel(
             is DeviceSessionState.FirmwareBoot, is DeviceSessionState.BluetoothBoot -> {
                 onBootReturned()
                 // Под тем же замком, что и «Повторить»: чтение профиля не идёт дважды параллельно.
-                if (core.value.profile == null) executeWithProceedLock { loadProfile(session) }
+                if (core.profile == null) executeWithProceedLock { loadProfile(session) }
             }
 
             DeviceSessionState.Disconnected, DeviceSessionState.Connecting ->
-                core.update { if (it.stage.isUpdating()) it.copy(linkDropped = true) else it }
+                reduceCore { if (stage.isUpdating()) copy(linkDropped = true) else this }
 
             is DeviceSessionState.Ready -> Unit
         }
@@ -134,131 +96,62 @@ class FirmwareUpdateViewModel(
 
     // Блок снова в загрузчике. Если связь пропадала в процессе, обновление не дошло до конца.
     private fun onBootReturned() {
-        val current = core.value
+        val current = core
         if (!current.linkDropped) return
         if (current.resumable) {
             // Передача продолжается сама: SDK дождался связи и шлёт неподтверждённый кадр.
-            core.update { it.copy(linkDropped = false) }
+            reduceCore { copy(linkDropped = false) }
         } else if (current.stage == UpdatePhase.Apply) {
             // После применения блок должен был вернуться в рабочий режим, а он снова в загрузчике: не применилась.
-            updateRequests.tryEmit(null)
+            cancelLaunched(UPDATE_PROCESS)
             deviceSession.cancelReboot()
-            core.update { it.copy(stage = UpdatePhase.Error(FailureKind.ApplyingError), linkDropped = false) }
+            reduceCore { copy(stage = UpdatePhase.Error(FailureKind.ApplyingError), linkDropped = false) }
         } else if (current.stage.isUpdating()) {
-            updateRequests.tryEmit(null)
-            core.update { it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, linkDropped = false) }
+            cancelLaunched(UPDATE_PROCESS)
+            reduceCore { copy(stage = UpdatePhase.Source, candidate = null, localFile = null, linkDropped = false) }
         } else {
-            core.update { it.copy(linkDropped = false) }
+            reduceCore { copy(linkDropped = false) }
         }
     }
 
     private suspend fun loadProfile(session: DeviceSessionState) {
         val transport = deviceSession.transport.value ?: return
-        core.update { if (it.stage == UpdatePhase.DataError) it.copy(stage = UpdatePhase.Loading) else it }
-        val source = when (session) {
-            is DeviceSessionState.FirmwareBoot -> {
-                val device = session.device
-                BootSource(
-                    UpdateProfile.Main,
-                    BootModeTarget.MainProgram,
-                    device.systemName,
-                    device.title,
-                    device.displayFirmwareVersion,
-                    // CAN — как блок сообщает его в загрузчике; не сообщил — ищем по всем версиям.
-                    can = device.can.toFirmwareCan(),
-                    factoryCan = device.can?.isFactory == true,
-                )
-            }
-
-            is DeviceSessionState.BluetoothBoot -> {
-                val manufacturer = session.manufacturer
-                BootSource(
-                    UpdateProfile.Bluetooth,
-                    BootModeTarget.BluetoothModule,
-                    manufacturer.firmwareName,
-                    manufacturer.deviceName,
-                    manufacturer.mainFirmwareVersion,
-                )
-            }
-
-            else -> return
-        }
+        reduceCore { if (stage == UpdatePhase.DataError) copy(stage = UpdatePhase.Loading) else this }
+        val source = session.bootSource() ?: return
         val response = withContext(dispatchers.io) { repository.modules(source.deviceName, transport) }
         val modules = (response as? Response.Success)?.value.orEmpty().filter { it.bootTarget == source.target }
-        core.update { state ->
-            state.copy(
-                profile = Profile(
-                    source.kind,
-                    source.target,
-                    source.deviceName,
-                    source.title,
-                    source.current,
-                    modules,
-                    canExit = transport == ConnectionTransport.BLE,
-                    overBle = transport == ConnectionTransport.BLE,
-                    can = source.can,
-                    factoryCan = source.factoryCan,
-                ),
-                selectedModuleId = state.selectedModuleId?.takeIf { id -> modules.any { it.id == id } }
-                    ?: modules.firstOrNull()?.id,
-                stage = if (state.stage == UpdatePhase.Loading) {
-                    if (modules.isEmpty()) UpdatePhase.DataError else UpdatePhase.Source
-                } else {
-                    state.stage
-                },
-            )
-        }
+        reduceCore { withBlock(source, modules, transport) }
     }
-
-    private data class BootSource(
-        val kind: UpdateProfile,
-        val target: BootModeTarget,
-        val deviceName: String,
-        val title: String,
-        val current: String,
-        val can: FirmwareCan? = null,
-        val factoryCan: Boolean = false,
-    )
 
     // ───── интенты ─────
 
     fun onModuleSelected(index: Int) {
-        core.update { state ->
-            val module = state.profile?.modules?.getOrNull(index) ?: return@update state
-            state.copy(selectedModuleId = module.id)
-        }
+        val module = core.profile?.modules?.getOrNull(index) ?: return
+        reduceCore { copy(selectedModuleId = module.id) }
     }
 
     fun onChannelSelected(channel: FirmwareChannel) {
-        core.update { it.copy(channel = channel, sourceError = null, exitError = false, fileError = null) }
+        reduceCore { copy(channel = channel, sourceError = null, exitError = false, fileError = null) }
     }
 
     /** «Скачать прошивку»: запросить последнюю версию выбранного канала и перейти к подтверждению. */
     fun onDownloadClick() {
-        safeLaunch {
+        intent {
             executeWithProceedLock {
-                val start = core.value
+                val start = core
                 val moduleId = start.selectedModuleId ?: return@executeWithProceedLock
-                if (!core.updateIf({ it.stage == UpdatePhase.Source }) {
-                        it.copy(stage = UpdatePhase.Download, sourceError = null, fileError = null)
-                    }
-                ) {
-                    return@executeWithProceedLock
-                }
+                if (start.stage != UpdatePhase.Source) return@executeWithProceedLock
+                reduceCore { copy(stage = UpdatePhase.Download, sourceError = null, fileError = null) }
                 val can = start.profile?.can?.takeIf { start.isAlarmMain }
                 val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel, can) }
-                core.updateIf({ it.stage == UpdatePhase.Download }) { state ->
+                reduceCore {
+                    if (stage != UpdatePhase.Download) return@reduceCore this
                     when (response) {
-                        is Response.Success -> state.copy(
-                            stage = UpdatePhase.Confirm,
-                            candidate = response.value,
-                            localFile = null,
-                        )
+                        is Response.Success ->
+                            copy(stage = UpdatePhase.Confirm, candidate = response.value, localFile = null)
 
-                        is Response.Error -> state.copy(
-                            stage = UpdatePhase.Source,
-                            sourceError = FirmwareError.from(response.exception),
-                        )
+                        is Response.Error ->
+                            copy(stage = UpdatePhase.Source, sourceError = FirmwareError.from(response.exception))
                     }
                 }
             }
@@ -266,17 +159,17 @@ class FirmwareUpdateViewModel(
     }
 
     fun onArchiveClick() {
-        val current = core.value
+        val current = core
         val profile = current.profile
         val moduleId = current.selectedModuleId
         if (current.stage != UpdatePhase.Source || profile == null || moduleId == null) return
-        _effect.tryEmit(
+        postSideEffect(
             FirmwareUpdateEffect.OpenArchive(
                 FirmwareArchiveRequest(
                     moduleId = moduleId,
                     channel = current.channel,
                     installedVersion = profile.currentVersion,
-                    deviceTitle = state.value.deviceTitle,
+                    deviceTitle = currentState.deviceTitle,
                     profile = profile.kind,
                     // Каталог автомобилей CAN-фильтра — под модель блока (у Bluetooth-модуля фильтра нет).
                     deviceName = profile.deviceName.takeIf { profile.kind == UpdateProfile.Main },
@@ -292,11 +185,12 @@ class FirmwareUpdateViewModel(
 
     /** Результат выбора файла прошивки в файловом менеджере: годный файл — сразу на подтверждение. */
     fun onFilePicked(result: FirmwareFilePickResult) {
-        core.updateIf({ it.stage == UpdatePhase.Source }) { state ->
+        reduceCore {
+            if (stage != UpdatePhase.Source) return@reduceCore this
             when (result) {
-                FirmwareFilePickResult.Cancelled -> state
+                FirmwareFilePickResult.Cancelled -> this
 
-                is FirmwareFilePickResult.Picked -> state.copy(
+                is FirmwareFilePickResult.Picked -> copy(
                     stage = UpdatePhase.Confirm,
                     candidate = null,
                     localFile = result,
@@ -304,38 +198,37 @@ class FirmwareUpdateViewModel(
                     fileError = null,
                 )
 
-                FirmwareFilePickResult.TooLarge -> state.copy(fileError = FileError.TooLarge)
+                FirmwareFilePickResult.TooLarge -> copy(fileError = FileError.TooLarge)
 
-                FirmwareFilePickResult.Failed -> state.copy(fileError = FileError.Failed)
+                FirmwareFilePickResult.Failed -> copy(fileError = FileError.Failed)
             }
         }
     }
 
     // Версия выбрана в архиве: сразу на подтверждение (версия, описание и ссылка уже известны — запрашивать нечего).
     private fun onArchivePicked(version: FirmwareVersion) {
-        core.updateIf({ it.stage == UpdatePhase.Source }) {
-            it.copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = null)
+        reduceCore {
+            if (stage != UpdatePhase.Source) return@reduceCore this
+            copy(stage = UpdatePhase.Confirm, candidate = version, localFile = null, sourceError = null)
         }
     }
 
     fun onCancelConfirm() {
-        core.updateIf({
-            it.stage == UpdatePhase.Confirm
-        }) { it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null) }
+        reduceCore {
+            if (stage != UpdatePhase.Confirm) return@reduceCore this
+            copy(stage = UpdatePhase.Source, candidate = null, localFile = null)
+        }
     }
 
     /** «Обновить» на подтверждении: запуск процесса с выбранной версией. */
     fun onConfirmUpdate() {
-        val current = core.value
+        val current = core
         val source = current.localFile?.let { UpdateSource.File(it.path) }
             ?: current.candidate?.let { UpdateSource.Server(it) }
             ?: return
-        if (core.updateIf({
-                it.stage == UpdatePhase.Confirm
-            }) { it.copy(stage = UpdatePhase.Prepare, linkDropped = false) }
-        ) {
-            updateRequests.tryEmit(source)
-        }
+        if (current.stage != UpdatePhase.Confirm) return
+        reduceCore { copy(stage = UpdatePhase.Prepare, linkDropped = false) }
+        launchReplacing(UPDATE_PROCESS) { runUpdate(source) }
     }
 
     /**
@@ -343,12 +236,12 @@ class FirmwareUpdateViewModel(
      * выйти командой); блок уже вернулся в рабочий режим — подтверждение, хост уйдёт со слота сам.
      */
     fun onResultOk() {
-        if (state.value.phase != UpdatePhase.Success) return
-        if (state.value.inBoot) {
+        if (currentState.phase != UpdatePhase.Success) return
+        if (currentState.inBoot) {
             // Блок остался в загрузчике: ожидание возврата, поставленное на «Применении», больше не нужно.
             if (deviceSession.reboot.value == DeviceReboot.ToMain) deviceSession.cancelReboot()
-            core.update {
-                it.copy(
+            reduceCore {
+                copy(
                     stage = UpdatePhase.Source,
                     candidate = null,
                     localFile = null,
@@ -357,7 +250,7 @@ class FirmwareUpdateViewModel(
                 )
             }
         } else {
-            core.update { it.copy(acknowledged = true) }
+            reduceCore { copy(acknowledged = true) }
             deviceSession.acknowledgeReboot()
         }
     }
@@ -368,21 +261,21 @@ class FirmwareUpdateViewModel(
      * перезагрузка, ждём возврата.
      */
     fun onExitBootClick() {
-        val current = core.value
+        val current = core
         val profile = current.profile ?: return
         if (current.stage != UpdatePhase.Source || !profile.canExit) return
         val target = profile.target
-        safeLaunch {
+        intent {
             executeWithProceedLock {
                 deviceSession.expectReboot(DeviceReboot.ToMain)
                 deviceSession.acknowledgeReboot()
-                core.update { it.copy(acknowledged = true, exitError = false) }
+                reduceCore { copy(acknowledged = true, exitError = false) }
                 val response = withContext(dispatchers.io) { deviceSession.exitBootMode(target) }
                 val stillInBoot = deviceSession.state.value.isBoot
                 if (response is Response.Error && stillInBoot) {
                     logger.d { "Exit boot mode failed: ${response.exception::class.simpleName}" }
                     deviceSession.cancelReboot()
-                    core.update { it.copy(acknowledged = false, exitError = true) }
+                    reduceCore { copy(acknowledged = false, exitError = true) }
                 }
             }
         }
@@ -390,64 +283,64 @@ class FirmwareUpdateViewModel(
 
     /** «Повторить»: после ошибки — снова к выбору источника; без данных блока — перечитать подсистемы. */
     fun onRetry() {
-        val stage = core.value.stage
+        val stage = core.stage
         when {
-            stage is UpdatePhase.Error -> core.update {
-                it.copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = null)
+            stage is UpdatePhase.Error -> reduceCore {
+                copy(stage = UpdatePhase.Source, candidate = null, localFile = null, sourceError = null)
             }
 
             stage == UpdatePhase.DataError -> {
                 val session = deviceSession.state.value
-                safeLaunch { executeWithProceedLock { loadProfile(session) } }
+                intent { executeWithProceedLock { loadProfile(session) } }
             }
         }
     }
 
     fun onSupportClick() {
-        _effect.tryEmit(FirmwareUpdateEffect.OpenSupportChat)
+        postSideEffect(FirmwareUpdateEffect.OpenSupportChat)
     }
 
     fun onReconnect() {
-        safeLaunch { withContext(dispatchers.io) { deviceSession.reconnectNow() } }
+        intent { withContext(dispatchers.io) { deviceSession.reconnectNow() } }
     }
 
     fun onDisconnect() {
-        _effect.tryEmit(FirmwareUpdateEffect.Exit)
+        postSideEffect(FirmwareUpdateEffect.Exit)
     }
 
     /** «Назад»: на процессе заблокирован; на выборе — предупреждение; после ошибки и обрыва — сразу выход. */
     fun onBackClick() {
-        val current = state.value
+        val current = currentState
         when {
             current.locked -> Unit
 
             current.phase is UpdatePhase.Error || current.phase is UpdatePhase.Lost ->
-                _effect.tryEmit(FirmwareUpdateEffect.Exit)
+                postSideEffect(FirmwareUpdateEffect.Exit)
 
-            else -> core.update { it.copy(exitDialog = true) }
+            else -> reduceCore { copy(exitDialog = true) }
         }
     }
 
     fun onExitDialogDismiss() {
-        core.update { it.copy(exitDialog = false) }
+        reduceCore { copy(exitDialog = false) }
     }
 
     fun onExitConfirm() {
-        core.update { it.copy(exitDialog = false) }
-        _effect.tryEmit(FirmwareUpdateEffect.Exit)
+        reduceCore { copy(exitDialog = false) }
+        postSideEffect(FirmwareUpdateEffect.Exit)
     }
 
     // ───── процесс обновления ─────
 
     private suspend fun runUpdate(source: UpdateSource) {
-        val target = core.value.profile?.target ?: return
+        val target = core.profile?.target ?: return
         val progress = when (source) {
             is UpdateSource.Server -> updateRepository.update(target, source.version)
             is UpdateSource.File -> updateRepository.updateFromFile(target, source.path)
         }
         // SDK шлёт событие на каждый пакет передачи: маппинг и отсев повторов — в фоне (io), на Main приходит
         // только смена стадии или процента; переходы состояния (onProgress) — в коллекторе, на Main.
-        core.update { it.copy(running = true) }
+        reduceCore { copy(running = true) }
         try {
             progress
                 .distinctUntilChanged()
@@ -455,7 +348,7 @@ class FirmwareUpdateViewModel(
                 .collect { onProgress(it) }
         } finally {
             deviceSession.endFirmwareTransfer()
-            core.update { it.copy(running = false) }
+            reduceCore { copy(running = false) }
         }
     }
 
@@ -487,11 +380,11 @@ class FirmwareUpdateViewModel(
 
     private suspend fun onFailed(failure: FirmwareFailure) {
         // SDK сдался: продолжения передачи после переподключения больше не будет.
-        core.update { it.copy(running = false) }
+        reduceCore { copy(running = false) }
         // Неизвестный сбой при потере связи — это обрыв: экран покажет «Связь прервана», а после возврата блока
         // вернётся к выбору источника. Связь оценивается с запасом: поток SDK иногда падает раньше статуса связи.
         if (failure == FirmwareFailure.Unknown && linkWentDown()) {
-            core.update { it.copy(linkDropped = true) }
+            reduceCore { copy(linkDropped = true) }
             return
         }
         if (deviceSession.reboot.value == DeviceReboot.ToMain) deviceSession.cancelReboot()
@@ -503,12 +396,12 @@ class FirmwareUpdateViewModel(
     } != null
 
     // Стадия меняется, только пока процесс идёт: запоздавшее событие отменённого процесса экран не трогает.
-    private fun setStage(stage: UpdatePhase) {
-        core.updateIf({ it.stage.isUpdating() || it.stage == UpdatePhase.Success }) { it.copy(stage = stage) }
+    private fun setStage(next: UpdatePhase) {
+        reduceCore { if (stage.isUpdating() || stage == UpdatePhase.Success) copy(stage = next) else this }
     }
 
     private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
+        const val UPDATE_PROCESS = "update"
         val LINK_GRACE = 3.seconds
     }
 }
