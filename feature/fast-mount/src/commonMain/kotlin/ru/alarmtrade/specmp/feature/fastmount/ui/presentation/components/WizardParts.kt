@@ -66,23 +66,16 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
-/** Высота главной кнопки мастера (макет `BIG`: 56). */
 internal val MainButtonHeight = 56.dp
 private val DockButtonWidth = 300.dp
 private const val SPIN_MILLIS = 2_400
 private const val RING_MILLIS = 1_800
 private const val RING_GROW = 0.5f
 
-/** Мастер в широком окне (колонка шагов слева): кнопки панели — справа в ряд, контент шире. */
 internal val LocalWizardWide = staticCompositionLocalOf { false }
 
-/** Навигация в шапке: «Назад», замок (выход недоступен, пока идёт операция) или ничего. */
 internal enum class WizardNav { BACK, LOCK, NONE }
 
-/**
- * Каркас экрана мастера (макет: topbar «шаг · Модель · ID», прокручиваемое тело, закреплённая панель с главной
- * кнопкой). [centered] — статусный экран: тело по центру по вертикали.
- */
 @Composable
 internal fun WizardScaffold(
     title: String,
@@ -118,7 +111,6 @@ internal fun WizardScaffold(
     }
 }
 
-/** Шапка мастера: «шаг · Модель · ID» и «Назад» / замок. */
 @Composable
 internal fun WizardTopBar(title: String, subtitle: String?, nav: WizardNav, onBack: () -> Unit) {
     CmpTopAppBar(
@@ -152,7 +144,6 @@ private fun NavIcon(nav: WizardNav, onBack: () -> Unit) {
     }
 }
 
-/** Колонка контента с max-width (макет `col`). */
 @Composable
 internal fun ContentColumn(
     modifier: Modifier = Modifier,
@@ -175,10 +166,6 @@ internal fun ContentColumn(
     )
 }
 
-/**
- * Закреплённая панель с главной кнопкой (макет `Dock`): на телефоне кнопки столбиком на всю ширину, в широком окне —
- * справа в ряд (первая — правее всех), [note] слева.
- */
 @Composable
 internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Modifier, note: String? = null) {
     val colors = cmpThemeColors()
@@ -220,10 +207,6 @@ internal fun Dock(buttons: List<@Composable () -> Unit>, modifier: Modifier = Mo
     }
 }
 
-/**
- * Панель мастера для кнопок экрана другой фичи (обход, Clone): на телефоне — во всю ширину, в широком окне —
- * колонкой справа (как кнопки остальных шагов).
- */
 @Composable
 internal fun DockFrame(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val colors = cmpThemeColors()
@@ -247,7 +230,6 @@ internal fun DockFrame(modifier: Modifier = Modifier, content: @Composable Colum
 
 private val DockColumnWidth = 360.dp
 
-/** Главная кнопка: [busy] — ожидание ответа (спиннер, повторный тап невозможен). */
 @Composable
 internal fun MainButton(
     text: String,
@@ -277,10 +259,8 @@ internal fun MainButton(
     }
 }
 
-/** Тон плашки (макет `TONES`). */
 internal enum class BannerTone { WARN, ERROR, INFO, SUCCESS }
 
-/** Плашка: причина + действие (в т.ч. «Ошибка шага» F17). */
 @Composable
 internal fun Banner(
     tone: BannerTone,
@@ -321,7 +301,6 @@ internal fun Banner(
     }
 }
 
-/** Карточка с заголовком (макет `Card`). */
 @Composable
 internal fun InfoCard(
     modifier: Modifier = Modifier,
@@ -360,7 +339,6 @@ internal fun InfoCard(
     }
 }
 
-/** Строка «подпись — значение» (макет `KV`). */
 @Composable
 internal fun KeyValue(label: String, value: String, modifier: Modifier = Modifier, tone: Color? = null) {
     val colors = cmpThemeColors()
@@ -381,7 +359,6 @@ internal fun KeyValue(label: String, value: String, modifier: Modifier = Modifie
     }
 }
 
-/** Плашка-метка (макет `Chip`). */
 @Composable
 internal fun Tag(text: String, modifier: Modifier = Modifier, icon: CmpIcons? = null, tone: BannerTone? = null) {
     val colors = cmpThemeColors()
@@ -405,7 +382,6 @@ internal fun Tag(text: String, modifier: Modifier = Modifier, icon: CmpIcons? = 
     }
 }
 
-/** Рейтинг звездой с числом. */
 @Composable
 internal fun RatingLabel(rating: Int, modifier: Modifier = Modifier) {
     CmpRow(
@@ -423,7 +399,6 @@ internal fun RatingLabel(rating: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Центрированный статусный экран (макет `Hero`): иллюстрация, заголовок, текст, доп. блоки. */
 @Composable
 internal fun Hero(
     title: String,
@@ -455,7 +430,6 @@ internal fun Hero(
     }
 }
 
-/** Круглая иконка-иллюстрация статусного экрана (вместо плейсхолдера художника). */
 @Composable
 internal fun RoundArt(icon: CmpIcons, modifier: Modifier = Modifier, tone: BannerTone? = null, size: Dp = 112.dp) {
     val colors = cmpThemeColors()
@@ -472,7 +446,6 @@ internal fun RoundArt(icon: CmpIcons, modifier: Modifier = Modifier, tone: Banne
 
 private const val ICON_SHARE = 0.46f
 
-/** Процесс (макет `BusyArt`): круг с расходящимся кольцом, кольцевой индикатор и иконка ([spin] — вращается). */
 @Composable
 internal fun BusyArt(icon: CmpIcons, modifier: Modifier = Modifier, spin: Boolean = false, size: Dp = 132.dp) {
     val colors = cmpThemeColors()
@@ -512,14 +485,12 @@ private const val FULL_TURN = 360f
 private const val RING_ALPHA = 0.5f
 private const val BUSY_ICON_SHARE = 0.42f
 
-/** Подложка «успех» (макет: `--success` 20% поверх `surface-container-high`). */
 @Composable
 internal fun successContainer(): Color =
     lerp(cmpThemeColors().surfaceContainerHigh, cmpDomainColors().success, SUCCESS_TINT)
 
 private const val SUCCESS_TINT = 0.2f
 
-/** Бесконечная полоса прогресса (макет `IndetBar`). */
 @Composable
 internal fun IndeterminateBar(modifier: Modifier = Modifier) {
     CmpLinearProgressIndicator(modifier = modifier.widthIn(max = 360.dp).fillMaxWidth().height(8.dp))

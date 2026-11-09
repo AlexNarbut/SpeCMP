@@ -7,9 +7,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
  * и `finally` отменённой работы.
  */
 interface DeviceSettingsSessionController {
-    /** Закрыть сессию [source] без сохранения правок. */
     fun discardSession(source: SettingsSource)
 
-    /** Закрыть сессию снимка и удалить его файл. */
     fun discardSnapshot(snapshot: SettingsSource.File)
 }

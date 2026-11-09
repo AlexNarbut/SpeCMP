@@ -127,7 +127,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateState
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdatePhase
 
-/** Шаги обновления на экране прогресса (подготовка → передача → проверка → применение). */
 private val ProgressSteps = listOf(
     Strings.string.firmware_update_item_step_prepare,
     Strings.string.firmware_update_item_step_transfer,
@@ -183,10 +182,6 @@ internal fun EnteringBody() {
     InfoBanner(text = stringResource(Strings.string.firmware_update_msg_power), icon = CmpIcons.PowerSettingsNew)
 }
 
-/**
- * Выбор источника: подсистема, версия блока, канал, «Скачать прошивку», «Архив прошивок», «Выбрать файл…».
- * [fileOnly] — только «Выбрать файл…» (без канала и сервера).
- */
 @Composable
 internal fun SourceBody(state: FirmwareUpdateState, actions: FirmwareUpdateActions, fileOnly: Boolean = false) {
     CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -319,7 +314,6 @@ internal fun DownloadBody() {
     CmpCircularProgressIndicator(modifier = Modifier.size(40.dp))
 }
 
-/** Подтверждение версии: текущая и найденная, «Что нового», предупреждения, «Обновить» / «Отмена». */
 @Composable
 internal fun ConfirmBody(confirm: ConfirmUi, testChannel: Boolean, onUpdate: () -> Unit, onCancel: () -> Unit) {
     val colors = cmpThemeColors()
@@ -393,7 +387,6 @@ private fun VersionRow(label: String, version: String) {
     }
 }
 
-/** Процесс обновления: степпер из четырёх шагов, статус, процент передачи, индикатор и постоянное предупреждение. */
 @Composable
 internal fun ProgressBody(phase: UpdatePhase) {
     val colors = cmpThemeColors()
@@ -464,7 +457,6 @@ private fun UpdatePhase.statusRes(): StringResource = when (this) {
     else -> Strings.string.firmware_update_status_apply
 }
 
-/** Успех: блок остался в загрузчике (подсказка по способу выйти зависит от связи) или уже вернулся в рабочий режим. */
 @Composable
 internal fun SuccessBody(inBoot: Boolean, canExitBoot: Boolean, onOk: () -> Unit) {
     Headline(stringResource(Strings.string.firmware_update_title_success))
@@ -550,7 +542,6 @@ internal fun LostBody(updating: Boolean, onReconnect: () -> Unit, onDisconnect: 
     )
 }
 
-/** «CAN 2154  профиль 1.03» или «Заводские CAN-настройки» под версией ПО на выборе источника. */
 @Composable
 private fun BlockCan(can: BlockCanUi) {
     val code = can.code
@@ -569,10 +560,6 @@ private fun BlockCan(can: BlockCanUi) {
     }
 }
 
-/**
- * «CAN блока 2154 → будет 3312» с пояснением, что другой CAN допустим; при совпадении — «Версия собрана под CAN-код
- * блока». Информация перед установкой, не запрет.
- */
 @Composable
 private fun ConfirmCan(can: ConfirmCanUi) {
     val colors = cmpThemeColors()

@@ -12,16 +12,8 @@ import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
- * `withContext` внутри репозитория или источника данных (класс `*Repository` — в том числе `Specialist*Repository`,
- * `*RepositoryImpl`, `*DataSource`, `*DataSourceImpl`, включая вложенные в него классы и лямбды). Диспетчер выбирает
- * вызывающий — ViewModel или точка входа; метод репозитория — голый `safeRun { }` (docs/patterns.md, «Диспетчеры»).
- *
- * Исключения структурные, без `@Suppress`:
- * - класс владеет собственным `CoroutineScope` (свойство или параметр конструктора этого типа, либо сам реализует
- *   `CoroutineScope`) — он сам хранит состояние и запускает фоновую работу, переключение внутри;
- * - `withContext(NonCancellable)` — не выбор диспетчера, а suspend-уборка в `finally` после отмены.
- *
- * Проверка по именам, без типов — работает во всех source set'ах.
+ * Диспетчер выбирает вызывающий. Исключения структурные: класс владеет своим `CoroutineScope` или
+ * `withContext(NonCancellable)` (уборка в `finally`). По именам — во всех source set'ах.
  */
 class RepositoryWithContext(config: Config) :
     Rule(config, "Репозиторий не переключает диспетчер сам — это решает вызывающий (ViewModel/точка входа).") {

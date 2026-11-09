@@ -51,12 +51,10 @@ private const val FLASH_ALPHA = 0.35f
 private const val ROW_ACTIVE_ALPHA = 0.75f
 internal val CardShape = RoundedCornerShape(20.dp)
 
-// Скелетон «Подробно»: три группы зон по 6 / 5 / 4 строки (как в макете).
 private val SkeletonRows = listOf(6, 5, 4)
 private const val SKELETON_TITLE_FRACTION = 0.45f
 private val PILL_MAX_WIDTH = 150.dp
 
-/** Цвета тона зоны (макет `TONE`). */
 internal data class ToneColors(
     val row: Color,
     val pill: Color,
@@ -104,14 +102,12 @@ internal fun CmpThemeColors.tone(tone: ZoneTone): ToneColors = when (tone) {
     )
 }
 
-/** Акцент значения: тревога — error, активно — primary, иначе обычный текст. */
 internal fun CmpThemeColors.accent(tone: ZoneTone): Color = when (tone) {
     ZoneTone.ALARM -> error
     ZoneTone.ACTIVE -> primary
     ZoneTone.REST, ZoneTone.MUTED -> onSurface
 }
 
-/** Карточка-секция: заголовок слева, итог справа. */
 @Composable
 internal fun SectionCard(
     modifier: Modifier = Modifier,
@@ -148,7 +144,6 @@ internal fun SectionCard(
     }
 }
 
-/** Плашка значения зоны. */
 @Composable
 internal fun ValuePill(text: String, tone: ZoneTone, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors().tone(tone)
@@ -172,7 +167,6 @@ internal fun ValuePill(text: String, tone: ZoneTone, modifier: Modifier = Modifi
     }
 }
 
-/** Метка «Изменилось». */
 @Composable
 internal fun ChangedTag(modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -193,10 +187,7 @@ internal fun ChangedTag(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Подсветка изменения: вспышка (гаснет за 1,8 с) и обводка — пока [on]. [key] — номер снимка: новый снимок с тем же
- * изменением даёт новую вспышку.
- */
+/** [key] — номер снимка: новый снимок с тем же изменением даёт новую вспышку. */
 @Composable
 internal fun BoxScope.ChangeFlash(on: Boolean, key: Int, color: Color, radius: Dp = 14.dp) {
     if (!on) return
@@ -213,7 +204,6 @@ internal fun BoxScope.ChangeFlash(on: Boolean, key: Int, color: Color, radius: D
     )
 }
 
-/** Строка «подпись — значение» карточек «Двигатель», «Связь», «Дополнительно». */
 @Composable
 internal fun KeyValueRow(
     label: String,
@@ -236,7 +226,6 @@ internal fun KeyValueRow(
     }
 }
 
-/** Баннер под статусом: режим ТО / программирования, данные устарели, выход из программирования. */
 @Composable
 internal fun StateBanner(
     title: String,
@@ -277,7 +266,6 @@ internal fun StateBanner(
     }
 }
 
-/** Плитка показателя: подпись сверху, крупное значение с единицей. */
 @Composable
 internal fun MetricTile(label: String, value: String, unit: String?, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -302,7 +290,6 @@ internal fun MetricTile(label: String, value: String, unit: String?, modifier: M
     }
 }
 
-/** Скелетон карточки зон (ждём первый снимок). */
 @Composable
 internal fun ZonesSkeleton(modifier: Modifier = Modifier) {
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {

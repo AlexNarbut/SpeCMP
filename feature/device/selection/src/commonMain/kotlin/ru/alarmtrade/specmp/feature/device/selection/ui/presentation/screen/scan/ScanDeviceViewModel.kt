@@ -37,16 +37,8 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.restr
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.toUiItem
 
 /**
- * ViewModel экрана поиска устройства.
- *
- * Разрешения запрашиваются **самой VM** через инжектированный [PermissionsProvider]
- * (контроллер app-scoped, забинжен в корне приложения) — без промежуточного
- * rationale-экрана. Проверка запускается один раз при первой подписке на state
- * ([onStart], см. docs/patterns.md — не через `LaunchedEffect`), при возврате в приложение
- * ([AppForegroundProvider.foregroundReturns]) — заново.
- * Сканирование — реактивный источник (BLE + USB `Flow`, при `serialEnabled` — и COM-порты), активный только на шаге
- * [ScanStep.Scanning], пока экран подписан на state. COM-порт подключается как USB: сессия SDK по порту, дальше —
- * `DeviceSession` ([ConnectionTransport.SERIAL]).
+ * Разрешения запрашивает сама VM через [PermissionsProvider]; скан активен только на [ScanStep.Scanning], пока экран
+ * подписан на state. COM-порт подключается как USB.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScanDeviceViewModel(
@@ -58,7 +50,6 @@ class ScanDeviceViewModel(
     private val dispatchers: AppDispatchers,
     supportedTransports: Set<DeviceTransport>,
     serialEnabled: Boolean = false,
-    /** Поиск для быстрого монтажа: BLE-устройства, которые не сигнализации, видны, но недоступны. */
     private val alarmsOnly: Boolean = false,
 ) : BaseViewModel<ScanDeviceState, ScanDeviceEffect>(
     ScanDeviceState(
@@ -111,27 +102,19 @@ class ScanDeviceViewModel(
         emit(true)
     }
 
-    // --- Интенты: разрешения ---
-
-    /** Повтор: заново запросить доступ / перепроверить адаптер и геолокацию. */
     fun onRetry() {
         intent { checkPermissionsExclusively() }
     }
 
-    /** Открыть системные настройки Bluetooth (случай выключенного адаптера). */
     fun onOpenBluetoothSettings() {
         permissionsProvider.openBluetoothSettings()
     }
 
-    /** Открыть системные настройки геолокации (случай выключенной службы). */
     fun onOpenLocationSettings() {
         permissionsProvider.openLocationSettings()
     }
 
-    /**
-     * Вернулись в приложение (из системных настроек, шторки на iOS, другого приложения): заново проверяем
-     * разрешения, Bluetooth и геолокацию и запускаем поиск. Подключение и системный запрос разрешения не трогаем.
-     */
+    /** Подключение и системный запрос разрешения не трогаем. */
     private suspend fun recheckOnForeground() {
         executeWithProceedLock {
             // Подключение и идущая проверка держат lock — сюда не попадут. Остаётся шаг Connecting после
@@ -142,15 +125,11 @@ class ScanDeviceViewModel(
         }
     }
 
-    /** Открыть системные настройки приложения (случай «отклонено навсегда»). */
     fun onOpenAppSettings() {
         permissionsProvider.openAppSettings()
     }
 
-    /**
-     * Проверка разрешений из любого триггера (старт, «Повторить», возврат в приложение) — под общим lock:
-     * параллельная вторая проверка показала бы второй системный запрос, дубль пропускается.
-     */
+    /** Под общим lock: параллельная вторая проверка показала бы второй системный запрос — дубль пропускается. */
     private suspend fun checkPermissionsExclusively() {
         executeWithProceedLock { checkPermissionAndProceed() }
     }
@@ -183,9 +162,6 @@ class ScanDeviceViewModel(
         reduce { copy(step = step) }
     }
 
-    // --- Интенты: выбор и подключение ---
-
-    /** Выбор устройства: в split — выделяем (карточка справа), иначе — подключаемся сразу. */
     fun onDeviceSelected(item: DeviceUiItem, isSplit: Boolean) {
         if (item.restricted) return
         if (isSplit) {
@@ -195,7 +171,6 @@ class ScanDeviceViewModel(
         }
     }
 
-    /** «Подключить» в split-раскладке для выбранного устройства. */
     fun onConnectSelected() {
         val selected = (currentState.devices as? LCEState.Content)?.content
             ?.firstOrNull { it.id == currentState.selectedId }
@@ -203,7 +178,6 @@ class ScanDeviceViewModel(
         onConnect(selected)
     }
 
-    /** «Назад» (системное и в заголовке): во время подключения — отмена, иначе — выход. */
     fun onBack() {
         if (currentState.step is ScanStep.Connecting) {
             onCancelConnecting()
@@ -212,7 +186,6 @@ class ScanDeviceViewModel(
         }
     }
 
-    /** Отмена подключения — назад к списку. */
     fun onCancelConnecting() {
         cancelLaunched(CONNECT_KEY)
         intent {
@@ -249,7 +222,6 @@ class ScanDeviceViewModel(
                 is DeviceUiItem.Serial -> ConnectionTransport.SERIAL.takeIf { connectSerial(item) }
             }
             if (connection != null) {
-                // Сессия создана: дальше устройством владеет flow работы с ним (interaction).
                 deviceSession.attach(connection)
                 postSideEffect(ScanDeviceEffect.SessionCreated)
             } else {
@@ -260,9 +232,8 @@ class ScanDeviceViewModel(
     }
 
     /**
-     * Сопряжение решает SDK: блок в режиме сопряжения — сам снимет старое сопряжение на телефоне и сопряжётся заново;
-     * блок «забыл» телефон — снимет старое сопряжение и вернёт [DeviceConnectionState.PAIRING_REQUIRED].
-     * До подключения отсекаем только блок, привязанный к другому телефону: с этого телефона это не исправить.
+     * Сопряжение решает SDK: блок в режиме сопряжения переспряжётся сам, «забыл» телефон —
+     * [DeviceConnectionState.PAIRING_REQUIRED]. До подключения отсекаем только блок, привязанный к другому телефону.
      */
     private suspend fun connectBle(item: DeviceUiItem.Ble, scanned: LCEState<List<DeviceUiItem>, ScanError>): Boolean {
         if (item.mode != ScannedDeviceMode.BOOT && item.isBoundToAnotherPhone()) {
@@ -350,7 +321,6 @@ class ScanDeviceViewModel(
         const val CONNECT_KEY = "connect"
         const val CONNECT_TIMEOUT_MILLIS = 20_000L
 
-        /** Повтор BLE-подключения после снятия старого сопряжения, если блок в режиме сопряжения. */
         const val BLE_CONNECT_ATTEMPTS = 2
 
         // Поиск внутри connect (до 8 с) + сопряжение с подтверждением (до ~30 с) + соединение (20 с).

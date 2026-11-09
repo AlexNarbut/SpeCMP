@@ -49,22 +49,8 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 
 /**
- * Сессия редактора настроек для [source] (одна на граф настроек).
- *
- * - Меню читается при открытии; для блока — на каждое (пере)подключение, с `reload`: незаписанные правки при обрыве
- *   связи теряются, после переподключения настройки перечитываются из блока.
- * - Правка ([onValueChange]) меняет значение в сессии SDK, после неё меню перечитывается из кэша сессии (правка может
- *   поменять соседние настройки); изменённые — пересечение `unsavedIds` SDK с настройками, чьё значение отличается от
- *   снимка «как было» ([SettingsChangeTracker]): возврат исходного значения снимает подсветку.
- * - Запись ([onWrite]) — `save`; после успеха снимок «как было» = текущее меню.
- * - Сессия SDK закрывается в [onCleared] в фоне приложения (`DeviceSettingsSessionController.discardSession`).
- * - Конфигурации: «Загрузить из…» (блок) — снимок источника в модели блока → «Что изменится» → копирование в сессию
- *   блока (без записи; SDK не отмечает скопированное как изменённое — изменённые после загрузки считает
- *   [SettingsChangeTracker.withLoaded]); «Сохранить в…» — «Мои конфигурации» или файл (снимок → системное
- *   сохранение). Для конфигураций «Сохранить» пишет в источник, у источников без записи — только «как…».
- *
- * Одна VM, а не несколько: правки, запись, сброс, загрузка и сохранение идут через одну сессию SDK под общим
- * `executeWithProceedLock` и меняют одно меню и один учёт изменений.
+ * Изменённые — пересечение `unsavedIds` SDK с отличающимися от снимка «как было» ([SettingsChangeTracker]). Одна VM:
+ * правки, запись, сброс, загрузка и сохранение идут через одну сессию SDK под общим `executeWithProceedLock`.
  */
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 internal class DeviceSettingsViewModel(
@@ -104,7 +90,6 @@ internal class DeviceSettingsViewModel(
 
     private suspend fun load() {
         readMenu()
-        // «Записать в блок» из конфигуратора: после первого чтения блока — сравнение с конфигурацией.
         if (currentState.menu !is LCEState.Content) return
         val pending = currentState.pendingLoad ?: return
         reduce { copy(pendingLoad = null) }
@@ -132,7 +117,6 @@ internal class DeviceSettingsViewModel(
         work { load() }
     }
 
-    /** Значение изменено прямо в строке (переключатель, сегменты) или применено из окна редактирования. */
     fun onValueChange(settingId: Int, value: SettingValue) {
         work { applyValue(settingId, value) }
     }
@@ -147,9 +131,8 @@ internal class DeviceSettingsViewModel(
             }
 
             is Response.Success -> {
-                // Правка может поменять соседние настройки (например, выбор одного таймерного канала снимает другие):
-                // перечитываем меню из кэша сессии SDK (без опроса блока); не вышло — заменяем только эту настройку.
-                // Неизменённые узлы берутся из текущего меню — их строки не перерисовываются.
+                // Правка может поменять соседние настройки: перечитываем меню из кэша сессии SDK (без опроса блока);
+                // не вышло — заменяем только эту. Неизменённые узлы — из текущего меню, их строки не перерисовываются.
                 val current = currentRoot() ?: return@executeWithProceedLock
                 val reread = withContext(dispatchers.io) { repository.open(source, reload = false) }.getValueIfSuccess()
                 val root = withContext(dispatchers.default) {
@@ -175,7 +158,6 @@ internal class DeviceSettingsViewModel(
         reduce { withDraft(draft) }
     }
 
-    /** Найти автомобиль по набранному CAN-коду; один найденный — сразу привязывается к коду. */
     fun onCarSearch() {
         val editing = currentState.editing ?: return
         val code = (editing.draft as? SettingValue.Can)?.value?.code ?: return
@@ -187,12 +169,10 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** Выбран автомобиль из нескольких подходящих к коду. */
     fun onCarPick(carId: Int) {
         reduce { withCarPicked(carId) }
     }
 
-    /** «Выбрать из каталога» в окне CAN-кода. */
     fun onVehiclePickerOpen() {
         if (currentState.editing?.draft is SettingValue.Can) reduce { copy(vehiclePicker = true) }
     }
@@ -201,7 +181,6 @@ internal class DeviceSettingsViewModel(
         reduce { copy(vehiclePicker = false) }
     }
 
-    /** Автомобиль выбран в каталоге: его CAN-код и `carId` — в черновик окна CAN-кода (применяется по «Готово»). */
     fun onCarPicked(car: CarSummary) {
         reduce { withCatalogCar(car) }
     }
@@ -230,7 +209,6 @@ internal class DeviceSettingsViewModel(
         reduce { copy(dialog = null) }
     }
 
-    /** Ширина колонки дерева изменена перетаскиванием (по окончании) — запоминается для следующих входов. */
     fun onTreeWidthChange(widthDp: Int) {
         reduce { copy(treeWidthDp = widthDp) }
         intent {
@@ -243,14 +221,12 @@ internal class DeviceSettingsViewModel(
         reduce { copy(searchInput = query) }
     }
 
-    /** Выход ([target] — «назад» с корня или к обновлению CAN): с незаписанными изменениями — подтверждение. */
     fun onExitRequest(target: ExitTarget = ExitTarget.BACK) {
         val dialog = currentState.exitDialog(target)
         reduce { copy(dialog = dialog) }
         if (dialog == null) postSideEffect(DeviceSettingsEffect.Exit(target))
     }
 
-    /** «Перейти к обновлению» в диалоге единой CAN-прошивки. */
     fun onSingleCanUpdate() {
         onExitRequest(ExitTarget.FIRMWARE_UPDATE)
     }
@@ -260,10 +236,7 @@ internal class DeviceSettingsViewModel(
         postSideEffect(DeviceSettingsEffect.Exit(target))
     }
 
-    /**
-     * Диалог выхода забирается сразу (интенты — на главном потоке по очереди): повторный тап его уже не застанет и не
-     * запишет/не выйдет второй раз. `null` — диалога нет.
-     */
+    /** Диалог выхода забирается сразу: повторный тап его уже не застанет и не запишет/не выйдет второй раз. */
     private fun takeExitTarget(): ExitTarget? {
         val target = currentState.dialog.exitTarget() ?: return null
         reduce { copy(dialog = null) }
@@ -293,10 +266,6 @@ internal class DeviceSettingsViewModel(
         exitTo?.let { postSideEffect(DeviceSettingsEffect.Exit(it)) }
     }
 
-    /**
-     * `save` источника (блок — запись в блок, конфигурация/файл — сохранение) с флагом прогресса [progress]; успех —
-     * снимок «как было» = текущее меню. Ответ — ошибка или `null`.
-     */
     private suspend fun saveToSource(progress: (DeviceSettingsState, Boolean) -> DeviceSettingsState): Response.Error? {
         reduce { progress(this, true).copy(dialog = null) }
         val response = try {
@@ -308,16 +277,12 @@ internal class DeviceSettingsViewModel(
         return response as? Response.Error
     }
 
-    /** Правки записаны/сохранены: снимок «как было» = текущее меню, подсветка снимается. */
     private suspend fun commit() {
         val root = currentRoot()
         updateChanges { (if (root != null) withBaseline(root) else this).withoutLoaded() }
         refreshChanged()
     }
 
-    // ── Загрузка конфигурации в редактор блока (K7 → K9) ─────────────────────────────────────────────────────
-
-    /** Меню «⋯» → «Загрузить из…». */
     fun onLoadRequest() {
         if (source != SettingsSource.Device || currentRoot() == null) return
         reduce { copy(dialog = SettingsDialog.LoadSources) }
@@ -333,7 +298,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** Выбрана конфигурация в «Моих» или облаке. */
     fun onConfigurationPicked(picked: SettingsSource) {
         reduce { copy(configurationPicker = null) }
         requestLoad(picked, closeAfter = true)
@@ -343,7 +307,6 @@ internal class DeviceSettingsViewModel(
         reduce { copy(configurationPicker = null) }
     }
 
-    /** Результат системного выбора файла настроек: модель — модель блока. */
     fun onFilePicked(result: SettingsFilePickResult) {
         when (result) {
             is SettingsFilePickResult.Picked -> {
@@ -360,7 +323,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** Модель конфигурации другая — предупреждение, иначе сразу сравнение. */
     private fun requestLoad(from: SettingsSource, closeAfter: Boolean) {
         val deviceName = deviceModel() ?: return
         val sourceDeviceName = from.deviceNameOrNull
@@ -382,9 +344,8 @@ internal class DeviceSettingsViewModel(
     }
 
     /**
-     * Сравнение с [from]: «Сравниваем…» — сразу (повторный запуск во время сравнения ничего не делает), сама работа —
-     * в очереди за правками (не пропуск: иначе выбор «Загрузить из…», пока применяется значение, молча терялся).
-     * Без связи работа не стартует — показываем [notStarted].
+     * «Сравниваем…» — сразу, работа — в очереди за правками (не пропуск: иначе выбор, пока применяется значение, молча
+     * терялся). Без связи работа не стартует — показываем [notStarted].
      */
     private fun startPreview(from: SettingsSource, closeAfter: Boolean, notStarted: DiffState?) {
         if (currentState.diff is DiffState.Busy) return
@@ -392,7 +353,6 @@ internal class DeviceSettingsViewModel(
         work { preview(from, closeAfter) } ?: reduce { copy(diff = notStarted) }
     }
 
-    /** «Продолжить» в предупреждении о другой модели. */
     fun onMismatchContinue() {
         val dialog = currentState.dialog as? SettingsDialog.ModelMismatch ?: return
         reduce { copy(dialog = null) }
@@ -403,7 +363,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** «Повторить» в ошибке сравнения. */
     fun onDiffRetry() {
         val error = currentState.diff as? DiffState.Error ?: return
         startPreview(error.from, error.closeAfter, notStarted = error)
@@ -447,7 +406,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** «Загрузить» в «Что изменится»: значения конфигурации — в сессию блока (в блок — только по «Записать»). */
     fun onDiffConfirm() {
         val ready = currentState.diff as? DiffState.Ready ?: return
         // Снимок забирается и флаг ставится уже в запущенной работе: без связи work не стартует — сравнение остаётся.
@@ -507,9 +465,6 @@ internal class DeviceSettingsViewModel(
         sessions.discardSnapshot(snapshot)
     }
 
-    // ── Сохранение (K6) и конфигурации (K5) ───────────────────────────────────────────────────────────────────
-
-    /** Действие панели «Изменено: N · …». */
     fun onBarAction() {
         when (currentState.barAction) {
             BarAction.WRITE -> onWrite()
@@ -518,7 +473,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** «Сохранить в…»: «Мои конфигурации» / файл. */
     fun onSaveToRequest(exitAfter: Boolean = false) {
         if (currentRoot() == null) return
         reduce { copy(dialog = SettingsDialog.SaveTargets(exitAfter)) }
@@ -538,14 +492,12 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** «Сохранить в мои» из меню конфигурации. */
     fun onSaveToMineRequest() {
         val deviceName = deviceModel() ?: return
         val form = SaveForm(source.defaultConfigurationName(), "", deviceName)
         reduce { copy(saveForm = form) }
     }
 
-    /** «Сохранить в файл» / «Сохранить как файл…» из меню. */
     fun onExportRequest() {
         saving { exportFile(exitAfter = false) }
     }
@@ -610,7 +562,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** Результат системного сохранения файла (после [DeviceSettingsEffect.ExportFile]). */
     fun onFileExported(result: SettingsFileSaveResult) {
         val done = currentState.pendingExport ?: return
         reduce { copy(pendingExport = null, isSaving = false) }
@@ -628,7 +579,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** «Сохранить» конфигурации: файл — с подтверждением перезаписи. */
     fun onSaveRequest(exitAfter: Boolean) {
         if (!currentState.source.canSave || source == SettingsSource.Device) return
         if (source is SettingsSource.File) {
@@ -655,7 +605,6 @@ internal class DeviceSettingsViewModel(
         if (exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
     }
 
-    /** «Повторить» в ошибке сохранения. */
     fun onSaveRetry() {
         val retry = (currentState.dialog as? SettingsDialog.SaveError)?.retry ?: return
         reduce { copy(dialog = null) }
@@ -666,7 +615,6 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** «Сохранить» в диалоге выхода из конфигурации. */
     fun onExitSave() {
         reduce { copy(dialog = null) }
         when (currentState.barAction) {
@@ -675,13 +623,11 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** «Создать копию» «моей» конфигурации: [name] — «Копия — …». */
     fun onCopyRequest(name: String) {
         val deviceName = deviceModel() ?: return
         saving { saveToMine(SaveForm(name.take(LocalConfiguration.NAME_MAX_LENGTH), "", deviceName)) }
     }
 
-    /** «Записать в блок» из конфигурации: другая модель — предупреждение. */
     fun onWriteToDeviceRequest() {
         val connected = currentDevice?.systemName ?: return
         val model = source.deviceNameOrNull
@@ -696,16 +642,13 @@ internal class DeviceSettingsViewModel(
     /** Источник не умеет сохранять себя: после «как…» правки считаются сохранёнными. */
     private fun savesAsNew(): Boolean = currentState.barAction == BarAction.SAVE_AS
 
-    /** Модель блока для снимков и «Моих»: у блока — из сессии, у конфигураций — из источника. */
     private fun deviceModel(): String? = source.deviceNameOrNull ?: currentState.header?.deviceName
 
-    /** Меню «⋯» → «Сбросить к заводским»: сначала подтверждение. */
     fun onResetRequest() {
         if (!currentState.canResetToFactory) return
         reduce { copy(dialog = SettingsDialog.ResetConfirm) }
     }
 
-    /** Подтверждён сброс (или «Повторить» после ошибки): после успеха меню перечитывается из блока. */
     fun onResetConfirm() {
         val dialog = currentState.dialog
         if (dialog != SettingsDialog.ResetConfirm && dialog != SettingsDialog.ResetError) return
@@ -746,24 +689,19 @@ internal class DeviceSettingsViewModel(
         loadCarNames(settings)
     }
 
-    /** Пересчитать изменённые настройки и счётчики разделов. */
     private suspend fun refreshChanged() {
         val root = currentRoot() ?: return
         val changed = changesOf(root, withContext(dispatchers.default) { root.settings() })
         reduce { copy(changedIds = changed.ids, sectionChanges = changed.bySection) }
     }
 
-    /** Изменённые настройки [root] (id) и их число по разделам. */
     private suspend fun changesOf(root: SettingsSection, settings: List<Setting>): SettingsChangeTracker.Changes {
         val unsaved = withContext(dispatchers.io) { repository.unsavedIds(source) }.getValueIfSuccess()
         val tracker = currentState.changes
         return withContext(dispatchers.default) { tracker.changesOf(root, settings, unsaved) }
     }
 
-    /**
-     * Подписи автомобилей к CAN-кодам меню (с сервера, без связи — без подписи). Каждый `carId` — раз за чтение меню:
-     * без сети запрос не повторяется на каждую правку.
-     */
+    /** Каждый `carId` — раз за чтение меню: без сети запрос не повторяется на каждую правку. */
     private fun loadCarNames(settings: List<Setting>) {
         val known = currentState.cars.keys + currentState.requestedCarIds
         val wanted = settings.filterIsInstance<CanCodeSetting>().mapNotNull { it.value.value.carId }.toSet() - known
@@ -778,13 +716,11 @@ internal class DeviceSettingsViewModel(
         }
     }
 
-    /** Каталог автомобилей — под модель подключённого блока (его подсистемы); блок неизвестен — без фильтра. */
     private fun vehicleDevice(): VehicleDeviceFilter? =
         currentState.header?.let { VehicleDeviceFilter.Device(it.deviceName) }
 
     private fun currentRoot(): SettingsSection? = currentState.menu.content
 
-    /** Учёт изменений пересчитывается на `default` (обход дерева) и кладётся в state. */
     private suspend fun updateChanges(transform: SettingsChangeTracker.() -> SettingsChangeTracker) {
         val tracker = currentState.changes
         val next = withContext(dispatchers.default) { tracker.transform() }
@@ -792,9 +728,8 @@ internal class DeviceSettingsViewModel(
     }
 
     /**
-     * Сохранение (в «Мои», в файл, источника): одно за раз. Флаг «сохраняем» ставится сразу — повторный тап (интенты
-     * приходят с Main по очереди) его застанет; снимается по окончании, при отмене и если работа не стартовала.
-     * Экспорт держит флаг до ответа системного сохранения ([onFileExported]).
+     * Одно сохранение за раз: флаг ставится сразу — повторный тап его застанет; снимается по окончании, при отмене
+     * и если работа не стартовала. Экспорт держит флаг до ответа системного сохранения ([onFileExported]).
      */
     private fun saving(block: suspend () -> Unit) {
         if (currentState.isSaving) return

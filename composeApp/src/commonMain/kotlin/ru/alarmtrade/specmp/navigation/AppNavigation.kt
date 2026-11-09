@@ -114,8 +114,6 @@ fun AppNavigation() {
     )
 }
 
-// Хост авторизованной зоны: держит app-level переходы между графами фич
-// (main / support-chat / device-selection). Каждый entry — целый граф фичи.
 @Composable
 private fun AuthedNavGraph() {
     val backStack = rememberNavBackStack(navConfig, MainRoute)
@@ -179,7 +177,6 @@ private fun AuthedNavGraph() {
                 )
             }
             entry<AdvancedMountRoute> { _ ->
-                // Обёртка interaction: дисконнект — экран поверх графа, выход — закрытие сессии.
                 DeviceInteractionHost(
                     onExit = { backStack.popSafe() },
                     bootContent = { onExit ->
@@ -201,7 +198,6 @@ private fun AuthedNavGraph() {
                         settingsEditor = { onBack, onOpenFirmwareUpdate ->
                             DeviceSettingsEditor(onExit = onBack, onOpenFirmwareUpdate = onOpenFirmwareUpdate)
                         },
-                        // Конфигуратор при активной сессии: «Записать в блок» — редактор блока с конфигурацией.
                         configurator = { onBack, onOpenFirmwareUpdate ->
                             AppConfigurator(
                                 onExit = onBack,
@@ -233,10 +229,6 @@ private fun AuthedNavGraph() {
     )
 }
 
-/**
- * Справочник автомобилей под подключённый блок (подсистемы модели, CAN-код прошивки — в поиске по CAN). «Прошивки
- * для CAN» в карточке — архив основной программы блока с этим CAN-фильтром, только просмотр.
- */
 @Composable
 private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
     var archiveCanCode by rememberSaveable { mutableStateOf<String?>(null) }
@@ -269,7 +261,6 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
                 deviceName = device.systemName,
                 canCode = canCode,
                 viewOnly = true,
-                // CAN блока — подсветка версий «как в блоке» рядом с кодом выбранного автомобиля.
                 deviceCanCode = device.can?.takeUnless { it.isFactory }?.code?.takeIf { it.isNotBlank() },
                 deviceCanVersion = device.can?.takeUnless { it.isFactory }?.version,
                 deviceCanProfile = device.can?.takeUnless { it.isFactory }?.firmwareVersion,
@@ -283,7 +274,6 @@ private fun DeviceVehicles(device: AlarmDevice, onBack: () -> Unit) {
     }
 }
 
-/** Конфигуратор: с главной (без [deviceEditor]) и раздел монтажа (с «Записать в блок»). */
 @Composable
 private fun AppConfigurator(
     onExit: () -> Unit,
@@ -303,7 +293,6 @@ private fun AppConfigurator(
     )
 }
 
-/** Редактор конфигурации (K5) в графе конфигуратора: CAN-код — из всего каталога под модель конфигурации. */
 @Composable
 internal fun ConfiguratorEditor(
     source: SettingsSource,
@@ -324,10 +313,6 @@ internal fun ConfiguratorEditor(
     )
 }
 
-/**
- * Редактор настроек подключённого блока: раздел «Настройки» монтажа и «Записать в блок» из конфигуратора
- * ([loadOnOpen] — конфигурация, сразу открываемая в «Что изменится»).
- */
 @Composable
 private fun DeviceSettingsEditor(
     onExit: () -> Unit,
@@ -337,11 +322,9 @@ private fun DeviceSettingsEditor(
     DeviceSettingsEntry(
         onExit = onExit,
         onOpenFirmwareUpdate = onOpenFirmwareUpdate,
-        // CAN-код из каталога: автомобили под модель блока, выбор подставляет код и carId.
         vehiclePicker = { deviceName, onPick, onPickerBack ->
             ConfiguratorVehicles(VehicleCatalog.ALL, deviceName, onPick, onPickerBack)
         },
-        // «Загрузить из…» → «Мои» / облако: экраны конфигуратора в режиме выбора.
         configurationPicker = { request, onPick, onOpenFirmware, onPickerBack ->
             ConfigurationPickerEntry(
                 request = request,
@@ -362,10 +345,6 @@ private fun DeviceSettingsEditor(
     )
 }
 
-/**
- * Выбор автомобиля в конфигураторе: каталог с конфигурациями (облако) или весь каталог (CAN-код в редакторе).
- * Модель блока не задана — облако для всех моделей (без экрана выбора типа устройства).
- */
 @Composable
 internal fun ConfiguratorVehicles(
     catalog: VehicleCatalog,
@@ -387,7 +366,6 @@ internal fun ConfiguratorVehicles(
     )
 }
 
-/** Выбор автомобиля для CAN-фильтра архива прошивок: каталог под модель блока, результат — CAN-код и название. */
 @Composable
 internal fun ArchiveVehiclePicker(
     deviceName: String?,
@@ -417,7 +395,6 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.FirmwareArchive -> backStack.navigateSafe(FirmwareArchiveRoute)
 
-        // Справочник автомобилей: блок не подключён — сначала выбор типа устройства.
         MainNavigationTarget.Cars -> backStack.navigateSafe(
             VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null)),
         )

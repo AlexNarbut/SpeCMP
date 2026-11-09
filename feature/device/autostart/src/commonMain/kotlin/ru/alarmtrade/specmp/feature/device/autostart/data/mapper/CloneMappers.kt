@@ -10,8 +10,8 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneResult
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneStage
 
 /**
- * Состояние процедуры SDK → событие. [written] — поток уже дошёл до записи в блок: `COMPLETED` до записи значит,
- * что Clone был выполнен раньше (блок сразу ответил «готово»), после — что процедура выполнена сейчас (D7).
+ * [written] — поток уже дошёл до записи в блок: `COMPLETED` до записи значит, что Clone был выполнен раньше, после —
+ * что процедура выполнена сейчас.
  */
 @Suppress("CyclomaticComplexMethod")
 internal fun CloneProcedureState.toEvent(written: Boolean): CloneEvent = when (status) {
@@ -41,7 +41,6 @@ internal fun CloneProcedureState.toEvent(written: Boolean): CloneEvent = when (s
     CloneProcedureStatus.READING_CONFIRMATION_ERROR -> CloneEvent.Finished(CloneResult.Failed(CloneFailure.VERIFYING))
 }
 
-/** Стадия, после которой «готово» от блока означает выполненную сейчас процедуру. */
 internal val CloneEvent.isWriting: Boolean
     get() = this is CloneEvent.Stage && stage.locked
 

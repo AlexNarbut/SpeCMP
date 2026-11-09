@@ -75,7 +75,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.TimeSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Weekday
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Wire
 
-/** Шаг дробной настройки, если устройство его не задаёт (как в старом редакторе). */
 internal const val DEFAULT_DECIMAL_STEP = 0.1f
 
 /** Цвет-заглушка SDK «у провода нет цвета» (прозрачный белый). */
@@ -192,7 +191,6 @@ internal fun SdkSettingItem.toDomain(): SettingNode = when (this) {
     )
 }
 
-/** Запрос SDK на изменение значения настройки [settingId] в сессии [path]. */
 internal fun SettingValue.toRequest(path: SettingsPath, settingId: Int): SetDeviceSettingValueRequest = when (this) {
     is SettingValue.Switch -> SetDeviceSettingBooleanValueRequest(path, settingId, enabled)
     is SettingValue.Option -> SetDeviceSettingOptionValueRequest(path, settingId, index)
@@ -303,10 +301,7 @@ private fun OutputValue.toSdk() = SystemOutputValue(logicsState = logicsState, p
 
 private fun SdkChannelLogic.toDomain() = ChannelLogic(id = id, name = name, description = description)
 
-/**
- * Провода канала. Цвет-заглушка SDK означает «без цвета»; провод без цвета и без пина — это отсутствие
- * провода (так SDK описывает канал без жгута, например реле R1), такие не показываем.
- */
+/** Провод без цвета и без пина — отсутствие провода (так SDK описывает канал без жгута, например реле R1). */
 internal fun List<DeviceWire>.toDomain(): List<Wire> = mapNotNull { wire ->
     val colors = wire.colors.filter { it != NO_WIRE_COLOR }.map { it and RGB_MASK }
     if (colors.isEmpty() && wire.pinNumber == 0) null else Wire(name = wire.name, colors = colors, pin = wire.pinNumber)

@@ -77,16 +77,10 @@ private val CONTEXT_ONE_ROW_MIN_WIDTH = 420.dp
 internal const val ARCHIVE_CHANGE_MODEL_TAG = "firmware_archive_change_model"
 internal const val ARCHIVE_SAVED_DIALOG_TAG = "firmware_archive_saved"
 
-/** testTag «Скачать» в строке версии. */
 internal fun archiveDownloadTag(key: String): String = "firmware_archive_download_$key"
 
-/** testTag «Поделиться» в строке версии. */
 internal fun archiveShareTag(key: String): String = "firmware_archive_share_$key"
 
-/**
- * Шапка архива без блока: система, подсистема — крупно название, мелко внутреннее имя прошивки (нажимается — выбор
- * другой подсистемы) и канал.
- */
 @Composable
 internal fun ArchiveNoUnitContext(
     system: String,
@@ -156,7 +150,6 @@ private fun ModelButton(
             CmpColumn(modifier = Modifier.weight(1f)) {
                 CmpText(text = system, fontSize = 13.sp, color = colors.onSurfaceVariant)
                 CmpText(text = subsystem, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                // Внутреннее имя прошивки — мелко, если оно не совпадает с названием.
                 systemName?.takeIf { it != subsystem }?.let {
                     CmpText(text = it, fontSize = 12.sp, color = colors.onSurfaceVariant)
                 }
@@ -177,7 +170,6 @@ private fun ModelButton(
     }
 }
 
-/** «Поделиться» (иконка, если платформа умеет) и «Скачать» / «Скачиваем…» в строке версии на узком окне. */
 @Composable
 internal fun RowExportActions(key: String, busy: Boolean, onDownload: () -> Unit, onShare: (() -> Unit)?) {
     CmpRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -199,7 +191,6 @@ internal fun RowExportActions(key: String, busy: Boolean, onDownload: () -> Unit
     }
 }
 
-/** «Скачать» и «Поделиться» в панели версии на широком окне. */
 @Composable
 internal fun DetailExportActions(busy: Boolean, onDownload: () -> Unit, onShare: (() -> Unit)?) {
     CmpRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -220,7 +211,6 @@ internal fun DetailExportActions(busy: Boolean, onDownload: () -> Unit, onShare:
     }
 }
 
-/** У подсистемы нет прошивок: «Для … прошивок нет» и «Выбрать другую подсистему». */
 @Composable
 internal fun ArchiveNoModelFirmware(model: String, onChangeModel: () -> Unit) {
     CmpBox(
@@ -252,7 +242,6 @@ internal fun ArchiveNoModelFirmware(model: String, onChangeModel: () -> Unit) {
     }
 }
 
-/** Баннер: не скачалось, не сохранилось или не открылось «Поделиться»; закрывается крестиком. */
 @Composable
 internal fun ArchiveExportBanner(error: ArchiveExportError, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     val text = when (error) {
@@ -276,10 +265,6 @@ internal fun ArchiveExportBanner(error: ArchiveExportError, onDismiss: () -> Uni
     )
 }
 
-/**
- * «Прошивка скачана»: куда сохранён файл (телефон — «Файлы» → «Загрузки», desktop — папка), имя файла и подсказка
- * про «Выбрать файл…». Подтверждение — «Открыть папку» (desktop) или «Поделиться» (где есть).
- */
 @Composable
 internal fun ArchiveSavedDialog(
     saved: ArchiveSavedUi,

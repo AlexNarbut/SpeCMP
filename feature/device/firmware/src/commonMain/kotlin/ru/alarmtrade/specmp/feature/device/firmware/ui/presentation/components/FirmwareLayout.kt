@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Раскладка по ширине окна (M3 Window Size Classes). */
 internal enum class FirmwareLayout { Compact, Medium, Expanded }
 
 private val MediumFrom = 600.dp

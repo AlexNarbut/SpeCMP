@@ -18,7 +18,6 @@ internal fun AlarmDevice.toUnitInfo(): UnitInfo = UnitInfo(
 
 internal fun String.withPdfExtension(): String = if (endsWith(".pdf", ignoreCase = true)) this else "$this.pdf"
 
-/** Новый шаг SDK (не равный прежнему): плашка «Настройки записаны» после записи, Clone в маршруте, длительность. */
 internal fun MasterState.withStep(step: FastMountStep): MasterState = copy(
     step = step,
     error = null,

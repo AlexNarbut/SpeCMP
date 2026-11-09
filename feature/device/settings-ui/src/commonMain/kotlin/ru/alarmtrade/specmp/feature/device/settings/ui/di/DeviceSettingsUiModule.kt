@@ -6,7 +6,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DeviceSettingsViewModel
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsEditorOptions
 
-/** Koin-модуль экранов настроек: ViewModel сессии редактора. Репозиторий — из `feature/device/settings`. */
 val deviceSettingsUiModule = module {
     viewModel { (source: SettingsSource, options: SettingsEditorOptions) ->
         DeviceSettingsViewModel(

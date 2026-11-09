@@ -7,14 +7,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
-/*
- * Окно CAN-кода: как результаты поиска и выбора автомобиля меняют state (чистые функции; запросы — во VM).
- */
-
-/**
- * Ответ поиска автомобилей по коду [code]. Устарел (в окне уже другой код или окно закрыто) — state без изменений;
- * найден ровно один — сразу привязывается к коду.
- */
+/** Устарел (в окне уже другой код или окно закрыто) — state без изменений; один найденный — сразу привязывается. */
 internal fun DeviceSettingsState.withCarSearch(
     code: String,
     response: Response<List<CarSummary>>,
@@ -37,14 +30,12 @@ internal fun DeviceSettingsState.withCarSearch(
     }
 }
 
-/** Выбран автомобиль [carId] из нескольких подходящих к коду. */
 internal fun DeviceSettingsState.withCarPicked(carId: Int): DeviceSettingsState {
     val current = editing ?: return this
     val draft = current.draft as? SettingValue.Can ?: return this
     return copy(editing = current.copy(draft = SettingValue.Can(draft.value.copy(carId = carId))))
 }
 
-/** Автомобиль выбран в каталоге: его CAN-код и `carId` — в черновик (применяется по «Готово»); каталог закрыт. */
 internal fun DeviceSettingsState.withCatalogCar(car: CarSummary): DeviceSettingsState {
     val current = editing
     if (current == null || current.draft !is SettingValue.Can) return copy(vehiclePicker = false)

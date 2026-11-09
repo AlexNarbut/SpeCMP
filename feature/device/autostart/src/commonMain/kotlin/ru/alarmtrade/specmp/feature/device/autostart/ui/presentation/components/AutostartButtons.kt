@@ -17,7 +17,6 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepNext
 
-/** Главная кнопка экрана (во всю ширину колонки кнопок, высота макета). */
 @Composable
 internal fun AutostartPrimaryButton(text: StringResource, onClick: () -> Unit, modifier: Modifier = Modifier) {
     CmpButton(
@@ -27,7 +26,6 @@ internal fun AutostartPrimaryButton(text: StringResource, onClick: () -> Unit, m
     )
 }
 
-/** Вторая кнопка экрана (обводкой). */
 @Composable
 internal fun AutostartSecondaryButton(
     text: StringResource,
@@ -43,10 +41,6 @@ internal fun AutostartSecondaryButton(
     )
 }
 
-/**
- * Итог шага в мастере быстрого монтажа: причина, по которой мастер не пустил дальше (если есть), и «Далее»
- * ([AutostartStepNext.busy] — спиннер, повторный тап невозможен).
- */
 @Composable
 internal fun StepNextButton(next: AutostartStepNext, onClick: () -> Unit, modifier: Modifier = Modifier) {
     next.error?.let { error ->

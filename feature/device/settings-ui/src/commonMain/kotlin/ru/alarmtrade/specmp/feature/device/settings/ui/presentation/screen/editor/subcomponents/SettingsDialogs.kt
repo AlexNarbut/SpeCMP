@@ -42,7 +42,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
 
-/** Описание настройки или раздела (по ⓘ). */
 @Composable
 internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
     CmpDialog(
@@ -60,7 +59,6 @@ internal fun DescriptionDialog(node: SettingNode, onDismiss: () -> Unit) {
     )
 }
 
-/** Выход с незаписанными изменениями: записать и выйти / выйти без записи / отмена. */
 @Composable
 internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -91,7 +89,6 @@ internal fun ExitDialog(changed: Int, onWrite: () -> Unit, onDiscard: () -> Unit
     )
 }
 
-/** Блокирующий прогресс записи: SDK не отдаёт процентов, индикатор неопределённый. */
 @Composable
 internal fun WriteProgressDialog() {
     CmpDialog(
@@ -122,7 +119,6 @@ internal fun WriteErrorDialog(changed: Int, onRetry: () -> Unit, onDismiss: () -
     )
 }
 
-/** Подтверждение сброса блока к заводским: незаписанные изменения пропадут, отменить нельзя. */
 @Composable
 internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -152,7 +148,6 @@ internal fun ResetConfirmDialog(changed: Int, onConfirm: () -> Unit, onDismiss: 
     )
 }
 
-/** Блокирующий прогресс сброса (SDK не отдаёт процентов). */
 @Composable
 internal fun ResetProgressDialog() {
     CmpDialog(
@@ -183,7 +178,6 @@ internal fun ResetErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-/** Единая CAN-прошивка: CAN-код меняется прошивкой CAN под автомобиль — переход к обновлению прошивки. */
 @Composable
 internal fun SingleCanFirmwareDialog(canCode: String, onUpdate: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(

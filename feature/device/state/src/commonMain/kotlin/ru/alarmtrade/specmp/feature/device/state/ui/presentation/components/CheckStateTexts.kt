@@ -131,7 +131,6 @@ internal val Zone.icon: CmpIcons
         Zone.TILT -> CmpIcons.ScreenRotation
     }
 
-/** Подпись значения зоны: зависит от типа («Открыта» у двери, «Открыт» у капота, «Нажат» у педали). */
 @Suppress("CyclomaticComplexMethod")
 internal fun zoneValueRes(kind: ZoneKind, value: ZoneValue): StringResource = when (value) {
     ZoneValue.ALARM -> Strings.string.devicestate_zone_value_alarm
@@ -196,7 +195,6 @@ internal val StateCommand.label: StringResource
         StateCommand.LIGHT_WAY -> Strings.string.devicestate_cmd_item_light
     }
 
-/** Короткая подпись для колонки пульта; у остальных — полная. */
 internal val StateCommand.shortLabel: StringResource
     get() = when (this) {
         StateCommand.ARM -> Strings.string.devicestate_cmd_value_short_arm
@@ -246,7 +244,6 @@ internal val DeviceEventKind.text: StringResource
         DeviceEventKind.CAR_STATE -> Strings.string.devicestate_event_value_car_state
     }
 
-/** `мм:сс` с ведущими нулями (отсчёт автозапуска). */
 internal fun formatMinutesSeconds(seconds: Int): String {
     val safe = seconds.coerceAtLeast(0)
     val minutes = (safe / SECONDS_IN_MINUTE).toString().padStart(2, '0')
@@ -254,7 +251,6 @@ internal fun formatMinutesSeconds(seconds: Int): String {
     return "$minutes:$rest"
 }
 
-/** Число с одним знаком после запятой (напряжение, давление). */
 internal fun formatOneDecimal(value: Float): String {
     val tenths = kotlin.math.round(value * TENTHS).toInt()
     val sign = if (tenths < 0) "-" else ""

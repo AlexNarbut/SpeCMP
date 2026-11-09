@@ -6,13 +6,9 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            // SDK устройства (бывший логический модуль selection): скан BLE/USB.
             implementation(project(":core:specialist"))
             implementation(libs.alarmtrade.specialist)
-            // BLE-типы из публичного API specialist (ScannedDeviceState и т.д.) живут
-            // в bluetooth-common (пакеты ru.alarmtrade.bluetoothControl.*). USB-типы —
-            // в самом specialist (ru.alarmtrade.specialist.domain.usb.*), отдельная
-            // usb-либа не нужна.
+            // BLE-типы публичного API SDK живут в bluetooth-common (ru.alarmtrade.bluetoothControl.*).
             implementation(libs.alarmtrade.bluetooth)
             implementation(libs.kermit)
 
@@ -23,14 +19,11 @@ kotlin {
             implementation(project(":core:permissions"))
             implementation(project(":core:lifecycle"))
 
-            // Сессия устройства (подключение, чтение информации о блоке)
             implementation(project(":feature:device:interaction"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 
-            // Nav3-граф фичи (см. docs/navigation.md)
             implementation(libs.compose.nav3)
-            // ViewModelStore-декоратор: per-entry ViewModelStore → очистка VM при pop
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.kotlinx.serialization.json)
 
@@ -47,7 +40,6 @@ kotlin {
             implementation(project(":core:testing"))
             implementation(project(":feature:device:interaction:testing"))
         }
-        // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs)
         }

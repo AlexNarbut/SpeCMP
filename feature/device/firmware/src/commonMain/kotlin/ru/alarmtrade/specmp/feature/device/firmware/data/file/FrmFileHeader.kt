@@ -14,7 +14,6 @@ private const val BYTE_MASK = 0xFF
 private const val BITS_PER_BYTE = 8
 private const val UINT_SIZE = 4
 
-/** Имя системы и версия из заголовка `.frm`; `null` — файл не `.frm` или в заголовке нет имени. */
 internal fun parseFrmFileInfo(bytes: ByteArray): FrmFileInfo? {
     if (bytes.size < VERSION_POSITION) return null
     if (bytes.uintAt(0) != bytes.size.toLong()) return null

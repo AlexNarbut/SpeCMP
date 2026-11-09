@@ -8,13 +8,7 @@ import org.jetbrains.kotlin.psi.KtAnonymousInitializer
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 
-/**
- * `init { }` в теле ViewModel. Стартовая работа экрана — `override suspend fun onStart()` из `BaseViewModel`:
- * запускается при первой подписке UI и один раз за жизнь VM. `init` выполняется при создании VM, даже если экран так и не подписался.
- *
- * ViewModel — класс, имя которого оканчивается на `ViewModel`, или класс с супертипом `…ViewModel` (в том числе
- * `BaseViewModel<S, E>`). Проверка по именам, без type resolution — работает во всех source set'ах. `companion object` и вложенные классы не трогаем.
- */
+/** `init` выполняется при создании VM, даже если экран так и не подписался. По именам, без type resolution. */
 class ViewModelInitBlock(config: Config) :
     Rule(
         config,

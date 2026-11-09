@@ -58,13 +58,10 @@ private const val COLLAPSED_LINES = 2
 private const val DAY_MONTH_DIGITS = 2
 private const val YEAR_DIGITS = 4
 
-/** testTag строки версии в архиве; [key] — [ArchiveRowUi.key] (у версии без CAN — номер версии). */
 internal fun archiveItemTag(key: String): String = "firmware_archive_item_$key"
 
-/** testTag «Показать больше» в строке. */
 internal fun archiveMoreTag(key: String): String = "firmware_archive_more_$key"
 
-/** testTag кнопки «Выбрать» в строке. */
 internal fun archiveSelectTag(key: String): String = "firmware_archive_select_$key"
 
 /** Дата как её отдаёт сервер, в виде `дд.мм.гггг` (не зависит от языка приложения). */
@@ -73,7 +70,6 @@ internal fun formatArchiveDate(date: LocalDate): String =
         "${date.monthNumber.toString().padStart(DAY_MONTH_DIGITS, '0')}." +
         date.year.toString().padStart(YEAR_DIGITS, '0')
 
-/** Метка у версии: «Установлена» или «Старее установленной» (у новых — нет). */
 @Composable
 internal fun VersionBadge(kind: ArchiveRowKind, modifier: Modifier = Modifier) {
     if (kind == ArchiveRowKind.New) return
@@ -107,11 +103,7 @@ internal fun VersionBadge(kind: ArchiveRowKind, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Строка версии: номер, метка, дата, CAN и начало описания; «Показать больше» открывает диалог с полным описанием
- * по центру экрана (нажатие по кнопке версию не выбирает). На широком окне ([master]) вся строка выбирает версию
- * для панели справа; на узком — кнопка «Выбрать» ([onPick] = `null` — просмотр без выбора, кнопки нет).
- */
+/** Нажатие по «Показать больше» версию не выбирает; [onPick] = `null` — просмотр без выбора. */
 @Composable
 internal fun ArchiveRow(
     row: ArchiveRowUi,
@@ -206,10 +198,6 @@ internal fun ArchiveRow(
     }
 }
 
-/**
- * Нижняя строка карточки: «Показать больше» (если есть описание) и на узком окне — «Выбрать» или (без блока,
- * [export]) «Поделиться» + «Скачать».
- */
 @Composable
 private fun RowActions(
     row: ArchiveRowUi,
@@ -247,10 +235,6 @@ private fun RowActions(
     }
 }
 
-/**
- * «Показать больше»: версия по центру экрана — номер, метка, дата, CAN и полное описание с прокруткой; внизу —
- * «Закрыть» и то же действие, что у строки («Выбрать», без блока — «Поделиться» и «Скачать»).
- */
 @Composable
 private fun ArchiveVersionDialog(
     row: ArchiveRowUi,
@@ -334,5 +318,4 @@ private fun ArchiveVersionDialog(
 
 internal const val ARCHIVE_VERSION_DIALOG_TAG = "firmware_archive_version"
 
-/** Полное описание в диалоге — до ~60 % высоты телефона, дальше прокрутка. */
 private val DialogDescriptionMaxHeight = 420.dp

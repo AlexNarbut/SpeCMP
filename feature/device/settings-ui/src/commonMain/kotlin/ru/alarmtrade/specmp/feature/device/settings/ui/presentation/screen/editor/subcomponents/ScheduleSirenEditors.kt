@@ -48,10 +48,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
 private const val DISABLED_ALPHA = 0.38f
 private val TimeChipFontSize = 20.sp
 
-/**
- * Расписание автозапуска: утренний и вечерний запуск — у каждого переключатель и время; время раскрывается
- * кнопками часов и минут по нажатию (неактивно, пока запуск выключен).
- */
 @Composable
 internal fun ScheduleEditor(value: AutoStartSchedule, onChange: (AutoStartSchedule) -> Unit) {
     var openSlot by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -136,7 +132,6 @@ private fun ScheduleSlot(
     }
 }
 
-/** Звук сирены: тон или мелодия и номер в диапазоне устройства (при смене типа — с начала диапазона). */
 @Composable
 internal fun SirenEditor(setting: SirenSetting, value: SirenTone, onChange: (SirenTone) -> Unit) {
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -68,7 +68,6 @@ internal fun FirmwareArchiveState.withSource(
     )
 }
 
-/** Строки списка от новой версии к старой; номер каждой версии разбирается один раз. */
 private fun FirmwareArchiveRequest.rowsOf(items: List<FirmwareVersion>): List<ArchiveRowUi> = items
     .map { FirmwareVersionNumber.parse(it.version) to it }
     .sortedByDescending { it.first }
@@ -87,10 +86,7 @@ private fun FirmwareArchiveRequest.rowsOf(items: List<FirmwareVersion>): List<Ar
         )
     }
 
-/**
- * Отношение к установленной версии. «Установлена» у сборки под CAN — только под CAN-код и профиль блока: тот же
- * номер под другой CAN — другой файл, его установка не переустановка.
- */
+/** Тот же номер под другой CAN — другой файл: его установка не переустановка. */
 internal fun FirmwareArchiveRequest.kindOf(version: FirmwareVersion): ArchiveRowKind {
     val installed = installedVersion ?: return ArchiveRowKind.New
     return when (version.version.relationTo(installed)) {
@@ -100,7 +96,6 @@ internal fun FirmwareArchiveRequest.kindOf(version: FirmwareVersion): ArchiveRow
     }
 }
 
-/** Сборка без CAN — любая; под CAN — под код блока и (если обе известны) его версию профиля. */
 private fun FirmwareArchiveRequest.isDeviceBuild(version: FirmwareVersion): Boolean {
     val code = version.canCode ?: return true
     val deviceCode = deviceCanCode ?: return !deviceCanFactory

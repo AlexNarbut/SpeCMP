@@ -12,12 +12,7 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 
-/**
- * Чтение `Mutex.isLocked` (docs/patterns.md, «Конкурентность»): «проверить и захватить» не атомарно — два вызова
- * проходят проверку до захвата. Ровно-один-в-полёте — `tryLock()`, очередь — `withLock { }`.
- *
- * Требует type resolution: в задачах detekt без классов правило молчит.
- */
+/** «Проверить и захватить» не атомарно: ровно-один-в-полёте — `tryLock()`, очередь — `withLock { }`. */
 class MutexIsLockedCheck(config: Config) :
     Rule(config, "Mutex.isLocked — check-then-act: используйте tryLock() или withLock { }."),
     RequiresAnalysisApi {

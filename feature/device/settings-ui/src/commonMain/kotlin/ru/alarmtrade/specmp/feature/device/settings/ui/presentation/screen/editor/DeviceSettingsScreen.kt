@@ -114,11 +114,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteErrorDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.WriteProgressDialog
 
-/**
- * Каркас редактора: шапка (устройство, бейдж единой CAN), крошки (compact), дерево разделов (medium/expanded),
- * панель содержимого [pane] (раздел или поиск — её даёт граф), нижняя панель «Изменено: N · Записать», окно
- * редактирования и диалоги.
- */
 @Composable
 internal fun DeviceSettingsContent(
     state: DeviceSettingsState,
@@ -190,7 +185,6 @@ private fun ReadyBody(
     }
 }
 
-/** Разделитель между деревом и разделом: тянется по горизонтали, меняет ширину дерева. */
 @Composable
 private fun TreeResizeHandle(onDrag: (Dp) -> Unit, onDragStop: () -> Unit) {
     val colors = cmpThemeColors()
@@ -254,7 +248,6 @@ private fun TopBar(state: DeviceSettingsState, location: SettingsLocation, actio
     )
 }
 
-/** Шапка конфигурации: название, плашка источника, модель блока, «Только просмотр». */
 @Composable
 private fun ConfigurationTopBar(
     state: DeviceSettingsState,
@@ -298,7 +291,6 @@ private fun ConfigurationTopBar(
     )
 }
 
-/** Шапка редактора: «Назад», а вне поиска с загруженным меню — поиск и меню «⋯». */
 @Composable
 private fun SettingsTopBar(
     state: DeviceSettingsState,
@@ -331,10 +323,6 @@ private fun SettingsTopBar(
     )
 }
 
-/**
- * Меню «⋯». Блок: «Загрузить из…», «Сохранить в…», сброс к заводским. Конфигурации — по источнику: «Мои» — в файл,
- * копия; файл — в мои, как файл; облако и заводские — в мои, в файл. «Записать в блок» — только при подключённом блоке.
- */
 @Composable
 private fun MoreMenu(state: DeviceSettingsState, actions: DeviceSettingsActions) {
     var expanded by remember { mutableStateOf(false) }
@@ -598,11 +586,9 @@ private fun Dialogs(state: DeviceSettingsState, wide: Boolean, actions: DeviceSe
     if (state.isApplying || state.isSaving) TransferProgressDialog(applying = state.isApplying)
 }
 
-/** Ширина дерева: от 180 dp до 480 dp, но не больше половины окна. */
 private val TreeMinWidth = 180.dp
 private val TreeMaxWidth = 480.dp
 private const val TREE_MAX_FRACTION = 0.5f
 private val ResizeHandleWidth = 12.dp
 
-/** На широкой раскладке корень не показывается: открыт первый раздел. */
 internal fun firstSectionId(root: SettingsSection): Int? = root.children.firstOrNull { it is SettingsSection }?.id

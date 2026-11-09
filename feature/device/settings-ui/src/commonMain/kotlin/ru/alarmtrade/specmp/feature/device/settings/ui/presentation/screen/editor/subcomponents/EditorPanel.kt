@@ -56,7 +56,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueT
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.EditingSetting
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
-/** Ширина окна редактирования на широком экране: 50 % окна, 480–600 dp. */
 private val EditorDialogWidth = CmpDialogWidth(fraction = 0.5f, min = 480.dp, max = 600.dp)
 
 @Immutable
@@ -70,10 +69,7 @@ internal class EditorActions(
     val onPickFromCatalog: () -> Unit,
 )
 
-/**
- * Окно редактирования настройки: нижняя шторка на компактном экране, диалог — на широком. Шапка (номер, название,
- * описание, «Было: …»), содержимое по типу, «Сбросить» / «Готово». Значение уходит в сессию только по «Готово».
- */
+/** Значение уходит в сессию только по «Готово». */
 @Composable
 internal fun EditorPanel(editing: EditingSetting, cars: Map<Int, CarSummary>, wide: Boolean, actions: EditorActions) {
     if (wide) {
@@ -155,7 +151,6 @@ private fun EditorHeader(editing: EditingSetting, onDraftChange: (SettingValue) 
     }
 }
 
-/** Описание канала: две строки, по нажатию — целиком. */
 @Composable
 private fun ChannelDescription(settingId: Int, text: String) {
     var expanded by rememberSaveable(settingId) { mutableStateOf(false) }

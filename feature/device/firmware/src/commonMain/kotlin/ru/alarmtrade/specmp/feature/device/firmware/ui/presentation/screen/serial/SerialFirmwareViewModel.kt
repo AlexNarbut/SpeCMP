@@ -17,17 +17,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceOrNull
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /**
- * Прошивка блока по COM-порту: «Обновить из файла» → разбор заголовка `.frm` → подтверждение с версиями блока и
- * файла (имя блока в файле другое — предупреждение, прошить можно) → GOBOOT (пользователь перезагружает блок по
- * питанию) → передача → CRC → применение → результат.
- *
- * Сессию порта держит [deviceSession] (её открыл поиск), связь и обрыв показывает хост устройства. Экран стоит и в
- * рабочем слоте хоста, и в слоте загрузчика: VM одна на запись навигации, поэтому смена режима блока экран не
+ * Экран стоит и в рабочем слоте хоста, и в слоте загрузчика: VM одна на запись навигации, смена режима его не
  * сбрасывает. Порт при перезагрузке блока не отключается — после обновления режим перечитывается явно.
- *
- * Блок в state — из `DeviceSession.state`, проверка файла читает блок из сессии в момент проверки. Выбранный файл
- * живёт в фазе [SerialPhase.Confirm] — отдельных полей нет. Обновление живёт, пока жива VM, а не пока экран подписан
- * на state.
  */
 class SerialFirmwareViewModel(
     private val repository: SerialFirmwareRepository,
@@ -41,7 +32,6 @@ class SerialFirmwareViewModel(
         }
     }
 
-    /** Результат выбора файла: `.frm` для этого блока — на подтверждение, иначе — баннер на шаге выбора. */
     fun onFilePicked(result: FirmwareFilePickResult) {
         if (currentState.phase != SerialPhase.Ready) return
         when (result) {
@@ -70,7 +60,6 @@ class SerialFirmwareViewModel(
                         val version = info.value.version
                         val older = version != null && current != null &&
                             version.relationTo(current.firmwareVersion) == VersionRelation.Older
-                        // Блок ещё не прочитан — сверять не с чем.
                         val mismatch = current?.takeUnless { info.value.isFor(it.systemName) }?.let {
                             SystemNameMismatch(info.value.systemName, it.systemName.trim())
                         }
@@ -108,7 +97,6 @@ class SerialFirmwareViewModel(
         }
     }
 
-    /** «OK» на результате — снова «Обновить из файла». */
     fun onResultOk() {
         reduce {
             if (phase is SerialPhase.Success || phase is SerialPhase.Error) {

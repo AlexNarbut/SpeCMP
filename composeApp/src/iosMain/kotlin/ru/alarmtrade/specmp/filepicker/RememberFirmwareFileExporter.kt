@@ -14,10 +14,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.Fir
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveTarget
 
-/**
- * iOS: сохранение — экспорт через «Файлы» (место выбирает пользователь, как вложения чата), «Поделиться» —
- * `UIActivityViewController` с временной копией файла. Папку открыть нечем.
- */
 @Composable
 actual fun rememberFirmwareFileExporter(): FirmwareFileExporter {
     val saver = rememberSupportChatFileSaver()

@@ -53,13 +53,8 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 import ru.alarmtrade.specmp.filepicker.rememberAppFirmwareFilePicker
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 
-/** Куда уйти после закрытия сессии блока. */
 private enum class FastMountExit { BACK, CHOOSE_ANOTHER, ADVANCED_MOUNT }
 
-/**
- * Быстрый монтаж внутри обёртки сессии; экраны других фич — слотами ([fastMountSlots]). Выход закрывает сессию;
- * дальше — назад, снова поиск («Выбрать другой блок») или поиск расширенного монтажа (блок не поддерживает быстрый).
- */
 @Composable
 internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
     var exit by rememberSaveable { mutableStateOf(FastMountExit.BACK) }
@@ -195,7 +190,6 @@ private fun CarSummary.toMountCar(): MountCar = MountCar(
     canCode = canCode,
 )
 
-/** Чек-лист мастера → чек-лист экрана проверки (строгий порядок, зоны авто-заданий). */
 private fun MountChecklist.toCheckState(): CheckStateChecklist = CheckStateChecklist(
     tasks = tasks.map { task ->
         ChecklistTask(

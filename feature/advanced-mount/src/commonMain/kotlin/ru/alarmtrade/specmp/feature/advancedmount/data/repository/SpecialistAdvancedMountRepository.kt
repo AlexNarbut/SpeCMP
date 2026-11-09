@@ -42,7 +42,7 @@ internal class SpecialistAdvancedMountRepository(private val dataSource: Advance
     }
 
     override fun remoteMountAvailable(): Flow<Response<Boolean>> = flow {
-        // Статус удалённого монтажа приходит по каналу чата — открываем его, как старое приложение.
+        // Статус удалённого монтажа приходит по каналу чата — открываем его.
         dataSource.openChat(ConnectChatRequest())
         emitAll(dataSource.remoteMountAvailability().map { it.toResponse() })
     }

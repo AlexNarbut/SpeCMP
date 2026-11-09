@@ -30,11 +30,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.seria
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.systems.FirmwareSystemsViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.FirmwareUpdateViewModel
 
-/**
- * Koin-модуль фичи `feature/device/firmware`: версии прошивок, обновление (в том числе по COM-порту), состояние
- * перехода в загрузчик и ViewModel экранов. SDK-интеракторы берутся из `core/specialist`.
- */
-
 private const val FIRMWARE_ARCHIVE_PREFERENCES = "firmwarearchive"
 
 val deviceFirmwareModule = module {

@@ -37,9 +37,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceOperat
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
-/**
- * Реализация [DeviceSessionRepository] над текущей сессией SDK независимо от транспорта (BLE/USB).
- */
 internal class SpecialistDeviceSessionRepository(private val dataSource: DeviceSessionDataSource) :
     DeviceSessionRepository {
 

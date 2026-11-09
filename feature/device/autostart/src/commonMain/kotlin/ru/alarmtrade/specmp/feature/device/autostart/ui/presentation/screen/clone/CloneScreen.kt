@@ -120,7 +120,6 @@ internal const val CLONE_STEP_NEXT_TAG = "autostart_clone_step_next"
 internal const val CLONE_CONFIRM_TAG = "autostart_clone_confirm"
 internal const val CLONE_RESULT_TAG = "autostart_clone_result"
 
-/** Действия экрана; один экземпляр на экран. */
 @Immutable
 internal data class CloneActions(
     val onBack: () -> Unit = {},
@@ -132,12 +131,6 @@ internal data class CloneActions(
     val onOpenSupportChat: () -> Unit = {},
 )
 
-/**
- * Экран «Процедура Clone» (раздел расширенного монтажа; отдельный экран — не вкладка обхода).
- *
- * @param fromBypass открыт из бесключевого обхода: итог закрывается «Вернуться к обходу».
- * @param onBack выход с экрана (в обход или на корень монтажа).
- */
 @Composable
 fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) {
     val viewModel = koinViewModel<CloneViewModel> { parametersOf(fromBypass) }
@@ -164,12 +157,7 @@ fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () ->
     CloneContent(state = state, actions = actions, onClose = onBack)
 }
 
-/**
- * Clone как шаг мастера быстрого монтажа: шапка и нижняя панель — мастера ([chrome]), тело, статус, ошибки и диалоги —
- * этого экрана. На успехе — «Далее» → [onNext].
- *
- * @param key ключ VM: новый ключ — процедура с начала, тот же — прежний итог.
- */
+/** @param key ключ VM: новый ключ — процедура с начала, тот же — прежний итог. */
 @Composable
 fun CloneStep(
     key: String,
@@ -204,10 +192,8 @@ fun CloneStep(
     CloneContent(state = state, actions = actions, step = CloneStepMode(chrome, next, onNext))
 }
 
-/** Режим шага мастера (см. [CloneStep]). */
 internal class CloneStepMode(val chrome: AutostartStepChrome, val next: AutostartStepNext, val onNext: () -> Unit)
 
-/** Stateless-контент: фаза → тело и кнопки; диалоги поверх. [step] — шаг мастера быстрого монтажа. */
 @Composable
 internal fun CloneContent(
     state: CloneState,
@@ -452,7 +438,6 @@ private fun failureText(failure: CloneFailure): String = when (failure) {
     CloneFailure.DEVICE_DENIED -> stringResource(Strings.string.autostart_clone_error_denied)
 }
 
-/** Кнопки по фазе (макет): старт / итог; во время процесса кнопок нет. */
 private fun footer(
     state: CloneState,
     actions: CloneActions,
@@ -498,7 +483,7 @@ private fun footer(
                     onClose,
                 )
 
-                // D3: повтор — только там, где он может помочь, и пока есть попытки.
+                // Повтор — только там, где он может помочь, и пока есть попытки.
                 result is CloneResult.Failed && result.failure.retryable && state.canStart -> {
                     AutostartPrimaryButton(Strings.string.autostart_common_btn_retry, actions.onStart)
                     AutostartSecondaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)

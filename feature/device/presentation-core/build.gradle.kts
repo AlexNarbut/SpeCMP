@@ -11,7 +11,6 @@ kotlin {
         commonMain.dependencies {
             api(project(":core:ui"))
             api(project(":feature:device:interaction"))
-            // LocalConfiguration: ограничения формы «Сохранить в мои» (components/ConfigurationKit.kt)
             implementation(project(":feature:configurator"))
 
             implementation(project(":core:common"))

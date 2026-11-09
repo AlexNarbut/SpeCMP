@@ -90,10 +90,6 @@ import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.model.Devic
 
 private enum class DeviceSelectLayout { Compact, Stacked, Split }
 
-/**
- * Публичный вход фичи поиска устройства. Компонует ViewModel, permissions-контроллер,
- * one-shot эффекты и адаптивную раскладку (compact / stacked / split).
- */
 @Composable
 internal fun DeviceSelectionScreen(
     onSessionCreate: () -> Unit,
@@ -142,23 +138,17 @@ internal fun DeviceSelectionScreen(
     )
 }
 
-/** Действия экрана поиска (stateless-контент получает их от VM или заглушки в галерее состояний). */
 internal class DeviceSelectionActions(
     val onBack: () -> Unit = {},
     val onRetry: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
     val onOpenBluetoothSettings: () -> Unit = {},
     val onOpenLocationSettings: () -> Unit = {},
-    /** Выбор устройства; `isSplit` — широкая раскладка (выбор без подключения). */
     val onSelect: (DeviceUiItem, Boolean) -> Unit = { _, _ -> },
     val onConnectSelectedDevice: () -> Unit = {},
     val onCancelConnecting: () -> Unit = {},
 )
 
-/**
- * Stateless-контент экрана поиска: адаптивная раскладка (compact / stacked / split).
- * [initialInfoId] — открытый диалог «⋮» (для галереи состояний); [showBack] — стрелка «Назад» (поиск — не корень).
- */
 @Composable
 internal fun DeviceSelectionContent(
     state: ScanDeviceState,
@@ -287,7 +277,6 @@ private fun DeniedBody(
     }
 }
 
-/** Состояние «что-то выключено» (Bluetooth / геолокация): открыть настройки + повторить. */
 @Composable
 private fun OffStateBody(
     icon: CmpIcons,
@@ -315,7 +304,6 @@ private fun OffStateBody(
     }
 }
 
-/** Проводное подключение (USB или COM-порт): подсказки поиска у них общие — «подключите кабель». */
 private fun Set<DeviceTransport>.hasCable(): Boolean = DeviceTransport.USB in this || DeviceTransport.SERIAL in this
 
 @Composable

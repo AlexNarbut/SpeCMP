@@ -18,22 +18,18 @@ import kotlinx.coroutines.flow.update
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 
 /**
- * Блокировка ввода PIN программирования на блоке после неверной попытки: [PIN_LOCKOUT] блок не принимает новый ввод.
- * SDK не умеет отличать неверный PIN от блокировки (оба — «неверный PIN»), поэтому отсчёт ведёт приложение:
- * пока он идёт, в блок ничего не отправляем, иначе блок сам продлит блокировку. Считается по блоку ([systemId]).
- * Монотонное время; перезапуск процесса отсчёт сбрасывает (блок ответит неверно ещё раз — отсчёт начнётся заново).
+ * SDK не отличает неверный PIN от блокировки, поэтому отсчёт [PIN_LOCKOUT] ведёт приложение: пока он идёт, в блок
+ * ничего не шлём — иначе блок продлит блокировку. Монотонное время; перезапуск процесса отсчёт сбрасывает.
  */
 class ServicePinCooldown(private val timeSource: TimeSource = TimeSource.Monotonic) : AuthCloseable {
 
     private val deadlines = MutableStateFlow<Map<Long, TimeMark>>(emptyMap())
 
-    /** Неверный PIN у блока [systemId]: запустить (или перезапустить) отсчёт. */
     fun start(systemId: Long) {
         val deadline = timeSource.markNow() + PIN_LOCKOUT
         deadlines.update { it + (systemId to deadline) }
     }
 
-    /** Сколько осталось ждать сейчас; [Duration.ZERO] — ввод разрешён. */
     fun remainingNow(systemId: Long): Duration = deadlines.value[systemId]?.left() ?: Duration.ZERO
 
     /**
@@ -58,11 +54,7 @@ class ServicePinCooldown(private val timeSource: TimeSource = TimeSource.Monoton
             }
         }
 
-    /**
-     * Блокировка для открытого диалога PIN: остаток по блоку из [systemId], округлённый вверх до целых секунд (диалог
-     * показывает секунды — значение меняется раз в секунду, а не на каждый тик); `null` — ввод разрешён или блока нет
-     * ([systemId] выдаёт `null`, например пока диалог закрыт).
-     */
+    /** Округлено вверх до секунд — значение меняется раз в секунду, а не на каждый тик; `null` — ввод разрешён. */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun lockedFor(systemId: Flow<Long?>): Flow<Duration?> = systemId
         .distinctUntilChanged()
@@ -86,7 +78,6 @@ class ServicePinCooldown(private val timeSource: TimeSource = TimeSource.Monoton
         ((inWholeMilliseconds + MILLIS_IN_SECOND - 1) / MILLIS_IN_SECOND).seconds
 
     companion object {
-        /** Блокировка ввода на блоке после неверного PIN. */
         val PIN_LOCKOUT: Duration = 15.seconds
 
         private val TICK: Duration = 250.milliseconds

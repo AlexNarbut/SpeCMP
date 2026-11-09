@@ -5,17 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 
-/**
- * Режим «шаг быстрого монтажа»: чек-лист проверок и «Далее». Данные чек-листа ведёт мастер быстрого монтажа
- * (SDK `FastMountInteractor`, автоответы считает SDK) — экран их только показывает и отдаёт ответы.
- *
- * @property onNext шаг завершён («Далее», в т.ч. с незакрытыми заданиями после подтверждения).
- * @property onBack возврат на предыдущий шаг мастера (после подтверждения).
- * @property onSkip пропустить авто-задание.
- * @property onAnswer ответ на ручное задание: индекс варианта в [ChecklistTask.options].
- * @property chrome шапка и нижняя панель мастера (экран — шаг мастера в его каркасе); `null` — свои.
- * @property nextBusy мастер ждёт ответа на «Далее» — кнопка недоступна.
- */
+/** Данные чек-листа ведёт мастер быстрого монтажа (автоответы считает SDK): экран их только показывает. */
 @Immutable
 data class CheckStateFastMount(
     val checklist: CheckStateChecklist,
@@ -27,7 +17,6 @@ data class CheckStateFastMount(
     val nextBusy: Boolean = false,
 )
 
-/** Шапка ([topBar] с «Назад» экрана) и нижняя панель ([dock]) мастера быстрого монтажа. */
 @Immutable
 class CheckStateChrome(
     val topBar: @Composable (onBack: () -> Unit) -> Unit,
@@ -45,14 +34,6 @@ data class CheckStateChecklist(val tasks: List<ChecklistTask> = emptyList(), val
     val allClosed: Boolean get() = closed == tasks.size
 }
 
-/**
- * Задание чек-листа.
- *
- * @property zone авто-задание по зоне — рядом показывается текущее значение зоны; `null` — без зоны (охрана, ручное).
- * @property guard авто-задание «поставьте на охрану» — рядом текущий статус охраны.
- * @property options варианты ответа ручного задания (пусто — задание автоматическое).
- * @property active текущее задание в строгом порядке ([CheckStateChecklist.sequential]).
- */
 @Immutable
 data class ChecklistTask(
     val id: String,
@@ -69,10 +50,8 @@ data class ChecklistTask(
 enum class ChecklistStatus {
     PENDING,
 
-    /** Авто-задание отметилось или ответ «да». */
     PASSED,
 
-    /** Ответ «нет — не работает». */
     FAILED,
     SKIPPED,
 }

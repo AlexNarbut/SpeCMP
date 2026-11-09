@@ -14,27 +14,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.Fir
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveResult
 
 /**
- * «Архив прошивок»: версии модуля в выбранном канале, страницами по [PAGE_SIZE]; выбранная версия уходит экрану
- * обновления через эффект [FirmwareArchiveEffect.Picked].
- *
- * Страница 1 грузится при создании; следующая — когда список докручен до конца. Версии уникальны по номеру и CAN
- * ([archiveRowKey]: у единой CAN-прошивки один номер выходит под разные CAN-коды) и держатся от новой к старой
- * (числами: `3.10` новее `3.9`). Источник не отдаёт признак «страниц больше нет», поэтому
- * конец списка — страница без новых версий (эвристика). Ошибка первой страницы — полноэкранная, ошибка догрузки
- * оставляет список.
- * Версия старее установленной выбирается через подтверждение, равная установленной и новее — сразу.
- *
- * CAN-фильтр (только основная программа): список грузится заново, когда в поле набран полный CAN-код или поле
- * очищено; код из каталога автомобилей применяется сразу. С подключённым блоком (единая CAN-прошивка) фильтр при
- * открытии — CAN-код и версия CAN-профиля блока; версия уточняет фильтр, только пока в нём код блока. Версии под
- * код блока подсвечиваются при любом фильтре; поставить версию под другой код можно — это не ошибка.
- * Модуль без [FirmwareArchiveRequest.moduleId] — основная программа устройства [FirmwareArchiveRequest.deviceName],
- * определяется перед первой страницей. В режиме просмотра версия не выбирается. CAN-фильтр — только у основной
- * программы сигнализации ([FirmwareArchiveRequest.canFilterAllowed]).
- *
- * Без блока ([FirmwareArchiveRequest.noUnit]): канал меняется на экране (список начинается заново), у подсистемы
- * без прошивок — «Выбрать другую подсистему»; «Скачать» сохраняет файл версии через [exporter], «Поделиться»
- * отдаёт его системному меню. Одна загрузка файла за раз.
+ * Источник не отдаёт признак «страниц больше нет»: конец списка — страница без новых версий (эвристика). Версии
+ * уникальны по номеру и CAN ([archiveRowKey]); версия CAN-профиля уточняет фильтр, только пока в нём код блока.
  */
 class FirmwareArchiveViewModel(
     private val args: FirmwareArchiveRequest,
@@ -55,9 +36,6 @@ class FirmwareArchiveViewModel(
         reduce { withSource(source.transform(), args) }
     }
 
-    // ───── загрузка ─────
-
-    /** Начать список заново (иконка «обновить», «Повторить» при ошибке первой страницы, «Обновить» при пустом). */
     fun onRefresh() {
         loadFirstPage()
     }
@@ -80,7 +58,6 @@ class FirmwareArchiveViewModel(
         intent { executeWithProceedLock(needSkipAnother = false) { loadPage(FIRST_PAGE) } }
     }
 
-    /** Список докручен до конца: следующая страница. */
     fun onEndReached() {
         if (!currentSource.canLoadMore) return
         reduceSource { copy(loadingMore = true) }
@@ -88,7 +65,6 @@ class FirmwareArchiveViewModel(
         intent { executeWithProceedLock { loadPage(next) } }
     }
 
-    /** «Повторить» под списком после ошибки догрузки. */
     fun onRetryMore() {
         if (currentSource.moreError == null) return
         reduceSource { copy(moreError = null, loadingMore = true) }
@@ -106,7 +82,6 @@ class FirmwareArchiveViewModel(
                 return
             }
 
-            // У устройства нет основной программы — версий нет.
             is Response.Success -> module.value ?: run {
                 reduceSource {
                     copy(load = LCEState.Content(Unit), hasMore = false, loadingMore = false, noModule = true)
@@ -145,14 +120,10 @@ class FirmwareArchiveViewModel(
         }
     }
 
-    /**
-     * Список ждёт [page]: первую — после сброса (страниц ещё нет), следующую — пока идёт догрузка за последней
-     * показанной. Иначе ответ устарел (обновление во время догрузки) и не должен попасть в новый список.
-     */
+    /** Список ждёт [page]: первую — после сброса, следующую — во время догрузки; иначе ответ устарел. */
     private fun ArchiveSource.awaits(page: Int): Boolean =
         if (page == FIRST_PAGE) this.page == 0 else loadingMore && this.page == page - 1
 
-    /** Модуль архива: из запроса или основная программа устройства [FirmwareArchiveRequest.deviceName] (один раз). */
     private suspend fun moduleId(): Response<Long?> {
         currentSource.moduleId?.let { return Response.Success(it) }
         val deviceName = args.deviceName ?: return Response.Success(null)
@@ -161,16 +132,12 @@ class FirmwareArchiveViewModel(
         return response
     }
 
-    // ───── без блока: канал, файл ─────
-
-    /** Канал в шапке (только без блока): список заново. */
     fun onChannelSelect(channel: FirmwareChannel) {
         if (!args.noUnit || currentState.channel == channel) return
         reduce { copy(channel = channel).withSource(source.copy(selected = null), args) }
         loadFirstPage()
     }
 
-    /** «Скачать»: файл версии [key] — в «Загрузки» / папку платформы, затем диалог «Прошивка скачана». */
     fun onDownload(key: String) {
         export(key) { item, bytes ->
             val exporter = exporter ?: return@export
@@ -189,7 +156,6 @@ class FirmwareArchiveViewModel(
         }
     }
 
-    /** «Поделиться»: файл версии [key] — системному меню. */
     fun onShare(key: String) {
         export(key) { item, bytes ->
             val exporter = exporter ?: return@export
@@ -199,14 +165,12 @@ class FirmwareArchiveViewModel(
         }
     }
 
-    /** «Поделиться» в диалоге «Прошивка скачана». */
     fun onSavedShare() {
         val saved = currentState.saved ?: return
         reduce { copy(saved = null) }
         onShare(saved.key)
     }
 
-    /** «Открыть папку» в диалоге «Прошивка скачана» (desktop). */
     fun onSavedOpenFolder() {
         val saved = currentState.saved ?: return
         reduce { copy(saved = null) }
@@ -224,7 +188,7 @@ class FirmwareArchiveViewModel(
         reduce { copy(exportError = null) }
     }
 
-    /** Скачать файл версии [key] и отдать [use]; одна загрузка за раз, ошибка скачивания — баннер. */
+    /** Одна загрузка за раз; ошибка скачивания — баннер. */
     private fun export(key: String, use: suspend (FirmwareVersion, ByteArray) -> Unit) {
         if (!args.noUnit) return
         val item = itemOf(key) ?: return
@@ -245,16 +209,12 @@ class FirmwareArchiveViewModel(
         }
     }
 
-    // ───── CAN-фильтр ─────
-
-    /** «Вернуть CAN блока»: фильтр снова по коду и версии CAN-профиля блока. */
     fun onCanResetToDevice() {
         val code = args.deviceCanCode ?: return
         reduceSource { copy(canInput = code, carTitle = null) }
         applyCanFilter(code)
     }
 
-    /** Ввод в поле CAN-кода: список перезапрашивается на полном коде и при очистке поля. */
     fun onCanInput(text: String) {
         val code = text.filter(Char::isDigit).take(CAN_CODE_DIGITS)
         reduceSource { copy(canInput = code, carTitle = null) }
@@ -265,7 +225,6 @@ class FirmwareArchiveViewModel(
         }
     }
 
-    /** Кнопка каталога есть, только когда каталог подключён (слот точки входа). */
     fun onVehiclePickerOpen() {
         reduce { copy(vehiclePicker = true) }
     }
@@ -274,7 +233,6 @@ class FirmwareArchiveViewModel(
         reduce { copy(vehiclePicker = false) }
     }
 
-    /** Автомобиль из каталога: его CAN-код — фильтр списка. */
     fun onVehiclePicked(canCode: String, carTitle: String) {
         val code = canCode.filter(Char::isDigit).take(CAN_CODE_DIGITS)
         reduce { copy(vehiclePicker = false).withSource(source.copy(canInput = code, carTitle = carTitle), args) }
@@ -287,14 +245,10 @@ class FirmwareArchiveViewModel(
         loadFirstPage()
     }
 
-    // ───── выбор ─────
-
-    /** [key] — [ArchiveRowUi.key]. */
     fun onSelectRow(key: String) {
         reduceSource { copy(selected = key) }
     }
 
-    /** «Выбрать» / «Установить» строки [key]: старее установленной — через подтверждение, иначе сразу. */
     fun onPick(key: String) {
         if (args.viewOnly) return
         val item = itemOf(key) ?: return

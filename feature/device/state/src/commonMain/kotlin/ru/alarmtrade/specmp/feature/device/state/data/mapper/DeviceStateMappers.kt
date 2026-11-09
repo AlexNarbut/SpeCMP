@@ -39,11 +39,8 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneValue
 private const val GSM_LEVEL_MAX = 3
 
 /**
- * Снимок SDK → [VehicleState]; `null` — снимок пустой (стартовый `DeviceState.Empty`, `deviceId == -1`) или
- * невалидный, на экран не идёт.
- *
- * Правило «нет данных»: SDK не отдаёт `null`, а заполняет отсутствующее нулями (`-1`, `UNKNOWN`). Группа CAN /
- * электромобиль / подогреватель / камера считается присланной, если в ней есть хоть одно ненулевое значение.
+ * SDK не отдаёт `null`, а заполняет отсутствующее нулями (`-1`, `UNKNOWN`): группа считается присланной, если в ней
+ * есть ненулевое значение. Пустой стартовый снимок (`deviceId == -1`) — `null`.
  */
 internal fun DeviceState.toVehicleState(): VehicleState? {
     if (deviceId < 0 || !isValid) return null

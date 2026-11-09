@@ -43,19 +43,7 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Граф экранов режима загрузчика: «Обновление прошивки» → «Архив прошивок».
- * Слот `bootContent` хоста устройства (`composeApp`):
- * хост показывает граф, пока блок в загрузчике или ждёт перезагрузку, и сам решает, когда уйти.
- *
- * @param onExit выход из всего flow (закрывает сессию); на экране обновления вызывается после подтверждения.
- * @param onOpenSupportChat открыть чат техподдержки (фича `support-chat`, app-level маршрут).
- * @param archivePicker канал версии, выбранной в архиве, к экрану обновления (singleton Koin из корня композиции).
- * @param filePicker выбор файла прошивки в файловом менеджере (платформа, `composeApp`).
- * @param vehiclePicker выбор автомобиля для CAN-фильтра архива (фича `vehicle-ui`, `composeApp`);
- *   `null` — без каталога.
- * @param sources источники прошивки на экране обновления; [FirmwareSources.FileOnly] — только файл.
- */
+/** Слот `bootContent` хоста устройства: хост показывает граф, пока блок в загрузчике или ждёт перезагрузку. */
 @Composable
 fun FirmwareBootGraph(
     onExit: () -> Unit,

@@ -10,10 +10,6 @@ import ru.alarmtrade.specmp.feature.advancedmount.data.repository.SpecialistAdva
 import ru.alarmtrade.specmp.feature.advancedmount.domain.repository.AdvancedMountRepository
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.screen.root.AdvancedMountRootViewModel
 
-/**
- * Koin-модуль расширенного монтажа. Сессия устройства — из `device:interaction`,
- * SDK-интеракторы — из `core:specialist`.
- */
 val advancedMountModule = module {
     singleOf(::SpecialistAdvancedMountDataSource) bind AdvancedMountDataSource::class
     singleOf(::SpecialistAdvancedMountRepository) bind AdvancedMountRepository::class

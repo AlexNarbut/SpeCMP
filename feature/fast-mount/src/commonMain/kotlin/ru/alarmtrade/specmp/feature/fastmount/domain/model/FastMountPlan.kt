@@ -2,22 +2,16 @@ package ru.alarmtrade.specmp.feature.fastmount.domain.model
 
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 
-/**
- * Ожидаемый путь мастера — для сводки перед стартом и шапки с шагами. Считается до старта по конфигурации и
- * транспорту — так же, как маршрутизирует SDK (`BluetoothFastMountRouter` / `UsbFastMountRouter`).
- * [FastMountStep.REBOOTING] — состояние перехода, в план не входит.
- */
+/** Считается до старта так же, как маршрутизирует SDK (`BluetoothFastMountRouter` / `UsbFastMountRouter`). */
 data class FastMountPlan(val steps: List<PlannedStep>) {
     val stepCount: Int get() = steps.size
 
-    /** Позиция шага в плане (0-based); `null` — шага в плане нет (например, переход). */
     fun indexOf(step: FastMountStep): Int? = steps.indexOfFirst { it.step == step }.takeIf { it >= 0 }
 }
 
 /** Шаг плана. [conditional] — появится, только если потребуется (Clone — по итогу обхода). */
 data class PlannedStep(val step: FastMountStep, val conditional: Boolean = false)
 
-/** План по конфигурации и транспорту; транспорт без поддержки быстрого монтажа — `null`. */
 fun fastMountPlan(configuration: FastMountConfiguration, transport: ConnectionTransport): FastMountPlan? {
     val bluetooth = when (transport) {
         ConnectionTransport.BLE -> true

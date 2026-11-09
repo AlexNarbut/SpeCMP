@@ -114,7 +114,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.Autost
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
 
-/** Короткий доступ к строкам фичи (ключи длинные). */
 private val txt = Strings.string
 
 internal const val BYPASS_START_TAG = "autostart_bypass_start"
@@ -122,7 +121,6 @@ internal const val BYPASS_OPEN_CLONE_TAG = "autostart_bypass_open_clone"
 internal const val BYPASS_RESULT_TAG = "autostart_bypass_result"
 internal const val BYPASS_STEP_NEXT_TAG = "autostart_bypass_step_next"
 
-/** Действия экрана; один экземпляр на экран. */
 @Immutable
 internal data class BypassActions(
     val onBack: () -> Unit = {},
@@ -135,10 +133,6 @@ internal data class BypassActions(
     val onOpenSupportChat: () -> Unit = {},
 )
 
-/**
- * Экран «Бесключевой обход» (раздел расширенного монтажа; Clone — отдельный экран, открывается поверх через
- * [onOpenClone]).
- */
 @Composable
 fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) {
     val viewModel = koinViewModel<BypassLearningViewModel>()
@@ -166,12 +160,7 @@ fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSuppo
     BypassContent(state = state, actions = actions)
 }
 
-/**
- * Обход как шаг мастера быстрого монтажа: шапка и нижняя панель — мастера ([chrome]), тело, статус, ошибки и диалоги —
- * этого экрана. Без перехода в Clone (его ведёт мастер): на успехе и «нужен Clone» — «Далее» → [onNext].
- *
- * @param key ключ VM: новый ключ — обучение с начала (мастер вернулся к монтажу), тот же — прежний итог.
- */
+/** @param key ключ VM: новый ключ — обучение с начала (мастер вернулся к монтажу), тот же — прежний итог. */
 @Composable
 fun BypassLearningStep(
     key: String,
@@ -210,14 +199,12 @@ fun BypassLearningStep(
     )
 }
 
-/** Режим шага мастера (см. [BypassLearningStep]). */
 internal class BypassStepMode(
     val chrome: AutostartStepChrome,
     val next: AutostartStepNext,
     val onNext: (cloneRequired: Boolean) -> Unit,
 )
 
-/** Stateless-контент: фаза → тело и кнопки; диалоги поверх. [stepMode] — шаг мастера быстрого монтажа. */
 @Composable
 internal fun BypassContent(state: BypassState, actions: BypassActions, stepMode: BypassStepMode? = null) {
     val phase = state.phase
@@ -233,7 +220,6 @@ internal fun BypassContent(state: BypassState, actions: BypassActions, stepMode:
             when (phase) {
                 is BypassPhase.Start -> StartBody(state, phase, layout)
 
-                // Каждый новый шаг появляется (макет `bcIn`); ключ — сам шаг.
                 is BypassPhase.Running -> StepAppear(phase.step) { step ->
                     val instruction = step?.subject?.instruction()
                     if (step != null && instruction != null) {
@@ -312,7 +298,6 @@ private fun StartBody(state: BypassState, phase: BypassPhase.Start, layout: Auto
     )
 }
 
-/** Карточка-команда под иллюстрацией (макет `StepCard`, вариант A). */
 @Composable
 private fun StepCard(step: BypassStep?, layout: AutostartLayout) {
     val kind = step?.kind ?: BypassStepKind.WAIT
@@ -336,7 +321,6 @@ private fun StepCard(step: BypassStep?, layout: AutostartLayout) {
     }
 }
 
-/** Цвета карточки: действие — primary, критичный обмен — tertiary, остальное — нейтральная. */
 private class StepCardStyle(val background: Color, val content: Color, val hint: Color, val border: BorderStroke)
 
 @Composable
@@ -417,7 +401,6 @@ private fun KindLabel(kind: BypassStepKind) {
     }
 }
 
-/** Инструкция: монтажник выполняет пункты сам, блок ждёт (макет `InstrView`). */
 @Composable
 private fun InstructionBody(step: BypassStep, instruction: Instruction, layout: AutostartLayout) {
     IllustrationFrame(step.illustration(), layout, mode = IllustrationMode.Request)
@@ -571,7 +554,6 @@ private fun ResultBody(state: BypassState, result: BypassResult, layout: Autosta
     }
 }
 
-/** «Что случилось» / «Что проверить» (D4): две строки ресурса на ошибку, любая может отсутствовать. */
 @Composable
 private fun ErrorBlock(error: BypassResult.Error) {
     val colors = cmpThemeColors()
@@ -620,7 +602,6 @@ private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: C
     }
 }
 
-/** Кнопки по фазе (макет): старт / итог; во время обучения кнопок нет. */
 private fun footer(
     state: BypassState,
     actions: BypassActions,

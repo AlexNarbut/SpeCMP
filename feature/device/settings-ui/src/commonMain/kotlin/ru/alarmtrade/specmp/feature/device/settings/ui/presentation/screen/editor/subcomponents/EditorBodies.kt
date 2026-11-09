@@ -85,7 +85,6 @@ internal fun IntegerEditor(setting: IntegerSetting, value: Int, onChange: (Int) 
     )
 }
 
-/** Целое число в диапазоне: −/+ с автоповтором, ввод с клавиатуры, ползунок, подписи краёв. */
 @Composable
 internal fun IntRangeEditor(
     value: Int,
@@ -158,7 +157,6 @@ private class SliderSpec(
     val onChange: (Float) -> Unit,
 )
 
-/** Крупное значение между кнопками −/+ (автоповтор), ввод с клавиатуры по нажатию на число, ползунок, края. */
 @Suppress("LongParameterList")
 @Composable
 private fun <T> NumberEditor(
@@ -261,7 +259,6 @@ private fun <T> NumberEditor(
     }
 }
 
-/** Список вариантов с радиокнопками; длинные названия переносятся, текущий вариант виден сразу. */
 @Composable
 internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int) -> Unit) {
     val colors = cmpThemeColors()
@@ -296,7 +293,6 @@ internal fun OptionEditor(setting: OptionSetting, selected: Int, onSelect: (Int)
     }
 }
 
-/** Поле ввода с клавиатурой по типу устройства, счётчиком символов и проверкой шаблоном устройства. */
 @Composable
 internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) -> Unit) {
     val valid = setting.matchesPattern(value)
@@ -326,7 +322,6 @@ internal fun TextEditor(setting: TextSetting, value: String, onChange: (String) 
     )
 }
 
-/** Часы и минуты крупными кнопками ▲/▼ (по кругу, с автоповтором). */
 @Composable
 internal fun TimeEditor(value: TimeOfDay, onChange: (TimeOfDay) -> Unit) {
     CmpRow(

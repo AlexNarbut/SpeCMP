@@ -16,11 +16,8 @@ import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
- * Повторный `withLock` того же мьютекса внутри `withLock` (docs/patterns.md, «Конкурентность»): `Mutex` из
- * `kotlinx.coroutines.sync` нереентерабелен — вложенный захват ждёт сам себя (deadlock). Ловит вложенный
- * `m.withLock { }` в той же функции и вызов функции своего класса (без ресивера или через `this`), в теле которой
- * есть `m.withLock` (на один уровень). Мьютекс сравнивается по тексту ресивера (`mutex`, `this.mutex`).
- * Проверка по именам, без type resolution.
+ * `Mutex` нереентерабелен — вложенный захват ждёт сам себя; ловит и вызов метода своего класса на один уровень.
+ * Мьютекс сравнивается по тексту ресивера.
  */
 class NestedSameMutexLock(config: Config) :
     Rule(config, "Mutex нереентерабелен: withLock того же мьютекса внутри withLock — deadlock.") {

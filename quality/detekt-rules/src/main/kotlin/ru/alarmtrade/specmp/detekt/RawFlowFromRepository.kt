@@ -21,14 +21,7 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.isPrivate
 
-/**
- * Публичная функция/свойство класса, реализующего интерфейс `*Repository`, отдаёт поток без `Response`:
- * `Flow<T>`/`StateFlow<T>`/`SharedFlow<T>`, где `T` — не `Response` (docs/patterns.md, «Контракты репозиториев»).
- * Ловит реализации с любым именем (`Specialist*Repository`, `Settings*`, декораторы), а не только `*RepositoryImpl`;
- * интерфейсы проверяет Konsist `repository-contract`.
- *
- * Требует type resolution: в задачах detekt без классов правило молчит (как StateFlowValueMutation).
- */
+/** Ловит реализации с любым именем; интерфейсы проверяет Konsist `repository-contract`. Требует type resolution. */
 class RawFlowFromRepository(config: Config) :
     Rule(config, "Поток репозитория — Flow<Response<T>>: значения — Response.Success, ошибка — Response.Error."),
     RequiresAnalysisApi {

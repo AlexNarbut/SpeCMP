@@ -19,7 +19,6 @@ private const val SEGMENT_MAX_LENGTH = 6
 internal val OptionSetting.isSegmented: Boolean
     get() = options.size in 2..SEGMENTS_MAX_OPTIONS && options.all { it.length <= SEGMENT_MAX_LENGTH }
 
-/** Настройка редактируется в окне (шторка / диалог), а не прямо в строке. */
 internal val Setting.opensEditor: Boolean
     get() = when (this) {
         is OptionSetting -> !isSegmented

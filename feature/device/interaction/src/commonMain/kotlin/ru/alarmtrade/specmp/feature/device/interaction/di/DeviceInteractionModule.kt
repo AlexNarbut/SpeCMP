@@ -28,10 +28,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePin
 // `backgroundScope`, реализация сессии остаётся internal.
 val deviceSessionScopeQualifier = named("deviceSessionScope")
 
-/**
- * Koin-модуль логической фичи `feature/device/interaction`: подключение, сессия и устройство.
- * SDK-интеракторы берутся из `core/specialist`.
- */
 val deviceInteractionModule = module {
     // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание источника.
     single<DeviceConnectionDataSource> {
@@ -45,10 +41,8 @@ val deviceInteractionModule = module {
     singleOf(::SpecialistDeviceSessionRepository) bind DeviceSessionRepository::class
     single(deviceSessionScopeQualifier) { serviceScope(get<AppDispatchers>().io, logTag = "DeviceSession") }
     single<DeviceSession> { DeviceSessionImpl(get(), get(), get(deviceSessionScopeQualifier)) }
-    // Блокировка ввода PIN программирования (по блоку): общая для прошивки и режима программирования.
-    // Состояние аккаунта — чистится при логауте.
+    // Блокировка ввода PIN — по блоку, общая для прошивки и режима программирования; чистится при логауте.
     single { ServicePinCooldown() } bind AuthCloseable::class
-    // Режим программирования (PIN по BLE + кулдаун): обход, проверка состояния.
     singleOf(::SpecialistProgramModeRepository) bind ProgramModeRepository::class
     factory { ProgramModeEntry(get(), get(), get()) }
 }

@@ -75,10 +75,7 @@ private val WideHero = 220.dp
 
 internal const val EXIT_DIALOG_CONFIRM_TAG = "firmware_exit_dialog_confirm"
 
-/**
- * «Обновление прошивки»: экран режима загрузчика, слот хоста устройства. Выход и чат поддержки — колбэки графа;
- * системная «Назад» перехвачена: на процессе заблокирована, на выборе спрашивает подтверждение.
- */
+/** Системная «Назад» перехвачена: на процессе заблокирована, на выборе спрашивает подтверждение. */
 @Composable
 fun FirmwareUpdateScreen(
     onExit: () -> Unit,
@@ -132,7 +129,6 @@ fun FirmwareUpdateScreen(
     )
 }
 
-/** Stateless-контент экрана обновления: иллюстрация и тело по фазе; на широком окне — две равные части. */
 @Composable
 internal fun FirmwareUpdateContent(
     state: FirmwareUpdateState,

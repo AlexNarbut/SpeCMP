@@ -55,15 +55,12 @@ private data class TreeRow(
     val hasSubsections: Boolean,
     val expanded: Boolean,
 ) {
-    /** Пустой раздел не выбирается: без нажатия и наведения, текст приглушён. */
     val enterable: Boolean get() = section.children.isNotEmpty()
 }
 
 /**
- * Дерево разделов для широкой раскладки. Настройки корневого уровня меню (как «Код модели» в старом приложении) —
- * строками над разделами: значение справа, нажатие открывает окно настройки. Выбранный раздел выделен, путь к нему
- * раскрывается при переходе; у разделов с изменениями — счётчик. Раскрытие переключается стрелкой или повторным
- * нажатием на выбранный раздел — в том числе на пути к выбранному (свёрнутое на пути сбрасывается при смене выбора).
+ * Раскрытие переключается стрелкой или повторным нажатием на выбранный раздел (в том числе на пути к нему);
+ * свёрнутое на пути сбрасывается при смене выбора.
  */
 @Composable
 internal fun SectionTree(
@@ -145,7 +142,6 @@ internal fun SectionTree(
     }
 }
 
-/** Настройка корневого уровня: шестерёнка, номер и название, значение; нажатие — окно настройки. */
 @Composable
 private fun TreeSettingRow(setting: Setting, changed: Boolean, onClick: () -> Unit) {
     val colors = cmpThemeColors()
@@ -201,7 +197,6 @@ private fun TreeRowView(row: TreeRow, selected: Boolean, changes: Int, onToggle:
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
             .heightIn(min = RowHeight)
-            // Наведение и нажатие — на всю «таблетку» строки, как у выбранного раздела.
             .testTag(SettingsTestTags.tree(row.section.id))
             .clip(CircleShape)
             .background(if (selected) colors.secondaryContainer else colors.surfaceContainerLow)

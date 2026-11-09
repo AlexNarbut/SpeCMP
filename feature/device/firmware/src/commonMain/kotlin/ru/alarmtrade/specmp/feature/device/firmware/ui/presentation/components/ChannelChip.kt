@@ -46,7 +46,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 
 internal const val CHANNEL_CHIP_TAG = "firmware_channel_chip"
 
-/** testTag пункта канала в меню: `firmware_channel_<release|beta|alpha>`. */
 internal fun channelTag(channel: FirmwareChannel): String = "firmware_channel_${channel.name.lowercase()}"
 
 private fun FirmwareChannel.shortLabel(): StringResource = when (this) {
@@ -61,10 +60,6 @@ private fun FirmwareChannel.longLabel(): StringResource = when (this) {
     FirmwareChannel.ALPHA -> Strings.string.firmware_common_value_channel_alpha
 }
 
-/**
- * Канал обновления одной кнопкой «Канал: Готовая ▾» (≥ 48 dp) с выпадающим списком каналов. Для тестовых каналов
- * кнопка предупреждающего цвета с иконкой — выбранный канал заметен, не открывая список.
- */
 @Composable
 internal fun ChannelChip(
     selected: FirmwareChannel,

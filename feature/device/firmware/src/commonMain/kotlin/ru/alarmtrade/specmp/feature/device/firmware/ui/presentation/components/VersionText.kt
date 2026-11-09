@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.sp
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 
-/** Номер версии: акцентный цвет и насыщенное начертание, чтобы отличался от подписей. */
 @Composable
 internal fun VersionText(
     version: String,

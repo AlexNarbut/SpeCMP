@@ -27,10 +27,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountQuestion
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionAnswer
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 
-/**
- * Шаг мастера по состоянию SDK; `null` — служебное состояние для серверного лога (`*_FINISHED`), в UI не
- * приходит (SDK сразу переходит дальше).
- */
+/** `null` — служебное состояние для серверного лога (`*_FINISHED`): SDK сразу переходит дальше. */
 internal fun StateTitle.toStep(): FastMountStep? = when (this) {
     StateTitle.INITIAL_STATE -> FastMountStep.WRITING_SETTINGS
 
@@ -58,7 +55,6 @@ internal fun StateTitle.toStep(): FastMountStep? = when (this) {
     -> null
 }
 
-/** Предметная ошибка SDK быстрого монтажа; прочие (сеть, связь, неизвестные) — `null`, остаются как есть. */
 internal fun Throwable.toFastMountFailure(): FastMountFailure? = when (this) {
     is FastMountSessionNotStartedException -> FastMountFailure.SessionLost
 
@@ -76,7 +72,6 @@ internal fun Throwable.toFastMountFailure(): FastMountFailure? = when (this) {
     else -> null
 }
 
-/** Класс блока по типам подсистем модели (основная подсистема). */
 internal fun List<SubsystemType>.toDeviceClass(): MountDeviceClass = when {
     SubsystemType.ALARM_MAIN in this -> MountDeviceClass.ALARM
     SubsystemType.MICROBOT_MAIN in this -> MountDeviceClass.MICROBOT

@@ -19,14 +19,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTr
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
-/**
- * Корень расширенного монтажа: шапка блока и разделы.
- *
- * На каждом подключении блока: IMEI; для нового блока — проверка на сервере → разделы по возможностям
- * и подписка на удалённый монтаж. После переподключения того же блока разделы не перезагружаются
- * (пользователь возвращается туда, где был). Непрочитанные в чате опрашивает репозиторий, пока экран на виду.
- * Работа с блоком — через [BaseDeviceViewModel] (отменяется при потере связи).
- */
+/** После переподключения того же блока разделы не перезагружаются: пользователь возвращается туда, где был. */
 class AdvancedMountRootViewModel(
     deviceSession: DeviceSession,
     private val repository: AdvancedMountRepository,
@@ -51,12 +44,10 @@ class AdvancedMountRootViewModel(
                 .flowOn(dispatchers.io)
                 .collect { available -> reduce { copy(remoteAvailable = available.getValueIfSuccess() ?: false) } }
         }
-        // Кнопка «Информация о товаре» — один раз за жизнь VM.
         safeLaunch {
             val enabled = withContext(dispatchers.io) { repository.isProductInfoEnabled() }
             reduce { copy(productInfo = (enabled as? Response.Success)?.value ?: false) }
         }
-        // Реакция на каждое (пере)подключение блока живёт всю жизнь VM: проверка нового блока и IMEI.
         onEachDeviceReady(::onDeviceReady)
     }
 
@@ -71,7 +62,6 @@ class AdvancedMountRootViewModel(
         reduce { copy(imei = imei ?: this.imei) }
     }
 
-    // Проверка блока: новый запрос (повтор или другой блок) отменяет незаконченную прежнюю.
     private fun load(device: AlarmDevice) {
         launchReplacing(VERIFY_KEY) { verify(device) }
     }
@@ -102,7 +92,6 @@ class AdvancedMountRootViewModel(
         reduce { copy(content = content) }
     }
 
-    /** «Исправить» / «Повторить»: заново проверить блок и собрать разделы. */
     fun onRetry() {
         currentState.device?.let(::load)
     }
@@ -123,7 +112,6 @@ class AdvancedMountRootViewModel(
         reduce { copy(dialog = null) }
     }
 
-    /** «Перейти к обновлению»: открыть проверку прошивок — вход в загрузчик (с PIN) запрашивает она. */
     fun onCanUpdateConfirm() {
         reduce { copy(dialog = null) }
         postSideEffect(AdvancedMountRootEffect.OpenSection(MountSection.FIRMWARE_UPDATE))

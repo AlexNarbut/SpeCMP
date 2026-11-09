@@ -27,14 +27,8 @@ import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
- * Репозиторий и use case не бросают (docs/patterns.md, «Контракт результата»): в файле, объявляющем класс
- * (не интерфейс) `*Repository` (реализации `Specialist*Repository`)/`*RepositoryImpl`/`*UseCase`, `throw`, `error()`, `check`/`checkNotNull`/`require`/`requireNotNull` и `!!` допустимы
- * только внутри границы, превращающей исключение в `Response`: лямбда `safeRun { }`/`safeResponseRun { }`/
- * `safeFlowRun { }` (в том числе тело `= safeRun { }` и лямбды операторов потока внутри `safeFlowRun`). Private-хелпер,
- * вызываемый из `safeRun`, правило не видит — он возвращает `null`/`Response`, а бросает уже лямбда.
- *
- * Проброс отмены разрешён везде: `catch (ce: CancellationException) { throw ce }` и
- * `if (e is CancellationException) throw e`. Проверка по именам, без типов — работает во всех source set'ах.
+ * Бросать можно только внутри границы `safeRun { }`/`safeResponseRun { }`/`safeFlowRun { }`; private-хелпер,
+ * вызываемый из неё, правило не видит. Проброс отмены разрешён везде. По именам, без типов.
  */
 class ThrowInRepository(config: Config) :
     Rule(config, "Репозиторий/use case не бросает: ошибка возвращается как Response.Error.") {

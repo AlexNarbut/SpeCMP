@@ -74,19 +74,12 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.updat
 
 internal const val SYSTEMS_SEARCH_TAG = "firmware_systems_search"
 
-/** testTag строки системы. */
 internal fun systemTag(id: Long): String = "firmware_system_$id"
 
-/** testTag строки подсистемы. */
 internal fun subsystemTag(id: Long): String = "firmware_subsystem_$id"
 
 private val ListMaxWidth = 760.dp
 
-/**
- * Архив прошивок без блока, шаг 1: все системы базы устройств и их подсистемы. Выбранная подсистема уходит в
- * [onPick] готовым запросом архива ([FirmwareArchiveRequest.noUnit]); у системы с одной подсистемой архив
- * открывается сразу. CAN-фильтр в архиве — только у основной программы сигнализации.
- */
 @Composable
 fun FirmwareSystemsEntry(onPick: (FirmwareArchiveRequest) -> Unit, onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareSystemsViewModel>()
@@ -102,7 +95,6 @@ fun FirmwareSystemsEntry(onPick: (FirmwareArchiveRequest) -> Unit, onBack: () ->
     )
 }
 
-/** Запрос архива подсистемы без блока. */
 fun archiveRequestOf(system: FirmwareSystem, subsystem: FirmwareSubsystem): FirmwareArchiveRequest =
     FirmwareArchiveRequest(
         moduleId = subsystem.id,
@@ -216,7 +208,6 @@ private fun SystemsList(
     }
 }
 
-/** Система: название и подсистемы через запятую; одна подсистема — нажатие сразу открывает архив. */
 @Composable
 private fun SystemCard(
     row: SystemRowUi,
@@ -281,7 +272,6 @@ private fun SystemCard(
     }
 }
 
-/** Подсистема раскрытой системы: крупно `title`, мелко — внутреннее имя `systemName` и тип. */
 @Composable
 private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
     val colors = cmpThemeColors()
@@ -299,7 +289,6 @@ private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CmpColumn(modifier = Modifier.weight(1f)) {
-                // Крупно — название для показа, мелко — внутреннее (системное) имя прошивки и тип.
                 CmpText(text = subsystem.title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                 CmpText(
                     text = subsystem.systemName + " · " + stringResource(subsystem.kind.titleRes()),
@@ -312,7 +301,6 @@ private fun SubsystemRow(subsystem: FirmwareSubsystem, onClick: () -> Unit) {
     }
 }
 
-/** Кнопка порядка в шапке: меню «По добавлению» / «По алфавиту», выбранный — с галочкой. */
 @Composable
 private fun OrderMenu(order: SystemsOrder, onSelect: (SystemsOrder) -> Unit) {
     var open by remember { mutableStateOf(false) }

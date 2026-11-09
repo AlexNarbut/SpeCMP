@@ -32,7 +32,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.text
 
 private val PlaceholderMaxWidth = 420.dp
 
-/** Чтение меню из устройства. */
 @Composable
 internal fun MenuLoading() {
     Centered {
@@ -51,7 +50,6 @@ internal fun MenuLoading() {
     }
 }
 
-/** Ошибка чтения меню и «Повторить». */
 @Composable
 internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
     Centered {
@@ -75,7 +73,6 @@ internal fun MenuError(error: SettingsError, onRetry: () -> Unit) {
     }
 }
 
-/** Пустое состояние по центру: значок, заголовок, пояснение. */
 @Composable
 internal fun EmptyMessage(icon: CmpIcons, title: String, hint: String?) {
     Centered {

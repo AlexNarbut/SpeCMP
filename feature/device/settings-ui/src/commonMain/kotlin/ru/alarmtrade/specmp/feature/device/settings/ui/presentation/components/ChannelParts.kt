@@ -46,10 +46,6 @@ private const val TWO_COLOR_STRIPE_FROM = 1f / 3
 private const val HATCH_STEP = 6f
 private val SwatchSize = Size(34f, 18f)
 
-/**
- * Метка провода: образец изоляции (1 цвет — заливка; 2 — основной с полосой посередине; 3 — три полосы;
- * без цвета — штриховка) и подпись «Серый, Pin 5».
- */
 @Composable
 internal fun WireTag(wire: Wire, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -119,7 +115,6 @@ private fun WireSwatch(rgb: List<Int>) {
     }
 }
 
-/** Полярность выхода: «+» — залитый кружок, «−» — контурный; не задана — ничего. */
 @Composable
 internal fun PolarityBadge(polarity: Polarity) {
     if (polarity == Polarity.UNDEFINED) return
@@ -156,11 +151,9 @@ internal fun PolarityBadge(polarity: Polarity) {
     }
 }
 
-/** Половина длины линии знака относительно размера круга и толщина линии (dp). */
 private const val SIGN_HALF_LENGTH = 0.25f
 private const val SIGN_STROKE = 2f
 
-/** Метка «Изменено» в заголовке канала (по макету): точка + слово на фоне цвета несохранённых правок. */
 @Composable
 internal fun ChangedChip() {
     val colors = cmpThemeColors()
@@ -182,7 +175,6 @@ internal fun ChangedChip() {
     }
 }
 
-/** Тип контакта входа «НО» / «НЗ»; не задан — ничего. */
 @Composable
 internal fun ContactBadge(type: InputContactType) {
     val text = when (type) {

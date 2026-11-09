@@ -10,10 +10,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStep
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassStepKind
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassSubject
 
-/**
- * Статус обучения SDK → событие. Критичные ожидания (решение D1 задачи) — LADA CAN, LADA Vesta CAN, MED17, GTP:
- * в них приложение передаёт данные, обрыв связи срывает обучение.
- */
+/** Критичные ожидания (LADA CAN, LADA Vesta CAN, MED17, GTP): приложение передаёт данные, обрыв срывает обучение. */
 @Suppress("CyclomaticComplexMethod") // таблица соответствий статус SDK → событие
 internal fun BypassLearningState.toEvent(): BypassEvent = when (bypassStatus) {
     BypassLearningStatus.FINISH_SUCCESS -> BypassEvent.Finished(BypassResult.Success)

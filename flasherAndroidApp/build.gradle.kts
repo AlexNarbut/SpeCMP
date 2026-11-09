@@ -31,10 +31,8 @@ kotlin {
 
 dependencies {
     implementation(project(":flasherApp"))
-    // Язык приложения в контексте Activity (attachBaseContext) — до первой композиции
     implementation(project(":core:localization"))
     implementation(libs.androidx.activityCompose)
-    // Box с testTagsAsResourceId в FlasherActivity
     implementation(libs.compose.foundation)
     // FlasherActivity — FragmentActivity (нужно core/permissions для bind PermissionsController)
     implementation(libs.androidx.fragment)

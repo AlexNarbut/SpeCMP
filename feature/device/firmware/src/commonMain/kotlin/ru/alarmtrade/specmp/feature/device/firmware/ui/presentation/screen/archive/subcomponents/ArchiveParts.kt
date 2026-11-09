@@ -103,11 +103,6 @@ internal fun ArchiveLoading() {
     }
 }
 
-/**
- * Пусто. Без CAN-фильтра — «не найдено» и «Обновить». Под фильтром поле CAN остаётся над пустым состоянием:
- * «Для CAN … прошивок не найдено» + «Показать все версии»; под кодом блока — подсказка поискать под другим кодом и
- * «Выбрать автомобиль», под другим кодом — «Вернуть CAN блока».
- */
 @Composable
 internal fun ArchiveEmpty(
     onRefresh: () -> Unit,
@@ -178,7 +173,6 @@ internal fun ArchiveError(error: FirmwareError, onRetry: () -> Unit) {
     )
 }
 
-/** Подвал списка: индикатор догрузки или ошибка догрузки (список выше остаётся). */
 @Composable
 internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRetryMore: () -> Unit) {
     when {
@@ -210,7 +204,6 @@ internal fun ArchiveFooter(loadingMore: Boolean, moreError: FirmwareError?, onRe
     }
 }
 
-/** Панель справа на широком окне: версия, метка, дата, полное описание, предупреждения и «Установить». */
 @Composable
 internal fun ArchiveDetail(
     row: ArchiveRowUi,
@@ -260,7 +253,6 @@ internal fun ArchiveDetail(
                         .verticalScroll(rememberScrollState()),
                 )
             }
-            // Без блока — «Скачать» / «Поделиться»; просмотр без установки — ни кнопки, ни предупреждений.
             if (onDownload != null) {
                 DetailExportActions(busy, onDownload, onShare)
                 return@CmpColumn
@@ -294,7 +286,6 @@ internal fun ArchiveDetail(
     }
 }
 
-/** «Установить более старую версию?»: версия старее установленной, возможно без новых функций и исправлений. */
 @Composable
 internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -329,10 +320,6 @@ internal fun RollbackDialog(rollback: RollbackUi, onConfirm: () -> Unit, onDismi
     )
 }
 
-/**
- * Блок «CAN-прошивка» в панели версии: код и профиль сборки, «как в блоке» / «другой CAN» и что будет с блоком
- * после установки. Без CAN — «Без привязки к CAN».
- */
 @Composable
 private fun DetailCan(row: ArchiveRowUi, filter: CanFilterUi) {
     val colors = cmpThemeColors()

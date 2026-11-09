@@ -26,7 +26,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 private val CenterMaxWidth = 440.dp
 
-/** Состояние на весь экран (загрузка, ошибка, пусто): колонка по центру с ограниченной шириной. */
 @Composable
 internal fun FirmwareCenteredBody(content: @Composable () -> Unit) {
     CmpBox(
@@ -45,7 +44,6 @@ internal fun FirmwareCenteredBody(content: @Composable () -> Unit) {
     }
 }
 
-/** Ошибка загрузки на весь экран: иллюстрация, заголовок, пояснение и «Повторить». */
 @Composable
 internal fun FirmwareLoadError(icon: CmpIcons, title: String, message: String, onRetry: () -> Unit) {
     FirmwareCenteredBody {

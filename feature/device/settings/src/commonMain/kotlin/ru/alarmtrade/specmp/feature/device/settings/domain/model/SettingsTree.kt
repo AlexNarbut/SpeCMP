@@ -1,8 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.settings.domain.model
 
-// Операции над деревом меню: поиск узлов, путь, замена настройки, поиск по тексту. Чистые, без побочных эффектов.
-
-/** Узел с [id] на любой глубине (сам раздел — тоже), или `null`. */
 fun SettingsSection.findNode(id: Int): SettingNode? {
     if (this.id == id) return this
     for (child in children) {
@@ -15,7 +12,6 @@ fun SettingsSection.findNode(id: Int): SettingNode? {
     return null
 }
 
-/** Разделы от первого уровня до родителя узла [id] включительно (корень не входит); `null` — узла нет. */
 fun SettingsSection.pathTo(id: Int): List<SettingsSection>? {
     for (child in children) {
         if (child.id == id) return emptyList()
@@ -26,7 +22,6 @@ fun SettingsSection.pathTo(id: Int): List<SettingsSection>? {
     return null
 }
 
-/** Все настройки-листья раздела на любой глубине. */
 fun SettingsSection.settings(): List<Setting> = children.flatMap { child ->
     when (child) {
         is SettingsSection -> child.settings()
@@ -34,7 +29,6 @@ fun SettingsSection.settings(): List<Setting> = children.flatMap { child ->
     }
 }
 
-/** Дерево, в котором настройка с тем же id заменена на [setting]; без совпадения — то же дерево. */
 fun SettingsSection.replace(setting: Setting): SettingsSection = copy(
     children = children.map { child ->
         when {
@@ -45,10 +39,7 @@ fun SettingsSection.replace(setting: Setting): SettingsSection = copy(
     },
 )
 
-/**
- * Это же дерево, но равные узлы (по id) взяты из [old]: неизменённые ветки сохраняют идентичность экземпляров,
- * и UI не перерисовывает их строки после перечитывания меню. Ничего не изменилось — возвращается сам [old].
- */
+/** Равные узлы (по id) — из [old]: неизменённые строки не перерисовываются; ничего не изменилось — сам [old]. */
 fun SettingsSection.reusing(old: SettingsSection): SettingsSection {
     val oldById = old.children.associateBy { it.id }
     val reused = children.map { child ->
@@ -62,13 +53,8 @@ fun SettingsSection.reusing(old: SettingsSection): SettingsSection {
     return if (sameChildren && copy(children = old.children) == old) old else copy(children = reused)
 }
 
-/** Результат поиска: найденный узел и разделы до него (для подписи пути). */
 data class SettingsSearchHit(val node: SettingNode, val path: List<SettingsSection>)
 
-/**
- * Поиск по названию (подстрока без учёта регистра), номеру (префикс: `3.2` найдёт `3.2.4`) и имени канала
- * входа/выхода. Корень не возвращается; порядок — порядок меню. Пустой запрос — пустой результат.
- */
 fun SettingsSection.search(query: String): List<SettingsSearchHit> {
     val q = query.trim()
     if (q.isEmpty()) return emptyList()

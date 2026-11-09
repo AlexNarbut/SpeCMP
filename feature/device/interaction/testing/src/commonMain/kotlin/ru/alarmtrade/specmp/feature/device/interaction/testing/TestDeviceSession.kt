@@ -13,10 +13,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceC
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
-/**
- * Настоящая сессия (сборка — из `deviceInteractionModule`) поверх фейковых репозиториев, уже запущенная (`start()`);
- * [transport] — сразу `attach`. Скоуп сессии — дочерний к `backgroundScope`, гасится в конце теста.
- */
+/** Настоящая сессия из `deviceInteractionModule` поверх фейков, уже `start()`; скоуп — дочерний к `backgroundScope`. */
 fun TestScope.testDeviceSession(
     sessionRepository: DeviceSessionRepository = FakeDeviceSessionRepository(),
     connectionRepository: DeviceConnectionRepository = FakeDeviceConnectionRepository(),

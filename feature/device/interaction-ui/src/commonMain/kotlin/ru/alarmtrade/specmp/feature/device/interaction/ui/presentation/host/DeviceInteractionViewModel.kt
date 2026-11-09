@@ -3,11 +3,6 @@ package ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
-/**
- * VM обёртки flow работы с устройством: состояние сессии + последний блок в рабочем режиме
- * (по нему остаётся в композиции дочерний flow, пока связь потеряна; загрузчик его сбрасывает), признак
- * «был загрузчик», ожидаемая перезагрузка и выход из flow.
- */
 class DeviceInteractionViewModel(private val deviceSession: DeviceSession) :
     BaseViewModel<DeviceInteractionState, DeviceInteractionEffect>(
         DeviceInteractionState()
@@ -23,10 +18,7 @@ class DeviceInteractionViewModel(private val deviceSession: DeviceSession) :
         safeLaunch { deviceSession.reboot.collect { reboot -> reduce { copy(reboot = reboot) } } }
     }
 
-    /**
-     * Выход из всего flow: закрыть сессию и сразу уйти. Закрытие идёт в скоупе сессии и не ждётся здесь —
-     * следующее подключение (экран поиска) само дождётся его. Повторное нажатие не даёт второго Exit.
-     */
+    /** Закрытие идёт в скоупе сессии и не ждётся: следующее подключение (экран поиска) само его дождётся. */
     fun onExit() {
         if (currentState.exitRequested) return
         reduce { copy(exitRequested = true) }

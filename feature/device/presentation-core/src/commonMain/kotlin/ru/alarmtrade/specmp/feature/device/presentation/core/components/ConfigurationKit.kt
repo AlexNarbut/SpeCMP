@@ -43,9 +43,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 
-// Компоненты конфигураций (ТЗ конфигуратора): общие для редактора настроек и экранов конфигуратора.
-
-/** Плашка модели блока («DX-9X») с рамкой. */
 @Composable
 fun ModelBadge(deviceName: String, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -62,7 +59,6 @@ fun ModelBadge(deviceName: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Плашка «Только просмотр» у облачных и заводских настроек. */
 @Composable
 fun ReadOnlyBadge(modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -88,7 +84,6 @@ fun ReadOnlyBadge(modifier: Modifier = Modifier) {
     }
 }
 
-/** Плашка источника в шапке: иконка и подпись на цветном фоне. */
 @Composable
 fun SourceTag(icon: CmpIcons, text: String, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -109,7 +104,6 @@ fun SourceTag(icon: CmpIcons, text: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Пункт выбора источника / назначения: иконка, название и пояснение; цель нажатия ≥ 56 dp. */
 @Composable
 fun ConfigurationOptionRow(
     icon: CmpIcons,
@@ -138,9 +132,6 @@ fun ConfigurationOptionRow(
     }
 }
 
-/**
- * Список вариантов выбора: нижняя шторка на компактном экране, диалог — на широком. [footer] — пояснение под списком.
- */
 @Composable
 fun ConfigurationOptionsPanel(
     title: String,
@@ -185,11 +176,6 @@ fun ConfigurationOptionsPanel(
     }
 }
 
-/**
- * Форма названия и описания конфигурации («Сохранить в мои», «Переименовать»): название 1–50 символов
- * (обязательно), описание до 500 (необязательно, со счётчиком); [deviceName] — модель блока только для показа
- * (`null` — не показывать).
- */
 @Composable
 fun ConfigurationInfoDialog(
     title: String,
@@ -272,7 +258,6 @@ fun ConfigurationInfoDialog(
     )
 }
 
-/** testTag общих компонентов конфигураций. */
 object ConfigurationTestTags {
     const val FORM_NAME = "configuration_form_name"
     const val FORM_DESCRIPTION = "configuration_form_description"

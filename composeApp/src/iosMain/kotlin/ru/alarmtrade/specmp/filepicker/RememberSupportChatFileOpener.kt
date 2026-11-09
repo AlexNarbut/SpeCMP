@@ -16,11 +16,6 @@ import platform.darwin.dispatch_get_main_queue
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpenResult
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
 
-/**
- * iOS: предпросмотр QuickLook через `UIDocumentInteractionController`; если тип
- * не поддерживается предпросмотром — меню «Открыть в…» (выбор приложения).
- * Разрешения не нужны.
- */
 @Composable
 actual fun rememberSupportChatFileOpener(): SupportChatFileOpener {
     return remember {

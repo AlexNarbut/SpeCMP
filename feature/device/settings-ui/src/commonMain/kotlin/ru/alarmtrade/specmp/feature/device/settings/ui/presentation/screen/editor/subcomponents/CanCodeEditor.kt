@@ -48,11 +48,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.Settin
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.carLabel
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
-/**
- * CAN-код: 4 ячейки (цифровая клавиатура), «Найти автомобиль» по коду и «Выбрать из каталога». Один
- * найденный по коду автомобиль привязывается сразу, несколько — выбор, ни одного или нет связи — предупреждение (код
- * всё равно можно применить). Выбор из каталога подставляет и код, и автомобиль.
- */
 @Suppress("LongMethod")
 @Composable
 internal fun CanCodeEditor(
@@ -113,7 +108,6 @@ internal fun CanCodeEditor(
     }
 }
 
-/** Результат поиска автомобиля по коду: привязанный автомобиль, загрузка, выбор из нескольких или предупреждение. */
 @Composable
 private fun CarSearchResult(
     value: CanCode,

@@ -8,17 +8,12 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarg
 
 interface FirmwareUpdateRepository {
     /**
-     * Процесс обновления [target] версией [firmware]. Завершается [FirmwareUpdateProgress.Finished] или
-     * `Response.Error` с `FirmwareUpdateException` (причина — `failure`, прочие исключения —
-     * `FirmwareFailure.Unknown`); итога нет, только если поток оборвался на стадии
-     * [FirmwareUpdateProgress.Applying] (блок перезагрузился до результата): тогда он просто заканчивается,
-     * и итог определяет возврат блока в рабочий режим.
+     * Итог — [FirmwareUpdateProgress.Finished] или `Response.Error` с `FirmwareUpdateException`; без итога поток
+     * кончается
+     * только при обрыве на [FirmwareUpdateProgress.Applying] (блок перезагрузился) — итог тогда даёт возврат блока.
      */
     fun update(target: BootModeTarget, firmware: FirmwareVersion): Flow<Response<FirmwareUpdateProgress>>
 
-    /**
-     * То же обновление, но из локального файла [path] (выбран пользователем в файловом менеджере): файл не скачивается
-     * и не сверяется с сервером, поэтому корректность версии и модуля проверяет только блок.
-     */
+    /** Локальный файл не скачивается и не сверяется с сервером: корректность версии и модуля проверяет только блок. */
     fun updateFromFile(target: BootModeTarget, path: String): Flow<Response<FirmwareUpdateProgress>>
 }

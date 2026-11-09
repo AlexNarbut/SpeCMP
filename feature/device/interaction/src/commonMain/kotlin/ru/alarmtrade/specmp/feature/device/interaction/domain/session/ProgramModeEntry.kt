@@ -8,25 +8,18 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
-/** Исход входа в режим программирования. */
 enum class ProgramModeEntryResult {
     ENTERED,
 
     /** Блок ещё не принимает PIN (блокировка после неверного) — команда не отправлялась. */
     PIN_LOCKED,
 
-    /** PIN неверный; блокировка ввода запущена ([ServicePinCooldown]). */
     WRONG_PIN,
 
-    /** Команда не прошла: нет связи, блок не ответил. */
     FAILED,
 }
 
-/**
- * Вход в режим программирования (обучение обходу, проверка состояния) — по образцу входа в загрузчик у прошивки.
- * BLE: без [ServicePin] SDK сам пробует сохранённый или `1111`; пока блок не принимает ввод ([ServicePinCooldown]),
- * в него ничего не шлём — иначе он продлит блокировку. Состояния нет.
- */
+/** Пока блок не принимает ввод ([ServicePinCooldown]), в него ничего не шлём — иначе он продлит блокировку. */
 class ProgramModeEntry(
     private val deviceSession: DeviceSession,
     private val programMode: ProgramModeRepository,

@@ -7,10 +7,6 @@ import ru.alarmtrade.specmp.feature.device.selection.data.transport.supportedDev
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.ScanDeviceViewModel
 
-/**
- * Koin-модуль фичи `feature/device/selection`: репозиторий-фасад скана и ViewModel экрана поиска.
- * SDK-интеракторы берёт из `core/specialist`, сессию устройства — из `device:interaction`.
- */
 val deviceSelectionModule = module {
     single<DeviceScanRepository> {
         // Провайдеры: интеракторы резолвятся лениво — недоступный транспорт

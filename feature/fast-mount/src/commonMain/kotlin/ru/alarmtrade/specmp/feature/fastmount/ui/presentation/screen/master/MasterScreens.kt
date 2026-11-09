@@ -126,7 +126,6 @@ private const val TICK_MILLIS = 1_000L
 private const val SLAVE_TEXT_WEIGHT = 1.15f
 private const val REVIEW_FORM_WEIGHT = 1.3f
 
-/** Действия шагов мастера. */
 internal class MasterActions(
     val onBack: () -> Unit = {},
     val onStartRetry: () -> Unit = {},
@@ -143,7 +142,6 @@ internal class MasterActions(
     val onHome: () -> Unit = {},
 )
 
-/** «Готовим монтаж…» (F6) и ошибка старта. */
 @Composable
 internal fun StartingScreen(state: FastMountState, actions: MasterActions) {
     val error = state.master.startError
@@ -193,7 +191,6 @@ internal fun StartingScreen(state: FastMountState, actions: MasterActions) {
     }
 }
 
-/** Запись настроек в блок (F7): процесс без процентов и ошибка с «Повторить». */
 @Composable
 internal fun WritingScreen(state: FastMountState, actions: MasterActions) {
     val error = state.master.error.takeIf { !state.master.busy }
@@ -243,7 +240,6 @@ internal fun WritingScreen(state: FastMountState, actions: MasterActions) {
     }
 }
 
-/** Перезагрузка блока (F9): таймер, «Не отключайте питание», «Далее: …». 60 с — потерю связи покажет обёртка. */
 @Composable
 internal fun RebootScreen(state: FastMountState, next: RailKey?, seconds: Int) {
     val colors = cmpThemeColors()
@@ -281,7 +277,6 @@ internal fun RebootScreen(state: FastMountState, next: RailKey?, seconds: Int) {
     }
 }
 
-/** Секунды с момента, как экран перезагрузки появился (таймер экрана и колонки). */
 @Composable
 internal fun rememberRebootSeconds(active: Boolean): Int {
     var seconds by remember { mutableIntStateOf(0) }
@@ -295,7 +290,6 @@ internal fun rememberRebootSeconds(active: Boolean): Int {
     return seconds
 }
 
-/** Ошибка перехода на текущем шаге (F17): причина и «Повторить». */
 @Composable
 internal fun StepErrorBanner(state: FastMountState, actions: MasterActions) {
     val error = state.master.error ?: return
@@ -309,7 +303,6 @@ internal fun StepErrorBanner(state: FastMountState, actions: MasterActions) {
     )
 }
 
-/** Обучение Slave (F11): анимация из старого приложения, 3 шага, «Обучение выполнено» в нижней панели. */
 @Composable
 internal fun SlaveScreen(state: FastMountState, actions: MasterActions) {
     val wide = LocalWizardWide.current
@@ -414,7 +407,6 @@ private fun SlaveDoneRow(done: Boolean, onChange: (Boolean) -> Unit) {
     }
 }
 
-/** Отзыв (F13): оценка и текст обязательны (правило SDK), итоги монтажа; ошибка — плашка (F17). */
 @Composable
 internal fun FeedbackScreen(state: FastMountState, actions: MasterActions) {
     val master = state.master
@@ -557,7 +549,6 @@ private fun MountSummary(state: FastMountState, modifier: Modifier) {
     }
 }
 
-/** «Готово» (F14): анимация успеха, «На главную». */
 @Composable
 internal fun DoneScreen(state: FastMountState, actions: MasterActions) {
     WizardScaffold(
@@ -587,7 +578,6 @@ internal fun DoneScreen(state: FastMountState, actions: MasterActions) {
     }
 }
 
-/** Успех: машина в круге и всплывающий значок (макет `SuccessArt`, плейсхолдер художника — иконки). */
 @Composable
 private fun SuccessArt() {
     val pop = remember { Animatable(0f) }

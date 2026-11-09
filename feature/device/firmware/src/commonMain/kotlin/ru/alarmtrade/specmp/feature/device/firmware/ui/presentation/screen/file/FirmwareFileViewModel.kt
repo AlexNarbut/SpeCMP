@@ -25,15 +25,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
-/**
- * «Обновить из файла» (приложение прошивки, BLE/USB): блок в рабочем режиме, одна кнопка — переход основной программы
- * в загрузчик. Дальше хост устройства показывает экран загрузчика (`FirmwareBootGraph` с `FirmwareSources.FileOnly`),
- * где выбирается файл.
- *
- * Модуль — основная программа блока (подсистема с целью [BootModeTarget.MainProgram]); список подсистем берётся из базы
- * устройств SDK (`deviceInformationInteractor`), сервер прошивок не нужен. Вход в загрузчик и PIN — как на экране
- * проверки ([FirmwareBootEntry]).
- */
+/** Список подсистем — из базы устройств SDK (`deviceInformationInteractor`), сервер прошивок не нужен. */
 class FirmwareFileViewModel(
     deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
@@ -46,7 +38,6 @@ class FirmwareFileViewModel(
 
     override suspend fun onStart() {
         onEachDeviceReady(::onDeviceReady)
-        // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
         pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
             .collectIntoState { lock -> copy(dialog = dialog.withPinLock(lock)) }
     }
@@ -91,13 +82,13 @@ class FirmwareFileViewModel(
         reduce { if (dialog.isSending()) this else copy(dialog = null) }
     }
 
-    /** «Перейти» в диалоге подтверждения: без PIN — SDK сам пробует сохранённый или `1111`. */
+    /** Без PIN — SDK сам пробует сохранённый или `1111`. */
     fun onConfirmBoot() {
         if (currentState.dialog !is CheckDialog.ConfirmBoot) return
         startBoot(pin = null)
     }
 
-    /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи оно не попадает. */
+    /** PIN живёт только в вызове — в state и логи не попадает. */
     fun onPinSubmit(pin: String) {
         if (currentState.dialog !is CheckDialog.Pin) return
         val servicePin = ServicePin.parseOrNull(pin) ?: return

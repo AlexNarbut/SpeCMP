@@ -29,13 +29,9 @@ import ru.alarmtrade.specmp.di.appKoinModules
 import ru.alarmtrade.specmp.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.navigation.AppNavigation
 
-/**
- * Точка входа платформенных обёрток. Версию передаёт платформа (Android — `PackageInfo`, iOS — Info.plist,
- * desktop — сгенерированный `version.properties`); примитивами — обёртки не зависят от `core/specialist`.
- */
+/** Версия — примитивами от платформы: обёртки не зависят от `core/specialist`. */
 @Composable
 fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable (isDark: Boolean) -> Unit = {}) {
-    // Язык применяется на старте процесса (docs/localization.md, «Язык приложения»); смена — через перезапуск.
     val appLocale = remember { prepareAppLocale() }
 
     val platformModules = rememberPlatformKoinModules()
@@ -53,13 +49,12 @@ fun App(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable 
         val appServicesStarter = koinInject<AppServicesStarter>()
         LaunchedEffect(Unit) { appServicesStarter.start() }
 
-        // Начальная настройка SDK (клиент, язык, язык конфигураций): app-scoped, идемпотентна; UI — после неё,
-        // чтобы первые запросы шли с правильным языком. Эффект только запускает её (работает в своём скоупе).
+        // UI — после начальной настройки SDK, чтобы первые запросы шли с правильным языком и клиентом.
         val specialistInitializer = koinInject<SpecialistInitializer>()
         LaunchedEffect(Unit) { specialistInitializer.start(appLocale.languageTag) }
         val specialistReady by specialistInitializer.ready.collectAsStateWithLifecycle()
 
-        // Единый ImageLoader приложения: memory/disk-кэш Coil общий для всех экранов (U-1).
+        // Единый ImageLoader: memory/disk-кэш Coil общий для всех экранов.
         CompositionLocalProvider(
             LocalClock provides koinInject<Clock>(),
             LocalTimeZoneSource provides koinInject<TimeZoneSource>(),

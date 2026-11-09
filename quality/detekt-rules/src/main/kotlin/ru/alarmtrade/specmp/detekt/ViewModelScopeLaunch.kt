@@ -12,16 +12,7 @@ import org.jetbrains.kotlin.psi.KtParenthesizedExpression
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.KtThisExpression
 
-/**
- * Запуск корутины прямо в `viewModelScope` мимо `BaseViewModel.safeLaunch`: `viewModelScope.launch { }`,
- * `viewModelScope.async { }` (в том числе `this.viewModelScope`, `this@Foo.viewModelScope`, `?.`) и
- * `flow.launchIn(viewModelScope)`. Такая корутина идёт без `CoroutineExceptionHandler` базового класса —
- * необработанное исключение роняет приложение вместо записи в лог.
- *
- * `stateIn(viewModelScope, …)` и `shareIn(viewModelScope, …)` разрешены. Проверка по именам, без type
- * resolution — работает во всех source set'ах. Сам `BaseViewModel` исключён путём в
- * detekt.yml.
- */
+/** Корутина без `CoroutineExceptionHandler` базы роняет приложение; `stateIn`/`shareIn(viewModelScope)` разрешены. */
 class ViewModelScopeLaunch(config: Config) :
     Rule(
         config,

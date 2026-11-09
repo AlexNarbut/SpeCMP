@@ -101,7 +101,6 @@ internal const val FAST_MOUNT_CHECK_NEXT_TAG = "fastmount_check_next"
 internal const val FAST_MOUNT_UNSUPPORTED_TAG = "fastmount_check_unsupported"
 internal const val FAST_MOUNT_SUMMARY_START_TAG = "fastmount_summary_start"
 
-/** Действия подготовки. */
 internal class PrepActions(
     val onBack: () -> Unit = {},
     val onRetryCheck: () -> Unit = {},
@@ -113,7 +112,6 @@ internal class PrepActions(
     val onStart: () -> Unit = {},
 )
 
-/** «Проверка блока» (F3) и «Блок не поддерживает быстрый монтаж» (F2). */
 @Composable
 internal fun UnitCheckScreen(state: FastMountState, actions: PrepActions) {
     val fixed = state.fixed
@@ -296,7 +294,6 @@ internal fun transportLabel(usb: Boolean): String = stringResource(
     if (usb) Strings.string.fastmount_common_value_usb else Strings.string.fastmount_common_value_ble,
 )
 
-/** Сводка перед стартом (F5): блок, автомобиль, конфигурация, план шагов, предупреждения. */
 @Composable
 internal fun SummaryScreen(state: FastMountState, actions: PrepActions) {
     WizardScaffold(
@@ -536,7 +533,6 @@ private fun UnsupportedReason.message() = when (this) {
     UnsupportedReason.NOT_IN_DATABASE -> Strings.string.fastmount_check_msg_unsupported_database
 }
 
-/** Текст ошибки для плашки/экрана; предметные ошибки шагов — свои строки. */
 @Composable
 internal fun FastMountError.text(): String? = when (this) {
     is FastMountError.Common -> error.message()

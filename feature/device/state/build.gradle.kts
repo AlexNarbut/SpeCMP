@@ -6,10 +6,8 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            // SDK: живое состояние блока (телеметрия) и команды управления — только BLE.
             implementation(project(":core:specialist"))
             implementation(libs.alarmtrade.specialist)
-            // DeviceState и команды управления (ru.alarmtrade.devices.*)
             implementation(libs.alarmtrade.devices)
             implementation(libs.kermit)
 
@@ -18,16 +16,12 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
-            // Сессия устройства: связь, транспорт, режим программирования (PIN)
             implementation(project(":feature:device:interaction"))
-            // Общий presentation устройства: база VM блока, диалог PIN
             implementation(project(":feature:device:presentation-core"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 
-            // Nav3 (см. docs/navigation.md)
             implementation(libs.compose.nav3)
-            // ViewModelStore-декоратор: per-entry ViewModelStore → очистка VM при pop
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.kotlinx.serialization.json)
 
@@ -46,14 +40,12 @@ kotlin {
             implementation(project(":core:testing"))
             implementation(project(":feature:device:interaction:testing"))
         }
-        // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs)
         }
     }
 }
 
-// Слои силуэта и значки показателей/команд (vector XML из design/features/check-state).
 compose.resources {
     publicResClass = false
     generateResClass = always

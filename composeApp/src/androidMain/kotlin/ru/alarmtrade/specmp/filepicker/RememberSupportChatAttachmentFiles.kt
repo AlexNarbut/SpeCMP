@@ -6,10 +6,7 @@ import androidx.compose.ui.platform.LocalContext
 import java.io.File
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
 
-/**
- * Удаляет копии вложений, созданные пикером, — только внутри собственного каталога
- * (`filesDir/support-chat-attachments/<uuid>/<имя>`); чужие пути игнорируются.
- */
+/** Удаляет только копии в своём каталоге `filesDir/support-chat-attachments`; чужие пути игнорирует. */
 @Composable
 actual fun rememberSupportChatAttachmentFiles(): SupportChatAttachmentFiles {
     val appContext = LocalContext.current.applicationContext

@@ -10,10 +10,6 @@ import ru.alarmtrade.specmp.feature.device.state.data.repository.SpecialistDevic
 import ru.alarmtrade.specmp.feature.device.state.domain.repository.DeviceStateRepository
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateViewModel
 
-/**
- * Koin-модуль фичи `feature/device/state`: экран «Проверка состояния» (расширенный монтаж, шаг быстрого монтажа).
- * SDK-интерактор — из `core/specialist`; сессия, PIN и режим программирования — из `deviceInteractionModule`.
- */
 val deviceStateModule = module {
     // Ленивый провайдер: недоступный на платформе интерактор не должен ронять создание источника.
     single<DeviceStateDataSource> { SpecialistDeviceStateDataSource(alarmDevice = { get() }) }

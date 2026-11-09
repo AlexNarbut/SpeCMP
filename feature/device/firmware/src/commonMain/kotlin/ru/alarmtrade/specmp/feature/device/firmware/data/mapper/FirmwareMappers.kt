@@ -38,10 +38,8 @@ internal fun SubsystemInformation.toModule(transport: ConnectionTransport): Firm
 )
 
 /**
- * Что переводить в загрузчик для [this] на [transport]; `null` — обновить нельзя. Режим обновления
- * поддерживается, когда его разрешает SDK (`isBootSupported`) **и** приложение умеет войти в загрузчик
- * этого типа: остальные типы (часы по BLE, датчик топлива, CAN-модуль, Microbot, тестер зарядной станции)
- * на первом этапе не обновляем — в старом приложении они тоже не работали.
+ * Обновить можно, когда это разрешает SDK (`isBootSupported`) и приложение умеет войти в загрузчик этого типа;
+ * иначе `null`.
  */
 internal fun SubsystemType.bootTarget(transport: ConnectionTransport): BootModeTarget? {
     val connectionType = when (transport) {
@@ -106,7 +104,6 @@ internal fun SubsystemFirmware.toDomain(): FirmwareVersion = FirmwareVersion(
     canVersionCode = canVersion,
 )
 
-/** Стадия SDK → стадия приложения (процент есть только на передаче); ошибка записи — `Error`. */
 internal fun FirmwareUpdateState.toProgress(): Response<FirmwareUpdateProgress> = when (status) {
     FirmwareUpdateStatus.SENDING_DATA -> Response.Success(FirmwareUpdateProgress.Sending(stateProgress))
 

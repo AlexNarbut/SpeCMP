@@ -38,7 +38,6 @@ actual fun rememberFirmwareFilePicker(appScope: CoroutineScope, ioDispatcher: Co
         if (uri == null) {
             FirmwarePickerResults.channel.trySend(FirmwareFilePickResult.Cancelled)
         } else {
-            // Копирование — вне main-потока.
             appScope.launch {
                 val result = withContext(ioDispatcher) { uri.copyToCache(appContext) }
                 FirmwarePickerResults.channel.trySend(result)
@@ -54,10 +53,7 @@ actual fun rememberFirmwareFilePicker(appScope: CoroutineScope, ioDispatcher: Co
     }
 }
 
-/**
- * Копия в `cacheDir/firmware-files/<uuid>/<имя>`: прошлые копии стираются перед новой (прошивка нужна только на время
- * обновления). Размер проверяется до копирования, а если провайдер его не отдал — по факту.
- */
+/** Прошлые копии стираются перед новой: прошивка нужна только на время обновления. */
 // Граница платформенного I/O: любой сбой копирования логируется и превращается в Failed
 @Suppress("TooGenericExceptionCaught")
 private fun Uri.copyToCache(context: Context): FirmwareFilePickResult {

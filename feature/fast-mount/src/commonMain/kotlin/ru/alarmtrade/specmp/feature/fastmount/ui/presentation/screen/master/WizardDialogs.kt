@@ -37,10 +37,7 @@ import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.MainBut
 internal const val FAST_MOUNT_DIALOG_CONFIRM_TAG = "fastmount_dialog_confirm"
 internal const val FAST_MOUNT_DIALOG_DISMISS_TAG = "fastmount_dialog_dismiss"
 
-/**
- * Тексты диалога. [primaryConfirm] — подтверждение безопасное (заливкой, первым); иначе первым идёт «остаться»,
- * а уход с шага — контуром (макет `StdDialog`).
- */
+/** [primaryConfirm] — подтверждение безопасное (заливкой, первым); иначе первым идёт «остаться». */
 private class DialogTexts(
     val icon: CmpIcons,
     val title: StringResource,
@@ -97,7 +94,6 @@ private fun WizardDialog.texts(): DialogTexts = when (this) {
     )
 }
 
-/** Диалоги мастера (F16): выход, возврат к монтажу, подтверждения монтажа и Slave. */
 @Composable
 internal fun WizardDialogView(dialog: WizardDialog, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val texts = dialog.texts()

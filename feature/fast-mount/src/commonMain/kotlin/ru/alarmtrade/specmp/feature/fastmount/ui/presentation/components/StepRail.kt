@@ -99,7 +99,6 @@ private const val FULL_TURN = 360f
 private const val PULSE_MIN_ALPHA = 0.45f
 private val TooltipWidth = 280.dp
 
-/** Ширина колонки шагов по ширине окна (макет: ≥1100 — 300, 900–1099 — 264, 760–899 — компактная 88). */
 internal fun railWidth(windowWidth: Dp): Dp = when {
     windowWidth >= 1100.dp -> 300.dp
     windowWidth >= 900.dp -> 264.dp
@@ -108,13 +107,8 @@ internal fun railWidth(windowWidth: Dp): Dp = when {
 
 internal val CompactRailWidth = 88.dp
 
-/** Карточка выбранного автомобиля и конфигурации внизу колонки. */
 internal data class RailCar(val title: String, val configuration: String, val usb: Boolean)
 
-/**
- * Колонка шагов (W1, вариант B): заголовок со счётчиком «N из M», шаги со статусами, «бегущая» линия
- * перезагрузки под завершённым шагом, карточка автомобиля внизу. Тап по шагу — короткая справка рядом, перехода нет.
- */
 @Composable
 internal fun StepRail(
     model: RailModel,
@@ -393,7 +387,6 @@ private fun MarkerCircle(
     }
 }
 
-/** Линия между шагами: пунктир — к Clone «по необходимости», цвет — пройдено/впереди. */
 @Composable
 private fun Connector(row: RailRow, next: RailRow, compact: Boolean, dense: Boolean) {
     val colors = cmpThemeColors()
@@ -421,7 +414,6 @@ private fun Connector(row: RailRow, next: RailRow, compact: Boolean, dense: Bool
 
 private const val DOTTED_ALPHA = 0.5f
 
-/** Перезагрузка — «бегущая» линия под завершённым шагом и плашка «Перезагрузка · м:сс». */
 @Composable
 private fun RebootLine(seconds: Int, compact: Boolean) {
     val colors = cmpThemeColors()
@@ -511,7 +503,6 @@ private fun RailCarCard(car: RailCar) {
     }
 }
 
-/** Короткая справка по шагу рядом с колонкой (макет: всплывающая подсказка, а не раскрытие строки). */
 @Composable
 private fun StepHelp(key: RailKey, status: RailStatus?, x: Dp, y: Int, onClose: () -> Unit) {
     val colors = cmpThemeColors()

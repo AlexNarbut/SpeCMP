@@ -36,7 +36,6 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.ZoneValue
 
 internal const val ZONE_TAG_PREFIX = "devicestate_zone_"
 
-/** Зоны — вариант A (решение владельца): группы строк с подписями, итог группы справа. */
 @Composable
 internal fun ZonesList(vehicle: VehicleState, changed: Set<Zone>, tick: Int, modifier: Modifier = Modifier) {
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -1,26 +1,18 @@
 package ru.alarmtrade.specmp.feature.device.autostart.domain.model
 
-/**
- * Вид шага обучения бесключевому обходу — от него зависят цвет карточки, метка и подпись полосы статуса.
- */
 enum class BypassStepKind {
-    /** Блок ждёт действия монтажника («Включите зажигание»). */
     ACTION,
 
-    /** Блок увидел действие («Зажигание включено. Ожидайте»). */
     ACCEPTED,
 
-    /** Блок работает сам, монтажнику — ждать. */
     WAIT,
 
     /** Обмен данными через приложение: связь прерывать нельзя («Не прерывайте соединение»). */
     CRITICAL,
 
-    /** Инструкция из нескольких пунктов: монтажник выполняет её сам, блок ждёт. */
     INSTRUCTION,
 }
 
-/** О чём шаг: определяет текст и иллюстрацию. */
 enum class BypassSubject {
     PREPARE,
     IGNITION_ON,
@@ -40,13 +32,9 @@ enum class BypassSubject {
     TOYOTA_DAIHATSU,
 }
 
-/** Текущий шаг обучения. */
 data class BypassStep(val kind: BypassStepKind, val subject: BypassSubject)
 
-/**
- * Причина ошибки обучения — по `BypassLearningError` SDK. Ошибки без своего текста (новые в SDK, `NO_ERROR`,
- * `DEFAULT`) — [GENERAL]. [START_FAILED] — сбой SDK без статуса (не вошли в режим программирования, оборвался поток).
- */
+/** Без своего текста (новые в SDK, `NO_ERROR`, `DEFAULT`) — [GENERAL]; [START_FAILED] — сбой SDK без статуса. */
 enum class BypassError {
     GENERAL,
     START_FAILED,
@@ -79,22 +67,16 @@ enum class BypassError {
     LADA_VESTA_CAN_PATCH_SEND,
 }
 
-/** Итог обучения. */
 sealed interface BypassResult {
     data object Success : BypassResult
 
-    /** Обучение завершено, но для автозапуска нужна процедура Clone. */
     data object CloneRequired : BypassResult
 
     data object NotSupported : BypassResult
 
-    /** @property code код ошибки блока (только у [BypassError.VAG_ECU_EXCHANGE]). */
     data class Error(val error: BypassError, val code: Int? = null) : BypassResult
 }
 
-/**
- * Событие потока обучения. Итог — [Finished]; сбой SDK без статуса — `Response.Error` с [BypassLearningException].
- */
 sealed interface BypassEvent {
     data class Step(val step: BypassStep) : BypassEvent
 

@@ -65,11 +65,7 @@ actual fun rememberSettingsFilePicker(): SettingsFilePicker {
     }
 }
 
-/**
- * SAF (`CreateDocument`): пользователь выбирает место и имя, готовый `.dxs` копируется в документ целиком (режим
- * `wt` — с обрезкой: перезапись длинного файла коротким не оставляет хвост). Лаунчер живёт в композиции,
- * сейвер ждёт результат через [SettingsSaveRequester].
- */
+/** Режим `wt` — с обрезкой: перезапись длинного файла коротким не оставляет хвост. */
 @Composable
 actual fun rememberSettingsFileSaver(): SettingsFileSaver {
     val appContext = LocalContext.current.applicationContext

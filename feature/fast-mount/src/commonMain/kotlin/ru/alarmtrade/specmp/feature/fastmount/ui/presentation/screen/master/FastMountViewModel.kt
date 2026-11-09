@@ -30,18 +30,7 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.isNewerFirmwareThan
 import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.model.FastMountError
 
-/**
- * Мастер быстрого монтажа (одна VM на мастер, живёт всю запись навигации).
- *
- * **Подготовка.** Блок фиксируется на первом подключении; другой блок останавливает мастер оверлеем, возврат нужного —
- * продолжение с того же места. Проверка блока: класс (сигнализация), доступ на сервере, заводской CAN, свежесть
- * прошивки. Дальше — автомобиль и конфигурация (экраны других фич через слоты) и сводка с планом шагов.
- *
- * **Шаги SDK.** Порядок ведёт SDK (`steps()`); VM вызывает «вперёд/назад» и держит то, чего нет в SDK: занятость,
- * ошибки шагов, итог обхода/Clone, ожидание перезагрузки блока ([RebootWait]) и статусы заданий проверки системы.
- * Поток вопросов SDK собирается ровно одним подписчиком — здесь, пока идёт проверка системы. Шаги, вопросы и
- * перезагрузка живут, пока жива VM, а не пока экран подписан на state.
- */
+/** Поток вопросов SDK собирается ровно одним подписчиком — здесь, пока идёт проверка системы. */
 class FastMountViewModel(
     deviceSession: DeviceSession,
     private val repository: FastMountRepository,
@@ -52,8 +41,6 @@ class FastMountViewModel(
     override suspend fun onStart() {
         onEachDeviceReady(::onDeviceReady)
     }
-
-    // region Блок
 
     private suspend fun onDeviceReady(device: AlarmDevice) {
         val fixed = currentState.fixed ?: FixedDevice(
@@ -121,15 +108,10 @@ class FastMountViewModel(
         reduce { copy(screen = WizardScreen.FIRMWARE) }
     }
 
-    /** Вернулись с экрана прошивки — блок мог обновиться: проверяем заново. */
     fun onFirmwareBack() {
         reduce { copy(screen = WizardScreen.CHECK) }
         onRetryCheck()
     }
-
-    // endregion
-
-    // region Подготовка
 
     fun onCheckNext() {
         val check = currentState.check
@@ -178,7 +160,6 @@ class FastMountViewModel(
         if (map == null) cancelLaunched(MAP) else downloadMap(map)
     }
 
-    /** «Назад» мастера (системная кнопка и стрелка в шапке) — по таблице правил макета. */
     fun onBack() {
         val current = currentState
         when (current.screen) {
@@ -225,10 +206,6 @@ class FastMountViewModel(
         postSideEffect(FastMountEffect.Exit)
     }
 
-    // endregion
-
-    // region Диалоги
-
     private fun showDialog(dialog: WizardDialog) {
         reduce { copy(dialog = dialog) }
     }
@@ -254,7 +231,6 @@ class FastMountViewModel(
         }
     }
 
-    /** Выход из незавершённого монтажа: блок — из режима программирования (BLE, по возможности), затем на главную. */
     private fun exitMount() {
         safeLaunch {
             if (currentState.fixed?.transport == ConnectionTransport.BLE && currentDevice != null) {
@@ -266,11 +242,6 @@ class FastMountViewModel(
         }
     }
 
-    // endregion
-
-    // region Шаги SDK
-
-    /** «Начать монтаж» на сводке и «Повторить» после ошибки старта. */
     fun onStartMount() {
         val configuration = currentState.configuration ?: return
         intent { executeWithProceedLock { start(configuration.id) } }
@@ -321,7 +292,6 @@ class FastMountViewModel(
         showDialog(WizardDialog.MOUNT_DONE)
     }
 
-    /** «Далее» на итоге обхода (успех или «нужен Clone») — к следующему шагу через перезагрузку блока. */
     fun onBypassNext(cloneRequired: Boolean) {
         reduce { copy(master = master.copy(cloneNeeded = cloneRequired)) }
         nextWithReboot(FastMountStep.KEY_BYPASS)
@@ -331,7 +301,6 @@ class FastMountViewModel(
         nextWithReboot(FastMountStep.CLONE)
     }
 
-    /** Экран обхода/Clone вернул «Назад» (не во время процесса) — «Вернуться к монтажу?». */
     fun onStepScreenBack() {
         onMasterBack(currentState.master)
     }
@@ -365,10 +334,6 @@ class FastMountViewModel(
         executeWithProceedLock { runTransition(call) }
     }
 
-    /**
-     * Переход SDK, когда замок уже взят: «занято» на время вызова, снимается и при отмене; ошибка — в state.
-     * `true` — переход прошёл.
-     */
     private suspend fun runTransition(call: suspend () -> Response<Unit>): Boolean {
         reduce { copy(master = master.copy(busy = true, error = null)) }
         var response: Response<Unit>? = null
@@ -387,10 +352,8 @@ class FastMountViewModel(
     }
 
     /**
-     * Шаг, после которого SDK перезагружает блок (выход из режима программирования): монтаж, обход, Clone.
-     * По BLE экран «Перезагрузка блока…» держится, пока блок не вернётся. Связь не оборвалась за [REBOOT_GRACE_MILLIS]
-     * после перехода SDK — блок не перезагружался, идём дальше. Не вернулся за тайм-аут сессии (60 с) — обёртка
-     * показывает потерю связи, мастер ждёт возврата блока.
+     * Связь не оборвалась за [REBOOT_GRACE_MILLIS] после перехода SDK — блок не перезагружался, идём дальше. Не
+     * вернулся за тайм-аут сессии — обёртка показывает потерю связи, мастер ждёт возврата блока.
      */
     private fun nextWithReboot(from: FastMountStep) {
         if (currentState.fixed?.transport != ConnectionTransport.BLE) {
@@ -427,10 +390,6 @@ class FastMountViewModel(
         }
         deviceSession.state.map { it is DeviceSessionState.Ready }.first { it }
     }
-
-    // endregion
-
-    // region Карта монтажа
 
     fun onMapRetry() {
         val map = currentState.configuration?.mountingMap ?: return
@@ -473,10 +432,6 @@ class FastMountViewModel(
         }
     }
 
-    // endregion
-
-    // region Проверка системы
-
     private suspend fun collectQuestions() {
         repository.questions().flowOn(dispatchers.io).collect { response ->
             when (response) {
@@ -516,7 +471,6 @@ class FastMountViewModel(
         }
     }
 
-    /** «Далее» проверки системы (в т.ч. «Завершить» с незакрытыми): оставшиеся пропускаем по курсору SDK. */
     fun onSystemCheckNext() {
         intent {
             transition {
@@ -533,10 +487,6 @@ class FastMountViewModel(
     fun onSystemCheckBack() {
         previous()
     }
-
-    // endregion
-
-    // region Отзыв
 
     fun onRatingChange(rating: Int) {
         if (currentState.master.busy) return
@@ -560,8 +510,6 @@ class FastMountViewModel(
             }
         }
     }
-
-    // endregion
 
     private suspend fun <T> io(block: suspend () -> T): T = withContext(dispatchers.io) { block() }
 

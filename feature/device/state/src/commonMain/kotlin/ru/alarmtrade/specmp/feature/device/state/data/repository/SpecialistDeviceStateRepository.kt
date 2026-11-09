@@ -33,9 +33,6 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.repository.DeviceStateRepository
 
-/**
- * [DeviceStateRepository]: поток телеметрии блока, пока идёт опрос (период 3 с задан в SDK), и команды управления.
- */
 internal class SpecialistDeviceStateRepository(private val dataSource: DeviceStateDataSource) : DeviceStateRepository {
 
     override fun states(): Flow<Response<VehicleState>> = flow {

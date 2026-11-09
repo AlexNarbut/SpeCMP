@@ -55,10 +55,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 
 private val ContentMaxWidth = 1040.dp
 
-/**
- * «Проверка прошивки»: слот графа расширенного монтажа (вход и выход — через [onBack]); переход в режим обновления
- * запускает ViewModel, дальше экран загрузчика показывает хост устройства.
- */
 @Composable
 fun FirmwareCheckScreen(onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareCheckViewModel>()
@@ -83,7 +79,6 @@ fun FirmwareCheckScreen(onBack: () -> Unit) {
     )
 }
 
-/** Stateless-контент экрана проверки: раскладка по ширине окна и диалоги. */
 @Composable
 internal fun FirmwareCheckContent(state: FirmwareCheckState, actions: FirmwareCheckActions) {
     CmpScaffold(
@@ -167,10 +162,6 @@ private fun ReadyBody(
     }
 }
 
-/**
- * Строка устройства: иконка, полное имя (переносится), ID и кнопка канала. В Compact — две строки: иконка и имя, затем
- * ID и кнопка канала; на широком окне — одна.
- */
 @Composable
 private fun DeviceRow(
     name: String,

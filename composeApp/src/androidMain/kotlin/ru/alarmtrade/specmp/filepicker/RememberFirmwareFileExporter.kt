@@ -14,9 +14,8 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.Fir
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveTarget
 
 /**
- * Android: сохранение — в «Загрузки/Pandora Spec» (как вложения чата: MediaStore, на API < 29 — с разрешением);
- * «Поделиться» — временная копия в `cacheDir/firmware-share` и `ACTION_SEND` через FileProvider (пути — в
- * `support_chat_file_paths.xml` androidApp). Папку открыть нечем — в диалоге «Поделиться».
+ * «Загрузки/Pandora Spec» через MediaStore (API < 29 — с разрешением); «Поделиться» — копия в `cacheDir` через
+ * FileProvider (пути — в `support_chat_file_paths.xml` androidApp).
  */
 @Composable
 actual fun rememberFirmwareFileExporter(): FirmwareFileExporter {

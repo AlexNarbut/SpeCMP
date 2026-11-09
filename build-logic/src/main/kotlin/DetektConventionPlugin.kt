@@ -19,7 +19,6 @@ class DetektConventionPlugin : Plugin<Project> {
             parallel.set(true)
         }
 
-        // Свой набор правил `specmp` (quality/detekt-rules).
         dependencies.add("detektPlugins", dependencies.project(mapOf("path" to ":quality:detekt-rules")))
 
         // Плагин detekt вешает обычный `detekt` на check — отвязываем: анализ запускается только через detektCheck.
@@ -53,7 +52,6 @@ class DetektConventionPlugin : Plugin<Project> {
                             "detektMainJvm",
                             "detektTestJvm",
                             "detektIosMainSourceSet",
-                            // desktop-обёртки (kotlin("jvm"))
                             "detektMain",
                             "detektTest",
                         )

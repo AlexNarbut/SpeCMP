@@ -8,9 +8,8 @@ import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-// KMP без iOS: android (android.kmp.library) и jvm, JVM 17. Напрямую — только модулям без iOS (flasherApp: COM-порта
-// на iOS в SDK нет), остальные берут specmp.kmp.library. namespace по умолчанию — из пути модуля без дефисов
-// (`:feature:auth-state` → `ru.alarmtrade.specmp.feature.authstate`); иной модуль задаёт в `kotlin { android { } }`.
+// KMP без iOS (android + jvm): только модулям без iOS (flasherApp: COM-порта на iOS в SDK нет), остальным —
+// specmp.kmp.library. namespace по умолчанию — из пути модуля без дефисов.
 class KmpAndroidJvmConventionPlugin : Plugin<Project> {
     override fun apply(target: Project): Unit = with(target) {
         pluginManager.apply("org.jetbrains.kotlin.multiplatform")

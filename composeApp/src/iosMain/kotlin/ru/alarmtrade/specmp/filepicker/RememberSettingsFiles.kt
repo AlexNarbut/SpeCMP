@@ -73,7 +73,6 @@ private class SettingsPickerDelegate(
             onFinished()
             return
         }
-        // Копирование не должно вешать main-поток.
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
             val picked = url.copySettingsToTemporary()
             dispatch_async(dispatch_get_main_queue()) {
@@ -116,7 +115,6 @@ private fun NSURL.copySettingsToTemporary(): SettingsFilePickResult {
     }
 }
 
-/** Экспорт документа: копия с нужным именем во временный каталог → системный «Сохранить в Файлы». */
 private class IosSettingsFileSaver : SettingsFileSaver {
     override suspend fun save(sourcePath: String, fileName: String): SettingsFileSaveResult {
         val fileManager = NSFileManager.defaultManager

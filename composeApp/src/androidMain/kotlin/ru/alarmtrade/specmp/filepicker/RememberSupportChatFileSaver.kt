@@ -30,13 +30,8 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileSaver
 
 /**
- * Сейвер передаётся в конструктор per-entry VM, а VM переживает пересоздание
- * Activity — поэтому только `applicationContext`, иначе VM удерживала бы старую Activity.
- *
- * Android 7–9 (API 24–28): запись в общие «Загрузки» требует `WRITE_EXTERNAL_STORAGE`
- * (в манифесте с `maxSdkVersion="28"`) — запрашиваем в момент сохранения. Лаунчер
- * живёт в композиции, сейвер берёт текущий через [StoragePermissionRequester].
- * С API 29 — MediaStore, разрешение не нужно.
+ * Только `applicationContext`: сейвер уходит в per-entry VM, которая переживает Activity. API 24–28 —
+ * `WRITE_EXTERNAL_STORAGE` в момент сохранения, с API 29 — MediaStore без разрешения.
  */
 @Composable
 actual fun rememberSupportChatFileSaver(): SupportChatFileSaver {
@@ -80,11 +75,7 @@ private fun saveToDownloads(context: Context, fileName: String, bytes: ByteArray
     null
 }
 
-/**
- * Запись через `IS_PENDING`: пока файл не дописан, он не виден другим приложениям;
- * при ошибке запись удаляется, а не остаётся пустым файлом в «Загрузках».
- * Путь в результате — фактическое имя из MediaStore (система уникализирует дубли).
- */
+/** `IS_PENDING`: недописанный файл не виден другим, при ошибке запись удаляется; имя — фактическое из MediaStore. */
 @RequiresApi(Build.VERSION_CODES.Q)
 private fun saveViaMediaStore(context: Context, fileName: String, bytes: ByteArray): String? {
     val relativePath = "${Environment.DIRECTORY_DOWNLOADS}/$DOWNLOADS_SUBDIR"
@@ -121,11 +112,7 @@ private fun saveToPublicDownloads(fileName: String, bytes: ByteArray): String? {
 
 private const val DOWNLOADS_SUBDIR = "Pandora Spec"
 
-/**
- * Запрос `WRITE_EXTERNAL_STORAGE` на API < 29 из suspend-кода сейвера. Лаунчер
- * обновляет композиция (переживает пересоздание Activity), результат ждём через
- * [CompletableDeferred]. На API 29+ и при уже выданном разрешении — сразу `true`.
- */
+/** Лаунчер обновляет композиция (переживает пересоздание Activity), результат ждём через [CompletableDeferred]. */
 private object StoragePermissionRequester {
     var launcher: ActivityResultLauncher<String>? = null
     private var pending: CompletableDeferred<Boolean>? = null

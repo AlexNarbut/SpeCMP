@@ -3,10 +3,6 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Раскладка по ширине окна (M3 Window Size Classes): Compact — переход по разделам с крошками и шторкой;
- * Medium / Expanded — дерево разделов слева (232 / 280 dp) и раздел справа, редактор — диалогом.
- */
 internal enum class SettingsLayout(val treeWidth: Dp) {
     Compact(0.dp),
     Medium(232.dp),

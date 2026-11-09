@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.LoadSourceKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SaveTarget
 
-/** Действия загрузки и сохранения конфигураций (меню «⋯», диалоги K6/K7/K9, панель внизу). */
 @Immutable
 internal class TransferActions(
     val onLoadRequest: () -> Unit,

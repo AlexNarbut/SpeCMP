@@ -1,9 +1,6 @@
 package ru.alarmtrade.specmp.feature.fastmount.domain.model
 
-/**
- * Чек-лист шага «Проверка системы»: все вопросы конфигурации по порядку SDK. Отвечать можно только на
- * [MountTask.active] (курсор SDK), остальные незакрытые — «Ожидает».
- */
+/** Отвечать можно только на [MountTask.active] (курсор SDK), остальные незакрытые — «Ожидает». */
 data class MountChecklist(val tasks: List<MountTask> = emptyList()) {
     val closed: Int get() = tasks.count { it.status != MountTaskStatus.PENDING }
     val skipped: Int get() = tasks.count { it.status == MountTaskStatus.SKIPPED }
@@ -11,12 +8,6 @@ data class MountChecklist(val tasks: List<MountTask> = emptyList()) {
     val allClosed: Boolean get() = closed == tasks.size
 }
 
-/**
- * Задание проверки.
- *
- * @property auto что отмечает задание автоматически (по телеметрии); `null` — ручное или без отображаемой зоны.
- * @property options варианты ответа ручного задания; пусто — задание автоматическое.
- */
 data class MountTask(
     val id: Int,
     val text: String,

@@ -62,10 +62,6 @@ private val SegmentsWidth = 132.dp
 private val FunctionsMaxHeight = 360.dp
 private const val SELECTED_TINT_ALPHA = 0.45f
 
-/**
- * Шапка окна канала: имя канала, справа — тип контакта (NO/NC) у входа или полярность (+/−) у выхода, если её можно
- * менять; ниже — провода канала.
- */
 @Composable
 internal fun ChannelEditorHeader(
     number: String,
@@ -99,7 +95,6 @@ internal fun ChannelEditorHeader(
     }
 }
 
-/** Тип контакта входа (NO/NC) или полярность выхода (+/−), если её можно менять. */
 @Composable
 private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, onDraftChange: (SettingValue) -> Unit) {
     when (draft) {
@@ -147,18 +142,12 @@ private fun ChannelModeSegments(draft: SettingValue, editablePolarity: Boolean, 
     }
 }
 
-/** Канал и «полярность можно менять» для окна канала (вход / выход), иначе null. */
 internal fun channelHeaderOf(setting: Setting): Pair<Channel, Boolean>? = when (setting) {
     is InputSetting -> setting.channel to false
     is OutputSetting -> setting.channel to setting.canEditPolarity
     else -> null
 }
 
-/**
- * Функции канала: «Выбрано N из M», «Только выбранные», поиск ([searchable] — на широком окне) и список с галочками;
- * описание функции раскрывается кнопкой справа.
- * Состояние — [state] по [ChannelLogic.id].
- */
 @Composable
 internal fun ChannelFunctionsEditor(
     logics: List<ChannelLogic>,
@@ -169,7 +158,6 @@ internal fun ChannelFunctionsEditor(
     val colors = cmpThemeColors()
     var query by rememberSaveable { mutableStateOf("") }
     var onlySelected by rememberSaveable { mutableStateOf(false) }
-    // Описания функций свёрнуты; раскрываются кнопкой справа (длинные описания не раздувают список).
     var expanded by rememberSaveable { mutableStateOf(listOf<Int>()) }
     val isOn = { logic: ChannelLogic -> state.getOrElse(logic.id) { false } }
     val selected = logics.count(isOn)
@@ -250,7 +238,6 @@ private fun FunctionSearchField(query: String, onQueryChange: (String) -> Unit) 
     )
 }
 
-/** Функция канала: галочка (вся строка), название; описание — по кнопке справа. */
 @Composable
 private fun FunctionRow(
     logic: ChannelLogic,

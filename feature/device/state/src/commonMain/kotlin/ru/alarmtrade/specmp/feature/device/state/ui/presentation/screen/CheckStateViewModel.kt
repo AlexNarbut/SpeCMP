@@ -33,16 +33,7 @@ import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.Zone
 import ru.alarmtrade.specmp.feature.device.state.domain.repository.DeviceStateRepository
 
-/**
- * Экран «Проверка состояния»: живое состояние блока (снимок раз в 3 с, только BLE) и команды.
- *
- * Опрос блока идёт, пока экран подписан на [state] и блок на связи: поток [DeviceStateRepository.states] собирается
- * в `repeatOnSubscription` — экран в фоне или под другим экраном блок не опрашивает; потеря связи
- * (`connectedDevice` → `null`) отменяет опрос, возврат блока запускает его заново.
- *
- * @param fastMount экран — шаг быстрого монтажа: без режима программирования (блок в нём выводится автоматически),
- *   «Назад» и «Далее» — с подтверждением.
- */
+/** Опрос — в `repeatOnSubscription`: экран в фоне блок не опрашивает; потеря связи отменяет опрос. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CheckStateViewModel(
     deviceSession: DeviceSession,
@@ -129,7 +120,7 @@ class CheckStateViewModel(
         if (fastMount && vehicle.programMode) exitProgramModeOnce()
     }
 
-    // Быстрый монтаж: блок в режиме программирования не охраняет — выводим один раз (старое приложение делало так же).
+    // Быстрый монтаж: блок в режиме программирования не охраняет — выводим его оттуда один раз.
     private fun exitProgramModeOnce() {
         if (currentState.programExiting) return
         reduce { copy(programExiting = true) }
@@ -140,7 +131,6 @@ class CheckStateViewModel(
         }
     }
 
-    /** Нажатие (удержание) кнопки команды: опасные — через лист подтверждения. */
     fun onCommand(command: StateCommand) {
         val state = currentState
         if (state.pending != null || state.loading) return
@@ -151,7 +141,6 @@ class CheckStateViewModel(
         }
     }
 
-    /** Удержание 2 с в листе подтверждения. */
     fun onConfirm() {
         val dialog = currentState.dialog as? CheckStateDialog.Confirm ?: return
         reduce { copy(dialog = null) }
@@ -179,10 +168,6 @@ class CheckStateViewModel(
         }
     }
 
-    /**
-     * «Назад». Быстрый монтаж — «Вернуться на предыдущий шаг?»; расширенный — предупреждение, если блок оставлен в
-     * режиме ТО или программирования; иначе — уйти сразу ([CheckStateEffect.Close]).
-     */
     fun onBack() {
         val vehicle = currentState.vehicle
         val dialog = when {
@@ -200,7 +185,7 @@ class CheckStateViewModel(
         }
     }
 
-    /** «Выключить и выйти»: выключаем режимы и уходим, даже если блок не ответил. */
+    /** Уходим, даже если блок не ответил. */
     fun onExitTurnOff() {
         val dialog = currentState.dialog as? CheckStateDialog.Exit ?: return
         reduce { copy(dialog = null) }
@@ -228,7 +213,6 @@ class CheckStateViewModel(
         if (job == null) postSideEffect(CheckStateEffect.Close)
     }
 
-    /** Быстрый монтаж, «Далее»: [notDone] заданий чек-листа не закрыто из [total]. */
     fun onNext(notDone: Int, total: Int) {
         if (notDone > 0) {
             reduce { copy(dialog = CheckStateDialog.FastFinish(notDone, total)) }

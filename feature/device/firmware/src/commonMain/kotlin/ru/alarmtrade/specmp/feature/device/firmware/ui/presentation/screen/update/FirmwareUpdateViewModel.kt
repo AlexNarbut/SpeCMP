@@ -31,24 +31,9 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
 /**
- * «Обновление прошивки» (блок в загрузчике): выбор источника → версия → процесс → результат.
- *
- * Фазы «блок входит в загрузчик» ([UpdatePhase.Entering]), «ждём блок после прошивки» ([UpdatePhase.Finishing])
- * и «связь прервана» ([UpdatePhase.Lost]) выводятся из связи и ожидаемой перезагрузки сессии, а не пишутся
- * вручную: перезагрузку мы ждём (`reboot`), обрыв без ожидания — потеря связи. Остальные — состояние процесса,
- * которое меняют действия пользователя и поток [FirmwareUpdateRepository.update].
- *
- * Связь при процессе: на стадии «Применение» блок перезагружается до результата — ставим ожидание возврата
- * в рабочий режим; если блок вернулся и результата не было — это успех. Передача прошивки по BLE (основная
- * программа и Bluetooth-модуль) обрыв переживает: SDK ждёт переподключения и продолжает с прерванного кадра (или
- * начинает передачу заново, если блок продолжение не принял; на iOS загрузчик модуля теряет связь каждые ~30 с),
- * экран показывает «переподключение» на той же передаче, а сессия на это время не перечитывает режим блока
- * ([DeviceSession.beginFirmwareTransfer]). Обрыв на других стадиях
- * (и после того, как SDK сдался) прерывает обновление: после возврата блока в загрузчик экран снова на выборе
- * источника; если блок после применения вернулся в загрузчике — ошибка.
- *
- * Процесс, связь и выбор в архиве живут всю жизнь VM, а не подписку на state: обновление идёт, пока экран перекрыт
- * архивом или приложение свёрнуто.
+ * Фазы [UpdatePhase.Entering], [UpdatePhase.Finishing] и [UpdatePhase.Lost] выводятся из связи и ожидаемой
+ * перезагрузки: её мы ждём (`reboot`), обрыв без ожидания — потеря связи. Передача по BLE обрыв переживает: SDK
+ * переподключается и продолжает (на iOS загрузчик модуля теряет связь каждые ~30 с).
  */
 class FirmwareUpdateViewModel(
     private val deviceSession: DeviceSession,
@@ -58,7 +43,6 @@ class FirmwareUpdateViewModel(
     private val archivePicker: FirmwareArchivePicker,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<FirmwareUpdateState, FirmwareUpdateEffect>(
-    // Модуль и канал — из запроса входа в загрузчик, забираются при создании VM.
     bootRequester.take().initialUpdateState(deviceSession.state.value, deviceSession.reboot.value),
 ) {
 
@@ -78,8 +62,6 @@ class FirmwareUpdateViewModel(
     private fun reduceCore(transform: UpdateCore.() -> UpdateCore) {
         reduce { core.transform().toState() }
     }
-
-    // ───── связь ─────
 
     private suspend fun onSession(session: DeviceSessionState) {
         when (session) {
@@ -125,8 +107,6 @@ class FirmwareUpdateViewModel(
         reduceCore { withBlock(source, modules, transport) }
     }
 
-    // ───── интенты ─────
-
     fun onModuleSelected(index: Int) {
         val module = core.profile?.modules?.getOrNull(index) ?: return
         reduceCore { copy(selectedModuleId = module.id) }
@@ -136,7 +116,6 @@ class FirmwareUpdateViewModel(
         reduceCore { copy(channel = channel, sourceError = null, exitError = false, fileError = null) }
     }
 
-    /** «Скачать прошивку»: запросить последнюю версию выбранного канала и перейти к подтверждению. */
     fun onDownloadClick() {
         intent {
             executeWithProceedLock {
@@ -185,7 +164,6 @@ class FirmwareUpdateViewModel(
         )
     }
 
-    /** Результат выбора файла прошивки в файловом менеджере: годный файл — сразу на подтверждение. */
     fun onFilePicked(result: FirmwareFilePickResult) {
         reduceCore {
             if (stage != UpdatePhase.Source) return@reduceCore this
@@ -222,7 +200,6 @@ class FirmwareUpdateViewModel(
         }
     }
 
-    /** «Обновить» на подтверждении: запуск процесса с выбранной версией. */
     fun onConfirmUpdate() {
         val current = core
         val source = current.localFile?.let { UpdateSource.File(it.path) }
@@ -233,10 +210,7 @@ class FirmwareUpdateViewModel(
         launchReplacing(UPDATE_PROCESS) { runUpdate(source) }
     }
 
-    /**
-     * «OK» на успехе. Блок ещё в загрузчике — обычное состояние выбора источника (можно выбрать другую прошивку или
-     * выйти командой); блок уже вернулся в рабочий режим — подтверждение, хост уйдёт со слота сам.
-     */
+    /** Блок ещё в загрузчике — снова выбор источника; уже вернулся в рабочий режим — хост уйдёт со слота сам. */
     fun onResultOk() {
         if (currentState.phase != UpdatePhase.Success) return
         if (currentState.inBoot) {
@@ -257,11 +231,7 @@ class FirmwareUpdateViewModel(
         }
     }
 
-    /**
-     * «Выйти из обновления» (BLE): команда перезагрузки блока в рабочий режим. Ожидание возврата ставится до команды —
-     * блок может перезагрузиться раньше ответа. Не прошла и блок на связи — баннер; связь оборвалась — это и есть
-     * перезагрузка, ждём возврата.
-     */
+    /** Ожидание возврата — до команды: блок может перезагрузиться раньше ответа; обрыв связи и есть перезагрузка. */
     fun onExitBootClick() {
         val current = core
         val profile = current.profile ?: return
@@ -283,7 +253,6 @@ class FirmwareUpdateViewModel(
         }
     }
 
-    /** «Повторить»: после ошибки — снова к выбору источника; без данных блока — перечитать подсистемы. */
     fun onRetry() {
         val stage = core.stage
         when {
@@ -314,7 +283,6 @@ class FirmwareUpdateViewModel(
         postSideEffect(FirmwareUpdateEffect.Exit)
     }
 
-    /** «Назад»: на процессе заблокирован; на выборе — предупреждение; после ошибки и обрыва — сразу выход. */
     fun onBackClick() {
         val current = currentState
         when {
@@ -335,8 +303,6 @@ class FirmwareUpdateViewModel(
         reduceCore { copy(exitDialog = false) }
         postSideEffect(FirmwareUpdateEffect.Exit)
     }
-
-    // ───── процесс обновления ─────
 
     private suspend fun runUpdate(source: UpdateSource) {
         val target = core.profile?.target ?: return

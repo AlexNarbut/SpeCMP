@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.state.domain.model
 
-/** Команда на блок с экрана проверки состояния. */
 enum class StateCommand {
     ARM,
     DISARM,
@@ -20,10 +19,8 @@ enum class StateCommand {
     LIGHT_WAY,
 }
 
-/** Ответ блока на команду. */
 enum class CommandReply {
     DONE,
 
-    /** Блок ответил, что команду не выполнил. */
     REJECTED,
 }

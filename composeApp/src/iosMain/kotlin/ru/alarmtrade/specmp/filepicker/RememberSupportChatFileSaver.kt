@@ -61,10 +61,8 @@ private class ExportDelegate(private val onResult: (NSURL?) -> Unit) :
 }
 
 /**
- * Делегат `UIDocumentPickerViewController` — weak-ссылка, поэтому его держит сама
- * корутина (захват в `invokeOnCancellation`), а не глобальная переменная. При отмене
- * корутины пикер закрывается: иначе `finally` удалил бы временный файл, пока
- * пользователь ещё выбирает место экспорта.
+ * Делегат пикера — weak-ссылка: его держит корутина (захват в `invokeOnCancellation`). При отмене пикер
+ * закрывается — иначе `finally` удалил бы временный файл, пока пользователь выбирает место.
  */
 private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResult =
     suspendCancellableCoroutine { cont ->
@@ -97,7 +95,6 @@ private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResu
         }
     }
 
-/** Верхний показанный контроллер — точка показа системных экранов (экспорт, QuickLook). */
 internal fun topViewController(): UIViewController? {
     val scene = UIApplication.sharedApplication.connectedScenes.firstOrNull() as? UIWindowScene
     var controller = scene?.keyWindow?.rootViewController

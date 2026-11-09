@@ -10,10 +10,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
-/**
- * Изменяемое свойство в наследнике `BaseViewModel` (супертип `…ViewModel`), включая вложенные классы и конструктор:
- * `var` (в т.ч. `lateinit`, `by`) и `val` с изменяемой коллекцией. Проверка по именам, без type resolution.
- */
+/** Включая вложенные классы и конструктор; по именам, без type resolution. */
 class ViewModelMutableProperty(config: Config) :
     Rule(
         config,

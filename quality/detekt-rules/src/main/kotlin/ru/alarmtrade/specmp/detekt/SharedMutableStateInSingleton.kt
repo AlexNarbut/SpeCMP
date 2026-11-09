@@ -11,15 +11,8 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
 /**
- * Разделяемое изменяемое состояние в долгоживущем объекте (docs/patterns.md, «Конкурентность»): `var` и `val`
- * с изменяемой коллекцией у класса/объекта, который
- * - держит собственный `CoroutineScope` (свойство или параметр конструктора с таким типом/инициализатором), или
- * - сервисный в data-слое: пакет `..data..` и имя `*Repository`/`*Coordinator`/`*Controller`/`*Session`/`*Impl`.
- *
- * Его зовут из нескольких корутин и потоков: голый `var` не атомарен и не виден между потоками. Разрешены
- * `MutableStateFlow` + `update { }`/`compareAndSet` (это `val`). Поле, которое читают и пишут только под `Mutex`, или
- * объект с явным confinement (один поток) — `@Suppress("SharedMutableStateInSingleton")` с причиной.
- * Проверяются члены самого класса (не вложенных) и параметры его первичного конструктора. Без type resolution.
+ * Класс со своим `CoroutineScope` или сервис data-слоя зовут из нескольких потоков. Поле под `Mutex` или с
+ * confinement — `@Suppress("SharedMutableStateInSingleton")` с причиной. Без type resolution.
  */
 class SharedMutableStateInSingleton(config: Config) :
     Rule(config, "Изменяемое поле в разделяемом сервисе: MutableStateFlow + update { } или Mutex.") {

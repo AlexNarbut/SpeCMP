@@ -18,11 +18,7 @@ import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.KtUnaryExpression
 
 /**
- * Запись в `MutableStateFlow.value`: `=`, `+=`, `-=`, `*=`, `/=`, `%=`, `++`, `--`. Чтение-изменение-запись
- * через `.value` не атомарно — гонка с параллельными обновлениями; нужен `update { }`.
- *
- * Тип ресивера берётся из Analysis API, поэтому Compose `MutableState.value` не попадает. Требует type
- * resolution: в задачах detekt без классов (jvmMain, iosMain, тесты — см. build-logic, specmp.detekt)
+ * Ресивер — по типу из Analysis API, Compose `MutableState.value` не попадает. Без классов (jvmMain, iosMain, тесты)
  * правило молчит; commonMain и androidMain проверяются Android-задачей с типами.
  */
 class StateFlowValueMutation(config: Config) :

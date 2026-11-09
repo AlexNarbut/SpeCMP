@@ -7,11 +7,9 @@ import ru.alarmtrade.specmp.core.common.AppError
 import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.core.ui.error.message
 
-/** Ошибка загрузки данных настроек: меню блока, поиск автомобиля по CAN. */
 internal sealed interface SettingsError {
     data class Common(val error: AppError) : SettingsError
 
-    /** Данные не получены (своя фраза у каждого места). */
     data object LoadFailed : SettingsError
 
     companion object {
@@ -19,7 +17,6 @@ internal sealed interface SettingsError {
     }
 }
 
-/** Текст ошибки; [loadFailed] — фраза места для своего отказа. */
 @Composable
 internal fun SettingsError.text(loadFailed: StringResource): String = when (this) {
     is SettingsError.Common -> error.message()

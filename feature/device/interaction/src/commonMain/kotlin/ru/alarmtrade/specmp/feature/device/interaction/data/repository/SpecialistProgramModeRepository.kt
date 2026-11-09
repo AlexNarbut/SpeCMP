@@ -7,7 +7,6 @@ import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.ProgramMo
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ProgramModeResult
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 
-/** [ProgramModeRepository]: неверный PIN — исход, не ошибка. */
 internal class SpecialistProgramModeRepository(private val dataSource: ProgramModeDataSource) : ProgramModeRepository {
 
     override suspend fun enter(): Response<ProgramModeResult> =

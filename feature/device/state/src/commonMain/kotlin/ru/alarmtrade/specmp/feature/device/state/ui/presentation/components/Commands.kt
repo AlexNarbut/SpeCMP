@@ -97,20 +97,15 @@ private const val HOLD_MILLIS = 1_000L
 private const val CONFIRM_HOLD_MILLIS = 2_000L
 private const val HINT_MILLIS = 1_800L
 
-/** Удержание кнопки: [pressed] — палец на кнопке (полоса/кольцо заполняется), [hint] — отпустили раньше времени. */
 @Stable
 internal class HoldState {
     var pressed by mutableStateOf(false)
     var hint by mutableStateOf(false)
 
-    /** Чья кнопка удерживается (общее состояние колонки пульта — прогресс рисуется на силуэте). */
     var command by mutableStateOf<StateCommand?>(null)
 }
 
-/**
- * Команда отправляется удержанием [millis] (защита от случайного нажатия). Отпустили раньше — подсказка
- * «Держите 1 с». Для TalkBack — обычное действие «нажать».
- */
+/** Отправка удержанием [millis] — защита от случайного нажатия; для TalkBack — обычное действие «нажать». */
 @Composable
 internal fun Modifier.holdToFire(
     enabled: Boolean,
@@ -155,7 +150,6 @@ internal fun Modifier.holdToFire(
         }
 }
 
-/** Прогресс удержания 0…1 (только отрисовка; команду шлёт жест). */
 @Composable
 internal fun holdProgress(state: HoldState, millis: Long): Float {
     val progress = remember { Animatable(0f) }
@@ -202,7 +196,6 @@ internal fun commandPainter(command: StateCommand): Painter = painterResource(
     },
 )
 
-/** Режимы ТО и программирования: свой значок на включение и на выключение (как в старом приложении). */
 private fun modeIcon(command: StateCommand): DrawableResource = when (command) {
     StateCommand.SERVICE_MODE_OFF -> Res.drawable.devicestate_cmd_service_mode_disable
     StateCommand.PROGRAM_MODE_ON -> Res.drawable.devicestate_cmd_program_mode_enable
@@ -210,7 +203,6 @@ private fun modeIcon(command: StateCommand): DrawableResource = when (command) {
     else -> Res.drawable.devicestate_cmd_service_mode_enable
 }
 
-/** Значок команды; при удержании — заполняющееся кольцо, при отправке — вращающееся. */
 @Composable
 private fun RingIcon(command: StateCommand, progress: Float, sending: Boolean, tint: Color, size: Int, iconSize: Int) {
     CmpBox(modifier = Modifier.size(size.dp), contentAlignment = Alignment.Center) {
@@ -255,12 +247,7 @@ private fun commandLook(command: CommandUi, status: CommandStatus): CommandLook 
     }
 }
 
-/**
- * Кнопка команды: только значок и название, размер постоянный (итог — цветом кнопки и снэкбаром). [compact] —
- * квадрат колонки пульта (короткая подпись), иначе плитка сетки «Все команды». [sharedHold] — удержание общее для
- * колонки пульта: прогресс рисует силуэт машины, а не кольцо у значка. Опасные команды ([CommandUi.danger])
- * открывают лист подтверждения обычным нажатием.
- */
+/** [sharedHold] — удержание общее для колонки пульта: прогресс рисует силуэт машины, а не кольцо у значка. */
 @Composable
 internal fun CommandButton(
     command: CommandUi,
@@ -318,7 +305,6 @@ private val CompactHeight = 84.dp
 private val TileHeight = 104.dp
 private const val DISABLED_ALPHA = 0.38f
 
-/** Опасная команда: обычное нажатие открывает лист подтверждения (удержание — уже там). */
 private fun Modifier.dangerTap(enabled: Boolean, label: String, onClick: () -> Unit): Modifier = this
     .semantics {
         role = Role.Button
@@ -339,7 +325,6 @@ private fun Modifier.dangerTap(enabled: Boolean, label: String, onClick: () -> U
         }
     }
 
-/** Сетка всех команд (вкладка «Подробно», нижний лист). */
 @Composable
 internal fun CommandsGrid(
     commands: List<CommandUi>,
@@ -367,7 +352,6 @@ internal fun CommandsGrid(
     }
 }
 
-/** Нижний лист «Все команды». */
 @Composable
 internal fun AllCommandsSheet(
     commands: List<CommandUi>,
@@ -403,10 +387,6 @@ internal fun AllCommandsSheet(
     }
 }
 
-/**
- * Лист подтверждения опасной команды: пояснение, у запуска — живые проверки из текущего снимка (нейтраль / «P»,
- * ручник, капот; информационные, запуск не блокируют), удержание 2 с.
- */
 @Composable
 internal fun DangerSheet(command: StateCommand, vehicle: VehicleState?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = cmpThemeColors()
@@ -510,7 +490,6 @@ private fun StartChecks(vehicle: VehicleState) {
     }
 }
 
-/** Полоса подтверждения: удерживайте 2 с, полоса заполняется. */
 @Composable
 private fun HoldBar(text: String, onDone: () -> Unit) {
     val colors = cmpThemeColors()
@@ -553,7 +532,6 @@ private fun HoldBar(text: String, onDone: () -> Unit) {
 
 private const val HALF = 0.5f
 
-/** Колонка основных команд пульта (охрана, снятие, запуск/стоп, багажник, паника) + «Все команды». */
 @Composable
 internal fun PrimaryCommands(
     commands: List<CommandUi>,

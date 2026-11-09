@@ -6,7 +6,6 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            // SDK прошивки (бывший логический модуль firmware): версии, обновление, загрузчик.
             implementation(project(":core:specialist"))
             implementation(libs.alarmtrade.specialist)
             implementation(libs.kotlinx.datetime)
@@ -17,16 +16,12 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
-            // Сессия устройства: подключение, переход в загрузчик
             implementation(project(":feature:device:interaction"))
-            // Общий presentation устройства: база VM блока, диалог PIN
             implementation(project(":feature:device:presentation-core"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 
-            // Nav3-граф экранов в режиме загрузчика (см. docs/navigation.md)
             implementation(libs.compose.nav3)
-            // ViewModelStore-декоратор: per-entry ViewModelStore → очистка VM при pop
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.kotlinx.serialization.json)
 
@@ -39,7 +34,6 @@ kotlin {
             implementation(libs.kermit)
         }
 
-        // rememberFirmwareFilePicker: SAF-лаунчер (rememberLauncherForActivityResult)
         androidMain.dependencies {
             implementation(libs.androidx.activityCompose)
         }
@@ -50,7 +44,6 @@ kotlin {
             implementation(project(":core:testing"))
             implementation(project(":feature:device:interaction:testing"))
         }
-        // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs)
         }

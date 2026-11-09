@@ -14,17 +14,8 @@ import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 
 /**
- * Результат `Response` молча выброшен (docs/patterns.md, «Контракт результата»): вызов, возвращающий `Response`
- * (или `Response?` после `?.`), стоит оператором — в блоке, последней строкой `Unit`-лямбды (`safeLaunch { repo.x() }`,
- * `intent { }`), веткой `if` без `else`, `withContext(io) { repo.x() }` оператором, `x.also { … }`.
- *
- * Обработкой считается: значение используется (присваивание, `return`, аргумент, условие, `when`, expression-body,
- * результат лямбды не-`Unit`); цепочка оканчивается `onError` — решение видно
- * на месте (в том числе последней строкой лямбды обёртки: `withContext(io) { x.onError { } }`); оператор
- * `safeRun { }`/`safeResponseRun { }` — сознательный «поймать и проглотить» на границе (логирует сам).
- * «Огонь и забудь» — `.onError { logger.w(it) { … } }`.
- *
- * Требует type resolution: в задачах detekt без классов правило молчит (как RedundantSafeRun).
+ * Обработкой считается использование значения, цепочка с `onError` и оператор `safeRun { }`/`safeResponseRun { }`
+ * (граница, логирует сама). Требует type resolution.
  */
 class ResponseIgnored(config: Config) :
     Rule(config, "Результат Response нельзя молча отбрасывать: обработайте ошибку или используйте значение."),
@@ -49,10 +40,7 @@ class ResponseIgnored(config: Config) :
         )
     }
 
-    /**
-     * Внешнее выражение цепочки, которой [this] — последний вызов (`a.b().c()` для `c()`); `null`, если вызов —
-     * ресивер следующего звена (его проверит внешний вызов).
-     */
+    /** `null`, если вызов — ресивер следующего звена (его проверит внешний вызов). */
     private fun KtCallExpression.outermostOfChain(): KtExpression? {
         val parent = parent
         val outer: KtExpression =

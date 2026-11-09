@@ -23,7 +23,6 @@ fun main() = application {
     }
 }
 
-/** Версия из `version.properties` — его генерирует Gradle из каталога версий (`generateVersionProperties`). */
 private fun loadDesktopAppVersion(): Pair<String, Int> {
     val properties = java.util.Properties()
     val stream = requireNotNull(Thread.currentThread().contextClassLoader?.getResourceAsStream("version.properties")) {

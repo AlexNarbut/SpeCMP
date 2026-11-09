@@ -11,10 +11,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.Fir
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveResult
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareSaveTarget
 
-/**
- * Desktop: сохранение — в `~/Downloads/Pandora Spec` (как вложения чата), «Открыть папку» —
- * `java.awt.Desktop.open`. Системного «Поделиться» нет.
- */
 @Composable
 actual fun rememberFirmwareFileExporter(): FirmwareFileExporter {
     val saver = rememberSupportChatFileSaver()

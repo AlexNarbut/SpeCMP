@@ -141,7 +141,6 @@ private val WideSplitFrom = 1100.dp
 private const val ALARM_BORDER_MIN_ALPHA = 0.25f
 private const val ALARM_BORDER_MILLIS = 500
 
-/** Действия экрана; один экземпляр на экран. */
 @Immutable
 internal data class CheckStateActions(
     val onBack: () -> Unit = {},
@@ -156,12 +155,7 @@ internal data class CheckStateActions(
     val onFinishConfirm: () -> Unit = {},
 )
 
-/**
- * Экран «Проверка состояния»: раздел расширенного монтажа или — с [fastMount] — шаг быстрого монтажа (чек-лист,
- * «Далее»). Только BLE: плитку при USB не показывает расширенный монтаж.
- *
- * @param onBack выход с экрана (расширенный монтаж; в быстром монтаже — [CheckStateFastMount.onBack]).
- */
+/** Только BLE: при USB плитку не показывает расширенный монтаж. */
 @Composable
 fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) {
     val viewModel = koinViewModel<CheckStateViewModel> { parametersOf(fastMount != null) }
@@ -225,11 +219,6 @@ private suspend fun showResult(
 
 private enum class Tab { CHECKS, PULT, DETAILS }
 
-/**
- * Stateless-контент. Узко (< 860 dp): сверху статус и плашки, ниже вкладки «Пульт / Подробно» (в быстром монтаже
- * первая — «Проверки N/M»). Широко: слева статус, горизонтальный пульт и «Подробно» вкладками, справа — чек-лист
- * (быстрый монтаж) или все команды. [CheckStateFastMount.chrome] — шапка и панель мастера быстрого монтажа.
- */
 @Composable
 internal fun CheckStateContent(
     state: CheckStateState,
@@ -298,7 +287,6 @@ internal fun CheckStateContent(
     CheckStateDialogs(state, actions)
 }
 
-/** Части экрана, общие для узкой и широкой раскладки. */
 private class Parts(
     val state: CheckStateState,
     val actions: CheckStateActions,
@@ -355,17 +343,12 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
     }
 }
 
-/** Ширина правой колонки (чек-лист / все команды) в широком окне. */
 private fun wideRightWidth(width: Dp): Dp = when {
     width >= 1200.dp -> 440.dp
     width >= 960.dp -> 380.dp
     else -> 340.dp
 }
 
-/**
- * Широкое окно (макет): слева — статус, пульт с машиной горизонтально и «Подробно» одной карточкой с вкладками;
- * справа — чек-лист (быстрый монтаж) или все команды (расширенный). «Далее» — в нижней панели справа.
- */
 @Composable
 private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
     val state = parts.state
@@ -405,7 +388,6 @@ private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
 
 private enum class DetailsTab { ZONES, ENGINE, LINK, EXTRA }
 
-/** «Подробно» в широком окне — одна карточка с вкладками вместо длинной ленты карточек. */
 @Composable
 private fun DetailsTabs(parts: Parts) {
     val vehicle = parts.state.vehicle
@@ -488,10 +470,7 @@ private fun tabTitle(tab: Tab, parts: Parts): String = when (tab) {
     Tab.DETAILS -> stringResource(Strings.string.devicestate_tabs_item_details)
 }
 
-/**
- * Место главного статуса. В режиме программирования блок не отдаёт охрану и не выполняет часть команд — вместо
- * карточки «Снято с охраны» плашка режима (с «Выключить»; в быстром монтаже — выход идёт сам).
- */
+/** В режиме программирования блок не отдаёт охрану и не выполняет часть команд — вместо статуса плашка режима. */
 @Composable
 private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
     val vehicle = state.vehicle
@@ -616,7 +595,6 @@ private fun FastDock(parts: Parts, wide: Boolean = false) {
     }
 }
 
-/** Красная пульсирующая рамка по краю экрана при тревоге. */
 @Composable
 private fun AlarmBorder() {
     val colors = cmpThemeColors()
@@ -696,7 +674,6 @@ private fun CheckStateDialogs(state: CheckStateState, actions: CheckStateActions
     }
 }
 
-/** Диалог с вертикальными кнопками во всю ширину: основная, вторичная, «Отмена». */
 @Composable
 private fun ChoiceDialog(
     icon: CmpIcons,

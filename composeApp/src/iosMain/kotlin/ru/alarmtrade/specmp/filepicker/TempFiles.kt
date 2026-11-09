@@ -13,7 +13,6 @@ import platform.Foundation.create
 import platform.Foundation.writeToURL
 import ru.alarmtrade.specmp.core.common.file.safeFileName
 
-/** Временная копия байтов в `tmp/<dirName>/<uuid>/<имя>` для передачи системе; `null` — записать не удалось. */
 internal fun writeTempFile(dirName: String, fileName: String, bytes: ByteArray): NSURL? {
     val directory = "${NSTemporaryDirectory()}$dirName/${NSUUID().UUIDString}"
     val created = NSFileManager.defaultManager.createDirectoryAtPath(

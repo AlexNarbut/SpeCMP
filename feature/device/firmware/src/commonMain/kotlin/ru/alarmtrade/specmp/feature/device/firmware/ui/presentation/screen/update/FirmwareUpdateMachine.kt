@@ -23,32 +23,21 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmw
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isBoot
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.isLinkDown
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
-import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 
-/*
- * Машина состояний экрана обновления — данные процесса и связи ([UpdateCore]) и чистые функции «данные → фаза и state
- * экрана». Без VM и корутин: тестируются напрямую. VM меняет [UpdateCore] интентами и событиями сессии/SDK, а поля
- * экрана пересчитываются в том же `reduce` ([toState]).
- */
+// Без VM и корутин: VM меняет [UpdateCore], поля экрана пересчитываются в том же `reduce` ([toState]).
 
-/** Блок в загрузчике: что обновляем, его данные и подсистемы. */
 @Immutable
 class BootBlock(
     val kind: UpdateProfile,
-    /** Что обновляем и чем выходим из загрузчика — основная программа или Bluetooth-модуль. */
     val target: BootModeTarget,
-    /** Модель блока (основная программа) или прошивка Bluetooth-модуля — для базы устройств. */
     val deviceName: String,
     val deviceTitle: String,
     val currentVersion: String,
     val modules: List<FirmwareModule>,
-    /** Выход из загрузчика командой доступен (BLE). */
     val canExit: Boolean,
     /** Связь по BLE: передача прошивки переживает обрыв (SDK переподключается и продолжает). */
     val overBle: Boolean,
-    /** CAN блока (единая CAN-прошивка, только основная программа): фильтр «Скачать» и архива. */
     val can: FirmwareCan? = null,
-    /** Заводские CAN-настройки: кода нет — в архиве подсказка выбрать автомобиль. */
     val factoryCan: Boolean = false,
 )
 
@@ -59,23 +48,17 @@ data class UpdateCore(
     val selectedModuleId: Long? = null,
     val channel: FirmwareChannel = FirmwareChannel.RELEASE,
     val candidate: FirmwareVersion? = null,
-    /** Прошивка из файла пользователя (вместо [candidate]). */
     val localFile: FirmwareFilePickResult.Picked? = null,
     val fileError: FileError? = null,
     val sourceError: FirmwareError? = null,
     val exitDialog: Boolean = false,
     val exitError: Boolean = false,
-    /** Пользователь подтвердил результат («OK»). */
     val acknowledged: Boolean = false,
-    /** Связь пропадала, пока шёл процесс обновления. */
     val linkDropped: Boolean = false,
-    /** Поток обновления SDK ещё идёт (не закончился и не сдался). */
     val running: Boolean = false,
     val session: DeviceSessionState = DeviceSessionState.Disconnected,
-    /** Ожидаемая перезагрузка блока ([DeviceSession.reboot]). */
     val reboot: DeviceReboot? = null,
 ) {
-    /** Выбран модуль «основная программа сигнализации»: только у него прошивки под CAN-код. */
     val isAlarmMain: Boolean
         get() = profile?.modules?.firstOrNull { it.id == selectedModuleId }?.kind == FirmwareModuleKind.AlarmMain
 
@@ -84,14 +67,12 @@ data class UpdateCore(
         get() = running && stage is UpdatePhase.Transfer && profile?.overBle == true
 }
 
-/** Откуда берём файл прошивки: версия с сервера или файл пользователя. */
 internal sealed interface UpdateSource {
     data class Server(val version: FirmwareVersion) : UpdateSource
 
     data class File(val path: String) : UpdateSource
 }
 
-/** Что известно о блоке в загрузчике до запроса подсистем. */
 internal data class BootSource(
     val kind: UpdateProfile,
     val target: BootModeTarget,
@@ -125,7 +106,7 @@ internal fun DeviceSessionState.bootSource(): BootSource? = when (this) {
     else -> null
 }
 
-/** Подсистемы блока прочитаны: выбор модуля сохраняется, если он среди них; «Загрузка» сменяется выбором источника. */
+/** Выбор модуля сохраняется, если он среди подсистем. */
 internal fun UpdateCore.withBlock(
     source: BootSource,
     modules: List<FirmwareModule>,
@@ -161,7 +142,6 @@ internal fun FirmwareBootRequest?.initialUpdateState(
     reboot = reboot,
 ).toState()
 
-/** State экрана из [core]: поля экрана выводятся из данных процесса и связи. */
 internal fun UpdateCore.toState(): FirmwareUpdateState {
     val core = this
     val profile = core.profile

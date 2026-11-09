@@ -29,22 +29,14 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportCha
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatPickedFileResult
 
 /**
- * Буфер результатов выбора — на уровне процесса, а не в `remember`:
- * - пока открыт системный пикер, процесс могут убить; registry доставит результат
- *   лаунчеру уже в новом процессе — он попадёт сюда и дождётся, пока экран подпишется;
- * - копирование большого файла может пережить пересоздание Activity — результат не
- *   должен уйти в канал старой композиции.
- * Подписчик один — экран чата (`SupportChatEntry`).
+ * Буфер — на уровне процесса: пока открыт пикер, процесс могут убить (registry доставит результат в новый), а
+ * копирование большого файла может пережить пересоздание Activity.
  */
 private object PickerResults {
     val channel = Channel<SupportChatPickedFileResult>(Channel.UNLIMITED)
 }
 
-/**
- * Картинки — системный Photo Picker (`PickVisualMedia`), документы — SAF (`OpenDocument`).
- * `GetContent` не годится: часть галерей возвращает выбор в `clipData`, а не в
- * `intent.data`, — успешный выбор приходил как `null`, то есть как «тихая» отмена.
- */
+/** `GetContent` не годится: часть галерей отдаёт выбор в `clipData`, и он приходил как `null` (тихая отмена). */
 @Composable
 actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
     val appContext = LocalContext.current.applicationContext
@@ -56,7 +48,6 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
             PickerResults.channel.trySend(SupportChatPickedFileResult.Cancelled)
             return
         }
-        // Копирование — вне main (большой файл не должен давать ANR).
         appScope.launch {
             val result = withContext(dispatchers.io) { uri.copyToAttachments(appContext, kind) }
             PickerResults.channel.trySend(result)
@@ -86,12 +77,8 @@ actual fun rememberSupportChatFilePicker(): SupportChatFilePicker {
 }
 
 /**
- * Копия в собственный каталог приложения (`filesDir`, а не `cacheDir`): она нужна
- * outbox'у после рестарта, а кэш система вправе вычистить. Удаляет копию
- * [rememberSupportChatAttachmentFiles], когда сообщение подтверждено или удалено.
- *
- * Каждая копия — в своём подкаталоге `<uuid>/<исходное имя>`: SDK берёт имя файла
- * для сервера из пути, и префикс в имени увидела бы поддержка.
+ * Копия в `filesDir`, не в `cacheDir`: нужна outbox'у после рестарта. Своя папка `<uuid>/` на копию: SDK берёт имя
+ * файла для сервера из пути.
  */
 // Граница платформенного I/O: любой сбой копирования логируется и превращается в Failed
 @Suppress("TooGenericExceptionCaught")
@@ -140,7 +127,6 @@ private fun Uri.copyToAttachments(context: Context, kind: SupportChatPickKind): 
     }
 }
 
-/** Удаляет копию вместе с её персональным подкаталогом `<uuid>/`. */
 internal fun File.deleteWithDirectory() {
     delete()
     parentFile?.delete()

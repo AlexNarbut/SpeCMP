@@ -11,14 +11,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtTypeAlias
 
-/**
- * Файл ViewModel содержит только ViewModel: State, Effect, UI-модели, enum'ы и прочие типы — в своих файлах,
- * private-хелперы — вложенными private-типами внутри VM. Top-level функции и свойства не проверяются.
- *
- * ViewModel — top-level класс, имя которого оканчивается на `ViewModel`, или класс с супертипом `…ViewModel`
- * (в том числе `BaseViewModel<S, E>`). Проверка по именам, без type resolution — работает
- * во всех source set'ах.
- */
+/** Top-level функции и свойства не проверяются. По именам, без type resolution. */
 class ViewModelFileContents(config: Config) :
     Rule(
         config,

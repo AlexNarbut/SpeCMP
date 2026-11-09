@@ -8,13 +8,7 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
 
-/**
- * Дженерики `BaseViewModel<S, E>` (и `BaseDeviceViewModel<S, E>`) называют контракт экрана: имя типа состояния
- * оканчивается на `State`, имя типа эффекта — на `Effect` (экран без эффектов — `Nothing`). Имя берётся последним
- * сегментом, без пакета и `?`. Собственные параметры типа класса (промежуточная абстрактная база) не проверяются.
- *
- * Проверка по PSI, без type resolution — работает во всех source set'ах.
- */
+/** Имя — последним сегментом, без пакета и `?`; собственные параметры типа класса не проверяются. По PSI, без типов. */
 class ViewModelContractNames(config: Config) :
     Rule(
         config,

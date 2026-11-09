@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.supportchat.di.supportChatModule
 import ru.alarmtrade.specmp.feature.vehicle.di.vehicleModule
 import ru.alarmtrade.specmp.feature.vehicle.ui.di.vehicleUiModule
 
-/** Модули composition root без платформенных ([rememberPlatformKoinModules]); порядок — порядок подключения. */
+/** Без платформенных ([rememberPlatformKoinModules]); порядок — порядок подключения. */
 fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = buildList {
     add(commonModule)
     addAll(specialistModules(appVersionName, appVersionCode))

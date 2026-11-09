@@ -27,7 +27,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareF
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
 
-/** [SerialFirmwareRepository]: обновление `.frm` в текущей serial-сессии SDK. */
 internal class SpecialistSerialFirmwareRepository(private val dataSource: FirmwareUpdateDataSource) :
     SerialFirmwareRepository {
 

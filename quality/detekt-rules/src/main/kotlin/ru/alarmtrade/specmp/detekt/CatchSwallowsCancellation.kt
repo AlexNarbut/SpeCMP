@@ -17,15 +17,8 @@ import org.jetbrains.kotlin.psi.KtTryExpression
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
 /**
- * `catch (Throwable/Exception/RuntimeException/IllegalStateException)` в корутине (`suspend fun` или suspend-лямбда,
- * через `inline`-лямбды), чей `try` содержит suspend-вызов, глотает `CancellationException` — корутина продолжает
- * работать после отмены (docs/patterns.md, «Корутины и Flow»).
- *
- * Не срабатывает, если отмена пробрасывается: отдельный `catch (e: CancellationException)` выше, в теле —
- * `if (e is CancellationException) throw e`, `ensureActive()` или `throw e` верхним оператором.
- * Обычно вместо `try/catch` — `safeRun { }` (он пробрасывает отмену).
- *
- * Требует type resolution: в задачах detekt без классов правило молчит.
+ * `catch (Throwable/Exception/…)` вокруг suspend-вызова в корутине глотает отмену. Не срабатывает, если отмена
+ * пробрасывается: `catch (e: CancellationException)` выше, `if (e is CancellationException) throw e`, `ensureActive()`.
  */
 class CatchSwallowsCancellation(config: Config) :
     Rule(config, "Широкий catch в корутине пробрасывает CancellationException."),

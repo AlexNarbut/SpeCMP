@@ -26,19 +26,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSess
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePinCooldown
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
-/**
- * «Проверка прошивки»: модули блока, их версии и версии на сервере, переход в режим обновления.
- *
- * На каждом подключении блока: для нового блока (или после ошибки) — список модулей; текущие версии читаются у
- * каждого модуля, затем (по готовности) запрашивается серверная версия выбранного канала. Результат сравнения
- * считается в момент ответа — поэтому серверный запрос идёт только после того, как известна текущая версия модуля.
- * Смена канала и «обновить» на карточке — повторный запрос; устаревший ответ (канал успел смениться) отбрасывается.
- *
- * Переход в загрузчик: на BLE команда сама пробует сохранённый PIN или `1111`; неверный PIN → диалог PIN
- * с блокировкой ввода ([ServicePinCooldown]). Ожидаемая перезагрузка ставится до команды (блок может перезагрузиться
- * раньше ответа) и снимается при любом исходе, кроме принятой команды. После принятой команды хост показывает
- * экран загрузчика.
- */
+/** Серверная версия запрашивается только после текущей: результат сравнения считается в момент ответа. */
 class FirmwareCheckViewModel(
     deviceSession: DeviceSession,
     private val repository: FirmwareRepository,
@@ -51,7 +39,6 @@ class FirmwareCheckViewModel(
 
     override suspend fun onStart() {
         onEachDeviceReady(::onDeviceReady)
-        // Остаток блокировки PIN, пока диалог PIN на экране (целые секунды).
         pinCooldown.lockedFor(select { deviceId.takeIf { dialog is CheckDialog.Pin } })
             .collectIntoState { lock -> copy(dialog = dialog.withPinLock(lock)) }
     }
@@ -94,7 +81,6 @@ class FirmwareCheckViewModel(
         status = if (module.isBootSupported) CardStatusUi.Searching else CardStatusUi.NotSupported,
     )
 
-    /** Текущая версия модуля, затем — серверная (если модуль можно обновить). */
     private suspend fun resolveModule(device: AlarmDevice, module: FirmwareModule) {
         val current = readCurrentVersion(device, module)
         updateCard(module.id) { it.copy(currentVersion = current) }
@@ -194,13 +180,13 @@ class FirmwareCheckViewModel(
         reduce { if (dialog.isSending()) this else copy(dialog = null) }
     }
 
-    /** «Перейти» в диалоге подтверждения: без PIN — SDK сам пробует сохранённый или `1111`. */
+    /** Без PIN — SDK сам пробует сохранённый или `1111`. */
     fun onConfirmBoot() {
         val dialog = currentState.dialog as? CheckDialog.ConfirmBoot ?: return
         startBoot(dialog.moduleId, pin = null)
     }
 
-    /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи оно не попадает. */
+    /** PIN живёт только в вызове — в state и логи не попадает. */
     fun onPinSubmit(pin: String) {
         val dialog = currentState.dialog as? CheckDialog.Pin ?: return
         val servicePin = ServicePin.parseOrNull(pin) ?: return

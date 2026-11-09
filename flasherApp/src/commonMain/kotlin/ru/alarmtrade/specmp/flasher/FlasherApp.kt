@@ -26,10 +26,6 @@ import ru.alarmtrade.specmp.flasher.di.flasherKoinModules
 import ru.alarmtrade.specmp.flasher.di.rememberPlatformKoinModules
 import ru.alarmtrade.specmp.flasher.navigation.FlasherNavigation
 
-/**
- * Точка входа приложения прошивки (обёртки `flasherAndroidApp`, `flasherDesktopApp`): тот же старт, что у `App()`
- * основного приложения (язык, Specialist SDK, разрешения), но только фичи авторизации и прошивки.
- */
 @Composable
 fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Composable (isDark: Boolean) -> Unit = {}) {
     val appLocale = remember { prepareAppLocale() }
@@ -48,7 +44,7 @@ fun FlasherApp(appVersionName: String, appVersionCode: Int, onThemeChange: @Comp
         val appServicesStarter = koinInject<AppServicesStarter>()
         LaunchedEffect(Unit) { appServicesStarter.start() }
 
-        // Начальная настройка SDK: app-scoped и идемпотентна; UI — после неё (см. App() основного приложения).
+        // UI — после начальной настройки SDK (см. App() основного приложения).
         val specialistInitializer = koinInject<SpecialistInitializer>()
         LaunchedEffect(Unit) { specialistInitializer.start(appLocale.languageTag) }
         val specialistReady by specialistInitializer.ready.collectAsStateWithLifecycle()

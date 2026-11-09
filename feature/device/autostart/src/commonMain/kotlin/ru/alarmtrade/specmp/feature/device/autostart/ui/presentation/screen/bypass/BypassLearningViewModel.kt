@@ -20,13 +20,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ServicePin
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
-/**
- * Экран «Бесключевой обход»: вход в режим программирования ([ProgramModeEntry], PIN по BLE) → шаги
- * [BypassLearningRepository.learn] → итог. Обрыв связи на шагах — работа отменяется ([launchOnDevice]), экран
- * возвращается на старт с сообщением «Процедура прервана». Повтор — тот же путь заново.
- *
- * Обучение живёт, пока жива VM, а не пока экран подписан на state: уход экрана в фон его не прерывает.
- */
+/** Обучение живёт, пока жива VM, а не пока экран подписан на state: уход экрана в фон его не прерывает. */
 class BypassLearningViewModel(
     deviceSession: DeviceSession,
     private val repository: BypassLearningRepository,
@@ -64,16 +58,15 @@ class BypassLearningViewModel(
         }
     }
 
-    /** «Начать обучение» / «Повторить»: вход в режим программирования без PIN (SDK пробует сохранённый или 1111). */
+    /** Вход в режим программирования без PIN: SDK пробует сохранённый или 1111. */
     fun onStartClick() {
         if (currentState.phase is BypassPhase.Running) return
         start(pin = null)
     }
 
-    /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи не попадает. */
+    /** PIN живёт только в вызове — в state и логи не попадает. */
     fun onPinSubmit(pin: String) {
         val dialog = currentState.dialog as? BypassDialog.Pin ?: return
-        // PIN уже отправляется — повторный тап не шлёт его второй раз.
         if (dialog.pin.sending) return
         val servicePin = ServicePin.parseOrNull(pin) ?: return
         start(servicePin)
@@ -86,7 +79,6 @@ class BypassLearningViewModel(
         }
     }
 
-    /** «Назад»: во время обучения — «Прервать?», иначе уйти сразу ([BypassEffect.Close]). */
     fun onBack() {
         if (currentState.phase is BypassPhase.Running) {
             reduce { copy(dialog = BypassDialog.Exit) }
@@ -95,7 +87,6 @@ class BypassLearningViewModel(
         }
     }
 
-    /** «Да» в «Прервать?»: обучение отменяется. */
     fun onExitConfirm() {
         cancelLaunched(LEARNING)
         reduce { copy(phase = BypassPhase.Start(), dialog = null) }

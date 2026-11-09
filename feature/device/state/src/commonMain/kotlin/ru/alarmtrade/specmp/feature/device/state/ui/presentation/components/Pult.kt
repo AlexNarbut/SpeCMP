@@ -135,10 +135,6 @@ private const val SKELETON_METRICS = 4
 private const val CHIPS_SKELETON_FRACTION = 0.7f
 private val CommandsColumnWidth = 108.dp
 
-/**
- * Вкладка «Пульт» (как в старом приложении, но с подписями): лента показателей, силуэт со статусами, колонка
- * основных команд и «Все команды», под силуэтом — одна строка плашек активных и изменившихся зон.
- */
 @Composable
 internal fun PultCard(
     state: CheckStateState,
@@ -201,10 +197,6 @@ internal fun PultCard(
     }
 }
 
-/**
- * Прогресс удержания кнопки пульта — поверх силуэта (как в старом приложении): «Удерживайте — <команда>» и полоса;
- * отпустили раньше — подсказка «Удерживайте кнопку 1 секунду».
- */
 @Composable
 private fun BoxScope.HoldOverlay(hold: HoldState, progress: Float) {
     val command = hold.command
@@ -394,7 +386,6 @@ private fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
     }
 }
 
-/** Плашки активных и только что изменившихся зон: одна строка фиксированной высоты, прокрутка вбок. */
 @Composable
 private fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
     val theme = cmpThemeColors()
@@ -470,10 +461,6 @@ private fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
     }
 }
 
-/**
- * Силуэт автомобиля из слоёв старого приложения (522×1000, перекрашены токенами): покой — onSurfaceVariant,
- * активно — primary, тревога — error, режим ТО / программирования — tertiary. `null` — заглушка загрузки.
- */
 @Composable
 internal fun VehicleSchematic(vehicle: VehicleState?, modifier: Modifier = Modifier) {
     val layers = vehicleLayers(vehicle)
@@ -510,7 +497,6 @@ private fun autostartFrame(): Int {
 
 private data class Layer(val drawable: DrawableResource, val color: Color, val frame: Int? = null)
 
-/** Цвет слоя по тону зоны: покой — onSurfaceVariant, активно — primary, тревога — error, отключено — outline. */
 @Composable
 private fun layerColor(tone: ZoneTone): Color {
     val theme = cmpThemeColors()
@@ -552,7 +538,6 @@ private fun zoneLayers(vehicle: VehicleState): List<Layer> {
     return zones + sensors
 }
 
-/** Охрана, режимы ТО / программирования, подогреватель, автозапуск (2 кадра). */
 @Composable
 private fun modeLayers(vehicle: VehicleState): List<Layer> {
     val theme = cmpThemeColors()
@@ -572,7 +557,6 @@ private fun modeLayers(vehicle: VehicleState): List<Layer> {
     }
 }
 
-/** Слои зон, видимые только когда зона не в покое. */
 private val ZoneLayers = listOf(
     Zone.HOOD to Res.drawable.devicestate_vehicle_hood,
     Zone.TRUNK to Res.drawable.devicestate_vehicle_trunk,
@@ -616,7 +600,6 @@ private val ExtraSensorLayers = SensorLayers(
     mainOff = Res.drawable.devicestate_vehicle_ext_sensor_main_zone_off,
 )
 
-/** Слои дверей: закрыта / открыта. */
 private object DoorLayers {
     val frontLeft = Res.drawable.devicestate_vehicle_top_left_close to Res.drawable.devicestate_vehicle_top_left_open
     val frontRight = Res.drawable.devicestate_vehicle_top_right_close to Res.drawable.devicestate_vehicle_top_right_open
@@ -626,10 +609,6 @@ private object DoorLayers {
         Res.drawable.devicestate_vehicle_bottom_right_close to Res.drawable.devicestate_vehicle_bottom_right_open
 }
 
-/**
- * Пульт в широком окне (макет `PultWide`): машина развёрнута горизонтально (носом вправо), показатели сеткой справа,
- * активные зоны, строка основных команд и «Все команды».
- */
 @Composable
 internal fun PultWideCard(
     state: CheckStateState,
@@ -703,7 +682,6 @@ internal fun PultWideCard(
     }
 }
 
-/** Схема машины, развёрнутая на 90° (носом вправо): ширина — [height] / пропорция схемы. */
 @Composable
 private fun HorizontalVehicle(vehicle: VehicleState?, height: Dp, modifier: Modifier = Modifier) {
     val width = height / VEHICLE_RATIO

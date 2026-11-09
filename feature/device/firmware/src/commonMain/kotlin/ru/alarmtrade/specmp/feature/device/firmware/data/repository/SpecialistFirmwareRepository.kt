@@ -24,7 +24,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 
-/** [FirmwareRepository]: модули блока и системы из базы устройств, версии прошивок, скачивание файла версии. */
 internal class SpecialistFirmwareRepository(private val dataSource: FirmwareDataSource) : FirmwareRepository {
 
     override suspend fun modules(deviceName: String, transport: ConnectionTransport): Response<List<FirmwareModule>> =
@@ -82,5 +81,5 @@ internal class SpecialistFirmwareRepository(private val dataSource: FirmwareData
         .map { list -> FirmwareVersionPage(items = list.map { it.toDomain() }, pageNumber = page) }
 }
 
-/** Все системы локальной базы устройств одной страницей (база на телефоне, страницы — фильтр в памяти). */
+/** Все системы одной страницей: база на телефоне, страницы — фильтр в памяти. */
 private const val ALL_SYSTEMS = 10_000

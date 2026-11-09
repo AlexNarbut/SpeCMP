@@ -22,14 +22,8 @@ import org.jetbrains.kotlin.psi.psiUtil.isPrivate
 import org.jetbrains.kotlin.psi.psiUtil.isProtected
 
 /**
- * Публичный API наследника `BaseViewModel` (docs/patterns.md, «BaseViewModel»): снаружи видны только `state` и
- * `sideEffect` из базы и функции-интенты — не `suspend`, результат `Unit`. Запрещены собственные публичные свойства
- * (в том числе `val` в первичном конструкторе), `suspend fun` и функции с результатом — включая выведенный `Job`
- * у `fun x() = safeLaunch { }`/`intent { }` и `Unit?` у `fun x() = y?.z()`. `internal` считается публичным,
- * `override` не проверяется (контракт задаёт супертип).
- *
- * Требует type resolution (наследование от `BaseViewModel` и выведенный тип результата): в задачах detekt без
- * классов правило молчит (как StateFlowValueMutation).
+ * Запрещены свои публичные свойства, `suspend fun` и функции с результатом (в том числе выведенный `Job`);
+ * `internal` — публичный, `override` не проверяется. Требует type resolution.
  */
 class ViewModelPublicApi(config: Config) :
     Rule(config, "Публичный API ViewModel — state, sideEffect и интенты, возвращающие Unit."),

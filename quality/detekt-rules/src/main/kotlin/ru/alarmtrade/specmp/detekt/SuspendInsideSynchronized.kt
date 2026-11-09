@@ -19,14 +19,7 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
-/**
- * Suspend-вызов под блокирующей блокировкой потока (docs/patterns.md, «Конкурентность»): внутри `synchronized { }`,
- * `Lock.withLock { }` (`kotlin.concurrent`), между `lock.lock()` и `lock.unlock()` и в `@Synchronized suspend fun`.
- * Корутина засыпает с удержанным монитором/локом — блокирует поток и другие корутины, а продолжение может прийти на
- * другом потоке (unlock чужим потоком). Критическая секция вокруг suspend-работы — `Mutex.withLock { }`.
- *
- * Требует type resolution: в задачах detekt без классов правило молчит.
- */
+/** Корутина засыпает с удержанным монитором/локом: блокирует поток, а unlock может прийти с чужого потока. */
 class SuspendInsideSynchronized(config: Config) :
     Rule(config, "Suspend-вызов под блокирующей блокировкой потока — используйте Mutex.withLock { }."),
     RequiresAnalysisApi {

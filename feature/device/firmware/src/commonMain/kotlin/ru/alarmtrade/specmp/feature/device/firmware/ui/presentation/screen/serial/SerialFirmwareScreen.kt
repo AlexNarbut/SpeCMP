@@ -92,14 +92,7 @@ private val HeroSize = 128.dp
 internal const val SERIAL_UPDATE_FILE_TAG = "firmware_serial_update_file"
 internal const val SERIAL_RESULT_OK_TAG = "firmware_serial_result_ok"
 
-/**
- * «Прошивка по COM-порту»: публичная точка входа (приложение прошивки, `flasherApp`) — контент хоста устройства
- * для сессии [ConnectionTransport.SERIAL][ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport]
- * и в рабочем режиме блока, и в загрузчике. «Назад» заблокирован, пока идёт обновление.
- *
- * @param onExit выход из flow устройства (закрывает сессию).
- * @param filePicker выбор файла прошивки в файловом менеджере (платформа, composition root).
- */
+/** Контент хоста и в рабочем режиме блока, и в загрузчике; «Назад» заблокирован, пока идёт обновление. */
 @Composable
 fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = NoFirmwareFilePicker) {
     val viewModel = koinViewModel<SerialFirmwareViewModel>()
@@ -129,7 +122,6 @@ fun SerialFirmwareScreen(onExit: () -> Unit, filePicker: FirmwareFilePicker = No
     SerialFirmwareContent(state = state, actions = actions)
 }
 
-/** Stateless-контент экрана прошивки по COM: иллюстрация и тело по фазе. */
 @Composable
 internal fun SerialFirmwareContent(state: SerialFirmwareState, actions: SerialFirmwareActions) {
     CmpScaffold(

@@ -154,7 +154,6 @@ private const val EXPANDED_ROTATION = 180f
 /** Автозапуск по умолчанию в SDK длится 10 минут — шкала отсчёта (точной длительности блок не сообщает). */
 private const val AUTOSTART_SCALE_SECONDS = 600
 
-/** «Двигатель и питание»: состояние двигателя, автозапуск с отсчётом, показатели плитками. */
 @Composable
 internal fun EngineCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -315,7 +314,6 @@ private fun AutostartBlock(autostart: Autostart) {
     }
 }
 
-/** «Связь»: GSM полосками, GPS, SMS и звонки. */
 @Composable
 internal fun LinkCard(vehicle: VehicleState, modifier: Modifier = Modifier) {
     val link = vehicle.link
@@ -375,7 +373,6 @@ private fun SignalBars(level: Int) {
     }
 }
 
-/** «Дополнительно» — раскрывающиеся группы; группа без данных не показывается. */
 @Composable
 internal fun ExtraGroups(vehicle: VehicleState, modifier: Modifier = Modifier) {
     val can = vehicle.can
@@ -678,7 +675,6 @@ private fun TiresBlock(tires: TirePressure) {
     }
 }
 
-/** Раскрывающаяся группа «Дополнительно»: иконка, заголовок, сводка в одну строку. */
 @Composable
 private fun ExtraGroup(key: String, icon: CmpIcons, title: String, summary: String, content: @Composable () -> Unit) {
     val colors = cmpThemeColors()

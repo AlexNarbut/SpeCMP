@@ -13,7 +13,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUi
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
 import ru.alarmtrade.specmp.feature.login.di.loginModule
 
-/** Модули приложения прошивки без платформенных ([rememberPlatformKoinModules]); порядок — порядок подключения. */
+/** Без платформенных ([rememberPlatformKoinModules]); порядок — порядок подключения. */
 fun flasherKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = buildList {
     add(commonModule)
     addAll(specialistModules(appVersionName, appVersionCode))

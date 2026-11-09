@@ -16,10 +16,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSetting
 
 private const val DEVICE_SETTINGS_PREFERENCES = "devicesettings"
 
-/**
- * Koin-модуль логической фичи `feature/device/settings`: сессии расширенных настроек блока и других источников.
- * SDK-интеракторы берутся из `core/specialist`.
- */
 val deviceSettingsModule = module {
     single<DeviceSettingsDataSource> {
         // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание источника.

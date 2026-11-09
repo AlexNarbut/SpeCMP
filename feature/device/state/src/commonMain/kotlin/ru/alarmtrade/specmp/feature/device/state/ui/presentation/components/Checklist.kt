@@ -58,10 +58,6 @@ internal const val CHECKLIST_TASK_TAG_PREFIX = "devicestate_task_"
 private const val PASSED_ALPHA = 0.14f
 private const val ALL_DONE_ALPHA = 0.2f
 
-/**
- * Чек-лист быстрого монтажа: прогресс «Пройдено N из M», задания (открытые — сверху). Авто-задание показывает
- * текущее значение своей зоны и отмечается само; ручное — кнопки вариантов.
- */
 @Composable
 internal fun ChecklistPanel(
     checklist: CheckStateChecklist,
@@ -184,7 +180,6 @@ private fun TaskRow(
     }
 }
 
-/** «Текущее задание» над текстом задания строгого порядка. */
 @Composable
 private fun CurrentLabel(visible: Boolean) {
     if (!visible) return
@@ -216,7 +211,6 @@ private fun taskTextColor(failed: Boolean, waiting: Boolean) = when {
     else -> cmpThemeColors().onSurface
 }
 
-/** «Ожидает — после предыдущего»: задание строгого порядка ещё не текущее. */
 @Composable
 private fun WaitingLabel() {
     val colors = cmpThemeColors()
@@ -236,7 +230,6 @@ private fun WaitingLabel() {
     }
 }
 
-/** Под текстом задания: текущее значение (авто), варианты ответа (ручное) или итог. */
 @Composable
 private fun TaskDetails(task: ChecklistTask, vehicle: VehicleState?, onAnswer: (String, Int) -> Unit) {
     val colors = cmpThemeColors()
@@ -334,7 +327,6 @@ private fun TaskBadge(status: ChecklistStatus, number: Int, current: Boolean = f
     }
 }
 
-/** «Сейчас: <значение> · отметится само» — текущее значение зоны (или охраны) авто-задания. */
 @Composable
 private fun LiveValue(task: ChecklistTask, vehicle: VehicleState?) {
     val colors = cmpThemeColors()

@@ -24,7 +24,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
-/** [DeviceSettingsRepository]: сессии настроек по `SettingsPath` и сброс блока. */
 internal class SpecialistDeviceSettingsRepository(private val dataSource: DeviceSettingsDataSource) :
     DeviceSettingsRepository {
 

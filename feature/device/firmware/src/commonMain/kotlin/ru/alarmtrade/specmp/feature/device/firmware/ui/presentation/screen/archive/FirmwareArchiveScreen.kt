@@ -71,24 +71,11 @@ private val ListMaxWidth = 760.dp
 private val MasterWidth = 440.dp
 private val DetailMaxWidth = 1180.dp
 
-// Сколько строк до конца списка остаётся, когда пора подгружать следующую страницу.
 private const val END_THRESHOLD = 3
 
-/**
- * Каталог автомобилей для CAN-фильтра архива (фича `vehicle-ui`, подключается в `composeApp`): [deviceName] — модель
- * блока (`null` — каталог с выбором типа), `onPick` — CAN-код и название выбранного автомобиля.
- */
 typealias ArchiveVehiclePicker =
     @Composable (deviceName: String?, onPick: (canCode: String, carTitle: String) -> Unit, onBack: () -> Unit) -> Unit
 
-/**
- * Точка входа «Архив прошивок»: версии модуля выбранного канала из [request]. Выбранная для установки версия
- * возвращается в [onPick] (закрыть архив — дело вызывающего; в режиме просмотра выбора нет), «назад» — [onBack].
- * Используется графом загрузчика; другие места подключают её через слот навигации в `composeApp`.
- * [vehiclePicker] — выбор автомобиля для CAN-фильтра; `null` — кнопки каталога нет, код вводится вручную.
- * Без блока ([FirmwareArchiveRequest.noUnit]): [exporter] — «Скачать» / «Поделиться», [onChangeModel] — «Сменить»
- * модель в шапке и «Выбрать другую модель».
- */
 @Composable
 fun FirmwareArchiveEntry(
     request: FirmwareArchiveRequest,
@@ -154,7 +141,6 @@ fun FirmwareArchiveEntry(
     }
 }
 
-/** Stateless-контент архива: раскладка по ширине (на широком окне — список и панель версии) и диалог отката. */
 @Composable
 internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: FirmwareArchiveActions) {
     CmpScaffold(
@@ -234,7 +220,6 @@ internal fun FirmwareArchiveContent(state: FirmwareArchiveState, actions: Firmwa
     }
 }
 
-/** Подзаголовок: без блока — «система · подсистема», с блоком — «Название  ID» / имя Bluetooth-модуля. */
 @Composable
 private fun archiveSubtitle(state: FirmwareArchiveState): String? {
     if (state.noUnit) {
@@ -244,7 +229,6 @@ private fun archiveSubtitle(state: FirmwareArchiveState): String? {
     return state.deviceTitle.takeIf { it.isNotBlank() }?.let { deviceSubtitle(state.profile, it) }
 }
 
-/** Шапка архива без блока во всю ширину содержимого (на широком окне — над обеими колонками). */
 @Composable
 private fun NoUnitBar(state: FirmwareArchiveState, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
     val padding = if (layout == FirmwareLayout.Compact) 14.dp else 24.dp
@@ -275,7 +259,6 @@ private fun ExportErrorBar(error: ArchiveExportError, layout: FirmwareLayout, ac
     }
 }
 
-/** Поле CAN-фильтра: над списком той же ширины (на широком окне — над колонкой списка). */
 @Composable
 private fun CanFilterBar(filter: CanFilterUi, layout: FirmwareLayout, actions: FirmwareArchiveActions) {
     val expanded = layout == FirmwareLayout.Expanded
@@ -352,7 +335,6 @@ private fun VersionList(
     padding: Dp = 2.dp,
 ) {
     val listState = rememberLazyListState()
-    // Докрутили почти до конца — просим следующую страницу (это сигнал UI → VM, не бизнес-логика).
     val nearEnd by remember {
         derivedStateOf {
             val info = listState.layoutInfo

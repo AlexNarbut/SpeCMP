@@ -73,7 +73,6 @@ private class FirmwareDocumentPickerDelegate(
             onFinished()
             return
         }
-        // Копирование не должно вешать main-поток.
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
             val picked = url.copyToTemporary()
             dispatch_async(dispatch_get_main_queue()) {
@@ -89,7 +88,7 @@ private class FirmwareDocumentPickerDelegate(
     }
 }
 
-/** Копия в `tmp/firmware-files/<uuid>/<имя>`: прошлые копии стираются перед новой, размер проверяется до и после. */
+/** Прошлые копии стираются перед новой, размер проверяется до и после копирования. */
 private fun NSURL.copyToTemporary(): FirmwareFilePickResult {
     val canAccess = startAccessingSecurityScopedResource()
     return try {

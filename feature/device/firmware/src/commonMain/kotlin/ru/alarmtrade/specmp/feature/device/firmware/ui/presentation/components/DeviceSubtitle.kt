@@ -6,7 +6,6 @@ import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_update_subtitle_bluetooth
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 
-/** Подзаголовок экранов режима загрузчика: «Название  ID» блока или «Bluetooth-модуль · имя» (по [profile]). */
 @Composable
 internal fun deviceSubtitle(profile: UpdateProfile, title: String): String = when (profile) {
     UpdateProfile.Main -> title

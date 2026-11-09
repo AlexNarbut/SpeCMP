@@ -25,13 +25,7 @@ import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDevice
 import ru.alarmtrade.specmp.feature.device.selection.domain.model.ScannedDeviceMode
 import ru.alarmtrade.specmp.feature.device.selection.domain.repository.DeviceScanRepository
 
-/**
- * Реализация [DeviceScanRepository] над Specialist SDK.
- *
- * Интеракторы транспортов резолвятся **лениво** (провайдеры) и через [resolveOrNull]:
- * недоступный на платформе транспорт (BLE на desktop, USB и COM на iOS) даёт пустой список,
- * а не роняет создание графа/репозитория.
- */
+/** Транспорты резолвятся лениво: недоступный на платформе (BLE на desktop, USB и COM на iOS) даёт пустой список. */
 internal class SpecialistDeviceScanRepository(
     private val bluetoothConnectorInteractor: () -> BluetoothConnectorInteractor,
     private val usbConnectorInteractor: () -> UsbConnectorInteractor,

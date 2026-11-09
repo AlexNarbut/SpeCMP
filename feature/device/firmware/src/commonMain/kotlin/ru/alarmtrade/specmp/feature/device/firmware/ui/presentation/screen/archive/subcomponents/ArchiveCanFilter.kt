@@ -54,11 +54,6 @@ internal const val ARCHIVE_CAN_INPUT_TAG = "firmware_archive_can_input"
 internal const val ARCHIVE_CAN_VEHICLE_TAG = "firmware_archive_can_vehicle"
 internal const val ARCHIVE_CAN_RESET_TAG = "firmware_archive_can_reset"
 
-/**
- * CAN-фильтр над списком версий: подпись «CAN-код автомобиля», поле с цифрами кода (справа — очистка и каталог
- * автомобилей), под полем — подсказка по состоянию и, если код ушёл от кода блока, плашка «CAN-код блока —
- * 2154» с «Вернуть CAN блока». Код блока, подставленный приложением, — иконка блока и тональный фон поля.
- */
 @Composable
 internal fun ArchiveCanFilter(
     filter: CanFilterUi,
@@ -124,7 +119,6 @@ internal fun ArchiveCanFilter(
     }
 }
 
-/** Подсказки под полем: одна-две строки «иконка + текст» по состоянию фильтра. */
 @Composable
 private fun CanHelp(filter: CanFilterUi) {
     val colors = cmpThemeColors()
@@ -158,7 +152,6 @@ private fun CanHelp(filter: CanFilterUi) {
     }
 }
 
-/** Без блока и при заводских CAN-настройках: автомобиль (если выбран) и подсказка выбрать автомобиль. */
 @Composable
 private fun InfoHelp(filter: CanFilterUi, carTitle: String?) {
     carTitle?.let { CarLine(it) }
@@ -192,7 +185,6 @@ private fun HelpLine(icon: CmpIcons, text: String, color: Color, textColor: Colo
     }
 }
 
-/** Плашка «CAN-код блока — 2154» с «Вернуть CAN блока», пока в поле другой код. */
 @Composable
 private fun DeviceCodePlate(deviceCode: String, onResetToDevice: () -> Unit) {
     val colors = cmpThemeColors()
@@ -239,10 +231,6 @@ private fun DeviceCodePlate(deviceCode: String, onResetToDevice: () -> Unit) {
     }
 }
 
-/**
- * Метка CAN у версии, собранной под CAN-код: «CAN 2154 · 1.03». Под код блока — акцент (рамка, тональный фон,
- * иконка связи и «· как в блоке»), другой код — приглушённая; без CAN — ничего.
- */
 @Composable
 internal fun ArchiveRowCan(row: ArchiveRowUi, modifier: Modifier = Modifier) {
     val code = row.canCode ?: return

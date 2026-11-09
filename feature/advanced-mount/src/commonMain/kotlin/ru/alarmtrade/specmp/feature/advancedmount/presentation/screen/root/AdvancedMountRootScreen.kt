@@ -115,10 +115,8 @@ import specmp.feature.advanced_mount.generated.resources.Res
 import specmp.feature.advanced_mount.generated.resources.mount_dialog_warning
 import specmp.feature.advanced_mount.generated.resources.mount_remote_sync
 
-/** Раскладка по ширине окна (M3 Window Size Classes). */
 internal enum class MountLayout { Compact, Medium, Expanded }
 
-/** Действия главного экрана (stateless-контент получает их от VM или заглушки в галерее состояний). */
 internal class AdvancedMountRootActions(
     val onBack: () -> Unit = {},
     val onSectionClick: (MountSection) -> Unit = {},
@@ -130,10 +128,8 @@ internal class AdvancedMountRootActions(
     val onProductInfoClick: () -> Unit = {},
 )
 
-/** «Название  ID» блока — подзаголовок экранов разделов (как в старом приложении). */
 internal fun AlarmDevice.title(): String = "$systemName  $systemId"
 
-/** Корневой экран расширенного монтажа: VM + навигационные эффекты. */
 @Composable
 internal fun AdvancedMountRootScreen(
     onSectionClick: (MountSection, String) -> Unit,
@@ -169,7 +165,6 @@ internal fun AdvancedMountRootScreen(
     )
 }
 
-/** Stateless-контент главного экрана: шапка блока + разделы, раскладка по ширине. */
 @Composable
 internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: AdvancedMountRootActions) {
     CmpScaffold(
@@ -249,7 +244,6 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
     }
 }
 
-/** Пульсирующая прозрачность (иконка синхронизации, ⚠ у CAN-кода). */
 @Composable
 private fun pulseAlpha(periodMillis: Int): Float {
     val transition = rememberInfiniteTransition()
@@ -276,8 +270,6 @@ private fun RemoteSyncAction(onClick: () -> Unit) {
         )
     }
 }
-
-// ── Шапка блока ─────────────────────────────────────────────────────────────
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
@@ -467,8 +459,6 @@ private fun HeaderRow(label: String, value: String, trailing: (@Composable () ->
     }
 }
 
-// ── Область разделов ────────────────────────────────────────────────────────
-
 @Composable
 private fun SectionsArea(state: AdvancedMountRootState, layout: MountLayout, actions: AdvancedMountRootActions) {
     when (val content = state.content) {
@@ -579,10 +569,6 @@ private fun RefreshButton(text: String, onClick: () -> Unit) {
     }
 }
 
-/**
- * Возможности блока не прочитаны: блок не поддерживается или (если [modelNotInDatabase]) нет модели в базе
- * устройств телефона.
- */
 @Composable
 private fun UnsupportedBanner(modelNotInDatabase: Boolean) {
     val colors = cmpThemeColors()
@@ -659,7 +645,6 @@ private fun SectionsGrid(
     }
 }
 
-/** testTag плитки «Проверка прошивок» — по ней видно, что экран расширенного монтажа открыт. */
 private const val FIRMWARE_CHECK_TAG = "advanced_mount_firmware_check"
 
 @Composable
@@ -673,7 +658,6 @@ private fun SectionTile(
     modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
-    // Появление плиток лесенкой (как в макете): 260 мс, задержка 35 мс на плитку.
     val appear = remember { Animatable(0f) }
     LaunchedEffect(Unit) { appear.animateTo(1f, tween(durationMillis = 260, delayMillis = appearIndex * 35)) }
     val shape = RoundedCornerShape(18.dp)
@@ -742,7 +726,6 @@ private fun SectionTile(
     }
 }
 
-/** Иконка раздела 52×52 с бейджами: замок (заводской CAN) справа снизу, непрочитанные слева сверху. */
 @Composable
 private fun SectionIconBox(section: MountSection, locked: Boolean, unreadCount: Int) {
     val colors = cmpThemeColors()
@@ -793,7 +776,6 @@ private fun SectionIconBox(section: MountSection, locked: Boolean, unreadCount: 
     }
 }
 
-/** Круглый бейдж с обводкой цвета карточки (отделяет бейдж от иконки). */
 @Composable
 private fun Badge(modifier: Modifier, color: androidx.compose.ui.graphics.Color, content: @Composable () -> Unit) {
     val colors = cmpThemeColors()
@@ -806,8 +788,6 @@ private fun Badge(modifier: Modifier, color: androidx.compose.ui.graphics.Color,
         CmpBox(contentAlignment = Alignment.Center) { content() }
     }
 }
-
-// ── Диалоги ─────────────────────────────────────────────────────────────────
 
 @Composable
 private fun WarningDialog(

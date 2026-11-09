@@ -8,15 +8,7 @@ import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
-/**
- * `safeRun`/`safeResponseRun` в классе ViewModel: VM вызывает бросающий код напрямую. Граница с бросающим кодом —
- * data-слой (репозиторий отдаёт `Response`), VM ветвится по `Response` через `ResponseExt` (docs/patterns.md,
- * «Слой данных»). Проверяются вызовы на любой глубине класса — в методах, лямбдах (`intent { }`), локальных
- * функциях и вложенных объявлениях.
- *
- * ViewModel — класс с именем `…ViewModel` или супертипом `…ViewModel` (`BaseViewModel<S, E>`),
- * как в [ViewModelInitBlock]. Проверка по именам, без type resolution — работает во всех source set'ах.
- */
+/** VM ветвится по `Response`, граница с бросающим кодом — data-слой. По именам — во всех source set'ах. */
 class SafeRunInViewModel(config: Config) :
     Rule(config, "safeRun/safeResponseRun во ViewModel запрещены: бросающий код оборачивает репозиторий.") {
 

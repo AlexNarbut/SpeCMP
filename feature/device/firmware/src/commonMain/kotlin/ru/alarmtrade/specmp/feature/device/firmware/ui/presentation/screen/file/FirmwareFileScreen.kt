@@ -56,12 +56,6 @@ private val HeroSize = 128.dp
 
 internal const val FILE_UPDATE_TAG = "firmware_file_update"
 
-/**
- * «Прошивка блока» (приложение прошивки, BLE/USB): блок в рабочем режиме, кнопка «Обновить из файла» переводит его
- * в загрузчик. Публичная точка входа — рабочий контент хоста устройства (`DeviceInteractionHost`).
- *
- * @param onBack выход из flow устройства (закрывает сессию).
- */
 @Composable
 fun FirmwareFileScreen(onBack: () -> Unit) {
     val viewModel = koinViewModel<FirmwareFileViewModel>()
@@ -79,7 +73,6 @@ fun FirmwareFileScreen(onBack: () -> Unit) {
     FirmwareFileContent(state = state, actions = actions)
 }
 
-/** Stateless-контент экрана «Обновить из файла». */
 @Composable
 internal fun FirmwareFileContent(state: FirmwareFileState, actions: FirmwareFileActions) {
     CmpScaffold(

@@ -62,19 +62,8 @@ import specmp.feature.device.interaction_ui.generated.resources.Res
 import specmp.feature.device.interaction_ui.generated.resources.device_link_lost
 
 /**
- * Обёртка flow работы с подключённым устройством (аналог `DeviceInteractionComponent` старого приложения).
- *
- * - Блок на связи в рабочем режиме — [content] (граф дочернего flow).
- * - Связь потеряна или ещё устанавливается — экран состояния **поверх** [content]: дочерний flow
- *   остаётся в композиции (его back stack и VM живы), после переподключения пользователь там же.
- * - «Назад» на экране состояния — выход из всего flow (сессия закрывается), а не из подэкрана.
- * - Блок в загрузчике (BLE-модуля или основной программы), либо вход в загрузчик / возврат после прошивки
- *   ожидается ([DeviceInteractionState.showBootContent]) — [bootContent] вместо оверлеев связи: он сам рисует и
- *   обрыв связи в процессе обновления. Рабочий [content] уходит из композиции, когда блок вернулся в загрузчике,
- *   и стартует заново после возврата в рабочий режим. Режим определяется на каждом подключении.
- *
- * @param bootContent экран режима загрузчика (обновление прошивки); получает выход из всего flow (закрывает сессию).
- * @param content дочерний flow; получает блок и выход из flow (закрывает сессию).
+ * Связь потеряна — экран состояния поверх [content]: дочерний flow остаётся в композиции (back stack и VM живы).
+ * Блок в загрузчике или его ждём ([DeviceInteractionState.showBootContent]) — [bootContent] вместо оверлеев связи.
  */
 @Composable
 fun DeviceInteractionHost(
@@ -131,19 +120,12 @@ fun DeviceInteractionHost(
     }
 }
 
-/** testTag кнопки «Выйти» на экране «Подключение к блоку…». */
 internal const val DEVICE_STATUS_EXIT_TAG = "device_status_exit"
 
-/** testTag кнопки «Отключиться» на экране потери связи. */
 internal const val DEVICE_STATUS_DISCONNECT_TAG = "device_status_disconnect"
 
-/** Состояние связи, при котором поверх дочернего flow показывается экран обёртки. */
 internal enum class DeviceStatus { Connecting, Disconnected }
 
-/**
- * Stateless-экран состояния поверх дочернего flow («Назад» перехватывает [DeviceInteractionHost]).
- * Потеря связи — по макету: иллюстрация, текст по транспорту, ожидание возврата блока, «Отключиться».
- */
 @Composable
 internal fun DeviceStatusContent(
     status: DeviceStatus,

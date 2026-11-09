@@ -64,10 +64,6 @@ private const val DOT_MIN_SCALE = 0.6f
 private const val FLASH_MILLIS = 1_800
 private const val FLASH_ALPHA = 0.45f
 
-/**
- * Главный статус: охрана / тревога, последнее событие в одну строку; точка «на связи» мигает на каждом снимке,
- * при устаревании — иконка «нет синхронизации» и «Нет данных N с». Высота постоянна — экран не прыгает.
- */
 @Composable
 internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
     val vehicle = state.vehicle
@@ -133,7 +129,6 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
     }
 }
 
-/** Иконка статуса: значок события старого приложения (охрана, снятие, активная охрана, тревога) или системная. */
 private sealed interface HeroIcon {
     data class Vector(val icon: CmpIcons) : HeroIcon
 
@@ -148,7 +143,6 @@ private data class HeroStyle(
     val iconTint: Color,
 )
 
-/** Цвета и иконка статуса: снято — нейтрально, охрана — primary, тревога — error (макет `HERO`). */
 @Composable
 private fun heroStyle(state: CheckStateState): HeroStyle {
     val colors = cmpThemeColors()
@@ -174,7 +168,6 @@ private fun heroStyle(state: CheckStateState): HeroStyle {
     )
 }
 
-/** Значки событий старого приложения (`DeviceEventUtils`): постановка, снятие, активная охрана. */
 private val SecurityState.icon: DrawableResource
     get() = when (this) {
         SecurityState.DISARMED -> Res.drawable.devicestate_status_disarm
@@ -206,7 +199,6 @@ private fun HeroSubtitle(state: CheckStateState, color: Color) {
     CmpText(text = text, color = color, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
-/** Зелёная точка на иконке статуса: короткий «пульс» на каждом новом снимке ([tick]). */
 @Composable
 private fun OnlineDot(tick: Int, ring: Color) {
     val scale = remember(tick) { Animatable(DOT_MIN_SCALE) }
@@ -230,7 +222,6 @@ private fun OnlineDot(tick: Int, ring: Color) {
     }
 }
 
-/** Вспышка статуса при смене охраны. */
 @Composable
 private fun GuardFlash(on: Boolean, key: Int, color: Color) {
     if (!on) return

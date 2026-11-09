@@ -61,17 +61,9 @@ private val DialogMaxWidth = 440.dp
 private const val PIN_LENGTH = 4
 private const val MILLIS_IN_SECOND = 1_000L
 
-/** Тег-префикс по умолчанию: элементы диалога — `<префикс>_input|submit|cancel|locked`. */
 const val SERVICE_PIN_TAG_PREFIX: String = "device_pin"
 
-/**
- * Состояние диалога PIN программирования.
- *
- * @property sending команда с PIN уходит в блок — ввод и кнопки заблокированы.
- * @property wrong последний PIN неверный — ячейки красные, под ними «Неверный PIN-код».
- * @property wrongCount счётчик неверных попыток: каждое изменение очищает поле.
- * @property lockedFor блок не принимает ввод ещё столько (`ServicePinCooldown`); `null` — ввод разрешён.
- */
+/** @property wrongCount счётчик неверных попыток: каждое изменение очищает поле. */
 @Immutable
 data class ServicePinDialogState(
     val sending: Boolean = false,
@@ -80,14 +72,6 @@ data class ServicePinDialogState(
     val lockedFor: Duration? = null,
 )
 
-/**
- * PIN программирования блока (BLE): четыре ячейки, невидимое поле ввода поверх них держит цифровую клавиатуру.
- * Пока блок не принимает ввод ([ServicePinDialogState.lockedFor]), поле и «Продолжить» отключены, внизу — отсчёт.
- * Общий для прошивки (вход в загрузчик) и режима программирования (бесключевой обход, Clone).
- *
- * @param message зачем нужен PIN (у каждой фичи свой текст).
- * @param testTagPrefix префикс testTag'ов элементов (см. [SERVICE_PIN_TAG_PREFIX]).
- */
 @Composable
 fun ServicePinDialog(
     message: String,

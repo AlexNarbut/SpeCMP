@@ -71,7 +71,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.TransferActions
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 
-/** Раздел меню; `null` — корень. */
 @Serializable
 @SerialName("device.settings-ui.SettingsSectionRoute")
 internal data class SettingsSectionRoute(val sectionId: Int?) : NavKey
@@ -90,21 +89,8 @@ private val navConfig = SavedStateConfiguration {
 }
 
 /**
- * Расширенные настройки подключённого блока: слот раздела «Настройки» графа расширенного монтажа.
- *
- * Одна сессия на граф ([DeviceSettingsViewModel] в хранилище записи, в которой стоит слот); back stack графа —
- * путь по разделам от корня (+ поиск). «Назад» поднимается на уровень вверх, с корня — выход (с незаписанными
- * изменениями — подтверждение).
- *
- * @param onExit выход из настроек.
- * @param onOpenFirmwareUpdate выход в «Проверку прошивок»: на блоке с единой CAN-прошивкой CAN-код меняется прошивкой.
- * @param vehiclePicker выбор автомобиля из каталога для CAN-кода (фича `vehicle-ui`, подключается в `composeApp`):
- *   получает модель блока (`null` — ещё не прочитана), выбранный автомобиль и отмену. Рисуется поверх настроек.
- * @param configurationPicker «Загрузить из…» → «Мои конфигурации» / облако (фича `configurator-ui`, подключается в
- *   `composeApp`): получает запрос, выбранный источник, переход к обновлению прошивки (CAN-код облачной конфигурации
- *   не совпадает с прошивкой) и отмену. Рисуется поверх настроек.
- * @param filePicker / [fileSaver] — платформенные выбор и сохранение файла `.dxs`.
- * @param loadOnOpen конфигурация, которую сравнить и загрузить сразу после чтения блока («Записать в блок»).
+ * Одна сессия на граф ([DeviceSettingsViewModel] в хранилище записи слота); back stack графа — путь по разделам от
+ * корня. «Назад» — на уровень вверх, с корня — выход (с незаписанными изменениями — подтверждение).
  */
 @Composable
 fun DeviceSettingsEntry(
@@ -137,13 +123,6 @@ fun DeviceSettingsEntry(
     )
 }
 
-/**
- * Редактор конфигурации (K5): «Мои», файл, облако, заводские. Тот же редактор, что для блока, — меняются шапка
- * (источник, модель, «Только просмотр»), меню «⋯» и действие панели («Сохранить» / «Сохранить как…»).
- *
- * @param onOpenConfiguration «Открыть» в тосте после «Сохранить в мои».
- * @param onWriteToDevice «Записать в блок» (пункт меню — только при подключённом блоке); `null` — не поддерживается.
- */
 @Composable
 fun ConfigurationEditorEntry(
     source: SettingsSource,
@@ -169,7 +148,6 @@ fun ConfigurationEditorEntry(
     )
 }
 
-/** Слоты и колбэки хоста редактора. */
 private class EditorSlots(
     val onExit: () -> Unit,
     val onOpenFirmwareUpdate: () -> Unit,
@@ -439,7 +417,6 @@ private fun NavBackStack<NavKey>.location(): SettingsLocation = SettingsLocation
     isSearch = lastOrNull() == SettingsSearchRoute,
 )
 
-/** Стек = корень + путь разделов (поиск закрывается). */
 private fun NavBackStack<NavKey>.navigateTo(path: List<Int>) {
     clear()
     add(SettingsSectionRoute(null))

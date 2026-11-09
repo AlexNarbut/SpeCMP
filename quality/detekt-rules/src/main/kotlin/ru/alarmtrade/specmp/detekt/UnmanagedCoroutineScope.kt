@@ -16,13 +16,8 @@ import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
- * `CoroutineScope(…)` без управляемого времени жизни (docs/patterns.md, «Конкурентность»):
- * - создаётся только в DI (пакет `..di..` — scope живёт столько же, сколько синглтон Koin) или в классе, который сам
- *   его отменяет: в классе есть `<scope>.cancel()` для свойства/переменной, куда scope положен;
- * - контекст содержит `SupervisorJob()` (сбой одной корутины не убивает соседей) и обработчик исключений
- *   (`CoroutineExceptionHandler` или значение с `Handler`/`handler` в имени) — иначе необработанное исключение
- *   роняет процесс.
- * Проверка по именам, без type resolution.
+ * Создаётся только в DI или в классе, который сам вызывает `<scope>.cancel()`; контекст — `SupervisorJob()` и
+ * обработчик исключений. По именам, без type resolution.
  */
 class UnmanagedCoroutineScope(config: Config) :
     Rule(config, "CoroutineScope — в DI или с явным cancel(), контекст с SupervisorJob() и обработчиком исключений.") {

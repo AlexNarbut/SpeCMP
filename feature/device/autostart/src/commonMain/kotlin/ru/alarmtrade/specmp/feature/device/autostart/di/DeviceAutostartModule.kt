@@ -14,11 +14,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepo
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassLearningViewModel
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneViewModel
 
-/**
- * Koin-модуль фичи `feature/device/autostart`: бесключевой обход и процедура Clone (два отдельных экрана
- * расширенного монтажа). SDK-интеракторы — из `core/specialist`; сессия, кулдаун PIN и вход в режим
- * программирования (`ProgramModeEntry`) — из `deviceInteractionModule`.
- */
 val deviceAutostartModule = module {
     // Ленивый провайдер: недоступный на платформе интерактор не должен ронять создание источника.
     single<AutostartDataSource> { SpecialistAutostartDataSource(alarmDevice = { get() }) }

@@ -14,12 +14,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SystemsOrder
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 
-/**
- * Выбор подсистемы для архива без блока: все системы базы устройств с подсистемами в выбранном порядке
- * ([SystemsOrder]: как в базе — последние добавленные сверху, или по алфавиту; выбор запоминается); поиск — по
- * названию системы и названию / имени прошивки подсистемы. Без поиска система раскрывается нажатием; с поиском
- * совпавшие системы раскрыты и показывают совпавшие подсистемы (совпала сама система — все её подсистемы).
- */
 class FirmwareSystemsViewModel(
     private val repository: FirmwareRepository,
     private val preferences: FirmwareArchivePreferences,
@@ -56,7 +50,6 @@ class FirmwareSystemsViewModel(
         reduce { copy(query = query) }
     }
 
-    /** Порядок списка (меню в шапке): сразу в списке, запоминается между запусками. */
     fun onOrderSelect(order: SystemsOrder) {
         if (currentState.order == order) return
         reduce { copy(order = order) }
@@ -66,7 +59,6 @@ class FirmwareSystemsViewModel(
         }
     }
 
-    /** Нажатие на систему (без поиска): раскрыть / свернуть подсистемы. */
     fun onToggle(systemId: Long) {
         reduce { copy(expanded = if (systemId in expanded) expanded - systemId else expanded + systemId) }
     }

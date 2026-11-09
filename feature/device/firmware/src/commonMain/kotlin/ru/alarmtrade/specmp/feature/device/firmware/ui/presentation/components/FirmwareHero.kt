@@ -32,7 +32,6 @@ private const val PULSE_FROM = 0.9f
 private const val PULSE_TO = 1.35f
 private const val PULSE_ALPHA = 0.5f
 
-/** Круглая иллюстрация состояния: иконка на цветном круге; [pulse] — расходящееся кольцо (идёт процесс). */
 @Composable
 internal fun FirmwareHero(
     icon: CmpIcons,

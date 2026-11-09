@@ -46,7 +46,6 @@ private val ButtonHeight = 48.dp
 internal const val ENTER_CONFIRM_TAG = "firmware_enter_confirm"
 private const val PIN_TAG_PREFIX = "firmware_pin"
 
-/** Описание версии: номер и полное описание; «Обновить» ведёт к подтверждению перехода в режим обновления. */
 @Composable
 internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () -> Unit, onUpdate: () -> Unit) {
     val colors = cmpThemeColors()
@@ -96,7 +95,6 @@ internal fun DescriptionDialog(dialog: CheckDialog.Description, onDismiss: () ->
     )
 }
 
-/** Подтверждение перехода в режим обновления: блок перезагрузится, обновление надо довести до конца. */
 @Composable
 internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     CmpDialog(
@@ -127,9 +125,6 @@ internal fun ConfirmBootDialog(dialog: CheckDialog.ConfirmBoot, onDismiss: () ->
     )
 }
 
-/**
- * PIN программирования для входа в загрузчик — общий [ServicePinDialog] с текстом прошивки; теги — `firmware_pin_*`.
- */
 @Composable
 internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
     ServicePinDialog(
@@ -146,7 +141,6 @@ internal fun PinDialog(dialog: CheckDialog.Pin, onDismiss: () -> Unit, onSubmit:
     )
 }
 
-/** Кнопка подтверждения: пока команда уходит — вместо текста индикатор. */
 @Composable
 private fun ProgressButton(text: String, sending: Boolean, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
     CmpButton(onClick = onClick, enabled = enabled, modifier = modifier.height(ButtonHeight)) {

@@ -58,9 +58,6 @@ private val ContentMaxWidth = 720.dp
 private val CardRadius = 16.dp
 private val CardBorder = 1.dp
 
-/**
- * Содержимое раздела: строки его пунктов. На широкой раскладке — заголовок раздела со счётчиком и строки в карточке.
- */
 @Composable
 internal fun SectionPane(section: SettingsSection, marks: RowMarks, wide: Boolean, actions: SettingRowActions) {
     if (section.children.isEmpty()) {
@@ -101,10 +98,7 @@ private fun SectionHeader(section: SettingsSection, changes: Int) {
     }
 }
 
-/**
- * Поиск по названию, номеру и каналу: поле и результаты с путём раздела. Текст поля — локальный (набор не
- * перерисовывает экран); [query] и [hits] приходят из state вместе, после debounce.
- */
+/** Текст поля — локальный (набор не перерисовывает экран); [query] и [hits] приходят из state вместе. */
 @Composable
 internal fun SearchPane(
     query: String,
@@ -137,7 +131,6 @@ internal fun SearchPane(
                 hint = null,
             )
 
-            // Текст набран, результат ещё считается (debounce).
             query.isBlank() -> Unit
 
             hits.isEmpty() -> EmptyMessage(
@@ -166,10 +159,7 @@ internal fun SearchPane(
     }
 }
 
-/**
- * Строки пунктов, лениво по строке. На широкой раскладке строки складываются в карточку с рамкой: каждая рисует
- * свой отрезок карточки ([cardSegment]) — раздел из десятков строк и длинный результат поиска не композируются разом.
- */
+/** Каждая строка рисует свой отрезок карточки ([cardSegment]): длинный раздел не композируется разом. */
 private fun LazyListScope.rows(
     nodes: List<SettingNode>,
     marks: RowMarks,
@@ -199,10 +189,6 @@ private fun LazyListScope.rows(
     }
 }
 
-/**
- * Отрезок карточки со скруглёнными углами и рамкой: у первой строки — верх, у последней — низ, у средних — только
- * боковые стороны (разделители между строками рисует сама строка).
- */
 private fun Modifier.cardSegment(first: Boolean, last: Boolean, color: Color, borderColor: Color): Modifier {
     val top = if (first) CardRadius else 0.dp
     val bottom = if (last) CardRadius else 0.dp

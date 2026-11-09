@@ -1,12 +1,6 @@
 package ru.alarmtrade.specmp.feature.fastmount.domain.model
 
-/**
- * Вопрос проверки системы из конфигурации. Отвечать можно только на текущий — SDK ведёт вопросы курсором.
- *
- * @property task что сделать монтажнику (`algorithmDescription`).
- * @property expected что должно получиться (`resultDescription`).
- * @property automatic ответ ставит SDK по телеметрии блока (двери, зажигание, охрана…).
- */
+/** SDK ведёт вопросы курсором; [automatic] — ответ ставит SDK по телеметрии блока. */
 data class MountQuestion(
     val id: Int,
     val group: String,
@@ -26,5 +20,4 @@ data class QuestionAnswer(val text: String, val value: Int) {
     }
 }
 
-/** Текущее состояние теста: вопрос под курсором; [completed] — ответ на последний вопрос дан. */
 data class QuestionsState(val current: MountQuestion?, val completed: Boolean)

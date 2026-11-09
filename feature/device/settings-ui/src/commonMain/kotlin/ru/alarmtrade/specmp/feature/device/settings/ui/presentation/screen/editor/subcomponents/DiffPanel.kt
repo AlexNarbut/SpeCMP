@@ -89,12 +89,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.settin
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.DiffState
 
-/**
- * K9 «Что изменится» перед загрузкой конфигурации: итог одной строкой, предупреждение о незаписанных правках, CAN-код
- * первой выделенной строкой, разделы с числом изменений (свёрнуты, если изменений больше 10 — раскрыт первый), строки
- * «было → станет» (тап — полные значения), поиск при > 20 изменений. Телефон — полноэкранно, широкое окно — диалог
- * с колонками «№ / Настройка / Было / Станет».
- */
 @Composable
 internal fun DiffPanel(state: DiffState, wide: Boolean, actions: TransferActions) {
     val title = stringResource(Strings.string.settings_diff_title)
@@ -253,7 +247,6 @@ private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
     }
 }
 
-/** Итог, предупреждение о незаписанных правках, поиск (при > 20 изменений). */
 @Composable
 private fun DiffSummary(
     diff: SettingsDiff,
@@ -297,7 +290,6 @@ private fun DiffSummary(
     }
 }
 
-/** CAN-код — первой выделенной строкой и подсказка про прошивку. */
 @Composable
 private fun CanRow(change: SettingChange, wide: Boolean, open: Boolean, onToggle: () -> Unit) {
     val colors = cmpThemeColors()
@@ -323,11 +315,9 @@ private fun CanRow(change: SettingChange, wide: Boolean, open: Boolean, onToggle
     }
 }
 
-/** Раскрытые сразу разделы: изменений больше 10 — только первый, иначе все. */
 private fun SettingsDiff.initiallyExpanded(): List<Int> =
     if (total > COLLAPSE_FROM) sections.take(1).map { it.key } else sections.map { it.key }
 
-/** Разделы с изменениями, подходящими под запрос (пустой — все). */
 private fun LazyListScope.sectionItems(
     section: SectionChanges,
     expanded: Boolean,
@@ -406,7 +396,6 @@ private fun ColumnsHeader() {
     }
 }
 
-/** Строка изменения: номер, название, «было → станет» (каналы — «+ функция, − функция»); тап — полные значения. */
 @Composable
 private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, open: Boolean, onToggle: () -> Unit) {
     val colors = cmpThemeColors()
@@ -526,7 +515,6 @@ private fun DiffRow(change: SettingChange, wide: Boolean, highlighted: Boolean, 
     }
 }
 
-/** Канал: смена типа контакта / полярности и функции «+ …» / «− …»; не канал — `null`. */
 @Composable
 private fun channelParts(change: SettingChange): List<String>? {
     val logics = change.logicsChange() ?: return null
@@ -560,10 +548,8 @@ private fun polarityText(polarity: Polarity): String = when (polarity) {
     Polarity.UNDEFINED -> stringResource(Strings.string.settings_common_value_empty)
 }
 
-/** Название строки: у каналов — «IN1 · Концевик дверей». */
 private fun SettingChange.title(): String = settingTitle(after.name, after.channelOrNull)
 
-/** Ключ раздела в списке: id раздела, корневые настройки — 0. */
 private val SectionChanges.key: Int get() = section?.id ?: 0
 
 private val RowShape = RoundedCornerShape(12.dp)

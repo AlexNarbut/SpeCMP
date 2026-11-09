@@ -82,7 +82,6 @@ private const val TOAST_MILLIS = 3_200L
 private val WideFrom = 760.dp
 private val LowHeight = 860.dp
 
-/** Мастер быстрого монтажа: колонка шагов (≥ 760 dp), экран текущего шага, диалоги, оверлей «другой блок». */
 @Composable
 internal fun FastMountScreen(
     onExit: () -> Unit,
@@ -149,7 +148,6 @@ internal fun FastMountScreen(
     )
 }
 
-/** Экран другой фичи (слот) на текущем шаге; `null` — экран мастера. */
 internal enum class SlotScreen { FIRMWARE, VEHICLE, CONFIGURATION, BYPASS, CLONE, SYSTEM_CHECK }
 
 internal fun FastMountState.slotScreen(): SlotScreen? = when (screen) {
@@ -208,7 +206,6 @@ private fun SlotScreen(
     }
 }
 
-/** Шаг другой фичи в шапке и панели мастера; ключ VM — шаг и номер прохода. */
 @Composable
 private fun mountStep(state: FastMountState, key: RailKey, viewModel: FastMountViewModel): MountStep {
     val title = stringResource(key.title())
@@ -230,7 +227,6 @@ private fun mountStep(state: FastMountState, key: RailKey, viewModel: FastMountV
     )
 }
 
-/** Stateless-мастер (галерея состояний рендерит его без VM; слоты — заглушки). */
 @Composable
 internal fun FastMountContent(
     state: FastMountState,
@@ -319,7 +315,6 @@ private fun OwnScreen(
     }
 }
 
-/** Позиция мастера в колонке шагов. */
 internal fun FastMountState.railPosition(): RailPosition = when (screen) {
     WizardScreen.CHECK, WizardScreen.FIRMWARE -> RailPosition(RailKey.PREP, PrepSub.UNIT)
     WizardScreen.VEHICLE -> RailPosition(RailKey.PREP, PrepSub.VEHICLE)
@@ -389,7 +384,6 @@ private fun Toast(toast: WizardToast?, onHide: () -> Unit, modifier: Modifier = 
     }
 }
 
-/** «Подключён другой блок» (F15): сравнение ID, ожидание нужного блока, «Отключиться». */
 @Composable
 private fun WrongDeviceOverlay(expected: String, connected: String, onExit: () -> Unit) {
     val colors = cmpThemeColors()

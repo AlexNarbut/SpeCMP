@@ -1,5 +1,3 @@
-// Общие тестовые дублёры контрактов feature:device:interaction (docs/patterns.md, «Тестовые дублёры»).
-// Подключается только в тестовых source set.
 plugins {
     id("specmp.kmp.library")
 }

@@ -12,11 +12,8 @@ import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
- * `collect`/`collectLatest` внутри лямбды `collect`/`collectLatest` (docs/patterns.md, «Корутины и Flow»): внутренний
- * сбор не завершается, пока жив внутренний поток, — внешний поток останавливается на первом значении (`collect`)
- * или подписки на внутренний перезапускаются вручную. Комбинация потоков — `flatMapLatest`/`combine` и один
- * `collect`. Внутри `launch { }`/`async { }` в лямбде — тоже нарушение (подписки множатся на каждое значение).
- * Проверка по именам, без type resolution.
+ * Внешний поток останавливается на первом значении, пока жив внутренний. Комбинация — `flatMapLatest`/`combine` и
+ * один `collect`. По именам, без type resolution.
  */
 class NestedCollect(config: Config) :
     Rule(

@@ -3,7 +3,6 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.presentation
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.LoadSourceKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SaveTarget
 
-/** testTag экрана настроек для ui-test (`ui.sh`): id — `SettingNode.id` из меню устройства. */
 internal object SettingsTestTags {
     const val WRITE = "settings_write"
     const val SEARCH_OPEN = "settings_search_open"

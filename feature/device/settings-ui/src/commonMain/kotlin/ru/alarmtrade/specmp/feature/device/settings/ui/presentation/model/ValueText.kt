@@ -41,11 +41,9 @@ private const val MAX_DECIMALS = 3
 private const val TEN = 10.0
 private const val TIME_DIGITS = 2
 
-/** Текущее значение настройки строкой для показа. */
 @Composable
 internal fun valueText(setting: Setting): String = valueText(setting, setting.value)
 
-/** Значение [value] настройки [setting] строкой для показа (в т. ч. «Было: …» в окне редактирования). */
 @Suppress("CyclomaticComplexMethod") // плоский when по типам настроек
 @Composable
 internal fun valueText(setting: Setting, value: SettingValue): String = when {
@@ -126,7 +124,6 @@ internal fun decimalText(setting: DecimalSetting, value: Float): String =
     edgeText(value, setting.minValue, setting.maxValue, setting.minValueText, setting.maxValueText)
         ?: withUnits(decimalNumber(setting, value), setting.units)
 
-/** Число дробной настройки с количеством знаков по шагу и разделителем языка (без единиц). */
 @Composable
 internal fun decimalNumber(setting: DecimalSetting, value: Float): String = formatDecimal(
     value,

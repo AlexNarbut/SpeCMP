@@ -6,13 +6,7 @@ import dev.detekt.api.Finding
 import dev.detekt.api.Rule
 import org.jetbrains.kotlin.psi.KtCallExpression
 
-/**
- * Платформенный `Settings()` создаёт только `core/common/di` (`platformSettings`, исключение путём в detekt.yml):
- * `Settings()` без аргументов и платформенные `SharedPreferencesSettings(…)`/`NSUserDefaultsSettings(…)`/
- * `PreferencesSettings(…)` вне него запрещены — владелец получает своё хранилище из `AppSettingsFactory` через DI.
- *
- * Проверка по именам, без type resolution — работает во всех source set'ах; тесты исключены (`MapSettings`).
- */
+/** Платформенный `Settings()` создаёт только `core/common/di` (`platformSettings`, исключение путём в detekt.yml). */
 class SettingsInstantiation(config: Config) :
     Rule(config, "Файл настроек создаёт AppSettingsFactory (core/common); владелец получает Settings через DI.") {
 

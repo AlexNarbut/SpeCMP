@@ -14,12 +14,7 @@ import org.jetbrains.kotlin.psi.KtPropertyAccessor
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
-/**
- * `shareIn`/`stateIn` в теле функции или геттера (docs/patterns.md, «Корутины и Flow»): каждый вызов запускает новый
- * горячий поток в scope — подписки на источник множатся и живут до отмены scope. Горячий поток объявляется один раз
- * в инициализаторе свойства класса/файла (`private val x = upstream.stateIn(scope, …)`); поток на ключ — кэш
- * `MutableStateFlow<Map<K, StateFlow>>` или `flatMapLatest` по ключу. Проверка по именам, без type resolution.
- */
+/** Каждый вызов запускает новый горячий поток в scope — подписки множатся. По именам, без type resolution. */
 class SharingInsideFunction(config: Config) :
     Rule(config, "shareIn/stateIn — только в инициализаторе свойства: в функции каждый вызов создаёт новый поток.") {
 

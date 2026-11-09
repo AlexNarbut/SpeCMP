@@ -166,7 +166,6 @@ private fun extraTitle(extra: MountExtra): String = stringResource(
     },
 )
 
-/** Заглушка раздела: экраны разделов — отдельные задачи. [deviceTitle] — «Название  ID» блока. */
 @Composable
 internal fun SectionStubScreen(section: MountSection, deviceTitle: String, onBack: () -> Unit) {
     StubScreen(
@@ -177,7 +176,6 @@ internal fun SectionStubScreen(section: MountSection, deviceTitle: String, onBac
     )
 }
 
-/** Заглушка экранов, ещё не проработанных в дизайне («Информация о товаре», «Удалённая синхронизация»). */
 @Composable
 internal fun ExtraStubScreen(extra: MountExtra, deviceTitle: String, onBack: () -> Unit) {
     val icon = when (extra) {

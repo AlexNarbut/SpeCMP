@@ -22,10 +22,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedure
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
 
-/**
- * [BypassLearningRepository] над `learnBypassFlowUseCase` (SDK сам пишет лог событий обучения на сервер).
- * Поток кончается на итоге или на первой ошибке SDK (`BypassLearningException`).
- */
+/** Поток кончается на итоге или на первой ошибке SDK; лог событий обучения на сервер SDK пишет сам. */
 internal class SpecialistBypassLearningRepository(private val dataSource: AutostartDataSource) :
     BypassLearningRepository {
 
@@ -47,7 +44,6 @@ internal class SpecialistBypassLearningRepository(private val dataSource: Autost
     }
 }
 
-/** [CloneRepository] над `makeCloneProcedureFlowUseCase` и `getAvailableCloneAttemptsUseCase`. */
 internal class SpecialistCloneRepository(private val dataSource: AutostartDataSource) : CloneRepository {
 
     override suspend fun attempts(): Response<Int?> = dataSource.cloneAttempts().toResponseOrUnavailable().map {

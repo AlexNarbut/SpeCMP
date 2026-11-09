@@ -2,12 +2,7 @@ package ru.alarmtrade.specmp.feature.device.firmware.domain.model
 
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 
-/**
- * Обновляемый модуль блока (подсистема): основной блок, Bluetooth-модуль, часы и т.д.
- *
- * @property bootTarget что переводим в загрузчик для обновления; `null` — на этом подключении приложение
- *   обновить модуль не может («Не поддерживается»).
- */
+/** @property bootTarget что переводим в загрузчик; `null` — на этом подключении модуль не обновить. */
 data class FirmwareModule(
     val id: Long,
     val kind: FirmwareModuleKind,
@@ -18,10 +13,8 @@ data class FirmwareModule(
     val isBootSupported: Boolean get() = bootTarget != null
 }
 
-/** Подпись модуля «Основная программа (DX-9X)». */
 val FirmwareModule.displayTitle: String get() = "$title ($systemName)"
 
-/** Тип модуля — по нему UI подбирает название типа и иллюстрацию. */
 enum class FirmwareModuleKind {
     AlarmMain,
     BluetoothModule,

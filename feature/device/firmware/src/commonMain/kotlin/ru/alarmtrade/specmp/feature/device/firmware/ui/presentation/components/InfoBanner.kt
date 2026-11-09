@@ -21,7 +21,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 
 internal enum class BannerTone { Warning, Error, Ok }
 
-/** Плашка с иконкой и текстом: предупреждение, ошибка, подтверждение. [action] — необязательная кнопка справа. */
 @Composable
 internal fun InfoBanner(
     text: String,

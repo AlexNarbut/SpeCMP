@@ -10,10 +10,6 @@ import ru.alarmtrade.specmp.feature.fastmount.data.repository.SpecialistFastMoun
 import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountRepository
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.screen.master.FastMountViewModel
 
-/**
- * Koin-модуль `feature/fast-mount`: мастер быстрого монтажа. SDK-интеракторы — из `core/specialist`; сессия
- * устройства и режим программирования — из `deviceInteractionModule`.
- */
 val fastMountModule = module {
     // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание источника.
     single<FastMountDataSource> {

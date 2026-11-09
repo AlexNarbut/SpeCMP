@@ -16,14 +16,8 @@ import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 
 /**
- * Весь production берёт «сейчас» и часовой пояс из внедрённых `Clock`/`TimeZoneSource`, composable — из
- * `LocalClock`/`LocalTimeZoneSource` (вне охвата — `excludes` в detekt.yml: тесты, `di`, сами источники времени):
- * `Clock.System`, `TimeZoneSource.System`, `TimeZone.currentSystemDefault()`, `System.currentTimeMillis()`/
- * `System.nanoTime()` и `NSDate()` — finding. Разрешено только значение по умолчанию параметра первичного конструктора
- * (`clock: Clock = Clock.System`): DI передаёт свои часы, тест — фиксированные. Дефолт параметра обычной функции или
- * composable и вызов в теле — нарушение. `TimeSource.Monotonic` (замер длительностей) не проверяется.
- *
- * Проверка по именам, без type resolution — работает во всех source set'ах (iosMain `NSDate()`, androidMain `System.*`).
+ * «Сейчас» и пояс — из внедрённых `Clock`/`TimeZoneSource` (composable — `LocalClock`). Разрешён только дефолт
+ * параметра первичного конструктора (`clock: Clock = Clock.System`). По именам — во всех source set'ах.
  */
 class DirectClockUsage(config: Config) :
     Rule(config, "Время и часовой пояс — из внедрённых Clock/TimeZoneSource, не из системных часов напрямую.") {

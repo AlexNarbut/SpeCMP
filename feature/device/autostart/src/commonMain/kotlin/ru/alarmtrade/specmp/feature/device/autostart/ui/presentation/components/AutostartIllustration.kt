@@ -47,11 +47,7 @@ import specmp.feature.device.autostart.generated.resources.autostart_bypass_turn
 import specmp.feature.device.autostart.generated.resources.autostart_bypass_turn_on_ignition_success_accent
 import specmp.feature.device.autostart.generated.resources.autostart_bypass_turn_on_ignition_success_ink
 
-/**
- * Иллюстрация шага (макет `design/features/bypass-clone/illus`, карта `BC_ILLUS`). Каждая — два слоя vector XML:
- * линии ([ink]) и акцент ([accent], в исходнике `#2672d1`), перекрашиваются темой (решение D8 задачи).
- * Пропорция 720:495 — общий артборд, одна толщина линий у всех.
- */
+/** Два слоя vector XML — линии ([ink]) и акцент ([accent]), перекрашиваются темой; общий артборд 720:495. */
 enum class AutostartIllustration(internal val ink: DrawableResource, internal val accent: DrawableResource? = null) {
     IGNITION_ON_REQUEST(Res.drawable.autostart_bypass_turn_on_ignition_request_ink),
     IGNITION_ON_DONE(
@@ -109,7 +105,6 @@ enum class AutostartIllustration(internal val ink: DrawableResource, internal va
     CLONE_RUN(Res.drawable.autostart_alarm_cloning_ink),
 }
 
-/** Слои иллюстрации, перекрашенные в [ink] и [accent]; размер и рамку задаёт вызывающий через [modifier]. */
 @Composable
 fun AutostartIllustrationLayers(
     illustration: AutostartIllustration,

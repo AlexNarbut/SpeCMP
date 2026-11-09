@@ -107,7 +107,6 @@ internal class SpecialistDeviceConnectionRepository(private val dataSource: Devi
     }
 
     private companion object {
-        /** Скорость PcBase по COM-порту (`DEFAULT_PCBASE_BAUD_RATE` SDK). */
         const val SERIAL_BAUD_RATE = 115_200
     }
 }

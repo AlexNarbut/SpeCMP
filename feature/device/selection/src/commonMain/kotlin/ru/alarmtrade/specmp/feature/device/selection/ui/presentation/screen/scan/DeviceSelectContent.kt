@@ -129,7 +129,6 @@ internal fun kindLabel(kind: DeviceKind): String = stringResource(
     },
 )
 
-/** Подпись режима. Обычный режим у BLE — «Обычный», у USB и COM — «Рабочий». */
 @Composable
 internal fun modeLabel(mode: ScannedDeviceMode, transport: DeviceTransport): String = stringResource(
     when (mode) {
@@ -144,7 +143,6 @@ internal fun modeLabel(mode: ScannedDeviceMode, transport: DeviceTransport): Str
     },
 )
 
-/** Режим устройства, если известен (у USB — только после опроса блока, у COM — неизвестен до прошивки). */
 internal val DeviceUiItem.modeOrNull: ScannedDeviceMode?
     get() = when (this) {
         is DeviceUiItem.Ble -> mode
@@ -152,11 +150,9 @@ internal val DeviceUiItem.modeOrNull: ScannedDeviceMode?
         is DeviceUiItem.Serial -> null
     }
 
-/** Режим, который стоит заметить в списке: сопряжение или загрузчик (рабочий — без метки). */
 internal val DeviceUiItem.notableMode: ScannedDeviceMode?
     get() = modeOrNull?.takeIf { it != ScannedDeviceMode.BASE }
 
-/** Метка режима блока (сопряжение / загрузчик). */
 @Composable
 internal fun ModeBadge(mode: ScannedDeviceMode) {
     val colors = cmpThemeColors()
@@ -176,10 +172,7 @@ internal fun ModeBadge(mode: ScannedDeviceMode) {
     }
 }
 
-/**
- * Поля устройства «до подключения» — общие для панели деталей (split) и диалога «⋮» (compact / stacked).
- * `hasPhoneBond == null` — платформа не Android: строку не показываем, а BLE-адрес на iOS — это UUID.
- */
+/** `hasPhoneBond == null` — платформа не Android: строку не показываем, а BLE-адрес на iOS — это UUID. */
 @Composable
 internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
     val yes = stringResource(Strings.string.deviceselect_common_value_yes)
@@ -240,7 +233,6 @@ internal fun deviceInfoRows(item: DeviceUiItem): List<DeviceInfoRow> {
     }
 }
 
-/** Сноска под полями: у BLE прошивка и ID блока появятся только после подключения; у COM блок не опрашивается. */
 @Composable
 internal fun deviceInfoNote(item: DeviceUiItem): String? = when (item) {
     is DeviceUiItem.Ble -> stringResource(Strings.string.deviceselect_detail_msg_note_ble)
@@ -248,7 +240,6 @@ internal fun deviceInfoNote(item: DeviceUiItem): String? = when (item) {
     is DeviceUiItem.Serial -> stringResource(Strings.string.deviceselect_detail_msg_note_serial)
 }
 
-/** Поля устройства с разделителями: подпись всегда целиком в одну строку, значение занимает остаток и переносится. */
 @Composable
 internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
     val colors = cmpThemeColors()
@@ -274,7 +265,6 @@ internal fun DeviceInfoRows(rows: List<DeviceInfoRow>) {
     }
 }
 
-/** Диалог «⋮» в compact / stacked: поля устройства и подключение. */
 @Composable
 internal fun DeviceInfoDialog(item: DeviceUiItem, onDismiss: () -> Unit, onConnect: () -> Unit) {
     val colors = cmpThemeColors()
@@ -309,7 +299,6 @@ internal fun DeviceTransport.icon(): CmpIcons = when (this) {
     DeviceTransport.SERIAL -> CmpIcons.Cable
 }
 
-/** Плейсхолдер-слот фото устройства: нейтральный фон + иконка типа (реального фото пока нет). */
 @Composable
 internal fun DeviceTile(icon: CmpIcons, sizeDp: Int) {
     val colors = cmpThemeColors()
@@ -325,7 +314,6 @@ internal fun DeviceTile(icon: CmpIcons, sizeDp: Int) {
     }
 }
 
-/** Чип транспорта: в карточке списка короткий («BLE» / «USB»), в деталях полный («Bluetooth»). */
 @Composable
 internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
     val colors = cmpThemeColors()
@@ -358,17 +346,10 @@ internal fun TransportChip(transport: DeviceTransport, short: Boolean = false) {
     }
 }
 
-/** Прозрачность строки, недоступной для выбора (поиск только сигнализаций). */
 private const val RESTRICTED_ALPHA = 0.5f
 
-/** testTag строки устройства — префикс, дальше id устройства (BLE — MAC). */
 internal const val DEVICE_ITEM_TAG_PREFIX = "device_item_"
 
-/**
- * Строка устройства в списке: имя (+ RSSI у BLE справа), чип транспорта и адрес.
- * [showMode] — метка «Сопряжение» / «Загрузчик» (только в широкой раскладке);
- * [onInfo] — кнопка «⋮» с диалогом полей (compact / stacked).
- */
 @Composable
 internal fun DeviceRow(
     item: DeviceUiItem,
@@ -385,7 +366,6 @@ internal fun DeviceRow(
             .then(if (restricted) Modifier.dashedBorder(colors.outlineVariant) else Modifier)
             .clip(RoundedCornerShape(16.dp)).clickable(enabled = !restricted, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        // Недоступно в этом поиске (быстрый монтаж — только сигнализации): без заливки, пунктирная рамка (макет F1).
         color = rowColor(restricted, selected),
         contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
         border = if (selected || restricted) null else BorderStroke(1.dp, colors.outlineVariant),
@@ -467,7 +447,6 @@ private fun rowColor(restricted: Boolean, selected: Boolean): Color = when {
     else -> cmpThemeColors().surfaceContainerLow
 }
 
-/** Справа в строке: «⋮» (если есть) и шеврон (у недоступного устройства его нет). */
 @Composable
 private fun RowTrail(onInfo: (() -> Unit)?, restricted: Boolean, selected: Boolean) {
     val colors = cmpThemeColors()
@@ -490,7 +469,6 @@ private fun RowTrail(onInfo: (() -> Unit)?, restricted: Boolean, selected: Boole
     }
 }
 
-/** Плашка «Только для сигнализаций» у устройства, недоступного в поиске быстрого монтажа. */
 @Composable
 private fun AlarmsOnlyChip() {
     val colors = cmpThemeColors()
@@ -517,7 +495,6 @@ private fun AlarmsOnlyChip() {
     }
 }
 
-/** Пунктирная рамка карточки (недоступное устройство). */
 private fun Modifier.dashedBorder(color: Color): Modifier = drawBehind {
     drawRoundRect(
         color = color,
@@ -532,7 +509,6 @@ private fun Modifier.dashedBorder(color: Color): Modifier = drawBehind {
 private const val DASH_ON = 12f
 private const val DASH_OFF = 8f
 
-/** Круглый герой-значок состояний. */
 @Composable
 internal fun Hero(icon: CmpIcons, tone: HeroTone = HeroTone.Primary) {
     val colors = cmpThemeColors()
@@ -553,7 +529,6 @@ internal fun Hero(icon: CmpIcons, tone: HeroTone = HeroTone.Primary) {
     }
 }
 
-/** Обёртка центрированных состояний (прокручиваемая). */
 @Composable
 internal fun CenterState(content: @Composable () -> Unit) {
     CmpBox(
@@ -570,7 +545,6 @@ internal fun CenterState(content: @Composable () -> Unit) {
     }
 }
 
-/** Строка разрешения в экране-обосновании. */
 @Composable
 internal fun PermissionRow(icon: CmpIcons, label: String, desc: String) {
     val colors = cmpThemeColors()
@@ -603,7 +577,6 @@ internal fun PermissionRow(icon: CmpIcons, label: String, desc: String) {
     }
 }
 
-/** Список подсказок «как починить» / «почему пусто». */
 @Composable
 internal fun FixSteps(items: List<String>, done: Boolean) {
     val colors = cmpThemeColors()
@@ -642,7 +615,6 @@ internal fun IconedButton(text: String, icon: CmpIcons, onClick: () -> Unit, mod
     }
 }
 
-/** Заголовок + подзаголовок для центрированных состояний. */
 @Composable
 internal fun StateHeadline(title: String, subtitle: String) {
     val colors = cmpThemeColors()

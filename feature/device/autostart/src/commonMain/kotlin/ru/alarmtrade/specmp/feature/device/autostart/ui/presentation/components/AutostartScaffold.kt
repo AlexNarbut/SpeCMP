@@ -82,7 +82,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.AutostartStepChrome
 
-/** Класс окна (Material 3 Window Size Classes): раскладка экранов обхода и Clone. */
 enum class AutostartLayout { Compact, Medium, Expanded }
 
 private val MediumFrom = 600.dp
@@ -93,7 +92,6 @@ private val SideWidth = 360.dp
 private val FooterMaxWidth = 440.dp
 internal val AutostartButtonHeight = 52.dp
 
-// Анимации макета (`bcRing`, `bcBreath`): пульс рамки у запроса быстрее, чем у ожидания.
 private const val PULSE_REQUEST_MILLIS = 1_400
 private const val PULSE_WAIT_MILLIS = 2_200
 private const val PULSE_SCALE_FROM = 0.96f
@@ -115,10 +113,7 @@ internal fun autostartLayoutOf(width: Dp): AutostartLayout = when {
 internal fun illustrationHeight(layout: AutostartLayout): Dp = if (layout == AutostartLayout.Compact) 160.dp else 210.dp
 
 /**
- * Каркас экрана: шапка «Название · Модель ID», полоса статуса (место зарезервировано всегда, во время процесса
- * плавно появляется), прокручиваемое тело; на Compact кнопки закреплены внизу, на Expanded — боковая колонка.
- *
- * @param status содержимое полосы статуса; `null` — полоса пустая (гаснет).
+ * @param status `null` — полоса гаснет (место под неё зарезервировано всегда).
  * @param locked вместо «Назад» — замок (выход недоступен).
  */
 @Composable
@@ -167,7 +162,6 @@ internal fun AutostartScaffold(
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = autostartLayoutOf(maxWidth)
-            // Шаг мастера: кнопки всегда в панели мастера внизу (как на остальных его шагах).
             val compact = layout == AutostartLayout.Compact || chrome != null
             CmpColumn(modifier = Modifier.fillMaxSize()) {
                 StatusStrip(layout = layout, content = status)
@@ -243,7 +237,6 @@ private fun Body(
     }
 }
 
-/** Полоса статуса под шапкой: высота зарезервирована, содержимое плавно появляется и гаснет — контент не прыгает. */
 @Composable
 private fun StatusStrip(layout: AutostartLayout, content: (@Composable () -> Unit)?) {
     val colors = cmpThemeColors()
@@ -278,7 +271,6 @@ private fun StatusStrip(layout: AutostartLayout, content: (@Composable () -> Uni
     }
 }
 
-/** Индикатор, фраза и таймер «m:ss» с начала текущего шага ([key] — смена шага сбрасывает таймер). */
 @Composable
 internal fun StatusRow(text: String, key: Any, modifier: Modifier = Modifier, startSeconds: Int = 0) {
     val colors = cmpThemeColors()
@@ -312,10 +304,8 @@ internal fun StatusRow(text: String, key: Any, modifier: Modifier = Modifier, st
     }
 }
 
-/** Тон плашки. */
 internal enum class BannerTone { Warn, Info, Error }
 
-/** Плашка: иконка, заголовок, текст (макет `Banner`). */
 @Composable
 internal fun InfoBanner(
     icon: CmpIcons,
@@ -345,7 +335,6 @@ internal fun InfoBanner(
     }
 }
 
-/** «Как это будет»: пункты с иконкой. */
 @Composable
 internal fun HowItWorks(items: List<Pair<CmpIcons, String>>, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
@@ -380,10 +369,8 @@ internal fun HowItWorks(items: List<Pair<CmpIcons, String>>, modifier: Modifier 
     }
 }
 
-/** Режим рамки иллюстрации: запрос действия (рамка + пульс), выполнено, ожидание («дыхание»), покой. */
 internal enum class IllustrationMode { Request, Done, Wait, Idle }
 
-/** Иллюстрация в рамке одного размера на всех состояниях (макет `Illus`). */
 @Composable
 internal fun IllustrationFrame(
     illustration: AutostartIllustration,
@@ -449,7 +436,6 @@ internal fun IllustrationFrame(
     }
 }
 
-/** Заголовок и подзаголовок по центру (старт, итог, этап Clone). */
 @Composable
 internal fun Headline(title: String, modifier: Modifier = Modifier, subtitle: String? = null) {
     val colors = cmpThemeColors()
@@ -470,7 +456,6 @@ internal fun Headline(title: String, modifier: Modifier = Modifier, subtitle: St
     }
 }
 
-/** «Прервать?» — выход во время процесса (текст макета). */
 @Composable
 internal fun ExitDialog(onStay: () -> Unit, onExit: () -> Unit) {
     CmpDialog(
@@ -499,10 +484,6 @@ internal fun ExitDialog(onStay: () -> Unit, onExit: () -> Unit) {
 private const val STEP_IN_MILLIS = 250
 private val StepInOffset = 8.dp
 
-/**
- * Появление нового шага (макет `bcIn`: прозрачность 0 → 1 и подъём на 8dp за 250 мс). Прежний шаг уходит сразу —
- * как в макете, где карточка пересоздаётся по ключу шага.
- */
 @Composable
 internal fun <K> StepAppear(stepKey: K, modifier: Modifier = Modifier, content: @Composable ColumnScope.(K) -> Unit) {
     val density = LocalDensity.current

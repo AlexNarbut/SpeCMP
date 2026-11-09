@@ -57,7 +57,6 @@ private class DesktopSettingsFileSaver : SettingsFileSaver {
     override suspend fun save(sourcePath: String, fileName: String): SettingsFileSaveResult {
         val chooser = JFileChooser().apply {
             fileSelectionMode = JFileChooser.FILES_ONLY
-            // Имя по умолчанию в текущем каталоге диалога.
             selectedFile = File(currentDirectory, safeFileName(fileName))
             fileFilter = FileNameExtensionFilter(DXS_FILTER, DXS_EXTENSION)
         }

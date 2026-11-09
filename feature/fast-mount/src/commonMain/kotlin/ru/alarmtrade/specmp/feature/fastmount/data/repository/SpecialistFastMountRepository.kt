@@ -36,7 +36,6 @@ import ru.alarmtrade.specmp.feature.fastmount.domain.model.QuestionsState
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.UnitAccess
 import ru.alarmtrade.specmp.feature.fastmount.domain.repository.FastMountRepository
 
-/** [FastMountRepository]: проверка доступа, подготовка (класс блока, конфигурация, прошивка) и шаги мастера SDK. */
 internal class SpecialistFastMountRepository(private val dataSource: FastMountDataSource) : FastMountRepository {
 
     override suspend fun verify(systemId: Long, systemName: String, firmwareVersion: String): Response<UnitAccess> {

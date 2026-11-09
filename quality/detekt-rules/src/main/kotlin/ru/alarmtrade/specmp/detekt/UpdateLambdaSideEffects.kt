@@ -15,16 +15,8 @@ import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 
 /**
- * Побочный эффект в лямбде `MutableStateFlow.update/getAndUpdate/updateAndGet` (docs/patterns.md, «Конкурентность»):
- * при CAS-конфликте лямбда выполняется повторно, и эффект повторится. Запрещены suspend-вызовы, вызовы
- * чужих репозиториев и сервисов (`*Repository`, `*DataSource`, `*Coordinator`, `*Controller`, `*Scheduler`, `*Service`,
- * `*Api`, `*Tracker`), записи в хранилище (`put…`, `set…`, `remove…`, `persist…`, `save…`, `write…` у `*Settings`/`*Store`/
- * `*Storage`/`*Preferences`/`*Queries`/`*Dao`/`*Cache`), `emit/tryEmit/send/trySend/postSideEffect`,
- * `launch/async/launchIn`. Метод своего класса проверяется на один уровень: эффект в его теле — нарушение, чистый
- * хелпер (`resolveTheme()`, `initialState()`) — нет. Вложенные лямбды `inline`-функций (`map`, `filter`)
- * проверяются, остальные (не выполняются внутри `update`) — нет.
- *
- * Требует type resolution: в задачах detekt без классов правило молчит.
+ * При CAS-конфликте лямбда выполняется повторно — эффект повторится. Метод своего класса проверяется на один уровень,
+ * вложенные лямбды — только `inline`-функций. Требует type resolution.
  */
 class UpdateLambdaSideEffects(config: Config) :
     Rule(config, "Лямбда update/getAndUpdate/updateAndGet — чистая функция: она повторяется при CAS-конфликте."),

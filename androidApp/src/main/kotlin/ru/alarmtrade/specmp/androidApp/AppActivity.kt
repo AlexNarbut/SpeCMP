@@ -58,7 +58,6 @@ class AppActivity : FragmentActivity() {
         }
 
         setContent {
-            // testTag видны снаружи (uiautomator, ui-test) как resource-id.
             Box(modifier = Modifier.semantics { testTagsAsResourceId = true }) {
                 App(
                     appVersionName = versionName,

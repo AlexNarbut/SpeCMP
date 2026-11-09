@@ -104,7 +104,6 @@ private const val SLAVE_COLUMNS = 3
 private const val VIEWER_BACKGROUND = 0xFF0C0E0F
 private const val VIEWER_BUTTON_ALPHA = 0.16f
 
-/** Монтаж (F8): карта монтажа (PDF), описание, фото «Особенности монтажа»; «Монтаж завершён» — с подтверждением. */
 @Composable
 internal fun MountScreen(state: FastMountState, actions: MasterActions) {
     val wide = LocalWizardWide.current
@@ -284,7 +283,6 @@ private fun DescriptionCard(description: String, open: Boolean, onToggle: () -> 
 
 private const val HALF_TURN = 180f
 
-/** Карта монтажа (телефон): скачивается / готово (тап — открыть) / ошибка с «Повторить». */
 @Composable
 private fun MapCard(map: MountMapState, actions: MasterActions) {
     val colors = cmpThemeColors()
@@ -336,7 +334,6 @@ private fun MapCard(map: MountMapState, actions: MasterActions) {
     }
 }
 
-/** Карта монтажа в широком окне: крупная плитка и кнопка «Открыть карту» (те же состояния, что у [MapCard]). */
 @Composable
 private fun MapPreview(map: MountMapState, actions: MasterActions) {
     val colors = cmpThemeColors()
@@ -474,7 +471,6 @@ private fun PhotoGrid(images: List<MountImage>, onPhoto: (Int) -> Unit) {
     }
 }
 
-/** Широкое окно: первое фото крупно, остальные сеткой по два. */
 @Composable
 private fun PhotoMosaic(images: List<MountImage>, onPhoto: (Int) -> Unit) {
     val first = images.firstOrNull() ?: return
@@ -507,7 +503,6 @@ private fun PhotoTile(image: MountImage, height: Dp, onClick: () -> Unit, modifi
     }
 }
 
-/** Фото на весь экран: листание свайпом и стрелками, масштаб, подпись, счётчик. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PhotoViewer(images: List<MountImage>, start: Int, onClose: () -> Unit) {
@@ -608,10 +603,7 @@ private fun ViewerArrow(
 
 private const val DISABLED_ALPHA = 0.35f
 
-/**
- * Анимация обучения штатного брелока: спрайт-лист `fastmount_slave_learn.webp` из `slave_learn.gif` старого
- * приложения — 18 кадров 800×550 сеткой [SLAVE_COLUMNS] колонки, 5 кадров/с, последний держится дольше.
- */
+/** Спрайт-лист из `slave_learn.gif` старого приложения: 18 кадров 800×550, [SLAVE_COLUMNS] колонки, 5 кадров/с. */
 @Composable
 internal fun SlaveAnimation(modifier: Modifier = Modifier) {
     val sheet = imageResource(Res.drawable.fastmount_slave_learn)

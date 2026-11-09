@@ -22,12 +22,8 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialo
 import ru.alarmtrade.specmp.feature.device.presentation.core.viewmodel.BaseDeviceViewModel
 
 /**
- * Экран «Процедура Clone»: попытки → подтверждение → [CloneRepository.run] по этапам → итог.
- *
- * Обрыв связи на процессе: работа отменяется ([launchOnDevice]), экран возвращается на старт с причиной (D2): до
- * вычисления на сервере попытка точно цела, позже — могла списаться, счётчик перечитывается. Неверный PIN (BLE) —
- * ошибка потока SDK: диалог PIN, повтор с введённым PIN. На этапах записи выход запрещён. Процедура живёт, пока жива
- * VM, а не пока экран подписан на state.
+ * Обрыв связи на процессе возвращает на старт с причиной: до вычисления на сервере попытка цела, позже — могла
+ * списаться (счётчик перечитывается). Процедура живёт, пока жива VM, а не пока экран подписан на state.
  */
 class CloneViewModel(
     deviceSession: DeviceSession,
@@ -75,22 +71,20 @@ class CloneViewModel(
         }
     }
 
-    /** «Начать Clone» / «Повторить»: сначала подтверждение с числом попыток. */
     fun onStartClick() {
         reduce { if (canStart && phase !is ClonePhase.Running) copy(dialog = CloneDialog.Confirm) else this }
     }
 
-    /** «Начать» в подтверждении: диалог забирается сразу — повторный тап не перезапустит процедуру. */
+    /** Диалог забирается сразу — повторный тап не перезапустит процедуру. */
     fun onConfirm() {
         if (currentState.dialog != CloneDialog.Confirm) return
         reduce { copy(dialog = null) }
         run()
     }
 
-    /** «Продолжить» в диалоге PIN; значение живёт только в вызове — в state и логи не попадает. */
+    /** PIN живёт только в вызове — в state и логи не попадает. */
     fun onPinSubmit(pin: String) {
         val dialog = currentState.dialog as? CloneDialog.Pin ?: return
-        // PIN уже отправляется — повторный тап не шлёт его второй раз.
         if (dialog.pin.sending) return
         val servicePin = ServicePin.parseOrNull(pin) ?: return
         val systemId = currentState.deviceId ?: return
@@ -115,7 +109,6 @@ class CloneViewModel(
         }
     }
 
-    /** «Назад»: на процессе — «Прервать?» (на этапах записи — ничего), иначе уйти сразу ([CloneEffect.Close]). */
     fun onBack() {
         val state = currentState
         when {
@@ -124,7 +117,6 @@ class CloneViewModel(
         }
     }
 
-    /** «Да» в «Прервать?»: процедура отменяется (если запись ещё не началась). */
     fun onExitConfirm() {
         if (currentState.locked) return
         cancelLaunched(PROCEDURE)
@@ -132,8 +124,8 @@ class CloneViewModel(
     }
 
     /**
-     * [pinTries] — сколько раз PIN уже запрашивали в этой попытке (0 — PIN не вводили). Сюда доходят, только когда
-     * процедура не идёт (подтверждение — вне Running, PIN — после её конца), — замена по ключу ничего не обрывает.
+     * [pinTries] — сколько раз PIN уже запрашивали в этой попытке. Сюда доходят, только когда процедура не идёт, —
+     * замена по ключу ничего не обрывает.
      */
     private fun run(pinTries: Int = 0) {
         launchOnDevice(PROCEDURE) {

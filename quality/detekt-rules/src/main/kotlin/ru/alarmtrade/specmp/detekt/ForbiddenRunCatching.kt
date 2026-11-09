@@ -7,10 +7,7 @@ import dev.detekt.api.Rule
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtCallableReferenceExpression
 
-/**
- * Любой вызов `runCatching` (с ресивером и без) по имени, без type resolution: правило работает во всех
- * source set'ах, включая iosMain, jvmMain и тесты. `runCatching` глотает CancellationException.
- */
+/** `runCatching` глотает CancellationException; по имени, без type resolution — во всех source set'ах. */
 class ForbiddenRunCatching(config: Config) :
     Rule(
         config,

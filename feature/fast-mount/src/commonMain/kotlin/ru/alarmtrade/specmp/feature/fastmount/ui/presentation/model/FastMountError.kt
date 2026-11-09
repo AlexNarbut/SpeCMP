@@ -6,7 +6,6 @@ import ru.alarmtrade.specmp.core.common.appError
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountException
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountFailure
 
-/** Ошибка шага мастера для UI: предметная ([Step]), общая ([Common]) или прочая ([Unknown]). */
 @Immutable
 sealed interface FastMountError {
     data class Step(val failure: FastMountFailure) : FastMountError

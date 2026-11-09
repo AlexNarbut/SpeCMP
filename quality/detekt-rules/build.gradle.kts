@@ -1,5 +1,4 @@
-// Набор правил detekt `specmp` (config/detekt/detekt.yml). Подключается ко всем Kotlin-модулям
-// через detektPlugins в build-logic (specmp.detekt); сам модуль detekt не проверяет.
+// Сам модуль detekt не проверяет; к модулям подключается через detektPlugins в build-logic (specmp.detekt).
 plugins {
     id("org.jetbrains.kotlin.jvm")
 }

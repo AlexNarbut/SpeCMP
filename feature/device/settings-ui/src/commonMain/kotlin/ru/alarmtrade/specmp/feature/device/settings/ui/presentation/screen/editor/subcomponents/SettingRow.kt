@@ -48,14 +48,12 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.isSegm
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 
-/** Длиннее — значение выводится под названием с переносом, а не справа. */
 private const val TEXT_STACK_FROM = 12
 private const val OPTION_STACK_FROM = 16
 private const val CHANGED_TINT_ALPHA = 0.5f
 private const val DISABLED_ALPHA = 0.38f
 private val SegmentsWideWidth = 300.dp
 
-/** Действия строки меню. */
 @Immutable
 internal class SettingRowActions(
     val onOpenSection: (sectionId: Int) -> Unit,
@@ -64,13 +62,6 @@ internal class SettingRowActions(
     val onDescription: (nodeId: Int) -> Unit,
 )
 
-/**
- * Строка меню: раздел (номер, название, счётчик изменений, стрелка) или настройка (ⓘ, номер и название, значение
- * справа / под названием, переключатель или сегменты прямо в строке). Изменённая настройка подсвечена и с точкой.
- *
- * @param path путь раздела (в результатах поиска).
- * @param wide широкая раскладка: сегменты — справа, а не под названием.
- */
 @Composable
 internal fun SettingNodeRow(
     node: SettingNode,
@@ -80,7 +71,6 @@ internal fun SettingNodeRow(
     actions: SettingRowActions,
     modifier: Modifier = Modifier,
     path: String? = null,
-    /** Подпись к значению (автомобиль у CAN-кода). */
     note: String? = null,
 ) {
     when (node) {
@@ -116,7 +106,6 @@ private fun SectionRow(
         LinkSeparator(section.name, modifier)
         return
     }
-    // В пустой раздел не заходим: без нажатия, наведения и стрелки, текст приглушён.
     val enterable = section.children.isNotEmpty()
     CmpRow(
         modifier = modifier
@@ -236,7 +225,6 @@ private fun LeafRow(
     }
 }
 
-/** Для переключаемых настроек: (текущее «вкл», значение после переключения), иначе null. */
 private fun toggleOf(setting: Setting): Pair<Boolean, SettingValue>? = when (setting) {
     is SwitchSetting -> !setting.value.enabled to SettingValue.Switch(!setting.value.enabled)
     is SwitchOutputSetting -> !setting.value.enabled to SettingValue.SwitchOutput(!setting.value.enabled)
@@ -307,7 +295,6 @@ private fun ValueLabel(text: String, maxLines: Int, modifier: Modifier = Modifie
     )
 }
 
-/** Связка между условиями («И», «ИЛИ»): подпись по центру между линиями, не нажимается. */
 @Composable
 private fun LinkSeparator(text: String, modifier: Modifier) {
     val colors = cmpThemeColors()

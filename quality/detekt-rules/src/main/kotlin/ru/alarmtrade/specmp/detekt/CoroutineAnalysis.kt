@@ -14,7 +14,6 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 
-/** Общие проверки корутинного контекста для правил с type resolution (вызываются внутри `analyze { }`). */
 internal fun KaSession.isSuspendCall(call: KtCallExpression): Boolean = resolvedFunction(call)?.isSuspend == true
 
 internal fun KaSession.resolvedFunction(call: KtCallExpression): KaNamedFunctionSymbol? =

@@ -18,10 +18,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeTarget
 
-/**
- * [FirmwareUpdateRepository]: основная программа и Bluetooth-модуль обновляются разными потоками SDK. Файл по `url`
- * SDK скачивает сам — это стадия [FirmwareUpdateProgress.Preparing].
- */
+/** Файл по `url` SDK скачивает сам — это стадия [FirmwareUpdateProgress.Preparing]. */
 internal class SpecialistFirmwareUpdateRepository(private val dataSource: FirmwareUpdateDataSource) :
     FirmwareUpdateRepository {
 

@@ -70,9 +70,8 @@ internal class DeviceSessionImpl(
 
     private val _transport = MutableStateFlow<ConnectionTransport?>(null)
 
-    // Идёт передача прошивки — режим (загрузчик), в котором она идёт. На переподключении BLE режим не перечитываем:
-    // блок в загрузчике между соединениями не перезагружается, а SDK занят передачей (чтение блока ждало бы протокол
-    // и рвало бы связь по тайм-ауту) и сам продолжает её после переподключения. attach/close сбрасывают.
+    // Идёт передача прошивки — её режим. На переподключении BLE режим не перечитываем: SDK занят передачей (чтение
+    // блока ждало бы протокол и рвало связь по тайм-ауту) и сам продолжает её. attach/close сбрасывают.
     private val transferMode = MutableStateFlow<DeviceSessionState?>(null)
 
     private val expectation = MutableStateFlow<RebootExpectation?>(null)
@@ -264,7 +263,6 @@ internal class DeviceSessionImpl(
         }
     }
 
-    /** Блок вернулся в режим [mode]: снять ожидание, если оно этим исполнено. */
     private fun onModeReached(mode: DeviceSessionState) {
         expectation.update { current ->
             when {
@@ -283,11 +281,9 @@ internal class DeviceSessionImpl(
     }
 
     /**
-     * BLE: SDK после обрыва (блок выключен или далеко, выключили Bluetooth) сам не переподключается — повторяем
-     * подключение, пока связь не вернётся. Цикл отменяется сменой состояния связи (`transformLatest`) и отпиской;
-     * после [close] транспорта нет — повторов тоже нет. USB переподключает SDK при повторном подключении кабеля.
-     * Проверка транспорта и `reconnect()` — под [sessionMutex], чтобы не пересечься с закрытием; тайм-аут не даёт
-     * зависшему подключению держать закрытие.
+     * BLE: SDK после обрыва сам не переподключается — повторяем, пока связь не вернётся; USB переподключает SDK сам.
+     * `reconnect()` — под [sessionMutex] (не пересечься с закрытием); тайм-аут не даёт зависшему подключению держать
+     * его.
      */
     private suspend fun reconnectWhileBle() {
         var attempt = 0
@@ -307,10 +303,7 @@ internal class DeviceSessionImpl(
         logStage { "reconnect loop stopped transport=${_transport.value}" }
     }
 
-    /**
-     * Режим блока на этом подключении (как в старом приложении). BLE: сначала Bluetooth-модуль (мануфактура + режим) —
-     * в его загрузчике основная программа недоступна; USB — сразу основная программа. `null` — блок не ответил.
-     */
+    /** BLE: сначала Bluetooth-модуль — в его загрузчике основная программа недоступна; `null` — блок не ответил. */
     private suspend fun detectMode(): DeviceSessionState? {
         if (_transport.value == ConnectionTransport.BLE) {
             val module = readWithRetry { sessionRepository.readBluetoothModule() } ?: return null
@@ -335,11 +328,7 @@ internal class DeviceSessionImpl(
         }
     }
 
-    /**
-     * COM: опрашивать блок, пока он не ответит, затем определить режим. Опрос короткий (одно чтение с малым
-     * тайм-аутом), чтобы экран сменился вскоре после перезагрузки блока; цикл отменяется сменой связи
-     * (`transformLatest`) и отпиской.
-     */
+    /** COM: опрос короткий (одно чтение с малым тайм-аутом), чтобы экран сменился вскоре после перезагрузки блока. */
     private suspend fun awaitSerialBoard(): DeviceSessionState {
         var attempt = 0
         while (true) {
@@ -368,7 +357,6 @@ internal class DeviceSessionImpl(
 
     private fun isBleReconnect(): Boolean = wasReady.value && _transport.value == ConnectionTransport.BLE
 
-    /** Лог этапа с временем от начала сессии: по нему замеряются подключение и переподключение. */
     private inline fun logStage(message: () -> String) {
         val elapsed = stageClock.value.elapsedNow().inWholeMilliseconds
         logger.i { "+${elapsed}ms ${message()}" }

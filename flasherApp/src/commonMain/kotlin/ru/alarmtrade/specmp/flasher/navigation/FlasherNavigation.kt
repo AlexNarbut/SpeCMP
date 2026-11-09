@@ -38,12 +38,10 @@ import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.Devi
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 
-/** Поиск устройства — корень авторизованной зоны. */
 @Serializable
 @SerialName("flasher.ScanRoute")
 private data object ScanRoute : NavKey
 
-/** Подключённый блок (BLE / USB / COM): хост устройства — связь, обрыв, рабочий режим и загрузчик. */
 @Serializable
 @SerialName("flasher.DeviceRoute")
 private data object DeviceRoute : NavKey
@@ -57,10 +55,6 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/**
- * Навигация приложения прошивки: логин (первая версия; финальная — без авторизации) → поиск → блок.
- * Экранов два: поиск и экран блока с одной кнопкой «Обновить из файла».
- */
 @Composable
 fun FlasherNavigation() {
     AuthStateNavGraph(
@@ -97,11 +91,7 @@ private fun AuthedNavGraph() {
     )
 }
 
-/**
- * Экран блока. BLE / USB: «Обновить из файла» переводит блок в загрузчик, прошивку ведёт граф загрузчика.
- * COM: загрузчик SDK входит сам внутри обновления — один экран прошивки по COM в обоих слотах хоста (VM у них общая).
- * Транспорт читается один раз: сессия уже создана поиском, а на выходе она закрывается (транспорт — `null`).
- */
+/** COM: загрузчик SDK входит сам внутри обновления — один экран прошивки в обоих слотах хоста (VM у них общая). */
 @Composable
 private fun DeviceEntry(onExit: () -> Unit) {
     val session = koinInject<DeviceSession>()

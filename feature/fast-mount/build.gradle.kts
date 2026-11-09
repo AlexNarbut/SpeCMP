@@ -6,7 +6,6 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            // SDK: мастер быстрого монтажа (FastMountInteractor), облачные конфигурации, база устройств.
             implementation(project(":core:specialist"))
             implementation(libs.alarmtrade.specialist)
             implementation(libs.kermit)
@@ -16,16 +15,12 @@ kotlin {
             implementation(project(":core:localization"))
             implementation(project(":core:ui"))
 
-            // Сессия устройства: связь, транспорт, режим программирования
             implementation(project(":feature:device:interaction"))
-            // Общий presentation устройства: база VM блока, диалог PIN
             implementation(project(":feature:device:presentation-core"))
 
             implementation(libs.androidx.lifecycle.viewmodel)
 
-            // Nav3 (см. docs/navigation.md)
             implementation(libs.compose.nav3)
-            // ViewModelStore-декоратор: per-entry ViewModelStore → очистка VM при pop
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.kotlinx.serialization.json)
 
@@ -42,14 +37,12 @@ kotlin {
             implementation(project(":core:testing"))
             implementation(project(":feature:device:interaction:testing"))
         }
-        // Галерея состояний экранов (headless-рендер в PNG)
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs)
         }
     }
 }
 
-// Ресурсы фичи — только картинки (drawable); строки — в core/localization (docs/localization.md)
 compose.resources {
     publicResClass = false
     generateResClass = always

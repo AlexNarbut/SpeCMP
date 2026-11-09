@@ -17,13 +17,7 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
-/**
- * Результат `async { }` (`Deferred`) не использован (docs/patterns.md, «Корутины и Flow»): вызов оператором или
- * в локальной переменной, к которой больше не обращаются. Исключение такой корутины не дойдёт до вызывающего
- * (`await()` не вызван), а «огонь и забудь» — это `launch { }`.
- *
- * Требует type resolution: в задачах detekt без классов правило молчит.
- */
+/** Исключение такой корутины не дойдёт до вызывающего; «огонь и забудь» — `launch { }`. Требует type resolution. */
 class UnawaitedAsync(config: Config) :
     Rule(config, "Deferred из async { } нужно дождаться (await/awaitAll); без результата — launch { }."),
     RequiresAnalysisApi {

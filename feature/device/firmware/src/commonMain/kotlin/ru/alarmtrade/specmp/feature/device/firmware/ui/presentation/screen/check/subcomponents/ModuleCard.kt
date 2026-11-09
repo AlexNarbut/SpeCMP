@@ -55,13 +55,10 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check
 
 private val ButtonHeight = 48.dp
 
-/** testTag кнопки «Обновить» / «Переустановить» карточки модуля. */
 internal fun moduleUpdateTag(moduleId: Long): String = "firmware_module_update_$moduleId"
 
-/** testTag иконки «обновить версию на сервере» карточки модуля. */
 internal fun moduleRefreshTag(moduleId: Long): String = "firmware_module_refresh_$moduleId"
 
-/** Карточка модуля блока: тип, название, текущая версия и состояние серверной версии с действиями. */
 @Composable
 internal fun ModuleCard(
     module: ModuleCardUi,

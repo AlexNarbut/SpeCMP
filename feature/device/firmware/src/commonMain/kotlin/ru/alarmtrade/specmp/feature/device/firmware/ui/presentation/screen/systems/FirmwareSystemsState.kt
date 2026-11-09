@@ -7,14 +7,10 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareSystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SystemsOrder
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 
-/** Система в списке: [expanded] — подсистемы видны (раскрыта пользователем или совпала с поиском). */
 @Immutable
 data class SystemRowUi(val system: FirmwareSystem, val subsystems: List<FirmwareSubsystem>, val expanded: Boolean)
 
-/**
- * [content] — список для экрана, считается из [systems], [query], [expanded] и [order] в фоне; [query] меняется
- * синхронно с вводом, поэтому поле поиска не отстаёт от списка.
- */
+/** [content] считается в фоне; [query] меняется синхронно с вводом — поле поиска не отстаёт от списка. */
 @Immutable
 data class FirmwareSystemsState(
     val content: LCEState<List<SystemRowUi>, FirmwareError> = LCEState.Loading,

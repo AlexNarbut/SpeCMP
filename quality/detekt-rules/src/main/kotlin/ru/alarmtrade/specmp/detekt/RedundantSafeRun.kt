@@ -23,13 +23,8 @@ import org.jetbrains.kotlin.psi.KtThisExpression
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
- * Обёртка того, что уже возвращает `Response` (docs/patterns.md, «Data — репозитории»):
- * - `safeRun { … }`, последнее выражение которого — `Response`: результат `Response<Response<T>>`, ошибка
- *   внутреннего `Response` не всплывает;
- * - `safeResponseRun { repository.foo(id) }` — блок из одного вызова, возвращающего `Response`, с простыми
- *   ресивером и аргументами (имена, `this`, литералы): бросать там нечему, контракт `Response` уже это гарантирует.
- *
- * Требует type resolution: в задачах detekt без классов правило молчит (как StateFlowValueMutation).
+ * `safeRun { }` над `Response` (выйдет `Response<Response<T>>`) и `safeResponseRun { repo.foo(id) }` с одним вызовом
+ * и простыми аргументами — бросать там нечему. Требует type resolution.
  */
 class RedundantSafeRun(config: Config) :
     Rule(config, "Не оборачивать в safeRun/safeResponseRun то, что уже возвращает Response."),

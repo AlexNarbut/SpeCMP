@@ -67,7 +67,6 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SaveForm
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SaveTarget
 
-/** K7 «Загрузить из…»: «Мои» (под модель блока), облако, файл, заводские настройки модели. */
 @Composable
 internal fun LoadSourcesPanel(
     deviceName: String,
@@ -112,7 +111,6 @@ internal fun LoadSourcesPanel(
     }
 }
 
-/** K6 «Сохранить в…»: «Мои конфигурации» / файл. */
 @Composable
 internal fun SaveTargetsPanel(deviceName: String, wide: Boolean, onPick: (SaveTarget) -> Unit, onDismiss: () -> Unit) {
     ConfigurationOptionsPanel(
@@ -150,7 +148,6 @@ internal fun SaveFormDialog(form: SaveForm, actions: TransferActions) {
     )
 }
 
-/** Модель конфигурации ≠ модели блока: предупреждение перед сравнением. */
 @Composable
 internal fun ModelMismatchDialog(
     sourceDeviceName: String,
@@ -175,7 +172,6 @@ internal fun ModelMismatchDialog(
     )
 }
 
-/** Не загрузилось: не подходит для блока / файл повреждён / нет связи с сервером. */
 @Composable
 internal fun LoadErrorDialog(kind: LoadErrorKind, onOtherSource: () -> Unit, onDismiss: () -> Unit) {
     val (title, text) = when (kind) {
@@ -216,7 +212,6 @@ internal fun SaveErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-/** «Сохранить» файла перезапишет его. */
 @Composable
 internal fun OverwriteDialog(fileName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     CmpDialog(
@@ -236,7 +231,6 @@ internal fun OverwriteDialog(fileName: String, onConfirm: () -> Unit, onDismiss:
     )
 }
 
-/** Выход из конфигурации с несохранёнными правками: «Сохранить» (или «как…») / «Не сохранять» / «Отмена». */
 @Composable
 internal fun ExitSaveDialog(
     changed: Int,
@@ -284,7 +278,6 @@ internal fun ExitSaveDialog(
     )
 }
 
-/** Блокирующий прогресс: подставляем значения конфигурации / сохраняем. */
 @Composable
 internal fun TransferProgressDialog(applying: Boolean) {
     CmpDialog(
