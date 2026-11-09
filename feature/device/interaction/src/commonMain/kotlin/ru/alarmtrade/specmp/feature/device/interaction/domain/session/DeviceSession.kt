@@ -29,6 +29,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModuleMode
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BootModeResult
@@ -168,7 +169,7 @@ class DeviceSession(
                         // Связь «готова», а блок не отвечает (сессия SDK не поднялась) — рвём соединение:
                         // связь уйдёт в DISCONNECTED, и BLE-цикл переподключения подключится заново.
                         emit(DeviceSessionState.Disconnected)
-                        sessionRepository.disconnect()
+                        sessionRepository.disconnect().onError { logger.w(it) { "Failed to drop a silent link" } }
                     }
                 }
             }
@@ -262,7 +263,9 @@ class DeviceSession(
         if (response is Response.Success && response.value == BootModeResult.Entered) {
             scope.launch {
                 delay(BOOT_MODE_RETRY_DELAY_MILLIS)
-                sessionRepository.setBootMode(target)
+                sessionRepository.setBootMode(target).onError {
+                    logger.d(it) { "Boot mode retry did not reach the board" }
+                }
             }
         }
         return response

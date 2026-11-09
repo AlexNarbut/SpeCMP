@@ -41,8 +41,9 @@ specmp:
   RepositoryWithContext:
     active: false
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Не оборачивать в safeRun/safeResponseRun то, что уже возвращает Response; требует type resolution.
   RedundantSafeRun:
-    active: false
+    active: true
   # Корневой Settings() создаёт только DI core/common для AppSettingsFactory.
   SettingsInstantiation:
     active: false
@@ -54,17 +55,20 @@ specmp:
   RawFlowFromRepository:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # getOrThrow() на Response — ошибка снова исключение; требует type resolution.
   ResponseGetOrThrow:
-    active: false
+    active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # Результат Response используется или обрабатывается на месте (onError/when); требует type resolution.
   ResponseIgnored:
-    active: false
+    active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
   DirectClockUsage:
     active: false
     excludes: ['**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
+  # В *Repository/*UseCase бросать — только внутри safeRun/safeResponseRun/asResponseFlow.
   ThrowInRepository:
-    active: false
+    active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
 
 complexity:

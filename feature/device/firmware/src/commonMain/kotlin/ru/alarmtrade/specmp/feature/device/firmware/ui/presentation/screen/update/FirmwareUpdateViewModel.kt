@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
@@ -302,7 +303,11 @@ class FirmwareUpdateViewModel(
     }
 
     fun onReconnect() {
-        intent { withContext(dispatchers.io) { deviceSession.reconnectNow() } }
+        intent {
+            // Экран остаётся на «Связь потеряна», пока сессия не вернётся, — неудачу попытки достаточно залогировать.
+            withContext(dispatchers.io) { deviceSession.reconnectNow() }
+                ?.onError { logger.w(it) { "Reconnect attempt failed" } }
+        }
     }
 
     fun onDisconnect() {

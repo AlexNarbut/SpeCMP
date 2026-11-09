@@ -33,6 +33,18 @@ class ThrowInRepositoryTest {
     }
 
     @Test
+    fun `reports Specialist repository implementations`() {
+        val code = """
+            internal class SpecialistLoginRepository(private val sdk: Sdk) : LoginRepository {
+                override suspend fun login(): Response<Unit> = safeRun { sdk.login()!! }
+                fun token(): String = sdk.token() ?: error("no token")
+            }
+        """.trimIndent()
+
+        assertEquals(1, rule.lint(code).size)
+    }
+
+    @Test
     fun `allows throwing inside safeRun, safeResponseRun, asResponseFlow chains and qualified check calls`() {
         val code = """
             internal class AuthRepositoryImpl : AuthRepository {

@@ -384,7 +384,7 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | SDK AlarmTrade — только data/di фич и профильные `core/*`; `@Serializable` — data/navigation; модели `domain/model` неизменяемы | Konsist `sdk-confinement`, `serializable-placement`, `domain-model-purity` | ✅ |
 | Члены репозиториев (интерфейсы `*Repository` и все интерфейсы `domain/repository`): `suspend` → `Response<T>`, потоки → `Flow`/`StateFlow`/`SharedFlow<Response<T>>`, иных членов нет; публичные потоки реализаций — тоже `Response` | Konsist `repository-contract`, detekt `RawFlowFromRepository` | ✅ |
 | Репозиторий сам main-safe | detekt `RepositoryWithContext` | ⏳ этап 3 |
-| Гигиена `Response`: не выбрасывать, не превращать в исключение, не оборачивать повторно; без `throw` в репозиториях | detekt `ResponseIgnored`, `ResponseGetOrThrow`, `RedundantSafeRun`, `ThrowInRepository` | ⏳ этап 3 |
+| Гигиена `Response`: не выбрасывать, не превращать в исключение, не оборачивать повторно; без `throw` в репозиториях и use case | detekt `ResponseIgnored`, `ResponseGetOrThrow`, `RedundantSafeRun`, `ThrowInRepository` | ✅ |
 | «Сейчас» — из внедрённых часов; `Settings()` — только фабрика `core/common` | detekt `DirectClockUsage`, `SettingsInstantiation` | ⏳ этап 3 |
 | Composable не достаёт зависимости из Koin (`koinInject`) | Konsist `composable-injection` | ⏳ этап 4 |
 

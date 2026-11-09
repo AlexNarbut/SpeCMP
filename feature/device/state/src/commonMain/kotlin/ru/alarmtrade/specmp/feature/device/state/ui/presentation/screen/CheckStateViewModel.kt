@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
@@ -127,7 +128,11 @@ class CheckStateViewModel(
     private fun exitProgramModeOnce() {
         if (currentState.programExiting) return
         reduce { copy(programExiting = true) }
-        launchOnDevice { withContext(dispatchers.io) { programModeRepository.exit() } }
+        launchOnDevice {
+            withContext(dispatchers.io) {
+                programModeRepository.exit().onError { logger.w(it) { "Program mode exit failed" } }
+            }
+        }
     }
 
     /** Нажатие (удержание) кнопки команды: опасные — через лист подтверждения. */
@@ -201,9 +206,15 @@ class CheckStateViewModel(
                     if (dialog.service) {
                         withTimeoutOrNull(COMMAND_TIMEOUT) {
                             repository.send(StateCommand.SERVICE_MODE_OFF)
+                                .onError { logger.w(it) { "Service mode was not turned off on exit" } }
                         }
                     }
-                    if (dialog.program) withTimeoutOrNull(COMMAND_TIMEOUT) { programModeRepository.exit() }
+                    if (dialog.program) {
+                        withTimeoutOrNull(COMMAND_TIMEOUT) {
+                            programModeRepository.exit()
+                                .onError { logger.w(it) { "Program mode was not turned off on exit" } }
+                        }
+                    }
                 }
             } finally {
                 postSideEffect(CheckStateEffect.Close)

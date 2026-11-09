@@ -7,6 +7,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceReboot
@@ -256,7 +257,9 @@ class FastMountViewModel(
     private fun exitMount() {
         safeLaunch {
             if (currentState.fixed?.transport == ConnectionTransport.BLE && currentDevice != null) {
-                withTimeoutOrNull(EXIT_TIMEOUT_MILLIS) { io { programMode.exit() } }
+                withTimeoutOrNull(EXIT_TIMEOUT_MILLIS) {
+                    io { programMode.exit() }.onError { logger.w(it) { "Program mode exit failed" } }
+                }
             }
             postSideEffect(FastMountEffect.Exit)
         }
@@ -356,18 +359,16 @@ class FastMountViewModel(
         safeLaunch { transition { io { repository.previous() } } }
     }
 
-    /**
-     * Переход SDK под общим замком VM: один за раз, повторные нажатия во время перехода пропускаются. Возвращает
-     * ответ; `null` — переход пропущен или отменён.
-     */
-    private suspend fun transition(call: suspend () -> Response<Unit>): Response<Unit>? {
-        var response: Response<Unit>? = null
-        executeWithProceedLock { response = runTransition(call) }
-        return response
+    /** Переход SDK под общим замком VM: один за раз, повторные нажатия во время перехода пропускаются. */
+    private suspend fun transition(call: suspend () -> Response<Unit>) {
+        executeWithProceedLock { runTransition(call) }
     }
 
-    /** Переход SDK, когда замок уже взят: «занято» на время вызова, снимается и при отмене. */
-    private suspend fun runTransition(call: suspend () -> Response<Unit>): Response<Unit>? {
+    /**
+     * Переход SDK, когда замок уже взят: «занято» на время вызова, снимается и при отмене; ошибка — в state.
+     * `true` — переход прошёл.
+     */
+    private suspend fun runTransition(call: suspend () -> Response<Unit>): Boolean {
         reduce { copy(master = master.copy(busy = true, error = null)) }
         var response: Response<Unit>? = null
         try {
@@ -375,7 +376,7 @@ class FastMountViewModel(
         } finally {
             finishCall(response)
         }
-        return response
+        return response is Response.Success
     }
 
     private fun finishCall(response: Response<Unit>?) {
@@ -403,7 +404,7 @@ class FastMountViewModel(
         deviceSession.expectReboot(DeviceReboot.Restart)
         reduce { copy(master = master.copy(reboot = RebootWait(from))) }
         try {
-            if (runTransition { io { repository.next() } } is Response.Success) {
+            if (runTransition { io { repository.next() } }) {
                 awaitReboot()
             } else {
                 deviceSession.cancelReboot()
@@ -520,7 +521,9 @@ class FastMountViewModel(
             transition {
                 val pending = currentState.master.checklist.tasks.filter { it.status == MountTaskStatus.PENDING }
                 reduce { pending.fold(this) { state, task -> state.withTaskStatus(task.id, MountTaskStatus.SKIPPED) } }
-                repeat(pending.size) { io { repository.skip() } }
+                repeat(pending.size) {
+                    io { repository.skip() }.onError { e -> logger.w(e) { "Checklist task skip failed" } }
+                }
                 io { repository.next() }
             }
         }

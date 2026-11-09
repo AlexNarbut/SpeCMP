@@ -4,6 +4,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -59,7 +60,7 @@ internal class CloudCardViewModel(
                 settings.open(source, reload = true).getValueIfSuccess()
                     ?.settings()?.filterIsInstance<CanCodeSetting>()?.firstOrNull()?.value?.value?.code
             } finally {
-                settings.close(source)
+                settings.close(source).onError { logger.w(it) { "Failed to close the settings session" } }
             }
         }
         reduce { copy(canCode = code?.takeIf { value -> value.isNotBlank() }) }
@@ -122,7 +123,7 @@ internal class CloudCardViewModel(
                             source,
                         )
                     } finally {
-                        settings.close(source)
+                        settings.close(source).onError { logger.w(it) { "Failed to close the settings session" } }
                     }
                 }
             } finally {

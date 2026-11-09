@@ -18,6 +18,7 @@ import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.interactors.appDevice.AppDeviceInformationInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 
 /**
@@ -55,7 +56,7 @@ class SpecialistInitializer(
         if (!started.compareAndSet(expect = false, update = true)) return
         scope.launch {
             try {
-                syncClientInfo()
+                syncClientInfo().onError { logger.w(it) { "Failed to sync the client info" } }
                 val language = applyLanguage(languageTag)
                 initConfigurationsLanguage(language)
             } finally {

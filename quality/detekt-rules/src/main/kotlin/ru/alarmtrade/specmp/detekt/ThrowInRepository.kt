@@ -9,6 +9,7 @@ import dev.detekt.api.Rule
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtCatchClause
+import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtIfExpression
@@ -27,7 +28,7 @@ import org.jetbrains.kotlin.psi.psiUtil.parents
 
 /**
  * Репозиторий и use case не бросают (docs/patterns.md, «Контракт результата»): в файле, объявляющем класс
- * `*RepositoryImpl`/`*UseCase`, `throw`, `error()`, `check`/`checkNotNull`/`require`/`requireNotNull` и `!!` допустимы
+ * (не интерфейс) `*Repository` (реализации `Specialist*Repository`)/`*RepositoryImpl`/`*UseCase`, `throw`, `error()`, `check`/`checkNotNull`/`require`/`requireNotNull` и `!!` допустимы
  * только внутри границы, превращающей исключение в `Response`: лямбда `safeRun { }`/`safeResponseRun { }` (в том
  * числе тело `= safeRun { }`) и лямбда звена `flow`-цепочки, которая оканчивается `.asResponseFlow()`. Private-хелпер,
  * вызываемый из `safeRun`, правило не видит — он возвращает `null`/`Response`, а бросает уже лямбда.
@@ -60,7 +61,10 @@ class ThrowInRepository(config: Config) :
 
     private fun check(element: KtExpression, what: String) {
         val owner = element.containingKtFile.collectDescendantsOfType<KtClassOrObject>()
-            .firstOrNull { declaration -> SUFFIXES.any { declaration.name.orEmpty().endsWith(it) } }
+            .firstOrNull { declaration ->
+                !(declaration is KtClass && declaration.isInterface()) &&
+                    SUFFIXES.any { declaration.name.orEmpty().endsWith(it) }
+            }
             ?: return
         if (element.isInsideBoundary()) return
         report(
@@ -115,7 +119,7 @@ class ThrowInRepository(config: Config) :
     private fun String?.isCancellation(): Boolean = this?.endsWith(CANCELLATION_EXCEPTION) == true
 
     private companion object {
-        val SUFFIXES = listOf("RepositoryImpl", "UseCase")
+        val SUFFIXES = listOf("Repository", "RepositoryImpl", "UseCase")
         val THROWING_CALLS = setOf("error", "check", "checkNotNull", "require", "requireNotNull")
         val BOUNDARY_CALLS = setOf("safeRun", "safeResponseRun")
         const val AS_RESPONSE_FLOW = "asResponseFlow"

@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.common.reusing
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -146,7 +147,7 @@ internal class MineViewModel(
                     from = source,
                 )
             } finally {
-                settings.close(source)
+                settings.close(source).onError { logger.w(it) { "Failed to close the settings session" } }
             }
         }
     }
@@ -179,7 +180,7 @@ internal class MineViewModel(
             try {
                 settings.snapshot(source, item.deviceName)
             } finally {
-                settings.close(source)
+                settings.close(source).onError { logger.w(it) { "Failed to close the settings session" } }
             }
         }
         when (response) {

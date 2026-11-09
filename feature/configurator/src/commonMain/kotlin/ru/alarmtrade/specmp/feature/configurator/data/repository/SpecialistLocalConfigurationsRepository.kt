@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.configurator.data.repository
 
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -9,6 +10,7 @@ import ru.alarmtrade.specialist.interactors.localConfigurations.requests.CreateL
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationRequest
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationsPageRequest
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
@@ -29,6 +31,8 @@ class SpecialistLocalConfigurationsRepository(
     private val interactor: () -> LocalSettingsConfigurationInteractor,
     private val settings: DeviceSettingsRepository,
 ) : LocalConfigurationsRepository {
+
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     private val _changes = MutableSharedFlow<Response<Unit>>(extraBufferCapacity = 1)
     override val changes: Flow<Response<Unit>> = _changes.asSharedFlow()
@@ -85,11 +89,11 @@ class SpecialistLocalConfigurationsRepository(
         val created = create(name, description, configuration.deviceName, from = old)
         if (created !is Response.Success) return created
         // Сессию старой записи открыло копирование — закрыть до удаления.
-        settings.close(old)
+        settings.close(old).onError { logger.w(it) { "Failed to close the settings session of ${configuration.id}" } }
         return when (val deleted = delete(configuration.id)) {
             // Старая не удалилась — убираем копию, иначе в списке окажутся обе (старое и новое название).
             is Response.Error -> {
-                delete(created.value.id)
+                delete(created.value.id).onError { logger.w(it) { "Failed to delete the copy ${created.value.id}" } }
                 deleted
             }
 

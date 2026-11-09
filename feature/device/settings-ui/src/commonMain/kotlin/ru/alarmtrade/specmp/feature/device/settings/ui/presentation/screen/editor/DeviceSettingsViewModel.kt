@@ -421,7 +421,11 @@ internal class DeviceSettingsViewModel(
         val title = from.displayTitle
         discardPreview()
         val snapshot = withContext(dispatchers.io) { repository.snapshot(from, deviceName) }
-        if (closeAfter && from != source) withContext(dispatchers.io) { repository.close(from) }
+        if (closeAfter && from != source) {
+            withContext(dispatchers.io) {
+                repository.close(from).onError { logger.w(it) { "Failed to close the source session" } }
+            }
+        }
         val next = (snapshot as? Response.Success)?.let {
             withContext(dispatchers.io) { repository.open(it.value, reload = true) }
         }
