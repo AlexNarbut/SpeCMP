@@ -14,6 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.resources.Strings
@@ -91,12 +93,18 @@ internal fun FastMountScreen(
 ) {
     val viewModel = koinViewModel<FastMountViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             FastMountEffect.Exit -> onExit()
+
             FastMountEffect.ChooseAnother -> onChooseAnother()
+
             FastMountEffect.AdvancedMount -> onOpenAdvancedMount()
-            is FastMountEffect.OpenFile -> viewModel.onFileOpenResult(slots.fileOpener.open(effect.name, effect.bytes))
+
+            is FastMountEffect.OpenFile -> scope.launch {
+                viewModel.onFileOpenResult(slots.fileOpener.open(effect.name, effect.bytes))
+            }
         }
     }
     val prep = remember(viewModel) {

@@ -287,7 +287,8 @@ Repository (Flow<Domain>)
 
 НЕ встраивать события в state. One-shot события — поток `sideEffect` `BaseViewModel`: VM шлёт `postSideEffect(…)`,
 экран собирает `collectSideEffect { }` (`core/ui`); своих `MutableSharedFlow`/`Channel` во VM нет (Konsist
-`view-model-owns-no-flows`, `docs/patterns.md`, «One-shot события (Effects)»):
+`view-model-owns-no-flows`, `docs/patterns.md`, «One-shot события (Effects)»). Обработчик короткий: снекбар и другое
+ожидание пользователя — в `rememberCoroutineScope().launch { }` (detekt `SideEffectAwaitsUi`):
 
 ```kotlin
 // ViewModel

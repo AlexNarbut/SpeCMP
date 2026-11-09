@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -29,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -100,6 +102,7 @@ internal fun DeviceSelectionScreen(
     val viewModel = koinViewModel<ScanDeviceViewModel>(parameters = { parametersOf(serialEnabled, alarmsOnly) })
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = rememberCmpSnackbarHostState()
+    val scope = rememberCoroutineScope()
 
     val connectionFailedText = stringResource(Strings.string.deviceselect_common_error_connection_failed)
     val boundToAnotherPhoneText = stringResource(Strings.string.deviceselect_common_error_bond_remove_device)
@@ -108,10 +111,16 @@ internal fun DeviceSelectionScreen(
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             ScanDeviceEffect.SessionCreated -> onSessionCreate()
+
             ScanDeviceEffect.Close -> onClose?.invoke()
-            ScanDeviceEffect.ConnectionFailed -> snackbarHostState.showSnackbar(connectionFailedText)
-            ScanDeviceEffect.BoundToAnotherPhone -> snackbarHostState.showSnackbar(boundToAnotherPhoneText)
-            ScanDeviceEffect.PairingRequired -> snackbarHostState.showSnackbar(pairingRequiredText)
+
+            ScanDeviceEffect.ConnectionFailed -> scope.launch { snackbarHostState.showSnackbar(connectionFailedText) }
+
+            ScanDeviceEffect.BoundToAnotherPhone -> scope.launch {
+                snackbarHostState.showSnackbar(boundToAnotherPhoneText)
+            }
+
+            ScanDeviceEffect.PairingRequired -> scope.launch { snackbarHostState.showSnackbar(pairingRequiredText) }
         }
     }
 

@@ -293,6 +293,7 @@ ViewModel через несколько composable, эффекты читают 
 | `SharingInsideFunction` | `.shareIn`/`.stateIn` в теле функции или геттера |
 | `UnawaitedAsync` | `async { }` оператором или в неиспользуемой переменной |
 | `NestedCollect` | `collect`/`collectLatest` внутри лямбды `collect`/`collectLatest` |
+| `SideEffectAwaitsUi` | `showSnackbar`/`showResult` прямо в лямбде `collectSideEffect { }` (не внутри `launch`/`async`): обработчики эффектов последовательны, снекбар держит навигацию; локальные `fun` и вызовы в отдельных функциях-обработчиках не проверяются |
 
 `UpdateLambdaSideEffects`, `CatchSwallowsCancellation`, `MutexIsLockedCheck`, `SuspendInsideSynchronized`,
 `UnawaitedAsync` требуют type resolution (в `iosMain` молчат), остальные — по именам. Подавление своего
@@ -359,7 +360,7 @@ ViewModel через несколько composable, эффекты читают 
 | `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
 | `repository-impl-tested` | у реализации репозитория (класс `..data..` с супертипом `*Repository`) есть тест в тестовом source set её модуля, использующий класс по имени в коде (не в `import`/KDoc/строке); исключений нет |
 | `view-model` | ViewModel наследует `BaseViewModel` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — пакет `presentation` |
-| `view-model-owns-no-flows` | у наследника `BaseViewModel` нет своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`sideEffectFlow`/`mutableStateOf` |
+| `view-model-owns-no-flows` | у наследника `BaseViewModel` нет своих `MutableStateFlow`/`MutableSharedFlow`/`Channel`/`mutableStateOf` |
 | `repository-contract` | члены интерфейсов `*Repository` и интерфейсов пакета `domain/repository`: `suspend` → `Response<…>`, `Flow`/`StateFlow`/`SharedFlow` → `…<Response<…>>`; синхронных функций и свойств-не-потоков нет |
 | `service-contract` | члены интерфейсов `*Coordinator`/`*Controller` и пакета `domain/service`: `suspend` → `Response<…>`, потоки → `…<Response<…>>`, синхронная функция — только команда с результатом `Unit`/`Boolean`; состояние сервиса в памяти (`DeviceSession.state`/`reboot`/`transport`) — `@Suppress` с причиной |
 | `no-constructor-side-effects` | у класса нет `init { }` (кроме `AndroidNetworkMonitor`/`IosNetworkMonitor` — регистрация в ОС) и инициализаторов свойств, запускающих корутины (`launch`/`async`/`launchIn` без `CoroutineStart.LAZY`, `SharingStarted.Eagerly`); геттер и `by lazy` — можно |
@@ -481,6 +482,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | Нет `var`/изменяемых коллекций в объектах со своим scope и сервисах data-слоя | detekt `SharedMutableStateInSingleton` | ✅ |
 | `CoroutineScope` — из DI (`serviceScope`) или с явным `cancel()`; `SupervisorJob()` + обработчик; без `GlobalScope`; диспетчеры — `AppDispatchers` | detekt `UnmanagedCoroutineScope`, `GlobalCoroutineUsage`, `InjectDispatcher` | ✅ |
 | `shareIn`/`stateIn` — только в инициализаторе свойства; `async` дожидаются; без `collect` в `collect` | detekt `SharingInsideFunction`, `UnawaitedAsync`, `NestedCollect` | ✅ |
+| Обработчик `collectSideEffect` короткий: снекбар и прочее ожидание UI — в `rememberCoroutineScope().launch { }` | detekt `SideEffectAwaitsUi` (по именам `showSnackbar`/`showResult`; диалоги файлов — ревью) | ✅ |
 | Start-once сервис и место с `Mutex`/`tryLock` покрыты стресс-тестом «32 параллельных вызова → эффект один раз» | ревью (эталон `DeviceSessionImplTest`) | — |
 | Тестовые дублёры (`Fake*`/`Stub*`) — только в тестах; модули `*:testing` подключаются только в тестовых source set'ах | Konsist `no-fakes-in-production`, `testing-modules-test-only` | ✅ |
 | Общие хелперы `core/common` и `core.ui.lce` — только под реальный вызов: без вызовов вне своего модуля-тестов удаляются | Konsist `core-helper-usage` | ✅ |

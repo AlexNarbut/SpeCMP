@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -36,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -161,12 +163,13 @@ fun CheckStateEntry(onBack: () -> Unit, fastMount: CheckStateFastMount? = null) 
     val viewModel = koinViewModel<CheckStateViewModel> { parametersOf(fastMount != null) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = rememberCmpSnackbarHostState()
+    val scope = rememberCoroutineScope()
     val leave = fastMount?.onBack ?: onBack
     val checklist = fastMount?.checklist
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
-            is CheckStateEffect.CommandFinished -> showResult(snackbar, effect, viewModel::onRetry)
-            CheckStateEffect.Close -> onBack()
+            is CheckStateEffect.CommandFinished -> scope.launch { showResult(snackbar, effect, viewModel::onRetry) }
+            CheckStateEffect.Close -> leave()
             CheckStateEffect.Next -> fastMount?.onNext?.invoke()
         }
     }

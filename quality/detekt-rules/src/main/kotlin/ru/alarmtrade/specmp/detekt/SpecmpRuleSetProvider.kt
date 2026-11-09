@@ -39,6 +39,7 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("SharingInsideFunction") to ::SharingInsideFunction,
             RuleName("UnawaitedAsync") to ::UnawaitedAsync,
             RuleName("NestedCollect") to ::NestedCollect,
+            RuleName("SideEffectAwaitsUi") to ::SideEffectAwaitsUi,
         ),
     )
 

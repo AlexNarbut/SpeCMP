@@ -44,6 +44,7 @@ class SpecmpRuleSetProviderTest {
                 "SharingInsideFunction",
                 "UnawaitedAsync",
                 "NestedCollect",
+                "SideEffectAwaitsUi",
             ),
             ruleSet.rules.keys.map { it.value }.toSet(),
         )

@@ -848,11 +848,11 @@ presentation/screen/<screen>/
 | Член | Что делает |
 |---|---|
 | `val state: StateFlow<S>` | единственный state экрана: `stateIn(WhileSubscribed(5 s))` поверх приватного `MutableStateFlow`; первая подписка запускает `onStart()` |
-| `val sideEffect: SharedFlow<E>` | one-shot эффекты (`replay = 0`, буфер 16, `DROP_OLDEST`); экран без эффектов — `E = Nothing` |
+| `val sideEffect: Flow<E>` | one-shot эффекты: `Channel(BUFFERED)` + `receiveAsFlow()` (как `FAN_OUT` в Orbit) — без подписчика копятся, каждый получает один сборщик; экран без эффектов — `E = Nothing` |
 | `protected open suspend fun onStart()` | стартовая работа вместо `init`: один раз за жизнь VM, при первой подписке UI на `state`, отдельной корутиной (цепочку state не держит) |
 | `protected val currentState: S` | текущее значение state для чтения в интентах |
 | `protected fun reduce(transform: S.() -> S)` | единственный способ изменить state (атомарный `update`) |
-| `protected fun postSideEffect(effect: E)` | эффект в `sideEffect` |
+| `protected fun postSideEffect(effect: E)` | эффект в `sideEffect` (`trySend`, не блокирует; переполнение буфера — в лог) |
 | `protected fun intent(block): Job` / `safeLaunch(block)` / `safeLaunch(context, block)` | запуск корутины с `CoroutineExceptionHandler` базы (необработанное исключение — в лог, не падение) |
 | `protected fun <T> Flow<T>.collectIntoState(reducer: S.(T) -> S): Job` | привязка потока к state: каждое значение — через `reduce`; собирается, только пока экран подписан на `state` (с тем же запасом 5 с), и перезапускается при возврате |
 | `protected fun <T> Flow<Response<T>>.collectIntoState(onError, reducer): Job` | то же для `Flow<Response<T>>`; `onError` обязателен (без него вызов не компилируется — перегрузка `@Deprecated(ERROR)`) |
@@ -1171,20 +1171,35 @@ viewModel.sideEffect.collectSideEffect { effect ->
         is MainScreenEffect.Navigate -> onNavigateToFeature(effect.target)
     }
 }
+
+// CheckStateScreen.kt — ожидание пользователя (снекбар) не держит обработчик
+val scope = rememberCoroutineScope()
+viewModel.sideEffect.collectSideEffect { effect ->
+    when (effect) {
+        is CheckStateEffect.CommandFinished -> scope.launch { showResult(snackbar, effect, viewModel::onRetry) }
+        CheckStateEffect.Close -> leave()
+    }
+}
 ```
 
 **Правила:**
 
 - Тип события — `sealed interface XxxEffect` (или `XxxSideEffect`) в своём файле; даже одно событие — `data object`
   (`Close`), а не голый `Unit`/`Boolean`. Экран без эффектов — `E = Nothing`.
-- Поток эффектов: `replay = 0` (повтор события после пересоздания экрана — двойная навигация), буфер 16,
-  `DROP_OLDEST` — `postSideEffect` не блокирует и не теряет события, пока обработчик suspend'ится.
-- Обработчик в `collectSideEffect` выполняется последовательно: пока он висит (`showSnackbar` — секунды), следующие
-  эффекты ждут в буфере; бесконечно блокироваться он не должен.
+- Доставка — как `FAN_OUT` в Orbit MVI: `Channel(BUFFERED)` + `receiveAsFlow()`. Эффект, отправленный без
+  подписчика (из `onStart` до отрисовки, пока экран ниже `STARTED`), ждёт в буфере и доставляется при подписке;
+  каждый эффект получает ровно один сборщик, повторов после пересоздания экрана нет. `postSideEffect` — `trySend`:
+  не блокирует, при переполнении буфера (64) эффект отбрасывается с записью в лог.
+- Обработчик в `collectSideEffect` выполняется последовательно (как `collectSideEffect` Orbit): пока он висит,
+  следующие эффекты ждут. Поэтому обработчик короткий: навигация, закрытие, вызов интента — сразу, а всё, что ждёт UI
+  или пользователя (`showSnackbar`, `showResult`, системный диалог сохранения/открытия файла), — в
+  `rememberCoroutineScope().launch { }` экрана. Логика «по действию снекбара — навигация/повтор» остаётся внутри этой
+  корутины. Прямой `showSnackbar`/`showResult` в лямбде `collectSideEffect` ловит detekt `SideEffectAwaitsUi`. Тосты
+  при этом всё равно идут по очереди — их упорядочивает `CmpSnackbarHostState`.
 - `collectSideEffect` собирает с `repeatOnLifecycle(STARTED)` и `rememberUpdatedState` — подписка приостанавливается в
   фоне, пересоздание лямбды не перезапускает сбор.
-- Эффекты шлём в ответ на действия пользователя, когда экран на переднем плане. Событие, эмитнутое без коллектора
-  (из `onStart` до отрисовки, в фоне), теряется; результат, который нельзя потерять, — поле state.
+- Эффект, полученный, но не обработанный до ухода экрана в фон (отмена посреди обработчика), теряется; результат,
+  который нельзя потерять, — поле state.
 - На эффект подписывается ровно один экран.
 
 ### Compose: локальное состояние и стабильность

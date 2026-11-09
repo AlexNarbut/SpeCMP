@@ -16,6 +16,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -175,10 +176,8 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(slots.filePicker) { slots.filePicker.results.collect(viewModel::onFilePicked) }
-    // Каждый эффект — в своей корутине: тост «Сохранено» с «Открыть» висит до 10 с, и выход по «назад» (тоже эффект)
-    // не должен ждать, пока он закроется. Тосты всё равно идут по очереди — их упорядочивает snackbarHostState.
     viewModel.sideEffect.collectSideEffect { effect ->
-        scope.launch { handleEffect(effect, viewModel, slots, snackbarHostState) }
+        handleEffect(effect, viewModel, slots, snackbarHostState, scope)
     }
 
     val onBack = { if (!backStack.popSafe()) viewModel.onExitRequest(ExitTarget.BACK) }
@@ -277,49 +276,55 @@ private fun transferActions(viewModel: DeviceSettingsViewModel) = TransferAction
 )
 
 @Suppress("CyclomaticComplexMethod") // плоский when по эффектам экрана
-private suspend fun handleEffect(
+// Ожидание UI (тосты до 10 с, «Сохранить как») — в scope экрана: выход по «назад» (тоже эффект) его не ждёт.
+// Тосты всё равно идут по очереди — их упорядочивает snackbarHostState.
+private fun handleEffect(
     effect: DeviceSettingsEffect,
     viewModel: DeviceSettingsViewModel,
     slots: EditorSlots,
     snackbarHostState: CmpSnackbarHostState,
+    scope: CoroutineScope,
 ) {
     when (effect) {
-        is DeviceSettingsEffect.Written -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_editor_msg_written, effect.count),
-        )
+        is DeviceSettingsEffect.Written -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_editor_msg_written, effect.count))
+        }
 
-        DeviceSettingsEffect.SetValueFailed -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_editor_error_set_value),
-        )
+        DeviceSettingsEffect.SetValueFailed -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_editor_error_set_value))
+        }
 
-        DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_reset_msg_done),
-        )
+        DeviceSettingsEffect.ResetDone -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_reset_msg_done))
+        }
 
         is DeviceSettingsEffect.Exit -> when (effect.target) {
             ExitTarget.BACK -> slots.onExit()
             ExitTarget.FIRMWARE_UPDATE -> slots.onOpenFirmwareUpdate()
         }
 
-        is DeviceSettingsEffect.Loaded -> snackbarHostState.showSnackbar(
-            if (effect.count > 0) {
-                getString(Strings.string.settings_loaded_msg, effect.count)
-            } else {
-                getString(Strings.string.settings_common_msg_loaded_same)
-            },
-            duration = CmpSnackbarDuration.Long,
-        )
+        is DeviceSettingsEffect.Loaded -> scope.launch {
+            snackbarHostState.showSnackbar(
+                if (effect.count > 0) {
+                    getString(Strings.string.settings_loaded_msg, effect.count)
+                } else {
+                    getString(Strings.string.settings_common_msg_loaded_same)
+                },
+                duration = CmpSnackbarDuration.Long,
+            )
+        }
 
         DeviceSettingsEffect.PickFile -> slots.filePicker.launch()
 
-        is DeviceSettingsEffect.ExportFile ->
+        is DeviceSettingsEffect.ExportFile -> scope.launch {
             viewModel.onFileExported(slots.fileSaver.save(effect.path, effect.fileName))
+        }
 
-        is DeviceSettingsEffect.FileSaved -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_common_msg_saved_file, effect.name),
-        )
+        is DeviceSettingsEffect.FileSaved -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_common_msg_saved_file, effect.name))
+        }
 
-        is DeviceSettingsEffect.SavedToMine -> {
+        is DeviceSettingsEffect.SavedToMine -> scope.launch {
             val open = slots.onOpenConfiguration
             val result = snackbarHostState.showSnackbar(
                 getString(Strings.string.settings_common_msg_saved_mine),
@@ -329,9 +334,9 @@ private suspend fun handleEffect(
             if (result == CmpSnackbarResult.ActionPerformed) open?.invoke(effect.configuration)
         }
 
-        DeviceSettingsEffect.Saved -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_common_msg_saved),
-        )
+        DeviceSettingsEffect.Saved -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_common_msg_saved))
+        }
 
         is DeviceSettingsEffect.WriteToDevice -> slots.onWriteToDevice?.invoke(effect.source)
     }

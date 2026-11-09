@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -14,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -57,6 +59,7 @@ fun VehicleSelectEntry(
     val currentOnPick by rememberUpdatedState(onPick)
     val currentOnBack by rememberUpdatedState(onBack)
 
+    val scope = rememberCoroutineScope()
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is VehicleSelectEffect.Picked -> currentOnPick(effect.car)
@@ -65,10 +68,14 @@ fun VehicleSelectEntry(
 
             is VehicleSelectEffect.CanCopied -> {
                 clipboard.setText(AnnotatedString(effect.code))
-                snackbarHostState.showSnackbar(getString(Strings.string.vehicle_select_msg_can_copied, effect.code))
+                scope.launch {
+                    snackbarHostState.showSnackbar(getString(Strings.string.vehicle_select_msg_can_copied, effect.code))
+                }
             }
 
-            is VehicleSelectEffect.PickFailed -> snackbarHostState.showSnackbar(effect.error.messageText())
+            is VehicleSelectEffect.PickFailed -> scope.launch {
+                snackbarHostState.showSnackbar(effect.error.messageText())
+            }
         }
     }
 
