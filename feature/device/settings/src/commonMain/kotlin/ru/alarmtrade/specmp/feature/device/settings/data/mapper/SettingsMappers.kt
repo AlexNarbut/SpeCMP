@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.settings.data.repository
+package ru.alarmtrade.specmp.feature.device.settings.data.mapper
 
 import ru.alarmtrade.common.settings.interaction.model.menu.SettingsPath
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.AutoStartScheduleSetting as SdkAutoStartScheduleSetting

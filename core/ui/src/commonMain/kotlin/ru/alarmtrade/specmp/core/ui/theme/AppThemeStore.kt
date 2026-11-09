@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.core.ui.theme
 
-import com.russhwolf.settings.Settings
+import ru.alarmtrade.specmp.core.common.di.platformSettings
 
 /**
  * Тема, выбранная пользователем (переключатель в боковом меню), между запусками. Интерфейсом — чтобы галереи и
@@ -13,13 +13,11 @@ interface AppThemeStore {
     fun save(isDark: Boolean)
 }
 
-/** Хранилище приложения — свой `Settings` (как у языка приложения), без DI: тема нужна до первой композиции. */
+/** Платформенный `Settings` процесса (как у языка приложения), без DI: тема нужна до первой композиции. */
 object DefaultAppThemeStore : AppThemeStore {
     private const val KEY = "app_theme_dark"
 
-    private val settings: Settings by lazy { Settings() }
+    override fun savedIsDark(): Boolean? = platformSettings.getBooleanOrNull(KEY)
 
-    override fun savedIsDark(): Boolean? = settings.getBooleanOrNull(KEY)
-
-    override fun save(isDark: Boolean) = settings.putBoolean(KEY, isDark)
+    override fun save(isDark: Boolean) = platformSettings.putBoolean(KEY, isDark)
 }

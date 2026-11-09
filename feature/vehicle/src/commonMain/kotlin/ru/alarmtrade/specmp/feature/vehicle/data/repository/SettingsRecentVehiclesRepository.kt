@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.vehicle.data.preferences
+package ru.alarmtrade.specmp.feature.vehicle.data.repository
 
 import com.russhwolf.settings.Settings
 import kotlinx.serialization.SerialName
@@ -11,15 +11,18 @@ import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.safeRun
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
-import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
+import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesRepository
 
-/** [RecentVehiclesStore] в именованном хранилище приложения: JSON-список на каталог. Битые данные — пустой список. */
-internal class SettingsRecentVehiclesStore(settings: Settings) : RecentVehiclesStore {
+/**
+ * [RecentVehiclesRepository] в именованном хранилище приложения: JSON-список на каталог. Битые данные — пустой
+ * список.
+ */
+internal class SettingsRecentVehiclesRepository(settings: Settings) : RecentVehiclesRepository {
 
     // Отдельный список (и замок) на каталог.
     private val lists = VehicleCatalog.entries.associateWith { catalog ->
         RecentList<CarSummary, Int>(
-            max = RecentVehiclesStore.MAX_RECENT,
+            max = RecentVehiclesRepository.MAX_RECENT,
             key = { it.id },
             read = {
                 settings.getStringOrNull(catalog.key())

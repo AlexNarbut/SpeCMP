@@ -282,7 +282,7 @@ isDark = !isDark
 ```
 
 Выбор темы запоминается между запусками: `AppTheme(onThemeChange, themeStore = DefaultAppThemeStore)` в корне
-приложения (`App`, `FlasherApp`) берёт сохранённый выбор (`theme/AppThemeStore.kt`, свой `Settings`, ключ
-`app_theme_dark`), а пока пользователь не переключал тему — системную. Переключение через `LocalThemeIsDark`
+приложения (`App`, `FlasherApp`) берёт сохранённый выбор (`theme/AppThemeStore.kt`, платформенный `Settings` процесса
+`platformSettings` из `core/common/di`, ключ `app_theme_dark`), а пока пользователь не переключал тему — системную. Переключение через `LocalThemeIsDark`
 сохраняется само. Галереи и тесты вызывают `AppTheme` без хранилища — тема как в системе, сохранённый выбор на
 снимки не влияет.

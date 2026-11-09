@@ -7,8 +7,8 @@
 - Фича не про подключённый блок и от `feature/device/*` не зависит: устройство приходит в запросе (`VehicleDeviceFilter`: `Type(ALARM|MICROBOT)` — блок не подключён, `Device(deviceName)` — модель блока).
 - `VehicleCatalogRepository` (тонкий, `Response<T>`): `brands` / `models` / `trims` по `CatalogQuery(catalog, device, groups)`, `card(carId, groups)`, `findByCanCode(code, device, groups)`, `summary(carId)`. Сервер отдаёт уровни целиком — без страниц и текстового поиска (поиск по названию — локальный, в UI).
 - Каталоги: `ALL` — `carsInteractor` (фильтр по подсистемам устройства: для `Device` — подсистемы модели из `deviceInformationInteractor`, для `Type` — `ALARM_MAIN`/`MICROBOT_MAIN`; фильтр групп функций — на сервере, пустой набор = `null`); `WITH_CONFIGURATIONS` — `configurationInteractor` (только автомобили с конфигурациями, фильтр — модель блока, `""` = все модели; группы не поддерживаются). Карточка и поиск по CAN — всегда `carsInteractor`.
-- Модель своя, без типов SDK (`data/repository/CarMappers.kt`): `CarBus` — все 16 значений `CarBusGroup` + `UNKNOWN`, `family` (CAN / CAN_FD / LIN / BEAN / IMO / UNKNOWN) — цвет чипа; `CarCapability` (`NoData` / `Supported(note)` / `NotSupported(note)`); функции, фото, документы — по `order` сервера; пустые строки (URL картинок, описания, примечания) → `null` / отброшены.
-- Недавние — `RecentVehiclesStore` (`AppSettingsFactory("vehicles")`, JSON на каталог, до 5, новые первыми, битые данные — пустой список).
+- Модель своя, без типов SDK (`data/mapper/CarMappers.kt`): `CarBus` — все 16 значений `CarBusGroup` + `UNKNOWN`, `family` (CAN / CAN_FD / LIN / BEAN / IMO / UNKNOWN) — цвет чипа; `CarCapability` (`NoData` / `Supported(note)` / `NotSupported(note)`); функции, фото, документы — по `order` сервера; пустые строки (URL картинок, описания, примечания) → `null` / отброшены.
+- Недавние — `RecentVehiclesRepository` (`SettingsRecentVehiclesRepository`, `AppSettingsFactory("vehicles")`, JSON на каталог, до 5, новые первыми, битые данные — пустой список).
 
 ## UI (`vehicle-ui`)
 

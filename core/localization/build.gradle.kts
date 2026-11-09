@@ -12,7 +12,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.multiplatformSettings)
+            implementation(project(":core:common"))
             implementation(libs.koin.core)
 
             api(libs.compose.runtime)

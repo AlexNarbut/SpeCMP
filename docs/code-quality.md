@@ -269,8 +269,8 @@ ViewModel через несколько composable, эффекты читают 
 `SafeRunInViewModel`) включены без исключений для наследников (`ViewModelContractNames` пропускает собственные
 параметры типа промежуточной базы `BaseDeviceViewModel`). `RawFlowFromRepository` (публичный поток реализации
 `*Repository` без `Response`) и `RepositoryWithContext` (исключения структурные: класс со свойством/параметром/супертипом `CoroutineScope` и
-`withContext(NonCancellable)` — без `@Suppress`) включены; остальные правила `Response`, данных и времени перенесены, но выключены
-(`active: false`) до подэтапов миграции, где убираются их нарушения. Подавление своего
+`withContext(NonCancellable)` — без `@Suppress`) включены, как и все остальные правила набора (`Response`, данные, время,
+`SettingsInstantiation`). Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
 Осознанно выключено или смягчено: `LongParameterList` (наборы колбэков `*Actions` длинные по построению; порог
@@ -315,7 +315,13 @@ ViewModel через несколько composable, эффекты читают 
 | `composable-in-presentation` | `@Composable` фичи — только в `presentation` |
 | `sdk-confinement` | типы AlarmTrade SDK (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — data/di фич, `core/specialist`, `core/permissions`, `core/network`, приложения |
 | `no-fakes-in-production` | `Fake*`/`Stub*` — только в тестах |
-| `forbidden-suffix` | `*Helper`/`*Utils` запрещены; `*Manager` — только в `androidMain`/`iosMain`/`jvmMain` |
+| `forbidden-suffix` | `*Helper`/`*Utils` запрещены; `*Manager` — только в `androidMain`/`iosMain`/`jvmMain`; `*Store`/`*Storage` в фичах — нет (это `*Repository`) |
+| `mapper-placement` | top-level `toDomain*`/`to*Dto` — `internal`/`private` в пакете `data.mapper` (в `core` — `mapper`) своего модуля |
+| `storage-usage` | в фиче `com.russhwolf.settings.*` и `core.common.settings.*` — только `data` и `di` |
+| `use-case-package` | `*UseCase` — в `domain/usecase` фичи (в `core` — пакет `usecase`) |
+| `use-case-contract` | `*UseCase` — ≥ 2 зависимостей-ролей в конструкторе (`*Repository`/`*UseCase`/`*Coordinator`/`*Controller`/`*Service`/`*Session`/`*Closeable`, `List<…>` — по элементу) и единственный публичный `operator fun invoke`: `suspend` → `Response`, иначе `Flow`/`StateFlow<Response>` |
+| `capability-usage` | API `core.permissions` (`PermissionsProvider`, `BindEffect`, `permissionsModule`, `blePermissions`) и moko-permissions в фиче — только `data`/`di`/файл ViewModel; порты `presentation/platform` — только presentation своего модуля, `di`, приложения (временно: `configurator-ui` → порты `device:settings-ui`) |
+| `foreground-usage` | импорт `core.lifecycle` (кроме `core.lifecycle.di`) — только `data`, `di`, файлы ViewModel и сам `core/lifecycle` |
 | `top-level-init-order` | верхнеуровневое свойство не читает свойство, объявленное ниже в файле |
 | `data-source-consumers` | `*DataSource` в конструкторе — только у реализаций репозиториев и составных `*DataSource` |
 | `view-model` | ViewModel наследует `BaseViewModel` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — пакет `presentation` |
@@ -328,7 +334,7 @@ ViewModel через несколько composable, эффекты читают 
 | `view-model-constructor` | у наследника `BaseViewModel` не больше 12 параметров первичного конструктора |
 | `no-service-locator` | Koin как сервис-локатор — `org.koin.core.component.*` (`KoinComponent`, `inject`, `get`), `org.koin.core.context.*` (`GlobalContext`, `startKoin`, `loadKoinModules`), `org.koin.mp.KoinPlatformTools`/`KoinPlatform`, `org.koin.java.KoinJavaComponent`, `org.koin.compose.getKoin`, `org.koin.core.Koin`, `org.koin.android.ext.android.*` — импортом (включая алиас) или полным именем — только пакеты `..di..`, composition roots и обёртки (`composeApp`, `flasherApp`, `androidApp`, `desktopApp`, `flasherAndroidApp`, `flasherDesktopApp`) и файлы с Android-компонентом, который создаёт система (`Activity`/`Application`/`Service`/`BroadcastReceiver`/`Worker`/`Initializer`…). Нарушение — декларация верхнего уровня (подавление — `@Suppress` на ней), импорт со звёздочкой и неиспользованный импорт — сам импорт. `koinInject` в composable — не это правило (этап 4) |
 
-Остальные правила BabySteps (`mapper-placement`, Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
+Остальные правила BabySteps (Koin в composable и др.) добавляются в подэтапах миграции, где убираются их нарушения.
 Подавление — `@Suppress("konsist.<id>")` (для файла — `@file:Suppress`) с причиной комментарием строкой выше.
 Новое правило проверяется на временном нарушителе (тест падает), затем нарушитель удаляется.
 
@@ -397,7 +403,10 @@ set'ы (`src/test`, `src/*Test`) — фикстуры тестов повтор�
 | Диспетчер выбирает вызывающий (VM/точка входа): в `*Repository`/`*DataSource` нет `withContext`, кроме класса со своим `CoroutineScope` и `withContext(NonCancellable)` | detekt `RepositoryWithContext` | ✅ |
 | Гигиена `Response`: не выбрасывать, не превращать в исключение, не оборачивать повторно; без `throw` в репозиториях и use case | detekt `ResponseIgnored`, `ResponseGetOrThrow`, `RedundantSafeRun`, `ThrowInRepository` | ✅ |
 | «Сейчас» и пояс — из внедрённых `Clock`/`TimeZoneSource`, в composable — `LocalClock`/`LocalTimeZoneSource` | detekt `DirectClockUsage` | ✅ |
-| `Settings()` — только фабрика `core/common` | detekt `SettingsInstantiation` | ⏳ этап 3 |
+| Платформенный `Settings()` — только `core/common/di` (`platformSettings`); в фиче хранилище — только data/di, `*Store` → `*Repository` | detekt `SettingsInstantiation`, Konsist `storage-usage`, `forbidden-suffix` | ✅ |
+| Мапперы `toDomain*` — `internal` в `data/mapper` | Konsist `mapper-placement` | ✅ |
+| `*UseCase` — в `domain/usecase`, оркестрация ≥ 2 зависимостей, только `operator fun invoke` с `Response` | Konsist `use-case-package`, `use-case-contract` | ✅ |
+| Платформенные возможности (`core.permissions`, порты `presentation/platform`, `core.lifecycle`) — где начинается вызов | Konsist `capability-usage`, `foreground-usage` | ✅ |
 | Composable не достаёт зависимости из Koin (`koinInject`) | Konsist `composable-injection` | ⏳ этап 4 |
 
 ---

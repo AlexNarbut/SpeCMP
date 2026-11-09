@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.core.common.di
 
-import com.russhwolf.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.datetime.Clock
@@ -18,8 +17,7 @@ val commonModule = module {
     single<Clock> { Clock.System }
     single<TimeZoneSource> { TimeZoneSource.System }
 
-    // Именованные key-value хранилища поверх одного платформенного Settings (no-arg).
-    single { AppSettingsFactory(Settings()) }
+    single { AppSettingsFactory(platformSettings) }
 
     // Скоуп уровня приложения: для работы, которая должна завершиться даже после
     // смерти инициатора (например, закрытие чат-сессии из ViewModel.onCleared).

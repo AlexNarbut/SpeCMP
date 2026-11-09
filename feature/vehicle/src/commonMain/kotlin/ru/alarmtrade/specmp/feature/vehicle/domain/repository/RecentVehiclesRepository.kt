@@ -5,7 +5,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 
 /** Недавно открытые/выбранные автомобили — отдельно для каждого каталога, новые первыми. */
-interface RecentVehiclesStore {
+interface RecentVehiclesRepository {
     suspend fun recent(catalog: VehicleCatalog): Response<List<CarSummary>>
 
     /** Поднять [car] наверх (без дублей), хранится не больше [MAX_RECENT]; атомарно. Ответ — новый список. */

@@ -25,6 +25,7 @@ import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.device.state.data.mapper.toVehicleState
 import ru.alarmtrade.specmp.feature.device.state.domain.model.CommandReply
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
 import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState

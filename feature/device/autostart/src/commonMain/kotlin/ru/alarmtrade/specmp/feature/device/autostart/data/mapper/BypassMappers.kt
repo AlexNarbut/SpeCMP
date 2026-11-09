@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.autostart.data.repository
+package ru.alarmtrade.specmp.feature.device.autostart.data.mapper
 
 import ru.alarmtrade.specialist.domain.alarmDevice.bypass.BypassLearningError
 import ru.alarmtrade.specialist.domain.alarmDevice.bypass.BypassLearningState

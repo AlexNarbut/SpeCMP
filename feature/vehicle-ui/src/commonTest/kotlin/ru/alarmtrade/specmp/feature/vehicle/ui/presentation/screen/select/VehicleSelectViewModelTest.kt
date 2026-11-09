@@ -39,7 +39,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CatalogQuery
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
-import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
+import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesRepository
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
@@ -77,7 +77,7 @@ class VehicleSelectViewModelTest {
         val vm = VehicleSelectViewModel(
             request = VehicleSelectRequest(mode, catalog, device, firmwareCanCode, warnOnCanMismatch),
             repository = repository,
-            recentStore = recent,
+            recentRepository = recent,
             dispatchers = AppDispatchers(dispatcher, dispatcher, dispatcher),
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()
@@ -477,7 +477,7 @@ private class FakeCatalog : VehicleCatalogRepository {
     }
 }
 
-private class FakeRecent : RecentVehiclesStore {
+private class FakeRecent : RecentVehiclesRepository {
     private val items = mutableMapOf<VehicleCatalog, List<CarSummary>>()
 
     fun items(catalog: VehicleCatalog): List<CarSummary> = items[catalog].orEmpty()
@@ -485,7 +485,8 @@ private class FakeRecent : RecentVehiclesStore {
     override suspend fun recent(catalog: VehicleCatalog): Response<List<CarSummary>> = Response.Success(items(catalog))
 
     override suspend fun push(catalog: VehicleCatalog, car: CarSummary): Response<List<CarSummary>> {
-        items[catalog] = (listOf(car) + items(catalog).filter { it.id != car.id }).take(RecentVehiclesStore.MAX_RECENT)
+        items[catalog] =
+            (listOf(car) + items(catalog).filter { it.id != car.id }).take(RecentVehiclesRepository.MAX_RECENT)
         return recent(catalog)
     }
 

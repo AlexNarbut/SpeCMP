@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.fastmount.data.repository
+package ru.alarmtrade.specmp.feature.fastmount.data.mapper
 
 import ru.alarmtrade.devices.domain.alarmDevice.settings.AlarmDeviceSettings
 import ru.alarmtrade.devices.domain.alarmDevice.settings.isKeyBypassEnabled

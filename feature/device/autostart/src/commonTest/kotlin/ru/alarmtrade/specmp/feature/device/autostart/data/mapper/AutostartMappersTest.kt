@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.autostart.data.repository
+package ru.alarmtrade.specmp.feature.device.autostart.data.mapper
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

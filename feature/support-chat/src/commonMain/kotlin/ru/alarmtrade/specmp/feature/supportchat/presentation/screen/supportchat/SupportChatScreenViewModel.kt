@@ -29,7 +29,7 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatCo
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatEffect
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.SupportChatUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.isResendable
-import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toDomain
+import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.model.toUiAttachment
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatAttachmentFiles
 import ru.alarmtrade.specmp.feature.supportchat.presentation.platform.SupportChatFileOpener
@@ -101,7 +101,7 @@ class SupportChatScreenViewModel(
         // каждое вложение и текст — отдельные сообщения.
         val timestamp = clock.now()
         val outgoing = buildList {
-            attachments.forEach { add(optimisticMessage(timestamp, attachment = it.toDomain())) }
+            attachments.forEach { add(optimisticMessage(timestamp, attachment = it.toAttachment())) }
             if (trimmed.isNotEmpty()) add(optimisticMessage(timestamp, text = trimmed))
         }
 

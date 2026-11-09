@@ -21,6 +21,7 @@ import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.firmware.data.file.parseFrmFileInfo
 import ru.alarmtrade.specmp.feature.device.firmware.data.file.readFileBytes
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FrmFileInfo
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareException
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.SerialFirmwareFailure

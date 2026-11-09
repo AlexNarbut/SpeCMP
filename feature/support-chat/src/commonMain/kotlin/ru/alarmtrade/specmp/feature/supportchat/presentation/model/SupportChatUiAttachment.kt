@@ -51,7 +51,7 @@ fun SupportChatAttachment.toUiAttachment(): SupportChatUiAttachment = when (this
 }
 
 /** Обратный маппинг: вложение композера → доменное вложение исходящего сообщения. */
-fun SupportChatUiAttachment.toDomain(): SupportChatAttachment = when (kind) {
+fun SupportChatUiAttachment.toAttachment(): SupportChatAttachment = when (kind) {
     SupportChatUiAttachment.Kind.Image -> SupportChatAttachment.Image(
         id = id,
         name = name,

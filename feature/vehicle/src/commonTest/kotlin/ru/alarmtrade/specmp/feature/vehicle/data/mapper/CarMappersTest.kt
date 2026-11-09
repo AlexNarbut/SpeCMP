@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.vehicle.data.repository
+package ru.alarmtrade.specmp.feature.vehicle.data.mapper
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

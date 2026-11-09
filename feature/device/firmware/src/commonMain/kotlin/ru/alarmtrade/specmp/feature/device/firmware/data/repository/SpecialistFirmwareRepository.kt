@@ -13,6 +13,11 @@ import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toKind
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toModule
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toSdk
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toSystem
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule

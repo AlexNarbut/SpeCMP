@@ -11,7 +11,7 @@ val vehicleUiModule = module {
         VehicleSelectViewModel(
             request = request,
             repository = get(),
-            recentStore = get(),
+            recentRepository = get(),
             dispatchers = get(),
         )
     }

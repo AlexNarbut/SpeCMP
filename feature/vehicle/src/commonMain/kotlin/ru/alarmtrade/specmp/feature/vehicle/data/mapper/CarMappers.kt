@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.vehicle.data.repository
+package ru.alarmtrade.specmp.feature.vehicle.data.mapper
 
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specialist.domain.cars.Car as SdkCar

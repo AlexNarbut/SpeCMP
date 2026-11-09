@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.core.localization
 
-import com.russhwolf.settings.Settings
+import ru.alarmtrade.specmp.core.common.di.platformSettings
 
 enum class AppLocale(val languageTag: String) {
     English("en"),
@@ -19,17 +19,16 @@ enum class AppLocale(val languageTag: String) {
  * `NSLocale.preferredLanguages`, кэшируется на старте), публичного способа подменить их окружение нет.
  * Смена языка = сохранить выбор + перезапустить приложение (`AppRestarter`).
  *
- * Хранилище — свой `Settings`, а не Koin: на Android язык нужен в `attachBaseContext`, до старта DI.
+ * Хранилище — платформенный `Settings` процесса напрямую, а не Koin: на Android язык нужен в `attachBaseContext`,
+ * до старта DI.
  */
 internal const val APP_LOCALE_SETTINGS_KEY = "app_locale"
-
-private val appLocaleSettings: Settings by lazy { Settings() }
 
 /** Язык приложения: выбранный пользователем, иначе системный. */
 fun currentAppLocale(): AppLocale = savedAppLocale() ?: systemAppLocale()
 
 private fun savedAppLocale(): AppLocale? =
-    appLocaleSettings.getStringOrNull(APP_LOCALE_SETTINGS_KEY)?.let(AppLocale::fromLanguageTag)
+    platformSettings.getStringOrNull(APP_LOCALE_SETTINGS_KEY)?.let(AppLocale::fromLanguageTag)
 
 /**
  * Применить язык на старте процесса — до первой композиции (`App()`). На Android основное применение — в
@@ -39,7 +38,7 @@ fun prepareAppLocale(): AppLocale = currentAppLocale().also(::applyPlatformAppLo
 
 /** Сохранить выбор пользователя. Действует со следующего запуска — вызывающий перезапускает приложение. */
 fun saveAppLocale(locale: AppLocale) {
-    appLocaleSettings.putString(APP_LOCALE_SETTINGS_KEY, locale.languageTag)
+    platformSettings.putString(APP_LOCALE_SETTINGS_KEY, locale.languageTag)
     persistPlatformAppLocale(locale)
 }
 

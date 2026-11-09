@@ -13,6 +13,8 @@ import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.device.autostart.data.mapper.isWriting
+import ru.alarmtrade.specmp.feature.device.autostart.data.mapper.toEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassLearningException
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent

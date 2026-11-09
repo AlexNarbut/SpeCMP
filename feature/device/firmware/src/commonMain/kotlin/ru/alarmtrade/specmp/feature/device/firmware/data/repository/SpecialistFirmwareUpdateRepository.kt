@@ -11,6 +11,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateException
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress

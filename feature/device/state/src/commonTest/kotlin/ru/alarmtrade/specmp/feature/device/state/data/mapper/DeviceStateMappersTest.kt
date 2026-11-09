@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.state.data.repository
+package ru.alarmtrade.specmp.feature.device.state.data.mapper
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

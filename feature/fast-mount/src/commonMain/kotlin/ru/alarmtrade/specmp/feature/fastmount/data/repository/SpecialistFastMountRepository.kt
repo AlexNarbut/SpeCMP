@@ -27,6 +27,11 @@ import ru.alarmtrade.specmp.core.common.safeFlowRun
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toDeviceClass
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toFastMountFailure
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toSdk
+import ru.alarmtrade.specmp.feature.fastmount.data.mapper.toStep
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountConfiguration
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountException
 import ru.alarmtrade.specmp.feature.fastmount.domain.model.FastMountStep

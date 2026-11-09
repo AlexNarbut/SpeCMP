@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.state.data.repository
+package ru.alarmtrade.specmp.feature.device.state.data.mapper
 
 import ru.alarmtrade.devices.domain.alarmDevice.event.DeviceMainEventType
 import ru.alarmtrade.devices.domain.alarmDevice.state.DeviceState

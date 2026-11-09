@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.fastmount.data.repository
+package ru.alarmtrade.specmp.feature.fastmount.data.mapper
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

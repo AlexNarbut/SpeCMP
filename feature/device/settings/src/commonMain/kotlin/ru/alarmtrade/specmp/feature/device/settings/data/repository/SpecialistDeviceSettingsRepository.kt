@@ -17,6 +17,10 @@ import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.device.settings.data.files.settingsScratchDirectory
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toPath
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRequest
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRootSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException

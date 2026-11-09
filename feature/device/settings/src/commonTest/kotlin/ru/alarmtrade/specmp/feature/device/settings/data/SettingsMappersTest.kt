@@ -29,11 +29,11 @@ import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDevi
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingOutputSwitchValueRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingOutputValueRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingSirenIntValueRequest
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.DEFAULT_DECIMAL_STEP
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toDomain
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toPath
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toRequest
-import ru.alarmtrade.specmp.feature.device.settings.data.repository.toRootSection
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.DEFAULT_DECIMAL_STEP
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toPath
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRequest
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRootSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.DecimalSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactType

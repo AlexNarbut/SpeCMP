@@ -13,11 +13,11 @@ import ru.alarmtrade.specialist.domain.alarmDevice.firmware.SubsystemFirmwareTyp
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemInformation
 import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemType
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.feature.device.firmware.data.repository.bootTarget
-import ru.alarmtrade.specmp.feature.device.firmware.data.repository.toDomain
-import ru.alarmtrade.specmp.feature.device.firmware.data.repository.toKind
-import ru.alarmtrade.specmp.feature.device.firmware.data.repository.toModule
-import ru.alarmtrade.specmp.feature.device.firmware.data.repository.toProgress
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.bootTarget
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toKind
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toModule
+import ru.alarmtrade.specmp.feature.device.firmware.data.mapper.toProgress
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareFailure
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareUpdateProgress

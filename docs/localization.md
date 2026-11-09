@@ -212,7 +212,7 @@ iOS — `NSLocale.preferredLanguages`, кэшируется на старте п
 перезапуска. Схема похожа на `sportlinesNew` (там нет шага `onConfigurationChanged` ниже — и та же ошибка при смене
 размера окна).
 
-1. **Хранение** — `core/localization` (`AppLocale.kt`): свой `Settings`, ключ `app_locale` (не Koin: на Android язык
+1. **Хранение** — `core/localization` (`AppLocale.kt`): платформенный `Settings` процесса (`platformSettings`, `core/common/di`), ключ `app_locale` (не Koin: на Android язык
    нужен в `attachBaseContext`, до старта DI). `currentAppLocale()` — выбор или системный; `saveAppLocale(locale)` —
    сохранить (iOS — сразу и `AppleLanguages`).
 2. **Применение на старте:**

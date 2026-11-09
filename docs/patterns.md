@@ -331,7 +331,7 @@ internal sealed interface SourceKey {
   примитивы темы.
 - **Key-value хранилище фичи — только через `AppSettingsFactory.create("<feature>")`** (`core/common`,
   Koin single), а не `Settings()` в фиче: именованное хранилище изолирует ключи фичи префиксом, и
-  `clear()` одной фичи не трогает чужие.
+  `clear()` одной фичи не трогает чужие. Подробнее — «Хранение настроек».
 - **Feature-модули не создают singleton внешнего SDK/application container** (`SpecialistApp`
   и аналоги) — такой singleton создаётся в профильном `core/*` модуле или в `composeApp`.
 - **В конструкторы feature-классов передаются узкие зависимости** (`AuthInteractor`, repository,
@@ -471,6 +471,20 @@ sealed interface MainDatabaseSyncStatus {
   контракты репозиториев; модели, которые порт отдаёт (`PickedFile`), — в `domain/model`, а не в
   файле интерфейса.
 
+### Use case
+
+Слой use case массово не вводится: ViewModel зовёт репозиторий (в том числе чужой фичи через её `domain/repository`).
+`*UseCase` нужен только для оркестрации (Konsist `use-case-package`, `use-case-contract`):
+
+- лежит в `feature/<name>/domain/usecase` (в `core` — пакет `usecase` модуля);
+- в первичном конструкторе ≥ 2 зависимостей-ролей (`*Repository`/`*UseCase`/`*Coordinator`/`*Controller`/`*Service`/
+  `*Session`/`*Closeable`, в том числе `List<…>` из `getAll()`); диспетчеры, часы, логгер не считаются;
+- единственный публичный метод — `operator fun invoke`: `suspend` → `Response<T>`, иначе `Flow`/`StateFlow<Response<T>>`.
+  Пример — `LogoutUseCase` (`AuthStateRepository` + все `AuthCloseable`), вызов `logoutUseCase()`.
+
+Одна зависимость — это не use case (VM зовёт репозиторий); чистое правило без зависимостей — класс с ролью
+(`*Validator`/`*Resolver`/`*Calculator`), не `*UseCase`.
+
 ## Data — репозитории
 
 `feature/<name>/data/repository` — реализации контрактов; единственное место фичи, где живут
@@ -544,6 +558,10 @@ suspend fun refreshUser(id: String): Response<UserProfile> {
   поток: для долгоживущей подписки (WebSocket, события SDK) это значит «событий больше не будет».
   Либо поток самовосстанавливается (`retryWhen`) в репозитории, либо VM явно пересоздаёт подписку
   при ручном реконнекте — «баннер снят, а события не приходят» недопустимо.
+- **Мапперы — в `data/mapper`** (Konsist `mapper-placement`): `toDomain*`/`to*Dto` — top-level `internal`/`private`
+  функции в пакете `data.mapper` своего модуля (`data/mapper/*Mappers.kt`; в `core` — пакет `mapper` модуля), не в файле
+  репозитория. Приватный маппер-член класса репозитория допустим. Обратный маппинг presentation → domain — не
+  `toDomain`, а `to<Модель>()` в presentation (`SupportChatUiAttachment.toAttachment()`).
 - **Маппинг не теряет данные молча.** `else -> null` / ветка, читающая поле только у одного
   наследника, превращают неизвестный вариант SDK в «пустое» сообщение без единой ошибки. Ветки
   исчерпывающие; неподдерживаемый вариант — явная ошибка маппинга (с `logger.d`), а не тихий
@@ -564,6 +582,29 @@ override fun observeChatAvailability(): Flow<Response<Boolean>> = flow {
     }
 }
 ```
+
+### Хранение настроек
+
+- Платформенный `Settings()` создаёт только `core/common/di` (`platformSettings`, detekt `SettingsInstantiation`): поверх
+  него — `AppSettingsFactory` (Koin single), фича получает своё хранилище `get<AppSettingsFactory>().create("<feature>")`
+  в Koin-модуле и передаёт конструктором. Напрямую `platformSettings` читают только язык и тема (`core/localization`,
+  `core/ui`) — до старта Koin, ключи без префикса.
+- В фиче `com.russhwolf.settings.*` и `core.common.settings.*` — только `data` и `di` (Konsist `storage-usage`): domain и
+  presentation получают данные через репозиторий.
+- Хранилище фичи — это репозиторий: контракт `*Repository` в `domain/repository`, реализация
+  `Settings<Интерфейс>` в `data/repository` (`SettingsRecentVehiclesRepository`); `*Store`/`*Storage` в фичах запрещены
+  (Konsist `forbidden-suffix`).
+
+### Платформенные возможности
+
+Konsist `capability-usage`:
+
+- API `core/permissions`, которое обращается к ОС (`PermissionsProvider`, `BindEffect`, `permissionsModule`,
+  `blePermissions`), и moko-permissions — в фиче только `data`, `di` и файл ViewModel (`ScanDeviceViewModel`); значения
+  (`DeviceAccessRequirement`, `BlePermissionResult`) — всем. Composition roots — свободно.
+- Порты `presentation/platform` фичи (пикеры, сохранение, открытие файлов) — только presentation своего модуля, `di` и
+  composition roots. Временное исключение: `configurator-ui` → порты `device:settings-ui` (Р2, снимается вместе с
+  ребром graph-assert).
 
 ## Доменные сервисы
 
@@ -797,7 +838,8 @@ private fun run(pinTries: Int = 0) {
 - **Не нужны:** `DisposableEffect` в nav-графе, методы `onScreenOpened()`/`onScreenDisposed()`, ручной сброс state при
   входе, поля-`Job`, самодельные барьеры («флаг + `while`», «`if (busy) return`» вне state) — есть `launchReplacing` и
   `executeWithProceedLock`. «Процесс уже идёт» — по фазе в state (`if (phase is Running) return`).
-- **Возврат приложения на передний план** — порт `AppForegroundProvider` (`core/lifecycle`) в конструкторе:
+- **Возврат приложения на передний план** — порт `AppForegroundProvider` (`core/lifecycle`) в конструкторе (Konsist
+  `foreground-usage`: `core.lifecycle` — только data, di и ViewModel, Koin-модуль `core.lifecycle.di` — где угодно):
   `foregroundProvider.foregroundReturns` собирается из `onStart` (`ScanDeviceViewModel`). Compose-эффекты
   (`LifecycleResumeEffect`) для решений VM не используются.
 - **Зависимости — в конструктор, не параметром интента.** Платформенный порт передаётся через конструктор

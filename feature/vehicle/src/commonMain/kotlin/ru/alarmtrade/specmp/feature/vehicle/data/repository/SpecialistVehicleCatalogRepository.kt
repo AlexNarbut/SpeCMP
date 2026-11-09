@@ -19,6 +19,11 @@ import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.vehicle.data.mapper.toCard
+import ru.alarmtrade.specmp.feature.vehicle.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.vehicle.data.mapper.toSdkFilter
+import ru.alarmtrade.specmp.feature.vehicle.data.mapper.toSubsystemType
+import ru.alarmtrade.specmp.feature.vehicle.data.mapper.toSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarFeatureGroup

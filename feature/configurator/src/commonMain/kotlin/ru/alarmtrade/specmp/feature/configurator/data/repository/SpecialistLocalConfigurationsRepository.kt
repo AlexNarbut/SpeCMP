@@ -4,7 +4,6 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import ru.alarmtrade.specialist.domain.alarmDevice.settings.LocalSettingsConfigurationInfo
 import ru.alarmtrade.specialist.interactors.localConfigurations.LocalSettingsConfigurationInteractor
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.CreateLocalConfigurationRequest
 import ru.alarmtrade.specialist.interactors.localConfigurations.requests.LocalConfigurationRequest
@@ -14,6 +13,7 @@ import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.feature.configurator.data.mapper.toDomain
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource
@@ -112,12 +112,3 @@ internal class SpecialistLocalConfigurationsRepository(
         const val PAGE_SIZE = 50
     }
 }
-
-internal fun LocalSettingsConfigurationInfo.toDomain() = LocalConfiguration(
-    id = id,
-    name = name,
-    description = description,
-    deviceName = deviceName,
-    created = createdDate,
-    updated = updatedDate,
-)

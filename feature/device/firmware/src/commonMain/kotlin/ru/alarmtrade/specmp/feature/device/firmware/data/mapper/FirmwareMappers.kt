@@ -1,4 +1,4 @@
-package ru.alarmtrade.specmp.feature.device.firmware.data.repository
+package ru.alarmtrade.specmp.feature.device.firmware.data.mapper
 
 import ru.alarmtrade.devices.domain.alarmDevice.DataWritingError
 import ru.alarmtrade.devices.domain.alarmDevice.firmware.FirmwareUpdateState

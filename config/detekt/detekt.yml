@@ -3,8 +3,8 @@
 # дополнительно как страховка.
 # Описание и принятые решения — docs/code-quality.md.
 
-# Свой набор правил `specmp` (quality/detekt-rules, docs/code-quality.md → «Свои правила»). Правила с active: false
-# включаются в подэтапах миграции архитектуры вместе с устранением нарушений.
+# Свой набор правил `specmp` (quality/detekt-rules, docs/code-quality.md → «Свои правила»). Новое правило включается
+# вместе с устранением его нарушений.
 specmp:
   # runCatching ловит CancellationException — граница с бросающим кодом только safeRun/safeResponseRun (ResponseExt.kt).
   ForbiddenRunCatching:
@@ -45,9 +45,9 @@ specmp:
   # Не оборачивать в safeRun/safeResponseRun то, что уже возвращает Response; требует type resolution.
   RedundantSafeRun:
     active: true
-  # Корневой Settings() создаёт только DI core/common для AppSettingsFactory.
+  # Платформенный Settings() создаёт только core/common/di (platformSettings под AppSettingsFactory).
   SettingsInstantiation:
-    active: false
+    active: true
     excludes: ['**/core/common/**/di/**', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**']
   # safeRun/safeResponseRun — граница с бросающим кодом в data; ViewModel ветвится по Response.
   SafeRunInViewModel:

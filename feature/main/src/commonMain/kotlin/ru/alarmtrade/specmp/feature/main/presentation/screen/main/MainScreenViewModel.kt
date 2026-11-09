@@ -98,7 +98,7 @@ class MainScreenViewModel(
         intent {
             reduce { copy(logoutState = LCEState.Loading) }
 
-            when (val response = withContext(dispatchers.io) { logoutUseCase.execute() }) {
+            when (val response = withContext(dispatchers.io) { logoutUseCase() }) {
                 // Остаёмся в Loading: кнопка заблокирована, пока auth-state не сменит зону; эта VM уйдёт вместе с
                 // авторизованной зоной (ViewModelScope по сессии) — state сбрасывать не нужно.
                 is Response.Success -> logger.d { "Logout succeeded" }

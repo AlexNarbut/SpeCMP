@@ -15,7 +15,7 @@ import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CatalogQuery
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceType
-import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesStore
+import ru.alarmtrade.specmp.feature.vehicle.domain.repository.RecentVehiclesRepository
 import ru.alarmtrade.specmp.feature.vehicle.domain.repository.VehicleCatalogRepository
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.model.CatalogError
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
@@ -34,12 +34,12 @@ private const val CAN_CODE_LENGTH = 4
 internal class VehicleSelectViewModel(
     private val request: VehicleSelectRequest,
     private val repository: VehicleCatalogRepository,
-    private val recentStore: RecentVehiclesStore,
+    private val recentRepository: RecentVehiclesRepository,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<VehicleSelectState, VehicleSelectEffect>(request.initialState()) {
 
     override suspend fun onStart() {
-        when (val recent = withContext(dispatchers.io) { recentStore.recent(request.catalog) }) {
+        when (val recent = withContext(dispatchers.io) { recentRepository.recent(request.catalog) }) {
             is Response.Success -> reduce { copy(recent = recent.value) }
             is Response.Error -> logger.w(recent.exception) { "Recent vehicles read failed" }
         }
@@ -171,7 +171,7 @@ internal class VehicleSelectViewModel(
 
     /** «✕» у недавнего автомобиля: убрать из списка (из каталога он никуда не девается). */
     fun onRecentRemove(car: CarSummary) {
-        updateRecent { recentStore.remove(request.catalog, car.id) }
+        updateRecent { recentRepository.remove(request.catalog, car.id) }
     }
 
     fun onRetry(level: CatalogLevel) {
@@ -355,7 +355,7 @@ internal class VehicleSelectViewModel(
 
     /** Запомнить автомобиль в «недавних» (хранилище атомарно само; Settings — на io); в state — готовый список. */
     private fun rememberRecent(car: CarSummary) {
-        updateRecent { recentStore.push(request.catalog, car) }
+        updateRecent { recentRepository.push(request.catalog, car) }
     }
 
     private fun updateRecent(change: suspend () -> Response<List<CarSummary>>) {

@@ -304,11 +304,105 @@ class ArchitectureTest {
                 testName = "forbidden-suffix",
                 additionalMessage = "Роль — в имени: *Helper/*Utils запрещены везде (функции-расширения или класс " +
                     "с ролью); *Manager — только платформенная обёртка над нативным API " +
-                    "(${PLATFORM_SOURCE_SETS.joinToString()}).",
+                    "(${PLATFORM_SOURCE_SETS.joinToString()}); *Store/*Storage в фичах — это *Repository " +
+                    "(контракт в domain/repository, реализация Settings*Repository в data/repository). " +
+                    "docs/patterns.md, «Хранение настроек»",
             ) {
                 VAGUE_SUFFIXES.any(it.name::endsWith) ||
-                    (it.name.endsWith(MANAGER) && it.containingFile.sourceSetName !in PLATFORM_SOURCE_SETS)
+                    (it.name.endsWith(MANAGER) && it.containingFile.sourceSetName !in PLATFORM_SOURCE_SETS) ||
+                    (STORAGE_SUFFIXES.any(it.name::endsWith) && it.containingFile.isFeature)
             }
+    }
+
+    @Test
+    fun `mappers live in data mapper and are not public`() {
+        libraryFiles.flatMap { it.functions(includeNested = false, includeLocal = false) }
+            .filter { MAPPER_NAME.matches(it.name) }
+            .assertTrue(
+                testName = "mapper-placement",
+                additionalMessage = "Маппинг слоёв (toDomain*, to*Dto) — top-level internal/private функция в пакете " +
+                    "data.mapper фичи (в core — пакет mapper модуля); presentation ↔ domain — не toDomain, а " +
+                    "to<Модель>/to*Ui в presentation. " +
+                    "docs/patterns.md, «Data — репозитории»",
+            ) {
+                val pkg = if (it.containingFile.isFeature) "..data.mapper.." else "..mapper.."
+                it.resideInPackage(pkg) && (it.hasInternalModifier || it.hasPrivateModifier)
+            }
+    }
+
+    @Test
+    fun `feature storage access lives in data and di`() {
+        libraryFiles.filter { it.isFeature && !it.inLayer("data") && !it.inLayer("di") }
+            .flatMap { file -> file.imports.filter { it.name.isStorageImport() } }
+            .assertFalse(
+                testName = "storage-usage",
+                additionalMessage =
+                    "Хранилища (multiplatform-settings, AppSettingsFactory из core.common.settings) в " +
+                        "фиче — только data и di; domain и presentation получают данные через репозиторий. " +
+                        "docs/patterns.md, «Хранение настроек»",
+            ) { true }
+    }
+
+    @Test
+    fun `use cases live in domain usecase`() {
+        classes.filter { it.name.endsWith(USE_CASE) }
+            .assertTrue(
+                testName = "use-case-package",
+                additionalMessage = "*UseCase — в feature/<name>/domain/usecase или в пакете usecase core-модуля. " +
+                    "docs/patterns.md, «Use case»",
+            ) {
+                if (it.containingFile.isFeature) {
+                    it.resideInPackage(
+                        "..domain.usecase..",
+                    )
+                } else {
+                    it.resideInPackage("..usecase..")
+                }
+            }
+    }
+
+    @Test
+    fun `use cases orchestrate dependencies and return Response`() {
+        classes.filter { it.name.endsWith(USE_CASE) }
+            .assertTrue(
+                testName = "use-case-contract",
+                additionalMessage = "Use case — оркестрация ≥ 2 зависимостей (*Repository/*UseCase/*Coordinator/" +
+                    "*Controller/*Service/*Session/*Closeable в первичном конструкторе, в том числе List<…> из " +
+                    "getAll(); диспетчеры, часы, логгер не считаются) с единственным публичным operator fun invoke: " +
+                    "suspend → Response<…>, иначе Flow/StateFlow<Response<…>>. Одна зависимость — VM зовёт " +
+                    "репозиторий; чистое правило — класс с ролью (*Validator/*Resolver/*Calculator/…), не *UseCase. " +
+                    "docs/patterns.md, «Use case»",
+            ) { it.orchestratesDependencies() && it.hasResponseInvoke() }
+    }
+
+    @Test
+    fun `platform capabilities are used where the call starts`() {
+        scope.files.flatMap { file -> file.imports.filter { it.name.isForbiddenCapabilityImport(file) } }
+            .assertFalse(
+                testName = "capability-usage",
+                additionalMessage = "Платформенные возможности: API core.permissions (PermissionsProvider, " +
+                    "BindEffect, permissionsModule, blePermissions) и moko-permissions в фиче — только data, di и " +
+                    "ViewModel (значения DeviceAccessRequirement/BlePermissionResult — всем); порты " +
+                    "presentation/platform фичи — только presentation своего модуля, di и composition roots. " +
+                    "docs/patterns.md, «Платформенные возможности»",
+            ) { true }
+    }
+
+    @Test
+    fun `app foreground is gated where the call starts`() {
+        scope.files
+            .filterNot { file ->
+                file.inLayer("data") || file.inLayer("di") || file.moduleName == LIFECYCLE_MODULE ||
+                    file.classes(includeNested = false).any { it.extendsViewModelBase() }
+            }
+            .flatMap { file -> file.imports.filter { it.name.isLifecycleImport() } }
+            .assertFalse(
+                testName = "foreground-usage",
+                additionalMessage = "AppForegroundProvider/AppLifecycle (core.lifecycle) — гейт там, где " +
+                    "инициируется вызов: data (репозиторий, сервис) или ViewModel (опрос, привязанный к экрану); не " +
+                    "domain и не composable. Koin-модуль core.lifecycle.di подключается где угодно. " +
+                    "docs/patterns.md, «Жизненный цикл ViewModel и сессии»",
+            ) { true }
     }
 
     @Test
@@ -463,7 +557,9 @@ class ArchitectureTest {
                 """mutableStateMapOf|mutableIntStateOf|mutableLongStateOf|mutableFloatStateOf|mutableDoubleStateOf)""" +
                 """\s*(<[^()]*>)?\s*\(""",
         )
+        const val USE_CASE = "UseCase"
         val VAGUE_SUFFIXES = listOf("Helper", "Helpers", "Util", "Utils")
+        val STORAGE_SUFFIXES = listOf("Store", "Storage")
         val PLATFORM_SOURCE_SETS = setOf("androidMain", "iosMain", "jvmMain")
         val GETTER = Regex("""\bget\(\)\s*=""")
         val SERIALIZABLE_PACKAGES = listOf("..data..", "..navigation..")
@@ -816,3 +912,73 @@ private fun KoFileDeclaration.serviceLocatorUsages(): List<KoBaseDeclaration> {
 }
 
 private val IDENTIFIER = Regex("""\b[A-Za-z_]\w*\b""")
+
+private val MAPPER_NAME = Regex("""toDomain\w*|toDto|to\w*Dto""")
+
+private fun String.isStorageImport(): Boolean =
+    startsWith("com.russhwolf.settings.") || startsWith("$ROOT.core.common.settings.")
+
+private val USE_CASE_DEPENDENCY_SUFFIXES =
+    listOf("Repository", "UseCase", "Coordinator", "Controller", "Service", "Session", "Closeable")
+
+// `List<AuthCloseable>` из getAll() — тоже зависимость: считаем по типу элемента.
+private fun KoClassDeclaration.orchestratesDependencies(): Boolean =
+    primaryConstructor?.parameters.orEmpty().count { parameter ->
+        val type = parameter.type.text
+        val element = if (type.baseTypeName() in
+            COLLECTION_TYPES
+        ) {
+            type.substringAfter('<').substringBeforeLast('>')
+        } else {
+            type
+        }
+        USE_CASE_DEPENDENCY_SUFFIXES.any(element.baseTypeName()::endsWith)
+    } >= 2
+
+private val COLLECTION_TYPES = setOf("List", "Set", "Collection")
+
+private fun KoClassDeclaration.hasResponseInvoke(): Boolean {
+    val functions = functions(includeNested = false, includeLocal = false)
+    val invokes = functions.filter { it.name == "invoke" && it.hasOperatorModifier }
+    val otherPublic = functions.filter { it.name != "invoke" && !it.hasPrivateModifier && !it.hasInternalModifier }
+    return invokes.isNotEmpty() && otherPublic.isEmpty() && invokes.all {
+        val returnType = it.returnType?.text
+        when {
+            it.hasSuspendModifier -> returnType?.baseTypeName() == RESPONSE
+            else -> returnType.isFlowType() && returnType.isResponseFlow()
+        }
+    }
+}
+
+private const val LIFECYCLE_MODULE = "core/lifecycle"
+private const val LIFECYCLE_PACKAGE = "$ROOT.core.lifecycle"
+
+// Импорт со звёздочкой Konsist отдаёт по-разному (`pkg.*` или `pkg`) — ловим оба.
+private fun String.isLifecycleImport(): Boolean = removeSuffix(".*").let { name ->
+    (name == LIFECYCLE_PACKAGE || name.startsWith("$LIFECYCLE_PACKAGE.")) && !name.startsWith("$LIFECYCLE_PACKAGE.di")
+}
+
+// API core.permissions, которое обращается к ОС; значения (DeviceAccessRequirement, BlePermissionResult) — не оно.
+private val PERMISSIONS_API = setOf("PermissionsProvider", "BindEffect", "permissionsModule", "blePermissions")
+    .map { "$ROOT.core.permissions.$it" }
+private const val MOKO_PERMISSIONS = "dev.icerock.moko.permissions"
+
+// Временное ребро Р2 (configurator-ui → device:settings-ui), как в graph-assert; снимается в 4a.
+private val PLATFORM_PORT_ALLOWLIST = setOf(
+    "feature/configurator-ui" to "$ROOT.feature.device.settings.ui.presentation.platform",
+)
+
+private fun String.isForbiddenCapabilityImport(file: KoFileDeclaration): Boolean {
+    if (!file.isFeature) return false
+    val name = removeSuffix(".*")
+    val inViewModelFile = file.classes(includeNested = false).any { klass ->
+        klass.parents(indirectParents = true).any { it.name.substringBefore('<') == "BaseViewModel" }
+    }
+    val permissionsApi = name in PERMISSIONS_API || name == MOKO_PERMISSIONS || name.startsWith("$MOKO_PERMISSIONS.")
+    if (permissionsApi) return !file.inLayer("data") && !file.inLayer("di") && !inViewModelFile
+    val port = name.substringBefore(".platform.", missingDelimiterValue = "").takeIf { ".presentation" in it }
+        ?.plus(".platform") ?: return false
+    if (!port.startsWith("$ROOT.feature.") || file.inLayer("di")) return false
+    val ownPresentation = port.startsWith(file.basePackage + ".") && file.inLayer("presentation")
+    return !ownPresentation && (file.moduleName to port) !in PLATFORM_PORT_ALLOWLIST
+}
