@@ -1,10 +1,13 @@
 package ru.alarmtrade.specmp.feature.supportchat.di
 
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.settings.AppSettingsFactory
+import ru.alarmtrade.specmp.feature.supportchat.data.datasource.SpecialistSupportChatDataSource
+import ru.alarmtrade.specmp.feature.supportchat.data.datasource.SupportChatDataSource
 import ru.alarmtrade.specmp.feature.supportchat.data.outbox.SettingsSupportChatOutbox
 import ru.alarmtrade.specmp.feature.supportchat.data.repository.SpecialistSupportChatRepository
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatOutbox
@@ -14,7 +17,8 @@ import ru.alarmtrade.specmp.feature.supportchat.presentation.screen.supportchat.
 private const val SUPPORT_CHAT_SETTINGS = "supportchat"
 
 val supportChatModule = module {
-    single { SpecialistSupportChatRepository(get(), get()) } bind SupportChatRepository::class
+    singleOf(::SpecialistSupportChatDataSource) bind SupportChatDataSource::class
+    singleOf(::SpecialistSupportChatRepository) bind SupportChatRepository::class
     // Outbox дополнительно регистрируется как AuthCloseable: LogoutUseCase
     // очищает очередь при смене аккаунта.
     single {

@@ -658,12 +658,6 @@ private fun KoClassDeclaration.isRepositoryImplementation(): Boolean =
 
 // Временный allowlist репозиториев без теста: имя убирается, когда у репозитория появляется тест.
 private val UNTESTED_REPOSITORIES = setOf(
-    "SpecialistSupportChatRepository",
-    "SpecialistDeviceConnectionRepository",
-    "SpecialistDeviceSessionRepository",
-    "SpecialistProgramModeRepository",
-    "SpecialistDeviceSettingsRepository",
-    "SpecialistDeviceStateRepository",
     "SpecialistFastMountRepository",
     "SpecialistFirmwareRepository",
     "SpecialistFirmwareUpdateRepository",

@@ -1,21 +1,17 @@
 package ru.alarmtrade.specmp.feature.device.settings.data.repository
 
 import kotlin.random.Random
-import ru.alarmtrade.common.core.usecase.EmptyRequest
 import ru.alarmtrade.common.settings.interaction.model.errors.WrongSettingsSizeException
-import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.AlarmDeviceSettingsInteractor
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CloseDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CopySettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.DeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.OpenDeviceSettingsRequest
-import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfError
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
-import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
-import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.device.settings.data.datasource.DeviceSettingsDataSource
 import ru.alarmtrade.specmp.feature.device.settings.data.files.settingsScratchDirectory
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toDomain
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toPath
@@ -28,76 +24,52 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
-/**
- * [DeviceSettingsRepository] над `alarmDeviceSettingsInteractor` (сессии настроек по `SettingsPath`) и
- * `bluetoothAlarmDeviceInteractor` (сброс блока). Интеракторы — лениво.
- */
-internal class SpecialistDeviceSettingsRepository(
-    private val settingsInteractor: () -> AlarmDeviceSettingsInteractor,
-    private val alarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
-) : DeviceSettingsRepository {
+/** [DeviceSettingsRepository]: сессии настроек по `SettingsPath` и сброс блока. */
+internal class SpecialistDeviceSettingsRepository(private val dataSource: DeviceSettingsDataSource) :
+    DeviceSettingsRepository {
 
-    override suspend fun open(source: SettingsSource, reload: Boolean): Response<SettingsSection> {
-        val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.openDeviceSettingsUseCase
-            .execute(OpenDeviceSettingsRequest(source.toPath(), reload))
-            .toResponse()
+    override suspend fun open(source: SettingsSource, reload: Boolean): Response<SettingsSection> =
+        dataSource.open(OpenDeviceSettingsRequest(source.toPath(), reload))
+            .toResponseOrUnavailable()
             .map { it.settings.toRootSection() }
-    }
 
-    override suspend fun close(source: SettingsSource): Response<Unit> {
-        val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.closeDeviceSettingsUseCase
-            .execute(CloseDeviceSettingsRequest(source.toPath(), saveChanges = false))
-            .toResponse()
-    }
+    override suspend fun close(source: SettingsSource): Response<Unit> =
+        dataSource.close(CloseDeviceSettingsRequest(source.toPath(), saveChanges = false)).toResponseOrUnavailable()
 
-    override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> {
-        val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.setDeviceSettingValueUseCase
-            .execute(value.toRequest(source.toPath(), settingId))
-            .toResponse()
+    override suspend fun setValue(source: SettingsSource, settingId: Int, value: SettingValue): Response<Setting> =
+        dataSource.setValue(value.toRequest(source.toPath(), settingId))
+            .toResponseOrUnavailable()
             .mapIfSuccess { item ->
                 when (val node = item.toDomain()) {
                     is Setting -> Response.Success(node)
                     is SettingsSection -> Response.Error(IllegalStateException("Setting $settingId is a section"))
                 }
             }
-    }
 
-    override suspend fun unsavedIds(source: SettingsSource): Response<Set<Int>> {
-        val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.getUnsavedSettingsUseCase
-            .execute(DeviceSettingsRequest(source.toPath()))
-            .toResponse()
+    override suspend fun unsavedIds(source: SettingsSource): Response<Set<Int>> =
+        dataSource.unsaved(DeviceSettingsRequest(source.toPath()))
+            .toResponseOrUnavailable()
             .map { list -> list.mapTo(mutableSetOf()) { it.id } }
-    }
 
-    override suspend fun save(source: SettingsSource): Response<Unit> {
-        val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.saveDeviceSettingsUseCase.execute(DeviceSettingsRequest(source.toPath())).toResponse()
-    }
+    override suspend fun save(source: SettingsSource): Response<Unit> =
+        dataSource.save(DeviceSettingsRequest(source.toPath())).toResponseOrUnavailable()
 
     override suspend fun copy(
         from: SettingsSource,
         to: SettingsSource,
         saveChanges: Boolean,
-    ): Response<SettingsSection> {
-        val interactor = settingsInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.copyDeviceSettingsUseCase
-            .execute(CopySettingsRequest(from.toPath(), to.toPath(), saveChanges))
-            .toResponse()
-            .map { it.toRootSection() }
-            .mapIfError { error ->
-                if (error.exception is WrongSettingsSizeException) {
-                    Response.Error(
-                        SettingsMismatchException(error.exception),
-                    )
-                } else {
-                    error
-                }
+    ): Response<SettingsSection> = dataSource.copy(CopySettingsRequest(from.toPath(), to.toPath(), saveChanges))
+        .toResponseOrUnavailable()
+        .map { it.toRootSection() }
+        .mapIfError { error ->
+            if (error.exception is WrongSettingsSizeException) {
+                Response.Error(
+                    SettingsMismatchException(error.exception),
+                )
+            } else {
+                error
             }
-    }
+        }
 
     // Файла снимка ещё нет: SDK не открывает приёмник и пишет в него байты источника как есть; при чтении меню
     // строится по модели из пути — так, как настройки увидит блок этой модели.
@@ -107,8 +79,6 @@ internal class SpecialistDeviceSettingsRepository(
         return copy(from, snapshot, saveChanges = true).map { snapshot }
     }
 
-    override suspend fun resetDeviceToFactory(): Response<Unit> {
-        val interactor = alarmDeviceInteractor.resolveOrNull() ?: return interactorUnavailable()
-        return interactor.resetAlarmDeviceSettingsUseCase.execute(EmptyRequest()).toResponse()
-    }
+    override suspend fun resetDeviceToFactory(): Response<Unit> =
+        dataSource.resetDeviceToFactory().toResponseOrUnavailable()
 }

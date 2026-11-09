@@ -15,16 +15,15 @@ import ru.alarmtrade.specialist.domain.alarmDevice.information.SubsystemFeature
 import ru.alarmtrade.specialist.domain.bluetooth.ConnectionState
 import ru.alarmtrade.specialist.domain.errors.IncorrectServicePinException
 import ru.alarmtrade.specialist.domain.errors.alarmDevice.AlarmDeviceNotFoundException
-import ru.alarmtrade.specialist.interactors.appUpdates.AppUpdatesInteractor
-import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
 import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.common.mapIfSuccess
 import ru.alarmtrade.specmp.core.common.safeResponseRun
 import ru.alarmtrade.specmp.core.specialist.sdk.interactorUnavailable
-import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
+import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
+import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.DeviceSessionDataSource
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothManufacturer
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.BluetoothModule
@@ -39,42 +38,33 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
 import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.DeviceSessionRepository
 
 /**
- * Реализация [DeviceSessionRepository] над `bluetoothAlarmDeviceInteractor` — он работает с текущей
- * сессией SDK независимо от транспорта (BLE/USB). Интерактор резолвится лениво, как в соседних репозиториях.
+ * Реализация [DeviceSessionRepository] над текущей сессией SDK независимо от транспорта (BLE/USB).
  */
-internal class SpecialistDeviceSessionRepository(
-    private val bluetoothAlarmDeviceInteractor: () -> BluetoothAlarmDeviceInteractor,
-    private val appUpdatesInteractor: () -> AppUpdatesInteractor,
-) : DeviceSessionRepository {
+internal class SpecialistDeviceSessionRepository(private val dataSource: DeviceSessionDataSource) :
+    DeviceSessionRepository {
 
     override fun linkState(): Flow<Response<DeviceLinkState>> = flow {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-        if (interactor == null) {
+        val states = dataSource.connectionState()
+        if (states == null) {
             emit(Response.Success(DeviceLinkState.DISCONNECTED))
             return@flow
         }
         // Поток текущей сессии SDK: сам переключается на новую сессию после закрытия прежней (поток конкретной
         // сессии после её закрытия молчит, и долгоживущий подписчик не увидел бы новое подключение).
-        emitAll(
-            interactor.observeCurrentSessionConnectionStateUseCase.execute().map { response ->
-                response.toResponse().map { it.toDomain() }
-            },
-        )
+        emitAll(states.map { response -> response.toResponse().map { it.toDomain() } })
     }.catch { e ->
         if (e is CancellationException) throw e
         emit(Response.Error(e))
     }
 
     override suspend fun readBluetoothModule(): Response<BluetoothModule> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
         // Мануфактура — обмен с модулем (заодно проверка, что он отвечает). Режима в ней нет: SDK определяет его
         // при подключении и отдаёт из кэша, к блоку этот вызов не ходит.
-        val manufacturer = when (val response = interactor.getBluetoothManufacturerDataUseCase.execute().toResponse()) {
+        val manufacturer = when (val response = dataSource.manufacturerData().toResponseOrUnavailable()) {
             is Response.Success -> response.value.toDomain()
             is Response.Error -> return response
         }
-        return interactor.getBluetoothOperationModeUseCase.execute().toResponse().mapIfSuccess { mode ->
+        return dataSource.bluetoothOperationMode().toResponseOrUnavailable().mapIfSuccess { mode ->
             when (mode) {
                 BluetoothOperationMode.BLE_MAIN_MODE -> Response.Success(
                     BluetoothModule(BluetoothModuleMode.MAIN, manufacturer),
@@ -92,15 +82,13 @@ internal class SpecialistDeviceSessionRepository(
     }
 
     override suspend fun readDevice(): Response<AlarmDevice> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
-        val information = when (val response = interactor.getAlarmDeviceInformationUseCase.execute().toResponse()) {
+        val information = when (val response = dataSource.deviceInformation().toResponseOrUnavailable()) {
             is Response.Success -> response.value
             is Response.Error -> return response
         }
         // Возможности — из базы устройств SDK по имени системы; не прочитаны — `null`. Модели нет в базе
         // (AlarmDeviceNotFoundException) — отдельно: базу нужно синхронизировать, блок при этом может поддерживаться.
-        val featuresResponse = interactor.getAlarmDeviceAppFeaturesUseCase.execute().toResponse()
+        val featuresResponse = dataSource.appFeatures().toResponseOrUnavailable()
         val sdkFeatures = featuresResponse.getValueIfSuccess()
         val modelMissing = (featuresResponse as? Response.Error)?.exception is AlarmDeviceNotFoundException
         val can = information.canInformation
@@ -127,39 +115,26 @@ internal class SpecialistDeviceSessionRepository(
     }
 
     override suspend fun syncDeviceDatabase(): Response<Unit> {
-        val interactor = appUpdatesInteractor.resolveOrNull() ?: return interactorUnavailable()
+        val sync = dataSource.synchronizeSettingsVersion() ?: return interactorUnavailable()
         // Поток SDK может бросить мимо Response (ошибка встроенной базы) — safeResponseRun превращает это в ошибку.
         return safeResponseRun {
-            interactor.synchronizeSettingsVersionUseCase.execute().lastOrNull()?.toResponse()?.map { }
+            sync.lastOrNull()?.toResponse()?.map { }
                 ?: Response.Error(IllegalStateException("Device database sync produced no result"))
         }
     }
 
-    override suspend fun readImei(): Response<String> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
-        return interactor.getModemInformationUseCase.execute().toResponse().map { it.imei }
-    }
+    override suspend fun readImei(): Response<String> =
+        dataSource.modemInformation().toResponseOrUnavailable().map { it.imei }
 
-    override suspend fun reconnect(): Response<Unit> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
-        return interactor.connectUseCase.execute().toResponse().map { }
-    }
+    override suspend fun reconnect(): Response<Unit> = dataSource.connect().toResponseOrUnavailable()
 
-    override suspend fun disconnect(): Response<Unit> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
-        return interactor.disconnectUseCase.execute().toResponse().map { }
-    }
+    override suspend fun disconnect(): Response<Unit> = dataSource.disconnect().toResponseOrUnavailable()
 
     override suspend fun setBootMode(target: BootModeTarget): Response<BootModeResult> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
         val response = when (target) {
-            BootModeTarget.MainProgram -> interactor.setAlarmDeviceBootModeUseCase.execute().toResponse()
-            BootModeTarget.BluetoothModule -> interactor.setBluetoothModemBootModeUseCase.execute().toResponse()
-        }
+            BootModeTarget.MainProgram -> dataSource.setAlarmDeviceBootMode()
+            BootModeTarget.BluetoothModule -> dataSource.setBluetoothModemBootMode()
+        }.toResponseOrUnavailable()
         return when (response) {
             is Response.Success -> Response.Success(BootModeResult.Entered)
 
@@ -173,22 +148,13 @@ internal class SpecialistDeviceSessionRepository(
         }
     }
 
-    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
-        return when (target) {
-            BootModeTarget.MainProgram -> interactor.exitAlarmDeviceBootModeUseCase.execute().toResponse().map { }
+    override suspend fun exitBootMode(target: BootModeTarget): Response<Unit> = when (target) {
+        BootModeTarget.MainProgram -> dataSource.exitAlarmDeviceBootMode()
+        BootModeTarget.BluetoothModule -> dataSource.exitBluetoothModemBootMode()
+    }.toResponseOrUnavailable()
 
-            BootModeTarget.BluetoothModule ->
-                interactor.exitBluetoothModemBootModeUseCase.execute().toResponse().map { }
-        }
-    }
-
-    override suspend fun setServicePin(pin: ServicePin): Response<Unit> {
-        val interactor = bluetoothAlarmDeviceInteractor.resolveOrNull()
-            ?: return interactorUnavailable()
-        return interactor.setPcBasePinUseCase.execute(SetPcBasePinRequest(pin.value)).toResponse().map { }
-    }
+    override suspend fun setServicePin(pin: ServicePin): Response<Unit> =
+        dataSource.setPcBasePin(SetPcBasePinRequest(pin.value)).toResponseOrUnavailable()
 
     private fun BluetoothManufacturerData.toDomain(): BluetoothManufacturer = BluetoothManufacturer(
         serialNumber = serialNumber,

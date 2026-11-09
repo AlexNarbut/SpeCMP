@@ -7,7 +7,6 @@ import kotlinx.coroutines.launch
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.specialist.domain.chat.ChatConnectionState
 import ru.alarmtrade.specialist.domain.chat.ChatEvent
-import ru.alarmtrade.specialist.interactors.chat.ChatInteractor
 import ru.alarmtrade.specialist.interactors.chat.requests.DownloadChatFileRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.LoadChatMessagesRequest
 import ru.alarmtrade.specialist.interactors.chat.requests.MarkMessagesAsReadRequest
@@ -17,6 +16,7 @@ import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
 import ru.alarmtrade.specmp.feature.account.domain.repository.AccountRepository
+import ru.alarmtrade.specmp.feature.supportchat.data.datasource.SupportChatDataSource
 import ru.alarmtrade.specmp.feature.supportchat.data.mapper.SupportChatMessageMapper
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatConnectionState
 import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatEvent
@@ -27,7 +27,7 @@ import ru.alarmtrade.specmp.feature.supportchat.domain.model.SupportChatUnavaila
 import ru.alarmtrade.specmp.feature.supportchat.domain.repository.SupportChatRepository
 
 internal class SpecialistSupportChatRepository(
-    private val chatInteractor: ChatInteractor,
+    private val dataSource: SupportChatDataSource,
     private val accountRepository: AccountRepository,
 ) : SupportChatRepository {
 
@@ -50,7 +50,7 @@ internal class SpecialistSupportChatRepository(
         }
 
         launch {
-            chatInteractor.getChatEventsFlowUseCase.execute().collect { response ->
+            dataSource.chatEvents().collect { response ->
                 when (response) {
                     is SpecialistResponse.Success -> response.value.toSupportChatEvent(profile)?.let {
                         send(Response.Success(it))
@@ -63,7 +63,7 @@ internal class SpecialistSupportChatRepository(
         }
 
         // Заявка на соединение живёт, пока собирается этот поток.
-        chatInteractor.chatSessionFlowUseCase.execute().collect { response ->
+        dataSource.chatSession().collect { response ->
             when (response) {
                 is SpecialistResponse.Success -> response.value.toDomain()?.let {
                     send(Response.Success(SupportChatEvent.Connection(it)))
@@ -80,7 +80,7 @@ internal class SpecialistSupportChatRepository(
             is Response.Error -> return response
         }
         val request = LoadChatMessagesRequest(cursor = cursor?.token, pageSize = HISTORY_PAGE_SIZE)
-        return when (val response = chatInteractor.loadChatMessagesUseCase.execute(request)) {
+        return when (val response = dataSource.loadMessages(request)) {
             is SpecialistResponse.Success -> Response.Success(
                 SupportChatHistoryPage(
                     messages = response.value.messages.mapNotNull { messageMapper.map(it, profile.email) },
@@ -93,17 +93,17 @@ internal class SpecialistSupportChatRepository(
     }
 
     override suspend fun sendMessage(text: String): Response<Unit> =
-        chatInteractor.writeMessageUseCase.execute(WriteMessageRequest(text)).toResponse()
+        dataSource.writeMessage(WriteMessageRequest(text)).toResponse()
 
     override suspend fun sendImage(file: SupportChatPickedFile): Response<Unit> =
-        chatInteractor.attachImageUseCase.execute(UploadChatFileRequest(file.path)).toResponse()
+        dataSource.attachImage(UploadChatFileRequest(file.path)).toResponse()
 
     override suspend fun sendDocument(file: SupportChatPickedFile): Response<Unit> =
-        chatInteractor.attachDocumentUseCase.execute(UploadChatFileRequest(file.path)).toResponse()
+        dataSource.attachDocument(UploadChatFileRequest(file.path)).toResponse()
 
     override suspend fun downloadFile(url: String): Response<ByteArray> {
         // Лимит размера (20 МБ) проверяет SDK.
-        return chatInteractor.downloadChatFileUseCase.execute(
+        return dataSource.downloadFile(
             DownloadChatFileRequest(url),
         ).toResponse().also { response ->
             if (response is Response.Error) logger.d(response.exception) { "Failed to download chat file" }
@@ -111,7 +111,7 @@ internal class SpecialistSupportChatRepository(
     }
 
     override suspend fun markMessagesAsRead(ids: List<Long>): Response<Unit> =
-        chatInteractor.markMessagesAsReadUseCase.execute(MarkMessagesAsReadRequest(ids)).toResponse()
+        dataSource.markMessagesAsRead(MarkMessagesAsReadRequest(ids)).toResponse()
 
     private fun ChatConnectionState.toDomain(): SupportChatConnectionState? = when (this) {
         // Заявка взята, но SDK ещё не начал подключение — для экрана это то же «подключение».
@@ -141,7 +141,7 @@ internal class SpecialistSupportChatRepository(
         is ChatEvent.Chat.Writing.Stop ->
             SupportChatEvent.TypingChanged(userLogin, isTyping = false, isMine = userLogin == profile.email)
 
-        // Состояние соединения — из chatSessionFlowUseCase.
+        // Состояние соединения — из потока сессии чата.
         is ChatEvent.Connection, is ChatEvent.ChatRoom, is ChatEvent.Error -> null
 
         else -> {

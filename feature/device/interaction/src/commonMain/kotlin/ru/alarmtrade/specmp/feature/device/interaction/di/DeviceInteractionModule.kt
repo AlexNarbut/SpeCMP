@@ -1,11 +1,18 @@
 package ru.alarmtrade.specmp.feature.device.interaction.di
 
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AuthCloseable
 import ru.alarmtrade.specmp.core.common.coroutines.serviceScope
+import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.DeviceConnectionDataSource
+import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.DeviceSessionDataSource
+import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.ProgramModeDataSource
+import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.SpecialistDeviceConnectionDataSource
+import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.SpecialistDeviceSessionDataSource
+import ru.alarmtrade.specmp.feature.device.interaction.data.datasource.SpecialistProgramModeDataSource
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceConnectionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistDeviceSessionRepository
 import ru.alarmtrade.specmp.feature.device.interaction.data.repository.SpecialistProgramModeRepository
@@ -26,24 +33,22 @@ val deviceSessionScopeQualifier = named("deviceSessionScope")
  * SDK-интеракторы берутся из `core/specialist`.
  */
 val deviceInteractionModule = module {
-    single<DeviceConnectionRepository> {
-        // Ленивые провайдеры: недоступный транспорт на платформе не должен
-        // ронять создание репозитория (см. resolveOrNull в реализации).
-        SpecialistDeviceConnectionRepository(
-            bluetoothConnectorInteractor = { get() },
-            usbConnectorInteractor = { get() },
-            serialConnectorInteractor = { get() },
-        )
+    // Ленивые провайдеры: недоступный на платформе интерактор не должен ронять создание источника.
+    single<DeviceConnectionDataSource> {
+        SpecialistDeviceConnectionDataSource(bluetooth = { get() }, usb = { get() }, serial = { get() })
     }
-    single<DeviceSessionRepository> {
-        SpecialistDeviceSessionRepository(bluetoothAlarmDeviceInteractor = { get() }, appUpdatesInteractor = { get() })
+    single<DeviceSessionDataSource> {
+        SpecialistDeviceSessionDataSource(alarmDevice = { get() }, appUpdates = { get() })
     }
+    single<ProgramModeDataSource> { SpecialistProgramModeDataSource(alarmDevice = { get() }) }
+    singleOf(::SpecialistDeviceConnectionRepository) bind DeviceConnectionRepository::class
+    singleOf(::SpecialistDeviceSessionRepository) bind DeviceSessionRepository::class
     single(deviceSessionScopeQualifier) { serviceScope(get<AppDispatchers>().io, logTag = "DeviceSession") }
     single<DeviceSession> { DeviceSessionImpl(get(), get(), get(deviceSessionScopeQualifier)) }
     // Блокировка ввода PIN программирования (по блоку): общая для прошивки и режима программирования.
     // Состояние аккаунта — чистится при логауте.
     single { ServicePinCooldown() } bind AuthCloseable::class
     // Режим программирования (PIN по BLE + кулдаун): обход, проверка состояния.
-    single<ProgramModeRepository> { SpecialistProgramModeRepository(bluetoothAlarmDeviceInteractor = { get() }) }
+    singleOf(::SpecialistProgramModeRepository) bind ProgramModeRepository::class
     factory { ProgramModeEntry(get(), get(), get()) }
 }
