@@ -54,6 +54,7 @@ internal val CardShape = RoundedCornerShape(20.dp)
 private val SkeletonRows = listOf(6, 5, 4)
 private const val SKELETON_TITLE_FRACTION = 0.45f
 private val PILL_MAX_WIDTH = 150.dp
+private val BANNER_MIN_HEIGHT = 64.dp
 
 internal data class ToneColors(
     val row: Color,
@@ -235,6 +236,7 @@ internal fun StateBanner(
     neutral: Boolean = false,
     busy: Boolean = false,
     action: String? = null,
+    actionEnabled: Boolean = true,
     onAction: () -> Unit = {},
 ) {
     val colors = cmpThemeColors()
@@ -243,6 +245,7 @@ internal fun StateBanner(
     CmpRow(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = BANNER_MIN_HEIGHT)
             .background(background, RoundedCornerShape(16.dp))
             .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -258,11 +261,26 @@ internal fun StateBanner(
                 modifier = Modifier.size(26.dp),
             )
         }
-        CmpColumn(modifier = Modifier.weight(1f)) {
-            CmpText(text = title, color = content, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-            if (text != null) CmpText(text = text, color = content, fontSize = 14.sp)
+        CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            CmpText(
+                text = title,
+                color = content,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (text != null) {
+                CmpText(
+                    text = text,
+                    color = content,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
-        if (action != null) CmpOutlinedButton(text = action, onClick = onAction)
+        if (action != null) CmpOutlinedButton(text = action, onClick = onAction, enabled = actionEnabled)
     }
 }
 
