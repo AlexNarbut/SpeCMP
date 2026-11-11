@@ -85,8 +85,11 @@ class FirmwareUpdateViewModel(
         if (current.resumable) {
             // Передача продолжается сама: SDK дождался связи и шлёт неподтверждённый кадр.
             reduceCore { copy(linkDropped = false) }
+        } else if (current.stage == UpdatePhase.Apply && current.running) {
+            // Блок после применения перезагружается обратно в загрузчик, и SDK только теперь спрашивает у него итог.
+            reduceCore { copy(linkDropped = false) }
         } else if (current.stage == UpdatePhase.Apply) {
-            // После применения блок должен был вернуться в рабочий режим, а он снова в загрузчике: не применилась.
+            // SDK итога не дал, а блок вместо рабочего режима снова в загрузчике: не применилась.
             cancelLaunched(UPDATE_PROCESS)
             deviceSession.cancelReboot()
             reduceCore { copy(stage = UpdatePhase.Error(FailureKind.ApplyingError), linkDropped = false) }

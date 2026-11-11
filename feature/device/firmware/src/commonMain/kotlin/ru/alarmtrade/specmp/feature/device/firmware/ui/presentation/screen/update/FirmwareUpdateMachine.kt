@@ -215,6 +215,9 @@ internal fun phaseOf(core: UpdateCore): UpdatePhase {
         // Блок перезагрузился после применения и вернулся в рабочий режим, а результата SDK не было — успех.
         core.stage == UpdatePhase.Apply && session is DeviceSessionState.Ready -> UpdatePhase.Success
 
+        // Применение бывает дольше ожидания перезагрузки: обрыв, пока SDK ждёт итог, — всё ещё применение.
+        linkDown && core.stage == UpdatePhase.Apply && core.running -> UpdatePhase.Apply
+
         linkDown && reboot == null -> linkDownPhase(core)
 
         else -> core.stage

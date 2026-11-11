@@ -7,6 +7,8 @@ struct SpeCMPApp: App {
         WindowGroup {
             ComposeView()
                 .ignoresSafeArea()
+                // Прошивка и долгий обмен с блоком идут минутами: автоблокировка приостановила бы приложение.
+                .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
         }
     }
 }

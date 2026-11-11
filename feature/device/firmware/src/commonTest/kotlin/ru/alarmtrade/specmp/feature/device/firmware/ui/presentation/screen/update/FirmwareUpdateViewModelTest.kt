@@ -328,7 +328,7 @@ class FirmwareUpdateViewModelTest {
     }
 
     @Test
-    fun `block that returns to the bootloader after applying is an applying error`() = test {
+    fun `block that returns to the bootloader after applying waits for the sdk verdict`() = test {
         val vm = startedUpdate()
         updateRepository.emit(FirmwareUpdateProgress.Applying)
         runCurrent()
@@ -336,6 +336,24 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
 
         linkBack(bootDevice)
+        assertEquals(UpdatePhase.Apply, vm.state.value.phase)
+
+        updateRepository.emit(FirmwareUpdateProgress.Finished)
+        runCurrent()
+        assertEquals(UpdatePhase.Success, vm.state.value.phase)
+    }
+
+    @Test
+    fun `applying error reported by the sdk after the bootloader returned is shown`() = test {
+        val vm = startedUpdate()
+        updateRepository.emit(FirmwareUpdateProgress.Applying)
+        runCurrent()
+        linkDrop()
+        runCurrent()
+        linkBack(bootDevice)
+
+        updateRepository.fail(FirmwareFailure.Write(WriteFailureReason.ApplyingError))
+        runCurrent()
 
         assertEquals(UpdatePhase.Error(FailureKind.ApplyingError), vm.state.value.phase)
         assertNull(session.reboot.value)
