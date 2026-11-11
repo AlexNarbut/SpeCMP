@@ -122,6 +122,52 @@ class BaseViewModelTest {
     }
 
     @Test
+    fun `side effect posted before subscription is delivered on subscription`() = runTest {
+        val vm = CounterViewModel()
+        vm.send("early")
+        vm.send("later")
+
+        val effects = mutableListOf<CounterEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.sideEffect.collect { effects += it } }
+
+        assertEquals(listOf(CounterEffect("early"), CounterEffect("later")), effects)
+    }
+
+    @Test
+    fun `each side effect reaches exactly one collector in order`() = runTest {
+        val vm = CounterViewModel()
+        val first = mutableListOf<CounterEffect>()
+        val second = mutableListOf<CounterEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.sideEffect.collect { first += it } }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.sideEffect.collect { second += it } }
+
+        val sent = (1..6).map { CounterEffect("e$it") }
+        sent.forEach { vm.send(it.message) }
+        runCurrent()
+
+        assertEquals(sent.toSet(), (first + second).toSet())
+        assertEquals(sent.size, first.size + second.size)
+        assertEquals(sent.filter { it in first }, first)
+        assertEquals(sent.filter { it in second }, second)
+    }
+
+    @Test
+    fun `side effects collected after resubscription are not repeated`() = runTest {
+        val vm = CounterViewModel()
+        val effects = mutableListOf<CounterEffect>()
+        val subscription = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.sideEffect.collect { effects += it }
+        }
+        vm.send("first")
+        subscription.cancel()
+        vm.send("while away")
+
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.sideEffect.collect { effects += it } }
+
+        assertEquals(listOf(CounterEffect("first"), CounterEffect("while away")), effects)
+    }
+
+    @Test
     fun `independent bindings update their own fields`() = runTest {
         val left = MutableStateFlow(1)
         val right = MutableStateFlow(2)

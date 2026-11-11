@@ -22,6 +22,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -56,6 +57,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsDialog
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsPage
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceHeader
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SourceKind
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
@@ -285,16 +287,18 @@ class DeviceSettingsGallery {
                 snackbarHostState = remember { CmpSnackbarHostState() },
             ) { layout ->
                 val marks = RowMarks(state.changedIds, state.sectionChanges, state.cars)
-                if (search) {
-                    SearchPane(state.searchQuery, state.searchHits, marks, layout.isWide, {}, noRowActions)
-                } else {
-                    SectionEntry(
-                        state.menu.content,
-                        marks,
-                        path.lastOrNull(),
-                        layout,
-                        noRowActions,
-                    )
+                SettingsPage(state, SettingsLocation(path, search), layout, noActions) {
+                    if (search) {
+                        SearchPane(state.searchQuery, state.searchHits, marks, layout.isWide, {}, noRowActions)
+                    } else {
+                        SectionEntry(
+                            state.menu.content,
+                            marks,
+                            path.lastOrNull(),
+                            layout,
+                            noRowActions,
+                        )
+                    }
                 }
             }
         }
@@ -380,6 +384,21 @@ class DeviceSettingsGallery {
     @Test
     fun search() =
         render("08_search", base.copy(searchQuery = "дат", searchHits = root.search("дат")), emptyList(), true)
+
+    @Test
+    fun searchFuzzy() {
+        val sdk = listOf(SettingNameMatch(321, listOf(0..4, 7..11)), SettingNameMatch(3251, listOf(0..4)))
+        render(
+            "53_search_fuzzy",
+            base.copy(searchQuery = "датчк удра", searchHits = root.search("датчк удра", sdk)),
+            emptyList(),
+            true,
+        )
+    }
+
+    @Test
+    fun searchNumber() =
+        render("54_search_number", base.copy(searchQuery = "4.1", searchHits = root.search("4.1")), emptyList(), true)
 
     @Test
     fun searchEmpty() = render("09_search_empty", base.copy(searchQuery = "вертолёт"), emptyList(), true)

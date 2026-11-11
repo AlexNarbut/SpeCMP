@@ -38,6 +38,7 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -346,7 +347,7 @@ private fun VersionList(
 
     LazyColumn(
         state = listState,
-        modifier = modifier,
+        modifier = modifier.hideKeyboardOnScroll(),
         contentPadding = PaddingValues(padding),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

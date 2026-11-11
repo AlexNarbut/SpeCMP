@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,6 +38,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OptionSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SearchHighlights
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
@@ -44,7 +47,9 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchOutputSet
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.TextSetting
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.SettingsTestTags
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.highlightedText
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.isSegmented
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.numberedTitleParts
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.valueText
 
@@ -72,15 +77,17 @@ internal fun SettingNodeRow(
     modifier: Modifier = Modifier,
     path: String? = null,
     note: String? = null,
+    highlights: SearchHighlights? = null,
 ) {
     when (node) {
-        is SettingsSection -> SectionRow(node, sectionChanges, path, actions, modifier)
+        is SettingsSection -> SectionRow(node, sectionChanges, path, highlights, actions, modifier)
 
         is Setting -> if (node.isChannel) {
             ChannelRow(
                 setting = node,
                 changed = changed,
                 path = path,
+                highlights = highlights,
                 actions = actions,
                 infoButton = {
                     InfoButton(enabled = node.description != null, onClick = { actions.onDescription(node.id) })
@@ -88,7 +95,7 @@ internal fun SettingNodeRow(
                 modifier = modifier,
             )
         } else {
-            LeafRow(node, changed, wide, path, note, actions, modifier)
+            LeafRow(node, changed, wide, path, note, highlights, actions, modifier)
         }
     }
 }
@@ -98,6 +105,7 @@ private fun SectionRow(
     section: SettingsSection,
     changes: Int,
     path: String?,
+    highlights: SearchHighlights?,
     actions: SettingRowActions,
     modifier: Modifier,
 ) {
@@ -126,7 +134,14 @@ private fun SectionRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CmpColumn(modifier = Modifier.weight(1f)) {
-            Title(number = section.number, name = section.name, changed = false, bold = true, dimmed = !enterable)
+            Title(
+                number = section.number,
+                name = section.name,
+                changed = false,
+                bold = true,
+                dimmed = !enterable,
+                highlights = highlights,
+            )
             if (path != null) Subtitle(path)
         }
         if (changes > 0) CmpCountPill(count = changes)
@@ -144,6 +159,7 @@ private fun LeafRow(
     wide: Boolean,
     path: String?,
     note: String?,
+    highlights: SearchHighlights?,
     actions: SettingRowActions,
     modifier: Modifier,
 ) {
@@ -177,7 +193,13 @@ private fun LeafRow(
             modifier = Modifier.weight(1f).padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Title(number = setting.number, name = setting.name, changed = changed, bold = false)
+            Title(
+                number = setting.number,
+                name = setting.name,
+                changed = changed,
+                bold = false,
+                highlights = highlights,
+            )
             when {
                 path != null -> Subtitle(path)
 
@@ -255,11 +277,22 @@ private fun InfoButton(enabled: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Title(number: String, name: String, changed: Boolean, bold: Boolean, dimmed: Boolean = false) {
+private fun Title(
+    number: String,
+    name: String,
+    changed: Boolean,
+    bold: Boolean,
+    dimmed: Boolean = false,
+    highlights: SearchHighlights? = null,
+) {
     val colors = cmpThemeColors()
+    val style = searchHighlightStyle()
+    val text = remember(number, name, highlights, style) {
+        highlightedText(numberedTitleParts(number, name, highlights ?: SearchHighlights()), style)
+    }
     CmpRow(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CmpText(
-            text = if (number.isEmpty()) name else "$number  $name",
+            text = text,
             style = CmpTextStyle.BodyLarge,
             fontWeight = if (bold) FontWeight.SemiBold else null,
             color = if (dimmed) colors.onSurfaceVariant else colors.onSurface,
@@ -268,6 +301,18 @@ private fun Title(number: String, name: String, changed: Boolean, bold: Boolean,
             modifier = Modifier.weight(1f, fill = false),
         )
         if (changed) CmpDot()
+    }
+}
+
+@Composable
+internal fun searchHighlightStyle(): SpanStyle {
+    val colors = cmpThemeColors()
+    return remember(colors.primaryContainer, colors.onPrimaryContainer) {
+        SpanStyle(
+            background = colors.primaryContainer,
+            color = colors.onPrimaryContainer,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 

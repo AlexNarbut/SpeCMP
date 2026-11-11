@@ -12,13 +12,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -26,13 +26,13 @@ import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.ui.effect.sideEffectFlow
 
 /** Контракт и правила использования — docs/patterns.md, «BaseViewModel». */
 abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
@@ -54,7 +54,9 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
     private val _state = MutableStateFlow(initialState)
     private val isSubscribed = MutableStateFlow(false)
     private val reloadRequests = MutableStateFlow(0)
-    private val _sideEffect = sideEffectFlow<E>()
+
+    // Как FAN_OUT в Orbit: без подписчика (экран ниже STARTED) эффекты копятся в буфере, каждый получает один сборщик.
+    private val _sideEffect = Channel<E>(Channel.BUFFERED)
 
     val state: StateFlow<S> = _state
         .onStart { isSubscribed.update { true } }
@@ -62,7 +64,7 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
         .onStart { startJob.start() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT), initialState)
 
-    val sideEffect: SharedFlow<E> = _sideEffect.asSharedFlow()
+    val sideEffect: Flow<E> = _sideEffect.receiveAsFlow()
 
     protected val currentState: S get() = _state.value
 
@@ -74,7 +76,7 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
     }
 
     protected fun postSideEffect(effect: E) {
-        _sideEffect.tryEmit(effect)
+        _sideEffect.trySend(effect).onFailure { logger.w { "Side effect dropped, buffer is full: $effect" } }
     }
 
     protected fun intent(block: suspend CoroutineScope.() -> Unit): Job = safeLaunch(block)

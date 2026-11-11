@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import ru.alarmtrade.common.settings.interaction.model.menu.SettingsPath
+import ru.alarmtrade.common.settings.interaction.model.search.SettingSearchResult
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.FloatSetting as SdkFloatSetting
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.InputSetting as SdkInputSetting
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.IntegerSetting as SdkIntegerSetting
@@ -31,6 +32,7 @@ import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDevi
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.SetDeviceSettingSirenIntValueRequest
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.DEFAULT_DECIMAL_STEP
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toDomain
+import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toPath
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRequest
 import ru.alarmtrade.specmp.feature.device.settings.data.mapper.toRootSection
@@ -43,6 +45,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.IntegerSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
@@ -56,6 +59,13 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.Wire
 class SettingsMappersTest {
 
     private val path = SettingsPath.CurrentSessionDevice
+
+    @Test
+    fun `search result keeps the setting id and the name highlights`() {
+        val result = SettingSearchResult(switch(id = 9, value = true), listOf(0..2, 5..6))
+
+        assertEquals(SettingNameMatch(9, listOf(0..2, 5..6)), result.toNameMatch())
+    }
 
     @Test
     fun `nested submenus keep their order and depth`() {

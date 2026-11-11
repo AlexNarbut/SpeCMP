@@ -1,6 +1,5 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +16,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -39,7 +39,6 @@ import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.core.ui.navigation.navigateSafe
 import ru.alarmtrade.specmp.core.ui.navigation.popSafe
-import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarDuration
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarResult
@@ -63,6 +62,7 @@ import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.edito
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.RowMarks
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsEditorOptions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsLocation
+import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.SettingsPage
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.firstSectionId
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.EditorActions
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor.subcomponents.SearchPane
@@ -176,10 +176,8 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(slots.filePicker) { slots.filePicker.results.collect(viewModel::onFilePicked) }
-    // Каждый эффект — в своей корутине: тост «Сохранено» с «Открыть» висит до 10 с, и выход по «назад» (тоже эффект)
-    // не должен ждать, пока он закроется. Тосты всё равно идут по очереди — их упорядочивает snackbarHostState.
     viewModel.sideEffect.collectSideEffect { effect ->
-        scope.launch { handleEffect(effect, viewModel, slots, snackbarHostState) }
+        handleEffect(effect, viewModel, slots, snackbarHostState, scope)
     }
 
     val onBack = { if (!backStack.popSafe()) viewModel.onExitRequest(ExitTarget.BACK) }
@@ -278,49 +276,55 @@ private fun transferActions(viewModel: DeviceSettingsViewModel) = TransferAction
 )
 
 @Suppress("CyclomaticComplexMethod") // плоский when по эффектам экрана
-private suspend fun handleEffect(
+// Ожидание UI (тосты до 10 с, «Сохранить как») — в scope экрана: выход по «назад» (тоже эффект) его не ждёт.
+// Тосты всё равно идут по очереди — их упорядочивает snackbarHostState.
+private fun handleEffect(
     effect: DeviceSettingsEffect,
     viewModel: DeviceSettingsViewModel,
     slots: EditorSlots,
     snackbarHostState: CmpSnackbarHostState,
+    scope: CoroutineScope,
 ) {
     when (effect) {
-        is DeviceSettingsEffect.Written -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_editor_msg_written, effect.count),
-        )
+        is DeviceSettingsEffect.Written -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_editor_msg_written, effect.count))
+        }
 
-        DeviceSettingsEffect.SetValueFailed -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_editor_error_set_value),
-        )
+        DeviceSettingsEffect.SetValueFailed -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_editor_error_set_value))
+        }
 
-        DeviceSettingsEffect.ResetDone -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_reset_msg_done),
-        )
+        DeviceSettingsEffect.ResetDone -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_reset_msg_done))
+        }
 
         is DeviceSettingsEffect.Exit -> when (effect.target) {
             ExitTarget.BACK -> slots.onExit()
             ExitTarget.FIRMWARE_UPDATE -> slots.onOpenFirmwareUpdate()
         }
 
-        is DeviceSettingsEffect.Loaded -> snackbarHostState.showSnackbar(
-            if (effect.count > 0) {
-                getString(Strings.string.settings_loaded_msg, effect.count)
-            } else {
-                getString(Strings.string.settings_common_msg_loaded_same)
-            },
-            duration = CmpSnackbarDuration.Long,
-        )
+        is DeviceSettingsEffect.Loaded -> scope.launch {
+            snackbarHostState.showSnackbar(
+                if (effect.count > 0) {
+                    getString(Strings.string.settings_loaded_msg, effect.count)
+                } else {
+                    getString(Strings.string.settings_common_msg_loaded_same)
+                },
+                duration = CmpSnackbarDuration.Long,
+            )
+        }
 
         DeviceSettingsEffect.PickFile -> slots.filePicker.launch()
 
-        is DeviceSettingsEffect.ExportFile ->
+        is DeviceSettingsEffect.ExportFile -> scope.launch {
             viewModel.onFileExported(slots.fileSaver.save(effect.path, effect.fileName))
+        }
 
-        is DeviceSettingsEffect.FileSaved -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_common_msg_saved_file, effect.name),
-        )
+        is DeviceSettingsEffect.FileSaved -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_common_msg_saved_file, effect.name))
+        }
 
-        is DeviceSettingsEffect.SavedToMine -> {
+        is DeviceSettingsEffect.SavedToMine -> scope.launch {
             val open = slots.onOpenConfiguration
             val result = snackbarHostState.showSnackbar(
                 getString(Strings.string.settings_common_msg_saved_mine),
@@ -330,9 +334,9 @@ private suspend fun handleEffect(
             if (result == CmpSnackbarResult.ActionPerformed) open?.invoke(effect.configuration)
         }
 
-        DeviceSettingsEffect.Saved -> snackbarHostState.showSnackbar(
-            getString(Strings.string.settings_common_msg_saved),
-        )
+        DeviceSettingsEffect.Saved -> scope.launch {
+            snackbarHostState.showSnackbar(getString(Strings.string.settings_common_msg_saved))
+        }
 
         is DeviceSettingsEffect.WriteToDevice -> slots.onWriteToDevice?.invoke(effect.source)
     }
@@ -369,10 +373,12 @@ private fun SettingsWithNav(
             ),
             entryProvider = entryProvider<NavKey> {
                 entry<SettingsSectionRoute> { key ->
-                    EntryBackground { SectionEntry(root, marks, key.sectionId, layout, rowActions) }
+                    SettingsPage(state, sectionLocation(root, key.sectionId), layout, actions) {
+                        SectionEntry(root, marks, key.sectionId, layout, rowActions)
+                    }
                 }
                 entry<SettingsSearchRoute> { _ ->
-                    EntryBackground {
+                    SettingsPage(state, SearchLocation, layout, actions) {
                         SearchPane(
                             query = state.searchQuery,
                             hits = state.searchHits,
@@ -388,15 +394,6 @@ private fun SettingsWithNav(
     }
 }
 
-/**
- * Непрозрачный фон записи: на переходе NavDisplay новая запись едет поверх старой, и без фона строки старой
- * просвечивают сквозь новую.
- */
-@Composable
-private fun EntryBackground(content: @Composable () -> Unit) {
-    CmpBox(modifier = Modifier.fillMaxSize().background(cmpThemeColors().background)) { content() }
-}
-
 @Composable
 internal fun SectionEntry(
     root: SettingsSection?,
@@ -410,6 +407,14 @@ internal fun SectionEntry(
     val id = sectionId ?: firstSectionId(root).takeIf { layout.isWide }
     val section = id?.let { root.findNode(it) as? SettingsSection } ?: root
     SectionPane(section = section, marks = marks, wide = layout.isWide, actions = actions)
+}
+
+private val SearchLocation = SettingsLocation(sectionPath = emptyList(), isSearch = true)
+
+/** Своя локация у каждой записи: уходящая при pop запись уже не в back stack, но рисует свои панель и крошки. */
+private fun sectionLocation(root: SettingsSection?, sectionId: Int?): SettingsLocation {
+    val path = sectionId?.let { id -> root?.pathTo(id).orEmpty().map { it.id } + id }.orEmpty()
+    return SettingsLocation(sectionPath = path, isSearch = false)
 }
 
 private fun NavBackStack<NavKey>.location(): SettingsLocation = SettingsLocation(

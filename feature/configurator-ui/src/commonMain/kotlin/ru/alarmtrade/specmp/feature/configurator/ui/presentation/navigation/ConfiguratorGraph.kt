@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -256,29 +257,32 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
             }
         }
     }
+    val scope = rememberCoroutineScope()
     viewModel.sideEffect.collectSideEffect { effect ->
-        when (effect) {
-            is MineEffect.Message -> snackbarHostState.showSnackbar(getString(effect.message.text()))
+        scope.launch {
+            when (effect) {
+                is MineEffect.Message -> snackbarHostState.showSnackbar(getString(effect.message.text()))
 
-            is MineEffect.Copied -> {
-                val result = snackbarHostState.showSnackbar(
-                    getString(Strings.string.configurator_common_msg_copied),
-                    actionLabel = getString(Strings.string.configurator_common_btn_open),
-                    duration = CmpSnackbarDuration.Long,
-                )
-                if (result == CmpSnackbarResult.ActionPerformed) {
-                    effect.configuration.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) }
+                is MineEffect.Copied -> {
+                    val result = snackbarHostState.showSnackbar(
+                        getString(Strings.string.configurator_common_msg_copied),
+                        actionLabel = getString(Strings.string.configurator_common_btn_open),
+                        duration = CmpSnackbarDuration.Long,
+                    )
+                    if (result == CmpSnackbarResult.ActionPerformed) {
+                        effect.configuration.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) }
+                    }
                 }
+
+                // Системное «Сохранить как» живёт в композиции (launcher), поэтому сохраняет UI, а результат уходит
+                // во VM — как в редакторе настроек.
+                is MineEffect.ExportFile ->
+                    viewModel.onFileExported((full?.fileSaver ?: NoSaver).save(effect.path, effect.fileName))
+
+                is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
+                    getString(Strings.string.configurator_common_msg_file_saved, effect.name),
+                )
             }
-
-            // Системное «Сохранить как» живёт в композиции (launcher), поэтому сохраняет UI, а результат уходит во VM —
-            // как в редакторе настроек. Обработчик эффектов — уже корутина: отдельный scope.launch не нужен.
-            is MineEffect.ExportFile ->
-                viewModel.onFileExported((full?.fileSaver ?: NoSaver).save(effect.path, effect.fileName))
-
-            is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
-                getString(Strings.string.configurator_common_msg_file_saved, effect.name),
-            )
         }
     }
     val actions = remember(viewModel, backStack) { mineActions(viewModel, backStack, mode, filePicker, onBack) }
@@ -403,11 +407,12 @@ private fun cloudCard(
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
+    val scope = rememberCoroutineScope()
     viewModel.sideEffect.collectSideEffect { effect ->
         when (effect) {
             is CloudCardEffect.OpenUrl -> safeRun { uriHandler.openUri(effect.url) }
 
-            is CloudCardEffect.SavedToMine -> {
+            is CloudCardEffect.SavedToMine -> scope.launch {
                 val result = snackbarHostState.showSnackbar(
                     getString(Strings.string.configurator_common_msg_saved_mine),
                     actionLabel = if (full != null) getString(Strings.string.configurator_common_btn_open) else null,
@@ -418,9 +423,9 @@ private fun cloudCard(
                 }
             }
 
-            CloudCardEffect.SaveFailed -> snackbarHostState.showSnackbar(
-                getString(Strings.string.configurator_common_msg_failed),
-            )
+            CloudCardEffect.SaveFailed -> scope.launch {
+                snackbarHostState.showSnackbar(getString(Strings.string.configurator_common_msg_failed))
+            }
         }
     }
     val actions = remember(viewModel, backStack) {

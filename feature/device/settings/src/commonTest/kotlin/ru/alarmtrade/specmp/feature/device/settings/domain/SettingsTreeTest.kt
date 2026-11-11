@@ -11,6 +11,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputContactTyp
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SearchHighlights
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -18,6 +20,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.localHighlights
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.reusing
@@ -87,6 +90,37 @@ class SettingsTreeTest {
         assertEquals(listOf(41), root.search("in1").map { it.node.id })
         assertEquals(listOf(300, 320, 325), root.search("наклона").single().path.map { it.id })
         assertTrue(root.search("  ").isEmpty())
+    }
+
+    @Test
+    fun `local search highlights the matched name, number prefix and channel name`() {
+        assertEquals(SearchHighlights(channel = listOf(0..2)), root.search("in1").single().highlights)
+        assertEquals(SearchHighlights(number = listOf(0..2)), root.search("3.2").first { it.node.id == 32 }.highlights)
+        assertEquals(listOf(7..13), root.search("наклона").single().highlights.name)
+        assertEquals(SearchHighlights(name = listOf(0..1, 2..3)), switch(1, "", "аАаа").localHighlights("аа"))
+    }
+
+    @Test
+    fun `sdk name matches go first in their order, local additions follow without duplicates`() {
+        val hits = root.search(
+            "3.2",
+            listOf(
+                SettingNameMatch(33, listOf(0..5)),
+                SettingNameMatch(33, listOf(7..13)),
+                SettingNameMatch(999, listOf(0..1)),
+            ),
+        )
+
+        assertEquals(listOf(33, 320, 32, 325), hits.map { it.node.id })
+        assertEquals(SearchHighlights(name = listOf(0..5), number = listOf(0..2)), hits.first().highlights)
+        assertEquals(listOf(300, 320, 325), hits.first().path.map { it.id })
+    }
+
+    @Test
+    fun `sdk match without highlights falls back to the local name match`() {
+        val hit = root.search("удара", listOf(SettingNameMatch(32, emptyList()))).single()
+
+        assertEquals(SearchHighlights(name = listOf(7..11)), hit.highlights)
     }
 
     @Test

@@ -49,6 +49,7 @@ import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -198,7 +199,7 @@ private fun SystemsList(
     onPick: (FirmwareSystem, FirmwareSubsystem) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.widthIn(max = ListMaxWidth).fillMaxSize(),
+        modifier = Modifier.widthIn(max = ListMaxWidth).fillMaxSize().hideKeyboardOnScroll(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

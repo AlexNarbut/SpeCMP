@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
+import ru.alarmtrade.specmp.core.ui.view.input.clearFocusOnTapOutside
 
 /** `AlertDialog` M3 ограничен 560 dp; для длинного текста — доля окна в пределах [min]..[max]. */
 class CmpDialogWidth(private val fraction: Float, private val min: Dp, private val max: Dp) {
@@ -70,7 +71,7 @@ fun CmpDialog(
         AlertDialog(
             onDismissRequest = onDismissRequest,
             confirmButton = confirmButton,
-            modifier = modifier,
+            modifier = modifier.clearFocusOnTapOutside(),
             dismissButton = dismissButton,
             title = title,
             text = text,
@@ -100,11 +101,14 @@ private fun WideDialog(
         // Окно диалога на всю ширину: касание вне карточки закрывает диалог, касание карточки — нет.
         val outside = remember { MutableInteractionSource() }
         BoxWithConstraints(
-            modifier = Modifier.fillMaxSize().clickable(
-                interactionSource = outside,
-                indication = null,
-                onClick = onDismissRequest,
-            ),
+            modifier = Modifier
+                .fillMaxSize()
+                .clearFocusOnTapOutside()
+                .clickable(
+                    interactionSource = outside,
+                    indication = null,
+                    onClick = onDismissRequest,
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Surface(

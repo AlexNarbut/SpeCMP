@@ -262,6 +262,22 @@ class CheckStateViewModelTest {
     }
 
     @Test
+    fun `back right after a command result closes without waiting`() = test {
+        val vm = viewModel()
+        emit(vehicle())
+
+        vm.onCommand(StateCommand.ARM)
+        runCurrent()
+        vm.onBack()
+        runCurrent()
+
+        assertEquals(
+            listOf(CheckStateEffect.CommandFinished(StateCommand.ARM, CommandOutcome.DONE), CheckStateEffect.Close),
+            effects.takeLast(2),
+        )
+    }
+
+    @Test
     fun `fast mount next with open tasks asks to confirm`() = test {
         val vm = viewModel(fastMount = true)
         vm.onNext(notDone = 2, total = 5)

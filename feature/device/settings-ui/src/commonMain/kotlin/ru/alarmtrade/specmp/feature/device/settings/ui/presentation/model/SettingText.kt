@@ -2,11 +2,8 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model
 
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Channel
 
-internal fun settingTitle(name: String, channel: Channel?): String = when {
-    channel == null || channel.name.isBlank() || channel.name == name -> name
-    name.isBlank() -> channel.name
-    else -> "${channel.name} · $name"
-}
+internal fun settingTitle(name: String, channel: Channel?): String =
+    settingTitleParts(name, channel).joinToString("") { it.text }
 
 internal fun withUnits(number: String, units: String?): String = if (units.isNullOrBlank()) number else "$number $units"
 

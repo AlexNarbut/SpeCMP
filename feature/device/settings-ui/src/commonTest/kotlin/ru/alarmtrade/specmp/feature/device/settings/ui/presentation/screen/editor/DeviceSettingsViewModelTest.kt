@@ -50,7 +50,9 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.InputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.IntegerSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SearchHighlights
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
@@ -687,6 +689,30 @@ class DeviceSettingsViewModelTest {
     }
 
     @Test
+    fun `sdk name matches come first, local matches are added after them`() = test {
+        repository.searchResult = Response.Success(listOf(SettingNameMatch(11, listOf(0..5))))
+        val vm = viewModel()
+        vm.onSearchQueryChange(" задер ")
+        settle()
+
+        assertEquals(listOf("задер"), repository.searchQueries)
+        assertEquals(listOf(11, 12), vm.state.value.searchHits.map { it.node.id })
+        assertEquals(SearchHighlights(name = listOf(0..5)), vm.state.value.searchHits[0].highlights)
+        assertEquals(SearchHighlights(name = listOf(0..4)), vm.state.value.searchHits[1].highlights)
+    }
+
+    @Test
+    fun `failed sdk search falls back to the local search`() = test {
+        repository.searchResult = Response.Error(IllegalStateException("session closed"))
+        val vm = viewModel()
+        vm.onSearchQueryChange("3.2.4")
+        settle()
+
+        assertEquals(listOf(12), vm.state.value.searchHits.map { it.node.id })
+        assertEquals(SearchHighlights(number = listOf(0..4)), vm.state.value.searchHits.single().highlights)
+    }
+
+    @Test
     fun `typed query reaches the state together with its hits`() = test {
         val vm = viewModel()
         vm.onSearchQueryChange("3.2.4")
@@ -903,6 +929,13 @@ private class FakeSettingsRepository(private val initial: SettingsSection) :
 
     var resetResult: Response<Unit> = Response.Success(Unit)
     var resetCalls = 0
+    var searchResult: Response<List<SettingNameMatch>> = Response.Success(emptyList())
+    val searchQueries = mutableListOf<String>()
+
+    override suspend fun search(source: SettingsSource, query: String): Response<List<SettingNameMatch>> {
+        searchQueries += query
+        return searchResult
+    }
 
     override suspend fun resetDeviceToFactory(): Response<Unit> {
         resetCalls++

@@ -42,6 +42,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpCheckbox
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSegmentedButton
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -198,7 +199,7 @@ internal fun ChannelFunctionsEditor(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
             )
         } else {
-            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = FunctionsMaxHeight)) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = FunctionsMaxHeight).hideKeyboardOnScroll()) {
                 items(visible, key = { it.id }) { logic ->
                     FunctionRow(
                         logic = logic,

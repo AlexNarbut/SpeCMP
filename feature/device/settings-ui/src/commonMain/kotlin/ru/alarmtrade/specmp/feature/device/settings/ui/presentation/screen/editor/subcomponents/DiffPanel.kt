@@ -68,6 +68,7 @@ import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
@@ -211,7 +212,7 @@ private fun DiffList(diff: SettingsDiff, pendingChanges: Int, wide: Boolean) {
     val sections = shown.sections
     val canCode = shown.canCode
     val sidePadding = if (wide) 0.dp else 16.dp
-    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+    LazyColumn(modifier = Modifier.fillMaxWidth().hideKeyboardOnScroll()) {
         item(key = "summary") {
             DiffSummary(diff, pendingChanges, query, { query = it }, Modifier.padding(horizontal = sidePadding))
         }

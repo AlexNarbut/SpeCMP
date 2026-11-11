@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.login.presentation.navigation
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -72,48 +73,7 @@ fun LoginNavGraph() {
     val state = viewModel.state.collectAsStateWithLifecycle()
     val colors = cmpThemeColors()
     val backStack = rememberNavBackStack(navConfig, LoginRoute)
-    val currentRoute = backStack.lastOrNull() ?: LoginRoute
 
-    AuthScreenChrome(
-        colors = colors,
-        isLoading = currentRoute == LoginRoute && state.value.isAuthLoading,
-        title = {
-            if (currentRoute != LoginRoute) {
-                CmpText(
-                    text = routeTitle(currentRoute),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-        },
-        navigationIcon = {
-            if (backStack.size > 1) {
-                CmpIconButton(
-                    onClick = { backStack.popSafe() },
-                    icon = CmpIcons.ArrowBack,
-                    contentDescription = stringResource(Strings.string.login_common_a11y_back),
-                )
-            }
-        },
-    ) { layoutMode ->
-        LoginNavDisplay(
-            backStack = backStack,
-            state = state,
-            colors = colors,
-            layoutMode = layoutMode,
-            viewModel = viewModel,
-        )
-    }
-}
-
-@Composable
-private fun LoginNavDisplay(
-    backStack: NavBackStack<NavKey>,
-    state: State<LoginScreenState>,
-    colors: CmpThemeColors,
-    layoutMode: AuthLayoutMode,
-    viewModel: LoginScreenViewModel,
-) {
     NavDisplay(
         backStack = backStack,
         modifier = Modifier.fillMaxSize(),
@@ -125,57 +85,109 @@ private fun LoginNavDisplay(
         ),
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
-                AuthBody(
-                    layoutMode = layoutMode,
-                    modifier = Modifier.fillMaxSize(),
+                LoginEntry(
+                    backStack = backStack,
+                    state = state,
                     colors = colors,
-                    error = state.value.authError?.text(Strings.string.login_common_error_auth_failed),
-                ) {
-                    LoginScreen(
-                        state = state.value,
-                        colors = colors,
+                    viewModel = viewModel,
+                )
+            }
+            entry<RegistrationRoute> { _ ->
+                AuthChildScreenChrome(
+                    title = stringResource(Strings.string.login_registration_title_screen),
+                    colors = colors,
+                    onBack = { backStack.popSafe() },
+                ) { layoutMode ->
+                    RegistrationScreen(
                         layoutMode = layoutMode,
-                        onLoginChange = viewModel::onLoginChanged,
-                        onPasswordChange = viewModel::onPasswordChanged,
-                        onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
-                        onSubmit = viewModel::onSubmit,
-                        onOpenRegistration = {
-                            viewModel.onResetForm()
-                            backStack.navigateSafe(RegistrationRoute)
-                        },
-                        onOpenForgotPassword = {
-                            viewModel.onResetForm()
-                            backStack.navigateSafe(ForgotPasswordRoute)
-                        },
-                        onResendActivationEmail = viewModel::onResendActivationEmail,
-                        onDismissActivationRequest = viewModel::onDismissActivationRequest,
-                        modifier = Modifier.fillMaxWidth(),
+                        colors = colors,
+                        onBackToLogin = { backStack.popSafe() },
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
-            entry<RegistrationRoute> { _ ->
-                RegistrationScreen(
-                    layoutMode = layoutMode,
-                    colors = colors,
-                    onBackToLogin = { backStack.popSafe() },
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
             entry<ForgotPasswordRoute> { _ ->
-                ForgotPasswordScreen(
-                    layoutMode = layoutMode,
+                AuthChildScreenChrome(
+                    title = stringResource(Strings.string.login_forgot_title_screen),
                     colors = colors,
-                    onBackToLogin = { backStack.popSafe() },
-                    modifier = Modifier.fillMaxSize(),
-                )
+                    onBack = { backStack.popSafe() },
+                ) { layoutMode ->
+                    ForgotPasswordScreen(
+                        layoutMode = layoutMode,
+                        colors = colors,
+                        onBackToLogin = { backStack.popSafe() },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         },
     )
 }
 
 @Composable
-private fun routeTitle(route: NavKey): String = when (route) {
-    RegistrationRoute -> stringResource(Strings.string.login_registration_title_screen)
-    ForgotPasswordRoute -> stringResource(Strings.string.login_forgot_title_screen)
-    else -> ""
+private fun LoginEntry(
+    backStack: NavBackStack<NavKey>,
+    state: State<LoginScreenState>,
+    colors: CmpThemeColors,
+    viewModel: LoginScreenViewModel,
+) {
+    AuthScreenChrome(
+        colors = colors,
+        isLoading = state.value.isAuthLoading,
+    ) { layoutMode ->
+        AuthBody(
+            layoutMode = layoutMode,
+            modifier = Modifier.fillMaxSize(),
+            colors = colors,
+            error = state.value.authError?.text(Strings.string.login_common_error_auth_failed),
+        ) {
+            LoginScreen(
+                state = state.value,
+                colors = colors,
+                layoutMode = layoutMode,
+                onLoginChange = viewModel::onLoginChanged,
+                onPasswordChange = viewModel::onPasswordChanged,
+                onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
+                onSubmit = viewModel::onSubmit,
+                onOpenRegistration = {
+                    viewModel.onResetForm()
+                    backStack.navigateSafe(RegistrationRoute)
+                },
+                onOpenForgotPassword = {
+                    viewModel.onResetForm()
+                    backStack.navigateSafe(ForgotPasswordRoute)
+                },
+                onResendActivationEmail = viewModel::onResendActivationEmail,
+                onDismissActivationRequest = viewModel::onDismissActivationRequest,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AuthChildScreenChrome(
+    title: String,
+    colors: CmpThemeColors,
+    onBack: () -> Unit,
+    body: @Composable ColumnScope.(AuthLayoutMode) -> Unit,
+) {
+    AuthScreenChrome(
+        colors = colors,
+        title = {
+            CmpText(
+                text = title,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        },
+        navigationIcon = {
+            CmpIconButton(
+                onClick = onBack,
+                icon = CmpIcons.ArrowBack,
+                contentDescription = stringResource(Strings.string.login_common_a11y_back),
+            )
+        },
+        body = body,
+    )
 }

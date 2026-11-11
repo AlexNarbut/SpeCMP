@@ -41,12 +41,14 @@ import ru.alarmtrade.specmp.core.ui.view.badge.CmpCountPill
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSearchField
+import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.CanCodeSetting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SearchHighlights
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSearchHit
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -69,7 +71,7 @@ internal fun SectionPane(section: SettingsSection, marks: RowMarks, wide: Boolea
         return
     }
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
         contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 16.dp) else PaddingValues(0.dp),
     ) {
         if (wide) {
@@ -140,7 +142,7 @@ internal fun SearchPane(
             )
 
             else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().hideKeyboardOnScroll(),
                 contentPadding = if (wide) PaddingValues(horizontal = 24.dp, vertical = 8.dp) else PaddingValues(0.dp),
             ) {
                 rows(
@@ -153,6 +155,7 @@ internal fun SearchPane(
                             if (section.number.isEmpty()) section.name else "${section.number} ${section.name}"
                         }
                     },
+                    highlights = hits.map { it.highlights },
                 )
             }
         }
@@ -166,6 +169,7 @@ private fun LazyListScope.rows(
     wide: Boolean,
     actions: SettingRowActions,
     paths: List<String>?,
+    highlights: List<SearchHighlights>? = null,
 ) {
     itemsIndexed(nodes, key = { _, node -> node.id }) { index, node ->
         val last = index == nodes.lastIndex
@@ -181,10 +185,20 @@ private fun LazyListScope.rows(
                         borderColor = cmpThemeColors().outlineVariant,
                     ),
             ) {
-                CmpColumn { NodeRow(node, last, marks, wide = true, actions, paths?.getOrNull(index)) }
+                CmpColumn {
+                    NodeRow(
+                        node,
+                        last,
+                        marks,
+                        wide = true,
+                        actions,
+                        paths?.getOrNull(index),
+                        highlights?.getOrNull(index),
+                    )
+                }
             }
         } else {
-            NodeRow(node, last, marks, wide = false, actions, paths?.getOrNull(index))
+            NodeRow(node, last, marks, wide = false, actions, paths?.getOrNull(index), highlights?.getOrNull(index))
         }
     }
 }
@@ -219,6 +233,7 @@ private fun NodeRow(
     wide: Boolean,
     actions: SettingRowActions,
     path: String?,
+    highlights: SearchHighlights?,
 ) {
     SettingNodeRow(
         node = node,
@@ -228,6 +243,7 @@ private fun NodeRow(
         actions = actions,
         path = path?.takeIf { it.isNotEmpty() },
         note = (node as? CanCodeSetting)?.value?.value?.carId?.let(marks.cars::get)?.let { carLabel(it) },
+        highlights = highlights,
     )
     if (!last) CmpDivider(color = cmpThemeColors().outlineVariant)
 }

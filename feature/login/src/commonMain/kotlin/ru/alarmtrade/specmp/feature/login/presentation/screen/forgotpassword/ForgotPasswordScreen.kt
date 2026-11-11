@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -35,6 +34,10 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthBody
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSuccessPanel
+import ru.alarmtrade.specmp.feature.login.presentation.components.formTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.rememberAuthFormTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.revealsFormTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.submitKeyboardActions
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
 
 @Composable
@@ -81,7 +84,7 @@ fun ForgotPasswordScreen(
 }
 
 @Composable
-private fun ForgotPasswordForm(
+internal fun ForgotPasswordForm(
     state: State<ForgotPasswordScreenState>,
     colors: CmpThemeColors,
     onEmailChange: (String) -> Unit,
@@ -90,6 +93,7 @@ private fun ForgotPasswordForm(
     modifier: Modifier = Modifier,
 ) {
     val value = state.value
+    val formTail = rememberAuthFormTail()
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
@@ -106,20 +110,16 @@ private fun ForgotPasswordForm(
         CmpTextField(
             value = value.email,
             onValueChange = onEmailChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().revealsFormTail(formTail),
             label = stringResource(Strings.string.login_common_label_email),
             singleLine = true,
             enabled = !value.isLoading,
             isError = value.resetError?.blamesInput == true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Done,
+                imeAction = ImeAction.Go,
             ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    if (value.canSubmit) onSubmit()
-                },
-            ),
+            keyboardActions = submitKeyboardActions(enabled = value.canSubmit, onSubmit = onSubmit),
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Email, contentDescription = null)
             },
@@ -128,6 +128,7 @@ private fun ForgotPasswordForm(
         AuthSubmitButton(
             text = stringResource(Strings.string.login_forgot_btn_submit),
             onClick = onSubmit,
+            modifier = Modifier.formTail(formTail),
             enabled = value.canSubmit,
             isLoading = value.isLoading,
             colors = colors,

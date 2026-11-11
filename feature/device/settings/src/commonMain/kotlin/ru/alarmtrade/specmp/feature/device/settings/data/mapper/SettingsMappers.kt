@@ -1,6 +1,7 @@
 package ru.alarmtrade.specmp.feature.device.settings.data.mapper
 
 import ru.alarmtrade.common.settings.interaction.model.menu.SettingsPath
+import ru.alarmtrade.common.settings.interaction.model.search.SettingSearchResult
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.AutoStartScheduleSetting as SdkAutoStartScheduleSetting
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.CanCodeSetting as SdkCanCodeSetting
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.FloatSetting as SdkFloatSetting
@@ -58,6 +59,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.OutputValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Polarity
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.Setting
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
@@ -306,3 +308,6 @@ internal fun List<DeviceWire>.toDomain(): List<Wire> = mapNotNull { wire ->
     val colors = wire.colors.filter { it != NO_WIRE_COLOR }.map { it and RGB_MASK }
     if (colors.isEmpty() && wire.pinNumber == 0) null else Wire(name = wire.name, colors = colors, pin = wire.pinNumber)
 }
+
+internal fun SettingSearchResult.toNameMatch(): SettingNameMatch =
+    SettingNameMatch(settingId = setting.id, nameHighlights = nameHighlights)

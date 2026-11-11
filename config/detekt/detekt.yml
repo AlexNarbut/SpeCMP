@@ -115,6 +115,9 @@ specmp:
   NestedCollect:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # collectSideEffect последовательный: showSnackbar/showResult — только в launch { }, иначе держат навигацию.
+  SideEffectAwaitsUi:
+    active: true
 
 complexity:
   LongMethod:

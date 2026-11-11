@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.login.presentation.screen.registration
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -44,6 +43,10 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSuccessPanel
+import ru.alarmtrade.specmp.feature.login.presentation.components.formTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.rememberAuthFormTail
+import ru.alarmtrade.specmp.feature.login.presentation.components.rememberNextFieldKeyboardActions
+import ru.alarmtrade.specmp.feature.login.presentation.components.revealsFormTail
 import ru.alarmtrade.specmp.feature.login.presentation.model.RegistrationFieldError
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
 
@@ -96,7 +99,7 @@ fun RegistrationScreen(
 }
 
 @Composable
-private fun RegistrationForm(
+internal fun RegistrationForm(
     state: State<RegistrationScreenState>,
     colors: CmpThemeColors,
     onFullNameChange: (String) -> Unit,
@@ -110,6 +113,8 @@ private fun RegistrationForm(
     modifier: Modifier = Modifier,
 ) {
     val value = state.value
+    val nextFieldActions = rememberNextFieldKeyboardActions()
+    val formTail = rememberAuthFormTail()
 
     CmpColumn(
         modifier = modifier.fillMaxWidth(),
@@ -129,6 +134,7 @@ private fun RegistrationForm(
                 text = Strings.string.login_common_error_full_name_required,
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = nextFieldActions,
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Person, contentDescription = null)
             },
@@ -150,6 +156,7 @@ private fun RegistrationForm(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next,
             ),
+            keyboardActions = nextFieldActions,
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Email, contentDescription = null)
             },
@@ -171,6 +178,7 @@ private fun RegistrationForm(
                 keyboardType = KeyboardType.Phone,
                 imeAction = ImeAction.Next,
             ),
+            keyboardActions = nextFieldActions,
             leadingIcon = {
                 CmpIcon(icon = CmpIcons.Phone, contentDescription = null)
             },
@@ -181,17 +189,12 @@ private fun RegistrationForm(
             onValueChange = onPasswordChange,
             isPasswordVisible = value.isPasswordVisible,
             onPasswordVisibilityChange = onPasswordVisibilityChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().revealsFormTail(formTail),
             enabled = !value.isLoading,
             isError = RegistrationFieldError.Password in value.fieldErrors,
             supportingText = fieldErrorText(
                 visible = RegistrationFieldError.Password in value.fieldErrors,
                 text = Strings.string.login_common_error_password_short,
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    if (value.canSubmit) onSubmit()
-                },
             ),
         )
 
@@ -214,6 +217,7 @@ private fun RegistrationForm(
         AuthSubmitButton(
             text = stringResource(Strings.string.login_registration_btn_submit),
             onClick = onSubmit,
+            modifier = Modifier.formTail(formTail),
             enabled = value.canSubmit,
             isLoading = value.isLoading,
             colors = colors,

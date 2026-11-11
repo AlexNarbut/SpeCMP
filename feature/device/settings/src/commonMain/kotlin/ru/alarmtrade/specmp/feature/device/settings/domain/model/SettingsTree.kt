@@ -52,24 +52,3 @@ fun SettingsSection.reusing(old: SettingsSection): SettingsSection {
     val sameChildren = reused.size == old.children.size && reused.indices.all { reused[it] === old.children[it] }
     return if (sameChildren && copy(children = old.children) == old) old else copy(children = reused)
 }
-
-data class SettingsSearchHit(val node: SettingNode, val path: List<SettingsSection>)
-
-fun SettingsSection.search(query: String): List<SettingsSearchHit> {
-    val q = query.trim()
-    if (q.isEmpty()) return emptyList()
-    val hits = mutableListOf<SettingsSearchHit>()
-    fun walk(section: SettingsSection, path: List<SettingsSection>) {
-        section.children.forEach { child ->
-            if (child.matches(q)) hits += SettingsSearchHit(child, path)
-            if (child is SettingsSection) walk(child, path + child)
-        }
-    }
-    walk(this, emptyList())
-    return hits
-}
-
-/** Подходит ли настройка под запрос поиска: имя, префикс номера или имя канала. Одно правило для поиска и диффа. */
-fun SettingNode.matches(query: String): Boolean = name.contains(query, ignoreCase = true) ||
-    (number.isNotEmpty() && number.startsWith(query)) ||
-    channelOrNull?.name?.contains(query, ignoreCase = true) == true
