@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwarePreselect
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
@@ -217,6 +218,34 @@ class FirmwareUpdateViewModelTest {
         vm.onRetry()
         runCurrent()
 
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
+    }
+
+    @Test
+    fun `version chosen before the bootloader goes straight to the confirmation`() = test {
+        prepareMain()
+        val chosen = version("3.40", "old notes")
+        requester.request(FirmwareBootRequest(1, FirmwareChannel.RELEASE, FirmwarePreselect.Version(chosen)))
+        val (vm, _) = viewModel()
+
+        val state = vm.state.value
+        assertEquals(UpdatePhase.Confirm, state.phase)
+        assertEquals(ConfirmUi("3.57", "3.40", "old notes", older = true), state.confirm)
+        assertEquals(emptyList(), repository.latestCalls)
+    }
+
+    @Test
+    fun `latest requested before the bootloader is fetched and confirmed without the source step`() = test {
+        prepareMain()
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.57", "same"))
+        requester.request(FirmwareBootRequest(1, FirmwareChannel.RELEASE, FirmwarePreselect.Latest))
+        val (vm, _) = viewModel()
+
+        assertEquals(UpdatePhase.Confirm, vm.state.value.phase)
+        assertEquals(listOf(1L to FirmwareChannel.RELEASE), repository.latestCalls)
+
+        vm.onCancelConfirm()
+        runCurrent()
         assertEquals(UpdatePhase.Source, vm.state.value.phase)
     }
 

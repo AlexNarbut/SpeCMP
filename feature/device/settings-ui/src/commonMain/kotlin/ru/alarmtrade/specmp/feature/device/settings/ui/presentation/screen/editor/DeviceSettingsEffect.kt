@@ -21,4 +21,7 @@ internal sealed interface DeviceSettingsEffect {
     data object Saved : DeviceSettingsEffect
 
     data class WriteToDevice(val source: SettingsSource) : DeviceSettingsEffect
+
+    /** Путь id разделов от корня до раздела настройки, на которой открыт редактор. */
+    data class OpenSection(val path: List<Int>) : DeviceSettingsEffect
 }

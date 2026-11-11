@@ -21,6 +21,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_a11
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_title_product_info
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_title_remote_sync
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_msg_stub
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_assistant
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_bypass_learning
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_check_state
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_clone
@@ -33,6 +34,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_s
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_tech_requests
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_vehicles
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_voice_firmware
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_assistant
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_bypass_learning
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_check_state
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_clone
@@ -59,6 +61,7 @@ import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
 import specmp.feature.advanced_mount.generated.resources.Res
 import specmp.feature.advanced_mount.generated.resources.mount_remote_sync
+import specmp.feature.advanced_mount.generated.resources.mount_section_assistant
 import specmp.feature.advanced_mount.generated.resources.mount_section_bypass_learning
 import specmp.feature.advanced_mount.generated.resources.mount_section_check_state
 import specmp.feature.advanced_mount.generated.resources.mount_section_clone
@@ -76,6 +79,12 @@ private class SectionRes(val title: StringResource, val subtitle: StringResource
 
 private val MountSection.res: SectionRes
     get() = when (this) {
+        MountSection.ASSISTANT -> SectionRes(
+            Strings.string.advancedmount_sections_title_assistant,
+            Strings.string.advancedmount_sections_subtitle_assistant,
+            Res.drawable.mount_section_assistant,
+        )
+
         MountSection.FIRMWARE_UPDATE -> SectionRes(
             Strings.string.advancedmount_sections_title_firmware_update,
             Strings.string.advancedmount_sections_subtitle_firmware_update,

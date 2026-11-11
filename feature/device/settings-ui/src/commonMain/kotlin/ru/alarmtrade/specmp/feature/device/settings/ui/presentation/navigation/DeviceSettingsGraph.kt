@@ -106,10 +106,16 @@ fun DeviceSettingsEntry(
     filePicker: SettingsFilePicker,
     fileSaver: SettingsFileSaver,
     loadOnOpen: SettingsSource? = null,
+    focusSettingId: Int? = null,
+    openLoadMenu: Boolean = false,
 ) {
     SettingsEditorHost(
         source = SettingsSource.Device,
-        options = SettingsEditorOptions(loadOnOpen = loadOnOpen),
+        options = SettingsEditorOptions(
+            loadOnOpen = loadOnOpen,
+            focusSettingId = focusSettingId,
+            openLoadMenu = openLoadMenu,
+        ),
         slots = EditorSlots(
             onExit = onExit,
             onOpenFirmwareUpdate = onOpenFirmwareUpdate,
@@ -177,7 +183,11 @@ private fun SettingsEditorHost(source: SettingsSource, options: SettingsEditorOp
 
     LaunchedEffect(slots.filePicker) { slots.filePicker.results.collect(viewModel::onFilePicked) }
     viewModel.sideEffect.collectSideEffect { effect ->
-        handleEffect(effect, viewModel, slots, snackbarHostState, scope)
+        if (effect is DeviceSettingsEffect.OpenSection) {
+            backStack.navigateTo(effect.path)
+        } else {
+            handleEffect(effect, viewModel, slots, snackbarHostState, scope)
+        }
     }
 
     val onBack = { if (!backStack.popSafe()) viewModel.onExitRequest(ExitTarget.BACK) }
@@ -339,6 +349,8 @@ private fun handleEffect(
         }
 
         is DeviceSettingsEffect.WriteToDevice -> slots.onWriteToDevice?.invoke(effect.source)
+
+        is DeviceSettingsEffect.OpenSection -> Unit
     }
 }
 

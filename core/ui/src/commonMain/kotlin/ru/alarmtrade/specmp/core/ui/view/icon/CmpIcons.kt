@@ -161,4 +161,8 @@ enum class CmpIcons {
     RestartAlt,
     CloudDone,
     CloudSync,
+
+    Bolt,
+    Tune,
+    Speed,
 }

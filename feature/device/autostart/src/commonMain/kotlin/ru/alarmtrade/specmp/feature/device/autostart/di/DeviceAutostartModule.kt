@@ -7,8 +7,10 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.device.autostart.data.datasource.AutostartDataSource
 import ru.alarmtrade.specmp.feature.device.autostart.data.datasource.SpecialistAutostartDataSource
+import ru.alarmtrade.specmp.feature.device.autostart.data.repository.SpecialistAutostartStatusRepository
 import ru.alarmtrade.specmp.feature.device.autostart.data.repository.SpecialistBypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.data.repository.SpecialistCloneRepository
+import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.AutostartStatusRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.bypass.BypassLearningViewModel
@@ -19,6 +21,7 @@ val deviceAutostartModule = module {
     single<AutostartDataSource> { SpecialistAutostartDataSource(alarmDevice = { get() }) }
     singleOf(::SpecialistBypassLearningRepository) bind BypassLearningRepository::class
     singleOf(::SpecialistCloneRepository) bind CloneRepository::class
+    singleOf(::SpecialistAutostartStatusRepository) bind AutostartStatusRepository::class
 
     viewModelOf(::BypassLearningViewModel)
     viewModel { (fromBypass: Boolean) -> CloneViewModel(get(), get(), get(), get(), fromBypass) }

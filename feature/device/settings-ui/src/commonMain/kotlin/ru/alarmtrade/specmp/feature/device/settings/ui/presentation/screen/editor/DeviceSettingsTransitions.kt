@@ -20,6 +20,8 @@ internal fun initialSettingsState(
     source = source.header(),
     canWriteToDevice = options.canWriteToDevice,
     pendingLoad = options.loadOnOpen,
+    pendingFocus = options.focusSettingId,
+    pendingLoadMenu = options.openLoadMenu,
 )
 
 /** Прежние правки, окна и сравнение устарели: прерванное обрывом связи осталось бы в Busy. */

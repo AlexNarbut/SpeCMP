@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_msg_boot_failed
 import ru.alarmtrade.specmp.core.localization.resources.firmware_check_title_modules
@@ -56,8 +57,10 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 private val ContentMaxWidth = 1040.dp
 
 @Composable
-fun FirmwareCheckScreen(onBack: () -> Unit) {
-    val viewModel = koinViewModel<FirmwareCheckViewModel>()
+fun FirmwareCheckScreen(onBack: () -> Unit, autoBoot: FirmwareAutoBoot? = null) {
+    val viewModel = koinViewModel<FirmwareCheckViewModel>(
+        parameters = { if (autoBoot != null) parametersOf(autoBoot) else parametersOf() },
+    )
     val state by viewModel.state.collectAsStateWithLifecycle()
     // Один экземпляр на экран: дочерние composable пропускают рекомпозицию по равенству действий.
     val actions = remember(viewModel, onBack) {

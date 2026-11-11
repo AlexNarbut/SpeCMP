@@ -15,6 +15,10 @@
     <string name="advancedmount_header_label_can_code">CAN код</string>
     <string name="advancedmount_header_label_imei">IMEI GSM модема</string>
     <string name="advancedmount_common_btn_product_info">Информация о товаре</string>
+    <string name="advancedmount_sections_title_assistant">Ассистент</string>
+    <string name="advancedmount_sections_subtitle_assistant">Выберите действие — результат и следующий шаг появятся в ленте</string>
+    <string name="advancedmount_sections_subtitle_assistant_limited">Для этого блока доступно меньше действий: прошивка, автомобили, чат поддержки</string>
+    <string name="advancedmount_sections_label_new">Новое</string>
     <string name="advancedmount_sections_title_firmware_update">Проверка прошивок</string>
     <string name="advancedmount_sections_subtitle_firmware_update">Обновите прошивки системы до актуальных версий</string>
     <string name="advancedmount_sections_title_settings">Расширенные настройки</string>

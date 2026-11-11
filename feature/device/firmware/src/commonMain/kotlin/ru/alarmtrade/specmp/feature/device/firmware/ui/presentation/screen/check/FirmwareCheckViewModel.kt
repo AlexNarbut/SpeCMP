@@ -7,11 +7,12 @@ import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareChannel
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModule
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleKind
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.VersionRelation
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.InstalledVersionSource
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.canFilter
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.displayTitle
-import ru.alarmtrade.specmp.feature.device.firmware.domain.model.relationTo
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.installedVersionSource
+import ru.alarmtrade.specmp.feature.device.firmware.domain.model.isUpdateFor
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareCan
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.BootEntryResult
@@ -33,6 +34,7 @@ class FirmwareCheckViewModel(
     bootRequester: FirmwareBootRequester,
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
+    private val autoBoot: FirmwareAutoBoot? = null,
 ) : BaseDeviceViewModel<FirmwareCheckState, Nothing>(deviceSession, FirmwareCheckState()) {
 
     private val bootEntry = FirmwareBootEntry(deviceSession, bootRequester, pinCooldown, dispatchers)
@@ -69,8 +71,17 @@ class FirmwareCheckViewModel(
                 // Через launchOnDevice: чтение модулей и запросы версий отменяются при потере связи
                 // и не пишут в карточки нового блока.
                 list.forEach { module -> launchOnDevice { resolveModule(device, module) } }
+                offerAutoBoot()
             }
         }
+    }
+
+    // Экран открыт ради прошивки конкретного модуля: подтверждение входа в загрузчик — сразу, один раз.
+    private fun offerAutoBoot() {
+        val boot = autoBoot ?: return
+        if (currentState.autoBootOffered) return
+        reduce { copy(autoBootOffered = true) }
+        onUpdateClick(boot.moduleId)
     }
 
     private fun initialCard(module: FirmwareModule): ModuleCardUi = ModuleCardUi(
@@ -88,30 +99,17 @@ class FirmwareCheckViewModel(
     }
 
     private suspend fun readCurrentVersion(device: AlarmDevice, module: FirmwareModule): CurrentVersionUi =
-        when (module.kind) {
-            FirmwareModuleKind.AlarmMain,
-            FirmwareModuleKind.WatchMain,
-            FirmwareModuleKind.GpsTracker,
-            FirmwareModuleKind.BmwBypass,
-            FirmwareModuleKind.RemoteControlMain,
-            -> CurrentVersionUi.Known(device.displayFirmwareVersion)
+        when (module.kind.installedVersionSource) {
+            InstalledVersionSource.DEVICE -> CurrentVersionUi.Known(device.displayFirmwareVersion)
 
-            FirmwareModuleKind.BluetoothModule -> {
+            InstalledVersionSource.BLUETOOTH_MODULE -> {
                 when (val response = withContext(dispatchers.io) { deviceSession.readBluetoothModule() }) {
                     is Response.Success -> CurrentVersionUi.Known(response.value.manufacturer.mainFirmwareVersion)
                     is Response.Error -> CurrentVersionUi.Absent
                 }
             }
 
-            FirmwareModuleKind.BatteryCharger,
-            FirmwareModuleKind.WatchInterface,
-            FirmwareModuleKind.WatchBluetooth,
-            FirmwareModuleKind.FuelSensor,
-            FirmwareModuleKind.ChargingStationTester,
-            FirmwareModuleKind.CanModule,
-            FirmwareModuleKind.Microbot,
-            FirmwareModuleKind.Unknown,
-            -> CurrentVersionUi.Absent
+            InstalledVersionSource.NONE -> CurrentVersionUi.Absent
         }
 
     /** Серверная версия модуля в текущем канале; ответ прежнего канала отбрасывается. */
@@ -119,8 +117,7 @@ class FirmwareCheckViewModel(
         val start = currentState
         val channel = start.channel
         updateCard(moduleId) { it.copy(status = CardStatusUi.Searching) }
-        // CAN-фильтр — только у основной программы сигнализации: прошивки остальных модулей к CAN-коду не привязаны.
-        val can = start.deviceCan.takeIf { start.modules[moduleId]?.kind == FirmwareModuleKind.AlarmMain }
+        val can = start.modules[moduleId]?.kind?.canFilter(start.deviceCan)
         val response = withContext(dispatchers.io) { repository.latest(moduleId, channel, can) }
         reduce {
             if (this.channel != channel) {
@@ -138,10 +135,10 @@ class FirmwareCheckViewModel(
             is Response.Success -> {
                 val server = response.value
                 val installed = (current as? CurrentVersionUi.Known)?.version
-                if (installed == null || server.version.relationTo(installed) == VersionRelation.Newer) {
-                    CardStatusUi.UpdateAvailable(server.version, server.description)
-                } else {
+                if (installed != null && !server.isUpdateFor(installed)) {
                     CardStatusUi.Actual(installed)
+                } else {
+                    CardStatusUi.UpdateAvailable(server.version, server.description)
                 }
             }
         }
@@ -206,7 +203,8 @@ class FirmwareCheckViewModel(
             return
         }
         reduce { copy(dialog = dialog.replacedBy(dialog.sending(moduleId, pin != null)), bootFailed = false) }
-        val request = FirmwareBootRequest(moduleId, currentState.channel)
+        val preselect = autoBoot?.takeIf { it.moduleId == moduleId }?.preselect
+        val request = FirmwareBootRequest(moduleId, currentState.channel, preselect)
         when (bootEntry.enter(request, target, systemId, pin)) {
             BootEntryResult.Entered -> reduce { copy(dialog = null) }
             BootEntryResult.Failed -> reduce { copy(dialog = null, bootFailed = true) }

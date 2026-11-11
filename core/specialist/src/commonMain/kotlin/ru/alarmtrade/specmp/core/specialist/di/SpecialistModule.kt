@@ -29,7 +29,7 @@ val specialistModule = module {
             override fun buildVersion(): Int = appVersionProvider.current().code
         }
         // Монитор сети — до создания SDK: по нему SDK ждёт сеть вместо попыток переподключения
-        // (в т. ч. блокировку сети в фоне на Android 15). Нет монитора (desktop) — дефолт SDK.
+        // (в т. ч. блокировку сети в фоне на Android 15). Нет монитора в Koin — дефолт SDK.
         getOrNull<NetworkMonitor>()?.let { monitor ->
             CommonConfigurator.networkMonitor = object : SdkNetworkMonitor {
                 override val isAvailable = monitor.isAvailable

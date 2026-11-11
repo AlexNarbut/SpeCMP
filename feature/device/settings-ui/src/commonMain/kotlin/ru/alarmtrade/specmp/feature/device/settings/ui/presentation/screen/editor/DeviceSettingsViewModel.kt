@@ -35,6 +35,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.capabilities
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.deviceNameOrNull
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.diffTo
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.pathTo
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.reusing
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
@@ -42,6 +43,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsWrites
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.SettingsWrite
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.opensEditor
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -58,6 +61,7 @@ internal class DeviceSettingsViewModel(
     options: SettingsEditorOptions,
     private val repository: DeviceSettingsRepository,
     private val sessions: DeviceSettingsSessionController,
+    private val writes: DeviceSettingsWrites,
     private val localConfigurations: LocalConfigurationsRepository,
     private val preferences: DeviceSettingsPreferences,
     private val carsRepository: VehicleCatalogRepository,
@@ -108,6 +112,7 @@ internal class DeviceSettingsViewModel(
     private suspend fun load() {
         readMenu()
         if (currentState.menu !is LCEState.Content) return
+        openPendingFocus()
         val pending = currentState.pendingLoad ?: return
         reduce { copy(pendingLoad = null) }
         requestLoad(pending, closeAfter = false)
@@ -273,12 +278,15 @@ internal class DeviceSettingsViewModel(
     private suspend fun write(exitTo: ExitTarget?) = executeWithProceedLock(needSkipAnother = false) {
         val count = currentState.changedCount
         if (count == 0 && exitTo == null) return@executeWithProceedLock
+        // До записи: после неё отметки «изменено» сбрасываются.
+        val changedNames = currentRoot()?.let { root -> currentState.changedIds.mapNotNull { root.findNode(it)?.name } }
         val error = saveToSource { state, inProgress -> state.copy(isWriting = inProgress) }
         if (error != null) {
             logger.w(error.exception) { "Settings write failed: ${error.message}" }
             reduce { copy(dialog = SettingsDialog.WriteError) }
             return@executeWithProceedLock
         }
+        if (!changedNames.isNullOrEmpty()) writes.record(SettingsWrite(source, changedNames))
         postSideEffect(DeviceSettingsEffect.Written(count))
         exitTo?.let { postSideEffect(DeviceSettingsEffect.Exit(it)) }
     }
@@ -298,6 +306,16 @@ internal class DeviceSettingsViewModel(
         val root = currentRoot()
         updateChanges { (if (root != null) withBaseline(root) else this).withoutLoaded() }
         refreshChanged()
+    }
+
+    private fun openPendingFocus() {
+        val root = currentRoot() ?: return
+        val focus = currentState.pendingFocus
+        val loadMenu = currentState.pendingLoadMenu
+        reduce { copy(pendingFocus = null, pendingLoadMenu = false) }
+        val path = focus?.let { root.pathTo(it) }
+        if (path != null) postSideEffect(DeviceSettingsEffect.OpenSection(path.map { it.id }))
+        if (loadMenu && source == SettingsSource.Device) reduce { copy(dialog = SettingsDialog.LoadSources) }
     }
 
     fun onLoadRequest() {

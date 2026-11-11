@@ -1,0 +1,297 @@
+package ru.alarmtrade.specmp.feature.mountassistant.presentation.screen.assistant
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
+import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.matchCatalog
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.AssistantFeed
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.CollapsedDock
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.DOCK_TAG
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.DeviceHeader
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.DockLevelHead
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.DockTiles
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.FeedCallbacks
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.SearchResultsPanel
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.SearchRow
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.carouselTileHeight
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockTile
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockUi
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.dockOf
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.quickActions
+import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.rememberCatalogTexts
+
+internal enum class AssistantLayout { Compact, Medium, Expanded }
+
+private val MediumFrom = 600.dp
+private val ExpandedFrom = 840.dp
+private val SideWidth = 400.dp
+private val FeedMaxWide = 760.dp
+private val ResultsMaxWidth = 712.dp
+private const val RESULTS_HEIGHT_PART = 0.78f
+private val FeedMaxMedium = 840.dp
+private val DockMaxMedium = 888.dp
+private val CollapseDistance = 60.dp
+
+/** Действия экрана для раскладок: VM не протаскиваем в компоненты. */
+internal class AssistantScreenActions(
+    val onTile: (DockTile) -> Unit,
+    val onTopicBack: () -> Unit,
+    val onQueryChange: (String) -> Unit,
+    val onSubmit: (AssistantTopic?) -> Unit,
+    val onDockToggle: () -> Unit,
+    val onFeedScrolledUp: () -> Unit,
+    val onHeaderToggle: (collapsed: Boolean) -> Unit,
+    val onCanUpdate: () -> Unit,
+    val feed: FeedCallbacks,
+)
+
+@Composable
+internal fun AssistantBody(
+    state: MountAssistantState,
+    facts: DeviceFacts,
+    actions: AssistantScreenActions,
+    focusRequester: FocusRequester,
+) {
+    val texts = rememberCatalogTexts()
+    val match = remember(state.query, texts) { matchCatalog(state.query, texts.actions, texts.topics, texts.keywords) }
+    val progress = state.journal.progress
+    val dock = remember(facts, progress, state.level, state.query, match, state.liveSettings, state.pulse) {
+        dockOf(facts, progress, state.level, state.query, match, state.liveSettings, state.pulse)
+    }
+    val submit = { actions.onSubmit(match.topics.firstOrNull()) }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val layout = when {
+            maxWidth < MediumFrom -> AssistantLayout.Compact
+            maxWidth < ExpandedFrom -> AssistantLayout.Medium
+            else -> AssistantLayout.Expanded
+        }
+        if (layout == AssistantLayout.Expanded) {
+            val console = remember(facts, progress, state.level, state.pulse) {
+                dockOf(facts, progress, state.level, query = "", match, emptyList(), state.pulse)
+            }
+            WideBody(state, facts, console, dock.takeIf { state.query.isNotBlank() }, actions, focusRequester, submit)
+        } else {
+            NarrowBody(state, facts, dock, layout, carouselTileHeight(maxHeight), actions, focusRequester, submit)
+        }
+    }
+}
+
+@Composable
+private fun WideBody(
+    state: MountAssistantState,
+    facts: DeviceFacts,
+    dock: DockUi,
+    results: DockUi?,
+    actions: AssistantScreenActions,
+    focusRequester: FocusRequester,
+    onSubmit: () -> Unit,
+) {
+    val colors = cmpThemeColors()
+    CmpRow(modifier = Modifier.fillMaxSize()) {
+        CmpColumn(
+            modifier = Modifier.width(SideWidth).fillMaxHeight()
+                .background(colors.surfaceContainerLow)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            DeviceHeader(facts, collapsed = false, wide = true, onToggle = null, onCanUpdate = actions.onCanUpdate)
+            CmpColumn(modifier = Modifier.testTag(DOCK_TAG), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                DockLevelHead(dock.head, onBack = actions.onTopicBack, onCollapse = null)
+                DockTiles(dock, facts.firmwareVersion, onTile = actions.onTile)
+            }
+        }
+        CmpDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
+        CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight()) {
+            BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                AssistantFeed(
+                    entries = state.journal.entries,
+                    facts = facts,
+                    callbacks = actions.feed,
+                    listState = rememberLazyListState(),
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 40.dp),
+                    modifier = Modifier.widthIn(max = FeedMaxWide).fillMaxSize(),
+                )
+                if (results != null) {
+                    SearchResultsPanel(
+                        results = results,
+                        query = state.query.trim(),
+                        firmwareVersion = facts.firmwareVersion,
+                        onTile = actions.onTile,
+                        onClose = { actions.onQueryChange("") },
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                            .padding(horizontal = 24.dp)
+                            .widthIn(max = ResultsMaxWidth)
+                            .fillMaxWidth()
+                            .heightIn(max = maxHeight * RESULTS_HEIGHT_PART),
+                    )
+                }
+            }
+            CmpDivider()
+            CmpBox(
+                modifier = Modifier.fillMaxWidth().background(colors.surfaceContainerLow).padding(vertical = 12.dp),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                CmpBox(modifier = Modifier.widthIn(max = FeedMaxWide).fillMaxWidth()) {
+                    SearchRow(state.query, actions.onQueryChange, onSubmit, focusRequester, horizontalPadding = 24.dp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NarrowBody(
+    state: MountAssistantState,
+    facts: DeviceFacts,
+    dock: DockUi,
+    layout: AssistantLayout,
+    tileHeight: Dp,
+    actions: AssistantScreenActions,
+    focusRequester: FocusRequester,
+    onSubmit: () -> Unit,
+) {
+    val compact = layout == AssistantLayout.Compact
+    val listState = rememberLazyListState()
+    val scrolled by remember(listState) { derivedStateOf { listState.isScrolled() } }
+    val density = LocalDensity.current
+    val keyboard = WindowInsets.ime.getBottom(density) > 0
+    val collapsedHeader = when (state.header) {
+        HeaderMode.CLOSED -> true
+        HeaderMode.OPEN -> false
+        HeaderMode.AUTO -> state.journal.entries.size > 1 || keyboard || scrolled
+    }
+    val collapseOnScroll = rememberCollapseOnScroll(actions.onFeedScrolledUp)
+    CmpColumn(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        CmpBox(modifier = Modifier.fillMaxWidth().widthIn(max = if (compact) Dp.Unspecified else FeedMaxMedium)) {
+            DeviceHeader(
+                facts = facts,
+                collapsed = collapsedHeader,
+                wide = false,
+                onToggle = { actions.onHeaderToggle(collapsedHeader) },
+                onCanUpdate = actions.onCanUpdate,
+            )
+        }
+        AssistantFeed(
+            entries = state.journal.entries,
+            facts = facts,
+            callbacks = actions.feed,
+            listState = listState,
+            contentPadding = if (compact) {
+                PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)
+            } else {
+                PaddingValues(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
+            },
+            modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = if (compact) Dp.Unspecified else FeedMaxMedium)
+                .nestedScroll(collapseOnScroll),
+        )
+        BottomDock(state, facts, dock, compact, tileHeight, actions, focusRequester, onSubmit)
+    }
+}
+
+@Composable
+private fun BottomDock(
+    state: MountAssistantState,
+    facts: DeviceFacts,
+    dock: DockUi,
+    compact: Boolean,
+    tileHeight: Dp,
+    actions: AssistantScreenActions,
+    focusRequester: FocusRequester,
+    onSubmit: () -> Unit,
+) {
+    val colors = cmpThemeColors()
+    val collapsed = state.dockCollapsed && state.query.isEmpty()
+    CmpSurface(
+        modifier = Modifier.fillMaxWidth().widthIn(
+            max = if (compact) Dp.Unspecified else DockMaxMedium,
+        ).testTag(DOCK_TAG),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        color = colors.surfaceContainerLow,
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        shadowElevation = 2.dp,
+    ) {
+        CmpColumn(
+            modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (collapsed) {
+                val progress = state.journal.progress
+                val quick = remember(facts, progress) { quickActions(facts, progress) }
+                CollapsedDock(quick, onTile = actions.onTile, onExpand = actions.onDockToggle)
+            } else {
+                DockLevelHead(
+                    dock.head,
+                    onBack = actions.onTopicBack,
+                    onCollapse = actions.onDockToggle,
+                    modifier = Modifier.padding(start = 16.dp, end = 8.dp),
+                )
+                DockTiles(dock, facts.firmwareVersion, onTile = actions.onTile, carouselHeight = tileHeight)
+            }
+            SearchRow(state.query, actions.onQueryChange, onSubmit, focusRequester, horizontalPadding = 16.dp)
+        }
+    }
+}
+
+private fun LazyListState.isScrolled(): Boolean = firstVisibleItemIndex > 0 || firstVisibleItemScrollOffset > 0
+
+/** Прокрутка ленты пальцем вверх больше чем на [CollapseDistance] сворачивает пульт. */
+@Composable
+private fun rememberCollapseOnScroll(onScrolledUp: () -> Unit): NestedScrollConnection {
+    val density = LocalDensity.current
+    val threshold = with(density) { CollapseDistance.toPx() }
+    return remember(threshold, onScrolledUp) {
+        object : NestedScrollConnection {
+            private var pulled = 0f
+
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source != NestedScrollSource.UserInput) return Offset.Zero
+                pulled = if (available.y > 0f) pulled + available.y else 0f
+                if (pulled > threshold) {
+                    pulled = 0f
+                    onScrolledUp()
+                }
+                return Offset.Zero
+            }
+        }
+    }
+}

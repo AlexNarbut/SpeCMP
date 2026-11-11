@@ -41,6 +41,7 @@ kotlin {
             implementation(project(":feature:device:interaction-ui"))
             implementation(project(":feature:advanced-mount"))
             implementation(project(":feature:fast-mount"))
+            implementation(project(":feature:mount-assistant"))
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -74,6 +75,8 @@ kotlin {
         jvmTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.koin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(project(":feature:device:interaction:testing"))
         }
 
         androidMain.dependencies {

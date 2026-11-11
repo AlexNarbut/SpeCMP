@@ -13,12 +13,15 @@ import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponseOrUnavailable
 import ru.alarmtrade.specmp.feature.device.autostart.data.datasource.AutostartDataSource
 import ru.alarmtrade.specmp.feature.device.autostart.data.mapper.isWriting
+import ru.alarmtrade.specmp.feature.device.autostart.data.mapper.toAutostartState
 import ru.alarmtrade.specmp.feature.device.autostart.data.mapper.toEvent
+import ru.alarmtrade.specmp.feature.device.autostart.domain.model.AutostartState
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.BypassLearningException
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneEvent
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureException
 import ru.alarmtrade.specmp.feature.device.autostart.domain.model.CloneProcedureFailure
+import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.AutostartStatusRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.BypassLearningRepository
 import ru.alarmtrade.specmp.feature.device.autostart.domain.repository.CloneRepository
 
@@ -81,4 +84,11 @@ internal class SpecialistCloneRepository(private val dataSource: AutostartDataSo
         }
         return CloneProcedureException(failure, this)
     }
+}
+
+internal class SpecialistAutostartStatusRepository(private val dataSource: AutostartDataSource) :
+    AutostartStatusRepository {
+
+    override suspend fun status(): Response<AutostartState> =
+        dataSource.cloneBypassState().toResponseOrUnavailable().map { it.toAutostartState() }
 }

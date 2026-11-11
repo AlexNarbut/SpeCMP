@@ -523,7 +523,14 @@ private fun AccessArea(
 
         is MountAccess.Ready -> CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (access.unsupported) UnsupportedBanner(modelNotInDatabase = access.modelNotInDatabase)
-            SectionsGrid(access.sections, layout, state.canLocked, state.unreadCount, actions.onSectionClick)
+            SectionsGrid(
+                sections = access.sections,
+                layout = layout,
+                canLocked = state.canLocked,
+                unreadCount = state.unreadCount,
+                limited = access.unsupported,
+                onClick = actions.onSectionClick,
+            )
         }
     }
 }
@@ -619,11 +626,17 @@ private fun SectionsGrid(
     layout: MountLayout,
     canLocked: Boolean,
     unreadCount: Int,
+    limited: Boolean,
     onClick: (MountSection) -> Unit,
 ) {
     val columns = if (layout == MountLayout.Compact) 1 else 2
+    val featured = MountSection.ASSISTANT.takeIf { it in sections }
+    val first = if (featured != null) 1 else 0
     CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        sections.chunked(columns).forEachIndexed { rowIndex, row ->
+        if (featured != null) {
+            AssistantTile(limited = limited, onClick = { onClick(featured) }, modifier = Modifier.fillMaxWidth())
+        }
+        sections.filter { it != featured }.chunked(columns).forEachIndexed { rowIndex, row ->
             CmpRow(
                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -634,7 +647,7 @@ private fun SectionsGrid(
                         locked = canLocked && section.needsCan,
                         unreadCount = if (section == MountSection.SUPPORT_CHAT) unreadCount else 0,
                         big = layout != MountLayout.Compact,
-                        appearIndex = rowIndex * columns + columnIndex,
+                        appearIndex = first + rowIndex * columns + columnIndex,
                         onClick = { onClick(section) },
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     )

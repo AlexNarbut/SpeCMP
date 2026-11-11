@@ -37,6 +37,8 @@ internal data class AdvancedMountSectionRoute(
     val section: MountSection,
     val deviceTitle: String,
     val fromBypass: Boolean = false,
+    val focusSettingId: Int? = null,
+    val openLoad: Boolean = false,
 ) : NavKey
 
 @Serializable
@@ -53,20 +55,42 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/** При потере связи граф остаётся в композиции под экраном дисконнекта: после переподключения — тот же экран. */
+/**
+ * При потере связи граф остаётся в композиции под экраном дисконнекта: после переподключения — тот же экран.
+ * Загрузчик убирает граф из композиции: [resumeAssistantTitle] (заголовок блока) — стек начнётся с ассистента.
+ */
 @Composable
 fun AdvancedMountNavGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
-    settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
+    settingsEditor: @Composable (
+        onBack: () -> Unit,
+        onOpenFirmwareUpdate: () -> Unit,
+        focusSettingId: Int?,
+        openLoad: Boolean,
+    ) -> Unit,
     configurator: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
     bypassLearning: @Composable (onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     checkState: @Composable (onBack: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit,
+    assistant: @Composable (
+        onBack: () -> Unit,
+        onOpenSection: (MountSection) -> Unit,
+        onOpenSettings: (focusSettingId: Int?, openLoad: Boolean) -> Unit,
+    ) -> Unit,
+    resumeAssistantTitle: String? = null,
 ) {
-    val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
+    val backStack = if (resumeAssistantTitle == null) {
+        rememberNavBackStack(navConfig, AdvancedMountRootRoute)
+    } else {
+        rememberNavBackStack(
+            navConfig,
+            AdvancedMountRootRoute,
+            AdvancedMountSectionRoute(MountSection.ASSISTANT, resumeAssistantTitle),
+        )
+    }
 
     NavDisplay(
         backStack = backStack,
@@ -93,11 +117,37 @@ fun AdvancedMountNavGraph(
                 when (key.section) {
                     MountSection.FIRMWARE_UPDATE -> firmwareCheck { backStack.popSafe() }
 
-                    MountSection.SETTINGS -> settingsEditor({ backStack.popSafe() }) {
-                        backStack.replaceCurrent(
-                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle),
-                        )
-                    }
+                    MountSection.SETTINGS -> settingsEditor(
+                        { backStack.popSafe() },
+                        {
+                            backStack.replaceCurrent(
+                                AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle),
+                            )
+                        },
+                        key.focusSettingId,
+                        key.openLoad,
+                    )
+
+                    MountSection.ASSISTANT -> assistant(
+                        { backStack.popSafe() },
+                        { section ->
+                            if (section == MountSection.SUPPORT_CHAT) {
+                                onOpenSupportChat()
+                            } else {
+                                backStack.navigateSafe(AdvancedMountSectionRoute(section, key.deviceTitle))
+                            }
+                        },
+                        { focusSettingId, openLoad ->
+                            backStack.navigateSafe(
+                                AdvancedMountSectionRoute(
+                                    MountSection.SETTINGS,
+                                    key.deviceTitle,
+                                    focusSettingId = focusSettingId,
+                                    openLoad = openLoad,
+                                ),
+                            )
+                        },
+                    )
 
                     MountSection.CONFIGURATOR -> configurator({ backStack.popSafe() }) {
                         backStack.replaceCurrent(

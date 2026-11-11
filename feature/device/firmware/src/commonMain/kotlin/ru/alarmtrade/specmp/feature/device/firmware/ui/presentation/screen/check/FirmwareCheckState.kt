@@ -20,6 +20,7 @@ data class FirmwareCheckState(
     /** Модули блока по id — цель входа в загрузчик; карточкам [content] нужны только примитивы. */
     val modules: Map<Long, FirmwareModule> = emptyMap(),
     val deviceCan: FirmwareCan? = null,
+    val autoBootOffered: Boolean = false,
 )
 
 /** Карточка модуля: только примитивы и enum — устойчива для Compose. */

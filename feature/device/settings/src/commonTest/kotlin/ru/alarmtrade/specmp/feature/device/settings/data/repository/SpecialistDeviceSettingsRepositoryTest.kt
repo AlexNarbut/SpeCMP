@@ -13,12 +13,14 @@ import ru.alarmtrade.common.settings.interaction.model.menu.SettingsPath
 import ru.alarmtrade.common.settings.interaction.model.search.SettingSearchResult
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.SettingsSubmenu as SdkSettingsSubmenu
 import ru.alarmtrade.specialist.domain.alarmDevice.settings.menu.SwitchSetting as SdkSwitchSetting
+import ru.alarmtrade.specialist.domain.errors.IncorrectServicePinException
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingNameMatch
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsWrongPinException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 
 class SpecialistDeviceSettingsRepositoryTest {
@@ -94,6 +96,18 @@ class SpecialistDeviceSettingsRepositoryTest {
         val request = dataSource.copyRequests.single()
         assertEquals(SettingsPath.DefaultSettings("DX-9X"), request.from)
         assertEquals(SettingsPath.CurrentSessionDevice, request.to)
+    }
+
+    @Test
+    fun `wrong pin on save is a typed error, other save errors are kept`() = runTest {
+        val wrongPin = IncorrectServicePinException()
+        dataSource.unitResult = SpecialistResponse.Error.Bluetooth(wrongPin)
+        val error = assertIs<Response.Error>(repository.save(SettingsSource.Device))
+        assertSame(wrongPin, assertIs<SettingsWrongPinException>(error.exception).cause)
+
+        val failure = IllegalStateException("io")
+        dataSource.unitResult = SpecialistResponse.Error.General(failure)
+        assertSame(failure, assertIs<Response.Error>(repository.save(SettingsSource.Device)).exception)
     }
 
     @Test

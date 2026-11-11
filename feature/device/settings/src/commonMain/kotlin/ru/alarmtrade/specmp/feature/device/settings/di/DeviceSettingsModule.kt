@@ -10,9 +10,11 @@ import ru.alarmtrade.specmp.feature.device.settings.data.datasource.SpecialistDe
 import ru.alarmtrade.specmp.feature.device.settings.data.preferences.SettingsDeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.data.repository.SpecialistDeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.data.service.DeviceSettingsSessionControllerImpl
+import ru.alarmtrade.specmp.feature.device.settings.data.service.DeviceSettingsWritesImpl
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsWrites
 
 private const val DEVICE_SETTINGS_PREFERENCES = "devicesettings"
 
@@ -25,6 +27,7 @@ val deviceSettingsModule = module {
     single<DeviceSettingsSessionController> {
         DeviceSettingsSessionControllerImpl(repository = get(), appScope = get(appScopeQualifier), dispatchers = get())
     }
+    single<DeviceSettingsWrites> { DeviceSettingsWritesImpl() }
     // Не привязано к аккаунту (ширина колонки дерева) — переживает логаут.
     single<DeviceSettingsPreferences> {
         SettingsDeviceSettingsPreferences(get<AppSettingsFactory>().create(DEVICE_SETTINGS_PREFERENCES))
