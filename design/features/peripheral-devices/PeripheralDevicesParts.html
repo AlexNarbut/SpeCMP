@@ -1,0 +1,127 @@
+
+<!-- @dsCard group="Устройства системы и приживление" viewport="1200x1000" name="Устройства системы — компоненты" subtitle="Строка устройства A/B/C во всех статусах, строка слота, индикаторы сигнала и батареи, инструкция, иконки типов, схемы приживления" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Устройства системы: компоненты</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 1100px; padding: 0 12px; }
+  .seg { flex: 0 0 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: nowrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.wrap { flex-wrap: wrap; justify-content: center; }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .hint { font-size: 13px; color: #3a3f44; }
+  .scaler { transform-origin: top left; }
+  .tablet { background: #1b1d1e; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); box-sizing: content-box; }
+  .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+  body.page-dark { background: #101314; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .hint { color: #aab2b8; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./PeripheralDevices.jsx"></script>
+<script type="text/babel">
+  const T = window.PD_TYPES;
+  const ICONS = ["token","keychain_watch","relay","hood_lock","rhm_siren","rhm","dms","tpms","fuel_sensor","pir_sensor","vs","nav_03","nav_08","nav_09","di","bt_02","rf_module","fb01","menu_peripheral_devices","menu_dynamic_devices"];
+  const SCHEMES = ["btr_1","bt_760_1","d_030_1","watch_2_1","control_device_1","rhm_03_1","ps_331_1","ps_332_1","nav_035_1","gps_1","nav_09_1","nav_10_1","door_module_1","di_04_1","bt_01_1","rfm_1","vs_1","hood_lock_1","hood_lock_2","hood_lock_3"];
+  const card = { background: "var(--background)", borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 16, boxSizing: "border-box", width: "100%" };
+  const H = ({ children, sub }) => <div style={{ display: "flex", flexDirection: "column", gap: 4 }}><span style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 700, color: "var(--on-surface)" }}>{children}</span>{sub && <span style={{ fontFamily: "var(--font-sans)", fontSize: 15, color: "var(--on-surface-variant)" }}>{sub}</span>}</div>;
+  const L = ({ children }) => <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--on-surface-variant)", textAlign: "center", overflowWrap: "anywhere", maxWidth: "100%" }}>{children}</span>;
+  function Section({ dark }) {
+    const devs = window.PD_demoDevices();
+    const near = devs[0], far = devs[1], relay = devs[2], hood = devs[3], dms = devs[4], fuel = devs[5], tpms = devs[6];
+    const rows = [near, far, relay, dms, tpms, hood, fuel];
+    const slots = window.PD_demoSlots();
+    const slotStates = [slots[0], slots[5], slots[1], slots[8], { ...slots[4], st: "waiting" }, { ...slots[0], id: "x", st: "deleting" }, slots[7]];
+    return (
+      <div data-theme={dark ? "dark" : undefined} style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 1180 }}>
+        <div style={card}>
+          <H sub="Строка A. Статусы: В зоне · Вне зоны · На связи · Нет связи · Приживлено. Слабый сигнал и низкий заряд — цветом индикатора; проблемная строка тонируется.">Строка устройства</H>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+            {["A"].map((v) => (
+              <div key={v} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 700, color: "var(--primary)" }}>{{ A: "A · Строка", B: "B · Карточка с плитками", C: "C · Статус крупно" }[v]}</span>
+                {rows.map((d) => <window.PD_DeviceRow key={d.id} d={d} variant={v} onClick={() => {}} />)}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={card}>
+            <H sub="4 класса: ≥ −60 отличный · −61…−75 хороший · −76…−85 слабый · < −85 очень слабый">Сигнал</H>
+            {[-55, -68, -80, -91].map((r) => <window.PD_SignalBars key={r} rssi={r} size={24} cls />)}
+          </div>
+          <div style={card}>
+            <H sub="4 уровня + низкий заряд (порог задаёт блок)">Батарея</H>
+            {[[3.05, 95], [2.95, 62], [2.8, 35], [2.7, 18]].map(([v, p]) => <window.PD_Battery key={p} v={v} pct={p} size={26} cls />)}
+            <window.PD_Battery v={2.41} pct={8} low size={26} />
+          </div>
+          <div style={card}>
+            <H sub="Устройства системы и слоты">Статусы</H>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{["near","far","online","offline","paired"].map((s) => <window.PD_StatusPill key={s} st={s} />)}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{["s_online","s_offline","free","s_paired","waiting","deleting"].map((s) => <window.PD_StatusPill key={s} st={s} />)}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}><window.PD_PhaseTag /><window.PD_PhaseTag>Опционально</window.PD_PhaseTag><window.PD_PhaseTag>Позже</window.PD_PhaseTag></div>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={card}>
+            <H sub="На связи · Не на связи · Свободный (кнопка в строке) · TPMS · Ожидает · Удаляется · PIR с адресом">Строка слота</H>
+            {slotStates.map((s, i) => <window.PD_SlotRow key={i} s={s} onClick={() => {}} onPair={() => {}} />)}
+          </div>
+          <div style={card}>
+            <H sub="Схема + 1–4 шага; свёрнута / развёрнута">Инструкция приживления · BTR-101</H>
+            <window.PD_Instruction type="relay" collapsed onToggle={() => {}} />
+            <window.PD_Instruction type="relay" onToggle={() => {}} />
+          </div>
+        </div>
+        <div style={card}>
+          <H sub="Легаси-иконки как есть (по решению), перекрашены в currentColor, толщина линии выровнена. «Нет связи» — бейдж, «свободный слот» — пунктир и приглушение. Нет легаси: часы отдельно, браслет, иммобилайзер, NFC, ALT-420, телефон, неизвестное — пока Material-символы.">Иконки типов</H>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 16 }}>
+            {ICONS.map((n) => (
+              <div key={n} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 72, height: 72, borderRadius: 20, background: "var(--surface-container-high)", color: "var(--primary)", display: "grid", placeItems: "center" }}><window.PD_Svg src={"icons/" + n + ".svg"} className="pd-svg pd-ic" style={{ width: 56, height: 56 }} /></span>
+                <L>{n}</L>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
+            <window.PD_DevIcon type="token" /><window.PD_DevIcon type="token" state="off" /><window.PD_DevIcon type="token" state="free" />
+            <L>на связи · нет связи · свободный слот</L>
+          </div>
+        </div>
+        <div style={card}>
+          <H sub="Линия currentColor, светлые заливки — surface, одиночный акцент (LED) — primary; цвета проводов (ps_331, bt_01, rhm_03) сохранены как есть.">Схемы приживления</H>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            {SCHEMES.map((n) => (
+              <div key={n} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ borderRadius: 16, background: "var(--surface-container-lowest)", border: "1px solid var(--outline-variant)", color: "var(--on-surface)", aspectRatio: "800 / 550", overflow: "hidden" }}><window.PD_Svg src={"pairing/" + n + ".svg"} className="pd-scheme" style={{ width: "100%", height: "100%" }} /></div>
+                <L>{n}</L>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  function App() {
+    const [dark, setDark] = React.useState(new URLSearchParams(location.search).get("theme") === "dark");
+    React.useEffect(() => { document.body.classList.toggle("page-dark", dark); }, [dark]);
+    return <React.Fragment><div className="toolbar"><PdSeg items={[["l", "Светлая"], ["d", "Тёмная"]]} value={dark ? "d" : "l"} onChange={(v) => setDark(v === "d")} /></div><div style={{ padding: "0 16px", width: "100%", boxSizing: "border-box", display: "flex", justifyContent: "center" }}><Section dark={dark} /></div></React.Fragment>;
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
