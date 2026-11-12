@@ -263,6 +263,7 @@ ViewModel через несколько composable, эффекты читают 
 | комментарии `FIXME:` и `STOPSHIP:` | закрыть до коммита (обычные `TODO` разрешены) |
 | импорт `androidx.lifecycle.ViewModel` вне `core/ui` (`ForbiddenImport`) | наследоваться от `BaseViewModel` ([`patterns.md`](patterns.md), «BaseViewModel») |
 | импорт `androidx.compose.material3.*` вне `core/ui` (`ForbiddenImport`) | компоненты `Cmp*` из `core/ui` ([`ui-kit.md`](ui-kit.md)) |
+| импорт `androidx.compose.runtime.collectAsState` вне `core/ui` (`ForbiddenImport`) | `collectAsStateWithLifecycle()` ([`compose-best-prac.md`](compose-best-prac.md)) |
 
 `StateFlowValueMutation` не проверяет тестовые source set'ы и модули тестовых дублёров (`**/testing/src/**`): тестовые фейки по [`patterns.md`](patterns.md#корутины-и-flow)
 могут писать `MutableStateFlow.value` напрямую. Правило берёт тип ресивера из Analysis API (Compose `MutableState`
@@ -473,6 +474,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | Гигиена `Response`: не выбрасывать, не превращать в исключение, не оборачивать повторно; без `throw` в репозиториях и use case | detekt `ResponseIgnored`, `ResponseGetOrThrow`, `RedundantSafeRun`, `ThrowInRepository` | ✅ |
 | «Сейчас» и пояс — из внедрённых `Clock`/`TimeZoneSource`, в composable — `LocalClock`/`LocalTimeZoneSource` | detekt `DirectClockUsage` | ✅ |
 | Платформенный `Settings()` — только `core/common/di` (`platformSettings`); в фиче хранилище — только data/di, `*Store` → `*Repository` | detekt `SettingsInstantiation`, Konsist `storage-usage`, `forbidden-suffix` | ✅ |
+| В `..domain.model..` отсутствие значения — `null`: без умолчаний `""`, `-1`, `"unknown"`/`"none"`/`"n/a"`/`"-"` у параметров конструктора и свойств | detekt `DomainSentinelDefault` | ✅ |
 | Мапперы `toDomain*` — `internal` в `data/mapper` | Konsist `mapper-placement` | ✅ |
 | `*UseCase` — в `domain/usecase`, оркестрация ≥ 2 зависимостей, только `operator fun invoke` с `Response` | Konsist `use-case-package`, `use-case-contract` | ✅ |
 | У реализации репозитория есть содержательный тест (успех → доменная модель, ошибка SDK → `Response.Error`, ключевые операции); SDK — за `*DataSource` | Konsist `repository-impl-tested` | ✅ |
@@ -489,6 +491,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | Общие хелперы `core/common` и `core.ui.lce` — только под реальный вызов: без вызовов вне своего модуля-тестов удаляются | Konsist `core-helper-usage` | ✅ |
 | Composable не достаёт зависимости из Koin (`koinInject`) — только корни композиции `composeApp`/`flasherApp` | Konsist `composable-injection` | ✅ |
 | UI-state `*State` — `@Immutable`/`@Stable`; `@Composable` фичи — только в `presentation` | Konsist `state-immutable`, `composable-in-presentation` | ✅ |
+| Текст UI — `stringResource(Strings.string.*)`: строковый литерал с буквами — не в `Text`/`CmpText`/`CmpHtmlText` и не в `text`/`title`/`subtitle`/`label`/`placeholder`/`contentDescription`/`message`/`actionLabel` внутри `@Composable` (кроме `@Preview`); state экрана — `collectAsStateWithLifecycle()` | detekt `HardcodedUiText`, `ForbiddenImport` | ✅ |
 | Свой `CompositionLocal` — только из списка `compose_allowed_composition_locals` | compose-rules `compositionlocal-allowlist` | ✅ |
 | Фичи и корни не обходят дизайн-систему: цвета — роли темы, размеры текста — `CmpTextStyle`, визуальные компоненты — `Cmp*` (`ui-kit.md`) | UI-аудит `hex_color`, `raw_color`, `raw_sp`, `bare_text_style`, `material_import`, `ui_component_import`, `coil_import` (baseline) | ✅ |
 

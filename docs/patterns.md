@@ -22,13 +22,13 @@
 - **Слои и модули — только по направлению зависимостей**: presentation → domain ← data, фича ↛ data и presentation чужой фичи, типы SDK — только data/di (Konsist `module-direction`, `presentation-isolation`, `cross-feature-presentation`, `sdk-confinement`, graph-assert) — см. «Слои и границы модуля».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
 - **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
-- **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
+- **Никаких строковых литералов в `@Composable`** (detekt `HardcodedUiText`) — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
 - **Стабильность для Compose:** state и presentation-модели — `@Immutable` (Konsist `state-immutable`), domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
 - **`@Serializable` — только форматы данных и маршруты, у каждого — `@SerialName("<модуль>.<Класс>")`** (Konsist `serializable-placement`) — см. «Сериализация».
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
-- **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()`: в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
+- **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()` (detekt `ForbiddenImport`): в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
 - **Время жизни работы VM задаёт место запуска**: `collectIntoState` — пока экран подписан, `onStart()` — один раз, `launchReplacing(key)`/`launchOnDevice(key)` — всю жизнь VM, дольше экрана — репозиторий со скоупом приложения; без `init {}`, `DisposableEffect`, полей-`Job` и `var` — см. «Жизненный цикл ViewModel и сессии».
 - **У каждого флага загрузки — гарантированный сброс; ошибка первой загрузки ≠ пустой экран; «нечего делать» ≠ `Success`** — см. «Корректность state».
 - **Код проходит `./gradlew spotlessCheck` и `./gradlew detektCheck` без замечаний** (строка ≤ 120, без `runCatching`/`!!`/`println`, generic `catch` только на границах) — см. «Что проверяют анализаторы (Spotless + detekt)» и [`code-quality.md`](code-quality.md).
@@ -581,7 +581,7 @@ sealed interface MainDatabaseSyncStatus {
 - **Никаких UI-представлений в модели.** Отформатированные строки (`displayTime = "14:05"`,
   `sizeLabel = "2 MB"`) в domain не хранятся — модель держит исходное значение (`LocalDateTime`,
   `Long`), форматирует UI. Иначе формат дублируется по слоям и зависит от языка того слоя, где его собрали.
-- **Отсутствие значения — `null`, а не sentinel.** `url = ""`, `id = -1`, `"unknown"` вместо `null`
+- **Отсутствие значения — `null`, а не sentinel** (detekt `DomainSentinelDefault`). `url = ""`, `id = -1`, `"unknown"` вместо `null`
   требуют отдельной проверки в каждом потребителе и молча проходят там, где её забыли.
 - **Одна иерархия на одну сущность.** Две почти одинаковые sealed-иерархии, различающиеся только
   nullability полей (`Attachment` и `PendingAttachment`), порождают конвертеры туда-обратно,

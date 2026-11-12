@@ -46,6 +46,8 @@ class SpecmpRuleSetProviderTest {
                 "UnawaitedAsync",
                 "NestedCollect",
                 "SideEffectAwaitsUi",
+                "HardcodedUiText",
+                "DomainSentinelDefault",
             ),
             ruleSet.rules.keys.map { it.value }.toSet(),
         )
