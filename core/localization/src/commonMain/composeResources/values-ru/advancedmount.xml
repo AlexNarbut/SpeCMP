@@ -25,8 +25,10 @@
     <string name="advancedmount_sections_subtitle_bypass_learning">Обучение бесключевому обходу штатного иммобилайзера</string>
     <string name="advancedmount_sections_title_clone">Процедура Clone</string>
     <string name="advancedmount_sections_subtitle_clone">Вычисление ключа средствами нашего сервера</string>
-    <string name="advancedmount_sections_title_dynamic_devices">Доп. устройства</string>
+    <string name="advancedmount_sections_title_dynamic_devices">Приживление устройств</string>
     <string name="advancedmount_sections_subtitle_dynamic_devices">Приживляйте и удаляйте устройства Pandora</string>
+    <string name="advancedmount_sections_title_system_devices">Устройства системы</string>
+    <string name="advancedmount_sections_subtitle_system_devices">Состояние меток, реле и датчиков</string>
     <string name="advancedmount_sections_title_tech_requests">Заявки на техпомощь</string>
     <string name="advancedmount_sections_subtitle_tech_requests">Просмотрите историю обращений или оформите заявку</string>
     <string name="advancedmount_sections_title_support_chat">Чат техподдержки</string>

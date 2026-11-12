@@ -16,6 +16,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.di.deviceAutostartModule
 import ru.alarmtrade.specmp.feature.device.firmware.di.deviceFirmwareModule
 import ru.alarmtrade.specmp.feature.device.interaction.di.deviceInteractionModule
 import ru.alarmtrade.specmp.feature.device.interaction.ui.di.deviceInteractionUiModule
+import ru.alarmtrade.specmp.feature.device.peripherals.di.devicePeripheralsModule
 import ru.alarmtrade.specmp.feature.device.selection.di.deviceSelectionModule
 import ru.alarmtrade.specmp.feature.device.settings.di.deviceSettingsModule
 import ru.alarmtrade.specmp.feature.device.settings.ui.di.deviceSettingsUiModule
@@ -44,6 +45,7 @@ fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = 
     add(deviceFirmwareModule)
     add(deviceAutostartModule)
     add(deviceStateModule)
+    add(devicePeripheralsModule)
     add(deviceSettingsModule)
     add(vehicleModule)
     add(accountModule)

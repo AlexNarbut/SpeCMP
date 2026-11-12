@@ -25,8 +25,10 @@
     <string name="advancedmount_sections_subtitle_bypass_learning">Learn keyless bypass of the factory immobilizer</string>
     <string name="advancedmount_sections_title_clone">Clone procedure</string>
     <string name="advancedmount_sections_subtitle_clone">Key calculation on our server</string>
-    <string name="advancedmount_sections_title_dynamic_devices">Extra devices</string>
+    <string name="advancedmount_sections_title_dynamic_devices">Device pairing</string>
     <string name="advancedmount_sections_subtitle_dynamic_devices">Pair and remove Pandora devices</string>
+    <string name="advancedmount_sections_title_system_devices">System devices</string>
+    <string name="advancedmount_sections_subtitle_system_devices">Status of tags, relays and sensors</string>
     <string name="advancedmount_sections_title_tech_requests">Tech support requests</string>
     <string name="advancedmount_sections_subtitle_tech_requests">View request history or create a request</string>
     <string name="advancedmount_sections_title_support_chat">Support chat</string>

@@ -93,17 +93,15 @@ private fun info() = CarConfigurationInfo(
     alarmDeviceTitle = "",
     alarmDeviceName = "DX-9X",
     language = AppLanguage.RU,
-    carId = 7,
     author = ConfigurationAuthor(id = 1, login = "ivan@mail.ru", fullName = " "),
     isAvailable = false,
     rating = 0,
     settings = byteArrayOf(),
     settingsFileName = "",
-    mountingManualUrl = "",
     creationDate = date,
     lastUpdateDate = date,
-    _mountingManualFile = ConfigurationFile(name = "Карта", url = "https://files/map.pdf"),
-    _car = CarFullInformation(id = 7, name = "2.5 AT", brand = "Toyota", model = "Camry"),
+    mountingManualFile = ConfigurationFile(name = "Карта", url = "https://files/map.pdf"),
+    car = CarFullInformation(id = 7, name = "2.5 AT", brand = "Toyota", model = "Camry"),
 )
 
 private fun configuration() = CarConfiguration(

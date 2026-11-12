@@ -64,6 +64,7 @@ fun AdvancedMountNavGraph(
     bypassLearning: @Composable (onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     checkState: @Composable (onBack: () -> Unit) -> Unit,
+    systemDevices: @Composable (onBack: () -> Unit, onOpenPairing: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit,
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
@@ -118,6 +119,10 @@ fun AdvancedMountNavGraph(
                     MountSection.CLONE -> clone(key.fromBypass, { backStack.popSafe() }, onOpenSupportChat)
 
                     MountSection.CHECK_STATE -> checkState { backStack.popSafe() }
+
+                    MountSection.SYSTEM_DEVICES -> systemDevices({ backStack.popSafe() }) {
+                        backStack.navigateSafe(AdvancedMountSectionRoute(MountSection.DYNAMIC_DEVICES, key.deviceTitle))
+                    }
 
                     MountSection.VEHICLES -> vehicles { backStack.popSafe() }
 

@@ -30,6 +30,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_s
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_settings
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_support_chat
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_system_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_tech_requests
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_vehicles
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_voice_firmware
@@ -42,6 +43,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_t
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_settings
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_support_chat
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_system_devices
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_tech_requests
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_vehicles
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_title_voice_firmware
@@ -68,6 +70,7 @@ import specmp.feature.advanced_mount.generated.resources.mount_section_dynamic_d
 import specmp.feature.advanced_mount.generated.resources.mount_section_firmware_update
 import specmp.feature.advanced_mount.generated.resources.mount_section_settings
 import specmp.feature.advanced_mount.generated.resources.mount_section_support_chat
+import specmp.feature.advanced_mount.generated.resources.mount_section_system_devices
 import specmp.feature.advanced_mount.generated.resources.mount_section_tech_requests
 import specmp.feature.advanced_mount.generated.resources.mount_section_vehicles
 import specmp.feature.advanced_mount.generated.resources.mount_section_voice_firmware
@@ -104,6 +107,12 @@ private val MountSection.res: SectionRes
             Strings.string.advancedmount_sections_title_clone,
             Strings.string.advancedmount_sections_subtitle_clone,
             Res.drawable.mount_section_clone,
+        )
+
+        MountSection.SYSTEM_DEVICES -> SectionRes(
+            Strings.string.advancedmount_sections_title_system_devices,
+            Strings.string.advancedmount_sections_subtitle_system_devices,
+            Res.drawable.mount_section_system_devices,
         )
 
         MountSection.DYNAMIC_DEVICES -> SectionRes(
