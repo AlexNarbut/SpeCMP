@@ -51,6 +51,7 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.PairingEntry
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.SystemDevicesEntry
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
@@ -235,6 +236,9 @@ private fun AuthedNavGraph() {
                                     onExit()
                                 },
                             )
+                        },
+                        dynamicDevices = { onBack, onOpenSystemDevices ->
+                            PairingEntry(onBack = onBack, onOpenSystemDevices = onOpenSystemDevices)
                         },
                         vehicles = { onBack -> DeviceVehicles(device, onBack) },
                     )

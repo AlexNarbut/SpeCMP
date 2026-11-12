@@ -389,7 +389,7 @@ private fun LazyListScope.groups(state: SystemDevicesState, actions: SystemDevic
         item(key = "group_${group.type}") {
             GroupHeader(
                 title = stringResource(group.type.ui.group),
-                count = group.devices.size.takeIf { it > 1 },
+                trailing = group.devices.size.takeIf { it > 1 }?.toString(),
             )
         }
         items(group.devices, key = { "${it.type}_${it.address}" }) { device ->

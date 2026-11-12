@@ -10,6 +10,7 @@ import ru.alarmtrade.specmp.feature.device.peripherals.data.repository.Specialis
 import ru.alarmtrade.specmp.feature.device.peripherals.data.repository.SpecialistSystemPeripheralsRepository
 import ru.alarmtrade.specmp.feature.device.peripherals.domain.repository.DynamicPeripheralsRepository
 import ru.alarmtrade.specmp.feature.device.peripherals.domain.repository.SystemPeripheralsRepository
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.PairingViewModel
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.SystemDevicesViewModel
 
 val devicePeripheralsModule = module {
@@ -18,4 +19,5 @@ val devicePeripheralsModule = module {
     single<SystemPeripheralsRepository> { SpecialistSystemPeripheralsRepository(get()) }
     singleOf(::SpecialistDynamicPeripheralsRepository) bind DynamicPeripheralsRepository::class
     viewModelOf(::SystemDevicesViewModel)
+    viewModelOf(::PairingViewModel)
 }

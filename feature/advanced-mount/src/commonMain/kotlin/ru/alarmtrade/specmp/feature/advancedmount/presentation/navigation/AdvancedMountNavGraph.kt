@@ -65,6 +65,7 @@ fun AdvancedMountNavGraph(
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     checkState: @Composable (onBack: () -> Unit) -> Unit,
     systemDevices: @Composable (onBack: () -> Unit, onOpenPairing: () -> Unit) -> Unit,
+    dynamicDevices: @Composable (onBack: () -> Unit, onOpenSystemDevices: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit,
 ) {
     val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
@@ -120,8 +121,17 @@ fun AdvancedMountNavGraph(
 
                     MountSection.CHECK_STATE -> checkState { backStack.popSafe() }
 
+                    // Переходы между «Устройствами» и «Приживлением» заменяют экран: стек не растёт от переключений.
                     MountSection.SYSTEM_DEVICES -> systemDevices({ backStack.popSafe() }) {
-                        backStack.navigateSafe(AdvancedMountSectionRoute(MountSection.DYNAMIC_DEVICES, key.deviceTitle))
+                        backStack.replaceCurrent(
+                            AdvancedMountSectionRoute(MountSection.DYNAMIC_DEVICES, key.deviceTitle),
+                        )
+                    }
+
+                    MountSection.DYNAMIC_DEVICES -> dynamicDevices({ backStack.popSafe() }) {
+                        backStack.replaceCurrent(
+                            AdvancedMountSectionRoute(MountSection.SYSTEM_DEVICES, key.deviceTitle),
+                        )
                     }
 
                     MountSection.VEHICLES -> vehicles { backStack.popSafe() }

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
@@ -196,6 +197,7 @@ internal fun StatusPill(
             fontWeight = FontWeight.SemiBold,
             style = if (big) CmpTextStyle.BodyLarge else CmpTextStyle.Body,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -363,7 +365,7 @@ internal fun Float.formatDecimal(digits: Int): String {
 }
 
 @Composable
-internal fun GroupHeader(title: String, count: Int?, modifier: Modifier = Modifier) {
+internal fun GroupHeader(title: String, trailing: String?, modifier: Modifier = Modifier) {
     val color = cmpThemeColors().onSurfaceVariant
     CmpRow(
         modifier = modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 18.dp, bottom = 8.dp),
@@ -376,7 +378,7 @@ internal fun GroupHeader(title: String, count: Int?, modifier: Modifier = Modifi
             style = CmpTextStyle.Body,
             modifier = Modifier.weight(1f),
         )
-        if (count != null) CmpText(text = count.toString(), color = color, style = CmpTextStyle.Body)
+        if (trailing != null) CmpText(text = trailing, color = color, style = CmpTextStyle.Body)
     }
 }
 
