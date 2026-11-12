@@ -48,6 +48,8 @@ class SpecmpRuleSetProviderTest {
                 "SideEffectAwaitsUi",
                 "HardcodedUiText",
                 "DomainSentinelDefault",
+                "LoopWithoutCancellation",
+                "LoggerTagLiteral",
             ),
             ruleSet.rules.keys.map { it.value }.toSet(),
         )

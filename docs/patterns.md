@@ -21,7 +21,7 @@
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов (Konsist `domain-isolation`, `domain-model-purity`) — см. «Domain».
 - **Слои и модули — только по направлению зависимостей**: presentation → domain ← data, фича ↛ data и presentation чужой фичи, типы SDK — только data/di (Konsist `module-direction`, `presentation-isolation`, `cross-feature-presentation`, `sdk-confinement`, graph-assert) — см. «Слои и границы модуля».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
-- **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
+- **Ошибки из ViewModel — только типизированные** (enum / sealed в state; в `*State`/`*Effect` нет `Throwable`/`*Exception`/`Response` — Konsist `state-typed-errors`), не строковые коды — см. «Ошибки фичи».
 - **Никаких строковых литералов в `@Composable`** (detekt `HardcodedUiText`) — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
 - **Стабильность для Compose:** state и presentation-модели — `@Immutable` (Konsist `state-immutable`), domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
@@ -73,8 +73,9 @@
   Сериализуй: в доменном объекте/репозитории — собственный `Mutex.withLock`, во ViewModel —
   готовый `executeWithProceedLock(needSkipAnother = false)` из `BaseViewModel`
   (см. «BaseViewModel»).
-- **Бесконечные циклы — по `isActive`** (кооперативная отмена), а не `while (true)`:
-  внутри `flow { }` это `currentCoroutineContext().isActive`, внутри `launch` — `isActive` скоупа.
+- **Бесконечный цикл в корутине — с точкой отмены** (detekt `LoopWithoutCancellation`): в теле `while (true)` есть
+  suspend-вызов (`delay`, `emit`, запрос) или `ensureActive()`; цикл без приостановок крутится по `isActive`
+  (внутри `flow { }` — `currentCoroutineContext().isActive`, внутри `launch` — `isActive` скоупа).
 - `flowOn` / `stateIn` применимы **только к холодным Flow** (`combine`, `zip`, `map`, `flow {}`).
   `MutableStateFlow` / `StateFlow` — горячие, для них эти операторы бессмысленны:
 
@@ -295,7 +296,7 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
   (repository, при маппинге SDK-ошибки), но не дублирование в VM: `asLCEState(XxxError::from)`
   только маппит ошибку, без `logger.e`.
 - `logger.d` — трассировка значимых событий (старт/завершение загрузки, результат операции).
-- **Тег — от имени класса, не литералом**: `Logger.withTag(this::class.simpleName.orEmpty())`.
+- **Тег — от имени класса, не литералом** (detekt `LoggerTagLiteral`; верхнеуровневый логгер файла — литералом): `Logger.withTag(this::class.simpleName.orEmpty())`.
   Строковый литерал (`withTag("MyRepository")`) разъедется при переименовании. Во ViewModel свой
   логгер не создаётся — есть `logger` из `BaseViewModel`.
 

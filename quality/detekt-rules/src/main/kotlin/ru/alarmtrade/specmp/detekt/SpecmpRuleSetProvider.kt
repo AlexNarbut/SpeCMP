@@ -43,6 +43,8 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("SideEffectAwaitsUi") to ::SideEffectAwaitsUi,
             RuleName("HardcodedUiText") to ::HardcodedUiText,
             RuleName("DomainSentinelDefault") to ::DomainSentinelDefault,
+            RuleName("LoopWithoutCancellation") to ::LoopWithoutCancellation,
+            RuleName("LoggerTagLiteral") to ::LoggerTagLiteral,
         ),
     )
 

@@ -35,6 +35,9 @@ class HardcodedUiTextTest {
                 CmpIcon(icon, contentDescription = null)
                 Modifier.testTag("submit")
                 key("row") { }
+                val transition = rememberInfiniteTransition(label = "skeleton")
+                val alpha by animateFloatAsState(1f, label = "alpha")
+                AnimatedContent(state, label = "fade") { }
             }
 
             @Preview

@@ -294,10 +294,11 @@ ViewModel через несколько composable, эффекты читают 
 | `SharingInsideFunction` | `.shareIn`/`.stateIn` в теле функции или геттера |
 | `UnawaitedAsync` | `async { }` оператором или в неиспользуемой переменной |
 | `NestedCollect` | `collect`/`collectLatest` внутри лямбды `collect`/`collectLatest` |
+| `LoopWithoutCancellation` | `while (true)` в корутине, в теле которого (через `inline`-лямбды) нет ни suspend-вызова, ни `ensureActive()` |
 | `SideEffectAwaitsUi` | `showSnackbar`/`showResult` прямо в лямбде `collectSideEffect { }` (не внутри `launch`/`async`): обработчики эффектов последовательны, снекбар держит навигацию; локальные `fun` и вызовы в отдельных функциях-обработчиках не проверяются |
 
 `UpdateLambdaSideEffects`, `CatchSwallowsCancellation`, `MutexIsLockedCheck`, `SuspendInsideSynchronized`,
-`UnawaitedAsync` требуют type resolution (в `iosMain` молчат), остальные — по именам. Подавление своего
+`UnawaitedAsync`, `LoopWithoutCancellation` требуют type resolution (в `iosMain` молчат), остальные — по именам. Подавление своего
 правила — `@Suppress("ForbiddenPrintln")` (имя правила без набора) с комментарием «почему».
 
 Осознанно выключено или смягчено: `LongParameterList` (наборы колбэков `*Actions` длинные по построению; порог
@@ -346,6 +347,7 @@ ViewModel через несколько composable, эффекты читают 
 | `serializable-placement` | `@Serializable` — в `..data..`, `..navigation..`, у `NavKey` и типов аргументов маршрутов |
 | `composable-in-presentation` | `@Composable` фичи — только в `presentation` |
 | `state-immutable` | `data class *State` в `presentation` помечен `@Immutable` или `@Stable` |
+| `state-typed-errors` | классы файлов `*State.kt`/`*Effect.kt` в `presentation` (включая вложенные): параметры конструктора и свойства без `Throwable`/`*Exception`/`Response` в типе |
 | `sdk-confinement` | типы AlarmTrade SDK (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — data/di фич, `core/specialist`, `core/permissions`, `core/network`, приложения |
 | `no-fakes-in-production` | `Fake*`/`Stub*` — только в тестах |
 | `testing-modules-test-only` | `project(":…:testing")` в `build.gradle.kts` — только в тестовом блоке/конфигурации (`commonTest.dependencies`, `*TestImplementation`); проверка разбирает скрипты, а не Kotlin-код |
@@ -485,12 +487,15 @@ lookahead конец имени модуля слева — пробел, а н�
 | Нет `var`/изменяемых коллекций в объектах со своим scope и сервисах data-слоя | detekt `SharedMutableStateInSingleton` | ✅ |
 | `CoroutineScope` — из DI (`serviceScope`) или с явным `cancel()`; `SupervisorJob()` + обработчик; без `GlobalScope`; диспетчеры — `AppDispatchers` | detekt `UnmanagedCoroutineScope`, `GlobalCoroutineUsage`, `InjectDispatcher` | ✅ |
 | `shareIn`/`stateIn` — только в инициализаторе свойства; `async` дожидаются; без `collect` в `collect` | detekt `SharingInsideFunction`, `UnawaitedAsync`, `NestedCollect` | ✅ |
+| Бесконечный цикл в корутине — с точкой отмены (suspend-вызов, `ensureActive()` или `isActive`) | detekt `LoopWithoutCancellation` | ✅ |
+| Тег логгера класса — `this::class.simpleName`, не литерал | detekt `LoggerTagLiteral` | ✅ |
 | Обработчик `collectSideEffect` короткий: снекбар и прочее ожидание UI — в `rememberCoroutineScope().launch { }` | detekt `SideEffectAwaitsUi` (по именам `showSnackbar`/`showResult`; диалоги файлов — ревью) | ✅ |
 | Start-once сервис и место с `Mutex`/`tryLock` покрыты стресс-тестом «32 параллельных вызова → эффект один раз» | ревью (эталон `DeviceSessionImplTest`) | — |
 | Тестовые дублёры (`Fake*`/`Stub*`) — только в тестах; модули `*:testing` подключаются только в тестовых source set'ах | Konsist `no-fakes-in-production`, `testing-modules-test-only` | ✅ |
 | Общие хелперы `core/common` и `core.ui.lce` — только под реальный вызов: без вызовов вне своего модуля-тестов удаляются | Konsist `core-helper-usage` | ✅ |
 | Composable не достаёт зависимости из Koin (`koinInject`) — только корни композиции `composeApp`/`flasherApp` | Konsist `composable-injection` | ✅ |
 | UI-state `*State` — `@Immutable`/`@Stable`; `@Composable` фичи — только в `presentation` | Konsist `state-immutable`, `composable-in-presentation` | ✅ |
+| Ошибка в State/Effect экрана — тип фичи (enum/sealed, `AppError`), не `Throwable`/`Exception`/`Response` | Konsist `state-typed-errors` | ✅ |
 | Текст UI — `stringResource(Strings.string.*)`: строковый литерал с буквами — не в `Text`/`CmpText`/`CmpHtmlText` и не в `text`/`title`/`subtitle`/`label`/`placeholder`/`contentDescription`/`message`/`actionLabel` внутри `@Composable` (кроме `@Preview`); state экрана — `collectAsStateWithLifecycle()` | detekt `HardcodedUiText`, `ForbiddenImport` | ✅ |
 | Свой `CompositionLocal` — только из списка `compose_allowed_composition_locals` | compose-rules `compositionlocal-allowlist` | ✅ |
 | Фичи и корни не обходят дизайн-систему: цвета — роли темы, размеры текста — `CmpTextStyle`, визуальные компоненты — `Cmp*` (`ui-kit.md`) | UI-аудит `hex_color`, `raw_color`, `raw_sp`, `bare_text_style`, `material_import`, `ui_component_import`, `coil_import` (baseline) | ✅ |

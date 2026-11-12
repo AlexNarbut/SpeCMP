@@ -37,7 +37,7 @@ class FirmwareBootEntry(
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
 ) {
-    private val logger = Logger.withTag("FirmwareBootEntry")
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     /** PIN программирования нужен только на BLE: на USB SDK пропускает режим программирования. */
     fun isPinLocked(systemId: Long): Boolean = deviceSession.transport.value == ConnectionTransport.BLE &&

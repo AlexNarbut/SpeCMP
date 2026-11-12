@@ -22,13 +22,21 @@ class HardcodedUiText(config: Config) :
         val callee = expression.calleeExpression?.text
         expression.valueArguments.forEachIndexed { index, argument ->
             val name = argument.getArgumentName()?.asName?.asString()
-            val isText = if (name != null) name in UI_PARAMS else index == 0 && callee in TEXT_CALLS
+            val isText = when {
+                name == LABEL && callee.isAnimation() -> false
+                name != null -> name in UI_PARAMS
+                else -> index == 0 && callee in TEXT_CALLS
+            }
             val value = argument.getArgumentExpression()
             if (isText && value != null && value.isTextLiteral()) {
                 report(Finding(Entity.from(value), MESSAGE))
             }
         }
     }
+
+    // `label` анимаций Compose — имя для инспектора, не текст на экране.
+    private fun String?.isAnimation(): Boolean =
+        this != null && (startsWith(ANIMATE) || contains(TRANSITION) || this in ANIMATED_CONTAINERS)
 
     private fun KtNamedFunction.hasAnnotation(name: String): Boolean =
         annotationEntries.any { it.shortName?.asString() == name }
@@ -39,6 +47,10 @@ class HardcodedUiText(config: Config) :
     private companion object {
         const val COMPOSABLE = "Composable"
         const val PREVIEW = "Preview"
+        const val LABEL = "label"
+        const val ANIMATE = "animate"
+        const val TRANSITION = "Transition"
+        val ANIMATED_CONTAINERS = setOf("AnimatedContent", "AnimatedVisibility", "Crossfade")
         val TEXT_CALLS = setOf("Text", "CmpText", "CmpHtmlText")
         val UI_PARAMS = setOf(
             "text",

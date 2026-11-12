@@ -333,6 +333,23 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `screen state and effects carry typed errors`() {
+        val contracts = scope.files
+            .filter { it.inLayer("presentation") && CONTRACT_FILE.matches(it.name) }
+            .flatMap { it.classes(includeNested = true) }
+        val message = "State и Effect экрана несут ошибку типом фичи (enum/sealed, AppError), не " +
+            "Throwable/Exception и не Response: UI не разбирает исключения. docs/patterns.md, «Ошибки фичи»"
+        contracts.flatMap { it.primaryConstructor?.parameters.orEmpty() }
+            .assertFalse(testName = "state-typed-errors", additionalMessage = message) {
+                RAW_ERROR_TYPE.containsMatchIn(it.type.text)
+            }
+        contracts.flatMap { it.properties(includeNested = false) }
+            .assertFalse(testName = "state-typed-errors", additionalMessage = message) {
+                RAW_ERROR_TYPE.containsMatchIn(it.type?.text.orEmpty())
+            }
+    }
+
+    @Test
     fun `AlarmTrade SDK types stay in data, di and SDK-facing core modules`() {
         val message =
             "Типы AlarmTrade SDK (ru.alarmtrade.common/specialist/devices/permissions/bluetoothControl/…) — " +
@@ -846,6 +863,9 @@ private fun String?.isMutableCollectionType(): Boolean = this != null && MUTABLE
 
 // Корни композиции: здесь composable собирают граф и передают зависимости дальше параметрами.
 private val COMPOSITION_ROOTS = setOf("composeApp", "flasherApp")
+
+private val CONTRACT_FILE = Regex("""\w+(State|Effect)""")
+private val RAW_ERROR_TYPE = Regex("""\b(Throwable|\w*Exception|Response)\b""")
 
 // SDK AlarmTrade — всё под ru.alarmtrade.*, кроме пакетов самого приложения.
 private fun String.isSdkName(): Boolean = startsWith("ru.alarmtrade.") && !startsWith("$ROOT.") && this != ROOT

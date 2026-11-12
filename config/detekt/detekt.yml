@@ -129,6 +129,14 @@ specmp:
   # В ..domain.model.. отсутствие значения — null, не "", -1, "unknown" (docs/patterns.md, «Domain»).
   DomainSentinelDefault:
     active: true
+  # while (true) в корутине — с точкой отмены (suspend-вызов или ensureActive()); требует type resolution.
+  LoopWithoutCancellation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Тег логгера класса — this::class.simpleName; верхнеуровневый логгер файла — литералом.
+  LoggerTagLiteral:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
 
 complexity:
   LongMethod:
