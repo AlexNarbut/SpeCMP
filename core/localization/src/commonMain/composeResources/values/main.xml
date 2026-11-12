@@ -44,6 +44,8 @@
     <string name="main_drawer_title_app_update_available">New version available</string>
     <string name="main_drawer_subtitle_app_update_available">%1$s · tap to update</string>
     <string name="main_drawer_label_settings">Settings</string>
+    <string name="main_drawer_btn_refresh_profile">Refresh profile</string>
+    <string name="main_drawer_error_profile_refresh">Couldn't refresh profile data</string>
     <string name="main_drawer_btn_logout">Log out</string>
     <string name="main_drawer_label_version">Pandora Spec · version %1$s</string>
     <string name="main_drawer_label_database_version">DB version %1$s</string>

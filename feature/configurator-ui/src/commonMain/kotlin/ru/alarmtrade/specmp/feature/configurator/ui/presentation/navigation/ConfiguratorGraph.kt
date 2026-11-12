@@ -67,7 +67,6 @@ import ru.alarmtrade.specmp.feature.device.presentation.core.navigation.Configur
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.NoSettingsFilePicker
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePickResult
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFilePicker
-import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -132,6 +131,7 @@ fun ConfigurationPickerEntry(
     onBack: () -> Unit,
     vehiclePicker: ConfiguratorVehiclePicker,
     editor: ConfigurationEditor,
+    fileSaver: SettingsFileSaver,
     purpose: ConfigurationPickPurpose = ConfigurationPickPurpose.LOAD,
     cloudCar: ConfigurationPickCar? = null,
 ) {
@@ -144,7 +144,7 @@ fun ConfigurationPickerEntry(
         onExit = onBack,
         vehiclePicker = vehiclePicker,
         editor = editor,
-        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose),
+        mode = GraphMode.Pick(request, onPick, onOpenFirmwareUpdate, purpose, fileSaver),
     )
 }
 
@@ -154,9 +154,11 @@ enum class ConfigurationPickPurpose { LOAD, FAST_MOUNT }
 data class ConfigurationPickCar(val id: Int, val title: String)
 
 private sealed interface GraphMode {
+    val fileSaver: SettingsFileSaver
+
     class Full(
         val filePicker: SettingsFilePicker,
-        val fileSaver: SettingsFileSaver,
+        override val fileSaver: SettingsFileSaver,
         val deviceEditor: (@Composable (load: SettingsSource, onBack: () -> Unit) -> Unit)?,
     ) : GraphMode
 
@@ -165,6 +167,7 @@ private sealed interface GraphMode {
         val onPick: (SettingsSource) -> Unit,
         val onOpenFirmwareUpdate: () -> Unit,
         val purpose: ConfigurationPickPurpose,
+        override val fileSaver: SettingsFileSaver,
     ) : GraphMode
 }
 
@@ -195,7 +198,7 @@ private fun ConfiguratorGraph(
                 val full = mode as? GraphMode.Full
                 editor(
                     key.source.toSource(),
-                    full?.fileSaver ?: NoSaver,
+                    mode.fileSaver,
                     { opened -> opened.toKey()?.let { backStack.navigateSafe(EditorRoute(it)) } },
                     full?.deviceEditor?.let {
                         { source -> source.toKey()?.let { backStack.navigateSafe(DeviceWriteRoute(it)) } }
@@ -277,7 +280,7 @@ private fun MineEntry(backStack: NavBackStack<NavKey>, mode: GraphMode, onBack: 
                 // Системное «Сохранить как» живёт в композиции (launcher), поэтому сохраняет UI, а результат уходит
                 // во VM — как в редакторе настроек.
                 is MineEffect.ExportFile ->
-                    viewModel.onFileExported((full?.fileSaver ?: NoSaver).save(effect.path, effect.fileName))
+                    viewModel.onFileExported(mode.fileSaver.save(effect.path, effect.fileName))
 
                 is MineEffect.FileSaved -> snackbarHostState.showSnackbar(
                     getString(Strings.string.configurator_common_msg_file_saved, effect.name),
@@ -457,8 +460,4 @@ private fun MineMessage.text() = when (this) {
     MineMessage.DELETED -> Strings.string.configurator_common_msg_deleted
     MineMessage.RENAMED -> Strings.string.configurator_common_msg_renamed
     MineMessage.FAILED -> Strings.string.configurator_common_msg_failed
-}
-
-private object NoSaver : SettingsFileSaver {
-    override suspend fun save(sourcePath: String, fileName: String) = SettingsFileSaveResult.Cancelled
 }

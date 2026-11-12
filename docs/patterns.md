@@ -868,7 +868,6 @@ presentation/screen/<screen>/
 ```kotlin
 internal class AppSettingsViewModel(
     private val localeStore: AppLocaleStore,
-    private val restarter: AppRestarter,
     private val configurationLanguages: ConfigurationLanguageStore,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<AppSettingsState, Nothing>(AppSettingsState(current = localeStore.current())) {
@@ -919,7 +918,7 @@ internal class AppSettingsViewModel(
 Параметры конструктора VM (и аргументы их дженериков) — только из разрешающего списка (Konsist
 `view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
 (аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
-`AppRestarter`, `AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`,
+`AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`,
 `Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
 типы SDK, `Flow`, `CoroutineScope`, функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
 

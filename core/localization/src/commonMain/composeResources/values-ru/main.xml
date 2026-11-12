@@ -44,6 +44,8 @@
     <string name="main_drawer_title_app_update_available">Доступна новая версия</string>
     <string name="main_drawer_subtitle_app_update_available">%1$s · нажмите, чтобы обновить</string>
     <string name="main_drawer_label_settings">Настройки</string>
+    <string name="main_drawer_btn_refresh_profile">Обновить данные профиля</string>
+    <string name="main_drawer_error_profile_refresh">Не удалось обновить данные профиля</string>
     <string name="main_drawer_btn_logout">Выход</string>
     <string name="main_drawer_label_version">Pandora Спец · версия %1$s</string>
     <string name="main_drawer_label_database_version">Версия базы %1$s</string>

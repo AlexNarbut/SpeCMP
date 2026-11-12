@@ -23,6 +23,11 @@ inline fun <T> Response<T>.mapIfError(it: (Response.Error) -> Response<T>): Resp
     is Response.Error -> it.invoke(this)
 }
 
+inline fun <T> Response<T>.onSuccess(action: (T) -> Unit): Response<T> {
+    if (this is Response.Success) action(value)
+    return this
+}
+
 inline fun <T> Response<T>.onError(action: (Throwable) -> Unit): Response<T> {
     if (this is Response.Error) action(exception)
     return this

@@ -563,7 +563,7 @@ class ArchitectureTest {
                 additionalMessage = "Тип параметра конструктора ViewModel (и аргументы его дженериков) — из " +
                     "разрешённого списка: domain фич (*Repository, *UseCase, доменные сервисы и модели), " +
                     "presentation (аргументы маршрута, порты presentation/platform), core: AppDispatchers " +
-                    "(до переноса main-safety в репозитории), AppRestarter, AppVersionProvider, " +
+                    "(до переноса main-safety в репозитории), AppVersionProvider, " +
                     "AppForegroundProvider, PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore; Kotlin: " +
                     "примитивы, коллекции, " +
                     "TimeSource; Clock, TimeZoneSource; Logger. " +
@@ -1011,7 +1011,6 @@ private fun KoFileDeclaration.qualifiedTypeName(reference: String): String {
 // Зависимости ViewModel вне domain/presentation фич: инфраструктура, которую VM получает из DI напрямую.
 private val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.common.AppDispatchers",
-    "$ROOT.core.common.AppRestarter",
     "$ROOT.core.common.AppVersionProvider",
     "$ROOT.core.lifecycle.AppForegroundProvider",
     "$ROOT.core.permissions.PermissionsProvider",

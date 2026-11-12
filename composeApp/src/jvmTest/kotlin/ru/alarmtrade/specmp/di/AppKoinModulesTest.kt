@@ -7,7 +7,6 @@ import org.koin.dsl.module
 import org.koin.test.verify.ParameterTypeInjection
 import org.koin.test.verify.definition
 import org.koin.test.verify.verify
-import ru.alarmtrade.specmp.core.common.AppRestarter
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveViewModel
@@ -24,8 +23,8 @@ class AppKoinModulesTest {
     @Test
     fun `every constructor dependency of the app graph is defined`() {
         module { includes(appKoinModules(appVersionName = "1.0", appVersionCode = 1)) }.verify(
-            // AppRestarter — из платформенного модуля; Settings, Set транспортов, Pair сервисов — значения в лямбдах.
-            extraTypes = listOf(AppRestarter::class, Settings::class, Set::class, Pair::class),
+            // Settings, Set транспортов, Pair сервисов — значения в лямбдах.
+            extraTypes = listOf(Settings::class, Set::class, Pair::class),
             // Параметры ViewModel из parametersOf экрана.
             injections = listOf(
                 definition<SupportChatScreenViewModel>(

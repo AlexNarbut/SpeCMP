@@ -14,7 +14,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ru.alarmtrade.specmp.core.common.AppRestarter
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguage
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.Response
@@ -43,15 +42,10 @@ class AppSettingsViewModelTest {
             return saveResponse
         }
     }
-    private var restarts = 0
 
     // Экран подписан на state — с этого стартует чтение языка конфигураций (onStart).
-    private fun TestScope.viewModel(restartSupported: Boolean = true) = AppSettingsViewModel(
+    private fun TestScope.viewModel() = AppSettingsViewModel(
         store,
-        AppRestarter {
-            restarts++
-            restartSupported
-        },
         configurationLanguages,
         testDispatchers(dispatcher),
     ).also { vm -> backgroundScope.launch { vm.state.collect {} } }
@@ -73,24 +67,12 @@ class AppSettingsViewModelTest {
     }
 
     @Test
-    fun `confirmed change saves the language and restarts the app`() = runTest(dispatcher) {
+    fun `confirmed change saves the language and asks the user to restart`() = runTest(dispatcher) {
         val vm = viewModel()
 
         vm.onLocaleSelect(AppLocale.Russian)
         vm.onApply()
         assertEquals(AppSettingsDialog.CONFIRM, vm.state.value.dialog)
-        vm.onConfirm()
-
-        assertEquals(AppLocale.Russian, store.saved)
-        assertEquals(1, restarts)
-    }
-
-    @Test
-    fun `without a platform restart the user is asked to restart manually`() = runTest(dispatcher) {
-        val vm = viewModel(restartSupported = false)
-
-        vm.onLocaleSelect(AppLocale.Russian)
-        vm.onApply()
         vm.onConfirm()
 
         assertEquals(AppLocale.Russian, store.saved)
@@ -107,7 +89,6 @@ class AppSettingsViewModelTest {
         vm.onDialogDismiss()
 
         assertEquals(AppLocale.English, store.saved)
-        assertEquals(0, restarts)
     }
 
     @Test
@@ -119,7 +100,6 @@ class AppSettingsViewModelTest {
 
         assertEquals(ConfigurationLanguage.EN, configurationLanguages.saved)
         assertEquals(ConfigurationLanguage.EN, vm.state.value.configurationLanguage)
-        assertEquals(0, restarts)
     }
 
     @Test

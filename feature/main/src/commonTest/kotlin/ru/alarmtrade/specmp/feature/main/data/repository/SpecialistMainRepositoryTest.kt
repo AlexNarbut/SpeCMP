@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertSame
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
@@ -24,6 +25,7 @@ import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppVersion
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
+import ru.alarmtrade.specmp.core.network.monitor.NetworkMonitor
 import ru.alarmtrade.specmp.feature.account.domain.model.AccountProfile
 import ru.alarmtrade.specmp.feature.main.domain.model.MainAppUpdateCheckResult
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
@@ -33,6 +35,10 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
 
 class SpecialistMainRepositoryTest {
     private val dataSource = FakeMainDataSource()
+    private val userCache = FakeMainUserCache()
+    private val networkMonitor = object : NetworkMonitor {
+        override val isAvailable = MutableStateFlow(true)
+    }
     private val accountRepository = FakeAccountRepository(
         Response.Success(AccountProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
     )
@@ -40,6 +46,8 @@ class SpecialistMainRepositoryTest {
         dataSource = dataSource,
         accountRepository = accountRepository,
         appVersionProvider = { AppVersion(name = "1.4.0", code = APP_VERSION_CODE) },
+        userCache = userCache,
+        networkMonitor = networkMonitor,
     )
 
     @Test
@@ -52,6 +60,22 @@ class SpecialistMainRepositoryTest {
         val failure = IllegalStateException("no profile")
         accountRepository.profile = Response.Error(failure)
         assertSame(failure, assertIs<Response.Error>(repository.currentUserProfile()).exception)
+    }
+
+    @Test
+    fun `successful user data is cached and a failure keeps the cache`() = runTest {
+        repository.currentUserProfile()
+        assertEquals(
+            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
+            repository.cachedUserProfile(),
+        )
+
+        accountRepository.profile = Response.Error(IllegalStateException("offline"))
+        repository.currentUserProfile()
+        assertEquals(
+            Response.Success(MainUserProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
+            repository.cachedUserProfile(),
+        )
     }
 
     @Test
@@ -73,6 +97,15 @@ class SpecialistMainRepositoryTest {
         dataSource.settingsVersion = SpecialistResponse.Error.Network(NetworkIsNotAvailableException())
 
         val result = assertIs<Response.Error>(repository.currentSettingsVersion())
+
+        assertEquals(ApiError.NoConnection, result.exception.appError)
+    }
+
+    @Test
+    fun `synchronization offline is an error, not no-updates`() = runTest {
+        networkMonitor.isAvailable.value = false
+
+        val result = assertIs<Response.Error>(repository.synchronizeSettingsVersion().toList().single())
 
         assertEquals(ApiError.NoConnection, result.exception.appError)
     }

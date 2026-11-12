@@ -51,6 +51,7 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSe
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectMode
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.navigation.VehicleSelectRequest
 import ru.alarmtrade.specmp.filepicker.rememberAppFirmwareFilePicker
+import ru.alarmtrade.specmp.filepicker.rememberSettingsFileSaver
 import ru.alarmtrade.specmp.filepicker.rememberSupportChatFileOpener
 
 private enum class FastMountExit { BACK, CHOOSE_ANOTHER, ADVANCED_MOUNT }
@@ -128,6 +129,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
                         ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
                     },
+                    fileSaver = rememberSettingsFileSaver(),
                     purpose = ConfigurationPickPurpose.FAST_MOUNT,
                     cloudCar = ConfigurationPickCar(request.car.id, request.car.title),
                 )

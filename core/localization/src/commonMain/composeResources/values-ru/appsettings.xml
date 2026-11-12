@@ -5,7 +5,7 @@
     <string name="appsettings_main_label_language">Язык</string>
     <string name="appsettings_main_btn_apply">Применить</string>
     <string name="appsettings_main_title_confirm">Сменить язык?</string>
-    <string name="appsettings_main_msg_confirm">Приложение перезапустится, чтобы применить новый язык.</string>
+    <string name="appsettings_main_msg_confirm">Новый язык применится после перезапуска приложения.</string>
     <string name="appsettings_main_btn_change">Сменить</string>
     <string name="appsettings_main_btn_cancel">Отмена</string>
     <string name="appsettings_main_title_restart">Перезапустите приложение</string>

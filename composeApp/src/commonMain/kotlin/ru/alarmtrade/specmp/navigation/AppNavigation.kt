@@ -337,6 +337,7 @@ private fun DeviceSettingsEditor(
                 editor = { source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit ->
                     ConfiguratorEditor(source, fileSaver, onOpenConfiguration, onWriteToDevice, onEditorExit)
                 },
+                fileSaver = rememberSettingsFileSaver(),
             )
         },
         filePicker = rememberSettingsFilePicker(),

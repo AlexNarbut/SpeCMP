@@ -15,12 +15,15 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.AppVersionProvider
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
-import ru.alarmtrade.specmp.core.ui.lce.mapContent
+import ru.alarmtrade.specmp.core.ui.lce.refreshedWith
+import ru.alarmtrade.specmp.core.ui.lce.refreshing
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.authstate.domain.usecase.LogoutUseCase
 import ru.alarmtrade.specmp.feature.main.domain.model.MainDatabaseSyncStatus
+import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
 import ru.alarmtrade.specmp.feature.main.domain.repository.MainRepository
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainError
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainHomeAction
@@ -48,18 +51,19 @@ class MainScreenViewModel(
             .onStart { emit(LCEState.None) }
             .collectIntoState { chatAvailability -> copy(chatAvailabilityState = chatAvailability).withActions() }
         safeLaunch { repeatOnSubscription { resetLogoutTransientState() } }
+        applyCachedUserData()
         initialRefresh()
     }
 
     fun onMenuClicked() {
         if (currentState.isInitialLoading) return
 
-        val profile = currentState.profileState
-        if (profile !is LCEState.Content && profile !is LCEState.Loading) {
-            intent { loadUserProfile() }
-        }
-
+        if (!currentState.isMenuOpen) refreshUserData()
         reduce { copy(isMenuOpen = !isMenuOpen) }
+    }
+
+    fun onUserDataRefreshClicked() {
+        refreshUserData()
     }
 
     fun onMenuDismissed() {
@@ -118,13 +122,7 @@ class MainScreenViewModel(
         safeLaunch { refreshDatabaseVersion() }
         safeLaunch { checkAppUpdate() }
         try {
-            coroutineScope {
-                awaitAll(
-                    async { loadUserProfile() },
-                    async { loadUserAppFeatures() },
-                    async { loadUserCommercial() },
-                )
-            }
+            loadUserData()
             logger.d { "Initial home data refresh completed" }
         } finally {
             // Сбой (необработанное исключение логирует база) скелетон тоже убирает.
@@ -132,30 +130,55 @@ class MainScreenViewModel(
         }
     }
 
-    private suspend fun loadUserProfile() {
-        reduce { copy(profileState = LCEState.Loading) }
-
-        val response = loadWithTimeout { mainRepository.currentUserProfile() }
+    private suspend fun applyCachedUserData() {
+        val profile = withContext(dispatchers.io) { mainRepository.cachedUserProfile().getValueIfSuccess() }
+        val features = withContext(dispatchers.io) { mainRepository.cachedUserAppFeatures().getValueIfSuccess() }
+        val commercial = withContext(dispatchers.io) { mainRepository.cachedUserCommercial().getValueIfSuccess() }
         reduce {
             copy(
-                profileState = response.asLCEState(MainError::from)
-                    .mapContent { profile -> MainProfile(name = profile.name, email = profile.email) },
-            )
+                isInitialLoading = profile == null,
+                profileState = profile?.let { LCEState.Content(it.toMainProfile()) } ?: profileState,
+                appFeaturesState = features?.let { LCEState.Content(it) } ?: appFeaturesState,
+                userCommercialState = commercial?.let { LCEState.Content(it) } ?: userCommercialState,
+            ).withActions()
         }
     }
 
+    private fun refreshUserData() {
+        if (currentState.isUserDataRefreshing) return
+
+        intent { loadUserData() }
+    }
+
+    private suspend fun loadUserData() = coroutineScope {
+        awaitAll(
+            async { loadUserProfile() },
+            async { loadUserAppFeatures() },
+            async { loadUserCommercial() },
+        )
+    }
+
+    private suspend fun loadUserProfile() {
+        reduce { copy(profileState = profileState.refreshing()) }
+
+        val response = loadWithTimeout { mainRepository.currentUserProfile() }.map { it.toMainProfile() }
+        reduce { copy(profileState = profileState.refreshedWith(response, MainError::from)) }
+    }
+
     private suspend fun loadUserAppFeatures() {
-        reduce { copy(appFeaturesState = LCEState.Loading).withActions() }
+        reduce { copy(appFeaturesState = appFeaturesState.refreshing()).withActions() }
 
         val response = loadWithTimeout { mainRepository.currentUserAppFeatures() }
-        reduce { copy(appFeaturesState = response.asLCEState(MainError::from)).withActions() }
+        reduce { copy(appFeaturesState = appFeaturesState.refreshedWith(response, MainError::from)).withActions() }
     }
 
     private suspend fun loadUserCommercial() {
-        reduce { copy(userCommercialState = LCEState.Loading).withActions() }
+        reduce { copy(userCommercialState = userCommercialState.refreshing()).withActions() }
 
         val response = loadWithTimeout { mainRepository.currentUserCommercial() }
-        reduce { copy(userCommercialState = response.asLCEState(MainError::from)).withActions() }
+        reduce {
+            copy(userCommercialState = userCommercialState.refreshedWith(response, MainError::from)).withActions()
+        }
     }
 
     private suspend fun refreshDatabaseVersion() {
@@ -194,6 +217,8 @@ class MainScreenViewModel(
     private fun resetLogoutTransientState() {
         reduce { if (logoutState is LCEState.Error) copy(logoutState = LCEState.None) else this }
     }
+
+    private fun MainUserProfile.toMainProfile() = MainProfile(name = name, email = email)
 
     private suspend fun <T> loadWithTimeout(block: suspend () -> Response<T>): Response<T> =
         withContext(dispatchers.io) {

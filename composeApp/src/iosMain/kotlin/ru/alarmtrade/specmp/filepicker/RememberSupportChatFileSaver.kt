@@ -17,7 +17,9 @@ import platform.Foundation.writeToURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
+import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIViewController
+import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
@@ -96,9 +98,14 @@ private suspend fun presentExportPicker(fileUrl: NSURL): SupportChatFileSaveResu
     }
 
 internal fun topViewController(): UIViewController? {
-    val scene = UIApplication.sharedApplication.connectedScenes.firstOrNull() as? UIWindowScene
-    var controller = scene?.keyWindow?.rootViewController
-    while (controller?.presentedViewController != null) {
+    val scenes = UIApplication.sharedApplication.connectedScenes.filterIsInstance<UIWindowScene>()
+    val scene =
+        scenes.firstOrNull { it.activationState == UISceneActivationStateForegroundActive } ?: scenes.firstOrNull()
+    var controller = scene?.keyWindow?.rootViewController ?: scene?.windows?.firstOrNull()?.let {
+        (it as? UIWindow)?.rootViewController
+    }
+    // Закрывающийся контроллер новую презентацию не примет — показываем поверх того, что останется.
+    while (controller?.presentedViewController?.isBeingDismissed() == false) {
         controller = controller.presentedViewController
     }
     return controller
