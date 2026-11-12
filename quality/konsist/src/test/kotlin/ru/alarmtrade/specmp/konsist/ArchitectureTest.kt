@@ -321,6 +321,23 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `domain model classes carry no UI text`() {
+        val types = libraryFiles.filter { ".domain.model." in ".${it.packagee?.name}." }
+            .flatMap { it.classes(includeNested = true) }
+        val message = "Поле модели domain/model — данные, не UI-текст: без display*/formatted* и строковых *Text; " +
+            "подпись собирает presentation из stringResource. Текст, который присылает SDK, — @Suppress с причиной. " +
+            "docs/patterns.md, «Domain»"
+        types.flatMap { it.primaryConstructor?.parameters.orEmpty() }
+            .assertFalse(testName = "domain-model-ui-text", additionalMessage = message) {
+                isUiTextField(it.name, it.type.text)
+            }
+        types.flatMap { it.properties(includeNested = false) }
+            .assertFalse(testName = "domain-model-ui-text", additionalMessage = message) {
+                isUiTextField(it.name, it.type?.text.orEmpty())
+            }
+    }
+
+    @Test
     fun `Serializable is used only for transport, storage formats and routes`() {
         val serializable = scope.classesAndInterfacesAndObjects(includeNested = true)
             .filter { it.hasAnnotationWithName("Serializable") }
@@ -908,6 +925,12 @@ private val COMPOSITION_ROOTS = setOf("composeApp", "flasherApp")
 
 private val CONTRACT_FILE = Regex("""\w+(State|Effect)""")
 private val RAW_ERROR_TYPE = Regex("""\b(Throwable|\w*Exception|Response)\b""")
+
+private val UI_TEXT_PREFIX = Regex("""^(display|formatted)[A-Z]""")
+private val STRING_TYPE = Regex("""^String\??$""")
+
+private fun isUiTextField(name: String, type: String): Boolean =
+    UI_TEXT_PREFIX.containsMatchIn(name) || (name.endsWith("Text") && STRING_TYPE.matches(type.trim()))
 
 // SDK AlarmTrade — всё под ru.alarmtrade.*, кроме пакетов самого приложения.
 private fun String.isSdkName(): Boolean = startsWith("ru.alarmtrade.") && !startsWith("$ROOT.") && this != ROOT
