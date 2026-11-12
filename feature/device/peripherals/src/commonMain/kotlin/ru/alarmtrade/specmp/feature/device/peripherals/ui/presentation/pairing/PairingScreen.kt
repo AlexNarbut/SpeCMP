@@ -337,7 +337,7 @@ private fun Failure(phase: PairingPhase, onRetry: () -> Unit, modifier: Modifier
 private class SlotGroup(val type: PeripheralType, val slots: List<DynamicPeripheral>)
 
 private fun PairingState.groups(): List<SlotGroup> =
-    slots.groupBy { it.type }.toSortedMap(compareBy { it.ordinal }).map { (type, list) -> SlotGroup(type, list) }
+    slots.groupBy { it.type }.entries.sortedBy { it.key.ordinal }.map { (type, list) -> SlotGroup(type, list) }
 
 @Composable
 private fun SlotList(state: PairingState, actions: PairingActions, wide: Boolean, modifier: Modifier, maxWidth: Dp) {
