@@ -43,6 +43,15 @@ class MountSectionTest {
     }
 
     @Test
+    fun `system devices are shown only over bluetooth, pairing follows the feature`() {
+        val features = setOf(DeviceFeature.DYNAMIC_DEVICES)
+        assertEquals(true, MountSection.SYSTEM_DEVICES in emptySet<DeviceFeature>().toSections(bluetooth = true))
+        assertEquals(false, MountSection.SYSTEM_DEVICES in features.toSections(bluetooth = false))
+        assertEquals(true, MountSection.DYNAMIC_DEVICES in features.toSections(bluetooth = false))
+        assertEquals(false, MountSection.DYNAMIC_DEVICES in emptySet<DeviceFeature>().toSections(bluetooth = true))
+    }
+
+    @Test
     fun `unread features give the unsupported fallback`() {
         assertEquals(
             listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),

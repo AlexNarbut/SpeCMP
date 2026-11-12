@@ -39,6 +39,7 @@ core/localization/src/commonMain/composeResources/
 | `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui`, `feature/device/presentation-core` |
 | `autostart` | `feature/device/autostart` (бесключевой обход, процедура Clone) |
 | `devicestate` | `feature/device/state` (проверка состояния) |
+| `peripherals` | `feature/device/peripherals` (устройства системы, приживление устройств) |
 | `fastmount` | `feature/fast-mount` (мастер быстрого монтажа) |
 
 Префикс — **одно слово без `_`** (иначе его не отличить от экрана). Новая фича — новая строка таблицы и новый файл

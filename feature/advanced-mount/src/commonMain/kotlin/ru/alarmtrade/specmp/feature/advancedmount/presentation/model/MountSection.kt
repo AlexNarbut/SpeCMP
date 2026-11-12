@@ -16,6 +16,9 @@ enum class MountSection(val needsCan: Boolean = false) {
     CONFIGURATOR,
     BYPASS_LEARNING(needsCan = true),
     CLONE(needsCan = true),
+
+    /** Периферия по типам — только по Bluetooth (SDK читает её только по BLE). */
+    SYSTEM_DEVICES,
     DYNAMIC_DEVICES(needsCan = true),
 
     TECH_REQUESTS,
@@ -49,7 +52,7 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
 
             MountSection.VOICE_FIRMWARE -> DeviceFeature.VOICE_FIRMWARE in this
 
-            MountSection.CHECK_STATE -> bluetooth
+            MountSection.CHECK_STATE, MountSection.SYSTEM_DEVICES -> bluetooth
 
             MountSection.SUPPORT_CHAT,
             MountSection.VEHICLES,

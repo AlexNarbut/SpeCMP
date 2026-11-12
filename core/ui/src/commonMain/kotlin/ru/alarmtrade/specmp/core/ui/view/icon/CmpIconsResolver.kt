@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.ArrowCircleUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AttachFile
@@ -60,6 +61,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Flare
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.GppGood
@@ -142,6 +144,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.runtime.Composable
@@ -295,4 +298,7 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.RestartAlt -> Icons.Filled.RestartAlt
     CmpIcons.CloudDone -> Icons.Filled.CloudDone
     CmpIcons.CloudSync -> Icons.Filled.CloudSync
+    CmpIcons.AddLink -> Icons.Filled.AddLink
+    CmpIcons.Flare -> Icons.Filled.Flare
+    CmpIcons.Watch -> Icons.Filled.Watch
 }

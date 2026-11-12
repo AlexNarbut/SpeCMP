@@ -6,6 +6,10 @@ import androidx.compose.ui.graphics.Color
 /** Цвета дизайн-системы, которых нет в Material-схеме; шины — цвет по семейству, номер шины — текстом. */
 data class CmpDomainColors(
     val success: Color,
+    /** Предупреждение (в Material-схеме роли нет): «вне зоны», слабый сигнал, «не на связи» у слота. */
+    val warning: Color,
+    val warningContainer: Color,
+    val onWarningContainer: Color,
     val rating: Color,
     val busCan: Color,
     val busCanFd: Color,
@@ -17,6 +21,9 @@ data class CmpDomainColors(
 
 private val LightDomainColors = CmpDomainColors(
     success = Color(0xFF79BD5B),
+    warning = Color(0xFF8A5300),
+    warningContainer = Color(0xFFFBE4C4),
+    onWarningContainer = Color(0xFF2E1A00),
     rating = Color(0xFFE0A100),
     busCan = Color(0xFF1F5FBF),
     busCanFd = Color(0xFF00838F),
@@ -28,6 +35,9 @@ private val LightDomainColors = CmpDomainColors(
 
 private val DarkDomainColors = CmpDomainColors(
     success = Color(0xFF79BD5B),
+    warning = Color(0xFFF2B455),
+    warningContainer = Color(0xFF4A3410),
+    onWarningContainer = Color(0xFFFFE2B8),
     rating = Color(0xFFF2C14E),
     busCan = Color(0xFF6FA8F5),
     busCanFd = Color(0xFF4DD0E1),

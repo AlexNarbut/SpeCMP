@@ -51,6 +51,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.title
 import ru.alarmtrade.specmp.feature.device.interaction.ui.presentation.host.DeviceInteractionHost
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.PairingEntry
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.SystemDevicesEntry
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaver
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionNavGraph
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.navigation.DeviceSelectionRoute
@@ -177,8 +179,12 @@ private fun AuthedNavGraph() {
                 )
             }
             entry<AdvancedMountRoute> { _ ->
+                // «Обновить» периферию: устройство уходит в режим прошивки — сессия закрывается, открывается поиск.
+                var reopenSearch by rememberSaveable { mutableStateOf(false) }
                 DeviceInteractionHost(
-                    onExit = { backStack.popSafe() },
+                    onExit = {
+                        if (reopenSearch) backStack.replaceCurrent(DeviceSelectionRoute) else backStack.popSafe()
+                    },
                     bootContent = { onExit ->
                         FirmwareBootGraph(
                             onExit = onExit,
@@ -221,6 +227,19 @@ private fun AuthedNavGraph() {
                             CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
                         },
                         checkState = { onBack -> CheckStateEntry(onBack = onBack) },
+                        systemDevices = { onBack, onOpenPairing ->
+                            SystemDevicesEntry(
+                                onBack = onBack,
+                                onOpenPairing = onOpenPairing,
+                                onOpenDeviceSearch = {
+                                    reopenSearch = true
+                                    onExit()
+                                },
+                            )
+                        },
+                        dynamicDevices = { onBack, onOpenSystemDevices ->
+                            PairingEntry(onBack = onBack, onOpenSystemDevices = onOpenSystemDevices)
+                        },
                         vehicles = { onBack -> DeviceVehicles(device, onBack) },
                     )
                 }
