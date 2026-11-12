@@ -20,8 +20,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
@@ -41,24 +47,29 @@ fun AuthBody(
     error: String? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    // Плашка ошибки висит над формой внизу экрана: область формы уменьшается на её высоту, чтобы кнопку
+    // можно было прокрутить выше плашки, а не прятать под ней.
+    val density = LocalDensity.current
+    var bannerHeight by remember { mutableStateOf(0.dp) }
+    val formInset = Modifier.padding(bottom = if (error != null) bannerHeight + ErrorBannerGap else 0.dp)
     CmpBox(modifier = modifier.fillMaxSize()) {
         when (layoutMode) {
             AuthLayoutMode.Compact -> AuthCompactBody(
-                modifier = Modifier,
+                modifier = formInset,
                 colors = colors,
                 showBrand = showCompactBrand,
                 content = content,
             )
 
             AuthLayoutMode.Medium -> AuthMediumBody(
-                modifier = Modifier,
+                modifier = formInset,
                 colors = colors,
                 showBrand = showCompactBrand,
                 content = content,
             )
 
             AuthLayoutMode.Expanded -> AuthExpandedBody(
-                modifier = Modifier,
+                modifier = formInset,
                 colors = colors,
                 showBrandRail = showExpandedBrandRail,
                 content = content,
@@ -69,6 +80,7 @@ fun AuthBody(
             error = error,
             colors = colors,
             modifier = Modifier.align(Alignment.BottomCenter),
+            onBannerHeight = { bannerHeight = with(density) { it.toDp() } },
         )
     }
 }
@@ -78,15 +90,21 @@ fun AuthBody(
  * и баннер внутри неё сдвигал бы поля и кнопку.
  */
 @Composable
-private fun AuthErrorOverlay(error: String?, colors: CmpThemeColors, modifier: Modifier = Modifier) {
+private fun AuthErrorOverlay(
+    error: String?,
+    colors: CmpThemeColors,
+    onBannerHeight: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     // AnimatedContent держит прежний текст, пока баннер уезжает.
     AnimatedContent(
         targetState = error,
         modifier = modifier
             .imePadding()
             .navigationBarsPadding()
-            .padding(24.dp)
-            .widthIn(max = 460.dp),
+            .padding(ErrorBannerGap)
+            .widthIn(max = 460.dp)
+            .onSizeChanged { onBannerHeight(it.height) },
         transitionSpec = {
             (fadeIn() + slideInVertically { it / 2 }) togetherWith (fadeOut() + slideOutVertically { it / 2 })
         },
@@ -224,3 +242,4 @@ private fun AuthFormCard(
 }
 
 private val AuthCardPadding = PaddingValues(28.dp)
+private val ErrorBannerGap = 24.dp

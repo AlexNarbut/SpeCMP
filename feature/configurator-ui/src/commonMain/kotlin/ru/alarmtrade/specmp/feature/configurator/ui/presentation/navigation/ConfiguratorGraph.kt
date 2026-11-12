@@ -348,6 +348,7 @@ private fun mineActions(
         onDeleteRequest = viewModel::onDeleteRequest,
         onDeleteConfirm = viewModel::onDeleteConfirm,
         onDialogDismiss = viewModel::onDialogDismiss,
+        onListWidthChange = viewModel::onListWidthChange,
     )
 }
 
@@ -387,6 +388,7 @@ private fun CloudListEntry(key: CloudListRoute, backStack: NavBackStack<NavKey>,
         onRetry = viewModel::onRetry,
         onOpen = { item -> backStack.navigateSafe(CloudCardRoute(item.id, item.name)) },
         onSelect = viewModel::onSelect,
+        onListWidthChange = viewModel::onListWidthChange,
         snackbarHostState = snackbarHostState,
     ) { id ->
         val (cardState, actions) = cloudCard(id, backStack, mode, snackbarHostState)

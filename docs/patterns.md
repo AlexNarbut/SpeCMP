@@ -541,7 +541,7 @@ data class MainUserAppFeatures(
   `repository-contract` — интерфейсы `*Repository` и всё в `domain/repository`,
   detekt `RawFlowFromRepository` — публичные потоки реализаций): one-shot операции — `suspend fun ...(): Response<T>`;
   процессы со стадиями и периодические источники — `fun ...(): Flow<Response<T>>` (не suspend); других членов нет.
-  Синхронный снимок (начальный state VM) — `StateFlow<Response<T>>.value` (`DeviceSettingsPreferences.treeWidthDp`);
+  Синхронный снимок (начальный state VM) — `StateFlow<Response<T>>.value` (`PaneWidthStore.widthsDp`);
   сигнал «изменилось» — тоже `Flow<Response<Unit>>`. Константа платформы или сборки — не член репозитория: значение
   из DI (`supportedDeviceTransports()` в фабрике VM, `AppVersionProvider`). Синхронная команда «в фоне приложения»,
   которую зовут из `onCleared`/`finally`, — доменный сервис (`domain/service`, `DeviceSettingsSessionController`),
@@ -918,7 +918,7 @@ internal class AppSettingsViewModel(
 Параметры конструктора VM (и аргументы их дженериков) — только из разрешающего списка (Konsist
 `view-model-dependencies`): domain фич (`*Repository`, `*UseCase`, доменные сервисы и модели), presentation
 (аргументы маршрута, порты `presentation/platform`), `core`: `AppDispatchers` (диспетчер выбирает VM, «Диспетчеры»),
-`AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`,
+`AppForegroundProvider`, `PermissionsProvider`, `AppLocaleStore`, `ConfigurationLanguageStore`, `PaneWidthStore`,
 `Clock`/`TimeZoneSource` («Источник времени»); Kotlin: примитивы, коллекции, `TimeSource`; `Logger`. Нельзя: data,
 типы SDK, `Flow`, `CoroutineScope`, функциональные типы. Новый тип в списке — правкой `ArchitectureTest` вместе с этим разделом.
 

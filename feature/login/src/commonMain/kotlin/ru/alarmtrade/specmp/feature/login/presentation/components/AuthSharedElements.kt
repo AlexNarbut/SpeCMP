@@ -43,11 +43,17 @@ fun AuthSubmitButton(
         enabled = enabled && !isLoading,
     ) {
         if (isLoading) {
-            CmpCircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                strokeWidth = 3.dp,
-                color = colors.onPrimary,
-            )
+            CmpRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CmpCircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.5.dp,
+                    color = colors.onPrimary,
+                )
+                CmpText(text = text)
+            }
         } else {
             CmpText(text = text)
         }

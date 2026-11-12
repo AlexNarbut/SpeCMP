@@ -49,7 +49,11 @@ class MainScreenViewModel(
             .map { response -> response.asLCEState(MainError::from) }
             .flowOn(dispatchers.io)
             .onStart { emit(LCEState.None) }
-            .collectIntoState { chatAvailability -> copy(chatAvailabilityState = chatAvailability).withActions() }
+            .collectIntoState { chatAvailability ->
+                // Ошибка опроса (нет сети) не меняет известный ответ сервера.
+                val keepKnown = chatAvailability is LCEState.Error && chatAvailabilityState is LCEState.Content
+                copy(chatAvailabilityState = if (keepKnown) chatAvailabilityState else chatAvailability).withActions()
+            }
         safeLaunch { repeatOnSubscription { resetLogoutTransientState() } }
         applyCachedUserData()
         initialRefresh()

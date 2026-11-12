@@ -15,7 +15,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
@@ -27,7 +26,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.testing.FakePaneWidthStore
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -63,7 +62,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SwitchSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.findNode
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
-import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
@@ -125,7 +123,7 @@ class DeviceSettingsViewModelTest {
 
     private val repository = FakeSettingsRepository(tree)
     private val sessionRepository = FakeDeviceSessionRepository(device)
-    private val preferences = FakePreferences()
+    private val paneWidths = FakePaneWidthStore()
     private val singleCanDevice = device.copy(can = CanInfo(firmwareVersion = "1.0", code = "2154", isFactory = false))
     private val cars = FakeCars()
     private val local = FakeLocalConfigurationsRepository()
@@ -157,7 +155,7 @@ class DeviceSettingsViewModelTest {
             repository,
             repository,
             local,
-            preferences,
+            paneWidths,
             cars,
             session,
             dispatchers,
@@ -475,14 +473,14 @@ class DeviceSettingsViewModelTest {
 
     @Test
     fun `tree width is restored from preferences and saved after resize`() = test {
-        preferences.width = 300
+        paneWidths.setWidthDp("settings.tree", 300)
         val vm = viewModel()
         assertEquals(300, vm.state.value.treeWidthDp)
 
         vm.onTreeWidthChange(360)
 
         assertEquals(360, vm.state.value.treeWidthDp)
-        assertEquals(360, preferences.width)
+        assertEquals(360, paneWidths.widthDp("settings.tree"))
     }
 
     @Test
@@ -941,20 +939,6 @@ private class FakeSettingsRepository(private val initial: SettingsSection) :
         resetCalls++
         if (resetResult is Response.Success) reset()
         return resetResult
-    }
-}
-
-private class FakePreferences : DeviceSettingsPreferences {
-    override val treeWidthDp = MutableStateFlow<Response<Int?>>(Response.Success(null))
-    var width: Int?
-        get() = treeWidthDp.value.getValueIfSuccess()
-        set(value) {
-            treeWidthDp.value = Response.Success(value)
-        }
-
-    override suspend fun setTreeWidthDp(width: Int): Response<Unit> {
-        this.width = width
-        return Response.Success(Unit)
     }
 }
 

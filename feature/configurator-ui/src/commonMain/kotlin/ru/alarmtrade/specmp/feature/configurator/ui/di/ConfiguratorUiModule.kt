@@ -16,6 +16,7 @@ val configuratorUiModule = module {
             settings = get(),
             sessions = get(),
             deviceSession = get(),
+            paneWidths = get(),
             dispatchers = get(),
         )
     }
@@ -23,7 +24,13 @@ val configuratorUiModule = module {
         ModelsViewModel(file = file, models = get(), settings = get(), deviceSession = get(), dispatchers = get())
     }
     viewModel { (carId: Int, deviceName: String) ->
-        CloudListViewModel(carId = carId, deviceName = deviceName, cloud = get(), dispatchers = get())
+        CloudListViewModel(
+            carId = carId,
+            deviceName = deviceName,
+            cloud = get(),
+            paneWidths = get(),
+            dispatchers = get(),
+        )
     }
     viewModel { (id: Int, firmwareCanCode: String?) ->
         CloudCardViewModel(

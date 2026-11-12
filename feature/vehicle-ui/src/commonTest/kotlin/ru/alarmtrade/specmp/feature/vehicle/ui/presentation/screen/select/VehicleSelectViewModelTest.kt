@@ -24,6 +24,7 @@ import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.FakePaneWidthStore
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -78,6 +79,7 @@ class VehicleSelectViewModelTest {
             request = VehicleSelectRequest(mode, catalog, device, firmwareCanCode, warnOnCanMismatch),
             repository = repository,
             recentRepository = recent,
+            paneWidths = FakePaneWidthStore(),
             dispatchers = testDispatchers(dispatcher),
         ).also { viewModels += it }
         val effects = mutableListOf<VehicleSelectEffect>()

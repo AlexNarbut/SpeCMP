@@ -108,6 +108,7 @@ fun VehicleSelectEntry(
                 onFilterDismiss = viewModel::onFilterDismiss,
                 onFilterClear = viewModel::onFilterClear,
                 onPick = viewModel::onPick,
+                onPaneWidthChange = viewModel::onPaneWidthChange,
                 card = CardActions(
                     onTabSelect = viewModel::onTabSelect,
                     onPointOpen = viewModel::onPointOpen,

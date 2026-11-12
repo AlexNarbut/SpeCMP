@@ -105,6 +105,19 @@ class MainScreenViewModelTest {
     }
 
     @Test
+    fun `chat card is hidden only by an explicit server answer`() = runTest(dispatcher) {
+        repository.chatAvailability.value = Response.Error(IllegalStateException("offline"))
+        val vm = viewModel()
+        assertTrue(MainHomeAction.TechSupportChat in vm.state.value.visibleActions)
+
+        repository.chatAvailability.value = Response.Success(false)
+        assertFalse(MainHomeAction.TechSupportChat in vm.state.value.visibleActions)
+
+        repository.chatAvailability.value = Response.Error(IllegalStateException("offline"))
+        assertFalse(MainHomeAction.TechSupportChat in vm.state.value.visibleActions)
+    }
+
+    @Test
     fun `home action and settings navigate`() = runTest(dispatcher) {
         val vm = viewModel()
         val effects = mutableListOf<MainScreenEffect>()

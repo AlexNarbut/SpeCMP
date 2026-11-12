@@ -342,6 +342,7 @@ class VehicleSelectGallery {
             onFilterDismiss = {},
             onFilterClear = {},
             onPick = {},
+            onPaneWidthChange = { _, _ -> },
             card = noCard,
         )
     }

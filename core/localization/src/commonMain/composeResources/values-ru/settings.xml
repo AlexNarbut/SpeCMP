@@ -17,6 +17,8 @@
     <string name="settings_editor_hint_read">По Bluetooth это может занять до минуты</string>
     <string name="settings_editor_error_read_title">Не удалось прочитать настройки</string>
     <string name="settings_editor_error_read_text">Устройство не ответило на запрос. Проверьте связь и питание блока.</string>
+    <string name="settings_editor_msg_no_settings">Для этой модели нет настроек</string>
+    <string name="settings_editor_msg_no_settings_hint">В базе нет настроек этой модели блока. Обновите базу или выберите другую модель.</string>
     <string name="settings_editor_msg_empty_section">В разделе нет настроек</string>
     <string name="settings_editor_msg_empty_section_hint">Устройство не передало пунктов для этого раздела.</string>
     <string name="settings_editor_label_changed">Изменено: %1$d</string>

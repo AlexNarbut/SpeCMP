@@ -77,8 +77,9 @@ data class MainScreenState(
     val userCommercial: MainUserCommercial
         get() = userCommercialState.content ?: MainUserCommercial()
 
+    /** Плитку чата прячет только явный ответ сервера «недоступен»; пока ответа нет или нет сети — она видна. */
     val chatAvailability: Boolean
-        get() = chatAvailabilityState.content ?: false
+        get() = chatAvailabilityState.content ?: true
 
     val isAppUpdateChecking: Boolean
         get() = appUpdateState is LCEState.Loading

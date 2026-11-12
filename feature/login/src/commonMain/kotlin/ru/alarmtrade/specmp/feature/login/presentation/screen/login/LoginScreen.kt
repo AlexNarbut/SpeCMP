@@ -20,6 +20,7 @@ import ru.alarmtrade.specmp.core.localization.resources.login_login_btn_submit
 import ru.alarmtrade.specmp.core.localization.resources.login_login_link_forgot_password
 import ru.alarmtrade.specmp.core.localization.resources.login_login_link_signup
 import ru.alarmtrade.specmp.core.localization.resources.login_login_msg_no_account
+import ru.alarmtrade.specmp.core.localization.resources.login_login_subtitle_screen
 import ru.alarmtrade.specmp.core.localization.resources.login_login_title_screen
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
@@ -29,6 +30,7 @@ import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthLayoutMode
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthPasswordField
 import ru.alarmtrade.specmp.feature.login.presentation.components.AuthSubmitButton
@@ -62,12 +64,19 @@ fun LoginScreen(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        if (layoutMode == AuthLayoutMode.Expanded) {
+        CmpColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (layoutMode == AuthLayoutMode.Expanded) {
+                CmpText(
+                    text = stringResource(Strings.string.login_login_title_screen),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.onSurface,
+                )
+            }
             CmpText(
-                text = stringResource(Strings.string.login_login_title_screen),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.onSurface,
+                text = stringResource(Strings.string.login_login_subtitle_screen),
+                style = CmpTextStyle.Body,
+                color = colors.onSurfaceVariant,
             )
         }
 

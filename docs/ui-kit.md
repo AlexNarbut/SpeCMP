@@ -191,6 +191,8 @@ commonMain.dependencies {
 | Row | `layout/CmpRow.kt` |
 | Строка с переносом (FlowRow) | `layout/CmpFlowRow.kt` |
 | Spacer | `layout/CmpSpacer.kt` |
+| Перетаскиваемая граница панелей (ширина левой панели; сохранение — `PaneWidthStore` через VM) | `layout/PaneWidthState.kt` (`CmpResizeHandle`, `rememberPaneWidthState`) |
+| Постоянная полоса прокрутки `LazyColumn` (iOS своей не рисует) | `scroll/CmpScrollbar.kt` (`Modifier.cmpVerticalScrollbar`) |
 
 Галерея новых компонентов (PNG, светлая/тёмная тема, без окна): `./gradlew :core:ui:jvmTest --tests '*KitGallery*'` →
 `core/ui/build/kit-gallery/`. Добавляя компонент, дополняй `KitGalleryTest` и смотри результат глазами.

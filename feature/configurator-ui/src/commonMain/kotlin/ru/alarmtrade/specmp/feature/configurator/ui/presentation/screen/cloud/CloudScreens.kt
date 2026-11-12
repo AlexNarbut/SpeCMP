@@ -106,6 +106,7 @@ internal fun CloudListScreen(
     onRetry: () -> Unit,
     onOpen: (CloudConfigurationSummary) -> Unit,
     onSelect: (Int) -> Unit,
+    onListWidthChange: (Int) -> Unit,
     snackbarHostState: CmpSnackbarHostState,
     detail: @Composable (id: Int) -> Unit,
 ) {
@@ -128,7 +129,9 @@ internal fun CloudListScreen(
             snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
         ) { padding ->
             ListDetailPane(
-                wide,
+                wide = wide,
+                listWidthDp = state.listWidthDp,
+                onListWidthChange = onListWidthChange,
                 detail = { state.selectedId?.let { detail(it) } },
                 modifier = Modifier.padding(padding),
             ) {
