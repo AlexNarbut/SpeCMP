@@ -20,6 +20,7 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("ViewModelContractNames") to ::ViewModelContractNames,
             RuleName("ViewModelPublicApi") to ::ViewModelPublicApi,
             RuleName("ViewModelMutableProperty") to ::ViewModelMutableProperty,
+            RuleName("ReduceOutsideIntent") to ::ReduceOutsideIntent,
             RuleName("RepositoryWithContext") to ::RepositoryWithContext,
             RuleName("RedundantSafeRun") to ::RedundantSafeRun,
             RuleName("SettingsInstantiation") to ::SettingsInstantiation,

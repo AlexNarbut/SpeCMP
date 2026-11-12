@@ -28,8 +28,8 @@ internal class CloudListViewModel(
 ) {
 
     fun onListWidthChange(widthDp: Int) {
-        reduce { copy(listWidthDp = widthDp) }
         intent {
+            reduce { copy(listWidthDp = widthDp) }
             withContext(dispatchers.io) { paneWidths.setWidthDp(LIST_PANE_KEY, widthDp) }
                 .onError { logger.w(it) { "List width was not saved" } }
         }

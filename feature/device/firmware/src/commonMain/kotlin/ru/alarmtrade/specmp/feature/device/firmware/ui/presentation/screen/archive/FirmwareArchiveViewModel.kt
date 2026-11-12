@@ -172,10 +172,10 @@ class FirmwareArchiveViewModel(
     }
 
     fun onSavedOpenFolder() {
-        val saved = currentState.saved ?: return
-        reduce { copy(saved = null) }
-        val exporter = exporter ?: return
         intent {
+            val saved = currentState.saved ?: return@intent
+            reduce { copy(saved = null) }
+            val exporter = exporter ?: return@intent
             if (!exporter.openFolder(saved.path)) reduce { copy(exportError = ArchiveExportError.Save) }
         }
     }
@@ -190,11 +190,11 @@ class FirmwareArchiveViewModel(
 
     /** Одна загрузка за раз; ошибка скачивания — баннер. */
     private fun export(key: String, use: suspend (FirmwareVersion, ByteArray) -> Unit) {
-        if (!args.noUnit) return
-        val item = itemOf(key) ?: return
-        if (currentState.busy != null) return
-        reduce { copy(busy = key, exportError = null) }
         intent {
+            if (!args.noUnit) return@intent
+            val item = itemOf(key) ?: return@intent
+            if (currentState.busy != null) return@intent
+            reduce { copy(busy = key, exportError = null) }
             try {
                 when (val response = withContext(dispatchers.io) { repository.download(item.url) }) {
                     is Response.Success -> use(item, response.value)

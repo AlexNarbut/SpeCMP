@@ -103,11 +103,11 @@ internal class CloudCardViewModel(
     }
 
     fun onSaveSubmit() {
-        val card = currentState.card.content ?: return
-        val form = currentState.saveForm ?: return
-        if (form.name.isBlank()) return
-        reduce { copy(saveForm = null, busy = true) }
         intent {
+            val card = currentState.card.content ?: return@intent
+            val form = currentState.saveForm ?: return@intent
+            if (form.name.isBlank()) return@intent
+            reduce { copy(saveForm = null, busy = true) }
             val source = card.toSource()
             val response = try {
                 withContext(dispatchers.io) {

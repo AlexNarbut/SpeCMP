@@ -452,6 +452,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | ViewModel не держит своих `Mutable*Flow`/`Channel`/`mutableStateOf`: входы подписки — поля state + `select { }`, «Повторить» — `reload()`/`launchReplacing` | Konsist `view-model-owns-no-flows` | ✅ |
 | ViewModel — наследник `BaseViewModel<S, E>` (в т.ч. через `BaseDeviceViewModel`), имя `*ViewModel`, в фиче — в `presentation`; дженерики `…State`/`…Effect`\|`…SideEffect`\|`Nothing` | Konsist `view-model`, detekt `ViewModelContractNames` | ✅ |
 | Корутины VM — `intent`/`safeLaunch`/`launchReplacing`, не `viewModelScope.launch`/`launchIn`; без `init { }` (старт — `onStart()`); в файле VM — только VM | detekt `ViewModelScopeLaunch`, `ViewModelInitBlock`, `ViewModelFileContents` | ✅ |
+| В не-`suspend` функции VM с `intent`/`safeLaunch` — `reduce`/`postSideEffect` только внутри `intent`/`safeLaunch`/`launchReplacing`/`launchOnDevice` | detekt `ReduceOutsideIntent` | ✅ |
 | Зависимости VM — только из разрешающего списка (domain, presentation, `AppDispatchers`, порты `core`); без `CoroutineScope` и функциональных типов; нет `safeRun` во VM | Konsist `view-model-dependencies`, detekt `SafeRunInViewModel` | ✅ |
 | Конструктор ViewModel — не больше 12 параметров | Konsist `view-model-constructor` | ✅ |
 | Импорт `androidx.lifecycle.ViewModel` — только `core/ui` (база); `androidx.compose.material3.*` — только `core/ui` (компоненты `Cmp*`) | detekt `ForbiddenImport` | ✅ |

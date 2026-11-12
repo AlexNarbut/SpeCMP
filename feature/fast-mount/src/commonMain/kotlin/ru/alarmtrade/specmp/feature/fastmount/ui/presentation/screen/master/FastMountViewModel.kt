@@ -133,8 +133,8 @@ class FastMountViewModel(
     }
 
     private fun loadConfiguration(id: Int) {
-        reduce { copy(summary = SummaryLoad.Loading) }
         safeLaunch {
+            reduce { copy(summary = SummaryLoad.Loading) }
             when (val response = io { repository.configuration(id) }) {
                 is Response.Success -> applyConfiguration(response.value)
 

@@ -51,9 +51,9 @@ class FirmwareSystemsViewModel(
     }
 
     fun onOrderSelect(order: SystemsOrder) {
-        if (currentState.order == order) return
-        reduce { copy(order = order) }
         intent {
+            if (currentState.order == order) return@intent
+            reduce { copy(order = order) }
             withContext(dispatchers.io) { preferences.setSystemsOrder(order) }
                 .onError { logger.w(it) { "Systems order was not saved" } }
         }

@@ -79,10 +79,10 @@ class SerialFirmwareViewModel(
     }
 
     fun onConfirmUpdate() {
-        val confirm = currentState.phase as? SerialPhase.Confirm ?: return
-        // Фаза уходит из Confirm до запуска: двойное нажатие запустит обновление один раз.
-        reduce { copy(phase = SerialPhase.WaitingBoot) }
         intent {
+            val confirm = currentState.phase as? SerialPhase.Confirm ?: return@intent
+            // Фаза уходит из Confirm до первой приостановки: двойное нажатие запустит обновление один раз.
+            reduce { copy(phase = SerialPhase.WaitingBoot) }
             repository.update(confirm.fileName, confirm.path)
                 .flowOn(dispatchers.io)
                 .collect { step ->

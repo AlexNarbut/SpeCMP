@@ -25,6 +25,7 @@ class SpecmpRuleSetProviderTest {
                 "ViewModelContractNames",
                 "ViewModelPublicApi",
                 "ViewModelMutableProperty",
+                "ReduceOutsideIntent",
                 "RepositoryWithContext",
                 "RedundantSafeRun",
                 "SettingsInstantiation",

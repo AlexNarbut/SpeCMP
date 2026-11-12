@@ -40,21 +40,19 @@ class RegistrationScreenViewModel(private val repository: LoginRepository, priva
     }
 
     fun onSubmit() {
-        if (currentState.registrationState is LCEState.Loading) return
-        val credentials = currentState.toCredentials()
-
-        val fieldErrors = credentials.validationErrors()
-        if (fieldErrors.isNotEmpty()) {
-            reduce {
-                copy(
-                    fieldErrors = fieldErrors.mapTo(mutableSetOf()) { error -> error.toFieldError() },
-                    registrationState = registrationState.dismissError(),
-                )
-            }
-            return
-        }
-
         intent {
+            if (currentState.registrationState is LCEState.Loading) return@intent
+            val credentials = currentState.toCredentials()
+            val fieldErrors = credentials.validationErrors()
+            if (fieldErrors.isNotEmpty()) {
+                reduce {
+                    copy(
+                        fieldErrors = fieldErrors.mapTo(mutableSetOf()) { error -> error.toFieldError() },
+                        registrationState = registrationState.dismissError(),
+                    )
+                }
+                return@intent
+            }
             reduce { copy(registrationState = LCEState.Loading) }
             val response = withContext(dispatchers.io) { repository.signUp(credentials) }
             reduce { copy(registrationState = response.asLCEState(AuthFormError::from)) }

@@ -81,6 +81,9 @@ abstract class BaseViewModel<S : Any, E : Any>(initialState: S) : ViewModel() {
 
     protected fun intent(block: suspend CoroutineScope.() -> Unit): Job = safeLaunch(block)
 
+    protected fun intent(coroutineContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit): Job =
+        safeLaunch(coroutineContext, block)
+
     protected fun safeLaunch(block: suspend CoroutineScope.() -> Unit): Job =
         viewModelScope.launch(exceptionHandler, block = block)
 

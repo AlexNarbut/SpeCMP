@@ -57,14 +57,14 @@ internal class ModelsViewModel(
 
     fun onPick(deviceName: String) {
         updateRecent { models.pushRecent(deviceName) }
-        if (file == null) {
-            postSideEffect(ModelsEffect.Open(SourceKey.Defaults(deviceName)))
-            return
-        }
-        if (currentState.checking) return
-        reduce { copy(checking = true) }
-        val key = file.copy(deviceName = deviceName)
         intent {
+            if (file == null) {
+                postSideEffect(ModelsEffect.Open(SourceKey.Defaults(deviceName)))
+                return@intent
+            }
+            if (currentState.checking) return@intent
+            reduce { copy(checking = true) }
+            val key = file.copy(deviceName = deviceName)
             val source = key.toSource()
             val response = try {
                 withContext(dispatchers.io) {
