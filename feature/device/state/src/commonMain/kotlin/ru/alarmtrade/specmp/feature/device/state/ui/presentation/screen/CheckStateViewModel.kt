@@ -286,18 +286,18 @@ class CheckStateViewModel(
     }
 
     private fun finish(command: StateCommand, outcome: CommandOutcome) {
-        val status = CommandStatus.Finished(outcome, currentState.resultSeq + 1)
-        reduce {
-            copy(
-                pending = null,
-                statuses = statuses + (command to status),
-                resultSeq = status.seq,
-                dialog = dialog.takeUnless { it is CheckStateDialog.Pin },
-            )
-        }
-        postSideEffect(CheckStateEffect.CommandFinished(command, outcome))
-        // Итог на кнопке — несколько секунд, потом кнопка возвращается в покой (если итог не сменился новым).
         safeLaunch {
+            val status = CommandStatus.Finished(outcome, currentState.resultSeq + 1)
+            reduce {
+                copy(
+                    pending = null,
+                    statuses = statuses + (command to status),
+                    resultSeq = status.seq,
+                    dialog = dialog.takeUnless { it is CheckStateDialog.Pin },
+                )
+            }
+            postSideEffect(CheckStateEffect.CommandFinished(command, outcome))
+            // Итог на кнопке — несколько секунд, потом кнопка возвращается в покой (если итог не сменился новым).
             delay(RESULT_VISIBLE)
             reduce { if (statuses[command] == status) copy(statuses = statuses - command) else this }
         }

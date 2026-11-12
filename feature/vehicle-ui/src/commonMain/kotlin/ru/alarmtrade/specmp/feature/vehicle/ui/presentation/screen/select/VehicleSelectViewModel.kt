@@ -160,8 +160,8 @@ internal class VehicleSelectViewModel(
     }
 
     fun onPaneWidthChange(key: String, widthDp: Int) {
-        reduce { copy(paneWidthsDp = paneWidthsDp + (key to widthDp)) }
         intent {
+            reduce { copy(paneWidthsDp = paneWidthsDp + (key to widthDp)) }
             withContext(dispatchers.io) { paneWidths.setWidthDp(key, widthDp) }
                 .onError { logger.w(it) { "Pane width was not saved" } }
         }
@@ -263,16 +263,16 @@ internal class VehicleSelectViewModel(
     }
 
     fun onPick(carId: Int) {
-        val current = currentState
-        if (!current.mode.pick || current.picking) return
-        val known = current.card.content?.summary?.takeIf { it.id == carId }
-            ?: current.canResults.content?.firstOrNull { it.id == carId }
-        if (known != null) {
-            choose(known)
-            return
-        }
-        reduce { copy(picking = true) }
         intent {
+            val current = currentState
+            if (!current.mode.pick || current.picking) return@intent
+            val known = current.card.content?.summary?.takeIf { it.id == carId }
+                ?: current.canResults.content?.firstOrNull { it.id == carId }
+            if (known != null) {
+                choose(known)
+                return@intent
+            }
+            reduce { copy(picking = true) }
             val response = withContext(dispatchers.io) { repository.summary(carId) }
             reduce { copy(picking = false) }
             when (response) {

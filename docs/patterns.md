@@ -903,7 +903,13 @@ internal class AppSettingsViewModel(
 - **Без `init { }`** (detekt `ViewModelInitBlock`) — стартовая работа в `onStart()`, синхронный посев — в начальном
   state (`BaseViewModel(initialState)`, функция от параметров конструктора: `VehicleSelectRequest.initialState()`).
 - **Корутины — `intent`/`safeLaunch`/`launchReplacing`**, не `viewModelScope.launch`/`async`/`flow.launchIn(viewModelScope)`
-  (detekt `ViewModelScopeLaunch`).
+  (detekt `ViewModelScopeLaunch`). Контекст — параметром: `intent(dispatchers.io) { }`, `safeLaunch(context) { }`.
+- **Функция с `intent`/`safeLaunch` меняет state и шлёт эффекты только из корутины** (detekt `ReduceOutsideIntent`):
+  в не-`suspend` функции VM, которая запускает `intent { }`/`safeLaunch { }`, `reduce`/`postSideEffect` вызываются
+  только внутри `intent`/`safeLaunch`/`launchReplacing`/`launchOnDevice`. Проверки и ранние выходы — тоже внутри
+  (`return@intent`): на `Main.immediate` тело до первой приостановки выполняется синхронно, guard
+  `reduce { copy(busy = true) }` по-прежнему ставится до следующего тапа. Функции без запуска корутины и `suspend fun`
+  правило не трогает.
 - **`safeRun`/`safeResponseRun` во VM нет** (detekt `SafeRunInViewModel`): бросающий код оборачивает репозиторий, VM
   ветвится по `Response`.
 - **Производные поля считаются в том же `reduce`, что и их входы** (`copy(order = order).withLists()`), иначе на кадр

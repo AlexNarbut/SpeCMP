@@ -176,11 +176,11 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onCarSearch() {
-        val editing = currentState.editing ?: return
-        val code = (editing.draft as? SettingValue.Can)?.value?.code ?: return
-        if (!editing.canApply) return
-        reduce { copy(editing = editing.copy(carSearch = LCEState.Loading)) }
         intent {
+            val editing = currentState.editing ?: return@intent
+            val code = (editing.draft as? SettingValue.Can)?.value?.code ?: return@intent
+            if (!editing.canApply) return@intent
+            reduce { copy(editing = editing.copy(carSearch = LCEState.Loading)) }
             val response = withContext(dispatchers.io) { carsRepository.findByCanCode(code, vehicleDevice()) }
             reduce { withCarSearch(code, response) }
         }
@@ -227,8 +227,8 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onTreeWidthChange(widthDp: Int) {
-        reduce { copy(treeWidthDp = widthDp) }
         intent {
+            reduce { copy(treeWidthDp = widthDp) }
             withContext(dispatchers.io) { paneWidths.setWidthDp(TREE_PANE, widthDp) }
                 .onError { logger.w(it) { "Tree width was not saved" } }
         }
@@ -580,19 +580,21 @@ internal class DeviceSettingsViewModel(
     }
 
     fun onFileExported(result: SettingsFileSaveResult) {
-        val done = currentState.pendingExport ?: return
-        reduce { copy(pendingExport = null, isSaving = false) }
-        sessions.discardSnapshot(done.snapshot)
-        when (result) {
-            is SettingsFileSaveResult.Saved -> intent {
-                if (savesAsNew()) commit()
-                postSideEffect(DeviceSettingsEffect.FileSaved(result.name))
-                if (done.exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
+        intent {
+            val done = currentState.pendingExport ?: return@intent
+            reduce { copy(pendingExport = null, isSaving = false) }
+            sessions.discardSnapshot(done.snapshot)
+            when (result) {
+                is SettingsFileSaveResult.Saved -> {
+                    if (savesAsNew()) commit()
+                    postSideEffect(DeviceSettingsEffect.FileSaved(result.name))
+                    if (done.exitAfter) postSideEffect(DeviceSettingsEffect.Exit(ExitTarget.BACK))
+                }
+
+                SettingsFileSaveResult.Failed -> reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.File)) }
+
+                SettingsFileSaveResult.Cancelled -> Unit
             }
-
-            SettingsFileSaveResult.Failed -> reduce { copy(dialog = SettingsDialog.SaveError(SaveRetry.File)) }
-
-            SettingsFileSaveResult.Cancelled -> Unit
         }
     }
 
@@ -720,14 +722,16 @@ internal class DeviceSettingsViewModel(
 
     /** Каждый `carId` — раз за чтение меню: без сети запрос не повторяется на каждую правку. */
     private fun loadCarNames(settings: List<Setting>) {
-        val known = currentState.cars.keys + currentState.requestedCarIds
-        val wanted = settings.filterIsInstance<CanCodeSetting>().mapNotNull { it.value.value.carId }.toSet() - known
-        if (wanted.isEmpty()) return
-        reduce { copy(requestedCarIds = requestedCarIds + wanted) }
-        wanted.forEach { carId ->
-            safeLaunch {
-                withContext(dispatchers.io) { carsRepository.summary(carId) }.getValueIfSuccess()?.let { car ->
-                    reduce { copy(cars = cars + (car.id to car)) }
+        safeLaunch {
+            val known = currentState.cars.keys + currentState.requestedCarIds
+            val wanted = settings.filterIsInstance<CanCodeSetting>().mapNotNull { it.value.value.carId }.toSet() - known
+            if (wanted.isEmpty()) return@safeLaunch
+            reduce { copy(requestedCarIds = requestedCarIds + wanted) }
+            wanted.forEach { carId ->
+                safeLaunch {
+                    withContext(dispatchers.io) { carsRepository.summary(carId) }.getValueIfSuccess()?.let { car ->
+                        reduce { copy(cars = cars + (car.id to car)) }
+                    }
                 }
             }
         }

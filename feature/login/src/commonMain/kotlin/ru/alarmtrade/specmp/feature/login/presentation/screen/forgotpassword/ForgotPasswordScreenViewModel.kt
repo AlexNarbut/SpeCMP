@@ -18,15 +18,14 @@ class ForgotPasswordScreenViewModel(private val repository: LoginRepository, pri
     }
 
     fun onSubmit() {
-        if (currentState.resetState is LCEState.Loading) return
-        val credentials = ResetPasswordCredentials(email = currentState.email)
-        // Валидация — до запроса: без мигания Loading перед ошибкой формы.
-        if (credentials.validationError() != null) {
-            reduce { copy(resetState = LCEState.Error(AuthFormError.RequiredFields)) }
-            return
-        }
-
         intent {
+            if (currentState.resetState is LCEState.Loading) return@intent
+            val credentials = ResetPasswordCredentials(email = currentState.email)
+            // Валидация — до запроса: без мигания Loading перед ошибкой формы.
+            if (credentials.validationError() != null) {
+                reduce { copy(resetState = LCEState.Error(AuthFormError.RequiredFields)) }
+                return@intent
+            }
             reduce { copy(resetState = LCEState.Loading) }
             val response = withContext(dispatchers.io) { repository.resetPassword(credentials) }
             reduce { copy(resetState = response.asLCEState(AuthFormError::from)) }

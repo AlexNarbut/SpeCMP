@@ -75,29 +75,31 @@ class SupportChatScreenViewModel(
     }
 
     fun onRemoveAttachment(id: String) {
-        val removed = currentState.pendingAttachments.firstOrNull { it.id == id } ?: return
-        reduce { copy(pendingAttachments = pendingAttachments.filterNot { it.id == id }.toPersistentList()) }
-        removed.localPath?.let { path -> intent { discardFile(path) } }
+        intent {
+            val removed = currentState.pendingAttachments.firstOrNull { it.id == id } ?: return@intent
+            reduce { copy(pendingAttachments = pendingAttachments.filterNot { it.id == id }.toPersistentList()) }
+            removed.localPath?.let { path -> discardFile(path) }
+        }
     }
 
     fun onSend(text: String) {
-        // Офлайн-ввод запрещён продуктово; UI выключает композер, VM — страховка.
-        if (!currentState.isInputEnabled) return
-        val trimmed = text.trim()
-        val attachments = currentState.pendingAttachments
-        if (trimmed.isEmpty() && attachments.isEmpty()) return
-
-        // Контент сообщения эксклюзивен (SDK не поддерживает подпись к вложению):
-        // каждое вложение и текст — отдельные сообщения.
-        val timestamp = clock.now()
-        val outgoing = buildList {
-            attachments.forEach { add(optimisticMessage(timestamp, attachment = it.toAttachment())) }
-            if (trimmed.isNotEmpty()) add(optimisticMessage(timestamp, text = trimmed))
-        }
-
-        reduce { withTimeline(timeline.withOptimistic(outgoing)).copy(pendingAttachments = persistentListOf()) }
-
         intent {
+            // Офлайн-ввод запрещён продуктово; UI выключает композер, VM — страховка.
+            if (!currentState.isInputEnabled) return@intent
+            val trimmed = text.trim()
+            val attachments = currentState.pendingAttachments
+            if (trimmed.isEmpty() && attachments.isEmpty()) return@intent
+
+            // Контент сообщения эксклюзивен (SDK не поддерживает подпись к вложению):
+            // каждое вложение и текст — отдельные сообщения.
+            val timestamp = clock.now()
+            val outgoing = buildList {
+                attachments.forEach { add(optimisticMessage(timestamp, attachment = it.toAttachment())) }
+                if (trimmed.isNotEmpty()) add(optimisticMessage(timestamp, text = trimmed))
+            }
+
+            reduce { withTimeline(timeline.withOptimistic(outgoing)).copy(pendingAttachments = persistentListOf()) }
+
             executeWithProceedLock(needSkipAnother = false) {
                 outgoing.forEach { send(it.id) }
             }
@@ -383,27 +385,27 @@ class SupportChatScreenViewModel(
     }
 
     fun onMessagesVisible(messageIds: List<String>) {
-        // Батч: пачки видимых при скролле id — одним сетевым вызовом с debounce.
-        val idSet = messageIds.toHashSet()
-        val known = currentState.readIds
-        val eligibleServerIds = currentState.messages.mapNotNull { message ->
-            message.serverId?.takeIf {
-                message.id in idSet &&
-                    !message.isMine &&
-                    message.status != SupportChatMessageStatus.Read &&
-                    !known.isKnown(it)
-            }
-        }
-        if (eligibleServerIds.isEmpty()) return
-
-        // Не перезапускаем таймер при непрерывном скролле: flush не реже одного раза за READ_FLUSH_DELAY.
-        var scheduleFlush = false
-        reduce {
-            scheduleFlush = !readIds.isFlushScheduled
-            copy(readIds = readIds.withPending(eligibleServerIds))
-        }
-        if (!scheduleFlush) return
         intent {
+            // Батч: пачки видимых при скролле id — одним сетевым вызовом с debounce.
+            val idSet = messageIds.toHashSet()
+            val known = currentState.readIds
+            val eligibleServerIds = currentState.messages.mapNotNull { message ->
+                message.serverId?.takeIf {
+                    message.id in idSet &&
+                        !message.isMine &&
+                        message.status != SupportChatMessageStatus.Read &&
+                        !known.isKnown(it)
+                }
+            }
+            if (eligibleServerIds.isEmpty()) return@intent
+
+            // Не перезапускаем таймер при непрерывном скролле: flush не реже одного раза за READ_FLUSH_DELAY.
+            var scheduleFlush = false
+            reduce {
+                scheduleFlush = !readIds.isFlushScheduled
+                copy(readIds = readIds.withPending(eligibleServerIds))
+            }
+            if (!scheduleFlush) return@intent
             try {
                 delay(READ_FLUSH_DELAY)
                 flushReadIds()
@@ -444,13 +446,13 @@ class SupportChatScreenViewModel(
      * тому же или другому вложению не пройдёт), освобождается в finally.
      */
     private fun withFileSlot(attachmentId: String, block: suspend () -> SupportChatEffect?) {
-        var acquired = false
-        reduce {
-            acquired = downloadingAttachmentId == null
-            if (acquired) copy(downloadingAttachmentId = attachmentId) else this
-        }
-        if (!acquired) return
         intent {
+            var acquired = false
+            reduce {
+                acquired = downloadingAttachmentId == null
+                if (acquired) copy(downloadingAttachmentId = attachmentId) else this
+            }
+            if (!acquired) return@intent
             try {
                 block()?.let(::postSideEffect)
             } finally {

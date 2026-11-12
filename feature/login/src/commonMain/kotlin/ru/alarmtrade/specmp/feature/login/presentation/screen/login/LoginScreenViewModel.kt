@@ -44,15 +44,14 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     }
 
     fun onSubmit() {
-        if (currentState.authState is LCEState.Loading) return
-        val credentials = currentState.toCredentials()
-        // Пустые поля — ошибка формы до запроса, а не «сервер отклонил».
-        if (!credentials.isValid()) {
-            reduce { copy(authState = LCEState.Error(AuthFormError.RequiredFields)) }
-            return
-        }
-
         intent {
+            if (currentState.authState is LCEState.Loading) return@intent
+            val credentials = currentState.toCredentials()
+            // Пустые поля — ошибка формы до запроса, а не «сервер отклонил».
+            if (!credentials.isValid()) {
+                reduce { copy(authState = LCEState.Error(AuthFormError.RequiredFields)) }
+                return@intent
+            }
             reduce {
                 copy(
                     authState = LCEState.Loading,
@@ -71,14 +70,13 @@ class LoginScreenViewModel(private val repository: LoginRepository, private val 
     }
 
     fun onResendActivationEmail() {
-        if (currentState.activationResendState is LCEState.Loading) return
-        val credentials = currentState.toCredentials()
-        if (!credentials.isValid()) {
-            reduce { copy(activationResendState = LCEState.Error(AuthFormError.RequiredFields)) }
-            return
-        }
-
         intent {
+            if (currentState.activationResendState is LCEState.Loading) return@intent
+            val credentials = currentState.toCredentials()
+            if (!credentials.isValid()) {
+                reduce { copy(activationResendState = LCEState.Error(AuthFormError.RequiredFields)) }
+                return@intent
+            }
             reduce { copy(activationResendState = LCEState.Loading) }
             val response = withContext(dispatchers.io) { repository.resendActivationEmail(credentials) }
             reduce { copy(activationResendState = response.asLCEState(AuthFormError::from)) }

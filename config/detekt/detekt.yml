@@ -38,6 +38,9 @@ specmp:
   ViewModelMutableProperty:
     active: true
     excludes: ['**/core/ui/**/navigation/ViewModelScope.kt']
+  # Функция VM, запускающая intent/safeLaunch, вызывает reduce/postSideEffect только внутри intent/safeLaunch/launchReplacing/launchOnDevice.
+  ReduceOutsideIntent:
+    active: true
   # Диспетчер выбирает вызывающий (VM/точка входа); исключения — класс со своим CoroutineScope, withContext(NonCancellable).
   RepositoryWithContext:
     active: true
