@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -51,9 +52,12 @@ class SystemDevicesViewModel(
     }
 
     private suspend fun poll() {
+        // SDK — на IO; combine и пересборка групп/сводки на каждый шаг опроса — на Default; на Main — только ошибки.
         combine(connectedDevice, select { pollGeneration }) { device, _ -> device }
             .flatMapLatest { device -> if (device == null) emptyFlow() else pollFlow().flowOn(dispatchers.io) }
-            .collect(::onPollResponse)
+            .onEach { response -> if (response is Response.Success) reduce { withStep(response.value) } }
+            .flowOn(dispatchers.default)
+            .collect { response -> if (response is Response.Error) onPollError(response) }
     }
 
     private fun pollFlow(): Flow<Response<PeripheralPollStep>> = flow {
@@ -93,16 +97,10 @@ class SystemDevicesViewModel(
         }
     }
 
-    private fun onPollResponse(response: Response<PeripheralPollStep>) {
-        when (response) {
-            is Response.Success -> reduce { withStep(response.value) }
-
-            // Без связи ошибку покажет хост («Потеря связи»); при связи — «Повторить», если данных ещё нет.
-            is Response.Error -> {
-                logger.w(response.exception) { "Peripheral poll failed" }
-                reduce { if (firstPassDone) this else copy(pollFailed = true, pollingType = null) }
-            }
-        }
+    // Без связи ошибку покажет хост («Потеря связи»); при связи — «Повторить», если данных ещё нет.
+    private fun onPollError(error: Response.Error) {
+        logger.w(error.exception) { "Peripheral poll failed" }
+        reduce { if (firstPassDone) this else copy(pollFailed = true, pollingType = null) }
     }
 
     fun onRetry() {
@@ -119,11 +117,8 @@ class SystemDevicesViewModel(
 
     /** «Показать» в сводке: сначала устройства без связи, затем остальные проблемные. */
     fun onShowProblem() {
-        val devices = currentState.devices
-        val target =
-            devices.firstOrNull { it.link == PeripheralLink.OFFLINE } ?: devices.firstOrNull { it.needsAttention() }
-        target ?: return
-        reduce { copy(selected = target.key, highlight = Highlight(target.key, (highlight?.seq ?: 0) + 1)) }
+        val target = currentState.summary.focus ?: return
+        reduce { copy(selected = target, highlight = Highlight(target, (highlight?.seq ?: 0) + 1)) }
     }
 
     fun onBlink(key: DeviceKey) {
@@ -247,10 +242,27 @@ internal fun SystemDevicesState.withStep(step: PeripheralPollStep): SystemDevice
     val current = groups.associate { it.type to it.devices }
     val devices = if (step.devices != null) current + (step.type to step.devices) else current
     val passDone = firstPassDone || step.index >= step.total - 1
+    val groups = types.mapNotNull { type -> devices[type]?.takeIf { it.isNotEmpty() }?.let { DeviceGroup(type, it) } }
+    val flat = groups.flatMap { it.devices }
     return copy(
-        groups = types.mapNotNull { type -> devices[type]?.takeIf { it.isNotEmpty() }?.let { DeviceGroup(type, it) } },
+        groups = groups,
+        devices = flat,
+        summary = summaryOf(flat),
         polled = if (firstPassDone) polled else step.index + 1,
         pollingType = if (passDone) null else types.getOrNull(step.index + 1),
         firstPassDone = passDone,
+    )
+}
+
+/** Считается в `reduce`, а не в composition: опрос обновляет экран часто. */
+internal fun summaryOf(devices: List<SystemPeripheral>): DevicesSummary {
+    val attention = devices.filter { it.needsAttention() }
+    val offline = attention.firstOrNull { it.link == PeripheralLink.OFFLINE }
+    return DevicesSummary(
+        total = devices.size,
+        online = devices.count { it.link != PeripheralLink.OFFLINE },
+        attention = attention.size,
+        anyOffline = offline != null,
+        focus = (offline ?: attention.firstOrNull())?.key,
     )
 }

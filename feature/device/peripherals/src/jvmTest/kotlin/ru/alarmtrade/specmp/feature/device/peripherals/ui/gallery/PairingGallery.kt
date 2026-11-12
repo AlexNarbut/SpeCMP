@@ -12,6 +12,7 @@ import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.P
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.PairingSession
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.PairingState
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.SlotSheet
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing.groupSlots
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 /** Состояния «Приживление устройств» (макет D1–D13); PNG — в `build/state-gallery/peripherals`. */
@@ -32,7 +33,10 @@ class PairingGallery {
     )
 
     private val ready =
-        PairingState(deviceName = "Pandora DX-4GS", systemId = 107131, phase = PairingPhase.READY, slots = slots)
+        PairingState(deviceName = "Pandora DX-4GS", systemId = 107131, phase = PairingPhase.READY).withSlots(slots)
+
+    private fun PairingState.withSlots(list: List<DynamicPeripheral>) =
+        copy(slots = list, groups = groupSlots(list), occupied = list.count { it.paired })
 
     private fun render(name: String, state: PairingState) = StateGallery.render(outDir, "pairing_$name") {
         PairingContent(state = state, actions = PairingActions())
@@ -45,7 +49,7 @@ class PairingGallery {
     fun list() = render("d2_list", ready)
 
     @Test
-    fun allFree() = render("d3_all_free", ready.copy(slots = slots.map { it.copy(paired = false, connected = false) }))
+    fun allFree() = render("d3_all_free", ready.withSlots(slots.map { it.copy(paired = false, connected = false) }))
 
     @Test
     fun actionsFree() = render("d4_free", ready.copy(selected = 1, sheet = SlotSheet.ACTIONS))
@@ -72,8 +76,9 @@ class PairingGallery {
     @Test
     fun pairingSuccess() = render(
         "d7_success",
-        ready.copy(
-            slots = slots.map { if (it.slot == 4) it.copy(paired = true, connected = true, voltage = 2.97f) else it },
+        ready.withSlots(
+            slots.map { if (it.slot == 4) it.copy(paired = true, connected = true, voltage = 2.97f) else it },
+        ).copy(
             pairing = PairingSession(4, 60, PairingOutcome.SUCCESS),
         ),
     )

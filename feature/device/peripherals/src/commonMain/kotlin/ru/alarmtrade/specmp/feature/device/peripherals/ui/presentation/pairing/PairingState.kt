@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.pairing
 
 import androidx.compose.runtime.Immutable
 import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.DynamicPeripheral
+import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.PeripheralType
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialogState
 
 enum class PairingPhase {
@@ -29,6 +30,13 @@ enum class PairingOutcome { WAITING, SUCCESS, FAILED }
 data class PairingSession(val slot: Int, val secondsLeft: Int, val outcome: PairingOutcome)
 
 @Immutable
+data class SlotGroup(val type: PeripheralType, val slots: List<DynamicPeripheral>)
+
+/** Группы по типам в порядке каталога; считаются в `reduce`, а не в composition. */
+internal fun groupSlots(slots: List<DynamicPeripheral>): List<SlotGroup> =
+    slots.groupBy { it.type }.entries.sortedBy { it.key.ordinal }.map { (type, list) -> SlotGroup(type, list) }
+
+@Immutable
 data class SlotFlash(val slot: Int, val seq: Int)
 
 @Immutable
@@ -45,6 +53,8 @@ data class PairingState(
     val bluetooth: Boolean = true,
     val phase: PairingPhase = PairingPhase.ENTERING,
     val slots: List<DynamicPeripheral> = emptyList(),
+    val groups: List<SlotGroup> = emptyList(),
+    val occupied: Int = 0,
     val selected: Int? = null,
     val sheet: SlotSheet? = null,
     val address: String = "",
@@ -58,8 +68,6 @@ data class PairingState(
     val pollGeneration: Int = 0,
 ) {
     fun slot(id: Int?): DynamicPeripheral? = id?.let { wanted -> slots.firstOrNull { it.slot == wanted } }
-
-    val occupied: Int get() = slots.count { it.paired }
 
     val waiting: Boolean get() = pairing?.outcome == PairingOutcome.WAITING
 }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
@@ -61,9 +62,14 @@ class PairingViewModel(
     }
 
     private suspend fun poll() {
+        // SDK — на IO (slotsFlow); combine и пересборка групп таблицы — на Default; на Main — только ошибки.
         combine(connectedDevice, select { pollGeneration }) { device, _ -> device }
             .flatMapLatest { device -> if (device == null) emptyFlow() else slotsFlow(device.systemId) }
-            .collect(::onSlots)
+            .onEach { response -> if (response is Response.Success) onTable(response.value) }
+            .flowOn(dispatchers.default)
+            .collect { response ->
+                if (response is Response.Error) onReadError(response.exception.toPeripheralFailure())
+            }
     }
 
     private fun slotsFlow(systemId: Long): Flow<Response<List<DynamicPeripheral>>> = flow {
@@ -82,13 +88,6 @@ class PairingViewModel(
         }
     }.flowOn(dispatchers.io)
 
-    private suspend fun onSlots(response: Response<List<DynamicPeripheral>>) {
-        when (response) {
-            is Response.Success -> onTable(response.value)
-            is Response.Error -> onReadError(response.exception.toPeripheralFailure())
-        }
-    }
-
     private fun onTable(slots: List<DynamicPeripheral>) {
         val removed = currentState.deleting.filter { id -> slots.firstOrNull { it.slot == id }?.paired == false }
         reduce {
@@ -99,6 +98,8 @@ class PairingViewModel(
             copy(
                 phase = PairingPhase.READY,
                 slots = slots,
+                groups = groupSlots(slots),
+                occupied = slots.count { it.paired },
                 deleting = deleting - removed.toSet(),
                 pairing = session?.copy(outcome = PairingOutcome.SUCCESS) ?: pairing,
                 flash = session?.let { SlotFlash(it.slot, (flash?.seq ?: 0) + 1) } ?: flash,

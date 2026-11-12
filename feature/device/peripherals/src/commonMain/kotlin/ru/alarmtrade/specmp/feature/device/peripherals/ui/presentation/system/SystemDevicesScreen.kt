@@ -97,7 +97,6 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.SystemPeripheral
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.GroupHeader
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.SkeletonRow
-import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.model.needsAttention
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.model.ui
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
 import specmp.feature.device.peripherals.generated.resources.Res
@@ -260,7 +259,7 @@ private fun WideLayout(state: SystemDevicesState, actions: SystemDevicesActions,
     val devices = state.devices
     // Широкое окно: без выбора после прохода — первое проблемное (или первое) устройство.
     val selected = state.device(state.selected)
-        ?: if (state.firstPassDone) devices.firstOrNull { it.needsAttention() } ?: devices.firstOrNull() else null
+        ?: if (state.firstPassDone) state.device(state.summary.focus) ?: devices.firstOrNull() else null
     CmpRow(modifier = modifier) {
         DeviceList(
             state = state.copy(selected = selected?.key),
@@ -359,7 +358,7 @@ private fun DeviceList(
                         !state.firstPassDone && !state.pollFailed -> PollProgress(state.polled, state.types.size)
 
                         state.firstPassDone && state.devices.isNotEmpty() -> Summary(
-                            state.devices,
+                            state.summary,
                             actions.onShowProblem,
                         )
                     }

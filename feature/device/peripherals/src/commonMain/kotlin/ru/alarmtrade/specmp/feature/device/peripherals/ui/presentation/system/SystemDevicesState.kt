@@ -28,6 +28,8 @@ data class SystemDevicesState(
     val bluetoothVersion: String? = null,
     val types: List<PeripheralType> = SystemPeripheralTypes,
     val groups: List<DeviceGroup> = emptyList(),
+    val devices: List<SystemPeripheral> = emptyList(),
+    val summary: DevicesSummary = DevicesSummary(),
     val polled: Int = 0,
     val pollingType: PeripheralType? = null,
     val firstPassDone: Boolean = false,
@@ -41,10 +43,18 @@ data class SystemDevicesState(
     val firmware: FirmwareStep? = null,
     val pin: ServicePinDialogState? = null,
 ) {
-    val devices: List<SystemPeripheral> get() = groups.flatMap { it.devices }
-
     fun device(key: DeviceKey?): SystemPeripheral? = key?.let { wanted -> devices.firstOrNull { it.key == wanted } }
 }
+
+/** Сводка после прохода; [focus] — куда ведёт «Показать»: сначала без связи, затем остальные проблемные. */
+@Immutable
+data class DevicesSummary(
+    val total: Int = 0,
+    val online: Int = 0,
+    val attention: Int = 0,
+    val anyOffline: Boolean = false,
+    val focus: DeviceKey? = null,
+)
 
 @Immutable
 data class Highlight(val key: DeviceKey, val seq: Int)

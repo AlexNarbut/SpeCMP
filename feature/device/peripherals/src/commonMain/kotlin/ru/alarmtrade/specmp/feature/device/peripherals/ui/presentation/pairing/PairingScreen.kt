@@ -98,8 +98,6 @@ import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateTone
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
-import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.DynamicPeripheral
-import ru.alarmtrade.specmp.feature.device.peripherals.domain.model.PeripheralType
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.components.GroupHeader
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.model.ui
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.deviceTitle
@@ -334,11 +332,6 @@ private fun Failure(phase: PairingPhase, onRetry: () -> Unit, modifier: Modifier
     }
 }
 
-private class SlotGroup(val type: PeripheralType, val slots: List<DynamicPeripheral>)
-
-private fun PairingState.groups(): List<SlotGroup> =
-    slots.groupBy { it.type }.entries.sortedBy { it.key.ordinal }.map { (type, list) -> SlotGroup(type, list) }
-
 @Composable
 private fun SlotList(state: PairingState, actions: PairingActions, wide: Boolean, modifier: Modifier, maxWidth: Dp) {
     val pairingSlot = state.slot(state.pairing?.slot)
@@ -379,7 +372,7 @@ private fun SlotList(state: PairingState, actions: PairingActions, wide: Boolean
 }
 
 private fun LazyListScope.slotGroups(state: PairingState, actions: PairingActions, wide: Boolean) {
-    state.groups().forEach { group ->
+    state.groups.forEach { group ->
         item(key = "group_${group.type}") {
             GroupHeader(
                 title = stringResource(group.type.ui.group),

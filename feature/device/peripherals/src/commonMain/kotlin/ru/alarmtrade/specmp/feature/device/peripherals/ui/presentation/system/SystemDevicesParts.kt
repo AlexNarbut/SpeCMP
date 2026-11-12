@@ -421,15 +421,13 @@ internal fun PollProgress(polled: Int, total: Int) {
 
 /** Сводка после прохода: «Требуют внимания: N» (ошибкой — если кто-то без связи) или «Все устройства на связи». */
 @Composable
-internal fun Summary(devices: List<SystemPeripheral>, onShow: () -> Unit) {
-    val attention = devices.filter { it.needsAttention() }
-    val online = devices.count { it.link != PeripheralLink.OFFLINE }
+internal fun Summary(summary: DevicesSummary, onShow: () -> Unit) {
+    val hasAttention = summary.attention > 0
     val theme = cmpThemeColors()
     val domain = cmpDomainColors()
-    val anyOffline = attention.any { it.link == PeripheralLink.OFFLINE }
     val tone = when {
-        attention.isEmpty() -> null
-        anyOffline -> PeripheralTone.ERROR
+        !hasAttention -> null
+        summary.anyOffline -> PeripheralTone.ERROR
         else -> PeripheralTone.WARN
     }
     val toneColors = tone?.colors()
@@ -441,7 +439,7 @@ internal fun Summary(devices: List<SystemPeripheral>, onShow: () -> Unit) {
             .fillMaxWidth()
             .clip(shape)
             .background(background, shape)
-            .then(if (attention.isEmpty()) Modifier else Modifier.clickable(onClick = onShow))
+            .then(if (!hasAttention) Modifier else Modifier.clickable(onClick = onShow))
             .heightIn(min = 64.dp)
             .padding(horizontal = 14.dp, vertical = 12.dp)
             .testTag(SYSTEM_SUMMARY_TAG),
@@ -449,29 +447,29 @@ internal fun Summary(devices: List<SystemPeripheral>, onShow: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CmpIcon(
-            icon = if (attention.isEmpty()) CmpIcons.CheckCircle else CmpIcons.Warning,
+            icon = if (!hasAttention) CmpIcons.CheckCircle else CmpIcons.Warning,
             contentDescription = null,
-            tint = if (attention.isEmpty()) domain.success else content,
+            tint = if (!hasAttention) domain.success else content,
             modifier = Modifier.size(28.dp),
         )
         CmpColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             CmpText(
-                text = if (attention.isEmpty()) {
+                text = if (!hasAttention) {
                     stringResource(Strings.string.peripherals_system_msg_all_online)
                 } else {
-                    stringResource(Strings.string.peripherals_system_format_attention, attention.size)
+                    stringResource(Strings.string.peripherals_system_format_attention, summary.attention)
                 },
                 color = content,
                 fontWeight = FontWeight.Bold,
                 style = CmpTextStyle.BodyLarge,
             )
             CmpText(
-                text = stringResource(Strings.string.peripherals_system_format_summary, devices.size, online),
-                color = if (attention.isEmpty()) theme.onSurfaceVariant else content,
+                text = stringResource(Strings.string.peripherals_system_format_summary, summary.total, summary.online),
+                color = if (!hasAttention) theme.onSurfaceVariant else content,
                 style = CmpTextStyle.Body,
             )
         }
-        if (attention.isNotEmpty()) {
+        if (hasAttention) {
             CmpRow(verticalAlignment = Alignment.CenterVertically) {
                 CmpText(
                     text = stringResource(Strings.string.peripherals_system_btn_show),

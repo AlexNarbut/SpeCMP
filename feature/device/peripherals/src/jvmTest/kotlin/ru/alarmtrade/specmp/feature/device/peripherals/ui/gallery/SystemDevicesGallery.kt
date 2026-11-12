@@ -14,6 +14,7 @@ import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.Sy
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.SystemDevicesContent
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.SystemDevicesState
 import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.key
+import ru.alarmtrade.specmp.feature.device.peripherals.ui.presentation.system.summaryOf
 
 /** Состояния «Устройства системы» (макет U1–U7); PNG — в `build/state-gallery/peripherals`. */
 class SystemDevicesGallery {
@@ -77,8 +78,12 @@ class SystemDevicesGallery {
         ),
     )
 
-    private fun groups(list: List<SystemPeripheral>) = SystemPeripheralTypes.mapNotNull { type ->
-        list.filter { it.type == type }.takeIf { it.isNotEmpty() }?.let { DeviceGroup(type, it) }
+    private fun SystemDevicesState.withDevices(list: List<SystemPeripheral>): SystemDevicesState {
+        val groups = SystemPeripheralTypes.mapNotNull { type ->
+            list.filter { it.type == type }.takeIf { it.isNotEmpty() }?.let { DeviceGroup(type, it) }
+        }
+        val flat = groups.flatMap { it.devices }
+        return copy(groups = groups, devices = flat, summary = summaryOf(flat))
     }
 
     private val base = SystemDevicesState(
@@ -89,8 +94,7 @@ class SystemDevicesGallery {
         canOpenPairing = true,
     )
 
-    private val done = base.copy(
-        groups = groups(devices),
+    private val done = base.withDevices(devices).copy(
         polled = SystemPeripheralTypes.size,
         firstPassDone = true,
     )
@@ -105,8 +109,7 @@ class SystemDevicesGallery {
     @Test
     fun filling() = render(
         "u2_filling",
-        base.copy(
-            groups = groups(devices.take(3)),
+        base.withDevices(devices.take(3)).copy(
             polled = 6,
             pollingType = PeripheralType.HOOD_LOCK,
         ),
@@ -125,7 +128,7 @@ class SystemDevicesGallery {
     fun empty() = render("u5_empty", base.copy(polled = SystemPeripheralTypes.size, firstPassDone = true))
 
     @Test
-    fun allOnline() = render("u3_all_online", done.copy(groups = groups(listOf(devices[0], devices[2]))))
+    fun allOnline() = render("u3_all_online", done.withDevices(listOf(devices[0], devices[2])))
 
     @Test
     fun firmwareConfirm() = render("u7_confirm", done.copy(firmware = FirmwareStep.Confirm(devices[1].key)))
