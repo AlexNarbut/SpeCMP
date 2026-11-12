@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,7 +46,6 @@ import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.F
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveEntry
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRoute
-import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckScreen
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.update.UpdateProfile
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.displayFirmwareVersion
@@ -178,74 +178,87 @@ private fun AuthedNavGraph() {
                     onBack = { backStack.popSafe() },
                 )
             }
-            entry<AdvancedMountRoute> { _ ->
-                // «Обновить» периферию: устройство уходит в режим прошивки — сессия закрывается, открывается поиск.
-                var reopenSearch by rememberSaveable { mutableStateOf(false) }
-                DeviceInteractionHost(
-                    onExit = {
-                        if (reopenSearch) backStack.replaceCurrent(DeviceSelectionRoute) else backStack.popSafe()
-                    },
-                    bootContent = { onExit ->
-                        FirmwareBootGraph(
-                            onExit = onExit,
-                            onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
-                            archivePicker = koinInject(),
-                            filePicker = rememberAppFirmwareFilePicker(),
-                            vehiclePicker = { deviceName, onPick, onPickerBack ->
-                                ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
-                            },
-                        )
-                    },
-                ) { device, onExit ->
-                    AdvancedMountNavGraph(
-                        onExit = onExit,
-                        onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
-                        firmwareCheck = { onBack -> FirmwareCheckScreen(onBack = onBack) },
-                        settingsEditor = { onBack, onOpenFirmwareUpdate ->
-                            DeviceSettingsEditor(onExit = onBack, onOpenFirmwareUpdate = onOpenFirmwareUpdate)
-                        },
-                        configurator = { onBack, onOpenFirmwareUpdate ->
-                            AppConfigurator(
-                                onExit = onBack,
-                                deviceEditor = { load, onEditorBack ->
-                                    DeviceSettingsEditor(
-                                        onExit = onEditorBack,
-                                        onOpenFirmwareUpdate = onOpenFirmwareUpdate,
-                                        loadOnOpen = load,
-                                    )
-                                },
-                            )
-                        },
-                        bypassLearning = { onBack, onOpenClone, onOpenSupportChat ->
-                            BypassLearningEntry(
-                                onBack = onBack,
-                                onOpenClone = onOpenClone,
-                                onOpenSupportChat = onOpenSupportChat,
-                            )
-                        },
-                        clone = { fromBypass, onBack, onOpenSupportChat ->
-                            CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
-                        },
-                        checkState = { onBack -> CheckStateEntry(onBack = onBack) },
-                        systemDevices = { onBack, onOpenPairing ->
-                            SystemDevicesEntry(
-                                onBack = onBack,
-                                onOpenPairing = onOpenPairing,
-                                onOpenDeviceSearch = {
-                                    reopenSearch = true
-                                    onExit()
-                                },
-                            )
-                        },
-                        dynamicDevices = { onBack, onOpenSystemDevices ->
-                            PairingEntry(onBack = onBack, onOpenSystemDevices = onOpenSystemDevices)
-                        },
-                        vehicles = { onBack -> DeviceVehicles(device, onBack) },
-                    )
-                }
-            }
+            entry<AdvancedMountRoute> { _ -> AdvancedMountFlow(backStack) }
         },
     )
+}
+
+@Composable
+private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
+    // «Обновить» периферию: устройство уходит в режим прошивки — сессия закрывается, открывается поиск.
+    var reopenSearch by rememberSaveable { mutableStateOf(false) }
+    DeviceInteractionHost(
+        onExit = {
+            if (reopenSearch) backStack.replaceCurrent(DeviceSelectionRoute) else backStack.popSafe()
+        },
+        bootContent = { onExit ->
+            FirmwareBootGraph(
+                onExit = onExit,
+                onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
+                archivePicker = koinInject(),
+                filePicker = rememberAppFirmwareFilePicker(),
+                vehiclePicker = { deviceName, onPick, onPickerBack ->
+                    ArchiveVehiclePicker(deviceName, onPick, onPickerBack)
+                },
+            )
+        },
+    ) { device, onExit ->
+        val firmwareBoot = remember { PendingFirmwareBoot() }
+        AdvancedMountNavGraph(
+            onExit = onExit,
+            onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
+            firmwareCheck = { onBack -> AssistantFirmwareCheck(firmwareBoot, onBack) },
+            settingsEditor = { onBack, onOpenFirmwareUpdate, focusSettingId, openLoad ->
+                DeviceSettingsEditor(
+                    onExit = onBack,
+                    onOpenFirmwareUpdate = onOpenFirmwareUpdate,
+                    focusSettingId = focusSettingId,
+                    openLoadMenu = openLoad,
+                )
+            },
+            configurator = { onBack, onOpenFirmwareUpdate ->
+                AppConfigurator(
+                    onExit = onBack,
+                    deviceEditor = { load, onEditorBack ->
+                        DeviceSettingsEditor(
+                            onExit = onEditorBack,
+                            onOpenFirmwareUpdate = onOpenFirmwareUpdate,
+                            loadOnOpen = load,
+                        )
+                    },
+                )
+            },
+            bypassLearning = { onBack, onOpenClone, onOpenSupportChat ->
+                BypassLearningEntry(
+                    onBack = onBack,
+                    onOpenClone = onOpenClone,
+                    onOpenSupportChat = onOpenSupportChat,
+                )
+            },
+            clone = { fromBypass, onBack, onOpenSupportChat ->
+                CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
+            },
+            checkState = { onBack -> CheckStateEntry(onBack = onBack) },
+            systemDevices = { onBack, onOpenPairing ->
+                SystemDevicesEntry(
+                    onBack = onBack,
+                    onOpenPairing = onOpenPairing,
+                    onOpenDeviceSearch = {
+                        reopenSearch = true
+                        onExit()
+                    },
+                )
+            },
+            dynamicDevices = { onBack, onOpenSystemDevices ->
+                PairingEntry(onBack = onBack, onOpenSystemDevices = onOpenSystemDevices)
+            },
+            vehicles = { onBack -> DeviceVehicles(device, onBack) },
+            assistant = { onBack, onOpenSection, onOpenSettings ->
+                AdvancedMountAssistant(device, firmwareBoot, onBack, onOpenSection, onOpenSettings)
+            },
+            resumeAssistantTitle = rememberAssistantResume(device),
+        )
+    }
 }
 
 @Composable
@@ -337,6 +350,8 @@ private fun DeviceSettingsEditor(
     onExit: () -> Unit,
     onOpenFirmwareUpdate: () -> Unit,
     loadOnOpen: SettingsSource? = null,
+    focusSettingId: Int? = null,
+    openLoadMenu: Boolean = false,
 ) {
     DeviceSettingsEntry(
         onExit = onExit,
@@ -362,6 +377,8 @@ private fun DeviceSettingsEditor(
         filePicker = rememberSettingsFilePicker(),
         fileSaver = rememberSettingsFileSaver(),
         loadOnOpen = loadOnOpen,
+        focusSettingId = focusSettingId,
+        openLoadMenu = openLoadMenu,
     )
 }
 

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.settings.data.repository
 
 import kotlin.random.Random
 import ru.alarmtrade.common.settings.interaction.model.errors.WrongSettingsSizeException
+import ru.alarmtrade.specialist.domain.errors.IncorrectServicePinException
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CloseDeviceSettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.CopySettingsRequest
 import ru.alarmtrade.specialist.interactors.alarmDeviceSettings.requests.DeviceSettingsRequest
@@ -25,6 +26,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingValue
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsMismatchException
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSection
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
+import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsWrongPinException
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 
 internal class SpecialistDeviceSettingsRepository(private val dataSource: DeviceSettingsDataSource) :
@@ -54,7 +56,15 @@ internal class SpecialistDeviceSettingsRepository(private val dataSource: Device
             .map { list -> list.mapTo(mutableSetOf()) { it.id } }
 
     override suspend fun save(source: SettingsSource): Response<Unit> =
-        dataSource.save(DeviceSettingsRequest(source.toPath())).toResponseOrUnavailable()
+        dataSource.save(DeviceSettingsRequest(source.toPath()))
+            .toResponseOrUnavailable()
+            .mapIfError { error ->
+                if (error.exception is IncorrectServicePinException) {
+                    Response.Error(SettingsWrongPinException(error.exception))
+                } else {
+                    error
+                }
+            }
 
     override suspend fun copy(
         from: SettingsSource,

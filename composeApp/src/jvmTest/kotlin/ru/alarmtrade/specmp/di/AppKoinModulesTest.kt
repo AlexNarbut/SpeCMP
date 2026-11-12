@@ -10,6 +10,8 @@ import org.koin.test.verify.verify
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.screen.clone.CloneViewModel
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveViewModel
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareAutoBoot
+import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.check.FirmwareCheckViewModel
 import ru.alarmtrade.specmp.feature.device.selection.ui.presentation.screen.scan.ScanDeviceViewModel
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.screen.CheckStateViewModel
@@ -36,6 +38,7 @@ class AppKoinModulesTest {
                 definition<CloneViewModel>(Boolean::class),
                 definition<CheckStateViewModel>(Boolean::class),
                 definition<FirmwareArchiveViewModel>(FirmwareArchiveRequest::class),
+                definition<FirmwareCheckViewModel>(FirmwareAutoBoot::class),
                 internalDefinition(
                     "feature.vehicle.ui.presentation.screen.select.VehicleSelectViewModel",
                     VehicleSelectRequest::class,

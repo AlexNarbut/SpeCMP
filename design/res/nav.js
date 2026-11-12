@@ -67,6 +67,8 @@
     'auth-desktop':       'features/auth/AuthDesktop.html',
     'auth-states':        'features/auth/AuthStates.html',
     'auth-flow':          'features/auth/AuthFlow.html',
+    assistant:             'features/assistant/Assistant.dc.html',
+    'assistant-wide':      'features/assistant/AssistantWide.dc.html',
     'support-chat':         'features/support-chat/SupportChat.html',
     'support-chat-tablet':  'features/support-chat/SupportChatTablet.html',
     'support-chat-desktop': 'features/support-chat/SupportChatDesktop.html',

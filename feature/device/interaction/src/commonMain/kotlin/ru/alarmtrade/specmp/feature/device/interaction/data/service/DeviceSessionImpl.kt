@@ -288,7 +288,8 @@ internal class DeviceSessionImpl(
     private suspend fun reconnectWhileBle() {
         var attempt = 0
         while (_transport.value == ConnectionTransport.BLE) {
-            delay(RECONNECT_INTERVAL_MILLIS)
+            // Первая попытка — сразу: блок в загрузчике сбрасывает приём прошивки через ~5 с без данных.
+            if (attempt > 0) delay(RECONNECT_INTERVAL_MILLIS)
             sessionMutex.withLock {
                 if (_transport.value == ConnectionTransport.BLE) {
                     attempt++

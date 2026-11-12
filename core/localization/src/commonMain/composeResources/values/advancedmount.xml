@@ -15,6 +15,10 @@
     <string name="advancedmount_header_label_can_code">CAN code</string>
     <string name="advancedmount_header_label_imei">GSM modem IMEI</string>
     <string name="advancedmount_common_btn_product_info">Product information</string>
+    <string name="advancedmount_sections_title_assistant">Assistant</string>
+    <string name="advancedmount_sections_subtitle_assistant">Pick an action — the result and the next step appear in the feed</string>
+    <string name="advancedmount_sections_subtitle_assistant_limited">Fewer actions are available for this unit: firmware, vehicles, support chat</string>
+    <string name="advancedmount_sections_label_new">New</string>
     <string name="advancedmount_sections_title_firmware_update">Firmware check</string>
     <string name="advancedmount_sections_subtitle_firmware_update">Update system firmware to the latest versions</string>
     <string name="advancedmount_sections_title_settings">Advanced settings</string>

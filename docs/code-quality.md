@@ -550,6 +550,7 @@ lookahead конец имени модуля слева — пробел, а н�
 |---|---|---|
 | `DeviceSession.state`/`reboot`/`transport` (`feature/device/interaction/domain/service`) | Konsist `service-contract` | состояние сервиса в памяти: ошибка связи уже свёрнута в `Disconnected`, `reboot`/`transport` — снимки, не результат операции |
 | `IntegerSetting`/`DecimalSetting.minValueText`/`maxValueText`, `TextSetting.validationErrorText` (`feature/device/settings/domain/model`) | Konsist `domain-model-ui-text` | текст из описания настройки в SDK, своя подпись у каждой настройки — в `core/localization` не перенести |
+| `AssistantJournal.state` (`feature/mount-assistant/domain/service`) | Konsist `service-contract` | состояние сервиса в памяти: журнал и прогресс монтажа хранятся в процессе, операции с ошибкой нет |
 | `MainViewController.kt` (`composeApp/iosMain`) | detekt `ForbiddenPrintln` | мост логов SDK в консоль Xcode |
 
 Остальные `@Suppress` в коде — стандартные правила detekt (`LongMethod`, `CyclomaticComplexMethod` у плоских таблиц

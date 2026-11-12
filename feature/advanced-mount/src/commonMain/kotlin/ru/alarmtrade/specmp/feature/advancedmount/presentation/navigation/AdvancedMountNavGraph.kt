@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -37,6 +38,8 @@ internal data class AdvancedMountSectionRoute(
     val section: MountSection,
     val deviceTitle: String,
     val fromBypass: Boolean = false,
+    val focusSettingId: Int? = null,
+    val openLoad: Boolean = false,
 ) : NavKey
 
 @Serializable
@@ -53,13 +56,21 @@ private val navConfig = SavedStateConfiguration {
     }
 }
 
-/** При потере связи граф остаётся в композиции под экраном дисконнекта: после переподключения — тот же экран. */
+/**
+ * При потере связи граф остаётся в композиции под экраном дисконнекта: после переподключения — тот же экран.
+ * Загрузчик убирает граф из композиции: [resumeAssistantTitle] (заголовок блока) — стек начнётся с ассистента.
+ */
 @Composable
 fun AdvancedMountNavGraph(
     onExit: () -> Unit,
     onOpenSupportChat: () -> Unit,
     firmwareCheck: @Composable (onBack: () -> Unit) -> Unit,
-    settingsEditor: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
+    settingsEditor: @Composable (
+        onBack: () -> Unit,
+        onOpenFirmwareUpdate: () -> Unit,
+        focusSettingId: Int?,
+        openLoad: Boolean,
+    ) -> Unit,
     configurator: @Composable (onBack: () -> Unit, onOpenFirmwareUpdate: () -> Unit) -> Unit,
     bypassLearning: @Composable (onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
     clone: @Composable (fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) -> Unit,
@@ -67,8 +78,22 @@ fun AdvancedMountNavGraph(
     systemDevices: @Composable (onBack: () -> Unit, onOpenPairing: () -> Unit) -> Unit,
     dynamicDevices: @Composable (onBack: () -> Unit, onOpenSystemDevices: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit,
+    assistant: @Composable (
+        onBack: () -> Unit,
+        onOpenSection: (MountSection) -> Unit,
+        onOpenSettings: (focusSettingId: Int?, openLoad: Boolean) -> Unit,
+    ) -> Unit,
+    resumeAssistantTitle: String? = null,
 ) {
-    val backStack = rememberNavBackStack(navConfig, AdvancedMountRootRoute)
+    val backStack = if (resumeAssistantTitle == null) {
+        rememberNavBackStack(navConfig, AdvancedMountRootRoute)
+    } else {
+        rememberNavBackStack(
+            navConfig,
+            AdvancedMountRootRoute,
+            AdvancedMountSectionRoute(MountSection.ASSISTANT, resumeAssistantTitle),
+        )
+    }
 
     NavDisplay(
         backStack = backStack,
@@ -95,11 +120,37 @@ fun AdvancedMountNavGraph(
                 when (key.section) {
                     MountSection.FIRMWARE_UPDATE -> firmwareCheck { backStack.popSafe() }
 
-                    MountSection.SETTINGS -> settingsEditor({ backStack.popSafe() }) {
-                        backStack.replaceCurrent(
-                            AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle),
-                        )
-                    }
+                    MountSection.SETTINGS -> settingsEditor(
+                        { backStack.popSafe() },
+                        {
+                            backStack.replaceCurrent(
+                                AdvancedMountSectionRoute(MountSection.FIRMWARE_UPDATE, key.deviceTitle),
+                            )
+                        },
+                        key.focusSettingId,
+                        key.openLoad,
+                    )
+
+                    MountSection.ASSISTANT -> assistant(
+                        { backStack.popSafe() },
+                        { section ->
+                            if (section == MountSection.SUPPORT_CHAT) {
+                                onOpenSupportChat()
+                            } else {
+                                backStack.navigateSafe(AdvancedMountSectionRoute(section, key.deviceTitle))
+                            }
+                        },
+                        { focusSettingId, openLoad ->
+                            backStack.navigateSafe(
+                                AdvancedMountSectionRoute(
+                                    MountSection.SETTINGS,
+                                    key.deviceTitle,
+                                    focusSettingId = focusSettingId,
+                                    openLoad = openLoad,
+                                ),
+                            )
+                        },
+                    )
 
                     MountSection.CONFIGURATOR -> configurator({ backStack.popSafe() }) {
                         backStack.replaceCurrent(
@@ -121,18 +172,8 @@ fun AdvancedMountNavGraph(
 
                     MountSection.CHECK_STATE -> checkState { backStack.popSafe() }
 
-                    // Переходы между «Устройствами» и «Приживлением» заменяют экран: стек не растёт от переключений.
-                    MountSection.SYSTEM_DEVICES -> systemDevices({ backStack.popSafe() }) {
-                        backStack.replaceCurrent(
-                            AdvancedMountSectionRoute(MountSection.DYNAMIC_DEVICES, key.deviceTitle),
-                        )
-                    }
-
-                    MountSection.DYNAMIC_DEVICES -> dynamicDevices({ backStack.popSafe() }) {
-                        backStack.replaceCurrent(
-                            AdvancedMountSectionRoute(MountSection.SYSTEM_DEVICES, key.deviceTitle),
-                        )
-                    }
+                    MountSection.SYSTEM_DEVICES, MountSection.DYNAMIC_DEVICES ->
+                        PeripheralsSection(key, backStack, systemDevices, dynamicDevices)
 
                     MountSection.VEHICLES -> vehicles { backStack.popSafe() }
 
@@ -146,4 +187,24 @@ fun AdvancedMountNavGraph(
             }
         },
     )
+}
+
+/** «Устройства системы» и «Приживление»: переходы между ними заменяют экран — стек не растёт от переключений. */
+@Composable
+private fun PeripheralsSection(
+    key: AdvancedMountSectionRoute,
+    backStack: NavBackStack<NavKey>,
+    systemDevices: @Composable (onBack: () -> Unit, onOpenPairing: () -> Unit) -> Unit,
+    dynamicDevices: @Composable (onBack: () -> Unit, onOpenSystemDevices: () -> Unit) -> Unit,
+) {
+    val onBack: () -> Unit = { backStack.popSafe() }
+    if (key.section == MountSection.SYSTEM_DEVICES) {
+        systemDevices(onBack) {
+            backStack.replaceCurrent(AdvancedMountSectionRoute(MountSection.DYNAMIC_DEVICES, key.deviceTitle))
+        }
+    } else {
+        dynamicDevices(onBack) {
+            backStack.replaceCurrent(AdvancedMountSectionRoute(MountSection.SYSTEM_DEVICES, key.deviceTitle))
+        }
+    }
 }

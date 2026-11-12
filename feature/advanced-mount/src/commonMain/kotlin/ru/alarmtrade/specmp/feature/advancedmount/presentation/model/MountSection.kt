@@ -8,6 +8,8 @@ import ru.alarmtrade.specmp.feature.device.interaction.domain.model.DeviceFeatur
 @Serializable
 @SerialName("advanced-mount.MountSection")
 enum class MountSection(val needsCan: Boolean = false) {
+    /** Открывается при любом CAN: сам показывает, что закрыто заводским CAN. */
+    ASSISTANT,
     FIRMWARE_UPDATE,
 
     /** Живое состояние блока и команды — только по Bluetooth (SDK не отдаёт телеметрию по USB). */
@@ -29,7 +31,7 @@ enum class MountSection(val needsCan: Boolean = false) {
 }
 
 internal val UnsupportedSections =
-    listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES)
+    listOf(MountSection.ASSISTANT, MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES)
 
 /** `null` — возможности не прочитаны: только [UnsupportedSections]; «Проверка состояния» — только по Bluetooth. */
 internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSection> {
@@ -54,6 +56,7 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
 
             MountSection.CHECK_STATE, MountSection.SYSTEM_DEVICES -> bluetooth
 
+            MountSection.ASSISTANT,
             MountSection.SUPPORT_CHAT,
             MountSection.VEHICLES,
             -> true

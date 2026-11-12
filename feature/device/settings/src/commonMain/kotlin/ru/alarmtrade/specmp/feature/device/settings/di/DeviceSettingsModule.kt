@@ -8,8 +8,10 @@ import ru.alarmtrade.specmp.feature.device.settings.data.datasource.DeviceSettin
 import ru.alarmtrade.specmp.feature.device.settings.data.datasource.SpecialistDeviceSettingsDataSource
 import ru.alarmtrade.specmp.feature.device.settings.data.repository.SpecialistDeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.data.service.DeviceSettingsSessionControllerImpl
+import ru.alarmtrade.specmp.feature.device.settings.data.service.DeviceSettingsWritesImpl
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsWrites
 
 val deviceSettingsModule = module {
     single<DeviceSettingsDataSource> {
@@ -20,4 +22,5 @@ val deviceSettingsModule = module {
     single<DeviceSettingsSessionController> {
         DeviceSettingsSessionControllerImpl(repository = get(), appScope = get(appScopeQualifier), dispatchers = get())
     }
+    single<DeviceSettingsWrites> { DeviceSettingsWritesImpl() }
 }

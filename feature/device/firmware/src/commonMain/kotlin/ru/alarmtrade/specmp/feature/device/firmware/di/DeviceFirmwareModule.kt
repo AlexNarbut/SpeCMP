@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.firmware.di
 
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -20,6 +21,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRe
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.SerialFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.domain.usecase.CheckFirmwareUseCase
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFileExporter
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.screen.archive.FirmwareArchiveRequest
@@ -39,13 +41,14 @@ val deviceFirmwareModule = module {
     }
     single<FirmwareUpdateDataSource> { SpecialistFirmwareUpdateDataSource(alarmDevice = { get() }) }
     singleOf(::SpecialistFirmwareRepository) bind FirmwareRepository::class
+    factoryOf(::CheckFirmwareUseCase)
     singleOf(::SpecialistFirmwareUpdateRepository) bind FirmwareUpdateRepository::class
     singleOf(::SpecialistSerialFirmwareRepository) bind SerialFirmwareRepository::class
     // Состояние, привязанное к аккаунту, — чистится при логауте.
     single { FirmwareBootRequester() } bind AuthCloseable::class
     single { FirmwareArchivePicker() }
 
-    viewModelOf(::FirmwareCheckViewModel)
+    viewModel { args -> FirmwareCheckViewModel(get(), get(), get(), get(), get(), args.getOrNull()) }
     viewModelOf(::FirmwareUpdateViewModel)
     viewModelOf(::FirmwareFileViewModel)
     viewModelOf(::SerialFirmwareViewModel)

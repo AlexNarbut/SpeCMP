@@ -341,7 +341,9 @@ class DeviceSessionImplTest {
         runCurrent()
 
         repository.link.value = DeviceLinkState.DISCONNECTED
-        advanceTimeBy(3_001)
+        runCurrent()
+        assertEquals(1, repository.reconnectCount)
+        advanceTimeBy(2_001)
         assertEquals(3, repository.reconnectCount)
 
         repository.link.value = DeviceLinkState.READY
@@ -411,7 +413,7 @@ class DeviceSessionImplTest {
         val session = testSession(repository, FakeDeviceConnectionRepository())
         session.attach(ConnectionTransport.BLE)
         backgroundScope.launch { session.state.collect {} }
-        advanceTimeBy(1_001)
+        runCurrent()
         assertEquals(1, repository.reconnectCount)
 
         session.close()

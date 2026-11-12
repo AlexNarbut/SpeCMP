@@ -164,4 +164,7 @@ enum class CmpIcons {
     AddLink,
     Flare,
     Watch,
+    Bolt,
+    Tune,
+    Speed,
 }

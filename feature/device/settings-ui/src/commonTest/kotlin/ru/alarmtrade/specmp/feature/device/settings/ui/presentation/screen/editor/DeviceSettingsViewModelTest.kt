@@ -15,6 +15,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
@@ -64,6 +66,8 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsWrites
+import ru.alarmtrade.specmp.feature.device.settings.domain.service.SettingsWrite
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarBrand
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarCard
@@ -142,6 +146,18 @@ class DeviceSettingsViewModelTest {
         }
     }
 
+    private class FakeSettingsWrites : DeviceSettingsWrites {
+        val recorded = mutableListOf<SettingsWrite>()
+
+        override fun writes(): Flow<Response<SettingsWrite>> = emptyFlow()
+
+        override fun record(write: SettingsWrite) {
+            recorded += write
+        }
+    }
+
+    private val writes = FakeSettingsWrites()
+
     private fun TestScope.viewModel(
         source: SettingsSource = SettingsSource.Device,
         options: SettingsEditorOptions = SettingsEditorOptions(),
@@ -154,6 +170,7 @@ class DeviceSettingsViewModelTest {
             options,
             repository,
             repository,
+            writes,
             local,
             paneWidths,
             cars,
@@ -248,6 +265,18 @@ class DeviceSettingsViewModelTest {
 
         assertEquals(SettingsDialog.LoadError(LoadErrorKind.MISMATCH), vm.state.value.dialog)
         assertTrue(vm.state.value.changedIds.isEmpty())
+    }
+
+    @Test
+    fun `focus opens the section of the setting and the load menu once the menu is read`() = test {
+        val vm = viewModel(options = SettingsEditorOptions(focusSettingId = delay.id, openLoadMenu = true))
+        val effects = mutableListOf<DeviceSettingsEffect>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
+        settle()
+
+        assertEquals(listOf<DeviceSettingsEffect>(DeviceSettingsEffect.OpenSection(listOf(1, 10))), effects)
+        assertEquals(SettingsDialog.LoadSources, vm.state.value.dialog)
+        assertEquals(null, vm.state.value.pendingFocus)
     }
 
     @Test

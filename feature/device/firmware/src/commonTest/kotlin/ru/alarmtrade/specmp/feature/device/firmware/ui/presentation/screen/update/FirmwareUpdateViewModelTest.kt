@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.WriteFailureReason
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwarePreselect
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
@@ -221,6 +222,34 @@ class FirmwareUpdateViewModelTest {
     }
 
     @Test
+    fun `version chosen before the bootloader goes straight to the confirmation`() = test {
+        prepareMain()
+        val chosen = version("3.40", "old notes")
+        requester.request(FirmwareBootRequest(1, FirmwareChannel.RELEASE, FirmwarePreselect.Version(chosen)))
+        val (vm, _) = viewModel()
+
+        val state = vm.state.value
+        assertEquals(UpdatePhase.Confirm, state.phase)
+        assertEquals(ConfirmUi("3.57", "3.40", "old notes", older = true), state.confirm)
+        assertEquals(emptyList(), repository.latestCalls)
+    }
+
+    @Test
+    fun `latest requested before the bootloader is fetched and confirmed without the source step`() = test {
+        prepareMain()
+        repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.57", "same"))
+        requester.request(FirmwareBootRequest(1, FirmwareChannel.RELEASE, FirmwarePreselect.Latest))
+        val (vm, _) = viewModel()
+
+        assertEquals(UpdatePhase.Confirm, vm.state.value.phase)
+        assertEquals(listOf(1L to FirmwareChannel.RELEASE), repository.latestCalls)
+
+        vm.onCancelConfirm()
+        runCurrent()
+        assertEquals(UpdatePhase.Source, vm.state.value.phase)
+    }
+
+    @Test
     fun `download fetches the latest version and asks for confirmation`() = test {
         prepareMain()
         repository.latest[1L to FirmwareChannel.RELEASE] = Response.Success(version("3.61", "notes"))
@@ -328,7 +357,7 @@ class FirmwareUpdateViewModelTest {
     }
 
     @Test
-    fun `block that returns to the bootloader after applying is an applying error`() = test {
+    fun `block that returns to the bootloader after applying waits for the sdk verdict`() = test {
         val vm = startedUpdate()
         updateRepository.emit(FirmwareUpdateProgress.Applying)
         runCurrent()
@@ -336,6 +365,24 @@ class FirmwareUpdateViewModelTest {
         runCurrent()
 
         linkBack(bootDevice)
+        assertEquals(UpdatePhase.Apply, vm.state.value.phase)
+
+        updateRepository.emit(FirmwareUpdateProgress.Finished)
+        runCurrent()
+        assertEquals(UpdatePhase.Success, vm.state.value.phase)
+    }
+
+    @Test
+    fun `applying error reported by the sdk after the bootloader returned is shown`() = test {
+        val vm = startedUpdate()
+        updateRepository.emit(FirmwareUpdateProgress.Applying)
+        runCurrent()
+        linkDrop()
+        runCurrent()
+        linkBack(bootDevice)
+
+        updateRepository.fail(FirmwareFailure.Write(WriteFailureReason.ApplyingError))
+        runCurrent()
 
         assertEquals(UpdatePhase.Error(FailureKind.ApplyingError), vm.state.value.phase)
         assertNull(session.reboot.value)

@@ -20,6 +20,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.toFirmwareFailu
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.repository.FirmwareUpdateRepository
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwarePreselect
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.navigation.FirmwareArchivePicker
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.platform.FirmwareFilePickResult
@@ -85,8 +86,11 @@ class FirmwareUpdateViewModel(
         if (current.resumable) {
             // Передача продолжается сама: SDK дождался связи и шлёт неподтверждённый кадр.
             reduceCore { copy(linkDropped = false) }
+        } else if (current.stage == UpdatePhase.Apply && current.running) {
+            // Блок после применения перезагружается обратно в загрузчик, и SDK только теперь спрашивает у него итог.
+            reduceCore { copy(linkDropped = false) }
         } else if (current.stage == UpdatePhase.Apply) {
-            // После применения блок должен был вернуться в рабочий режим, а он снова в загрузчике: не применилась.
+            // SDK итога не дал, а блок вместо рабочего режима снова в загрузчике: не применилась.
             cancelLaunched(UPDATE_PROCESS)
             deviceSession.cancelReboot()
             reduceCore { copy(stage = UpdatePhase.Error(FailureKind.ApplyingError), linkDropped = false) }
@@ -105,6 +109,18 @@ class FirmwareUpdateViewModel(
         val response = withContext(dispatchers.io) { repository.modules(source.deviceName, transport) }
         val modules = (response as? Response.Success)?.value.orEmpty().filter { it.bootTarget == source.target }
         reduceCore { withBlock(source, modules, transport) }
+        applyPreselect()
+    }
+
+    // Версия выбрана ещё до загрузчика (архив, ассистент): сразу на подтверждение, без выбора источника.
+    private suspend fun applyPreselect() {
+        val preselect = core.preselect ?: return
+        if (core.stage != UpdatePhase.Source) return
+        reduceCore { copy(preselect = null) }
+        when (preselect) {
+            FirmwarePreselect.Latest -> downloadLatest()
+            is FirmwarePreselect.Version -> onArchivePicked(preselect.version)
+        }
     }
 
     fun onModuleSelected(index: Int) {
@@ -117,24 +133,25 @@ class FirmwareUpdateViewModel(
     }
 
     fun onDownloadClick() {
-        intent {
-            executeWithProceedLock {
-                val start = core
-                val moduleId = start.selectedModuleId ?: return@executeWithProceedLock
-                if (start.stage != UpdatePhase.Source) return@executeWithProceedLock
-                reduceCore { copy(stage = UpdatePhase.Download, sourceError = null, fileError = null) }
-                val can = start.profile?.can?.takeIf { start.isAlarmMain }
-                val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel, can) }
-                reduceCore {
-                    if (stage != UpdatePhase.Download) return@reduceCore this
-                    when (response) {
-                        is Response.Success ->
-                            copy(stage = UpdatePhase.Confirm, candidate = response.value, localFile = null)
+        intent { executeWithProceedLock { downloadLatest() } }
+    }
 
-                        is Response.Error ->
-                            copy(stage = UpdatePhase.Source, sourceError = FirmwareError.from(response.exception))
-                    }
-                }
+    private suspend fun downloadLatest() {
+        val start = core
+        val moduleId = start.selectedModuleId ?: return
+        if (start.stage != UpdatePhase.Source) return
+        reduceCore { copy(stage = UpdatePhase.Download, sourceError = null, fileError = null) }
+        val can = start.profile?.can?.takeIf { start.isAlarmMain }
+        val response = withContext(dispatchers.io) { repository.latest(moduleId, start.channel, can) }
+        reduceCore {
+            if (stage != UpdatePhase.Download) return@reduceCore this
+            when (response) {
+                is Response.Success -> copy(stage = UpdatePhase.Confirm, candidate = response.value, localFile = null)
+
+                is Response.Error -> copy(
+                    stage = UpdatePhase.Source,
+                    sourceError = FirmwareError.from(response.exception),
+                )
             }
         }
     }

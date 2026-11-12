@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flow
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.common.core.serialization.IntWrapper
 import ru.alarmtrade.specialist.domain.alarmDevice.bypass.BypassLearningState
+import ru.alarmtrade.specialist.domain.alarmDevice.bypass.CloneBypassState
 import ru.alarmtrade.specialist.domain.alarmDevice.bypass.CloneProcedureState
 import ru.alarmtrade.specialist.interactors.bluetoothAlarmDevice.BluetoothAlarmDeviceInteractor
 import ru.alarmtrade.specmp.core.specialist.sdk.resolveOrNull
@@ -15,6 +16,7 @@ internal interface AutostartDataSource {
     fun learnBypass(): Flow<SpecialistResponse<BypassLearningState>>?
     suspend fun cloneAttempts(): SpecialistResponse<IntWrapper>?
     fun cloneProcedure(): Flow<SpecialistResponse<CloneProcedureState>>?
+    suspend fun cloneBypassState(): SpecialistResponse<CloneBypassState>?
 }
 
 internal class SpecialistAutostartDataSource(private val alarmDevice: () -> BluetoothAlarmDeviceInteractor) :
@@ -29,4 +31,7 @@ internal class SpecialistAutostartDataSource(private val alarmDevice: () -> Blue
         alarmDevice.resolveOrNull()?.let { interactor ->
             flow { emitAll(interactor.makeCloneProcedureFlowUseCase.execute()) }
         }
+
+    override suspend fun cloneBypassState(): SpecialistResponse<CloneBypassState>? =
+        alarmDevice.resolveOrNull()?.getCloneBypassStateUseCase?.execute()
 }

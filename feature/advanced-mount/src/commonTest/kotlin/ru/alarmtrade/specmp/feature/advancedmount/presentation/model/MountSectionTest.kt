@@ -15,6 +15,7 @@ class MountSectionTest {
     fun `settings feature brings configurator, tech requests and community maps`() {
         assertEquals(
             listOf(
+                MountSection.ASSISTANT,
                 MountSection.FIRMWARE_UPDATE,
                 MountSection.SETTINGS,
                 MountSection.CONFIGURATOR,
@@ -28,9 +29,9 @@ class MountSectionTest {
     }
 
     @Test
-    fun `chat and vehicles are always shown`() {
+    fun `assistant, chat and vehicles are always shown`() {
         assertEquals(
-            listOf(MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
+            listOf(MountSection.ASSISTANT, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
             emptySet<DeviceFeature>().toSections(bluetooth = false),
         )
     }
@@ -54,9 +55,19 @@ class MountSectionTest {
     @Test
     fun `unread features give the unsupported fallback`() {
         assertEquals(
-            listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
+            listOf(
+                MountSection.ASSISTANT,
+                MountSection.FIRMWARE_UPDATE,
+                MountSection.SUPPORT_CHAT,
+                MountSection.VEHICLES,
+            ),
             (null as Set<DeviceFeature>?).toSections(bluetooth = true),
         )
+    }
+
+    @Test
+    fun `assistant is the first tile`() {
+        assertEquals(MountSection.ASSISTANT, MountSection.entries.first())
     }
 
     @Test

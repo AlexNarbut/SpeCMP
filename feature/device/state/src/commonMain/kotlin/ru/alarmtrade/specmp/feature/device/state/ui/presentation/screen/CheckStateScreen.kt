@@ -484,18 +484,15 @@ private fun StatusArea(state: CheckStateState, actions: CheckStateActions) {
             title = stringResource(Strings.string.devicestate_banner_title_program_exit),
             text = stringResource(Strings.string.devicestate_banner_msg_reboot),
             busy = true,
-            modifier = Modifier.heightIn(min = 72.dp),
         )
 
         else -> StateBanner(
             title = stringResource(Strings.string.devicestate_banner_title_program),
             text = stringResource(Strings.string.devicestate_banner_msg_program),
             icon = CmpIcons.DeveloperBoard,
-            action = stringResource(Strings.string.devicestate_banner_btn_turn_off).takeIf {
-                state.pending == null && !state.fastMount
-            },
+            action = stringResource(Strings.string.devicestate_banner_btn_turn_off).takeIf { !state.fastMount },
+            actionEnabled = state.pending == null,
             onAction = { actions.onCommand(StateCommand.PROGRAM_MODE_OFF) },
-            modifier = Modifier.heightIn(min = 72.dp),
         )
     }
 }
@@ -512,13 +509,13 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
             neutral = true,
         )
     }
-    val enabled = state.pending == null
     if (vehicle.serviceMode) {
         StateBanner(
             title = stringResource(Strings.string.devicestate_banner_title_service),
             text = stringResource(Strings.string.devicestate_banner_msg_not_guarding),
             icon = CmpIcons.Build,
-            action = stringResource(Strings.string.devicestate_banner_btn_turn_off).takeIf { enabled },
+            action = stringResource(Strings.string.devicestate_banner_btn_turn_off),
+            actionEnabled = state.pending == null,
             onAction = { actions.onCommand(StateCommand.SERVICE_MODE_OFF) },
         )
     }

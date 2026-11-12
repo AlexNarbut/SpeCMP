@@ -161,7 +161,12 @@ class AdvancedMountRootViewModelTest {
         val content = assertIs<MountAccess.Ready>(vm.state.value.content.content)
         assertTrue(content.unsupported)
         assertEquals(
-            listOf(MountSection.FIRMWARE_UPDATE, MountSection.SUPPORT_CHAT, MountSection.VEHICLES),
+            listOf(
+                MountSection.ASSISTANT,
+                MountSection.FIRMWARE_UPDATE,
+                MountSection.SUPPORT_CHAT,
+                MountSection.VEHICLES,
+            ),
             content.sections,
         )
     }

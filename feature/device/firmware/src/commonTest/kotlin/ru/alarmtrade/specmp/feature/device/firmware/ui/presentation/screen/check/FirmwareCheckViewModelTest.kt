@@ -34,6 +34,7 @@ import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareModuleK
 import ru.alarmtrade.specmp.feature.device.firmware.domain.model.FirmwareVersion
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequest
 import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwareBootRequester
+import ru.alarmtrade.specmp.feature.device.firmware.domain.session.FirmwarePreselect
 import ru.alarmtrade.specmp.feature.device.firmware.ui.FakeFirmwareRepository
 import ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.model.FirmwareError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
@@ -114,10 +115,12 @@ class FirmwareCheckViewModelTest {
     private fun TestScope.viewModel(
         transport: ConnectionTransport = ConnectionTransport.BLE,
         subscribed: Boolean = true,
+        autoBoot: FirmwareAutoBoot? = null,
     ): FirmwareCheckViewModel {
         val dispatchers = testDispatchers(dispatcher)
         session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = transport)
-        val vm = FirmwareCheckViewModel(session, repository, requester, cooldown, dispatchers).also { viewModels += it }
+        val vm = FirmwareCheckViewModel(session, repository, requester, cooldown, dispatchers, autoBoot)
+            .also { viewModels += it }
         if (subscribed) backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         runCurrent()
         return vm
@@ -277,6 +280,36 @@ class FirmwareCheckViewModelTest {
         assertEquals(FirmwareBootRequest(1, FirmwareChannel.BETA), requester.take())
         assertNull(vm.state.value.dialog)
         assertEquals(false, vm.state.value.bootFailed)
+    }
+
+    @Test
+    fun `auto boot offers the confirmation once and passes the chosen version to the bootloader`() = test {
+        repository.modulesResult = Response.Success(listOf(alarmModule))
+        val chosen = version("3.40")
+        val vm = viewModel(autoBoot = FirmwareAutoBoot(moduleId = 1, version = chosen))
+
+        assertEquals(CheckDialog.ConfirmBoot(1), vm.state.value.dialog)
+        vm.onDialogDismiss()
+        vm.onRetry()
+        runCurrent()
+        assertNull(vm.state.value.dialog)
+
+        vm.onUpdateClick(1)
+        vm.onConfirmBoot()
+        runCurrent()
+        val expected = FirmwareBootRequest(1, FirmwareChannel.RELEASE, FirmwarePreselect.Version(chosen))
+        assertEquals(expected, requester.take())
+    }
+
+    @Test
+    fun `auto boot without a version asks the bootloader for the latest one`() = test {
+        repository.modulesResult = Response.Success(listOf(alarmModule))
+        val vm = viewModel(autoBoot = FirmwareAutoBoot(moduleId = 1, version = null))
+
+        vm.onConfirmBoot()
+        runCurrent()
+
+        assertEquals(FirmwareBootRequest(1, FirmwareChannel.RELEASE, FirmwarePreselect.Latest), requester.take())
     }
 
     @Test

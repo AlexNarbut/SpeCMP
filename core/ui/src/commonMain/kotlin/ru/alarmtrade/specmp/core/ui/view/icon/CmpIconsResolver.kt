@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothDisabled
 import androidx.compose.material.icons.filled.BluetoothSearching
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Cable
 import androidx.compose.material.icons.filled.Call
@@ -125,6 +126,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SettingsRemote
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.SupportAgent
@@ -136,6 +138,7 @@ import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Vibration
@@ -301,4 +304,7 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.AddLink -> Icons.Filled.AddLink
     CmpIcons.Flare -> Icons.Filled.Flare
     CmpIcons.Watch -> Icons.Filled.Watch
+    CmpIcons.Bolt -> Icons.Filled.Bolt
+    CmpIcons.Tune -> Icons.Filled.Tune
+    CmpIcons.Speed -> Icons.Filled.Speed
 }

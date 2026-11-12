@@ -42,6 +42,8 @@ internal data class DeviceSettingsState(
     val searchInput: String = "",
     val changes: SettingsChangeTracker = SettingsChangeTracker(),
     val pendingLoad: SettingsSource? = null,
+    val pendingFocus: Int? = null,
+    val pendingLoadMenu: Boolean = false,
     /** Снимок для «Что изменится» (временный файл); после загрузки или отмены — удаляется. */
     val previewSnapshot: SettingsSource.File? = null,
     /** Снимок, отданный системному сохранению файла (до ответа `onFileExported`). */

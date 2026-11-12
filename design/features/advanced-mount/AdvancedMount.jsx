@@ -13,6 +13,7 @@ const { CmpTopAppBar, CmpIconButton, CmpButton, CmpOutlinedButton, CmpSurface, C
 
 // ── Каталог разделов (порядок = порядок в сетке) ─────────────────────────────
 const SECTIONS = [
+  { key: "assistant", icon: "", title: "Ассистент", sub: "Выберите действие — результат и следующий шаг появятся в ленте", featured: true },
   { key: "firmware", svg: "sections/01_proverka_proshivok.svg", icon: "",    title: "Проверка прошивок",     sub: "Обновите прошивки системы до актуальных версий" },
   { key: "settings", svg: "sections/02_rasshirennye_nastroyki.svg", icon: "",             title: "Расширенные настройки", sub: "Выполните полную настройку системы", needsCan: true },
   { key: "bypass",   svg: "sections/03_beskluchevoy_obhod.svg", icon: "",              title: "Бесключевой обход",     sub: "Обучение бесключевому обходу штатного иммобилайзера", needsCan: true },
@@ -31,17 +32,17 @@ const PROFILES = {
   alarm: {
     label: "Сигнализация (CAN)", name: "Pandora DX-4GS", id: "107131", transport: "ble", address: "AC:23:3F:A1:0C:7D",
     fw: "3.57", can: { fw: "12.05", code: "VWPOLO20", factory: true }, imei: "351756051523999", product: true,
-    sections: ["firmware", "settings", "bypass", "clone", "extra", "check", "tickets", "chat", "voice", "maps", "cars"],
+    sections: ["assistant", "firmware", "settings", "bypass", "clone", "extra", "check", "tickets", "chat", "voice", "maps", "cars"],
   },
   module: {
     label: "Модуль (USB)", name: "Pandora RMD-5", id: "107131313", transport: "usb", address: "HID · 0483:5750",
     fw: "3.57", can: null, imei: null, product: false,
-    sections: ["firmware", "settings", "extra", "tickets", "chat", "cars"],
+    sections: ["assistant", "firmware", "settings", "extra", "tickets", "chat", "cars"],
   },
   legacy: {
     label: "Не поддерживается", name: "Pandora RMD-4", id: "107131320", transport: "usb", address: "HID · 0483:5751",
     fw: "3.42", can: null, imei: null, product: false, unsupported: true,
-    sections: ["firmware", "chat", "cars"],
+    sections: ["assistant", "firmware", "chat", "cars"],
   },
 };
 
@@ -77,6 +78,7 @@ const SECTION_PATHS = {
 // (базовый слой opacity .3 + деталь полным тоном).
 const MAIN_MAP = { firmware: "firmware_archive", settings: "settings_configurator", tickets: "orders", cars: "vehicle_support", maps: "articles" };
 const DUO = {
+  assistant: <><rect opacity=".3" x="2" y="2" width="20" height="20" rx="6" /><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z" /></>,
   bypass: <><path opacity=".3" d={SECTION_PATHS.bypass} /><path d="M7 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM17 14h4v4h-4zM12 10h11v2H12z" /></>,
   clone: <><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1z" /><path opacity=".3" d="M19 5H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z" /><path d="M10 10h7v2h-7zM10 14h7v2h-7z" /></>,
   extra: <><path opacity=".3" d="M15 9H9c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V10c0-.55-.45-1-1-1z" /><circle cx="12" cy="13" r="2" /><path d="M7.05 6.05l1.41 1.41C9.37 6.56 10.62 6 12 6s2.63.56 3.54 1.46l1.41-1.41C15.68 4.78 13.93 4 12 4s-3.68.78-4.95 2.05zM12 0C8.96 0 6.21 1.23 4.22 3.22l1.41 1.41C7.26 3.01 9.51 2 12 2s4.74 1.01 6.36 2.64l1.41-1.41C17.79 1.23 15.04 0 12 0z" /></>,
@@ -91,7 +93,7 @@ function SectionIcon({ k, size = 32 }) {
 }
 const SVG_CACHE = {};
 function loadSvg(src) {
-  if (!SVG_CACHE[src]) SVG_CACHE[src] = fetch("icons/" + src).then((r) => r.text()).then((t) =>
+  if (!SVG_CACHE[src]) SVG_CACHE[src] = fetch((window.AM_BASE || "") + "icons/" + src).then((r) => r.text()).then((t) =>
     t.replace(/<\?xml[^>]*\?>/, "").replace(/<metadata[\s\S]*?<\/metadata>/, "")
      .replace(/<svg([^>]*)>/, (m, at) => "<svg" + at.replace(/\s(width|height|x|y)="[^"]*"/g, "").replace(/style="[^"]*"/, "") + ' width="100%" height="100%" fill="currentColor">'));
   return SVG_CACHE[src];
@@ -179,20 +181,21 @@ function DeviceHeader({ p, mode = "work", layout, onInfo, onCanHint, hideRows = 
 }
 
 // ── Плитка раздела ───────────────────────────────────────────────────────────
-function Tile({ s, locked, unread, onClick, big }) {
+function Tile({ s, locked, unread, onClick, big, limited }) {
+  const feat = !!s.featured;
   const { opacity, handlers } = DS.useStateLayer ? DS.useStateLayer() : { opacity: 0, handlers: {} };
   const title = s.key === "chat" && unread ? "Чат тех. поддержки" : s.title;
-  const sub = s.key === "chat" && unread ? "Напишите в чат нашему специалисту о вашей проблеме" : s.sub;
-  const iconBg = locked ? "var(--tertiary-container)" : "var(--primary-container)";
-  const iconFg = locked ? "var(--on-tertiary-container)" : "var(--on-primary-container)";
+  const sub = s.key === "chat" && unread ? "Напишите в чат нашему специалисту о вашей проблеме" : feat && limited ? "Для этого блока доступно меньше действий: прошивка, автомобили, чат поддержки" : s.sub;
+  const iconBg = feat ? "var(--primary)" : locked ? "var(--tertiary-container)" : "var(--primary-container)";
+  const iconFg = feat ? "var(--on-primary)" : locked ? "var(--on-tertiary-container)" : "var(--on-primary-container)";
   return (
-    <CmpSurface onClick={onClick} color="var(--surface-container-low)" radius={18} border style={{ boxSizing: "border-box", position: "relative", overflow: "hidden", cursor: "pointer", height: "100%" }}>
+    <CmpSurface onClick={onClick} color={feat ? "var(--primary-container)" : "var(--surface-container-low)"} radius={18} border={!feat} style={{ boxSizing: "border-box", position: "relative", overflow: "hidden", cursor: "pointer", height: "100%", ...(feat ? { color: "var(--on-primary-container)", border: "1.5px solid var(--primary)" } : null) }}>
       <div {...handlers} role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick && onClick(); } }}
-        style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 14px 14px 16px", minHeight: big ? 96 : 84, boxSizing: "border-box", height: "100%" }}>
+        style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 14px 14px 16px", minHeight: feat ? 104 : big ? 96 : 84, boxSizing: "border-box", height: "100%" }}>
         <div style={{ position: "absolute", inset: 0, background: "var(--on-surface)", opacity, pointerEvents: "none" }} />
-        <div style={{ position: "relative", width: 52, height: 52, borderRadius: 14, background: iconBg, color: iconFg, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-          <SectionIcon k={s.key} size={32} />
+        <div style={{ position: "relative", width: feat ? 60 : 52, height: feat ? 60 : 52, borderRadius: feat ? 16 : 14, background: iconBg, color: iconFg, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+          <SectionIcon k={s.key} size={feat ? 36 : 32} />
           {locked && (
             <span style={{ position: "absolute", right: -7, bottom: -7, width: 26, height: 26, borderRadius: 999, boxSizing: "border-box", background: "var(--tertiary)", color: "var(--on-tertiary)", display: "grid", placeItems: "center", border: "2px solid var(--surface-container-low)" }}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6a3 3 0 0 1 6 0v2H9V6zm3 11.5a1.75 1.75 0 1 1 0-3.5 1.75 1.75 0 0 1 0 3.5z" /></svg>
@@ -203,24 +206,29 @@ function Tile({ s, locked, unread, onClick, big }) {
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
-          <CmpText variant="titleMedium" maxLines={1}>{title}</CmpText>
+          {feat
+            ? <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CmpText variant="titleLarge" maxLines={1}>{title}</CmpText><span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "0 10px", borderRadius: 999, background: "var(--primary)", color: "var(--on-primary)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 700 }}>Новое</span></div>
+            : <CmpText variant="titleMedium" maxLines={1}>{title}</CmpText>}
           {locked
             ? <div style={{ marginTop: 2 }}><CmpText variant="bodyMedium" color="var(--on-tertiary-container)" maxLines={2}><b>Сначала обновите CAN-прошивку</b></CmpText></div>
-            : <div style={{ marginTop: 2 }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)" maxLines={2}>{sub}</CmpText></div>}
+            : <div style={{ marginTop: 2 }}><CmpText variant="bodyMedium" color={feat ? "var(--on-primary-container)" : "var(--on-surface-variant)"} maxLines={2}>{sub}</CmpText></div>}
         </div>
-        <CmpIcon icon="chevron_right" size={24} color="var(--on-surface-variant)" />
+        <CmpIcon icon="chevron_right" size={24} color={feat ? "var(--on-primary-container)" : "var(--on-surface-variant)"} />
       </div>
     </CmpSurface>
   );
 }
 
-function Grid({ items, layout, canLocked, unread, onOpen }) {
-  const cols = layout === "compact" ? "1fr" : "repeat(2, minmax(0, 1fr))";
+function Grid({ items, layout, canLocked, unread, onOpen, limited }) {
+  // Compact — вертикальный список; шире — 2 колонки (auto-fill страхует от неверного замера ширины).
+  const style = layout === "compact"
+    ? { display: "flex", flexDirection: "column", gap: 12 }
+    : { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))", gap: 12, alignContent: "start" };
   return (
-    <div style={{ display: "grid", gridTemplateColumns: cols, gap: 12, alignContent: "start" }}>
+    <div style={style}>
       {items.map((s, i) => (
-        <div key={s.key} className="am-in" style={{ animation: "amIn .26s ease both", animationDelay: `${i * 35}ms` }}>
-          <Tile s={s} big={layout !== "compact"} locked={canLocked && s.needsCan} unread={unread} onClick={() => onOpen(s)} />
+        <div key={s.key} className="am-in" style={{ animation: "amIn .26s ease both", animationDelay: `${i * 35}ms`, ...(s.featured ? { gridColumn: "1 / -1" } : null) }}>
+          <Tile s={s} big={layout !== "compact"} locked={canLocked && s.needsCan} unread={unread} limited={limited} onClick={() => onOpen(s)} />
         </div>
       ))}
     </div>
@@ -282,7 +290,7 @@ function GridArea({ p, state, layout, items, canLocked, unread, onOpen, setState
             <CmpText variant="bodyMedium">Доступны только базовые разделы.</CmpText></div>
         </div>
       )}
-      <Grid items={items} layout={layout} canLocked={canLocked} unread={unread} onOpen={onOpen} />
+      <Grid items={items} layout={layout} canLocked={canLocked} unread={unread} onOpen={onOpen} limited={!!p.unsupported} />
     </div>
   );
 }
@@ -336,7 +344,8 @@ function AdvancedMountScreen({ profile = "alarm", initialState = "ready", mode =
 
   const items = SECTIONS.filter((s) => p.sections.includes(s.key));
   const canLocked = !!(p.can && p.can.factory) && state === "ready";
-  const open = (s) => (canLocked && s.needsCan) ? setDialog("can")
+  const open = (s) => (s.key === "assistant" && window.psHas && window.psHas("assistant")) ? window.psGo(layout === "compact" ? "assistant" : "assistant-wide", profile)
+    : (canLocked && s.needsCan) ? setDialog("can")
     : (s.key === "check" && window.psHas && window.psHas("check-state")) ? window.psGo(layout === "compact" ? "check-state" : "check-state-tablet")
     : setSection(s);
   const effItems = state === "empty" ? [] : items;
@@ -394,4 +403,4 @@ function CmpTextButtonSafe(props) {
   return Btn ? <Btn {...props} /> : <CmpOutlinedButton {...props} />;
 }
 
-Object.assign(window, { AdvancedMountScreen, AM_PROFILES: PROFILES, AM_Tile: Tile, AM_SECTIONS: SECTIONS, AM_SectionIcon: SectionIcon });
+Object.assign(window, { AM_Loaded: () => null, AdvancedMountScreen, AM_PROFILES: PROFILES, AM_Tile: Tile, AM_SECTIONS: SECTIONS, AM_SectionIcon: SectionIcon });

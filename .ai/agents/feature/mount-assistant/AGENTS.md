@@ -1,0 +1,49 @@
+# feature/mount-assistant
+
+- «Ассистент» (ИИ-монтаж v1, без LLM): раздел расширенного монтажа — журнал (лента) и пульт действий. Один обособленный
+  модуль (domain + data + presentation, DI — `mountAssistantModule`): логика другим фичам не нужна. План и ход
+  реализации — `.claude/tasks/ai-mount/ai-mount-plan.md` (раздел 11), макет — `design/features/assistant`,
+  `design/changelog/ai-mount/assistant.md`. Слово «ИИ» в интерфейсе не используется.
+- **Ядро — чистый Kotlin** (`domain/model`, `domain/engine`): каталог `AssistantAction` (тема, вид IN_FEED/HANDOFF,
+  нужные возможности, сеть, «закрыто заводским CAN», только BLE), `availability` (порядок: модели нет в базе → нет
+  возможности/не BLE → «Обновить прошивку» без найденного обновления → «Обновить CAN» без CAN → заводской CAN → нет
+  сети), `topics`, `nextStep` (CAN → прошивка → статус обхода → обход → Clone → состояние → настройки / поддержка),
+  `topicStatus`, `snapshotOf`/`diffTo`, `stemsOf`/`matchCatalog` (названия и ключевые слова — строки
+  `mountassistant_search_value_keywords_<тема>`, ядро языка не знает). Работает от возможностей устройства
+  (`DeviceFacts.capabilities`, `can`, транспорт, сеть), без допущения «это сигнализация»; «CAN не заводской» — только
+  если CAN есть. Микробот и навигационный модуль — вне v1 (для них — свои адаптеры портов, ядро не меняется).
+- **Порты** (`domain/repository`): `AssistantDeviceRepository` (реализация в модуле — сессия + `NetworkMonitor`,
+  монитора нет → сеть доступна), `AssistantSettingsRepository` (в модуле, над `DeviceSettingsRepository`),
+  `AssistantFirmwareRepository` / `AssistantAutostartRepository` / `AssistantStateRepository` — **адаптеры в
+  `composeApp/assistant`** (`assistantPortsModule`): фича не зависит от обособленных `firmware`/`autostart`/`state`.
+  Модели портов — свои, типы других фич в домен ассистента не протекают.
+- **Журнал** (`AssistantJournal`, `data/service/AssistantJournalImpl`, Koin `single`) хранит записи, прогресс и
+  ожидаемый возврат (`PendingHandoff` = действие + снимок «до») на время сессии блока: прошивка уводит граф
+  расширенного монтажа из композиции. `bind(systemId)` — другой блок сбрасывает журнал, тот же — нет. Что писать,
+  решает VM; экран всегда строится из журнала (VM после загрузчика бывает и новой, и прежней).
+- **Возврат с другого экрана**: HANDOFF → шаг + `beginHandoff` + эффект `Navigate(AssistantNavigationTarget)` →
+  `composeApp/navigation/AssistantWiring.kt` переводит цель в разделы `AdvancedMountNavGraph` (архив — `FirmwareArchiveEntry`
+  модуля блока поверх ассистента; один модуль — сразу, несколько — выбор в карточке прошивки; «Установить» в архиве и
+  кнопки карточки «Обновить до X» / «Перепрошить» (`FirmwareFlash`) открывают экран прошивок с `FirmwareAutoBoot` —
+  сразу подтверждение загрузчика, версия уже выбрана; чат —
+  `onOpenSupportChat`). Возврат ловит `LifecycleResumeEffect` → `onScreenResumed()`
+  (событие, не стартовая загрузка), новая VM после загрузчика — `onEachDeviceReady`; граф после загрузчика
+  стартует со стеком `[Root, ASSISTANT]` (`resumeAssistantTitle`). Итог — только «изменилось (до → после)» / «не
+  изменилось»: экраны обхода, Clone и прошивки итог наружу не сообщают.
+- **Настройки** — общая сессия `SettingsSource.Device`: `open(reload = false)`, ассистент её не закрывает во время
+  работы, `discardSession(Device)` — в `onCleared` VM. Запись — `setValue` → `save`; неверный PIN приходит как
+  `SettingsWrongPinException` (`device:settings`) → `AssistantWriteException(WRONG_PIN)` → `ServicePinDialog` →
+  `setServicePin` → `save`; отмена после попытки — `revert` старого значения. SDK пишет сессию целиком: чужие
+  несохранённые правки — предупреждением. «Открыть в настройках» — редактор на разделе настройки
+  (`focusSettingId`, без прокрутки и подсветки строки), загрузка — редактор с меню «Загрузить из…» (`openLoadMenu`).
+- UI (`presentation`): `MountAssistantEntry(onBack, onNavigate)` — каркас внутри записи графа; раскладки Compact
+  (< 600) / Medium (600–839) — шапка блока, лента, пульт внизу каруселью; Expanded (≥ 840) — колонка 400 dp (шапка,
+  плитки 2 колонки; при вводе не меняется) и лента до 760 dp со строкой поиска под ней; найденное — панель
+  `SearchResultsPanel` над строкой поиска (строки по группам `resultGroups`, `testTag` `mountassistant_result_<ключ>`). Прокрутка ленты вверх > 60 dp сворачивает пульт до быстрых действий.
+  Пульт — `dockOf` (`presentation/model/DockUi.kt`, чистая функция: дом / тема / поиск). Строки —
+  `core/localization` `mountassistant.xml`. `testTag`: плитки `mountassistant_tile_<ключ>`, поле поиска
+  `mountassistant_search`, стрелка `mountassistant_search_submit`, пульт `mountassistant_dock`, шапка
+  `mountassistant_header`, карточки `mountassistant_card_<id>`, «Записать» `mountassistant_confirm_write`, «Далее»
+  `mountassistant_editor_next`, источники `mountassistant_source_<file|mine|cloud|defaults>`.
+- **Не проверено на железе**: возвращает ли `getCloneBypassState` итог обхода после переподключения; время первого
+  `open(Device)`; автоматический возврат и «до → после» после прошивки; запись настройки при неверном сохранённом PIN.

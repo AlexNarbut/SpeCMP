@@ -235,6 +235,17 @@ Android wrapper также объявляет `ACCESS_COARSE_LOCATION`, пото
 
 ---
 
+### Экран и фоновая работа
+
+Прошивка блока по BLE идёт 15–20 минут; если приложение приостановлено дольше ~5 с, загрузчик блока сбрасывает приём
+(`ERROR_TIMEOUT`) и прошивка начинается заново.
+
+| Платформа | Экран | Фон |
+|---|---|---|
+| Android (`androidApp`, `flasherAndroidApp`) | `FLAG_KEEP_SCREEN_ON` в Activity, пока приложение на переднем плане | нет (foreground service не сделан) |
+| iOS (`iosApp`) | `isIdleTimerDisabled = true` в `iosApp.swift` | `UIBackgroundModes = bluetooth-central` в `Info.plist` |
+| Desktop | не держим | не нужен |
+
 ### macOS
 
 Единственная платформа для обоих целей: Android + iOS.
