@@ -45,6 +45,7 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("DomainSentinelDefault") to ::DomainSentinelDefault,
             RuleName("LoopWithoutCancellation") to ::LoopWithoutCancellation,
             RuleName("LoggerTagLiteral") to ::LoggerTagLiteral,
+            RuleName("ViewModelCallInEffect") to ::ViewModelCallInEffect,
         ),
     )
 

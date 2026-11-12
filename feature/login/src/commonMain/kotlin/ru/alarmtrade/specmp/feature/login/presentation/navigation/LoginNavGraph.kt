@@ -4,13 +4,11 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -41,7 +39,6 @@ import ru.alarmtrade.specmp.feature.login.presentation.components.AuthScreenChro
 import ru.alarmtrade.specmp.feature.login.presentation.model.text
 import ru.alarmtrade.specmp.feature.login.presentation.screen.forgotpassword.ForgotPasswordScreen
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreen
-import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenState
 import ru.alarmtrade.specmp.feature.login.presentation.screen.login.LoginScreenViewModel
 import ru.alarmtrade.specmp.feature.login.presentation.screen.registration.RegistrationScreen
 
@@ -85,12 +82,38 @@ fun LoginNavGraph() {
         ),
         entryProvider = entryProvider<NavKey> {
             entry<LoginRoute> { _ ->
-                LoginEntry(
-                    backStack = backStack,
-                    state = state,
+                AuthScreenChrome(
                     colors = colors,
-                    viewModel = viewModel,
-                )
+                    isLoading = state.value.isAuthLoading,
+                ) { layoutMode ->
+                    AuthBody(
+                        layoutMode = layoutMode,
+                        modifier = Modifier.fillMaxSize(),
+                        colors = colors,
+                        error = state.value.authError?.text(Strings.string.login_common_error_auth_failed),
+                    ) {
+                        LoginScreen(
+                            state = state.value,
+                            colors = colors,
+                            layoutMode = layoutMode,
+                            onLoginChange = viewModel::onLoginChanged,
+                            onPasswordChange = viewModel::onPasswordChanged,
+                            onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
+                            onSubmit = viewModel::onSubmit,
+                            onOpenRegistration = {
+                                viewModel.onResetForm()
+                                backStack.navigateSafe(RegistrationRoute)
+                            },
+                            onOpenForgotPassword = {
+                                viewModel.onResetForm()
+                                backStack.navigateSafe(ForgotPasswordRoute)
+                            },
+                            onResendActivationEmail = viewModel::onResendActivationEmail,
+                            onDismissActivationRequest = viewModel::onDismissActivationRequest,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
             }
             entry<RegistrationRoute> { _ ->
                 AuthChildScreenChrome(
@@ -122,47 +145,6 @@ fun LoginNavGraph() {
             }
         },
     )
-}
-
-@Composable
-private fun LoginEntry(
-    backStack: NavBackStack<NavKey>,
-    state: State<LoginScreenState>,
-    colors: CmpThemeColors,
-    viewModel: LoginScreenViewModel,
-) {
-    AuthScreenChrome(
-        colors = colors,
-        isLoading = state.value.isAuthLoading,
-    ) { layoutMode ->
-        AuthBody(
-            layoutMode = layoutMode,
-            modifier = Modifier.fillMaxSize(),
-            colors = colors,
-            error = state.value.authError?.text(Strings.string.login_common_error_auth_failed),
-        ) {
-            LoginScreen(
-                state = state.value,
-                colors = colors,
-                layoutMode = layoutMode,
-                onLoginChange = viewModel::onLoginChanged,
-                onPasswordChange = viewModel::onPasswordChanged,
-                onPasswordVisibilityChange = viewModel::onPasswordVisibilityChanged,
-                onSubmit = viewModel::onSubmit,
-                onOpenRegistration = {
-                    viewModel.onResetForm()
-                    backStack.navigateSafe(RegistrationRoute)
-                },
-                onOpenForgotPassword = {
-                    viewModel.onResetForm()
-                    backStack.navigateSafe(ForgotPasswordRoute)
-                },
-                onResendActivationEmail = viewModel::onResendActivationEmail,
-                onDismissActivationRequest = viewModel::onDismissActivationRequest,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
 }
 
 @Composable

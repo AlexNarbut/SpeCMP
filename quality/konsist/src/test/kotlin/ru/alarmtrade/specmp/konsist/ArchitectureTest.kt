@@ -144,6 +144,36 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `repository and service members have callers`() {
+        val contracts = scope.interfaces(includeNested = true).filter {
+            it.name.endsWith(REPOSITORY) || it.name.isServiceName() ||
+                it.resideInPackage("..domain.repository..") || it.resideInPackage("..domain.service..")
+        }
+        val implementers = scope.classesAndObjects(includeNested = true)
+            .flatMap { type -> type.parents().map { it.name.substringBefore('<') to type.containingFile.path } }
+            .groupBy({ it.first }, { it.second })
+        val code = scope.files.associate { it.path to it.codeWithoutHeaderCommentsAndStrings() }
+        val message = "Член контракта (интерфейс *Repository/*Coordinator/*Controller, domain/repository, " +
+            "domain/service) вызывается в production-коде вне интерфейса и его реализаций; мёртвый метод " +
+            "удаляется из контракта, реализаций и фейков. docs/patterns.md, «Domain»"
+        val unused = contracts.flatMap { contract ->
+            val own = implementers[contract.name].orEmpty().toSet() + contract.containingFile.path
+            val callers = code.filterKeys { it !in own }.values
+            val members: List<KoBaseDeclaration> =
+                contract.functions(includeNested = false) + contract.properties(includeNested = false)
+            // Функция может вызываться без получателя — в лямбде с ресивером (`updateOutbox { markSent(id) }`).
+            members.filterNot { member ->
+                val reference = when (member) {
+                    is KoFunctionDeclaration -> Regex("""(\.|::)${Regex.escape(member.name)}\b|\b${member.name}\s*\(""")
+                    else -> Regex("""(\.|::)${Regex.escape((member as KoPropertyDeclaration).name)}\b""")
+                }
+                callers.any { reference.containsMatchIn(it) }
+            }
+        }
+        unused.assertFalse(testName = "contract-member-usage", additionalMessage = message) { true }
+    }
+
+    @Test
     fun `service members return Response`() {
         scope.interfaces(includeNested = true)
             .filter { it.name.isServiceName() || it.resideInPackage("..domain.service..") }
@@ -630,6 +660,18 @@ class ArchitectureTest {
                     "разрешён), параметр или CompositionLocal, заданный в корне композиции " +
                     "(${COMPOSITION_ROOTS.joinToString()}). docs/patterns.md, «Внедрение зависимостей»",
             ) { true }
+    }
+
+    @Test
+    fun `composables do not receive view models`() {
+        scope.functions(includeNested = true, includeLocal = true)
+            .filter { it.hasAnnotationWithName("Composable") }
+            .flatMap { it.parameters }
+            .assertFalse(
+                testName = "composable-no-view-model",
+                additionalMessage = "ViewModel не передаётся в composable параметром: её получает точка входа экрана " +
+                    "(koinViewModel), дальше идут state и actions (лямбды, *Actions). docs/compose-best-prac.md",
+            ) { it.type.text.baseTypeName().endsWith("ViewModel") }
     }
 
     @Test

@@ -51,6 +51,7 @@ import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.fastmount.domain.model.MountCar
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.DockFrame
 import ru.alarmtrade.specmp.feature.fastmount.ui.presentation.components.Hero
@@ -144,11 +145,23 @@ internal fun FastMountScreen(
             onBack = viewModel::onSystemCheckBack,
         )
     }
+    val slotActions = remember(viewModel) {
+        SlotActions(
+            onFirmwareBack = viewModel::onFirmwareBack,
+            onCarPicked = viewModel::onCarPicked,
+            onConfigurationPicked = viewModel::onConfigurationPicked,
+            onOpenFirmwareUpdate = viewModel::onOpenFirmwareUpdate,
+            onBypassNext = viewModel::onBypassNext,
+            onCloneNext = viewModel::onCloneNext,
+            onStepBack = viewModel::onStepScreenBack,
+            onBack = viewModel::onBack,
+        )
+    }
     FastMountContent(
         state = state,
         prep = prep,
         master = master,
-        slotContent = { screen -> SlotScreen(screen, state, slots, viewModel, checklist) },
+        slotContent = { screen -> SlotScreen(screen, state, slots, slotActions, checklist) },
         onDialogConfirm = viewModel::onDialogConfirm,
         onDialogDismiss = viewModel::onDialogDismiss,
         onToastHide = viewModel::onToastShown,
@@ -157,6 +170,17 @@ internal fun FastMountScreen(
 }
 
 internal enum class SlotScreen { FIRMWARE, VEHICLE, CONFIGURATION, BYPASS, CLONE, SYSTEM_CHECK }
+
+internal class SlotActions(
+    val onFirmwareBack: () -> Unit,
+    val onCarPicked: (MountCar) -> Unit,
+    val onConfigurationPicked: (configurationId: Int) -> Unit,
+    val onOpenFirmwareUpdate: () -> Unit,
+    val onBypassNext: (cloneRequired: Boolean) -> Unit,
+    val onCloneNext: () -> Unit,
+    val onStepBack: () -> Unit,
+    val onBack: () -> Unit,
+)
 
 internal fun FastMountState.slotScreen(): SlotScreen? = when (screen) {
     WizardScreen.FIRMWARE -> SlotScreen.FIRMWARE
@@ -180,34 +204,34 @@ private fun SlotScreen(
     screen: SlotScreen,
     state: FastMountState,
     slots: FastMountSlots,
-    viewModel: FastMountViewModel,
+    actions: SlotActions,
     checklist: MountChecklistActions,
 ) {
     val fixed = state.fixed ?: return
     when (screen) {
-        SlotScreen.FIRMWARE -> slots.firmwareUpdate(viewModel::onFirmwareBack)
+        SlotScreen.FIRMWARE -> slots.firmwareUpdate(actions.onFirmwareBack)
 
         SlotScreen.VEHICLE -> slots.vehiclePicker(
             MountVehicleRequest(fixed.systemName, state.unit?.canCode),
-            viewModel::onCarPicked,
-            viewModel::onBack,
+            actions.onCarPicked,
+            actions.onBack,
         )
 
         SlotScreen.CONFIGURATION -> state.car?.let { car ->
             slots.configurationPicker(
                 MountConfigurationRequest(fixed.systemName, state.unit?.canCode, car),
-                viewModel::onConfigurationPicked,
-                viewModel::onOpenFirmwareUpdate,
-                viewModel::onBack,
+                actions.onConfigurationPicked,
+                actions.onOpenFirmwareUpdate,
+                actions.onBack,
             )
         }
 
-        SlotScreen.BYPASS -> slots.bypass(mountStep(state, RailKey.BYPASS, viewModel), viewModel::onBypassNext)
+        SlotScreen.BYPASS -> slots.bypass(mountStep(state, RailKey.BYPASS, actions), actions.onBypassNext)
 
-        SlotScreen.CLONE -> slots.clone(mountStep(state, RailKey.CLONE, viewModel), viewModel::onCloneNext)
+        SlotScreen.CLONE -> slots.clone(mountStep(state, RailKey.CLONE, actions), actions.onCloneNext)
 
         SlotScreen.SYSTEM_CHECK -> slots.systemCheck(
-            mountStep(state, RailKey.CHECK, viewModel),
+            mountStep(state, RailKey.CHECK, actions),
             state.master.checklist,
             checklist,
         )
@@ -215,7 +239,7 @@ private fun SlotScreen(
 }
 
 @Composable
-private fun mountStep(state: FastMountState, key: RailKey, viewModel: FastMountViewModel): MountStep {
+private fun mountStep(state: FastMountState, key: RailKey, actions: SlotActions): MountStep {
     val title = stringResource(key.title())
     val subtitle = state.fixed?.title
     val frame = remember(title, subtitle) {
@@ -231,7 +255,7 @@ private fun mountStep(state: FastMountState, key: RailKey, viewModel: FastMountV
         key = "fastmount-${key.name.lowercase()}-${master.stepAttempt}",
         frame = frame,
         next = MountStepNext(busy = master.busy, error = master.error?.takeIf { !master.busy }?.text()),
-        onBack = viewModel::onStepScreenBack,
+        onBack = actions.onStepBack,
     )
 }
 

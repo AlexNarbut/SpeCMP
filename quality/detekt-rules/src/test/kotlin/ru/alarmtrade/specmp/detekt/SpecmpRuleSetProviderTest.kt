@@ -50,6 +50,7 @@ class SpecmpRuleSetProviderTest {
                 "DomainSentinelDefault",
                 "LoopWithoutCancellation",
                 "LoggerTagLiteral",
+                "ViewModelCallInEffect",
             ),
             ruleSet.rules.keys.map { it.value }.toSet(),
         )

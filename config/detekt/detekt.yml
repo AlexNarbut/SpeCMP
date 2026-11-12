@@ -137,6 +137,10 @@ specmp:
   LoggerTagLiteral:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Из LaunchedEffect/DisposableEffect VM не вызывается: старт — onStart(); мост results.collect { vm.onX(it) } — можно.
+  ViewModelCallInEffect:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
 
 complexity:
   LongMethod:

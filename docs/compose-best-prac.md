@@ -283,6 +283,9 @@ Repository (Flow<Domain>)
     → Children (plain-значения, стабильные параметры)
 ```
 
+ViewModel получает только точка входа экрана (`koinViewModel()` в entry/графе) и раздаёт дальше state и actions
+(лямбды, `*Actions`): параметр типа `*ViewModel` у `@Composable` запрещён (Konsist `composable-no-view-model`).
+
 ### Одноразовые события (side effects)
 
 НЕ встраивать события в state. One-shot события — поток `sideEffect` `BaseViewModel`: VM шлёт `postSideEffect(…)`,

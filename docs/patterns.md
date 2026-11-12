@@ -11,7 +11,7 @@
 - Компоненты Material3 в фичах — только через `Cmp*` из `core/ui` (detekt `ForbiddenImport` на `androidx.compose.material3.*`); визуальные компоненты других библиотек (`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`, layout-примитивы и модификаторы `foundation` — напрямую (`docs/ui-kit.md`).
 - Предпочитать `commonMain`; `expect`/`actual` — только для по-настоящему платформо-специфичного кода.
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
-- **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
+- **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** (detekt `ViewModelCallInEffect`: прямой вызов VM из эффекта запрещён, мост результатов `results.collect { viewModel.onX(it) }` разрешён) — см. «Запуск работы на старте экрана».
 - **ViewModel — только через `BaseViewModel<S, E>`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`): наружу `state`, `sideEffect` и интенты `onXxx()`, state меняется только `reduce`, эффекты — `postSideEffect`, корутины — `intent`/`safeLaunch`/`launchReplacing`, стартовая работа — `onStart()` — см. «BaseViewModel».
 - **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
@@ -596,8 +596,8 @@ sealed interface MainDatabaseSyncStatus {
   («не удалось» = ошибка записи + нет прав + пользователь сам нажал «Отмена»). Возвращай
   `Response<T>` или sealed-результат (`Saved` / `Cancelled` / `Failed`); `Cancelled` не показывается
   пользователю как ошибка.
-- **Контракт без мёртвых методов.** Метод, который реализован в репозитории и фейке, но нигде не
-  вызывается, — либо подключается, либо удаляется вместе с реализациями.
+- **Контракт без мёртвых методов** (Konsist `contract-member-usage`). Метод, который реализован в репозитории и фейке,
+  но нигде не вызывается, — либо подключается, либо удаляется вместе с реализациями.
 - **Платформенные UI-порты — не domain.** Пикеры файлов, сохранение в «Загрузки», шаринг
   (activity-result, `UIDocumentPickerViewController`, `JFileChooser`) — это presentation-порты:
   интерфейс в `presentation/platform` фичи, actual — в `composeApp`. В `domain/` остаются модели и

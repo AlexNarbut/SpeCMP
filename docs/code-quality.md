@@ -347,6 +347,8 @@ ViewModel через несколько composable, эффекты читают 
 | `serializable-placement` | `@Serializable` — в `..data..`, `..navigation..`, у `NavKey` и типов аргументов маршрутов |
 | `composable-in-presentation` | `@Composable` фичи — только в `presentation` |
 | `state-immutable` | `data class *State` в `presentation` помечен `@Immutable` или `@Stable` |
+| `composable-no-view-model` | у `@Composable` (включая вложенные и локальные) нет параметра типа `*ViewModel` |
+| `contract-member-usage` | функция или свойство интерфейса `*Repository`/`*Coordinator`/`*Controller`, `domain/repository`, `domain/service` упоминается в production-коде вне интерфейса и файлов его реализаций (`.name`, `::name`, у функций — и `name(` в лямбде с ресивером) |
 | `state-typed-errors` | классы файлов `*State.kt`/`*Effect.kt` в `presentation` (включая вложенные): параметры конструктора и свойства без `Throwable`/`*Exception`/`Response` в типе |
 | `sdk-confinement` | типы AlarmTrade SDK (`ru.alarmtrade.*` вне `ru.alarmtrade.specmp`) — data/di фич, `core/specialist`, `core/permissions`, `core/network`, приложения |
 | `no-fakes-in-production` | `Fake*`/`Stub*` — только в тестах |
@@ -495,6 +497,8 @@ lookahead конец имени модуля слева — пробел, а н�
 | Общие хелперы `core/common` и `core.ui.lce` — только под реальный вызов: без вызовов вне своего модуля-тестов удаляются | Konsist `core-helper-usage` | ✅ |
 | Composable не достаёт зависимости из Koin (`koinInject`) — только корни композиции `composeApp`/`flasherApp` | Konsist `composable-injection` | ✅ |
 | UI-state `*State` — `@Immutable`/`@Stable`; `@Composable` фичи — только в `presentation` | Konsist `state-immutable`, `composable-in-presentation` | ✅ |
+| ViewModel не передаётся в composable параметром; из `LaunchedEffect`/`DisposableEffect` VM не вызывается (кроме моста `results.collect { vm.onX(it) }`) | Konsist `composable-no-view-model`, detekt `ViewModelCallInEffect` | ✅ |
+| У каждого члена контракта репозитория/доменного сервиса есть вызов в production-коде | Konsist `contract-member-usage` | ✅ |
 | Ошибка в State/Effect экрана — тип фичи (enum/sealed, `AppError`), не `Throwable`/`Exception`/`Response` | Konsist `state-typed-errors` | ✅ |
 | Текст UI — `stringResource(Strings.string.*)`: строковый литерал с буквами — не в `Text`/`CmpText`/`CmpHtmlText` и не в `text`/`title`/`subtitle`/`label`/`placeholder`/`contentDescription`/`message`/`actionLabel` внутри `@Composable` (кроме `@Preview`); state экрана — `collectAsStateWithLifecycle()` | detekt `HardcodedUiText`, `ForbiddenImport` | ✅ |
 | Свой `CompositionLocal` — только из списка `compose_allowed_composition_locals` | compose-rules `compositionlocal-allowlist` | ✅ |
