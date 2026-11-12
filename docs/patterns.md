@@ -538,6 +538,9 @@ data class MainUserAppFeatures(
 )
 ```
 
+- **Модель — данные, не UI-текст** (Konsist `domain-model-ui-text`): у классов `domain/model` нет полей
+  `display*`/`formatted*` и строковых `*Text` — подпись собирает presentation из `stringResource`. Текст, который
+  присылает SDK (подписи краёв и сообщение валидации в `SettingNode`), — `@Suppress` с причиной.
 - **Контракты репозиториев** (интерфейс — в `domain/repository`, Konsist `repository-in-domain`; Konsist
   `repository-contract` — интерфейсы `*Repository` и всё в `domain/repository`,
   detekt `RawFlowFromRepository` — публичные потоки реализаций): one-shot операции — `suspend fun ...(): Response<T>`;

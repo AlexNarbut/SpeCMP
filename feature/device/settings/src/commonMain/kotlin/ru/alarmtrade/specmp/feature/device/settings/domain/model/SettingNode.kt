@@ -55,7 +55,11 @@ data class IntegerSetting(
     override val value: SettingValue.Integer,
     val range: IntRange,
     val units: String?,
+    // Подпись края из описания настройки в SDK (в core/localization её не перенести).
+    @Suppress("konsist.domain-model-ui-text")
     val minValueText: String?,
+    // Подпись края из описания настройки в SDK (в core/localization её не перенести).
+    @Suppress("konsist.domain-model-ui-text")
     val maxValueText: String?,
 ) : Setting
 
@@ -69,7 +73,11 @@ data class DecimalSetting(
     val maxValue: Float,
     val step: Float,
     val units: String?,
+    // Подпись края из описания настройки в SDK (в core/localization её не перенести).
+    @Suppress("konsist.domain-model-ui-text")
     val minValueText: String?,
+    // Подпись края из описания настройки в SDK (в core/localization её не перенести).
+    @Suppress("konsist.domain-model-ui-text")
     val maxValueText: String?,
 ) : Setting
 
@@ -82,6 +90,8 @@ data class TextSetting(
     val maxLength: Int,
     val inputType: TextInputType,
     val validationPattern: String?,
+    // Сообщение к validationPattern из описания настройки в SDK.
+    @Suppress("konsist.domain-model-ui-text")
     val validationErrorText: String?,
 ) : Setting {
     /**

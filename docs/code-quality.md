@@ -344,6 +344,7 @@ ViewModel через несколько composable, эффекты читают 
 | `koin-wiring` | реализацию (`*Impl`, класс `..data..` с супертипом `*Repository`) создаёт (`Foo(…)`, `::Foo`) только пакет `di` |
 | `koin-module` | Koin-модуль (свойство типа `Module` или `= module {…}`) — `val <name>Module` в пакете `di` |
 | `domain-model-purity` | `domain/model`: только `val`, read-only коллекции, без `@Serializable` |
+| `domain-model-ui-text` | классы `domain/model` (включая вложенные): параметры конструктора и свойства без префикса `display`/`formatted` и без имени `*Text` с типом `String`/`String?`; extension-свойства не проверяются |
 | `serializable-placement` | `@Serializable` — в `..data..`, `..navigation..`, у `NavKey` и типов аргументов маршрутов |
 | `composable-in-presentation` | `@Composable` фичи — только в `presentation` |
 | `state-immutable` | `data class *State` в `presentation` помечен `@Immutable` или `@Stable` |
@@ -500,6 +501,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | ViewModel не передаётся в composable параметром; из `LaunchedEffect`/`DisposableEffect` VM не вызывается (кроме моста `results.collect { vm.onX(it) }`) | Konsist `composable-no-view-model`, detekt `ViewModelCallInEffect` | ✅ |
 | У каждого члена контракта репозитория/доменного сервиса есть вызов в production-коде | Konsist `contract-member-usage` | ✅ |
 | Ошибка в State/Effect экрана — тип фичи (enum/sealed, `AppError`), не `Throwable`/`Exception`/`Response` | Konsist `state-typed-errors` | ✅ |
+| В полях `domain/model` нет UI-текста (`display*`/`formatted*`, строковые `*Text`) | Konsist `domain-model-ui-text` | ✅ |
 | Текст UI — `stringResource(Strings.string.*)`: строковый литерал с буквами — не в `Text`/`CmpText`/`CmpHtmlText` и не в `text`/`title`/`subtitle`/`label`/`placeholder`/`contentDescription`/`message`/`actionLabel` внутри `@Composable` (кроме `@Preview`); state экрана — `collectAsStateWithLifecycle()` | detekt `HardcodedUiText`, `ForbiddenImport` | ✅ |
 | Свой `CompositionLocal` — только из списка `compose_allowed_composition_locals` | compose-rules `compositionlocal-allowlist` | ✅ |
 | Фичи и корни не обходят дизайн-систему: цвета — роли темы, размеры текста — `CmpTextStyle`, визуальные компоненты — `Cmp*` (`ui-kit.md`) | UI-аудит `hex_color`, `raw_color`, `raw_sp`, `bare_text_style`, `material_import`, `ui_component_import`, `coil_import` (baseline) | ✅ |
@@ -547,6 +549,7 @@ lookahead конец имени модуля слева — пробел, а н�
 | Где | Правило | Причина |
 |---|---|---|
 | `DeviceSession.state`/`reboot`/`transport` (`feature/device/interaction/domain/service`) | Konsist `service-contract` | состояние сервиса в памяти: ошибка связи уже свёрнута в `Disconnected`, `reboot`/`transport` — снимки, не результат операции |
+| `IntegerSetting`/`DecimalSetting.minValueText`/`maxValueText`, `TextSetting.validationErrorText` (`feature/device/settings/domain/model`) | Konsist `domain-model-ui-text` | текст из описания настройки в SDK, своя подпись у каждой настройки — в `core/localization` не перенести |
 | `MainViewController.kt` (`composeApp/iosMain`) | detekt `ForbiddenPrintln` | мост логов SDK в консоль Xcode |
 
 Остальные `@Suppress` в коде — стандартные правила detekt (`LongMethod`, `CyclomaticComplexMethod` у плоских таблиц
