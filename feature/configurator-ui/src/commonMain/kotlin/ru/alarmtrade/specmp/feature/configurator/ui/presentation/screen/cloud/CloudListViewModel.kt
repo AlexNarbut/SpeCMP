@@ -2,11 +2,15 @@ package ru.alarmtrade.specmp.feature.configurator.ui.presentation.screen.cloud
 
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.layout.PaneWidthStore
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationOrder
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.CloudConfigurationsRepository
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.LIST_PANE_KEY
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 
 /** Список приходит целиком: сортировка и фильтр по модели — локально; [deviceName] пусто — все модели. */
@@ -14,8 +18,22 @@ internal class CloudListViewModel(
     private val carId: Int,
     private val deviceName: String,
     private val cloud: CloudConfigurationsRepository,
+    private val paneWidths: PaneWidthStore,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel<CloudListState, Nothing>(CloudListState(modelFilter = deviceName.ifEmpty { null })) {
+) : BaseViewModel<CloudListState, Nothing>(
+    CloudListState(
+        modelFilter = deviceName.ifEmpty { null },
+        listWidthDp = paneWidths.widthsDp.value.getValueIfSuccess()?.get(LIST_PANE_KEY),
+    ),
+) {
+
+    fun onListWidthChange(widthDp: Int) {
+        reduce { copy(listWidthDp = widthDp) }
+        intent {
+            withContext(dispatchers.io) { paneWidths.setWidthDp(LIST_PANE_KEY, widthDp) }
+                .onError { logger.w(it) { "List width was not saved" } }
+        }
+    }
 
     override suspend fun onStart() {
         load()

@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.main.presentation.screen.main.subcomponents
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,8 +12,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,11 +26,15 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.main_common_status_database_update_failed
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_btn_logout
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_btn_refresh_profile
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_logout_failed
+import ru.alarmtrade.specmp.core.localization.resources.main_drawer_error_profile_refresh
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_check
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_app_update_checking
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_database_update
@@ -42,14 +49,15 @@ import ru.alarmtrade.specmp.core.localization.resources.main_drawer_label_versio
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_subtitle_app_update_available
 import ru.alarmtrade.specmp.core.localization.resources.main_drawer_title_app_update_available
 import ru.alarmtrade.specmp.core.ui.error.message
+import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.isContent
 import ru.alarmtrade.specmp.core.ui.theme.CmpThemeColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpSwitch
-import ru.alarmtrade.specmp.core.ui.view.layout.CmpSpacer
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
@@ -73,6 +81,7 @@ internal fun MainHomeDrawer(
     onAppUpdateOpenClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onLogout: () -> Unit,
+    onUserDataRefreshClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     colors: CmpThemeColors = cmpThemeColors(),
@@ -95,93 +104,129 @@ internal fun MainHomeDrawer(
         color = colors.surface,
         contentColor = colors.onSurface,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(contentPadding)
-                .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
-        ) {
-            MainProfileBlock(
-                profile = state.profile,
-                colors = colors,
-            )
-
-            CmpDivider(color = colors.outlineVariant)
-
+        // На низком экране (iPhone в ландшафте, крупный шрифт) пункты не должны уходить за край: колонка
+        // прокручивается, а подвал прижат вниз за счёт минимальной высоты и SpaceBetween вместо weight.
+        BoxWithConstraints(modifier = Modifier.fillMaxHeight().padding(contentPadding)) {
             Column(
-                modifier = Modifier.padding(top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight)
+                    .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                MainDrawerRow(
-                    icon = if (isDark) CmpIcons.DarkMode else CmpIcons.LightMode,
-                    label = stringResource(Strings.string.main_drawer_label_theme),
-                    colors = colors,
-                    trailing = {
-                        CmpSwitch(
-                            checked = isDark,
-                            onCheckedChange = onThemeChange,
-                        )
-                    },
-                    onClick = { onThemeChange(!isDark) },
-                )
-
-                MainDrawerRow(
-                    icon = CmpIcons.Refresh,
-                    label = if (state.isDatabaseSyncing) {
-                        stringResource(Strings.string.main_drawer_label_database_updating)
-                    } else {
-                        stringResource(Strings.string.main_drawer_label_database_update)
-                    },
-                    colors = colors,
-                    trailing = {
-                        if (state.isDatabaseSyncing) {
-                            CmpCircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.5.dp,
-                                color = colors.primary,
-                            )
-                        }
-                    },
-                    enabled = !state.isDatabaseSyncing,
-                    onClick = onDatabaseSyncClick,
-                )
-
-                if (state.isAppUpdateSupported) {
-                    MainDrawerRow(
-                        iconPainter = painterResource(Res.drawable.app_update),
-                        label = if (state.isAppUpdateChecking) {
-                            stringResource(Strings.string.main_drawer_label_app_update_checking)
-                        } else {
-                            stringResource(Strings.string.main_drawer_label_app_update_check)
-                        },
+                Column {
+                    MainDrawerMenu(
+                        state = state,
+                        isDark = isDark,
                         colors = colors,
-                        trailing = {
-                            if (state.isAppUpdateChecking) {
-                                CmpCircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.5.dp,
-                                    color = colors.primary,
-                                )
-                            }
-                        },
-                        enabled = !state.isAppUpdateChecking,
-                        onClick = onAppUpdateCheckClick,
+                        onThemeChange = onThemeChange,
+                        onDatabaseSyncClick = onDatabaseSyncClick,
+                        onAppUpdateCheckClick = onAppUpdateCheckClick,
+                        onSettingsClick = onSettingsClick,
+                        onLogout = onLogout,
+                        onUserDataRefreshClick = onUserDataRefreshClick,
                     )
                 }
 
-                MainDrawerRow(
-                    iconPainter = painterResource(Res.drawable.app_settings),
-                    label = stringResource(Strings.string.main_drawer_label_settings),
+                MainDrawerFooter(
+                    state = state,
                     colors = colors,
-                    onClick = onSettingsClick,
+                    onAppUpdateOpenClick = onAppUpdateOpenClick,
+                    modifier = Modifier.padding(top = 16.dp),
                 )
+            }
+        }
+    }
+}
 
+@Suppress("LongMethod")
+@Composable
+private fun MainDrawerMenu(
+    state: MainScreenState,
+    isDark: Boolean,
+    colors: CmpThemeColors,
+    onThemeChange: (Boolean) -> Unit,
+    onDatabaseSyncClick: () -> Unit,
+    onAppUpdateCheckClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onLogout: () -> Unit,
+    onUserDataRefreshClick: () -> Unit,
+) {
+    Column {
+        MainProfileBlock(
+            profile = state.profile,
+            isRefreshing = state.isUserDataRefreshing,
+            colors = colors,
+            onRefreshClick = onUserDataRefreshClick,
+        )
+
+        state.userDataError?.let { error ->
+            MainDrawerErrorMessage(
+                text = error.text(Strings.string.main_drawer_error_profile_refresh),
+                colors = colors,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+        }
+
+        CmpDivider(color = colors.outlineVariant)
+
+        Column(
+            modifier = Modifier.padding(top = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            MainDrawerRow(
+                icon = if (isDark) CmpIcons.DarkMode else CmpIcons.LightMode,
+                label = stringResource(Strings.string.main_drawer_label_theme),
+                colors = colors,
+                trailing = {
+                    CmpSwitch(
+                        checked = isDark,
+                        onCheckedChange = onThemeChange,
+                    )
+                },
+                onClick = { onThemeChange(!isDark) },
+            )
+
+            MainDrawerRow(
+                icon = CmpIcons.Refresh,
+                label = if (state.isDatabaseSyncing) {
+                    stringResource(Strings.string.main_drawer_label_database_updating)
+                } else {
+                    stringResource(Strings.string.main_drawer_label_database_update)
+                },
+                colors = colors,
+                trailing = {
+                    if (state.isDatabaseSyncing) {
+                        CmpCircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.5.dp,
+                            color = colors.primary,
+                        )
+                    }
+                },
+                enabled = !state.isDatabaseSyncing,
+                onClick = onDatabaseSyncClick,
+            )
+
+            (state.databaseSyncState as? LCEState.Error)?.let { failed ->
+                MainDrawerErrorMessage(
+                    text = failed.error.text(Strings.string.main_common_status_database_update_failed),
+                    colors = colors,
+                )
+            }
+
+            if (state.isAppUpdateSupported) {
                 MainDrawerRow(
-                    icon = CmpIcons.ExitToApp,
-                    label = stringResource(Strings.string.main_drawer_btn_logout),
+                    iconPainter = painterResource(Res.drawable.app_update),
+                    label = if (state.isAppUpdateChecking) {
+                        stringResource(Strings.string.main_drawer_label_app_update_checking)
+                    } else {
+                        stringResource(Strings.string.main_drawer_label_app_update_check)
+                    },
                     colors = colors,
                     trailing = {
-                        if (state.isLogoutInProgress) {
+                        if (state.isAppUpdateChecking) {
                             CmpCircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.5.dp,
@@ -189,32 +234,54 @@ internal fun MainHomeDrawer(
                             )
                         }
                     },
-                    enabled = !state.isLogoutInProgress,
-                    onClick = onLogout,
+                    enabled = !state.isAppUpdateChecking,
+                    onClick = onAppUpdateCheckClick,
                 )
             }
 
-            state.logoutError?.let { error ->
-                MainLogoutErrorMessage(
-                    error = error,
-                    colors = colors,
-                    modifier = Modifier.padding(top = 10.dp),
-                )
-            }
-
-            CmpSpacer(modifier = Modifier.weight(1f))
-
-            MainDrawerFooter(
-                state = state,
+            MainDrawerRow(
+                iconPainter = painterResource(Res.drawable.app_settings),
+                label = stringResource(Strings.string.main_drawer_label_settings),
                 colors = colors,
-                onAppUpdateOpenClick = onAppUpdateOpenClick,
+                onClick = onSettingsClick,
+            )
+
+            MainDrawerRow(
+                icon = CmpIcons.ExitToApp,
+                label = stringResource(Strings.string.main_drawer_btn_logout),
+                colors = colors,
+                trailing = {
+                    if (state.isLogoutInProgress) {
+                        CmpCircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.5.dp,
+                            color = colors.primary,
+                        )
+                    }
+                },
+                enabled = !state.isLogoutInProgress,
+                onClick = onLogout,
+            )
+        }
+
+        state.logoutError?.let { error ->
+            MainDrawerErrorMessage(
+                text = error.text(Strings.string.main_drawer_error_logout_failed),
+                colors = colors,
+                modifier = Modifier.padding(top = 10.dp),
             )
         }
     }
 }
 
 @Composable
-private fun MainProfileBlock(profile: MainProfile, colors: CmpThemeColors, modifier: Modifier = Modifier) {
+private fun MainProfileBlock(
+    profile: MainProfile,
+    isRefreshing: Boolean,
+    colors: CmpThemeColors,
+    onRefreshClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val name = profile.name.trim()
     val email = profile.email.trim()
     val initials = mainProfileInitials(name)
@@ -286,6 +353,23 @@ private fun MainProfileBlock(profile: MainProfile, colors: CmpThemeColors, modif
                 fontSize = 14.sp,
                 color = colors.onSurfaceVariant,
             )
+        }
+
+        Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+            if (isRefreshing) {
+                CmpCircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.5.dp,
+                    color = colors.primary,
+                )
+            } else {
+                CmpIconButton(
+                    onClick = onRefreshClick,
+                    icon = CmpIcons.Refresh,
+                    contentDescription = stringResource(Strings.string.main_drawer_btn_refresh_profile),
+                    tint = colors.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -454,12 +538,13 @@ private fun MainAppUpdateBanner(
 }
 
 @Composable
-private fun MainLogoutErrorMessage(error: MainError, colors: CmpThemeColors, modifier: Modifier = Modifier) {
-    val text = when (error) {
-        is MainError.Common -> error.error.message()
-        MainError.Failed -> stringResource(Strings.string.main_drawer_error_logout_failed)
-    }
+private fun MainError.text(fallback: StringResource): String = when (this) {
+    is MainError.Common -> error.message()
+    MainError.Failed -> stringResource(fallback)
+}
 
+@Composable
+private fun MainDrawerErrorMessage(text: String, colors: CmpThemeColors, modifier: Modifier = Modifier) {
     CmpSurface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(MainHomeTokens.CardRadius),

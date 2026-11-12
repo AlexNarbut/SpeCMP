@@ -563,8 +563,9 @@ class ArchitectureTest {
                 additionalMessage = "Тип параметра конструктора ViewModel (и аргументы его дженериков) — из " +
                     "разрешённого списка: domain фич (*Repository, *UseCase, доменные сервисы и модели), " +
                     "presentation (аргументы маршрута, порты presentation/platform), core: AppDispatchers " +
-                    "(до переноса main-safety в репозитории), AppRestarter, AppVersionProvider, " +
-                    "AppForegroundProvider, PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore; Kotlin: " +
+                    "(до переноса main-safety в репозитории), AppVersionProvider, " +
+                    "AppForegroundProvider, PermissionsProvider, AppLocaleStore, ConfigurationLanguageStore, " +
+                    "PaneWidthStore; Kotlin: " +
                     "примитивы, коллекции, " +
                     "TimeSource; Clock, TimeZoneSource; Logger. " +
                     "Нельзя: data, SDK, Flow, CoroutineScope, функциональные типы. docs/patterns.md, «BaseViewModel»",
@@ -1011,13 +1012,14 @@ private fun KoFileDeclaration.qualifiedTypeName(reference: String): String {
 // Зависимости ViewModel вне domain/presentation фич: инфраструктура, которую VM получает из DI напрямую.
 private val VIEW_MODEL_DEPENDENCY_TYPES = setOf(
     "$ROOT.core.common.AppDispatchers",
-    "$ROOT.core.common.AppRestarter",
     "$ROOT.core.common.AppVersionProvider",
     "$ROOT.core.lifecycle.AppForegroundProvider",
     "$ROOT.core.permissions.PermissionsProvider",
     "$ROOT.core.localization.AppLocaleStore",
     // Как AppLocaleStore: настройка приложения из core/common, реализация — core/specialist; доменной обёртки нет.
     "$ROOT.core.common.ConfigurationLanguageStore",
+    // Ширины перетаскиваемых панелей: UI-настройка приложения, как ConfigurationLanguageStore.
+    "$ROOT.core.common.layout.PaneWidthStore",
     "kotlin.time.TimeSource",
     "kotlinx.datetime.Clock",
     "$ROOT.core.common.time.TimeZoneSource",

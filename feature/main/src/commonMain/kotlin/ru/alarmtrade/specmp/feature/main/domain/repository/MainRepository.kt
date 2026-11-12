@@ -10,6 +10,9 @@ import ru.alarmtrade.specmp.feature.main.domain.model.MainUserProfile
 
 interface MainRepository {
     suspend fun currentUserProfile(): Response<MainUserProfile>
+    suspend fun cachedUserProfile(): Response<MainUserProfile?>
+    suspend fun cachedUserAppFeatures(): Response<MainUserAppFeatures?>
+    suspend fun cachedUserCommercial(): Response<MainUserCommercial?>
     suspend fun currentSettingsVersion(): Response<Long?>
 
     fun synchronizeSettingsVersion(): Flow<Response<MainDatabaseSyncStatus>>

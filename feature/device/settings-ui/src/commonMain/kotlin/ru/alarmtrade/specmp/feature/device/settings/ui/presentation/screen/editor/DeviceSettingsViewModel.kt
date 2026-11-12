@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.layout.PaneWidthStore
 import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -39,7 +40,6 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.replace
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.reusing
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.search
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.settings
-import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsPreferences
 import ru.alarmtrade.specmp.feature.device.settings.domain.repository.DeviceSettingsRepository
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.ui.presentation.model.SettingsError
@@ -59,13 +59,13 @@ internal class DeviceSettingsViewModel(
     private val repository: DeviceSettingsRepository,
     private val sessions: DeviceSettingsSessionController,
     private val localConfigurations: LocalConfigurationsRepository,
-    private val preferences: DeviceSettingsPreferences,
+    private val paneWidths: PaneWidthStore,
     private val carsRepository: VehicleCatalogRepository,
     deviceSession: DeviceSession,
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<DeviceSettingsState, DeviceSettingsEffect>(
     deviceSession,
-    initialSettingsState(source, options, preferences.treeWidthDp.value.getValueIfSuccess()),
+    initialSettingsState(source, options, paneWidths.widthsDp.value.getValueIfSuccess()?.get(TREE_PANE)),
 ) {
 
     private val followsDevice = source.capabilities.followsDeviceConnection
@@ -229,7 +229,7 @@ internal class DeviceSettingsViewModel(
     fun onTreeWidthChange(widthDp: Int) {
         reduce { copy(treeWidthDp = widthDp) }
         intent {
-            withContext(dispatchers.io) { preferences.setTreeWidthDp(widthDp) }
+            withContext(dispatchers.io) { paneWidths.setWidthDp(TREE_PANE, widthDp) }
                 .onError { logger.w(it) { "Tree width was not saved" } }
         }
     }
@@ -774,5 +774,6 @@ internal class DeviceSettingsViewModel(
 
     private companion object {
         const val SEARCH_DEBOUNCE_MILLIS = 150L
+        const val TREE_PANE = "settings.tree"
     }
 }

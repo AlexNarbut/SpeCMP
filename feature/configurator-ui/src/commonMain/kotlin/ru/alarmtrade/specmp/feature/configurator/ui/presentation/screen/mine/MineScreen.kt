@@ -150,7 +150,13 @@ internal fun MineScreen(state: MineState, actions: MineActions, snackbarHostStat
             },
             snackbarHost = { CmpSnackbarHost(hostState = snackbarHostState) },
         ) { padding ->
-            ListDetailPane(wide, detail = { MineDetail(state, actions) }, modifier = Modifier.padding(padding)) {
+            ListDetailPane(
+                wide = wide,
+                listWidthDp = state.listWidthDp,
+                onListWidthChange = actions.onListWidthChange,
+                detail = { MineDetail(state, actions) },
+                modifier = Modifier.padding(padding),
+            ) {
                 MineToolbar(state, actions)
                 MineContent(state, actions, wide)
             }

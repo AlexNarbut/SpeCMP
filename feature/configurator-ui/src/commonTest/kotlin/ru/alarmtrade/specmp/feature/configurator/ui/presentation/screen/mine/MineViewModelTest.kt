@@ -18,6 +18,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.FakePaneWidthStore
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.testing.FakeLocalConfigurationsRepository
@@ -55,6 +56,7 @@ class MineViewModelTest {
             settings = settings,
             sessions = settings,
             deviceSession = testDeviceSession(FakeDeviceSessionRepository(testDevice, link), dispatcher = dispatcher),
+            paneWidths = FakePaneWidthStore(),
             dispatchers = testDispatchers(dispatcher),
         )
         val effects = mutableListOf<MineEffect>()

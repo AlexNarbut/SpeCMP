@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.layout.PaneWidthStore
 import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.common.reusing
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
@@ -12,6 +14,7 @@ import ru.alarmtrade.specmp.core.ui.lce.content
 import ru.alarmtrade.specmp.feature.configurator.domain.model.LocalConfiguration
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.LocalConfigurationsRepository
 import ru.alarmtrade.specmp.feature.configurator.domain.repository.toSource
+import ru.alarmtrade.specmp.feature.configurator.ui.presentation.components.LIST_PANE_KEY
 import ru.alarmtrade.specmp.feature.configurator.ui.presentation.model.ConfiguratorError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.presentation.core.platform.SettingsFileSaveResult
@@ -31,11 +34,24 @@ internal class MineViewModel(
     private val settings: DeviceSettingsRepository,
     private val sessions: DeviceSettingsSessionController,
     deviceSession: DeviceSession,
+    private val paneWidths: PaneWidthStore,
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<MineState, MineEffect>(
     deviceSession,
-    MineState(modelFilter = pickDeviceName, pickMode = pickDeviceName != null),
+    MineState(
+        modelFilter = pickDeviceName,
+        pickMode = pickDeviceName != null,
+        listWidthDp = paneWidths.widthsDp.value.getValueIfSuccess()?.get(LIST_PANE_KEY),
+    ),
 ) {
+
+    fun onListWidthChange(widthDp: Int) {
+        reduce { copy(listWidthDp = widthDp) }
+        intent {
+            withContext(dispatchers.io) { paneWidths.setWidthDp(LIST_PANE_KEY, widthDp) }
+                .onError { logger.w(it) { "List width was not saved" } }
+        }
+    }
 
     override suspend fun onStart() {
         connectedDeviceName.collectIntoState { connected -> copy(connectedDeviceName = connected) }

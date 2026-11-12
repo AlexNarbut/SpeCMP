@@ -73,12 +73,48 @@ class MainScreenViewModelTest {
     }
 
     @Test
+    fun `cached profile is shown when the network fails`() = runTest(dispatcher) {
+        repository.cachedProfile = MainUserProfile(name = "Cached", email = "cached@example.com")
+        repository.profile = Response.Error(IllegalStateException("offline"))
+        val vm = viewModel()
+
+        val state = vm.state.value
+        assertFalse(state.isInitialLoading)
+        assertEquals(MainProfile(name = "Cached", email = "cached@example.com"), state.profile)
+        assertTrue(state.userDataError != null)
+    }
+
+    @Test
+    fun `opening the menu and the refresh button reload the profile`() = runTest(dispatcher) {
+        val vm = viewModel()
+        val before = repository.profileRequests
+
+        vm.onMenuClicked()
+        vm.onUserDataRefreshClicked()
+
+        assertEquals(before + 2, repository.profileRequests)
+    }
+
+    @Test
     fun `chat card follows chat availability`() = runTest(dispatcher) {
         val vm = viewModel()
 
         repository.chatAvailability.value = Response.Success(true)
 
         assertTrue(MainHomeAction.TechSupportChat in vm.state.value.visibleActions)
+    }
+
+    @Test
+    fun `chat card is hidden only by an explicit server answer`() = runTest(dispatcher) {
+        repository.chatAvailability.value = Response.Error(IllegalStateException("offline"))
+        val vm = viewModel()
+        assertTrue(MainHomeAction.TechSupportChat in vm.state.value.visibleActions)
+
+        repository.chatAvailability.value = Response.Success(false)
+        assertFalse(MainHomeAction.TechSupportChat in vm.state.value.visibleActions)
+
+        repository.chatAvailability.value = Response.Error(IllegalStateException("offline"))
+        assertFalse(MainHomeAction.TechSupportChat in vm.state.value.visibleActions)
     }
 
     @Test
@@ -129,10 +165,20 @@ class MainScreenViewModelTest {
 
     private class FakeMainRepository : MainRepository {
         var features = MainUserAppFeatures()
+        var profile: Response<MainUserProfile> = Response.Success(
+            MainUserProfile(name = "Ivan", email = "ivan@example.com"),
+        )
+        var cachedProfile: MainUserProfile? = null
+        var profileRequests = 0
         val chatAvailability = MutableStateFlow<Response<Boolean>>(Response.Success(false))
 
-        override suspend fun currentUserProfile(): Response<MainUserProfile> =
-            Response.Success(MainUserProfile(name = "Ivan", email = "ivan@example.com"))
+        override suspend fun currentUserProfile(): Response<MainUserProfile> = profile.also { profileRequests++ }
+
+        override suspend fun cachedUserProfile(): Response<MainUserProfile?> = Response.Success(cachedProfile)
+
+        override suspend fun cachedUserAppFeatures(): Response<MainUserAppFeatures?> = Response.Success(null)
+
+        override suspend fun cachedUserCommercial(): Response<MainUserCommercial?> = Response.Success(null)
 
         override suspend fun currentSettingsVersion(): Response<Long?> = Response.Success(1L)
 

@@ -8,6 +8,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:common"))
             implementation(project(":core:localization"))
+            implementation(project(":core:network"))
             implementation(project(":core:specialist"))
             implementation(project(":feature:account"))
             implementation(project(":core:ui"))

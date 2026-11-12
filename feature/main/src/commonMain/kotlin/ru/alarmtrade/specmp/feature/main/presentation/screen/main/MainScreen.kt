@@ -28,6 +28,7 @@ internal fun MainScreen(
         state = state,
         onMenuClick = viewModel::onMenuClicked,
         onMenuDismiss = viewModel::onMenuDismissed,
+        onUserDataRefreshClick = viewModel::onUserDataRefreshClicked,
         onDatabaseSyncClick = viewModel::onDatabaseSyncClicked,
         onAppUpdateCheckClick = viewModel::onAppUpdateCheckClicked,
         onAppUpdateOpenClick = viewModel::onAppUpdateBannerClicked,

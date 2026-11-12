@@ -17,6 +17,7 @@ internal data class CloudListState(
     val modelFilter: String? = null,
     /** Выбранная (широкое окно — карточка справа). */
     val selectedId: Int? = null,
+    val listWidthDp: Int? = null,
     val models: List<String> = emptyList(),
     val shown: List<CloudConfigurationSummary> = emptyList(),
 )

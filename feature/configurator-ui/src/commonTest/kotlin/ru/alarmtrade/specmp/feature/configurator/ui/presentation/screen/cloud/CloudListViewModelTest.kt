@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.testing.FakePaneWidthStore
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.configurator.domain.model.CloudConfigurationOrder
@@ -34,7 +35,7 @@ class CloudListViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(deviceName: String = ""): CloudListViewModel {
-        val vm = CloudListViewModel(7, deviceName, cloud, testDispatchers(dispatcher))
+        val vm = CloudListViewModel(7, deviceName, cloud, FakePaneWidthStore(), testDispatchers(dispatcher))
         backgroundScope.launch { vm.state.collect {} }
         advanceUntilIdle()
         return vm

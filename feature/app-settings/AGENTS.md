@@ -4,7 +4,7 @@
 # feature/app-settings
 
 - Область: настройки приложения — язык приложения и язык конфигураций. Вход — главная → боковое меню → «Настройки» (`AppSettingsRoute`, `AppSettingsEntry(onBack)` в `composeApp/AppNavigation`).
-- Язык применяется только на старте процесса (`docs/localization.md`, «Язык приложения»): `AppSettingsViewModel` по «Применить» → подтверждение «приложение перезапустится» → `AppLocaleStore.save` → `AppRestarter.restart()`. Android перезапускает процесс; iOS и desktop — `false`, экран просит перезапустить вручную.
-- Зависимости узкие: `AppLocaleStore` (`core/localization`) и `AppRestarter` (`core/common`) приходят из composition root (`App()` и платформенные Koin-модули); app-level хранение и применение локали — не в фиче.
+- Язык применяется только на старте процесса (`docs/localization.md`, «Язык приложения»): `AppSettingsViewModel` по «Применить» → подтверждение → `AppLocaleStore.save` → диалог «Перезапустите приложение». Само приложение не перезапускается ни на одной платформе — пользователь перезапускает его сам.
+- Зависимости узкие: `AppLocaleStore` (`core/localization`) приходит из composition root (`App()`); app-level хранение и применение локали — не в фиче.
 - Язык конфигураций (`ConfigurationLanguage` RU/EN) применяется сразу, без перезапуска: `ConfigurationLanguageStore` (`core/common`, реализация — `core/specialist` над хранилищем SDK) сохраняет выбор, SDK подставляет его в каждый запрос каталога автомобилей с конфигурациями, списков и карточек конфигураций (конфигуратор, быстрый монтаж). Начальное значение — язык приложения (`SpecialistInitializer`). Чтение — `onStart()` VM, смена — под замком VM (`needSkipAnother = false`, последний выбор побеждает); не сохранилось — откат и сообщение под списком.
 - Строки — префикс `appsettings` в `core/localization`; названия языков — на самих языках (`translatable="false"`).

@@ -22,6 +22,6 @@ internal data class AppSettingsState(
 internal enum class AppSettingsDialog {
     CONFIRM,
 
-    /** Платформа не перезапускается сама (iOS, desktop): язык применится после ручного перезапуска. */
+    /** Язык сохранён и применится, когда пользователь сам перезапустит приложение. */
     RESTART_MANUALLY,
 }

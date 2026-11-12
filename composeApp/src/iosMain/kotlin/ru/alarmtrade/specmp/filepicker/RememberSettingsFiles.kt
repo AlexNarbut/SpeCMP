@@ -179,6 +179,12 @@ private suspend fun presentExport(fileUrl: NSURL, fileName: String): SettingsFil
                 }
             }
             presenter.presentViewController(picker, animated = true, completion = null)
+            // UIKit молча отказывает в показе, пока идёт другая презентация/закрытие: без проверки корутина
+            // висит, «Сохранить» остаётся занятым и ничего не происходит.
+            if (picker.presentingViewController == null && cont.isActive) {
+                picker.delegate = null
+                cont.resumeWith(Result.success(SettingsFileSaveResult.Failed))
+            }
         }
     }
 

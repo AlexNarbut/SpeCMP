@@ -11,6 +11,7 @@ val vehicleUiModule = module {
             request = request,
             repository = get(),
             recentRepository = get(),
+            paneWidths = get(),
             dispatchers = get(),
         )
     }

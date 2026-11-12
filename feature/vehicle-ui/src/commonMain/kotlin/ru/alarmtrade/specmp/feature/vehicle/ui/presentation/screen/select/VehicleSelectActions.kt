@@ -30,6 +30,7 @@ internal class VehicleSelectActions(
     val onFilterDismiss: () -> Unit,
     val onFilterClear: () -> Unit,
     val onPick: (Int) -> Unit,
+    val onPaneWidthChange: (key: String, widthDp: Int) -> Unit,
     val card: CardActions,
 )
 

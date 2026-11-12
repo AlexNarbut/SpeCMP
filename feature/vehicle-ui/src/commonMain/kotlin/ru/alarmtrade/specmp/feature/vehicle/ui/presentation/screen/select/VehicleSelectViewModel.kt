@@ -4,6 +4,8 @@ import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.getValueIfSuccess
+import ru.alarmtrade.specmp.core.common.layout.PaneWidthStore
+import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.lce.content
@@ -30,8 +32,11 @@ internal class VehicleSelectViewModel(
     private val request: VehicleSelectRequest,
     private val repository: VehicleCatalogRepository,
     private val recentRepository: RecentVehiclesRepository,
+    private val paneWidths: PaneWidthStore,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel<VehicleSelectState, VehicleSelectEffect>(request.initialState()) {
+) : BaseViewModel<VehicleSelectState, VehicleSelectEffect>(
+    request.initialState().copy(paneWidthsDp = paneWidths.widthsDp.value.getValueIfSuccess().orEmpty()),
+) {
 
     override suspend fun onStart() {
         when (val recent = withContext(dispatchers.io) { recentRepository.recent(request.catalog) }) {
@@ -152,6 +157,14 @@ internal class VehicleSelectViewModel(
 
     fun onRecentOpen(car: CarSummary) {
         openCard(car.id, CardSource.RECENT)
+    }
+
+    fun onPaneWidthChange(key: String, widthDp: Int) {
+        reduce { copy(paneWidthsDp = paneWidthsDp + (key to widthDp)) }
+        intent {
+            withContext(dispatchers.io) { paneWidths.setWidthDp(key, widthDp) }
+                .onError { logger.w(it) { "Pane width was not saved" } }
+        }
     }
 
     fun onRecentRemove(car: CarSummary) {

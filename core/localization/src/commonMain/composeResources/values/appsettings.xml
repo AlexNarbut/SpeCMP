@@ -7,7 +7,7 @@
     <string name="appsettings_main_value_language_ru" translatable="false">Русский</string>
     <string name="appsettings_main_btn_apply">Apply</string>
     <string name="appsettings_main_title_confirm">Change the language?</string>
-    <string name="appsettings_main_msg_confirm">The app will restart to apply the new language.</string>
+    <string name="appsettings_main_msg_confirm">The new language will apply after you restart the app.</string>
     <string name="appsettings_main_btn_change">Change</string>
     <string name="appsettings_main_btn_cancel">Cancel</string>
     <string name="appsettings_main_title_restart">Restart the app</string>

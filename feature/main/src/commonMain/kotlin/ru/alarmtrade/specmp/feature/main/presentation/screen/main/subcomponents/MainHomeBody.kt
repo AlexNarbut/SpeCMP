@@ -49,6 +49,7 @@ fun MainHomeBody(
     state: State<MainScreenState>,
     onMenuClick: () -> Unit,
     onMenuDismiss: () -> Unit,
+    onUserDataRefreshClick: () -> Unit,
     onDatabaseSyncClick: () -> Unit,
     onAppUpdateCheckClick: () -> Unit,
     onAppUpdateOpenClick: () -> Unit,
@@ -130,6 +131,7 @@ fun MainHomeBody(
                             onAppUpdateOpenClick = onAppUpdateOpenClick,
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
+                            onUserDataRefreshClick = onUserDataRefreshClick,
                             contentPadding = sidePanelDrawerPadding,
                             modifier = Modifier.width(312.dp),
                         )
@@ -184,6 +186,7 @@ fun MainHomeBody(
                             onAppUpdateOpenClick = onAppUpdateOpenClick,
                             onSettingsClick = onSettingsClick,
                             onLogout = onLogout,
+                            onUserDataRefreshClick = onUserDataRefreshClick,
                             contentPadding = modalDrawerPadding,
                             modifier = Modifier.width(320.dp),
                         )

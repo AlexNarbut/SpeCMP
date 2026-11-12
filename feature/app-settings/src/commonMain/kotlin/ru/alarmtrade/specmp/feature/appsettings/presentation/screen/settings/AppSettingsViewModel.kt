@@ -2,7 +2,6 @@ package ru.alarmtrade.specmp.feature.appsettings.presentation.screen.settings
 
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
-import ru.alarmtrade.specmp.core.common.AppRestarter
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguage
 import ru.alarmtrade.specmp.core.common.ConfigurationLanguageStore
 import ru.alarmtrade.specmp.core.common.Response
@@ -12,7 +11,6 @@ import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
 
 internal class AppSettingsViewModel(
     private val localeStore: AppLocaleStore,
-    private val restarter: AppRestarter,
     private val configurationLanguages: ConfigurationLanguageStore,
     private val dispatchers: AppDispatchers,
 ) : BaseViewModel<AppSettingsState, Nothing>(AppSettingsState(current = localeStore.current())) {
@@ -34,11 +32,7 @@ internal class AppSettingsViewModel(
         val locale = currentState.selected
         intent {
             withContext(dispatchers.io) { localeStore.save(locale) }
-            // Android перезапускает процесс (сюда не вернёмся); iOS/desktop — no-op,
-            // язык применится со следующего запуска.
-            if (!restarter.restart()) {
-                reduce { copy(current = locale, dialog = AppSettingsDialog.RESTART_MANUALLY) }
-            }
+            reduce { copy(current = locale, dialog = AppSettingsDialog.RESTART_MANUALLY) }
         }
     }
 

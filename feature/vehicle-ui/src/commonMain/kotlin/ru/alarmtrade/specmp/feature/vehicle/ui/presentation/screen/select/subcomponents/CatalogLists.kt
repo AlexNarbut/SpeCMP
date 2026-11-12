@@ -58,6 +58,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.scroll.cmpVerticalScrollbar
 import ru.alarmtrade.specmp.core.ui.view.state.CmpStateBox
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
@@ -95,14 +96,20 @@ internal fun CatalogList(
     listState: LazyListState = rememberLazyListState(),
     content: LazyListScope.() -> Unit,
 ) {
+    val scrollbarColor = cmpThemeColors().outline.copy(alpha = SCROLLBAR_ALPHA)
     LazyColumn(
-        modifier = modifier.fillMaxSize().hideKeyboardOnScroll(),
+        modifier = modifier
+            .fillMaxSize()
+            .hideKeyboardOnScroll()
+            .cmpVerticalScrollbar(listState, scrollbarColor),
         state = listState,
         contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
         content = content,
     )
 }
+
+private const val SCROLLBAR_ALPHA = 0.6f
 
 /** Состояние загрузки уровня вместо списка; `null` — данные готовы, рисуем список. */
 internal fun <T> LazyListScope.levelState(

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.vehicle_can_msg_enter
@@ -46,7 +47,10 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpResizeHandle
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.layout.PaneWidthState
+import ru.alarmtrade.specmp.core.ui.view.layout.rememberPaneWidthState
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.fullName
@@ -62,6 +66,12 @@ import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.Vehicl
 import ru.alarmtrade.specmp.feature.vehicle.ui.presentation.screen.select.card.CardPane
 
 private val CardWideMinWidth = 640.dp
+private val PaneMinWidth = 200.dp
+private const val PANE_MAX_FRACTION = 0.35f
+private const val PANE_BRANDS = "vehicle.brands"
+private const val PANE_MODELS = "vehicle.models"
+private const val PANE_TRIMS = "vehicle.trims"
+private const val PANE_CAN = "vehicle.can"
 
 @Composable
 internal fun WideCatalog(
@@ -85,13 +95,21 @@ internal fun WideCatalog(
         CmpRow(modifier = Modifier.fillMaxSize()) {
             val expanded = layout == VehicleLayout.EXPANDED
             if (catalog.searchMode == SearchMode.CAN) {
-                CanColumn(catalog, actions, if (expanded) Modifier.width(460.dp) else Modifier.weight(1f))
+                if (expanded) {
+                    val pane = rememberCatalogPane(catalog, PANE_CAN, 460.dp, windowWidth)
+                    CanColumn(catalog, actions, Modifier.width(pane.width))
+                    CatalogPaneHandle(PANE_CAN, pane, actions)
+                } else {
+                    CanColumn(catalog, actions, Modifier.weight(1f))
+                    CmpVerticalDivider()
+                }
             } else {
                 NameColumns(
                     catalog,
                     actions,
                     third = expanded && windowWidth >= ThirdColumnMinWidth,
                     expanded = expanded,
+                    windowWidth = windowWidth,
                 )
             }
             if (expanded) CardColumn(state.forCard(), actions)
@@ -171,6 +189,7 @@ private fun RowScope.NameColumns(
     actions: VehicleSelectActions,
     third: Boolean,
     expanded: Boolean,
+    windowWidth: Dp,
 ) {
     val brand = state.selection.brand
     val brandWidth = when {
@@ -178,20 +197,22 @@ private fun RowScope.NameColumns(
         state.combo != null -> 340.dp
         else -> 260.dp
     }
+    val brandPane = rememberCatalogPane(state, PANE_BRANDS, brandWidth, windowWidth)
     Column(
         title = if (state.combo != null) {
             stringResource(Strings.string.vehicle_catalog_title_search_results)
         } else {
             stringResource(Strings.string.vehicle_catalog_title_brands, state.brands.content?.size ?: 0)
         },
-        modifier = Modifier.width(brandWidth),
+        modifier = Modifier.width(brandPane.width),
     ) {
         CatalogList { brandItems(state, actions, showRecent = false, compact = true) }
     }
-    CmpVerticalDivider()
+    CatalogPaneHandle(PANE_BRANDS, brandPane, actions)
+    val modelPane = rememberCatalogPane(state, PANE_MODELS, if (third) 300.dp else 340.dp, windowWidth)
     Column(
         title = brand?.name ?: stringResource(Strings.string.vehicle_catalog_title_models),
-        modifier = if (expanded) Modifier.width(if (third) 300.dp else 340.dp) else Modifier.weight(1f),
+        modifier = if (expanded) Modifier.width(modelPane.width) else Modifier.weight(1f),
     ) {
         FadeContent(targetState = state, contentKey = { it.selection.brand?.id }) { shown ->
             if (shown.selection.brand == null) {
@@ -201,16 +222,31 @@ private fun RowScope.NameColumns(
             }
         }
     }
+    if (expanded) CatalogPaneHandle(PANE_MODELS, modelPane, actions)
     if (third) {
-        CmpVerticalDivider()
-        TrimsColumn(state, actions)
+        val trimPane = rememberCatalogPane(state, PANE_TRIMS, 260.dp, windowWidth)
+        TrimsColumn(state, actions, Modifier.width(trimPane.width))
+        CatalogPaneHandle(PANE_TRIMS, trimPane, actions)
     }
-    if (expanded) CmpVerticalDivider()
 }
 
 @Composable
-private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions) {
-    Column(title = stringResource(Strings.string.vehicle_catalog_title_trims), modifier = Modifier.width(260.dp)) {
+private fun rememberCatalogPane(state: VehicleSelectState, key: String, default: Dp, windowWidth: Dp): PaneWidthState =
+    rememberPaneWidthState(
+        saved = state.paneWidthsDp[key]?.dp,
+        default = default,
+        min = PaneMinWidth,
+        max = windowWidth * PANE_MAX_FRACTION,
+    )
+
+@Composable
+private fun CatalogPaneHandle(key: String, pane: PaneWidthState, actions: VehicleSelectActions) {
+    CmpResizeHandle(state = pane, onDragStop = { actions.onPaneWidthChange(key, it.value.roundToInt()) })
+}
+
+@Composable
+private fun TrimsColumn(state: VehicleSelectState, actions: VehicleSelectActions, modifier: Modifier) {
+    Column(title = stringResource(Strings.string.vehicle_catalog_title_trims), modifier = modifier) {
         FadeContent(targetState = state, contentKey = { it.selection.model?.id }) { shown ->
             val single = shown.trims.content?.size == 1
             when {
@@ -234,7 +270,6 @@ private fun CanColumn(state: VehicleSelectState, actions: VehicleSelectActions, 
             CatalogList { canItems(state, actions, compact = true) }
         }
     }
-    CmpVerticalDivider()
 }
 
 @Composable

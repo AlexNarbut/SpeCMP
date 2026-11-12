@@ -1,9 +1,6 @@
 package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.screen.editor
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -24,14 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -79,7 +71,9 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpFlowRow
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpResizeHandle
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.layout.rememberPaneWidthState
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenu
 import ru.alarmtrade.specmp.core.ui.view.menu.CmpDropdownMenuItem
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpBreadcrumb
@@ -172,21 +166,21 @@ private fun ReadyBody(
     CmpRow(modifier = Modifier.fillMaxSize()) {
         if (layout.isWide) {
             val maxTree = minOf(TreeMaxWidth, windowWidth * TREE_MAX_FRACTION)
-            val saved = state.treeWidthDp?.dp ?: layout.treeWidth
-            var treeWidth by remember(saved, maxTree) { mutableStateOf(saved.coerceIn(TreeMinWidth, maxTree)) }
+            val tree = rememberPaneWidthState(state.treeWidthDp?.dp, layout.treeWidth, TreeMinWidth, maxTree)
             SectionTree(
                 root = root,
                 selectedId = (location.sectionId ?: firstSectionId(root)).takeUnless { location.isSearch },
                 selectedPath = location.sectionPath,
                 sectionChanges = state.sectionChanges,
                 changedIds = state.changedIds,
-                width = { treeWidth },
+                width = { tree.width },
                 onEditSetting = actions.onEditSetting,
                 onSelect = { id -> actions.onNavigateTo(root.pathTo(id).orEmpty().map { it.id } + id) },
             )
-            TreeResizeHandle(
-                onDrag = { delta -> treeWidth = (treeWidth + delta).coerceIn(TreeMinWidth, maxTree) },
-                onDragStop = { actions.onTreeWidthChange(treeWidth.value.roundToInt()) },
+            CmpResizeHandle(
+                state = tree,
+                onDragStop = { width -> actions.onTreeWidthChange(width.value.roundToInt()) },
+                modifier = Modifier.testTag(SettingsTestTags.TREE_RESIZE),
             )
         }
         // Переход между разделами (запись едет из-за края) не рисуется поверх дерева.
@@ -215,34 +209,6 @@ internal fun SettingsPage(
             if (!location.isSearch && root != null) Crumbs(root, state, location, actions)
         }
         CmpBox(modifier = Modifier.weight(1f).fillMaxWidth()) { content() }
-    }
-}
-
-@Composable
-private fun TreeResizeHandle(onDrag: (Dp) -> Unit, onDragStop: () -> Unit) {
-    val colors = cmpThemeColors()
-    val density = LocalDensity.current
-    val currentOnDrag by rememberUpdatedState(onDrag)
-    CmpBox(
-        modifier = Modifier
-            .width(ResizeHandleWidth)
-            .fillMaxHeight()
-            .testTag(SettingsTestTags.TREE_RESIZE)
-            .background(colors.surfaceContainerLow)
-            .pointerHoverIcon(PointerIcon.Hand)
-            .draggable(
-                orientation = Orientation.Horizontal,
-                state = rememberDraggableState { deltaPx -> currentOnDrag(with(density) { deltaPx.toDp() }) },
-                onDragStopped = { onDragStop() },
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        CmpBox(modifier = Modifier.width(1.dp).fillMaxHeight().background(colors.outlineVariant))
-        CmpBox(
-            modifier = Modifier
-                .size(width = 4.dp, height = 32.dp)
-                .background(colors.outline, CircleShape),
-        )
     }
 }
 
@@ -618,6 +584,5 @@ private fun Dialogs(state: DeviceSettingsState, wide: Boolean, actions: DeviceSe
 private val TreeMinWidth = 180.dp
 private val TreeMaxWidth = 480.dp
 private const val TREE_MAX_FRACTION = 0.5f
-private val ResizeHandleWidth = 12.dp
 
 internal fun firstSectionId(root: SettingsSection): Int? = root.children.firstOrNull { it is SettingsSection }?.id

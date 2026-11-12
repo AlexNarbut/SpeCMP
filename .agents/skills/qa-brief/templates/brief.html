@@ -113,6 +113,11 @@ section.sec { margin-bottom: 36px; scroll-margin-top: 80px; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin-top: 10px; }
 .cols h5 { margin: 0 0 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .cols ol, .cols ul { margin: 0; padding-left: 20px; }
+.checks { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.checks li { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; padding-top: 8px; border-top: 1px solid var(--line, rgba(127,127,127,.25)); }
+.checks li:first-child { border-top: 0; padding-top: 0; }
+.checks b { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.pair { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: start; }
 .note { margin-top: 8px; font-size: 13px; color: var(--muted); }
 .status { display: flex; gap: 4px; flex-wrap: wrap; }
 .status button {
@@ -160,6 +165,7 @@ details.orig .orig-title { margin-top: 6px; font-weight: 600; }
   .layout { grid-template-columns: 1fr; }
   nav.toc { position: static; max-height: none; }
   .cols { grid-template-columns: 1fr; }
+  .checks li, .pair { grid-template-columns: 1fr; }
   h1 { font-size: 24px; }
   .bar { position: static; }
   .progress { flex-basis: 100%; }
@@ -230,8 +236,9 @@ details.orig .orig-title { margin-top: 6px; font-weight: 600; }
     return out;
   }
   function statusOf(id) { return (results[id] && results[id].status) || ""; }
-  // Правка тестировщика: { title, steps, expected } — поверх исходного кейса из brief.json.
+  // Правка тестировщика: { title, checks } (старые брифы — { title, steps, expected }) — поверх исходного кейса.
   function editOf(id) { return (results[id] && results[id].edit) || null; }
+  function sameChecks(a, b) { return JSON.stringify(a || []) === JSON.stringify(b || []); }
   function view(c) { return editOf(c.id) || c; }
   function lines(text) {
     return String(text || "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
@@ -358,6 +365,17 @@ details.orig .orig-title { margin-top: 6px; font-weight: 600; }
         el("div", null, [el("h5", { text: "Ожидаемый результат" }), list("ul", expected)])
       ]);
     }
+    // Кейс — пары «Шаг-N → ОР-N»; у старых брифов шаги и ожидаемое — двумя списками.
+    function checksView(checks) {
+      return el("ol", { class: "checks" }, (checks || []).map(function (x, i) {
+        var n = i + 1;
+        return el("li", null, [
+          el("div", null, [el("b", { text: "Шаг-" + n }), document.createTextNode(x.step)]),
+          el("div", null, [el("b", { text: "ОР-" + n }), document.createTextNode(x.expected)])
+        ]);
+      }));
+    }
+    function caseBody(x) { return x.checks ? checksView(x.checks) : columns(x.steps, x.expected); }
     function paint() {
       var v = view(c), edited = !!editOf(c.id);
       titleNode.textContent = "";
@@ -366,16 +384,75 @@ details.orig .orig-title { margin-top: 6px; font-weight: 600; }
       editedBadge.classList.toggle("hidden", !edited);
       editBtn.disabled = false;
       body.textContent = "";
-      body.appendChild(columns(v.steps, v.expected));
+      body.appendChild(caseBody(v));
       if (edited) {
         body.appendChild(el("details", { class: "orig" }, [
           el("summary", { text: "Исходный вариант кейса" }),
           el("div", { class: "orig-title", text: c.title || "" }),
-          columns(c.steps, c.expected)
+          caseBody(c)
         ]));
       }
     }
+    function openChecksEditor() {
+      var v = view(c);
+      editBtn.disabled = true;
+      body.textContent = "";
+      var title = el("input", { type: "text" }); title.value = v.title || "";
+      var rows = el("div", { class: "editor" });
+      function addRow(x) {
+        var step = el("textarea"); step.value = (x && x.step) || ""; step.placeholder = "Шаг";
+        var exp = el("textarea"); exp.value = (x && x.expected) || ""; exp.placeholder = "ОР";
+        var del = el("button", { class: "btn", type: "button", text: "✕", title: "Убрать шаг" });
+        var row = el("div", { class: "pair" }, [step, exp, del]);
+        del.addEventListener("click", function () { rows.removeChild(row); });
+        rows.appendChild(row);
+      }
+      (v.checks || []).forEach(addRow);
+      var addB = el("button", { class: "btn", type: "button", text: "+ Шаг" });
+      addB.addEventListener("click", function () { addRow(null); });
+      var error = el("div", { class: "error hidden", role: "alert" });
+      var saveB = el("button", { class: "btn primary", type: "button", text: "Сохранить" });
+      var cancelB = el("button", { class: "btn", type: "button", text: "Отмена" });
+      var revertB = el("button", { class: "btn" + (editOf(c.id) ? "" : " hidden"), type: "button", text: "Вернуть исходный" });
+      saveB.addEventListener("click", function () {
+        var checks = [], broken = false;
+        Array.prototype.forEach.call(rows.children, function (row) {
+          var step = oneLine(row.children[0].value), exp = oneLine(row.children[1].value);
+          if (!step && !exp) return;
+          if (!step || !exp) broken = true;
+          checks.push({ step: step, expected: exp });
+        });
+        var next = { title: oneLine(title.value), checks: checks };
+        if (!next.title || !checks.length || broken) {
+          error.textContent = "Нужны название и хотя бы один шаг; у каждого шага — свой ожидаемый результат.";
+          error.classList.remove("hidden");
+          return;
+        }
+        results[c.id] = results[c.id] || {};
+        if (next.title === c.title && sameChecks(next.checks, c.checks)) delete results[c.id].edit;
+        else results[c.id].edit = next;
+        save(); paint();
+        toast(editOf(c.id) ? "Кейс исправлен — правка попадёт в отчёт" : "Без изменений");
+        if (editOf(c.id) && !comment.value) comment.focus();
+      });
+      cancelB.addEventListener("click", paint);
+      revertB.addEventListener("click", function () {
+        if (results[c.id]) delete results[c.id].edit;
+        save(); paint(); toast("Возвращён исходный вариант");
+      });
+      body.appendChild(el("div", { class: "editor" }, [
+        el("label", null, [document.createTextNode("Название"), title]),
+        el("label", null, [document.createTextNode("Шаг → ОР")]),
+        rows,
+        addB,
+        el("div", { class: "hint", text: "Каждой строке — один шаг и его ожидаемый результат. Почему исправили — напишите в комментарии ниже." }),
+        error,
+        el("div", { class: "actions" }, [saveB, cancelB, revertB])
+      ]));
+      title.focus();
+    }
     function openEditor() {
+      if (c.checks) { openChecksEditor(); return; }
       var v = view(c);
       editBtn.disabled = true;
       body.textContent = "";
@@ -498,6 +575,19 @@ details.orig .orig-title { margin-top: 6px; font-weight: 600; }
         var e = editOf(x.c.id), r = results[x.c.id] || {};
         out.push("### " + x.c.id + " " + e.title + " (" + x.sec.title + ")", "");
         if (e.title !== x.c.title) out.push("- Название: было «" + x.c.title + "», стало «" + e.title + "»");
+        if (x.c.checks) {
+          if (!sameChecks(e.checks, x.c.checks)) {
+            [["было", x.c.checks], ["стало", e.checks]].forEach(function (p) {
+              out.push("- Шаги — " + p[0] + ":");
+              p[1].forEach(function (k, i) {
+                out.push("  - Шаг-" + (i + 1) + ": " + k.step, "  - ОР-" + (i + 1) + ": " + k.expected);
+              });
+            });
+          }
+          if (r.comment) out.push("- Комментарий: " + oneLine(r.comment));
+          out.push("");
+          return;
+        }
         [["Шаги", "steps", true], ["Ожидаемый результат", "expected", false]].forEach(function (f) {
           if (sameList(e[f[1]], x.c[f[1]])) return;
           out.push("- " + f[0] + " — было:");

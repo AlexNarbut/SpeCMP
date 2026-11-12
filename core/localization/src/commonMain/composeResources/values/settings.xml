@@ -17,6 +17,8 @@
     <string name="settings_editor_hint_read">Over Bluetooth this may take up to a minute</string>
     <string name="settings_editor_error_read_title">Failed to read settings</string>
     <string name="settings_editor_error_read_text">The device did not respond. Check the connection and the unit's power.</string>
+    <string name="settings_editor_msg_no_settings">No settings for this model</string>
+    <string name="settings_editor_msg_no_settings_hint">The database has no settings for this unit model. Update the database or pick another model.</string>
     <string name="settings_editor_msg_empty_section">This section has no settings</string>
     <string name="settings_editor_msg_empty_section_hint">The device sent no items for this section.</string>
     <string name="settings_editor_label_changed">Changed: %1$d</string>

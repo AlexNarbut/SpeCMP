@@ -31,6 +31,8 @@ import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_empty_section
 import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_empty_section_hint
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_no_settings
+import ru.alarmtrade.specmp.core.localization.resources.settings_editor_msg_no_settings_hint
 import ru.alarmtrade.specmp.core.localization.resources.settings_search_a11y_clear
 import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_empty
 import ru.alarmtrade.specmp.core.localization.resources.settings_search_msg_empty_hint
@@ -61,7 +63,21 @@ private val CardRadius = 16.dp
 private val CardBorder = 1.dp
 
 @Composable
-internal fun SectionPane(section: SettingsSection, marks: RowMarks, wide: Boolean, actions: SettingRowActions) {
+internal fun SectionPane(
+    section: SettingsSection,
+    marks: RowMarks,
+    wide: Boolean,
+    actions: SettingRowActions,
+    noSettings: Boolean = false,
+) {
+    if (noSettings) {
+        EmptyMessage(
+            icon = CmpIcons.List,
+            title = stringResource(Strings.string.settings_editor_msg_no_settings),
+            hint = stringResource(Strings.string.settings_editor_msg_no_settings_hint),
+        )
+        return
+    }
     if (section.children.isEmpty()) {
         EmptyMessage(
             icon = CmpIcons.List,

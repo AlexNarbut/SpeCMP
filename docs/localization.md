@@ -220,13 +220,13 @@ iOS — `NSLocale.preferredLanguages`, кэшируется на старте п
      (android-ресурсы) и в процессной локали (compose-resources). Плюс `AppActivity.onConfigurationChanged` →
      `reapplyAppLocale()`: смену конфигурации без пересоздания (поворот, размер окна при `configChanges`) система
      сопровождает сбросом `Locale.getDefault()` к системному языку — без повторного применения перерисованный UI
-     съезжает на него. Запись выбора на Android синхронная (`commit`): перезапуск сразу завершает процесс.
+     съезжает на него. Запись выбора на Android синхронная (`commit`).
    - iOS — `prepareAppLocale()` в `App()` приводит `AppleLanguages` к выбору (лечит расхождения с per-app языком
      в настройках iOS); действует со следующего запуска.
    - desktop — `prepareAppLocale()` в `App()`: `Locale.setDefault` до первой композиции.
-3. **Смена языка** — `AppSettingsViewModel`: подтверждение «приложение перезапустится» → `AppLocaleStore.save` →
-   `AppRestarter.restart()` (`core/common`, реализация — платформенный Koin-модуль `composeApp`). Android
-   перезапускает процесс; iOS (`exit()` отклоняет App Store) и desktop — `false`, экран просит перезапустить вручную.
+3. **Смена языка** — `AppSettingsViewModel`: подтверждение → `AppLocaleStore.save` → диалог «Перезапустите
+   приложение». На всех платформах приложение само не перезапускается (на iOS `exit()` отклоняет App Store):
+   язык применится, когда пользователь перезапустит приложение.
 4. **SDK** получает язык один раз — `SpecialistInitializer.start(currentLocale)` на старте; отдельной синхронизации
    смены языка нет (смена = перезапуск).
 5. **Фичи** локалью не управляют и `CompositionLocal` локали нет: строки берутся `stringResource` в языке запуска;

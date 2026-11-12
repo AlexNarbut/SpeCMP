@@ -3,8 +3,8 @@
 #
 #   render.sh .ai-qa/briefs/<slug>
 #
-# Проверяет JSON и обязательные поля (title, sections[].id/title, cases[].id/title/steps/expected),
-# уникальность id кейсов. Ошибки — в stderr, код выхода 1.
+# Проверяет JSON и обязательные поля (title, sections[].id/title, cases[].id/title и checks — пары
+# step/expected; у старых брифов вместо checks — steps/expected), уникальность id кейсов. Ошибки — в stderr, код выхода 1.
 
 set -euo pipefail
 dir="${1:?usage: render.sh <папка брифа>}"
@@ -33,9 +33,17 @@ for si, s in enumerate(data.get("sections") or []):
         for key in ("id", "title"):
             if not c.get(key):
                 errors.append(f"{cw}: нет {key}")
-        for key in ("steps", "expected"):
-            if not c.get(key):
-                errors.append(f"{cw}: пустой {key}")
+        checks = c.get("checks")
+        if checks is not None:
+            if not checks:
+                errors.append(f"{cw}: пустой checks")
+            for ki, k in enumerate(checks or []):
+                if not isinstance(k, dict) or not k.get("step") or not k.get("expected"):
+                    errors.append(f"{cw}: checks[{ki}] — нужны step и expected")
+        else:
+            for key in ("steps", "expected"):
+                if not c.get(key):
+                    errors.append(f"{cw}: пустой {key} (новый формат — checks)")
         if c.get("priority") not in (None, "high", "normal", "low"):
             errors.append(f"{cw}: priority — high / normal / low")
         if c.get("id") in ids:

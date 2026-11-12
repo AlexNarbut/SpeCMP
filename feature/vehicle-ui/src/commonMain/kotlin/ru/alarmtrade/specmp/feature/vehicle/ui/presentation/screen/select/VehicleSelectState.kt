@@ -88,6 +88,8 @@ internal data class VehicleSelectState(
     val dialog: VehicleDialog? = null,
     /** Идёт получение данных автомобиля для «Выбрать» из строки. */
     val picking: Boolean = false,
+    /** Ширины колонок широкой раскладки, перетащенные пользователем (ключ колонки → dp). */
+    val paneWidthsDp: Map<String, Int> = emptyMap(),
 ) {
     val showTypeChoice: Boolean get() = mode.typeSelectable && deviceType == null
 }

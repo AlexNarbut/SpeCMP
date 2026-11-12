@@ -406,7 +406,13 @@ internal fun SectionEntry(
     // На широкой раскладке корень не показывается — открыт первый раздел (он же выделен в дереве).
     val id = sectionId ?: firstSectionId(root).takeIf { layout.isWide }
     val section = id?.let { root.findNode(it) as? SettingsSection } ?: root
-    SectionPane(section = section, marks = marks, wide = layout.isWide, actions = actions)
+    SectionPane(
+        section = section,
+        marks = marks,
+        wide = layout.isWide,
+        actions = actions,
+        noSettings = root.children.isEmpty(),
+    )
 }
 
 private val SearchLocation = SettingsLocation(sectionPath = emptyList(), isSearch = true)

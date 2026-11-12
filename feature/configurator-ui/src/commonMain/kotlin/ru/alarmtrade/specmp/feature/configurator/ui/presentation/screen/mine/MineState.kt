@@ -17,6 +17,7 @@ internal data class MineState(
     val modelFilter: String? = null,
     val shown: Int = PAGE_SIZE,
     val selectedId: Long? = null,
+    val listWidthDp: Int? = null,
     val dialog: MineDialog? = null,
     val busy: Boolean = false,
     val connectedDeviceName: String? = null,
