@@ -144,6 +144,36 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `repository and service members have callers`() {
+        val contracts = scope.interfaces(includeNested = true).filter {
+            it.name.endsWith(REPOSITORY) || it.name.isServiceName() ||
+                it.resideInPackage("..domain.repository..") || it.resideInPackage("..domain.service..")
+        }
+        val implementers = scope.classesAndObjects(includeNested = true)
+            .flatMap { type -> type.parents().map { it.name.substringBefore('<') to type.containingFile.path } }
+            .groupBy({ it.first }, { it.second })
+        val code = scope.files.associate { it.path to it.codeWithoutHeaderCommentsAndStrings() }
+        val message = "Член контракта (интерфейс *Repository/*Coordinator/*Controller, domain/repository, " +
+            "domain/service) вызывается в production-коде вне интерфейса и его реализаций; мёртвый метод " +
+            "удаляется из контракта, реализаций и фейков. docs/patterns.md, «Domain»"
+        val unused = contracts.flatMap { contract ->
+            val own = implementers[contract.name].orEmpty().toSet() + contract.containingFile.path
+            val callers = code.filterKeys { it !in own }.values
+            val members: List<KoBaseDeclaration> =
+                contract.functions(includeNested = false) + contract.properties(includeNested = false)
+            // Функция может вызываться без получателя — в лямбде с ресивером (`updateOutbox { markSent(id) }`).
+            members.filterNot { member ->
+                val reference = when (member) {
+                    is KoFunctionDeclaration -> Regex("""(\.|::)${Regex.escape(member.name)}\b|\b${member.name}\s*\(""")
+                    else -> Regex("""(\.|::)${Regex.escape((member as KoPropertyDeclaration).name)}\b""")
+                }
+                callers.any { reference.containsMatchIn(it) }
+            }
+        }
+        unused.assertFalse(testName = "contract-member-usage", additionalMessage = message) { true }
+    }
+
+    @Test
     fun `service members return Response`() {
         scope.interfaces(includeNested = true)
             .filter { it.name.isServiceName() || it.resideInPackage("..domain.service..") }
@@ -330,6 +360,23 @@ class ArchitectureTest {
                 additionalMessage = "data class *State в presentation помечается @Immutable или @Stable; коллекции — " +
                     "поля такого класса или ImmutableList. docs/compose-best-prac.md, §3.2",
             ) { it.hasAnnotationWithName("Immutable", "Stable") }
+    }
+
+    @Test
+    fun `screen state and effects carry typed errors`() {
+        val contracts = scope.files
+            .filter { it.inLayer("presentation") && CONTRACT_FILE.matches(it.name) }
+            .flatMap { it.classes(includeNested = true) }
+        val message = "State и Effect экрана несут ошибку типом фичи (enum/sealed, AppError), не " +
+            "Throwable/Exception и не Response: UI не разбирает исключения. docs/patterns.md, «Ошибки фичи»"
+        contracts.flatMap { it.primaryConstructor?.parameters.orEmpty() }
+            .assertFalse(testName = "state-typed-errors", additionalMessage = message) {
+                RAW_ERROR_TYPE.containsMatchIn(it.type.text)
+            }
+        contracts.flatMap { it.properties(includeNested = false) }
+            .assertFalse(testName = "state-typed-errors", additionalMessage = message) {
+                RAW_ERROR_TYPE.containsMatchIn(it.type?.text.orEmpty())
+            }
     }
 
     @Test
@@ -616,6 +663,18 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `composables do not receive view models`() {
+        scope.functions(includeNested = true, includeLocal = true)
+            .filter { it.hasAnnotationWithName("Composable") }
+            .flatMap { it.parameters }
+            .assertFalse(
+                testName = "composable-no-view-model",
+                additionalMessage = "ViewModel не передаётся в composable параметром: её получает точка входа экрана " +
+                    "(koinViewModel), дальше идут state и actions (лямбды, *Actions). docs/compose-best-prac.md",
+            ) { it.type.text.baseTypeName().endsWith("ViewModel") }
+    }
+
+    @Test
     fun `classes have no constructor side effects`() {
         classes.assertFalse(
             testName = "no-constructor-side-effects",
@@ -846,6 +905,9 @@ private fun String?.isMutableCollectionType(): Boolean = this != null && MUTABLE
 
 // Корни композиции: здесь composable собирают граф и передают зависимости дальше параметрами.
 private val COMPOSITION_ROOTS = setOf("composeApp", "flasherApp")
+
+private val CONTRACT_FILE = Regex("""\w+(State|Effect)""")
+private val RAW_ERROR_TYPE = Regex("""\b(Throwable|\w*Exception|Response)\b""")
 
 // SDK AlarmTrade — всё под ru.alarmtrade.*, кроме пакетов самого приложения.
 private fun String.isSdkName(): Boolean = startsWith("ru.alarmtrade.") && !startsWith("$ROOT.") && this != ROOT

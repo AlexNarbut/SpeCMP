@@ -41,6 +41,11 @@ class SpecmpRuleSetProvider : RuleSetProvider {
             RuleName("UnawaitedAsync") to ::UnawaitedAsync,
             RuleName("NestedCollect") to ::NestedCollect,
             RuleName("SideEffectAwaitsUi") to ::SideEffectAwaitsUi,
+            RuleName("HardcodedUiText") to ::HardcodedUiText,
+            RuleName("DomainSentinelDefault") to ::DomainSentinelDefault,
+            RuleName("LoopWithoutCancellation") to ::LoopWithoutCancellation,
+            RuleName("LoggerTagLiteral") to ::LoggerTagLiteral,
+            RuleName("ViewModelCallInEffect") to ::ViewModelCallInEffect,
         ),
     )
 

@@ -11,7 +11,7 @@
 - Компоненты Material3 в фичах — только через `Cmp*` из `core/ui` (detekt `ForbiddenImport` на `androidx.compose.material3.*`); визуальные компоненты других библиотек (`foundation.Image`, `Dialog`, Coil) — тоже через `Cmp*`, layout-примитивы и модификаторы `foundation` — напрямую (`docs/ui-kit.md`).
 - Предпочитать `commonMain`; `expect`/`actual` — только для по-настоящему платформо-специфичного кода.
 - **Никаких `launch`/`coroutineScope` в Composable-функциях** — suspend-операции только через ViewModel или Repository; composable вызывает синхронные методы VM.
-- **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** — см. «Запуск работы на старте экрана».
+- **Бизнес-логику не запускать из `LaunchedEffect`/`DisposableEffect`/`rememberCoroutineScope`** (detekt `ViewModelCallInEffect`: прямой вызов VM из эффекта запрещён, мост результатов `results.collect { viewModel.onX(it) }` разрешён) — см. «Запуск работы на старте экрана».
 - **ViewModel — только через `BaseViewModel<S, E>`** (detekt `ForbiddenImport` на `androidx.lifecycle.ViewModel`): наружу `state`, `sideEffect` и интенты `onXxx()`, state меняется только `reduce`, эффекты — `postSideEffect`, корутины — `intent`/`safeLaunch`/`launchReplacing`, стартовая работа — `onStart()` — см. «BaseViewModel».
 - **VM, работающая с подключённым блоком, — от `BaseDeviceViewModel<S, E>`** (`feature/device/presentation-core`): работа с блоком через `launchOnDevice` / `onEachDeviceReady` / `onDeviceLost`, имя блока — `connectedDeviceName`; свои `deviceSession.state.map { … Ready … }` не писать (`feature/device/presentation-core/AGENTS.md`).
 - **Файлы экрана: `XxxViewModel.kt` — только VM (одна на файл), State и все его подстейты — `XxxState.kt`, эффекты — `XxxEffect.kt`**; модель view со своим состоянием — тоже не в файле composable — см. «Файлы экрана».
@@ -21,14 +21,14 @@
 - **Domain — чистый Kotlin**: без Compose и других UI-фреймворков, без SDK-типов (Konsist `domain-isolation`, `domain-model-purity`) — см. «Domain».
 - **Слои и модули — только по направлению зависимостей**: presentation → domain ← data, фича ↛ data и presentation чужой фичи, типы SDK — только data/di (Konsist `module-direction`, `presentation-isolation`, `cross-feature-presentation`, `sdk-confinement`, graph-assert) — см. «Слои и границы модуля».
 - **Гонки: `MutableStateFlow` — только через `update { }`, запись `.value = …` запрещена (даже простая); персистентный read-modify-write и многошаговая пересборка внешнего состояния — под `Mutex`** — см. «Корутины и Flow».
-- **Ошибки из ViewModel — только типизированные** (enum / sealed в state), не строковые коды — см. «Ошибки фичи».
-- **Никаких строковых литералов в `@Composable`** — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
+- **Ошибки из ViewModel — только типизированные** (enum / sealed в state; в `*State`/`*Effect` нет `Throwable`/`*Exception`/`Response` — Konsist `state-typed-errors`), не строковые коды — см. «Ошибки фичи».
+- **Никаких строковых литералов в `@Composable`** (detekt `HardcodedUiText`) — UI-текст (включая `contentDescription`) только через `stringResource(Strings.string.*)` (см. `docs/localization.md`); строки для логики (ключи, теги) — через `const val`, не inline.
 - **Импорты — только сверху файла, unused удаляем** — см. «Импорты».
 - **Стабильность для Compose:** state и presentation-модели — `@Immutable` (Konsist `state-immutable`), domain — неизменяемый (стабилен через `config/compose/stability.conf`), SDK-типы и голые `List` параметрами composable не передаём, неизменённые экземпляры не пересоздаём; `stability.conf` — крайняя мера, сначала код — см. «Compose: локальное состояние и стабильность».
 - **`@Serializable` — только форматы данных и маршруты, у каждого — `@SerialName("<модуль>.<Класс>")`** (Konsist `serializable-placement`) — см. «Сериализация».
 - **Domain-модель без UI-строк, sentinel-значений и дублирующих иерархий**; отмена ≠ ошибка; запрос с асинхронным результатом возвращает результат или таймаут — см. «Domain».
 - **Состояние, привязанное к аккаунту, чистится через `AuthCloseable`**; identity берётся из `AccountRepository`, а не кэшируется полем фичи — см. «Состояние сессии и смена аккаунта».
-- **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()`: в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
+- **State экрана — `collectAsStateWithLifecycle()`**, не `collectAsState()` (detekt `ForbiddenImport`): в фоне сбор останавливается и `WhileSubscribed` гасит источники; то, что жить в фоне обязано, — не на `WhileSubscribed` — см. `docs/compose-best-prac.md` §4.
 - **Время жизни работы VM задаёт место запуска**: `collectIntoState` — пока экран подписан, `onStart()` — один раз, `launchReplacing(key)`/`launchOnDevice(key)` — всю жизнь VM, дольше экрана — репозиторий со скоупом приложения; без `init {}`, `DisposableEffect`, полей-`Job` и `var` — см. «Жизненный цикл ViewModel и сессии».
 - **У каждого флага загрузки — гарантированный сброс; ошибка первой загрузки ≠ пустой экран; «нечего делать» ≠ `Success`** — см. «Корректность state».
 - **Код проходит `./gradlew spotlessCheck` и `./gradlew detektCheck` без замечаний** (строка ≤ 120, без `runCatching`/`!!`/`println`, generic `catch` только на границах) — см. «Что проверяют анализаторы (Spotless + detekt)» и [`code-quality.md`](code-quality.md).
@@ -73,8 +73,9 @@
   Сериализуй: в доменном объекте/репозитории — собственный `Mutex.withLock`, во ViewModel —
   готовый `executeWithProceedLock(needSkipAnother = false)` из `BaseViewModel`
   (см. «BaseViewModel»).
-- **Бесконечные циклы — по `isActive`** (кооперативная отмена), а не `while (true)`:
-  внутри `flow { }` это `currentCoroutineContext().isActive`, внутри `launch` — `isActive` скоупа.
+- **Бесконечный цикл в корутине — с точкой отмены** (detekt `LoopWithoutCancellation`): в теле `while (true)` есть
+  suspend-вызов (`delay`, `emit`, запрос) или `ensureActive()`; цикл без приостановок крутится по `isActive`
+  (внутри `flow { }` — `currentCoroutineContext().isActive`, внутри `launch` — `isActive` скоупа).
 - `flowOn` / `stateIn` применимы **только к холодным Flow** (`combine`, `zip`, `map`, `flow {}`).
   `MutableStateFlow` / `StateFlow` — горячие, для них эти операторы бессмысленны:
 
@@ -295,7 +296,7 @@ val dispatchers = testDispatchers(StandardTestDispatcher())
   (repository, при маппинге SDK-ошибки), но не дублирование в VM: `asLCEState(XxxError::from)`
   только маппит ошибку, без `logger.e`.
 - `logger.d` — трассировка значимых событий (старт/завершение загрузки, результат операции).
-- **Тег — от имени класса, не литералом**: `Logger.withTag(this::class.simpleName.orEmpty())`.
+- **Тег — от имени класса, не литералом** (detekt `LoggerTagLiteral`; верхнеуровневый логгер файла — литералом): `Logger.withTag(this::class.simpleName.orEmpty())`.
   Строковый литерал (`withTag("MyRepository")`) разъедется при переименовании. Во ViewModel свой
   логгер не создаётся — есть `logger` из `BaseViewModel`.
 
@@ -581,7 +582,7 @@ sealed interface MainDatabaseSyncStatus {
 - **Никаких UI-представлений в модели.** Отформатированные строки (`displayTime = "14:05"`,
   `sizeLabel = "2 MB"`) в domain не хранятся — модель держит исходное значение (`LocalDateTime`,
   `Long`), форматирует UI. Иначе формат дублируется по слоям и зависит от языка того слоя, где его собрали.
-- **Отсутствие значения — `null`, а не sentinel.** `url = ""`, `id = -1`, `"unknown"` вместо `null`
+- **Отсутствие значения — `null`, а не sentinel** (detekt `DomainSentinelDefault`). `url = ""`, `id = -1`, `"unknown"` вместо `null`
   требуют отдельной проверки в каждом потребителе и молча проходят там, где её забыли.
 - **Одна иерархия на одну сущность.** Две почти одинаковые sealed-иерархии, различающиеся только
   nullability полей (`Attachment` и `PendingAttachment`), порождают конвертеры туда-обратно,
@@ -595,8 +596,8 @@ sealed interface MainDatabaseSyncStatus {
   («не удалось» = ошибка записи + нет прав + пользователь сам нажал «Отмена»). Возвращай
   `Response<T>` или sealed-результат (`Saved` / `Cancelled` / `Failed`); `Cancelled` не показывается
   пользователю как ошибка.
-- **Контракт без мёртвых методов.** Метод, который реализован в репозитории и фейке, но нигде не
-  вызывается, — либо подключается, либо удаляется вместе с реализациями.
+- **Контракт без мёртвых методов** (Konsist `contract-member-usage`). Метод, который реализован в репозитории и фейке,
+  но нигде не вызывается, — либо подключается, либо удаляется вместе с реализациями.
 - **Платформенные UI-порты — не domain.** Пикеры файлов, сохранение в «Загрузки», шаринг
   (activity-result, `UIDocumentPickerViewController`, `JFileChooser`) — это presentation-порты:
   интерфейс в `presentation/platform` фичи, actual — в `composeApp`. В `domain/` остаются модели и

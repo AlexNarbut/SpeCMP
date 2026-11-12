@@ -46,6 +46,11 @@ class SpecmpRuleSetProviderTest {
                 "UnawaitedAsync",
                 "NestedCollect",
                 "SideEffectAwaitsUi",
+                "HardcodedUiText",
+                "DomainSentinelDefault",
+                "LoopWithoutCancellation",
+                "LoggerTagLiteral",
+                "ViewModelCallInEffect",
             ),
             ruleSet.rules.keys.map { it.value }.toSet(),
         )

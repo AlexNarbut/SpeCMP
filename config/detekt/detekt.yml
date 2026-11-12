@@ -121,6 +121,26 @@ specmp:
   # collectSideEffect последовательный: showSnackbar/showResult — только в launch { }, иначе держат навигацию.
   SideEffectAwaitsUi:
     active: true
+  # Текст UI (Text/CmpText, text/title/label/placeholder/contentDescription/…) — stringResource из core/localization;
+  # @Preview вне охвата.
+  HardcodedUiText:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # В ..domain.model.. отсутствие значения — null, не "", -1, "unknown" (docs/patterns.md, «Domain»).
+  DomainSentinelDefault:
+    active: true
+  # while (true) в корутине — с точкой отмены (suspend-вызов или ensureActive()); требует type resolution.
+  LoopWithoutCancellation:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Тег логгера класса — this::class.simpleName; верхнеуровневый логгер файла — литералом.
+  LoggerTagLiteral:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
+  # Из LaunchedEffect/DisposableEffect VM не вызывается: старт — onStart(); мост results.collect { vm.onX(it) } — можно.
+  ViewModelCallInEffect:
+    active: true
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/iosTest/**', '**/testing/src/**']
 
 complexity:
   LongMethod:
@@ -203,6 +223,8 @@ style:
       # ui-kit (docs/ui-kit.md): фичи берут компоненты Cmp* из core/ui, material3 напрямую не импортируют.
       - reason: 'Компоненты дизайн-системы — из core/ui (docs/ui-kit.md), не material3 напрямую'
         value: 'androidx.compose.material3.*'
+      - reason: 'State экрана — collectAsStateWithLifecycle(): в фоне сбор останавливается (docs/patterns.md, чеклист)'
+        value: 'androidx.compose.runtime.collectAsState'
   ForbiddenComment:
     active: true
     comments:

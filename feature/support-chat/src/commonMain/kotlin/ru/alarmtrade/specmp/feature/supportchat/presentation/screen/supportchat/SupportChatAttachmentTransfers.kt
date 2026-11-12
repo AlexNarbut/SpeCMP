@@ -19,7 +19,7 @@ internal class SupportChatAttachmentTransfers(
     private val fileOpener: SupportChatFileOpener,
     private val dispatchers: AppDispatchers,
 ) {
-    private val logger = Logger.withTag("SupportChatAttachmentTransfers")
+    private val logger = Logger.withTag(this::class.simpleName.orEmpty())
 
     suspend fun download(attachment: SupportChatUiAttachment): SupportChatEffect? {
         val url = attachment.url ?: return null

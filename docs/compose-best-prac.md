@@ -265,7 +265,7 @@ fun Screen(vm: MyViewModel) {
 **State экрана собирается только через `collectAsStateWithLifecycle()`** (`androidx.lifecycle.compose`, KMP-артефакт
 `lifecycle-runtime-compose` — доступен в `commonMain` всем фичам через `core/ui`). Сбор останавливается, когда
 экран ниже `STARTED` (приложение в фоне), — и тогда `state` `BaseViewModel` (`WhileSubscribed` 5 с) действительно
-гасит привязки `collectIntoState`: поллинг, сканирование и прочие источники. `collectAsState()` держит подписку и в фоне — им state экрана не собираем.
+гасит привязки `collectIntoState`: поллинг, сканирование и прочие источники. `collectAsState()` держит подписку и в фоне — им state экрана не собираем (импорт запрещён detekt `ForbiddenImport`).
 
 - **Что не должно останавливаться в фоне** (сессия сокета, счётчик сессий, идущее обновление прошивки), — не
   через `collectIntoState`: `launchReplacing(key)`/`launchOnDevice(key)` из `onStart`/интента (живёт с VM) или доменный
@@ -282,6 +282,9 @@ Repository (Flow<Domain>)
     → Screen (.collectAsStateWithLifecycle())
     → Children (plain-значения, стабильные параметры)
 ```
+
+ViewModel получает только точка входа экрана (`koinViewModel()` в entry/графе) и раздаёт дальше state и actions
+(лямбды, `*Actions`): параметр типа `*ViewModel` у `@Composable` запрещён (Konsist `composable-no-view-model`).
 
 ### Одноразовые события (side effects)
 
