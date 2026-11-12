@@ -13,11 +13,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
-import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.AlarmDevice
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ConnectionTransport
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.ServicePin
-import ru.alarmtrade.specmp.feature.device.interaction.domain.repository.ProgramModeRepository
 import ru.alarmtrade.specmp.feature.device.interaction.domain.service.DeviceSession
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntry
 import ru.alarmtrade.specmp.feature.device.interaction.domain.session.ProgramModeEntryResult
@@ -40,7 +38,6 @@ class PairingViewModel(
     deviceSession: DeviceSession,
     private val repository: DynamicPeripheralsRepository,
     private val programMode: ProgramModeEntry,
-    private val programModeRepository: ProgramModeRepository,
     private val pinCooldown: ServicePinCooldown,
     private val dispatchers: AppDispatchers,
 ) : BaseDeviceViewModel<PairingState, PairingEffect>(deviceSession, PairingState()) {
@@ -200,18 +197,11 @@ class PairingViewModel(
         }
     }
 
-    /** Отмена: выходим из режима программирования — блок прекращает ждать устройство; таблица перечитывается. */
+    /** Отмена только скрывает плашку: блок сам выйдет из режима приживления по таймауту. */
     fun onPairingCancel() {
         if (!currentState.waiting) return
         cancelLaunched(PAIR_KEY)
         reduce { copy(pairing = null) }
-        postSideEffect(PairingEffect.Snackbar(PairingMessage.CANCELLED))
-        launchOnDevice {
-            withContext(dispatchers.io) {
-                programModeRepository.exit().onError { logger.w(it) { "Program mode exit on pairing cancel failed" } }
-            }
-            reduce { copy(pollGeneration = pollGeneration + 1) }
-        }
     }
 
     fun onPairingClose() {

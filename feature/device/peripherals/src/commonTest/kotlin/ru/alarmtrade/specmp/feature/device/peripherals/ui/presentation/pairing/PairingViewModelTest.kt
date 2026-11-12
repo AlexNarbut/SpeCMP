@@ -67,7 +67,7 @@ class PairingViewModelTest {
     private fun TestScope.viewModel(): PairingViewModel {
         val session = testDeviceSession(sessionRepository, dispatcher = dispatcher, transport = ConnectionTransport.BLE)
         val entry = ProgramModeEntry(session, programMode, cooldown)
-        val vm = PairingViewModel(session, repository, entry, programMode, cooldown, testDispatchers(dispatcher))
+        val vm = PairingViewModel(session, repository, entry, cooldown, testDispatchers(dispatcher))
             .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
@@ -200,7 +200,7 @@ class PairingViewModelTest {
     }
 
     @Test
-    fun `cancel leaves program mode and reads the table again`() = test {
+    fun `cancel only hides the pairing card`() = test {
         val vm = viewModel()
         table(slot(0))
         vm.onPair(0)
@@ -210,9 +210,9 @@ class PairingViewModelTest {
         runCurrent()
 
         assertNull(vm.state.value.pairing)
-        assertEquals(1, programMode.exits)
-        assertEquals(2, repository.subscriptions)
-        assertEquals(PairingEffect.Snackbar(PairingMessage.CANCELLED), effects.last())
+        assertEquals(0, programMode.exits)
+        assertEquals(1, repository.subscriptions)
+        assertTrue(effects.isEmpty())
     }
 
     @Test

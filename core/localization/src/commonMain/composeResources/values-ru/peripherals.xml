@@ -239,7 +239,6 @@
     <string name="peripherals_pairing_btn_instruction">Инструкция</string>
     <string name="peripherals_pairing_format_instruction_title">Инструкция · %1$s</string>
     <string name="peripherals_pairing_a11y_expand">Показать инструкцию</string>
-    <string name="peripherals_pairing_msg_cancelled">Режим приживления отменён</string>
     <string name="peripherals_pairing_format_delete_title">Удалить %1$s?</string>
     <string name="peripherals_pairing_msg_delete">Устройство перестанет работать с сигнализацией</string>
     <string name="peripherals_pairing_btn_delete">Удалить</string>

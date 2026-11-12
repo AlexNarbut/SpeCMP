@@ -239,7 +239,6 @@
     <string name="peripherals_pairing_btn_instruction">Instruction</string>
     <string name="peripherals_pairing_format_instruction_title">Instruction · %1$s</string>
     <string name="peripherals_pairing_a11y_expand">Show instruction</string>
-    <string name="peripherals_pairing_msg_cancelled">Pairing mode cancelled</string>
     <string name="peripherals_pairing_format_delete_title">Delete %1$s?</string>
     <string name="peripherals_pairing_msg_delete">The device will stop working with the alarm</string>
     <string name="peripherals_pairing_btn_delete">Delete</string>

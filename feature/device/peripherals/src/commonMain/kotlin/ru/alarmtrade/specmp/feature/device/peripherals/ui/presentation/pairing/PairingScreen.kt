@@ -62,7 +62,6 @@ import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_form
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_format_occupied
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_loading_program
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_loading_read
-import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_msg_cancelled
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_msg_delete
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_msg_deleted
 import ru.alarmtrade.specmp.core.localization.resources.peripherals_pairing_msg_empty_hint
@@ -178,7 +177,6 @@ fun PairingEntry(onBack: () -> Unit, onOpenSystemDevices: () -> Unit) {
 
 private val PairingMessage.text: StringResource
     get() = when (this) {
-        PairingMessage.CANCELLED -> Strings.string.peripherals_pairing_msg_cancelled
         PairingMessage.DELETED -> Strings.string.peripherals_pairing_msg_deleted
         PairingMessage.UPDATE_SENT -> Strings.string.peripherals_pairing_msg_update_sent
         PairingMessage.COMMAND_FAILED -> Strings.string.peripherals_pairing_error_command
