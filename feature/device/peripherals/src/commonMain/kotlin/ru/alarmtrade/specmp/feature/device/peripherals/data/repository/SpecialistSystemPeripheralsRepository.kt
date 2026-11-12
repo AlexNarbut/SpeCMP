@@ -58,7 +58,8 @@ internal class SpecialistSystemPeripheralsRepository(
                 is Response.Error -> if (!response.exception.isNoAnswer()) return response
             }
         }
-        return Response.Success(devices.takeIf { answered })
+        // RHM и сирена в одной группе: блок может вернуть одно устройство на оба запроса.
+        return Response.Success(devices.distinctBy { it.address }.takeIf { answered })
     }
 
     override suspend fun blink(address: String): Response<Unit> =

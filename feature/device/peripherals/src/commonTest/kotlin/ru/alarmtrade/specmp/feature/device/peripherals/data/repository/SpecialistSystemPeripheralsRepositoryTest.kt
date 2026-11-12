@@ -79,6 +79,26 @@ class SpecialistSystemPeripheralsRepositoryTest {
     }
 
     @Test
+    fun `same device answered for two sdk types of a group is shown once`() = runTest {
+        val rhm = PeripheralDeviceInformation.Rhm(
+            id = 0,
+            status = PeripheralDeviceStatus.Default(isBound = true, isConnected = true),
+            addressByteArray = byteArrayOf(0xEA.toByte(), 0x52, 0xA1.toByte(), 0xB0.toByte(), 0x35, 0xD4.toByte()),
+            signalLevel = -60,
+            engineTemperature = 20,
+        )
+        dataSource.byType[DeviceType.RHM] = SpecialistResponse.Success(listOf(rhm))
+        dataSource.byType[DeviceType.SIREN] = SpecialistResponse.Success(listOf(rhm))
+
+        val step =
+            assertIs<Response.Success<PeripheralPollStep>>(
+                repository.poll(listOf(PeripheralType.RHM)).take(1).toList().single(),
+            )
+
+        assertEquals(1, step.value.devices.orEmpty().size)
+    }
+
+    @Test
     fun `other read error ends the poll`() = runTest {
         val failure = IllegalStateException("no link")
         dataSource.byType[DeviceType.TAG_760] = SpecialistResponse.Error.General(failure)
