@@ -543,7 +543,10 @@ private fun SentContent(sent: TechRequestSending.Sent, onDone: () -> Unit, modif
                 textAlign = TextAlign.Center,
             )
             CmpText(
-                text = stringResource(Strings.string.techrequests_form_msg_sent, PhoneNumbers.format(sent.phoneDigits)),
+                text = stringResource(
+                    Strings.string.techrequests_form_msg_sent,
+                    PhoneNumbers.format(sent.phoneDigits).unbreakable(),
+                ),
                 style = CmpTextStyle.BodyLarge,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -558,3 +561,8 @@ private fun SentContent(sent: TechRequestSending.Sent, onDone: () -> Unit, modif
 }
 
 private const val SUCCESS_TINT = 0.24f
+private const val NO_BREAK_SPACE = '\u00A0'
+private const val NO_BREAK_HYPHEN = '\u2011'
+
+/** Номер переносится целиком: пробелы и дефисы маски — неразрывные. */
+private fun String.unbreakable(): String = replace(' ', NO_BREAK_SPACE).replace('-', NO_BREAK_HYPHEN)
