@@ -14,6 +14,7 @@ actual val isBarcodeScanAvailable: Boolean = false
 internal actual fun CameraPreview(
     frame: DpSize,
     torch: Boolean,
+    focus: FocusRequest?,
     onDetect: (List<String>) -> Unit,
     onUnavailable: () -> Unit,
     modifier: Modifier,

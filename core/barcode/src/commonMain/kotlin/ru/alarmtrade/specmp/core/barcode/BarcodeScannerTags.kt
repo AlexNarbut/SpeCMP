@@ -9,4 +9,5 @@ object BarcodeScannerTags {
     const val ALLOW = "barcode_scanner_allow"
     const val SETTINGS = "barcode_scanner_settings"
     const val FOUND = "barcode_scanner_found"
+    const val FOCUS = "barcode_scanner_focus"
 }

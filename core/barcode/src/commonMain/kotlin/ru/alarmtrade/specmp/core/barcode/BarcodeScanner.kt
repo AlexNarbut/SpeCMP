@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.core.barcode
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -9,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +46,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
@@ -52,6 +56,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import kotlin.time.Duration.Companion.milliseconds
@@ -101,6 +106,8 @@ private const val LASER_MILLIS = 1_200
 private const val LASER_INSET_FRACTION = 0.06f
 private const val EAN13_LENGTH = 13
 private const val EAN13_HALF = 7
+private const val FOCUS_RING_MILLIS = 700
+private val FocusRingRadius = 28.dp
 
 /**
  * Полноэкранный сканер штрих-кода: камера, рамка, лазер, фонарик, «Ввести вручную», подсказка через 8 с, отклик
@@ -124,6 +131,7 @@ fun BarcodeScanner(
     var unavailable by remember { mutableStateOf(false) }
     var found by remember { mutableStateOf<String?>(null) }
     var slow by remember { mutableStateOf(false) }
+    var focus by remember { mutableStateOf<FocusRequest?>(null) }
     val stabilizer = remember { ScanStabilizer() }
     val started = remember { TimeSource.Monotonic.markNow() }
     val haptic = LocalHapticFeedback.current
@@ -159,8 +167,11 @@ fun BarcodeScanner(
             access = access,
             unavailable = unavailable,
             frame = frame,
+            area = DpSize(window.width, window.height),
             torch = torch,
             found = found,
+            focus = focus,
+            onFocus = { x, y -> focus = FocusRequest(x, y, (focus?.seq ?: 0) + 1) },
             onDetect = { texts ->
                 if (found == null) {
                     val now = started.elapsedNow().inWholeMilliseconds
@@ -199,8 +210,11 @@ private fun ScannerBody(
     access: BarcodeScannerAccess,
     unavailable: Boolean,
     frame: DpSize,
+    area: DpSize,
     torch: Boolean,
     found: String?,
+    focus: FocusRequest?,
+    onFocus: (Dp, Dp) -> Unit,
     onDetect: (List<String>) -> Unit,
     onUnavailable: () -> Unit,
     onRequestAccess: () -> Unit,
@@ -238,11 +252,13 @@ private fun ScannerBody(
             CameraPreview(
                 frame = frame,
                 torch = torch,
+                focus = focus,
                 onDetect = onDetect,
                 onUnavailable = onUnavailable,
                 modifier = Modifier.fillMaxSize(),
             )
             Viewfinder(frame = frame, found = found != null)
+            if (found == null) FocusArea(frame = frame, area = area, focus = focus, onFocus = onFocus)
             FoundChip(number = found, frame = frame)
         }
     }
@@ -406,6 +422,46 @@ private fun Viewfinder(frame: DpSize, found: Boolean) {
                 topLeft = Offset(left + radius, y - 1.5.dp.toPx()),
                 size = Size(width - 2 * radius, 3.dp.toPx()),
                 cornerRadius = CornerRadius(2.dp.toPx()),
+            )
+        }
+    }
+}
+
+/** Тап внутри рамки — фокус камеры в эту точку; короткое кольцо показывает, куда навели. */
+@Composable
+private fun FocusArea(frame: DpSize, area: DpSize, focus: FocusRequest?, onFocus: (Dp, Dp) -> Unit) {
+    val density = LocalDensity.current
+    val left = (area.width - frame.width) / 2
+    val top = (area.height - frame.height) / 2
+    val currentOnFocus by rememberUpdatedState(onFocus)
+    val ring = remember { Animatable(0f) }
+    LaunchedEffect(focus) {
+        if (focus == null) return@LaunchedEffect
+        ring.snapTo(1f)
+        ring.animateTo(0f, tween(FOCUS_RING_MILLIS))
+    }
+    val ringColor = cmpDomainColors().onCamera
+    Box(
+        modifier = Modifier
+            .offset(x = left, y = top)
+            .size(frame)
+            .testTag(BarcodeScannerTags.FOCUS)
+            .pointerInput(left, top) {
+                detectTapGestures { tap ->
+                    with(density) { currentOnFocus(left + tap.x.toDp(), top + tap.y.toDp()) }
+                }
+            },
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val target = focus ?: return@Canvas
+            val alpha = ring.value
+            if (alpha <= 0f) return@Canvas
+            val center = Offset((target.x - left).toPx(), (target.y - top).toPx())
+            drawCircle(
+                color = ringColor.copy(alpha = alpha),
+                radius = FocusRingRadius.toPx(),
+                center = center,
+                style = Stroke(width = 2.dp.toPx()),
             )
         }
     }

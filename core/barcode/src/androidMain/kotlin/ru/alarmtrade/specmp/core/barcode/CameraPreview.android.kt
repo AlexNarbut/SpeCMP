@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.core.barcode
 import android.content.pm.PackageManager
 import android.graphics.RectF
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.mlkit.vision.MlKitAnalyzer
 import androidx.camera.view.CameraController.COORDINATE_SYSTEM_VIEW_REFERENCED
@@ -26,6 +27,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 actual val isBarcodeScanAvailable: Boolean = true
 
@@ -47,6 +49,7 @@ private val Formats = intArrayOf(
 internal actual fun CameraPreview(
     frame: DpSize,
     torch: Boolean,
+    focus: FocusRequest?,
     onDetect: (List<String>) -> Unit,
     onUnavailable: () -> Unit,
     modifier: Modifier,
@@ -119,11 +122,24 @@ internal actual fun CameraPreview(
         }
     }
     LaunchedEffect(torch) { controller.enableTorch(torch) }
+    LaunchedEffect(focus) {
+        val target = focus ?: return@LaunchedEffect
+        val camera = controller.cameraControl ?: return@LaunchedEffect
+        val point = previewView.meteringPointFactory.createPoint(
+            with(density) { target.x.toPx() },
+            with(density) { target.y.toPx() },
+        )
+        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
+            .setAutoCancelDuration(FOCUS_HOLD_SECONDS, TimeUnit.SECONDS)
+            .build()
+        camera.startFocusAndMetering(action)
+    }
 
     AndroidView(factory = { previewView }, modifier = modifier)
 }
 
 private const val DEFAULT_MAX_ZOOM = 4f
+private const val FOCUS_HOLD_SECONDS = 3L
 
 private fun frameRect(viewWidth: Int, viewHeight: Int, frameWidth: Float, frameHeight: Float): RectF {
     val left = (viewWidth - frameWidth) / 2

@@ -16,6 +16,7 @@ import kotlinx.cinterop.useContents
 import platform.AVFoundation.AVCaptureConnection
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVCaptureDeviceInput
+import platform.AVFoundation.AVCaptureExposureModeContinuousAutoExposure
 import platform.AVFoundation.AVCaptureFocusModeContinuousAutoFocus
 import platform.AVFoundation.AVCaptureMetadataOutput
 import platform.AVFoundation.AVCaptureMetadataOutputObjectsDelegateProtocol
@@ -38,12 +39,19 @@ import platform.AVFoundation.AVMetadataObjectTypeITF14Code
 import platform.AVFoundation.AVMetadataObjectTypeInterleaved2of5Code
 import platform.AVFoundation.AVMetadataObjectTypeQRCode
 import platform.AVFoundation.AVMetadataObjectTypeUPCECode
+import platform.AVFoundation.exposureMode
+import platform.AVFoundation.exposurePointOfInterest
+import platform.AVFoundation.exposurePointOfInterestSupported
 import platform.AVFoundation.focusMode
+import platform.AVFoundation.focusPointOfInterest
+import platform.AVFoundation.focusPointOfInterestSupported
 import platform.AVFoundation.hasTorch
+import platform.AVFoundation.isExposureModeSupported
 import platform.AVFoundation.isFocusModeSupported
 import platform.AVFoundation.minimumFocusDistance
 import platform.AVFoundation.torchMode
 import platform.AVFoundation.videoZoomFactor
+import platform.CoreGraphics.CGPointMake
 import platform.CoreGraphics.CGRect
 import platform.CoreGraphics.CGRectMake
 import platform.QuartzCore.CATransaction
@@ -77,6 +85,7 @@ private val SessionQueue = dispatch_queue_create("ru.alarmtrade.specmp.barcode.s
 internal actual fun CameraPreview(
     frame: DpSize,
     torch: Boolean,
+    focus: FocusRequest?,
     onDetect: (List<String>) -> Unit,
     onUnavailable: () -> Unit,
     modifier: Modifier,
@@ -90,6 +99,9 @@ internal actual fun CameraPreview(
         onDispose { camera.stop() }
     }
     LaunchedEffect(torch) { camera.setTorch(torch) }
+    LaunchedEffect(focus) {
+        focus?.let { camera.focus(it.x.value.toDouble(), it.y.value.toDouble()) }
+    }
 
     UIKitView(
         factory = { camera.view },
@@ -143,6 +155,26 @@ private class BarcodeCamera(private val onDetect: (List<String>) -> Unit) {
             camera.torchMode = if (on) AVCaptureTorchModeOn else AVCaptureTorchModeOff
             camera.unlockForConfiguration()
         }
+    }
+
+    /** Фокус и экспозиция в точку превью (pt); потом камера сама следит за фокусом дальше. */
+    fun focus(x: Double, y: Double) {
+        val camera = device ?: return
+        val point = previewLayer.captureDevicePointOfInterestForPoint(CGPointMake(x, y))
+        if (!camera.lockForConfiguration(null)) return
+        if (camera.focusPointOfInterestSupported) {
+            camera.focusPointOfInterest = point
+            if (camera.isFocusModeSupported(AVCaptureFocusModeContinuousAutoFocus)) {
+                camera.focusMode = AVCaptureFocusModeContinuousAutoFocus
+            }
+        }
+        if (camera.exposurePointOfInterestSupported) {
+            camera.exposurePointOfInterest = point
+            if (camera.isExposureModeSupported(AVCaptureExposureModeContinuousAutoExposure)) {
+                camera.exposureMode = AVCaptureExposureModeContinuousAutoExposure
+            }
+        }
+        camera.unlockForConfiguration()
     }
 
     // Непрерывный автофокус и стартовый зум: у камер с большой минимальной дистанцией фокуса (iPhone 13 Pro+) мелкий
