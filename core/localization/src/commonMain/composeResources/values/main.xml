@@ -22,14 +22,14 @@
     <string name="main_main_msg_cars">Supported vehicles and functions</string>
     <string name="main_main_title_can_scanner">CAN scanner</string>
     <string name="main_main_msg_can_scanner">CAN bus reading</string>
-    <string name="main_main_title_requests">Community map requests</string>
-    <string name="main_main_msg_requests">Share your installation experience</string>
     <string name="main_main_title_feedback">Feedback</string>
     <string name="main_main_msg_feedback">Share install feedback and improvements</string>
     <string name="main_main_title_product_info">Product information</string>
     <string name="main_main_msg_product_info">Find product and package information</string>
     <string name="main_main_title_tech_support_chat">Tech support chat</string>
     <string name="main_main_msg_tech_support_chat">Message our specialist in chat about your issue</string>
+    <string name="main_main_title_tech_requests">Tech support requests</string>
+    <string name="main_main_msg_tech_requests">Specialist call back and request history</string>
     <string name="main_main_title_warehouse_1c">Warehouse 1C</string>
     <string name="main_main_msg_warehouse_1c">Open warehouse integration</string>
 

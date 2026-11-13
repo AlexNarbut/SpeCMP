@@ -54,6 +54,7 @@ internal fun AdvancedMountAssistant(
     onBack: () -> Unit,
     onOpenSection: (MountSection) -> Unit,
     onOpenSettings: (focusSettingId: Int?, openLoad: Boolean) -> Unit,
+    onOpenNewTechRequest: () -> Unit,
 ) {
     val onFlash = { boot: FirmwareAutoBoot ->
         firmwareBoot.put(boot)
@@ -81,17 +82,19 @@ internal fun AdvancedMountAssistant(
     MountAssistantEntry(
         onBack = onBack,
         onNavigate = { target ->
-            when (target) {
-                AssistantNavigationTarget.FirmwareUpdate -> onOpenSection(MountSection.FIRMWARE_UPDATE)
-                is AssistantNavigationTarget.FirmwareFlash -> onFlash(FirmwareAutoBoot(target.moduleId, version = null))
-                is AssistantNavigationTarget.FirmwareArchive -> archive = target
-                AssistantNavigationTarget.BypassLearning -> onOpenSection(MountSection.BYPASS_LEARNING)
-                AssistantNavigationTarget.Clone -> onOpenSection(MountSection.CLONE)
-                is AssistantNavigationTarget.SettingsEditor -> onOpenSettings(target.focusSettingId, target.openLoad)
-                AssistantNavigationTarget.Configurator -> onOpenSection(MountSection.CONFIGURATOR)
-                AssistantNavigationTarget.CheckState -> onOpenSection(MountSection.CHECK_STATE)
-                AssistantNavigationTarget.Vehicles -> onOpenSection(MountSection.VEHICLES)
-                AssistantNavigationTarget.SupportChat -> onOpenSection(MountSection.SUPPORT_CHAT)
+            val section = target.section()
+            when {
+                section != null -> onOpenSection(section)
+
+                target is AssistantNavigationTarget.FirmwareFlash ->
+                    onFlash(FirmwareAutoBoot(target.moduleId, version = null))
+
+                target is AssistantNavigationTarget.FirmwareArchive -> archive = target
+
+                target is AssistantNavigationTarget.SettingsEditor ->
+                    onOpenSettings(target.focusSettingId, target.openLoad)
+
+                target == AssistantNavigationTarget.TechRequestNew -> onOpenNewTechRequest()
             }
         },
     )
@@ -132,4 +135,33 @@ internal class PendingFirmwareBoot {
     }
 
     fun take(): FirmwareAutoBoot? = boot.also { boot = null }
+}
+
+/** Цели ассистента, которые просто открывают раздел расширенного монтажа. */
+private fun AssistantNavigationTarget.section(): MountSection? = when (this) {
+    AssistantNavigationTarget.FirmwareUpdate -> MountSection.FIRMWARE_UPDATE
+
+    AssistantNavigationTarget.BypassLearning -> MountSection.BYPASS_LEARNING
+
+    AssistantNavigationTarget.Clone -> MountSection.CLONE
+
+    AssistantNavigationTarget.Configurator -> MountSection.CONFIGURATOR
+
+    AssistantNavigationTarget.CheckState -> MountSection.CHECK_STATE
+
+    AssistantNavigationTarget.Vehicles -> MountSection.VEHICLES
+
+    AssistantNavigationTarget.SupportChat -> MountSection.SUPPORT_CHAT
+
+    AssistantNavigationTarget.SystemDevices -> MountSection.SYSTEM_DEVICES
+
+    AssistantNavigationTarget.Pairing -> MountSection.DYNAMIC_DEVICES
+
+    AssistantNavigationTarget.TechRequests -> MountSection.TECH_REQUESTS
+
+    is AssistantNavigationTarget.FirmwareFlash,
+    is AssistantNavigationTarget.FirmwareArchive,
+    is AssistantNavigationTarget.SettingsEditor,
+    AssistantNavigationTarget.TechRequestNew,
+    -> null
 }

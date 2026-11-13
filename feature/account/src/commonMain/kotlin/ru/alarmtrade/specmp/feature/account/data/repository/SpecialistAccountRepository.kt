@@ -19,6 +19,7 @@ internal class SpecialistAccountRepository(private val dataSource: AccountDataSo
                 AccountProfile(
                     name = user.userContactInformation.fullName,
                     email = user.login,
+                    phone = user.userContactInformation.phoneNumber.takeIf { it.isNotBlank() },
                 ),
             )
         }

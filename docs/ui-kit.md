@@ -145,8 +145,9 @@ commonMain.dependencies {
 | Кнопка с иконкой | `button/CmpIconButton.kt` |
 | Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
-| Текстовое поле | `input/CmpTextField.kt` |
+| Текстовое поле (многострочное — `singleLine = false`, `minLines`/`maxLines`) | `input/CmpTextField.kt` |
 | Поле поиска (лупа, «очистить») | `input/CmpSearchField.kt` |
+| Телефон с маской страны (Европа, СНГ; значение — цифры с кодом, логика — `PhoneNumbers` в `core/common`) | `input/CmpPhoneField.kt` |
 | Поле цифрового кода по ячейкам (CAN-код) | `input/CmpCodeField.kt` |
 | Скрытие клавиатуры: тап вне поля, прокрутка, зона «не снимать фокус» | `input/KeyboardDismiss.kt` |
 | Выпадающий список (поле) | `input/CmpDropdown.kt` |
@@ -191,11 +192,42 @@ commonMain.dependencies {
 | Row | `layout/CmpRow.kt` |
 | Строка с переносом (FlowRow) | `layout/CmpFlowRow.kt` |
 | Spacer | `layout/CmpSpacer.kt` |
+| Размер области экрана и класс окна (Compact / Medium / Expanded / Large, низкое окно) | `layout/CmpWindowSize.kt` (`CmpAdaptiveBox`, `cmpWindowSize`, `CmpBreakpoints`) |
 | Перетаскиваемая граница панелей (ширина левой панели; сохранение — `PaneWidthStore` через VM) | `layout/PaneWidthState.kt` (`CmpResizeHandle`, `rememberPaneWidthState`) |
 | Постоянная полоса прокрутки `LazyColumn` (iOS своей не рисует) | `scroll/CmpScrollbar.kt` (`Modifier.cmpVerticalScrollbar`) |
 
 Галерея новых компонентов (PNG, светлая/тёмная тема, без окна): `./gradlew :core:ui:jvmTest --tests '*KitGallery*'` →
 `core/ui/build/kit-gallery/`. Добавляя компонент, дополняй `KitGalleryTest` и смотри результат глазами.
+
+## Размеры окон и адаптивность
+
+Раскладку экрана выбирают **только** через `core/ui` `view/layout/CmpWindowSize.kt` — своих `private val MediumFrom = 600.dp`
+фичи не заводят. Меряется область экрана (`BoxWithConstraints`), а не всё окно: экран в панели мастера получает свой класс.
+
+| Класс | Граница | Опорные окна | Обычная раскладка |
+|---|---|---|---|
+| `CmpWidthClass.Compact` | ширина < 600 | телефон 412×915, раскладной сложен 344×882 | одна колонка, вкладки |
+| `CmpWidthClass.Medium` | 600–839 | раскладной разложен 690×829, планшет-портрет 800×1280 | две панели / форма диалогом |
+| `CmpWidthClass.Expanded` | 840–1099 | телефон-ландшафт 915×412, окно desktop 800–1099 | master-detail в две колонки |
+| `CmpWidthClass.Large` | ≥ 1100 | планшет-ландшафт 1280×800, desktop | три колонки |
+| `isLowHeight` | высота < 520 при ширине ≥ 600 | телефон-ландшафт 915×412 | статус в шапку, без вкладок, главное без прокрутки |
+
+```kotlin
+CmpAdaptiveBox(modifier = Modifier.fillMaxSize()) { window ->
+    when {
+        window.isLowHeight -> LowLayout()
+        window.atLeast(CmpWidthClass.Large) -> ThreeColumns()
+        window.atLeast(CmpWidthClass.Medium) -> TwoPanes()
+        else -> Tabs()
+    }
+}
+// внутри своего BoxWithConstraints — `cmpWindowSize`; сами границы — `CmpBreakpoints.Medium / Expanded / Large / LowHeight`
+```
+
+- Классы — источник `design/CLAUDE.md` → «Размеры экранов»; новые границы появляются здесь и в макете вместе.
+- Ширины колонок и панелей внутри класса (380–480 и т. п.) — решение экрана, их константы остаются в фиче.
+- Раскладные: граница двух панелей — половина ширины (сгиб посередине); `FoldingFeature` пока не используется.
+- Опорные окна рендерит галерея состояний (`StateGallery`, `feature/device/state` jvmTest) — образец для визуальной проверки.
 
 ## Ошибки запроса и форм
 

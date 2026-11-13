@@ -77,6 +77,7 @@ fun MountAssistantEntry(onBack: () -> Unit, onNavigate: (AssistantNavigationTarg
                 onWrite = viewModel::onWriteConfirm,
                 onWriteCancel = viewModel::onWriteCancel,
                 onSourcePick = viewModel::onSourcePick,
+                onAction = viewModel::onActionClick,
             ),
         )
     }

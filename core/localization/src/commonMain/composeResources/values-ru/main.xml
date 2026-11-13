@@ -22,14 +22,14 @@
     <string name="main_main_msg_cars">Поддерживаемые автомобили и функции</string>
     <string name="main_main_title_can_scanner">CAN сканер</string>
     <string name="main_main_msg_can_scanner">Чтение CAN шины</string>
-    <string name="main_main_title_requests">Заявки народных карт</string>
-    <string name="main_main_msg_requests">Делитесь своим опытом монтажа</string>
     <string name="main_main_title_feedback">Обратная связь</string>
     <string name="main_main_msg_feedback">Отзыв о монтаже и улучшениях</string>
     <string name="main_main_title_product_info">Информация о товаре</string>
     <string name="main_main_msg_product_info">Найти информацию о товаре и комплектации</string>
     <string name="main_main_title_tech_support_chat">Чат тех. поддержки</string>
     <string name="main_main_msg_tech_support_chat">Напишите в чат нашему специалисту о вашей проблеме</string>
+    <string name="main_main_title_tech_requests">Заявки на техпомощь</string>
+    <string name="main_main_msg_tech_requests">Обратный звонок специалиста и история заявок</string>
     <string name="main_main_title_warehouse_1c">Склад 1С</string>
     <string name="main_main_msg_warehouse_1c">Открыть интеграцию со складом</string>
 

@@ -78,6 +78,7 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Link
@@ -95,6 +96,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Outbox
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PauseCircle
@@ -107,6 +109,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PriorityHigh
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
@@ -307,4 +310,7 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.Bolt -> Icons.Filled.Bolt
     CmpIcons.Tune -> Icons.Filled.Tune
     CmpIcons.Speed -> Icons.Filled.Speed
+    CmpIcons.Language -> Icons.Filled.Language
+    CmpIcons.RadioButtonUnchecked -> Icons.Filled.RadioButtonUnchecked
+    CmpIcons.Outbox -> Icons.Filled.Outbox
 }

@@ -1,0 +1,83 @@
+
+<!-- @dsCard group="Проверка состояния" viewport="1000x1000" name="Проверка состояния (раскладной телефон)" subtitle="Сложен 344×882 (Compact), разложен 690×829 (две панели по сгибу), разложен горизонтально 829×690" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Проверка состояния (раскладной телефон)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 1100px; padding: 0 12px; }
+  .seg { flex: 0 0 auto; max-width: 100%; box-sizing: border-box; display: flex; flex-wrap: nowrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg.wrap { flex-wrap: wrap; justify-content: center; }
+  .seg button { white-space: nowrap; border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .hint { font-size: 13px; color: #3a3f44; }
+  .scaler { transform-origin: top left; width: max-content; }
+  .tablet { width: max-content; background: #1b1d1e; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); box-sizing: content-box; }
+  .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+  body.page-dark { background: #101314; }
+  body.page-dark .seg { background: #272b2d; }
+  body.page-dark .seg button { color: #c7cccf; }
+  body.page-dark .seg button.on { background: #9fc2ff; color: #0b1b36; }
+  body.page-dark .hint { color: #aab2b8; }
+  #root { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+  .fold { width: max-content; background: #1b1d1e; border-radius: 34px; padding: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.32); box-sizing: content-box; position: relative; }
+  .hinge { position: absolute; pointer-events: none; z-index: 20; }
+  .hinge.v { top: 12px; bottom: 12px; width: 14px; transform: translateX(-50%); background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.16) 45%, rgba(255,255,255,.10) 55%, rgba(0,0,0,0) 100%); }
+  .hinge.h { left: 12px; right: 12px; height: 14px; transform: translateY(-50%); background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.16) 45%, rgba(255,255,255,.10) 55%, rgba(0,0,0,0) 100%); }
+  .cam { position: absolute; width: 10px; height: 10px; border-radius: 9px; background: #0a0b0c; box-shadow: 0 0 0 2px #2a2d2f; z-index: 21; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./CheckState.jsx"></script>
+<script type="text/babel">
+  // Ориентиры — раскладной телефон класса Galaxy Z Fold: внешний экран ≈344×882 dp, внутренний ≈690×829 dp.
+  const MODES = {
+    cover:  { w: 344, h: 882, r: 26, label: "Сложен · внешний экран 344×882", hinge: null },
+    open:   { w: 690, h: 829, r: 18, label: "Разложен 690×829", hinge: "v" },
+    rotate: { w: 829, h: 690, r: 18, label: "Разложен горизонтально 829×690", hinge: "h" },
+  };
+  function App() {
+    const c = useCsCtl();
+    const [mode, setMode] = React.useState(new URLSearchParams(location.search).get("fold") || "open");
+    const m = MODES[mode];
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const fit = () => setScale(Math.min(1, (window.innerWidth - 48) / (m.w + 24), Math.max(480, window.innerHeight - 260) / (m.h + 24)));
+      fit(); window.addEventListener("resize", fit);
+      return () => window.removeEventListener("resize", fit);
+    }, [m.w, m.h]);
+    const k = mode;
+    return (
+      <React.Fragment>
+        {c.bar}
+        <div className="toolbar"><CsSeg items={Object.entries(MODES).map(([k, v]) => [k, v.label])} value={mode} onChange={setMode} /></div>
+        <div style={{ width: (m.w + 24) * scale, height: (m.h + 24) * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="fold" style={{ borderRadius: m.r + 14 }}>
+              <div className="screen" data-theme={c.dark ? "dark" : undefined} style={{ width: m.w, height: m.h, borderRadius: m.r }}>
+                <window.CheckStateScreen key={c.key + k} {...c.props} hingeAt={mode === "open" ? m.w / 2 : undefined} onBack={() => window.psGo("advanced-mount")} />
+              </div>
+              {m.hinge === "v" && <div className="hinge v" style={{ left: 12 + m.w / 2 }} />}
+              {m.hinge === "h" && <div className="hinge h" style={{ top: 12 + m.h / 2 }} />}
+              <span className="cam" style={mode === "cover" ? { top: 22, left: "50%", marginLeft: -5 } : mode === "open" ? { top: 22, right: 30 } : { left: 22, top: 30 }} />
+            </div>
+          </div>
+        </div>
+        <span className="hint">{mode === "cover" ? "Compact: вкладки, как на телефоне" : "Две равные панели, граница по сгибу: слева статус и машина, справа «Проверки · Команды · Подробно»"}</span>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

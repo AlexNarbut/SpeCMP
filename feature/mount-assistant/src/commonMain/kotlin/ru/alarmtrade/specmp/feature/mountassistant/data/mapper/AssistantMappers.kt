@@ -40,7 +40,8 @@ private fun DeviceFeature.toCapability(): AssistantCapability? = when (this) {
     DeviceFeature.SETTINGS -> AssistantCapability.SETTINGS
     DeviceFeature.BYPASS_LEARNING -> AssistantCapability.BYPASS
     DeviceFeature.CLONE -> AssistantCapability.CLONE
-    DeviceFeature.VOICE_FIRMWARE, DeviceFeature.DYNAMIC_DEVICES -> null
+    DeviceFeature.DYNAMIC_DEVICES -> AssistantCapability.DYNAMIC_DEVICES
+    DeviceFeature.VOICE_FIRMWARE -> null
 }
 
 internal fun Setting.toFoundSetting(path: List<SettingsSection>, nameHighlights: List<IntRange>): FoundSetting =

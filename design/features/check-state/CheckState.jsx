@@ -186,14 +186,56 @@ const CMD_LABEL = { arm: "Поставить на охрану", disarm: "Сня
 // ── Примитивы ────────────────────────────────────────────────────────────────
 function useWidth() {
   const ref = React.useRef(null);
-  const [w, setW] = React.useState(0);
+  const [sz, setSz] = React.useState([0, 0]);
   React.useEffect(() => {
     const el = ref.current; if (!el) return;
-    const m = () => setW(el.offsetWidth);
+    const m = () => setSz([el.offsetWidth, el.offsetHeight]);
     const ro = new ResizeObserver(m); ro.observe(el); m();
     return () => ro.disconnect();
   }, []);
-  return [ref, w];
+  return [ref, sz[0], sz[1]];
+}
+
+// ── Раскладки v2 (исследование: планшет-ландшафт, раскладные, телефон-ландшафт) ──
+// low   — высота < 520 (телефон-ландшафт 915×412): статус в шапке, слева машина, справа пульт / текущее задание.
+// split — ширина 600–1099 (раскладной 690×829 / 829×690, планшет-портрет): две равные панели по сгибу,
+//         слева «живое» (статус, машина, показатели), справа вкладки.
+// desk  — ширина ≥ 1100 (планшет-ландшафт 1280×800): три колонки — машина | зоны | команды или чек-лист.
+function layoutV2(w, h) {
+  if (!w) return "split";
+  if (h && h < 520 && w >= 600) return "low";
+  if (w >= 1100) return "desk";
+  if (w >= 600) return "split";
+  return "compact";
+}
+function StatusPill({ d, loading, stale, secs }) {
+  if (loading) return <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 14px", borderRadius: 999, background: "var(--surface-container-high)" }}><CmpCircularProgressIndicator size={16} strokeWidth={2.5} /><CmpText variant="labelLarge">Ждём блок…</CmpText></span>;
+  const alarm = isAlarm(d); const c = HERO[alarm ? "alarm" : d.guard];
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 14px 0 10px", borderRadius: 999, background: c.bg, color: c.fg, whiteSpace: "nowrap", flex: "0 0 auto" }}>
+      <CmpIcon icon={stale ? "sync_problem" : c.icon} size={22} />
+      <CmpText variant="titleSmall" weight={700} color={c.fg}>{c.title}</CmpText>
+      <CmpText variant="labelMedium" color={c.fg} style={{ opacity: 0.85 }}>{stale ? `нет данных ${secs} с` : secs < 2 ? "· только что" : `· ${secs} с`}</CmpText>
+    </span>
+  );
+}
+function ZonesGrid({ d, changed, tick, onZone, min = 150 }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {GROUPS.map((g) => (
+        <div key={g.k} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "0 2px" }}><CmpText variant="titleMedium" weight={600}>{g.title}</CmpText><CmpText variant="labelLarge" color="var(--on-surface-variant)">{groupAside(g.k, d)}</CmpText></div>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 8 }}>
+            {ZONES.filter((z) => z.grp === g.k).map((z) => <ZoneTile key={z.k} z={z} v={d.z[z.k]} changed={!!changed[z.k]} tick={tick} onClick={onZone && (() => onZone(z.k))} />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+function PaneTabs({ tabs, value, onChange }) {
+  const idx = Math.max(0, tabs.findIndex((t) => t.k === value));
+  return <CmpTabRow tabs={tabs.map((t) => ({ title: t.title }))} selectedTabIndex={idx} onTabSelected={(i) => onChange(tabs[i].k)} />;
 }
 
 function Flash({ on, k, radius = 14, color = "var(--primary)" }) {
@@ -927,14 +969,14 @@ function ActiveChips({ d, changed, tick }) {
     </div>
   );
 }
-function AllCommandsSheet({ children, onClose }) {
+function AllCommandsSheet({ children, onClose, title = "Все команды" }) {
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 8, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "color-mix(in srgb, var(--scrim) 42%, transparent)" }} />
       <div className="cs-anim" style={{ position: "relative", maxHeight: "86%", display: "flex", flexDirection: "column", background: "var(--surface-container-low)", borderRadius: "28px 28px 0 0", animation: "csUp .25s ease both", maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
         <div style={{ alignSelf: "center", width: 36, height: 4, borderRadius: 2, background: "var(--outline)", marginTop: 10 }} />
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 8px 4px 20px" }}>
-          <CmpText variant="headlineSmall" style={{ flex: 1 }}>Все команды</CmpText>
+          <CmpText variant="headlineSmall" style={{ flex: 1 }}>{title}</CmpText>
           <CmpIconButton icon="Close" contentDescription="Закрыть" onClick={onClose} />
         </div>
         <div style={{ overflow: "auto", padding: "4px 16px 20px" }}>{children}</div>
@@ -1023,11 +1065,15 @@ function Pult({ d, changed, tick, cmds, cmdSt, loading, onFire, onDanger, onAll,
 }
 
 // ── Экран ────────────────────────────────────────────────────────────────────
-function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", response = "ok", device = { name: "Pandora DX-4GS", id: "107131" }, onBack = () => {}, onDone }) {
+function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", response = "ok", device = { name: "Pandora DX-4GS", id: "107131" }, onBack = () => {}, onDone, layoutV = "v2", hingeAt }) {
   const { useState, useEffect, useRef } = React;
   const init = React.useMemo(() => makeInit(preset || (mode === "quick" ? "F1" : "S2"), mode), []);
-  const [rootRef, width] = useWidth();
-  const wide = width >= 760;
+  const [rootRef, width, height] = useWidth();
+  const L2 = layoutV === "v2" ? layoutV2(width, height) : null;
+  const wide = L2 ? L2 !== "compact" : width >= 760;
+  const [pane, setPane] = React.useState(null);
+  const [detailsOpen, setDetailsOpen] = React.useState(false);
+  const [checksOpen, setChecksOpen] = React.useState(false);
   const [d, setD] = useState(init.data);
   const dRef = useRef(init.data); dRef.current = d;
   const queue = useRef(init.queue);
@@ -1188,7 +1234,7 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
   const scrollRef = useRef(null);
   const goAll = () => setAllOpen(true);
   const pult = <Pult d={d} changed={changed} tick={tick} cmds={cmds} cmdSt={cmdSt} loading={loading} onFire={fire} onDanger={(c) => setSheet(c.k)} onAll={goAll} carW={wide ? 220 : 196} />;
-  const checklist = hasChecks && <Checklist tasks={tasks} ts={ts} d={d} changed={changed} tick={tick} onSkip={skip} onAnswer={answer} bare={!wide} seq={mode === "quick"} />;
+  const checklist = hasChecks && <Checklist tasks={tasks} ts={ts} d={d} changed={changed} tick={tick} onSkip={skip} onAnswer={answer} bare={!wide || L2 === "split" || L2 === "low"} seq={mode === "quick"} />;
   const dock = mode === "quick" && (
     <div style={{ padding: "12px 14px 14px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)" }}>
       <CmpButton text={hasChecks && closed < tasks.length ? `Далее · пройдено ${closed} из ${tasks.length}` : "Далее"} icon="arrow_forward" fullWidth onClick={next} style={BIG} />
@@ -1208,7 +1254,120 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
   );
 
   let body;
-  if (wide) {
+  const onDanger = (c) => setSheet(c.k);
+  const pultKeys = ["arm", "disarm", d.engine.state === "off" ? "start" : "stop", "trunk", "panic"].map((k) => cmds.find((c) => c.k === k)).filter(Boolean);
+  const squares = (cols) => (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 8 }}>
+      {pultKeys.map((c) => <CmdSquare key={c.k} c={c} st={cmdSt[c.k]} disabled={loading} onFire={fire} onDanger={onDanger} />)}
+      <button type="button" onClick={goAll} style={{ height: 72, border: "1.5px solid var(--outline-variant)", borderRadius: 16, background: "transparent", color: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+        <CmpIcon icon="apps" size={30} color="var(--primary)" />Все команды
+      </button>
+    </div>
+  );
+  const curTask = hasChecks && tasks.find((t) => ts[t.id] === "pending");
+  const nextBtn = (full) => <CmpButton text={hasChecks && closed < tasks.length ? `Далее · ${closed} из ${tasks.length}` : "Далее"} icon="arrow_forward" fullWidth={full} onClick={next} style={BIG} />;
+  const details = (min) => loading ? <Skel h={160} /> : (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <ZonesGrid d={d} changed={changed} tick={tick} onZone={onZone} min={min} />
+      <EngineCard d={d} tick={tick} changed={changed} />
+      <LinkCard d={d} />
+      <ExtraGroups d={d} />
+    </div>
+  );
+  const scrollCol = (children, extra) => <div style={{ minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column", gap: 12, ...(extra && extra.padding ? null : { paddingBottom: 16 }), ...extra }}>{children}</div>;
+
+  if (L2 === "low") {
+    // Телефон-ландшафт: высоты мало — без карточки статуса и вкладок; всё главное без прокрутки.
+    const rightW = Math.min(420, Math.round(width * 0.44));
+    body = (
+      <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `minmax(0, 1fr) ${rightW}px`, gap: 12, padding: "8px 12px 12px" }}>
+        {scrollCol(<React.Fragment>
+          {banners}
+          <div style={{ opacity: loading ? 0.3 : 1 }}><VehicleH d={loading ? baseData() : d} height={Math.max(110, Math.min(150, height - 250))} /></div>
+          {loading ? <Skel h={36} w="70%" r={12} /> : <ActiveChips d={d} changed={changed} tick={tick} />}
+          {!loading && <MetricStrip d={d} changed={changed} tick={tick} />}
+        </React.Fragment>, { paddingBottom: 4 })}
+        <div style={{ position: "relative", minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+          {toastEl}
+          {hasChecks ? (
+            <React.Fragment>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <CmpText variant="titleMedium" weight={700} style={{ flex: 1 }}>{closed === tasks.length ? "Все проверки пройдены" : `Проверка ${closed + 1} из ${tasks.length}`}</CmpText>
+                <CsTextBtn text="Весь список" icon="checklist" onClick={() => setChecksOpen(true)} style={{ height: 48 }} />
+              </div>
+              <CmpLinearProgressIndicator progress={closed / tasks.length} height={6} />
+              <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+                {curTask ? <TaskRow t={curTask} st={ts[curTask.id]} d={d} changed={changed} tick={tick} n={tasks.indexOf(curTask) + 1} onSkip={skip} onAnswer={answer} current /> : <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Нажмите «Далее», чтобы завершить шаг.</CmpText>}
+              </div>
+              {nextBtn(true)}
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>{squares(3)}</div>
+              <CmpOutlinedButton text="Подробно: зоны, двигатель, связь" icon="list" fullWidth onClick={() => setDetailsOpen(true)} style={{ height: 48 }} />
+            </React.Fragment>
+          )}
+        </div>
+      </div>
+    );
+  } else if (L2 === "split") {
+    // Раскладной (и планшет-портрет): две равные панели, граница — по сгибу.
+    const tabsR = hasChecks
+      ? [{ k: "checks", title: `Проверки ${closed}/${tasks.length}` }, { k: "cmds", title: "Команды" }, { k: "details", title: "Подробно" }]
+      : [{ k: "cmds", title: "Команды" }, { k: "details", title: "Подробно" }];
+    const pv = pane && tabsR.some((t) => t.k === pane) ? pane : tabsR[0].k;
+    const half = hingeAt || width / 2;
+    body = (
+      <React.Fragment>
+        <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `${half}px minmax(0, 1fr)` }}>
+          {scrollCol(<React.Fragment>
+            {hero}{banners}
+            <Card pad={12}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ opacity: loading ? 0.3 : 1 }}><Vehicle d={loading ? baseData() : d} width={Math.min(200, half * 0.46)} /></div>
+                {loading ? <Skel h={36} w="70%" r={12} /> : <ActiveChips d={d} changed={changed} tick={tick} />}
+                {!loading && <MetricStrip d={d} changed={changed} tick={tick} wrap />}
+              </div>
+            </Card>
+          </React.Fragment>, { padding: "12px 16px 16px", borderRight: "1px solid var(--outline-variant)" })}
+          <div style={{ position: "relative", minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <PaneTabs tabs={tabsR} value={pv} onChange={setPane} />
+            {toastEl}
+            {scrollCol(pv === "checks" ? checklist : pv === "cmds" ? <CommandsPanel bare cols={half >= 400 ? 2 : 1} cmds={cmds} cmdSt={cmdSt} disabled={loading} onFire={fire} onDanger={onDanger} /> : details(130), { padding: "12px 16px 16px" })}
+          </div>
+        </div>
+        {dock && <div style={{ padding: "12px 16px 16px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)", display: "grid", gridTemplateColumns: `${half}px minmax(0, 1fr)` }}><span /><div style={{ paddingLeft: 16 }}>{nextBtn(true)}</div></div>}
+      </React.Fragment>
+    );
+  } else if (L2 === "desk") {
+    // Планшет-ландшафт: машина всегда видна слева, зоны — в центре без вкладок, справа команды или чек-лист.
+    const leftW = width >= 1240 ? 340 : 300, rightW = width >= 1240 ? 400 : 340;
+    body = (
+      <React.Fragment>
+        <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: `${leftW}px minmax(0, 1fr) ${rightW}px`, gap: 16, padding: "12px 16px 0", maxWidth: 1600, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+          {scrollCol(<React.Fragment>
+            {hero}{banners}
+            <Card pad={12}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ opacity: loading ? 0.3 : 1 }}><Vehicle d={loading ? baseData() : d} width={170} /></div>
+                {!loading && <MetricStrip d={d} changed={changed} tick={tick} wrap />}
+              </div>
+            </Card>
+            {hasChecks && <CmpOutlinedButton text="Команды блоку" icon="apps" fullWidth onClick={goAll} style={{ height: 56 }} />}
+          </React.Fragment>)}
+          {scrollCol(<React.Fragment>
+            {loading ? <Skel h={36} w="70%" r={12} /> : <Card pad={12}><ActiveChips d={d} changed={changed} tick={tick} /></Card>}
+            {details(150)}
+          </React.Fragment>)}
+          <div style={{ position: "relative", minHeight: 0, display: "flex", flexDirection: "column" }}>
+            {toastEl}
+            {scrollCol(checklist || <Card title="Команды"><CommandsPanel bare cols={1} cmds={cmds} cmdSt={cmdSt} disabled={loading} onFire={fire} onDanger={onDanger} /></Card>)}
+          </div>
+        </div>
+        {dock && <div style={{ padding: "12px 16px 16px", background: "var(--surface-container)", borderTop: "1px solid var(--outline-variant)", display: "flex", justifyContent: "flex-end" }}><div style={{ width: rightW }}>{nextBtn(true)}</div></div>}
+      </React.Fragment>
+    );
+  } else if (wide) {
     // Широкое окно: слева — статус, горизонтальный пульт и «Подробно» вкладками; справа — чек-лист (быстрый монтаж) или все команды.
     const rightW = width >= 1200 ? 440 : width >= 960 ? 380 : 340;
     const pultW = <PultWide d={d} changed={changed} tick={tick} cmds={cmds} cmdSt={cmdSt} loading={loading} onFire={fire} onDanger={(c) => setSheet(c.k)} onAll={goAll} carH={width >= 1100 ? 180 : 150} />;
@@ -1255,11 +1414,22 @@ function CheckStateScreen({ mode = "advanced", preset, zoneView = "list", respon
 
   return (
     <div ref={rootRef} data-screen-label={mode === "quick" ? "Проверка состояния · быстрый монтаж" : "Проверка состояния"} style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", background: "var(--background)", color: "var(--on-background)", overflow: "hidden" }}>
-      <CmpTopAppBar title="Проверка состояния" subtitle={`${device.name} · ID ${device.id}`} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={back} />} />
+      {L2 === "low" ? (
+        <div style={{ flex: "0 0 auto", height: 56, display: "flex", alignItems: "center", gap: 8, padding: "0 12px 0 4px", borderBottom: "1px solid var(--outline-variant)" }}>
+          <CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={back} />
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            <CmpText variant="titleMedium" weight={600} maxLines={1}>Проверка состояния</CmpText>
+            <CmpText variant="bodySmall" color="var(--on-surface-variant)" maxLines={1}>{device.name} · ID {device.id}</CmpText>
+          </div>
+          <StatusPill d={d} loading={loading} stale={stale} secs={secs} />
+        </div>
+      ) : <CmpTopAppBar title="Проверка состояния" subtitle={`${device.name} · ID ${device.id}`} navigationIcon={<CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={back} />} />}
       {body}
+      {detailsOpen && <AllCommandsSheet title="Подробно" onClose={() => setDetailsOpen(false)}>{details(140)}</AllCommandsSheet>}
+      {checksOpen && <AllCommandsSheet title="Проверки" onClose={() => setChecksOpen(false)}>{checklist}</AllCommandsSheet>}
       {alarm && <span className="cs-anim" style={{ position: "absolute", inset: 0, zIndex: 7, border: "6px solid var(--error)", pointerEvents: "none", animation: "csBorder 1s ease-in-out infinite" }} />}
       {snack && (
-        <div style={{ position: "absolute", left: 12, right: 12, bottom: mode === "quick" ? 96 : 16, zIndex: 7, display: "flex", justifyContent: "center" }}>
+        <div style={{ position: "absolute", left: 12, right: 12, bottom: mode === "quick" && L2 !== "low" ? 96 : 16, zIndex: 7, display: "flex", justifyContent: "center" }}>
           <CmpSnackbar message={snack.text} actionLabel={snack.k ? "Повторить" : undefined} onActionClick={() => { const k = snack.k; setSnack(null); send({ k }); }} style={{ width: "100%", borderRadius: 12, minHeight: 56 }} />
         </div>
       )}

@@ -39,6 +39,7 @@
     firmware:            'features/firmware/Firmware.html',
     'firmware-tablet':    'features/firmware/FirmwareTablet.html',
     'firmware-desktop':   'features/firmware/FirmwareDesktop.html',
+    'firmware-foldable':  'features/firmware/FirmwareFoldable.html',
     'vehicle-select':          'features/vehicle-select/VehicleSelect.html',
     'vehicle-select-tablet':   'features/vehicle-select/VehicleSelectTablet.html',
     'vehicle-select-desktop':  'features/vehicle-select/VehicleSelectDesktop.html',
@@ -55,6 +56,8 @@
     'check-state':          'features/check-state/CheckState.html',
     'check-state-tablet':   'features/check-state/CheckStateTablet.html',
     'check-state-parts':    'features/check-state/CheckStateParts.html',
+    'check-state-layouts':  'features/check-state/CheckStateLayouts.html',
+    'check-state-foldable': 'features/check-state/CheckStateFoldable.html',
     'peripheral-devices':         'features/peripheral-devices/PeripheralDevices.html',
     'peripheral-devices-tablet':  'features/peripheral-devices/PeripheralDevicesTablet.html',
     'peripheral-devices-foldable': 'features/peripheral-devices/PeripheralDevicesFoldable.html',
@@ -77,6 +80,18 @@
     'support-chat':         'features/support-chat/SupportChat.html',
     'support-chat-tablet':  'features/support-chat/SupportChatTablet.html',
     'support-chat-desktop': 'features/support-chat/SupportChatDesktop.html',
+    'tech-requests':         'features/tech-requests/TechRequests.html',
+    'tech-requests-tablet':  'features/tech-requests/TechRequestsTablet.html',
+    'tech-requests-desktop': 'features/tech-requests/TechRequestsDesktop.html',
+    'tech-requests-states':  'features/tech-requests/TechRequestsStates.html',
+  };
+
+  // Заявка на техпомощь из сценария (обход, Clone, ассистент): открывает форму «Новая заявка»
+  // с описанием проблемы. Вариант экрана — по текущему макету (Desktop / Tablet / mobile).
+  window.psTicket = function (from, text) {
+    var f = location.pathname;
+    var key = /Desktop/i.test(f) ? 'tech-requests-desktop' : /(Tablet|Wide|Foldable)/i.test(f) ? 'tech-requests-tablet' : 'tech-requests';
+    location.href = ROOT + LINKS[key] + '?new=1&from=' + encodeURIComponent(from || '') + '&text=' + encodeURIComponent(text || '');
   };
 
   window.PS_ROOT = ROOT;

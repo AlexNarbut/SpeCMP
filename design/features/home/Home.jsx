@@ -60,8 +60,8 @@ function HomeApp({
     if (key === "settings" || key === "logout") setMenuOpen(false);
     if (key === "logout" && onLogout) onLogout();
     if (key === "support" || key === "requests") {
-      // «Заявки на техпомощь» / карточка «Заявки» → support chat mockup for this platform.
-      const target = isDesktop ? "support-chat-desktop" : "support-chat";
+      // «Заявки на техпомощь» → экран заявок для этой платформы.
+      const target = isDesktop ? "tech-requests-desktop" : "tech-requests";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
     if (key === "quick") {

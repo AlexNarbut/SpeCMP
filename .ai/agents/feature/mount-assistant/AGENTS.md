@@ -17,6 +17,7 @@
   `AssistantFirmwareRepository` / `AssistantAutostartRepository` / `AssistantStateRepository` — **адаптеры в
   `composeApp/assistant`** (`assistantPortsModule`): фича не зависит от обособленных `firmware`/`autostart`/`state`.
   Модели портов — свои, типы других фич в домен ассистента не протекают.
+- **Темы**: прошивка · обход и Clone · настройки · состояние · **устройства** (устройства системы — только BLE; приживление — `DYNAMIC_DEVICES`, закрыто заводским CAN) · автомобиль · **поддержка** (заявка на техпомощь — первой, мои заявки, чат). Заявка — `AssistantNavigationTarget.TechRequestNew` → форма «Новая заявка» поверх монтажа (`composeApp`, `TechRequestsRoute(prefill)`), «Мои заявки» — раздел `TECH_REQUESTS`. Возврат без изменений после прошивки, CAN, обхода и Clone (`AssistantAction.NeedsHelpOnFailure`) показывает чипы «Заявка на техпомощь» и «Чат поддержки» (`FeedCallbacks.onAction`); «Ничего не найдено» предлагает их же. Устройства системы, приживление и заявки — «тихие» возвраты (снимок их не видит).
 - **Журнал** (`AssistantJournal`, `data/service/AssistantJournalImpl`, Koin `single`) хранит записи, прогресс и
   ожидаемый возврат (`PendingHandoff` = действие + снимок «до») на время сессии блока: прошивка уводит граф
   расширенного монтажа из композиции. `bind(systemId)` — другой блок сбрасывает журнал, тот же — нет. Что писать,

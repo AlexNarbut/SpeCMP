@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.device.settings.ui.presentation.components
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 
 internal enum class SettingsLayout(val treeWidth: Dp) {
     Compact(0.dp),
@@ -12,11 +13,8 @@ internal enum class SettingsLayout(val treeWidth: Dp) {
     val isWide: Boolean get() = this != Compact
 }
 
-private val MediumFrom = 600.dp
-private val ExpandedFrom = 840.dp
-
 internal fun settingsLayoutOf(width: Dp): SettingsLayout = when {
-    width < MediumFrom -> SettingsLayout.Compact
-    width < ExpandedFrom -> SettingsLayout.Medium
+    width < CmpBreakpoints.Medium -> SettingsLayout.Compact
+    width < CmpBreakpoints.Expanded -> SettingsLayout.Medium
     else -> SettingsLayout.Expanded
 }

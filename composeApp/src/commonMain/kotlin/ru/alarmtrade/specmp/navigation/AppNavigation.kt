@@ -68,6 +68,9 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestPrefill
+import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestsEntry
+import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestsRoute
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleCatalog
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.VehicleDeviceFilter
@@ -90,6 +93,7 @@ private val navConfig = SavedStateConfiguration {
         polymorphic(NavKey::class) {
             subclass(MainRoute::class, MainRoute.serializer())
             subclass(SupportChatRoute::class, SupportChatRoute.serializer())
+            subclass(TechRequestsRoute::class, TechRequestsRoute.serializer())
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
             subclass(FastMountSelectionRoute::class, FastMountSelectionRoute.serializer())
@@ -145,6 +149,14 @@ private fun AuthedNavGraph() {
                     fileSaver = rememberSupportChatFileSaver(),
                     attachmentFiles = rememberSupportChatAttachmentFiles(),
                     fileOpener = rememberSupportChatFileOpener(),
+                )
+            }
+            entry<TechRequestsRoute> { key ->
+                TechRequestsEntry(
+                    onBack = { backStack.popSafe() },
+                    onConnectDevice = { backStack.navigateSafe(DeviceSelectionRoute) },
+                    onOpenChat = { backStack.navigateSafe(SupportChatRoute) },
+                    prefill = key.prefill,
                 )
             }
             entry<DeviceSelectionRoute> { _ ->
@@ -233,10 +245,16 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                     onBack = onBack,
                     onOpenClone = onOpenClone,
                     onOpenSupportChat = onOpenSupportChat,
+                    onOpenTechRequest = backStack.techRequestOpener(),
                 )
             },
             clone = { fromBypass, onBack, onOpenSupportChat ->
-                CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
+                CloneEntry(
+                    fromBypass = fromBypass,
+                    onBack = onBack,
+                    onOpenSupportChat = onOpenSupportChat,
+                    onOpenTechRequest = backStack.techRequestOpener(),
+                )
             },
             checkState = { onBack -> CheckStateEntry(onBack = onBack) },
             systemDevices = { onBack, onOpenPairing ->
@@ -253,8 +271,18 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                 PairingEntry(onBack = onBack, onOpenSystemDevices = onOpenSystemDevices)
             },
             vehicles = { onBack -> DeviceVehicles(device, onBack) },
+            // Блок здесь подключён — кнопка «Подключить блок» не показывается.
+            techRequests = { onBack ->
+                TechRequestsEntry(
+                    onBack = onBack,
+                    onConnectDevice = {},
+                    onOpenChat = { backStack.navigateSafe(SupportChatRoute) },
+                )
+            },
             assistant = { onBack, onOpenSection, onOpenSettings ->
-                AdvancedMountAssistant(device, firmwareBoot, onBack, onOpenSection, onOpenSettings)
+                AdvancedMountAssistant(device, firmwareBoot, onBack, onOpenSection, onOpenSettings) {
+                    backStack.navigateSafe(TechRequestsRoute(TechRequestPrefill(origin = null, text = "")))
+                }
             },
             resumeAssistantTitle = rememberAssistantResume(device),
         )
@@ -436,21 +464,18 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
             VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null)),
         )
 
-        MainNavigationTarget.CanScanner -> Unit
-
-        MainNavigationTarget.Requests -> backStack.navigateSafe(SupportChatRoute)
-
-        MainNavigationTarget.Feedback -> Unit
-
-        MainNavigationTarget.ProductInfo -> Unit
-
         MainNavigationTarget.TechSupportChat -> backStack.navigateSafe(SupportChatRoute)
 
-        MainNavigationTarget.Warehouse1C -> Unit
+        MainNavigationTarget.TechRequests -> backStack.navigateSafe(TechRequestsRoute())
 
         MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 
-        MainNavigationTarget.AppUpdate -> Unit
+        MainNavigationTarget.CanScanner,
+        MainNavigationTarget.Feedback,
+        MainNavigationTarget.ProductInfo,
+        MainNavigationTarget.Warehouse1C,
+        MainNavigationTarget.AppUpdate,
+        -> Unit
     }
 }
 
@@ -462,4 +487,9 @@ private fun AppStartLoading() {
     ) {
         CmpCircularProgressIndicator(color = cmpThemeColors().primary)
     }
+}
+
+/** «Заявка на техпомощь» из сценария (обход, Clone): экран заявок поверх, сессия с блоком остаётся открытой. */
+internal fun NavBackStack<NavKey>.techRequestOpener(): (origin: String, text: String) -> Unit = { origin, text ->
+    navigateSafe(TechRequestsRoute(TechRequestPrefill(origin, text)))
 }

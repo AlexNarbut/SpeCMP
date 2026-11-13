@@ -91,12 +91,16 @@ function fwScenario(sc, channel) {
     { ...FW_MODS.watch, cur: null, srv: { k: "error", err: "Сервер не ответил (503). Проверьте интернет и повторите." } },
   ];
   if (sc === "nodesc") return [{ ...base, srv: { ...base.srv, desc: "" } }, bt, watch];
+  if (sc === "one") return [base];
   return [base, bt, watch];
 }
 
-function ModCard({ m, onDesc, onEnter, onRefresh, i }) {
+// wide — горизонтальная карточка для окон ≥600 (раскладной, планшет-портрет, один модуль на широком окне):
+// слева модуль и версия, справа обновление с началом описания — без узких колонок и переносов в кнопках.
+function ModCard({ m, onDesc, onEnter, onRefresh, i, wide }) {
   const s = m.srv, upd = s.k === "update", busy = s.k === "search";
   const hl = upd && !m.unsupported;
+  if (wide) return <ModCardWide m={m} onDesc={onDesc} onEnter={onEnter} onRefresh={onRefresh} i={i} />;
   return (
     <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: 20, padding: 16, background: "var(--surface-container-low)", border: hl ? "2px solid var(--primary)" : "1px solid var(--outline-variant)", margin: hl ? 0 : 1, display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
@@ -134,8 +138,8 @@ function ModCard({ m, onDesc, onEnter, onRefresh, i }) {
             <Ver v={s.v} size={18} color="currentColor" />
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            <CmpOutlinedButton text={L("Описание")} onClick={onDesc} style={{ ...btn48, flex: 1 }} />
-            <CmpButton text={L("Обновить")} icon="system_update" onClick={onEnter} style={{ ...btn48, flex: 1.4 }} />
+            <CmpOutlinedButton text={L("Описание")} onClick={onDesc} style={{ ...btn48, flex: 1, whiteSpace: "nowrap", padding: "0 12px" }} />
+            <CmpButton text={L("Обновить")} icon="system_update" onClick={onEnter} style={{ ...btn48, flex: 1.4, whiteSpace: "nowrap" }} />
           </div>
         </div>
       ) : s.k === "actual" ? (
@@ -153,6 +157,64 @@ function ModCard({ m, onDesc, onEnter, onRefresh, i }) {
   );
 }
 
+function ModCardWide({ m, onDesc, onEnter, onRefresh, i }) {
+  const s = m.srv, upd = s.k === "update", busy = s.k === "search";
+  const hl = upd && !m.unsupported;
+  const status = m.unsupported ? (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--error)" }}><CmpIcon icon="warning" size={24} color="currentColor" /><CmpText variant="titleSmall" color="var(--error)">{L("Не поддерживается")}</CmpText></div>
+      <CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Можно обновить в мобильном приложении Pandora Spec. Desktop версия пока не поддерживает обновление таких прошивок")}</CmpText>
+    </div>
+  ) : busy ? (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 48 }}><Spin /><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Поиск обновлений…")}</CmpText></div>
+  ) : upd ? (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, borderRadius: 16, background: "var(--primary-container)", color: "var(--on-primary-container)", height: "100%", boxSizing: "border-box" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpIcon icon="arrow_circle_up" size={26} color="currentColor" /><CmpText variant="titleMedium" color="currentColor">{L("Доступно обновление")}</CmpText></span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Ver v={m.cur} size={16} color="currentColor" /><CmpIcon icon="arrow_forward" size={18} color="currentColor" /><Ver v={s.v} size={20} color="currentColor" /></span>
+      </div>
+      {s.desc ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div style={{ whiteSpace: "pre-line", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}><CmpText variant="bodyMedium" color="currentColor">{L(s.desc)}</CmpText></div>
+          <CmpTextButton text={L("Полное описание")} onClick={onDesc} style={{ ...btn48, alignSelf: "flex-start", marginLeft: -12, whiteSpace: "nowrap" }} />
+        </div>
+      ) : <CmpText variant="bodyMedium" color="currentColor">{L("Описание отсутствует")}</CmpText>}
+      <CmpButton text={L("Обновить")} icon="system_update" onClick={onEnter} style={{ height: 52, whiteSpace: "nowrap", marginTop: "auto" }} />
+    </div>
+  ) : s.k === "actual" ? (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "8px 4px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}><CmpIcon icon="check_circle" size={26} color="var(--primary)" /><CmpText variant="titleSmall">{L("Актуальная")}</CmpText><Ver v={s.v} /></div>
+      <CmpTextButton text={L("Переустановить")} onClick={onEnter} style={{ ...btn48, whiteSpace: "nowrap" }} />
+    </div>
+  ) : s.k === "error" ? (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14, borderRadius: 14, background: "var(--error-container)", color: "var(--on-error-container)" }}>
+      <div style={{ display: "flex", gap: 10 }}><CmpIcon icon="cloud_off" size={24} color="currentColor" /><CmpText variant="bodyMedium" color="currentColor">{L(s.err)}</CmpText></div>
+      <CmpOutlinedButton text={L("Повторить")} icon="refresh" onClick={onRefresh} style={{ ...btn48, alignSelf: "flex-start" }} />
+    </div>
+  ) : null;
+  return (
+    <div className="fw-anim" style={{ animation: "fwIn .26s ease both", animationDelay: `${i * 50}ms`, boxSizing: "border-box", borderRadius: 20, padding: 16, background: "var(--surface-container-low)", border: hl ? "2px solid var(--primary)" : "1px solid var(--outline-variant)", margin: hl ? 0 : 1, display: "grid", gridTemplateColumns: upd && !m.unsupported ? "minmax(0, 1fr) minmax(0, 1.25fr)" : "minmax(0, 1fr) minmax(0, 1fr)", gap: 20, alignItems: "stretch", minWidth: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, flex: "0 0 auto", background: "var(--primary-container)", color: "var(--on-primary-container)", display: "grid", placeItems: "center" }}><CmpIcon icon="memory" size={32} color="currentColor" /></div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "var(--primary)", textTransform: "uppercase" }}>{L(m.type)}</div>
+            <div style={wrapTxt}><CmpText variant="titleLarge">{N(m.name)}</CmpText></div>
+          </div>
+        </div>
+        {m.cur !== null && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--outline-variant)" }}>
+            <CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Версия ПО")}</CmpText>
+            {m.cur === "reading"
+              ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><CmpText variant="bodyMedium" color="var(--on-surface-variant)">{L("Считывание версии…")}</CmpText><Spin size={18} /></span>
+              : <Ver v={m.cur} size={18} />}
+          </div>)}
+        {!m.unsupported && <CmpTextButton text={L("Проверить заново")} icon="refresh" disabled={busy} onClick={onRefresh} style={{ ...btn48, alignSelf: "flex-start", marginLeft: -12, marginTop: "auto", whiteSpace: "nowrap" }} />}
+      </div>
+      <div style={{ minWidth: 0, display: "flex", flexDirection: "column", justifyContent: upd ? "stretch" : "center" }}>{status}</div>
+    </div>
+  );
+}
 
 function ChannelChip({ channel, onChange }) {
   const [open, setOpen] = React.useState(false);
@@ -242,6 +304,10 @@ function FwCheck({ layout, scenario, dialog0, channel0, onBack, onEnter }) {
   const refresh = (id) => { setMods((ms) => ms.map((m) => m.id === id ? { ...m, srv: { k: "search" } } : m)); setTimeout(() => setMods(fwScenario("list", channel)), 1200); };
   const upd = mods.find((m) => m.srv.k === "update");
   const pad = layout === "compact" ? 14 : 24;
+  // Раскладка карточек: compact — столбик обычных; medium (раскладной 690, планшет-портрет) — столбик
+  // широких горизонтальных; expanded — 2 колонки обычных, а если модуль один — одна широкая на всю строку.
+  const wideCards = layout === "medium" || (layout === "expanded" && mods.length === 1);
+  const grid2 = layout === "expanded" && mods.length > 1;
   let body;
   if (state === "loading") body = <Center><CmpCircularProgressIndicator /><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Читаем список модулей блока…")}</CmpText></Center>;
   else if (state === "error") body = <Center><Hero icon="error_outline" tone="neutral" size={88} /><CmpText variant="titleLarge">{L("Не удалось получить список модулей")}</CmpText><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{L("Проверьте соединение с блоком и повторите попытку.")}</CmpText><CmpButton text={L("Повторить")} icon="refresh" fullWidth style={{ height: 52 }} onClick={() => setState("loading")} /></Center>;
@@ -261,8 +327,8 @@ function FwCheck({ layout, scenario, dialog0, channel0, onBack, onEnter }) {
         </div>
         {channel !== "release" && <Banner icon="warning">{L(FW_TEST_WARN)}</Banner>}
         <CmpText variant="titleMedium">{L("Доступные для обновления модули")}</CmpText>
-        <div style={{ display: "grid", gridTemplateColumns: layout === "compact" ? "1fr" : "repeat(2, minmax(0,1fr))", gap: 14, alignItems: "start" }}>
-          {mods.map((m, i) => <ModCard key={m.id} m={m} i={i} onDesc={() => setDialog("desc")} onEnter={() => { setTarget(m.id); setDialog("confirm"); }} onRefresh={() => refresh(m.id)} />)}
+        <div style={{ display: "grid", gridTemplateColumns: grid2 ? "repeat(2, minmax(0,1fr))" : "minmax(0, 1fr)", gap: 14, alignItems: "start" }}>
+          {mods.map((m, i) => <ModCard key={m.id} m={m} i={i} wide={wideCards} onDesc={() => setDialog("desc")} onEnter={() => { setTarget(m.id); setDialog("confirm"); }} onRefresh={() => refresh(m.id)} />)}
         </div>
       </div>
     </div>
@@ -898,7 +964,7 @@ function FirmwareApp({ view = "check", entry = "a", scenario = "list", dialog = 
 function FwSeg({ items, value, onChange }) {
   return <div className={"seg" + (items.length > 4 ? " wrap" : "")}>{items.map(([k, l]) => <button key={k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}</div>;
 }
-const FW_CHECK_OPTS = [["list", "Список"], ["states", "Состояния карточки"], ["loading", "Загрузка"], ["error", "Ошибка списка"], ["beta", "Beta-канал"], ["desc", "Диалог описания"], ["nodesc", "Описание пустое"], ["confirm", "Подтверждение"], ["pin", "PIN-диалог"], ["pinerr", "PIN: ошибка"]];
+const FW_CHECK_OPTS = [["list", "Список"], ["one", "Один модуль"], ["states", "Состояния карточки"], ["loading", "Загрузка"], ["error", "Ошибка списка"], ["beta", "Beta-канал"], ["desc", "Диалог описания"], ["nodesc", "Описание пустое"], ["confirm", "Подтверждение"], ["pin", "PIN-диалог"], ["pinerr", "PIN: ошибка"]];
 const FW_ARCH_OPTS = [["list", "Список"], ["loading", "Загрузка"], ["more", "Догрузка"], ["moreerror", "Ошибка догрузки"], ["empty", "Пусто"], ["error", "Нет связи"], ["rollback", "Откат (диалог)"]];
 const FW_ARCH_OPTS_B = [["list", "Список"], ["loading", "Загрузка"], ["more", "Догрузка"], ["moreerror", "Ошибка догрузки"], ["nofw", "У модели нет прошивок"], ["error", "Нет связи"], ["dl", "Скачано (диалог)"]];
 const FW_CAN_A = [["block", "CAN: код блока"], ["other", "Другой код"], ["car", "Из автомобиля"], ["cleared", "Поле очищено"], ["partial", "1–3 цифры"], ["factory", "Заводские CAN"], ["emptyblock", "Пусто: код блока"], ["emptyother", "Пусто: другой код"]];
@@ -927,7 +993,7 @@ function useFwCtl() {
   window.FW_LANG = lang; window.FW_LONG = long;
   let props;
   if (entry === "b") props = { view: bview, entry: "b", scenario: bsc, channel: ach, canSc: bcan, module: amod };
-  else if (view === "check") props = { view, scenario: sc === "beta" || sc === "desc" || sc === "confirm" || sc === "pin" || sc === "pinerr" ? "list" : sc, dialog: sc === "desc" || sc === "nodesc" ? "desc" : sc === "confirm" ? "confirm" : sc === "pin" || sc === "pinerr" ? sc : null, channel: sc === "beta" ? "beta" : "release" };
+  else if (view === "check") props = { view, scenario: sc === "one" ? "one" : sc === "beta" || sc === "desc" || sc === "confirm" || sc === "pin" || sc === "pinerr" ? "list" : sc, dialog: sc === "desc" || sc === "nodesc" ? "desc" : sc === "confirm" ? "confirm" : sc === "pin" || sc === "pinerr" ? sc : null, channel: sc === "beta" ? "beta" : "release" };
   else if (view === "archive") props = { view, scenario: asc === "rollback" ? "list" : asc, dialog: asc === "rollback" ? "rollback" : null, channel: ach, canSc: acan, module: amod };
   else props = { view, phase: ph === "confirmcan" ? "confirm" : ph, profile, reserve, nextCan: ph === "confirmcan" ? { can: "3312", prof: "1.01" } : ph === "confirm" ? { can: "2154", prof: "1.03" } : null, nextVer: ph === "confirmcan" || ph === "confirm" ? "3.61" : null, blkFactory: ufac };
   const chSeg = <FwSeg items={[["release", "Готовая"], ["beta", "Beta"], ["alpha", "Alpha"]]} value={ach} onChange={setAch} />;

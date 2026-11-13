@@ -5,10 +5,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -58,11 +60,7 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_check_title_
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_cmd_btn_retry
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_cmd_msg_hold_hint
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_commands_title_section
-import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_engine
-import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_extra
-import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_link
-import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_item_zones
-import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_msg_no_extra
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_details_btn_open
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_btn_keep
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_btn_keep_both
@@ -71,6 +69,7 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_msg_bot
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_msg_program
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_msg_service
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_exit_title_dialog
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_btn_all_checks
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_btn_back
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_btn_cancel
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_btn_continue
@@ -83,7 +82,10 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_title_b
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_title_checks
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_fast_title_finish
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_pin_msg_program
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_pult_btn_all_commands
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_pult_btn_device_commands
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_format_checks
+import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_item_commands
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_item_details
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_tabs_item_pult
 import ru.alarmtrade.specmp.core.ui.effect.collectSideEffect
@@ -102,6 +104,9 @@ import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpWidthClass
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpWindowSize
+import ru.alarmtrade.specmp.core.ui.view.layout.cmpWindowSize
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTabItem
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTabRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -111,22 +116,24 @@ import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.device.interaction.domain.model.deviceTitle
 import ru.alarmtrade.specmp.feature.device.presentation.core.pin.ServicePinDialog
-import ru.alarmtrade.specmp.feature.device.state.domain.model.HandsFreeMode
-import ru.alarmtrade.specmp.feature.device.state.domain.model.SirenMode
 import ru.alarmtrade.specmp.feature.device.state.domain.model.StateCommand
-import ru.alarmtrade.specmp.feature.device.state.domain.model.VehicleState
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ActiveZones
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.AllCommandsSheet
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ChecklistPanel
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.CommandsGrid
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.DangerSheet
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.EngineCard
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ExtraGroups
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.HorizontalVehicle
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.LinkCard
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.LiveCard
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.MetricStrip
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.PanelSheet
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.PultCard
-import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.PultWideCard
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.SectionCard
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StateBanner
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StatusHero
+import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.StatusPill
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ZonesList
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.ZonesSkeleton
 import ru.alarmtrade.specmp.feature.device.state.ui.presentation.components.label
@@ -136,10 +143,13 @@ import ru.alarmtrade.specmp.feature.device.state.ui.presentation.model.CheckStat
 internal const val CHECK_STATE_NEXT_TAG = "devicestate_next"
 internal const val CHECK_STATE_TABS_TAG = "devicestate_tabs"
 
-// Две колонки — только когда контенту хватает ширины (макет: ≥ 860 dp контента, в т.ч. справа от колонки
-// шагов мастера).
-private val WideFrom = 860.dp
-private val WideSplitFrom = 1100.dp
+/**
+ * Раскладка — по ширине и высоте окна контента (не по типу устройства): < 600 — вкладки; высота < 520 — низкое
+ * окно (телефон-ландшафт); 600–1099 — две равные панели (раскладной, планшет-портрет); ≥ 1100 — три колонки.
+ */
+private enum class CheckStateLayout { Compact, Low, Split, Desk }
+
+private val WideDeskFrom = 1240.dp
 private const val ALARM_BORDER_MIN_ALPHA = 0.25f
 private const val ALARM_BORDER_MILLIS = 500
 
@@ -222,6 +232,12 @@ private suspend fun showResult(
 
 private enum class Tab { CHECKS, PULT, DETAILS }
 
+/** Листы низкого окна: «Подробно» и весь чек-лист. */
+private enum class PanelKind { DETAILS, CHECKS }
+
+/** Вкладки правой панели раскладки «две панели». */
+private enum class PaneTab { CHECKS, COMMANDS, DETAILS }
+
 @Composable
 internal fun CheckStateContent(
     state: CheckStateState,
@@ -234,49 +250,34 @@ internal fun CheckStateContent(
     var allCommands by rememberSaveable { mutableStateOf(false) }
     val onFire: (CommandUi) -> Unit =
         remember(actions) { { actions.onCommand(it.command) } }
-    val chrome = fastMount?.chrome
-    CmpScaffold(
-        topBar = {
-            if (chrome != null) {
-                chrome.topBar(actions.onBack)
-            } else {
-                CmpTopAppBar(
-                    title = { CmpText(text = stringResource(Strings.string.devicestate_check_title_screen)) },
-                    subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
-                    navigationIcon = {
-                        CmpIconButton(
-                            onClick = actions.onBack,
-                            icon = CmpIcons.ArrowBack,
-                            contentDescription = stringResource(Strings.string.devicestate_check_a11y_back),
-                        )
-                    },
+    var sheet by rememberSaveable { mutableStateOf<PanelKind?>(null) }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val layout = checkStateLayout(cmpWindowSize)
+        CmpScaffold(
+            topBar = { CheckStateTopBar(state, actions, fastMount, subtitle, layout) },
+            snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
+        ) { padding ->
+            BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+                val parts = Parts(
+                    state = state,
+                    actions = actions,
+                    fastMount = fastMount,
+                    onFire = onFire,
+                    columns = 2,
+                    onAllCommands = { allCommands = true },
+                    onOpenSheet = { sheet = it },
                 )
+                when (layout) {
+                    CheckStateLayout.Compact -> CompactLayout(parts, initialTab)
+                    CheckStateLayout.Low -> LowLayout(parts, width = maxWidth, height = maxHeight)
+                    CheckStateLayout.Split -> SplitLayout(parts, half = maxWidth / 2)
+                    CheckStateLayout.Desk -> DeskLayout(parts, width = maxWidth)
+                }
+                if (state.alarm) AlarmBorder()
             }
-        },
-        snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
-    ) { padding ->
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
-            val wide = maxWidth >= WideFrom
-            val columns = if (maxWidth >= WideSplitFrom) 3 else 2
-            val parts = Parts(state, actions, fastMount, onFire, columns, onAllCommands = { allCommands = true })
-            if (wide) {
-                WideLayout(
-                    parts,
-                    rightWidth = wideRightWidth(maxWidth),
-                    carHeight = if (maxWidth >=
-                        WideSplitFrom
-                    ) {
-                        180.dp
-                    } else {
-                        150.dp
-                    },
-                )
-            } else {
-                CompactLayout(parts, initialTab)
-            }
-            if (state.alarm) AlarmBorder()
         }
     }
+    sheet?.let { kind -> PanelSheets(kind, state, fastMount, onDismiss = { sheet = null }) }
     if (allCommands) {
         AllCommandsSheet(
             commands = state.commands,
@@ -290,6 +291,67 @@ internal fun CheckStateContent(
     CheckStateDialogs(state, actions)
 }
 
+private fun checkStateLayout(window: CmpWindowSize): CheckStateLayout = when {
+    window.isLowHeight -> CheckStateLayout.Low
+    window.atLeast(CmpWidthClass.Large) -> CheckStateLayout.Desk
+    window.atLeast(CmpWidthClass.Medium) -> CheckStateLayout.Split
+    else -> CheckStateLayout.Compact
+}
+
+@Composable
+private fun CheckStateTopBar(
+    state: CheckStateState,
+    actions: CheckStateActions,
+    fastMount: CheckStateFastMount?,
+    subtitle: String?,
+    layout: CheckStateLayout,
+) {
+    val chrome = fastMount?.chrome
+    if (chrome != null) {
+        chrome.topBar(actions.onBack)
+        return
+    }
+    CmpTopAppBar(
+        title = { CmpText(text = stringResource(Strings.string.devicestate_check_title_screen)) },
+        subtitle = subtitle?.let { { CmpText(text = it, style = CmpTextStyle.Caption) } },
+        navigationIcon = {
+            CmpIconButton(
+                onClick = actions.onBack,
+                icon = CmpIcons.ArrowBack,
+                contentDescription = stringResource(Strings.string.devicestate_check_a11y_back),
+            )
+        },
+        actions = {
+            // Низкое окно: карточки статуса нет — статус в шапке.
+            if (layout == CheckStateLayout.Low) StatusPill(state, Modifier.padding(end = 12.dp))
+        },
+    )
+}
+
+@Composable
+private fun PanelSheets(
+    kind: PanelKind,
+    state: CheckStateState,
+    fastMount: CheckStateFastMount?,
+    onDismiss: () -> Unit,
+) {
+    when (kind) {
+        PanelKind.DETAILS -> PanelSheet(
+            title = stringResource(Strings.string.devicestate_check_title_details),
+            onDismiss = onDismiss,
+        ) { DetailBlocks(state) }
+
+        PanelKind.CHECKS -> PanelSheet(
+            title = stringResource(Strings.string.devicestate_fast_title_checks),
+            onDismiss = onDismiss,
+        ) {
+            fastMount?.let { mount ->
+                ChecklistPanel(mount.checklist, state.vehicle, onSkip = mount.onSkip, onAnswer = mount.onAnswer)
+            }
+        }
+    }
+}
+
 private class Parts(
     val state: CheckStateState,
     val actions: CheckStateActions,
@@ -297,6 +359,7 @@ private class Parts(
     val onFire: (CommandUi) -> Unit,
     val columns: Int,
     val onAllCommands: () -> Unit,
+    val onOpenSheet: (PanelKind) -> Unit,
 ) {
     val hasChecks: Boolean get() = fastMount != null && fastMount.checklist.tasks.isNotEmpty()
 }
@@ -346,33 +409,88 @@ private fun CompactLayout(parts: Parts, initialTab: Int?) {
     }
 }
 
-private fun wideRightWidth(width: Dp): Dp = when {
-    width >= 1200.dp -> 440.dp
-    width >= 960.dp -> 380.dp
-    else -> 340.dp
+/** Две равные панели (граница — посередине, по сгибу раскладного): слева «живое», справа вкладки. */
+@Composable
+private fun SplitLayout(parts: Parts, half: Dp) {
+    val colors = cmpThemeColors()
+    val tabs = buildList {
+        if (parts.hasChecks) add(PaneTab.CHECKS)
+        add(PaneTab.COMMANDS)
+        add(PaneTab.DETAILS)
+    }
+    var selected by rememberSaveable { mutableIntStateOf(0) }
+    val tab = tabs[selected.coerceIn(0, tabs.lastIndex)]
+    CmpColumn(modifier = Modifier.fillMaxSize()) {
+        CmpRow(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            CmpColumn(
+                modifier = Modifier
+                    .width(half)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                StatusArea(parts.state, parts.actions)
+                Banners(parts.state, parts.actions)
+                LiveCard(parts.state, carWidth = minOf(SplitCarMax, half * SPLIT_CAR_FRACTION))
+            }
+            CmpBox(modifier = Modifier.fillMaxHeight().width(1.dp).background(colors.outlineVariant))
+            CmpColumn(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                CmpTabRow(
+                    selectedTabIndex = tabs.indexOf(tab),
+                    tabs = tabs.map { CmpTabItem(title = paneTabTitle(it, parts)) },
+                    onTabSelect = { selected = it },
+                    modifier = Modifier.testTag(CHECK_STATE_TABS_TAG),
+                )
+                CmpColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    when (tab) {
+                        PaneTab.CHECKS -> Checks(parts)
+                        PaneTab.COMMANDS -> CommandsBlock(parts, columns = if (half >= TwoColumnCommandsFrom) 2 else 1)
+                        PaneTab.DETAILS -> DetailBlocks(parts.state)
+                    }
+                }
+            }
+        }
+        FastDock(parts, buttonWidth = half)
+    }
 }
 
+/** Три колонки (планшет-ландшафт, desktop): машина и показатели | все зоны и детали | команды или чек-лист. */
 @Composable
-private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
+private fun DeskLayout(parts: Parts, width: Dp) {
     val state = parts.state
+    val leftWidth = if (width >= WideDeskFrom) 340.dp else 300.dp
+    val rightWidth = if (width >= WideDeskFrom) 400.dp else 340.dp
     CmpColumn(modifier = Modifier.fillMaxSize()) {
         CmpRow(
             modifier = Modifier.weight(1f).fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            CmpColumn(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            ScrollColumn(Modifier.width(leftWidth)) {
                 StatusArea(state, parts.actions)
                 Banners(state, parts.actions)
-                PultWideCard(state, carHeight = carHeight, onFire = parts.onFire, onAllCommands = parts.onAllCommands)
-                DetailsTabs(parts)
+                LiveCard(state, carWidth = DeskCarWidth, chips = false)
+                if (parts.hasChecks) {
+                    // Команды не мешают чек-листу: все команды — листом.
+                    CmpOutlinedButton(
+                        text = stringResource(Strings.string.devicestate_pult_btn_device_commands),
+                        onClick = parts.onAllCommands,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    )
+                }
             }
-            CmpColumn(
-                modifier = Modifier.width(rightWidth).verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            ScrollColumn(Modifier.weight(1f)) {
+                state.vehicle?.let { vehicle ->
+                    SectionCard {
+                        ActiveZones(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
+                    }
+                }
+                DetailBlocks(state)
+            }
+            ScrollColumn(Modifier.width(rightWidth)) {
                 if (parts.hasChecks) {
                     SectionCard(
                         title = stringResource(Strings.string.devicestate_fast_title_checks),
@@ -381,66 +499,122 @@ private fun WideLayout(parts: Parts, rightWidth: Dp, carHeight: Dp) {
                         Checks(parts)
                     }
                 } else {
-                    CommandsSection(parts, columns = if (rightWidth >= 400.dp) 2 else 1)
+                    CommandsSection(parts, columns = 1)
                 }
             }
         }
-        FastDock(parts, wide = true)
+        FastDock(parts, buttonWidth = rightWidth)
     }
 }
 
-private enum class DetailsTab { ZONES, ENGINE, LINK, EXTRA }
-
+/** Низкое окно (телефон-ландшафт): без карточки статуса и вкладок; главное — без прокрутки. */
 @Composable
-private fun DetailsTabs(parts: Parts) {
-    val vehicle = parts.state.vehicle
-    var selected by rememberSaveable { mutableIntStateOf(0) }
-    val tab = DetailsTab.entries[selected.coerceIn(0, DetailsTab.entries.lastIndex)]
-    SectionCard(title = stringResource(Strings.string.devicestate_check_title_details), contentPadding = 0.dp) {
-        CmpTabRow(
-            selectedTabIndex = tab.ordinal,
-            tabs = DetailsTab.entries.map { CmpTabItem(title = stringResource(it.title())) },
-            onTabSelect = { selected = it },
-        )
-        CmpColumn(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            when {
-                vehicle == null -> ZonesSkeleton()
-
-                tab == DetailsTab.ZONES -> ZonesList(
-                    vehicle = vehicle,
-                    changed = parts.state.changedZones,
-                    tick = parts.state.tick,
+private fun LowLayout(parts: Parts, width: Dp, height: Dp) {
+    val state = parts.state
+    val vehicle = state.vehicle
+    val rightWidth = minOf(LowRightMax, width * LOW_RIGHT_FRACTION)
+    val carHeight = (height - LOW_CAR_RESERVE).coerceIn(LowCarMin, LowCarMax)
+    CmpRow(
+        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        ScrollColumn(Modifier.weight(1f)) {
+            if (vehicle?.programMode == true) StatusArea(state, parts.actions)
+            Banners(state, parts.actions)
+            CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                HorizontalVehicle(vehicle = vehicle, height = carHeight)
+            }
+            if (vehicle != null) {
+                ActiveZones(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
+                MetricStrip(vehicle, wrap = true)
+            }
+        }
+        CmpColumn(
+            modifier = Modifier.width(rightWidth).fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            val fastMount = parts.fastMount
+            if (parts.hasChecks && fastMount != null) {
+                ScrollColumn(Modifier.weight(1f)) {
+                    ChecklistPanel(
+                        checklist = fastMount.checklist,
+                        vehicle = vehicle,
+                        onSkip = fastMount.onSkip,
+                        onAnswer = fastMount.onAnswer,
+                        onlyCurrent = true,
+                    )
+                }
+                CmpTextButton(
+                    text = stringResource(Strings.string.devicestate_fast_btn_all_checks),
+                    onClick = { parts.onOpenSheet(PanelKind.CHECKS) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 )
-
-                tab == DetailsTab.ENGINE -> EngineCard(vehicle)
-
-                tab == DetailsTab.LINK -> LinkCard(vehicle)
-
-                vehicle.hasExtra() -> ExtraGroups(vehicle)
-
-                else -> CmpText(
-                    text = stringResource(Strings.string.devicestate_details_msg_no_extra),
-                    color = cmpThemeColors().onSurfaceVariant,
+            } else {
+                ScrollColumn(Modifier.weight(1f)) {
+                    CommandsGrid(
+                        commands = state.commands.filter { it.primary },
+                        status = { state.status(it.command) },
+                        enabled = !state.loading && state.pending == null,
+                        columns = LOW_COMMAND_COLUMNS,
+                        onFire = parts.onFire,
+                        compact = true,
+                    )
+                    CmpTextButton(
+                        text = stringResource(Strings.string.devicestate_pult_btn_all_commands),
+                        onClick = parts.onAllCommands,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    )
+                }
+                CmpOutlinedButton(
+                    text = stringResource(Strings.string.devicestate_details_btn_open),
+                    onClick = { parts.onOpenSheet(PanelKind.DETAILS) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 )
             }
+            FastDock(parts)
         }
     }
 }
 
-private fun DetailsTab.title() = when (this) {
-    DetailsTab.ZONES -> Strings.string.devicestate_details_item_zones
-    DetailsTab.ENGINE -> Strings.string.devicestate_details_item_engine
-    DetailsTab.LINK -> Strings.string.devicestate_details_item_link
-    DetailsTab.EXTRA -> Strings.string.devicestate_details_item_extra
+@Composable
+private fun ScrollColumn(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+    CmpColumn(
+        modifier = modifier.fillMaxHeight().verticalScroll(rememberScrollState()).padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        content = content,
+    )
 }
 
-private fun VehicleState.hasExtra(): Boolean =
-    listOf(can, ev, heater, camera).any { it != null } || siren != SirenMode.OFF || handsFree != HandsFreeMode.OFF
+@Composable
+private fun paneTabTitle(tab: PaneTab, parts: Parts): String = when (tab) {
+    PaneTab.CHECKS -> tabTitle(Tab.CHECKS, parts)
+    PaneTab.COMMANDS -> stringResource(Strings.string.devicestate_tabs_item_commands)
+    PaneTab.DETAILS -> tabTitle(Tab.DETAILS, parts)
+}
+
+private val SplitCarMax = 200.dp
+private const val SPLIT_CAR_FRACTION = 0.46f
+private val TwoColumnCommandsFrom = 400.dp
+private val DeskCarWidth = 170.dp
+private val LowRightMax = 420.dp
+private const val LOW_RIGHT_FRACTION = 0.44f
+private val LOW_CAR_RESERVE = 250.dp
+private val LowCarMin = 110.dp
+private val LowCarMax = 150.dp
+private const val LOW_COMMAND_COLUMNS = 3
 
 @Composable
 private fun CommandsSection(parts: Parts, columns: Int) {
-    val state = parts.state
     SectionCard(title = stringResource(Strings.string.devicestate_commands_title_section)) {
+        CommandsBlock(parts, columns)
+    }
+}
+
+/** Подсказка «удерживайте» и все команды сеткой — каждая команда показывается один раз. */
+@Composable
+private fun CommandsBlock(parts: Parts, columns: Int) {
+    val state = parts.state
+    CmpColumn {
         CmpText(
             text = stringResource(Strings.string.devicestate_cmd_msg_hold_hint),
             fontSize = 14.sp,
@@ -523,30 +697,25 @@ private fun ColumnScope.Banners(state: CheckStateState, actions: CheckStateActio
 
 @Composable
 private fun Details(parts: Parts) {
-    val state = parts.state
-    val vehicle = state.vehicle
-    if (vehicle == null) {
-        ZonesSkeleton()
-    } else {
-        ZonesList(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
-        EngineCard(vehicle)
-        LinkCard(vehicle)
-        ExtraGroups(vehicle)
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        DetailBlocks(parts.state)
+        CommandsSection(parts, columns = parts.columns)
     }
-    SectionCard(title = stringResource(Strings.string.devicestate_commands_title_section)) {
-        CmpText(
-            text = stringResource(Strings.string.devicestate_cmd_msg_hold_hint),
-            fontSize = 14.sp,
-            color = cmpThemeColors().onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-        )
-        CommandsGrid(
-            commands = state.commands,
-            status = { state.status(it.command) },
-            enabled = !state.loading && state.pending == null,
-            columns = parts.columns,
-            onFire = parts.onFire,
-        )
+}
+
+/** Зоны, двигатель, связь и дополнительно — без команд. */
+@Composable
+private fun DetailBlocks(state: CheckStateState) {
+    val vehicle = state.vehicle
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (vehicle == null) {
+            ZonesSkeleton()
+        } else {
+            ZonesList(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
+            EngineCard(vehicle)
+            LinkCard(vehicle)
+            ExtraGroups(vehicle)
+        }
     }
 }
 
@@ -562,7 +731,7 @@ private fun Checks(parts: Parts) {
 }
 
 @Composable
-private fun FastDock(parts: Parts, wide: Boolean = false) {
+private fun FastDock(parts: Parts, buttonWidth: Dp? = null) {
     val fastMount = parts.fastMount ?: return
     val checklist = fastMount.checklist
     val button: @Composable ColumnScope.() -> Unit = {
@@ -588,7 +757,7 @@ private fun FastDock(parts: Parts, wide: Boolean = false) {
             modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 14.dp),
             contentAlignment = Alignment.CenterEnd,
         ) {
-            CmpColumn(modifier = if (wide) Modifier.widthIn(max = 400.dp).fillMaxWidth() else Modifier.fillMaxWidth()) {
+            CmpColumn(modifier = if (buttonWidth != null) Modifier.width(buttonWidth) else Modifier.fillMaxWidth()) {
                 button()
             }
         }

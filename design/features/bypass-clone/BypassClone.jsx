@@ -75,6 +75,16 @@ function useElapsed(key, from = 0) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 const goChat = () => window.psGo && window.psGo("support-chat");
+// Заявка на техпомощь — в приоритете перед чатом: текст ошибки сразу попадает в описание заявки.
+const goTicket = (from, text) => window.psTicket && window.psTicket(from, text);
+function HelpBtns({ from, text, primary }) {
+  return <React.Fragment>
+    {primary
+      ? <CmpButton text="Заявка на техпомощь" icon="phone_callback" fullWidth style={H52} onClick={() => goTicket(from, text)} />
+      : <CmpOutlinedButton text="Заявка на техпомощь" icon="phone_callback" fullWidth style={H52} onClick={() => goTicket(from, text)} />}
+    <CmpTextButton text="Написать в чат поддержки" icon="support_agent" style={{ height: 48, alignSelf: "center" }} onClick={goChat} />
+  </React.Fragment>;
+}
 
 function Banner({ icon = "warning", tone = "warn", title, children, action }) {
   const bg = tone === "error" ? "var(--error-container)" : tone === "info" ? "var(--secondary-container)" : "var(--tertiary-container)";
@@ -477,7 +487,7 @@ function BypassScreen({ layout, scenario, variant, transport, onBack, onClone, a
     footer = result === "ok" ? <React.Fragment><CmpButton text="Готово" fullWidth style={H52} onClick={onBack} />{cloneAvail && <CmpOutlinedButton text="Перейти к процедуре Clone" icon="content_copy" fullWidth style={H52} onClick={onClone} />}</React.Fragment>
       : result === "needclone" ? <React.Fragment><CmpButton text="Перейти к процедуре Clone" icon="content_copy" fullWidth style={H52} onClick={onClone} /><CmpOutlinedButton text="Закрыть" fullWidth style={H52} onClick={onBack} /></React.Fragment>
       : result === "unsupported" ? <CmpButton text="Закрыть" fullWidth style={H52} onClick={onBack} />
-      : <React.Fragment><CmpButton text="Повторить" icon="refresh" fullWidth style={H52} onClick={begin} /><CmpOutlinedButton text="В чат поддержки" icon="support_agent" fullWidth style={H52} onClick={goChat} /></React.Fragment>;
+      : <React.Fragment><CmpButton text="Повторить" icon="refresh" fullWidth style={H52} onClick={begin} /><HelpBtns from="Бесключевой обход" text={`Бесключевой обход: обучение не выполнено. ${errText}`} /></React.Fragment>;
   }
 
   return (
@@ -569,7 +579,7 @@ function CloneScreen({ layout, scenario, transport, onBack, active, fromBypass }
     </React.Fragment>;
     side = layout === "expanded" ? <HowItWorks items={CL_HOW} /> : null;
     footer = att === 0
-      ? <React.Fragment><CmpButton text="В чат поддержки" icon="support_agent" fullWidth style={H52} onClick={goChat} /><CmpOutlinedButton text="Начать Clone" fullWidth disabled style={H52} /></React.Fragment>
+      ? <HelpBtns primary from="Процедура Clone" text="Процедура Clone: исчерпано число попыток. Нужны дополнительные попытки." />
       : <CmpButton text="Начать Clone" icon="play_arrow" fullWidth style={H52} onClick={() => setDialog("confirm")} />;
   } else if (phase === "run") {
     const g = CL_STAGES[stage];
@@ -612,7 +622,7 @@ function CloneScreen({ layout, scenario, transport, onBack, active, fromBypass }
     </React.Fragment>;
     side = null;
     footer = result === "error"
-      ? <React.Fragment><CmpButton text="Повторить" icon="refresh" fullWidth style={H52} onClick={() => setDialog("confirm")} /><CmpOutlinedButton text="В чат поддержки" icon="support_agent" fullWidth style={H52} onClick={goChat} /></React.Fragment>
+      ? <React.Fragment><CmpButton text="Повторить" icon="refresh" fullWidth style={H52} onClick={() => setDialog("confirm")} /><HelpBtns from="Процедура Clone" text={`Процедура Clone: ${errMsg}.`} /></React.Fragment>
       : <CmpButton text={result === "unsupported" ? "Закрыть" : closeTxt} fullWidth style={H52} onClick={onBack} />;
   }
 

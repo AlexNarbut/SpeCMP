@@ -62,7 +62,6 @@ import ru.alarmtrade.specmp.core.localization.resources.devicestate_unit_format_
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_unit_format_volt
 import ru.alarmtrade.specmp.core.localization.resources.devicestate_zones_format_chip
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
-import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -331,7 +330,7 @@ internal fun gsmIcon(level: Int?): DrawableResource = when (level) {
 }
 
 @Composable
-private fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
+internal fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
     val colors = cmpThemeColors()
     val row: @Composable (@Composable () -> Unit) -> Unit = { items ->
         if (wrap) {
@@ -387,7 +386,7 @@ private fun MetricStrip(vehicle: VehicleState, wrap: Boolean = false) {
 }
 
 @Composable
-private fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
+internal fun ActiveZones(vehicle: VehicleState, changed: Set<Zone>, tick: Int) {
     val theme = cmpThemeColors()
     val active = Zone.entries.filter { vehicle.zone(it).tone != ZoneTone.REST || it in changed }
     CmpRow(
@@ -609,41 +608,20 @@ private object DoorLayers {
         Res.drawable.devicestate_vehicle_bottom_right_close to Res.drawable.devicestate_vehicle_bottom_right_open
 }
 
+/**
+ * «Живое» состояние без команд: машина сверху, активные зоны, показатели. Левая панель раскладок «две панели» и
+ * «три колонки»; [chips] = false — активные зоны показывает соседняя колонка.
+ */
 @Composable
-internal fun PultWideCard(
-    state: CheckStateState,
-    carHeight: Dp,
-    onFire: (CommandUi) -> Unit,
-    onAllCommands: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun LiveCard(state: CheckStateState, carWidth: Dp, modifier: Modifier = Modifier, chips: Boolean = true) {
     val vehicle = state.vehicle
-    val colors = cmpThemeColors()
     SectionCard(modifier = modifier) {
         CmpColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            CmpRow(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                HorizontalVehicle(
+            CmpBox(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                VehicleSchematic(
                     vehicle = vehicle,
-                    height = carHeight,
-                    modifier = Modifier.alpha(if (vehicle == null) LOADING_ALPHA else 1f),
+                    modifier = Modifier.width(carWidth).alpha(if (vehicle == null) LOADING_ALPHA else 1f),
                 )
-                CmpBox(modifier = Modifier.weight(1f)) {
-                    if (vehicle == null) {
-                        CmpFlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            repeat(SKELETON_METRICS) {
-                                CmpSkeleton(
-                                    modifier = Modifier.width(88.dp).height(56.dp),
-                                    shape = RoundedCornerShape(14.dp),
-                                )
-                            }
-                        }
-                    } else {
-                        MetricStrip(vehicle, wrap = true)
-                    }
-                }
             }
             if (vehicle == null) {
                 CmpSkeleton(
@@ -651,39 +629,15 @@ internal fun PultWideCard(
                     shape = RoundedCornerShape(12.dp),
                 )
             } else {
-                ActiveZones(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
-            }
-            CmpRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.commands.filter { it.primary }.forEach { command ->
-                    CommandButton(
-                        command = command,
-                        status = state.status(command.command),
-                        enabled = !state.loading && state.pending == null,
-                        onFire = onFire,
-                        compact = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                CmpOutlinedButton(
-                    onClick = onAllCommands,
-                    modifier = Modifier.weight(1f).heightIn(min = 72.dp),
-                ) {
-                    CmpColumn(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CmpIcon(icon = CmpIcons.Menu, contentDescription = null, tint = colors.primary)
-                        CmpText(
-                            text = stringResource(Strings.string.devicestate_pult_btn_all_commands),
-                            fontSize = 13.sp,
-                            maxLines = 2,
-                        )
-                    }
-                }
+                if (chips) ActiveZones(vehicle = vehicle, changed = state.changedZones, tick = state.tick)
+                MetricStrip(vehicle, wrap = true)
             }
         }
     }
 }
 
 @Composable
-private fun HorizontalVehicle(vehicle: VehicleState?, height: Dp, modifier: Modifier = Modifier) {
+internal fun HorizontalVehicle(vehicle: VehicleState?, height: Dp, modifier: Modifier = Modifier) {
     val width = height / VEHICLE_RATIO
     CmpBox(
         modifier = modifier

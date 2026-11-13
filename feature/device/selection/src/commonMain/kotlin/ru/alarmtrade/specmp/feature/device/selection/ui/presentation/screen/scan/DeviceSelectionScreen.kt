@@ -80,6 +80,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -185,7 +186,7 @@ internal fun DeviceSelectionContent(
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = when {
-                maxWidth < 600.dp -> DeviceSelectLayout.Compact
+                maxWidth < CmpBreakpoints.Medium -> DeviceSelectLayout.Compact
                 maxWidth > maxHeight * 1.1f -> DeviceSelectLayout.Split
                 else -> DeviceSelectLayout.Stacked
             }

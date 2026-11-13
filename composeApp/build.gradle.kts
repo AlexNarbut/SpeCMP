@@ -26,6 +26,7 @@ kotlin {
             implementation(project(":feature:app-settings"))
             implementation(project(":feature:main"))
             implementation(project(":feature:support-chat"))
+            implementation(project(":feature:tech-requests"))
             implementation(project(":feature:device:selection"))
             implementation(project(":feature:device:interaction"))
             implementation(project(":feature:device:firmware"))

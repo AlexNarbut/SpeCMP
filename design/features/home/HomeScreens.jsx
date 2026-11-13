@@ -41,7 +41,7 @@ const TOOLS = [
   { key: "configurator", svg: "settings_configurator", title: "Конфигуратор",         desc: "Создание и изменение настроек системы" },
   { key: "firmware",     svg: "firmware_archive",      title: "Архив прошивок",        desc: "Поиск и загрузка прошивок" },
   { key: "cars",         svg: "vehicle_support",       title: "Автомобили",            desc: "Поддерживаемые автомобили и функции" },
-  { key: "requests",     svg: "orders",                title: "Заявки",                desc: "Заявки и пользовательский опыт монтажа" },
+  { key: "requests",     svg: "tech_requests",         title: "Заявки на техпомощь",   desc: "Обратный звонок специалиста и история заявок" },
   { key: "feedback",     svg: "feedback",              title: "Обратная связь",        desc: "Отзыв о монтаже и улучшениях" },
   { key: "product",      svg: "articles",              title: "Информация о товаре",   desc: "Поиск информации о продукте" },
 ];
@@ -108,7 +108,7 @@ function StatusChip({ compact = false, syncing = false }) {
 
 // ── Inline SVG icon (old-project asset; inlined so it inherits currentColor) ──
 function PsSvgIcon({ name, size = 32 }) {
-  const html = (window.PS_MAIN_ICONS && window.PS_MAIN_ICONS[name]) || "";
+  const html = (window.PS_SECTION_ICONS && window.PS_SECTION_ICONS[name]) || (window.PS_MAIN_ICONS && window.PS_MAIN_ICONS[name]) || "";
   return <span aria-hidden="true" style={{ width: size, height: size, display: "inline-flex", flex: "0 0 auto" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 

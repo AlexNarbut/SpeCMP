@@ -62,6 +62,7 @@ class AssistantLayoutRenderTest {
             onWrite = {},
             onWriteCancel = {},
             onSourcePick = { _, _ -> },
+            onAction = {},
         ),
     )
 

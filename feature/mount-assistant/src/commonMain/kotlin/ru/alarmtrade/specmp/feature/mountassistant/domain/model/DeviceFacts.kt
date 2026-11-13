@@ -19,6 +19,6 @@ data class DeviceFacts(
 
 enum class AssistantTransport { BLE, USB, SERIAL }
 
-enum class AssistantCapability { FIRMWARE, SETTINGS, BYPASS, CLONE }
+enum class AssistantCapability { FIRMWARE, SETTINGS, BYPASS, CLONE, DYNAMIC_DEVICES }
 
 data class CanFacts(val factory: Boolean, val code: String?, val version: String?)

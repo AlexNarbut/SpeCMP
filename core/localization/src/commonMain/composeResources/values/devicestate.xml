@@ -274,4 +274,8 @@
     <string name="devicestate_details_item_link">Connection</string>
     <string name="devicestate_details_item_extra">Extra</string>
     <string name="devicestate_details_msg_no_extra">No extra data</string>
+    <string name="devicestate_tabs_item_commands">Commands</string>
+    <string name="devicestate_details_btn_open">Details: zones, engine, link</string>
+    <string name="devicestate_fast_btn_all_checks">Full list</string>
+    <string name="devicestate_pult_btn_device_commands">Device commands</string>
 </resources>

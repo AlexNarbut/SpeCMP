@@ -17,10 +17,10 @@ import ru.alarmtrade.specmp.core.ui.theme.LocalThemeIsDark
 /**
  * Галерея состояний: рендерит stateless-экран headless (без окна) в PNG — для визуальной проверки
  * состояний, которые не воспроизвести живым блоком. Лист на состояние: строки — светлая/тёмная тема,
- * колонки — опорные окна Compact 412×915, Medium 800×1280, Expanded 1280×800.
+ * колонки — окна Compact 412×915, телефон-ландшафт 915×412, раскладной 690×829, Medium 800×1280, Expanded 1280×800.
  */
 internal object StateGallery {
-    private val windows = listOf(412 to 915, 800 to 1280, 1280 to 800)
+    private val windows = listOf(412 to 915, 915 to 412, 690 to 829, 800 to 1280, 1280 to 800)
     private const val GAP = 24
 
     fun render(outDir: File, name: String, content: @Composable () -> Unit) {

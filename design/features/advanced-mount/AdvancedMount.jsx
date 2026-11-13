@@ -77,7 +77,9 @@ const SECTION_PATHS = {
 };
 // Стиль как на главной: часть иконок — те же main_* (duotone), остальные дорисованы в той же манере
 // (базовый слой opacity .3 + деталь полным тоном).
-const MAIN_MAP = { firmware: "firmware_archive", settings: "settings_configurator", tickets: "orders", cars: "vehicle_support", maps: "articles" };
+const MAIN_MAP = { firmware: "firmware_archive", cars: "vehicle_support", maps: "articles" };
+// Новые иконки разделов (res/icons/section-icons.js) — duotone, как DUO ниже.
+const SECTION_MAP = { settings: "adv_settings", tickets: "tech_requests", clone: "clone", devices: "sys_devices", extra: "pairing" };
 const DUO = {
   assistant: <><rect opacity=".3" x="2" y="2" width="20" height="20" rx="6" /><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z" /></>,
   bypass: <><path opacity=".3" d={SECTION_PATHS.bypass} /><path d="M7 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM17 14h4v4h-4zM12 10h11v2H12z" /></>,
@@ -89,6 +91,8 @@ const DUO = {
   voice: <><path opacity=".3" d="M9 13c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zM9 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" /><path d="M16.76 3.36l-1.68 1.69c.84 1.18.84 2.71 0 3.89l1.68 1.69c2.02-2.02 2.02-5.07 0-7.27zM20.07 0l-1.63 1.63c2.77 3.02 2.77 7.56 0 10.74L20.07 14c3.9-3.89 3.91-9.95 0-14z" /></>,
 };
 function SectionIcon({ k, size = 32 }) {
+  if (SECTION_MAP[k] && window.PS_SECTION_ICONS && window.PS_SECTION_ICONS[SECTION_MAP[k]])
+    return <span aria-hidden="true" style={{ width: size, height: size, display: "inline-flex", flex: "0 0 auto" }} dangerouslySetInnerHTML={{ __html: window.PS_SECTION_ICONS[SECTION_MAP[k]] }} />;
   if (MAIN_MAP[k] && window.PS_MAIN_ICONS && window.PS_MAIN_ICONS[MAIN_MAP[k]])
     return <span aria-hidden="true" style={{ width: size, height: size, display: "inline-flex", flex: "0 0 auto" }} dangerouslySetInnerHTML={{ __html: window.PS_MAIN_ICONS[MAIN_MAP[k]] }} />;
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="currentColor" style={{ flex: "0 0 auto" }}>{DUO[k]}</svg>;
@@ -352,6 +356,7 @@ function AdvancedMountScreen({ profile = "alarm", initialState = "ready", mode =
     : (s.key === "devices" && window.psHas && window.psHas("peripheral-devices")) ? window.psGo(layout === "compact" ? "peripheral-devices" : "peripheral-devices-tablet")
     : (s.key === "extra" && !(canLocked && s.needsCan) && window.psHas && window.psHas("peripheral-devices")) ? (location.href = window.PS_ROOT + window.PS_LINKS[layout === "compact" ? "peripheral-devices" : "peripheral-devices-tablet"] + "?screen=pairing")
     : (s.key === "check" && window.psHas && window.psHas("check-state")) ? window.psGo(layout === "compact" ? "check-state" : "check-state-tablet")
+    : (s.key === "tickets" && window.psHas && window.psHas("tech-requests")) ? window.psGo(layout === "compact" ? "tech-requests" : "tech-requests-tablet")
     : setSection(s);
   const effItems = state === "empty" ? [] : items;
 

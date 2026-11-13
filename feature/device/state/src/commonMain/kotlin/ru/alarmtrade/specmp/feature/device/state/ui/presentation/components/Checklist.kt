@@ -65,6 +65,7 @@ internal fun ChecklistPanel(
     onSkip: (String) -> Unit,
     onAnswer: (String, Int) -> Unit,
     modifier: Modifier = Modifier,
+    onlyCurrent: Boolean = false,
 ) {
     val colors = cmpThemeColors()
     val success = cmpDomainColors().success
@@ -125,7 +126,12 @@ internal fun ChecklistPanel(
                 fontSize = 14.sp,
             )
         }
-        order.forEach { task ->
+        val shown = if (onlyCurrent) {
+            listOfNotNull(order.firstOrNull { it.status == ChecklistStatus.PENDING })
+        } else {
+            order
+        }
+        shown.forEach { task ->
             TaskRow(
                 task = task,
                 sequential = checklist.sequential,

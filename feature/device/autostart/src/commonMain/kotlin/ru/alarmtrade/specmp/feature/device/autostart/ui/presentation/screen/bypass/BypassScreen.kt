@@ -32,6 +32,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_btn_start
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_error_ecu_what
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_format_ticket
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_hint_action
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_hint_critical
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_hint_wait
@@ -43,6 +44,8 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_a
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_action
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_check
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_critical
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_ticket_origin
+import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_ticket_origin_fast
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_wait
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_label_what
 import ru.alarmtrade.specmp.core.localization.resources.autostart_bypass_msg_can
@@ -69,6 +72,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_clo
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_done
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_open_clone
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_ticket
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_msg_pin
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_title_interrupted
 import ru.alarmtrade.specmp.core.localization.resources.autostart_instruction_label_fail
@@ -99,6 +103,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartPrimaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartScaffold
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartSecondaryButton
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartTextButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.ExitDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.Headline
@@ -131,10 +136,17 @@ internal data class BypassActions(
     val onExitConfirm: () -> Unit = {},
     val onOpenClone: () -> Unit = {},
     val onOpenSupportChat: () -> Unit = {},
+    val onOpenTechRequest: (origin: String, text: String) -> Unit = { _, _ -> },
 )
 
+/** [onOpenTechRequest] — «Заявка на техпомощь» при ошибке: откуда открыто и текст ошибки для описания. */
 @Composable
-fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSupportChat: () -> Unit) {
+fun BypassLearningEntry(
+    onBack: () -> Unit,
+    onOpenClone: () -> Unit,
+    onOpenSupportChat: () -> Unit,
+    onOpenTechRequest: (origin: String, text: String) -> Unit,
+) {
     val viewModel = koinViewModel<BypassLearningViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     viewModel.sideEffect.collectSideEffect { effect ->
@@ -142,7 +154,7 @@ fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSuppo
             BypassEffect.Close -> onBack()
         }
     }
-    val actions = remember(viewModel, onBack, onOpenClone, onOpenSupportChat) {
+    val actions = remember(viewModel, onBack, onOpenClone, onOpenSupportChat, onOpenTechRequest) {
         BypassActions(
             onBack = viewModel::onBack,
             onClose = onBack,
@@ -155,6 +167,7 @@ fun BypassLearningEntry(onBack: () -> Unit, onOpenClone: () -> Unit, onOpenSuppo
             },
             onOpenClone = onOpenClone,
             onOpenSupportChat = onOpenSupportChat,
+            onOpenTechRequest = onOpenTechRequest,
         )
     }
     BypassContent(state = state, actions = actions)
@@ -169,6 +182,7 @@ fun BypassLearningStep(
     onNext: (cloneRequired: Boolean) -> Unit,
     onBack: () -> Unit,
     onOpenSupportChat: () -> Unit,
+    onOpenTechRequest: (origin: String, text: String) -> Unit,
 ) {
     val viewModel = koinViewModel<BypassLearningViewModel>(key = key)
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -177,7 +191,7 @@ fun BypassLearningStep(
             BypassEffect.Close -> onBack()
         }
     }
-    val actions = remember(viewModel, onBack, onOpenSupportChat) {
+    val actions = remember(viewModel, onBack, onOpenSupportChat, onOpenTechRequest) {
         BypassActions(
             onBack = viewModel::onBack,
             onClose = onBack,
@@ -186,6 +200,7 @@ fun BypassLearningStep(
             onPinSubmit = viewModel::onPinSubmit,
             onExitConfirm = viewModel::onExitConfirm,
             onOpenSupportChat = onOpenSupportChat,
+            onOpenTechRequest = onOpenTechRequest,
         )
     }
     NavigationBackHandler(
@@ -558,11 +573,7 @@ private fun ResultBody(state: BypassState, result: BypassResult, layout: Autosta
 private fun ErrorBlock(error: BypassResult.Error) {
     val colors = cmpThemeColors()
     val texts = error.error.texts()
-    val what = if (error.error == BypassError.VAG_ECU_EXCHANGE) {
-        stringResource(txt.autostart_bypass_error_ecu_what, error.code ?: 0)
-    } else {
-        texts.what?.let { stringResource(it) }
-    }
+    val what = error.whatText()
     CmpColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         what?.let {
             ErrorPart(
@@ -600,6 +611,14 @@ private fun ErrorPart(icon: CmpIcons, title: StringResource, text: String, bg: C
             CmpText(text = text, color = fg, fontSize = 18.sp)
         }
     }
+}
+
+/** «Что случилось» по ошибке обхода — и в карточке ошибки, и в описании заявки на техпомощь. */
+@Composable
+private fun BypassResult.Error.whatText(): String? = if (error == BypassError.VAG_ECU_EXCHANGE) {
+    stringResource(txt.autostart_bypass_error_ecu_what, code ?: 0)
+} else {
+    error.texts().what?.let { stringResource(it) }
 }
 
 private fun footer(
@@ -654,7 +673,21 @@ private fun footer(
 
                     is BypassResult.Error -> {
                         AutostartPrimaryButton(txt.autostart_common_btn_retry, actions.onStart)
-                        AutostartSecondaryButton(txt.autostart_common_btn_chat, actions.onOpenSupportChat)
+                        val origin = stringResource(
+                            if (step != null) {
+                                txt.autostart_bypass_label_ticket_origin_fast
+                            } else {
+                                txt.autostart_bypass_label_ticket_origin
+                            },
+                        )
+                        val ticket = stringResource(
+                            txt.autostart_bypass_format_ticket,
+                            phase.result.whatText() ?: stringResource(txt.autostart_bypass_title_error),
+                        )
+                        AutostartSecondaryButton(txt.autostart_common_btn_ticket, {
+                            actions.onOpenTechRequest(origin, ticket)
+                        })
+                        AutostartTextButton(txt.autostart_common_btn_chat, actions.onOpenSupportChat)
                     }
                 }
             }

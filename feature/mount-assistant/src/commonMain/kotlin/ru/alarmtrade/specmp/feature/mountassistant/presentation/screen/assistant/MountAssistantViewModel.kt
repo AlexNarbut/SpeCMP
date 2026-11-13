@@ -679,34 +679,26 @@ class MountAssistantViewModel(
             is ResultRequest.Settings -> AssistantTopic.SETTINGS
         }
 
-    private fun AssistantAction.target(): AssistantNavigationTarget? = when (this) {
-        AssistantAction.FIRMWARE_UPDATE, AssistantAction.CAN_UPDATE -> AssistantNavigationTarget.FirmwareUpdate
-
-        AssistantAction.FIRMWARE_ARCHIVE -> null
-
-        AssistantAction.BYPASS_RUN -> AssistantNavigationTarget.BypassLearning
-
-        AssistantAction.CLONE_RUN -> AssistantNavigationTarget.Clone
-
-        AssistantAction.SETTINGS_ALL -> AssistantNavigationTarget.SettingsEditor()
-
-        AssistantAction.CONFIGURATOR -> AssistantNavigationTarget.Configurator
-
-        AssistantAction.STATE_FULL -> AssistantNavigationTarget.CheckState
-
-        AssistantAction.VEHICLES -> AssistantNavigationTarget.Vehicles
-
-        AssistantAction.SUPPORT -> AssistantNavigationTarget.SupportChat
-
-        AssistantAction.FIRMWARE_CHECK,
-        AssistantAction.AUTOSTART_STATUS,
-        AssistantAction.SETTINGS_FIND,
-        AssistantAction.SETTINGS_LOAD,
-        AssistantAction.STATE,
-        -> null
-    }
+    private fun AssistantAction.target(): AssistantNavigationTarget? = HandoffTargets[this]
 
     private companion object {
+        /** HANDOFF → экран; IN_FEED и архив (модуль выбирают в карточке прошивки) здесь не значатся. */
+        val HandoffTargets: Map<AssistantAction, AssistantNavigationTarget> = mapOf(
+            AssistantAction.FIRMWARE_UPDATE to AssistantNavigationTarget.FirmwareUpdate,
+            AssistantAction.CAN_UPDATE to AssistantNavigationTarget.FirmwareUpdate,
+            AssistantAction.BYPASS_RUN to AssistantNavigationTarget.BypassLearning,
+            AssistantAction.CLONE_RUN to AssistantNavigationTarget.Clone,
+            AssistantAction.SETTINGS_ALL to AssistantNavigationTarget.SettingsEditor(),
+            AssistantAction.CONFIGURATOR to AssistantNavigationTarget.Configurator,
+            AssistantAction.STATE_FULL to AssistantNavigationTarget.CheckState,
+            AssistantAction.SYSTEM_DEVICES to AssistantNavigationTarget.SystemDevices,
+            AssistantAction.PAIRING to AssistantNavigationTarget.Pairing,
+            AssistantAction.VEHICLES to AssistantNavigationTarget.Vehicles,
+            AssistantAction.TICKET_NEW to AssistantNavigationTarget.TechRequestNew,
+            AssistantAction.TICKETS to AssistantNavigationTarget.TechRequests,
+            AssistantAction.SUPPORT to AssistantNavigationTarget.SupportChat,
+        )
+
         val FACTS_TIMEOUT = 5.seconds
         const val RETURN_KEY = "return"
         const val LIVE_KEY = "live-search"
@@ -716,6 +708,11 @@ class MountAssistantViewModel(
         /** Экраны, которые блок обычно не меняют: карточка возврата — только если снимок изменился. */
         val QuietReturns = setOf(
             AssistantAction.SUPPORT,
+            AssistantAction.TICKET_NEW,
+            AssistantAction.TICKETS,
+            // Периферию снимок не видит: «без изменений» после приживления вводило бы в заблуждение.
+            AssistantAction.SYSTEM_DEVICES,
+            AssistantAction.PAIRING,
             AssistantAction.VEHICLES,
             AssistantAction.FIRMWARE_ARCHIVE,
             AssistantAction.CONFIGURATOR,

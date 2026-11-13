@@ -274,4 +274,8 @@
     <string name="devicestate_details_item_link">Связь</string>
     <string name="devicestate_details_item_extra">Дополнительно</string>
     <string name="devicestate_details_msg_no_extra">Нет дополнительных данных</string>
+    <string name="devicestate_tabs_item_commands">Команды</string>
+    <string name="devicestate_details_btn_open">Подробно: зоны, двигатель, связь</string>
+    <string name="devicestate_fast_btn_all_checks">Весь список</string>
+    <string name="devicestate_pult_btn_device_commands">Команды блоку</string>
 </resources>

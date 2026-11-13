@@ -37,10 +37,11 @@ const TOPICS = {
   bypass: { label: "Обход и Clone", icon: "key" },
   settings: { label: "Настройки", icon: "tune" },
   state: { label: "Состояние", icon: "speed" },
+  devices: { label: "Устройства", icon: "settings_remote" },
   cars: { label: "Автомобиль", icon: "directions_car" },
   support: { label: "Поддержка", icon: "support_agent" },
 };
-const TOPIC_ORDER = ["fw", "bypass", "settings", "state", "cars", "support"];
+const TOPIC_ORDER = ["fw", "bypass", "settings", "state", "devices", "cars", "support"];
 // t — тема; net — нужна сеть; can — нужен обновлённый CAN; ble — только Bluetooth.
 const A2 = {
   fw_check: { t: "fw", label: "Проверить прошивку", icon: "system_update", net: 1 },
@@ -57,19 +58,26 @@ const A2 = {
   state: { t: "state", label: "Состояние блока", icon: "speed", ble: 1 },
   state_more: { t: "state", label: "Проверка состояния", icon: "sensors", ble: 1 },
   cars: { t: "cars", label: "Выбрать автомобиль", icon: "directions_car" },
+  devices: { t: "devices", label: "Устройства системы", icon: "settings_remote", ble: 1 },
+  pairing: { t: "devices", label: "Приживить устройство", icon: "add_link", can: 1 },
+  ticket_new: { t: "support", label: "Заявка на техпомощь", icon: "phone_callback", net: 1 },
+  tickets: { t: "support", label: "Мои заявки", icon: "assignment", net: 1 },
   support: { t: "support", label: "Чат поддержки", icon: "support_agent" },
 };
-const TOPIC_ACTS = { fw: ["fw_update", "fw_check", "can_update", "archive"], bypass: ["bypass_status", "bypass_run", "clone_run"], settings: ["find", "load", "all_settings", "configurator"], state: ["state", "state_more"], cars: ["cars"], support: ["support"] };
+// Помощь после ошибки обхода / Clone / прошивки: заявка на техпомощь — первой, чат — вторым.
+const HELP_G = { items: [{ k: "ticket_new", label: "Заявка на техпомощь", icon: "phone_callback", primary: true }, { k: "support", label: "Чат поддержки", icon: "support_agent" }] };
+const TOPIC_ACTS = { fw: ["fw_update", "fw_check", "can_update", "archive"], bypass: ["bypass_status", "bypass_run", "clone_run"], settings: ["find", "load", "all_settings", "configurator"], state: ["state", "state_more"], devices: ["devices", "pairing"], cars: ["cars"], support: ["ticket_new", "tickets", "support"] };
 const INFEED = ["fw_check", "state", "bypass_status", "find", "load"];
 const QUICK2 = ["state", "load", "all_settings"];
-const UNSUP2 = ["fw_check", "fw_update", "archive", "cars", "support"];
+const UNSUP2 = ["fw_check", "fw_update", "archive", "cars", "ticket_new", "tickets", "support"];
 const KW = {
   fw: ["прошив", "обнов", "верси", "firmware", "загрузч", "can", "кан "],
   bypass: ["обход", "бесключ", "иммоб", "clone", "клон", "ключ"],
   settings: ["настро", "конфиг", "dxs", "парамет"],
   state: ["состоян", "датчик", "двер", "капот", "напряж", "питан", "багаж"],
   cars: ["автомоб", "машин", "марк"],
-  support: ["поддерж", "чат", "помощ", "специал"],
+  devices: ["устройств", "метк", "брелок", "реле", "прижив", "привяз", "датчик движ"],
+  support: ["поддерж", "чат", "помощ", "специал", "заявк", "звон", "перезвон"],
 };
 let SETS = null, SBY2 = null;
 const initData = () => { if (SETS) return; SETS = K.SETTINGS; SBY2 = Object.fromEntries(SETS.map((s) => [s.id, s])); };
@@ -99,7 +107,8 @@ function topicStatus(t, S) {
   if (t === "settings") return canF ? ["lock", "Нужно обновить CAN"] : changed ? ["ok", `Изменено: ${changed}`] : ["neutral", "Без изменений"];
   if (t === "state") return stateRead ? ["warn", "Капот открыт"] : ["neutral", "Не проверено"];
   if (t === "cars") return ["neutral", p.unsupported ? "Список марок" : "VW Polo 2020"];
-  return ["neutral", "Специалист на связи"];
+  if (t === "devices") return canF ? ["lock", "Нужно обновить CAN"] : p.transport === "ble" ? ["warn", "4 устройства · 1 вне зоны"] : ["neutral", "Метки, реле, датчики"];
+  return S.ticketNo ? ["ok", `Заявка №${S.ticketNo} · ждите звонка`] : ["neutral", "Заявка или чат"];
 }
 // Маршрут монтажа: CAN → прошивка → обход → Clone → состояние.
 function nextStep(S) {
@@ -421,6 +430,7 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   const [fwChecked, setFwChecked] = useState(long);
   const [stateRead, setStateRead] = useState(long && p.transport === "ble");
   const [changed, setChanged] = useState(long ? 1 : 0);
+  const [ticketNo, setTicketNo] = useState(null);
   const [vals, setVals] = useState(() => { const v = Object.fromEntries(SETS.map((s) => [s.id, s.value])); if (long) v.as_temp = true; return v; });
   const [pinOk, setPinOk] = useState(false);
   const clock = useRef(30), nid = useRef(1);
@@ -450,7 +460,7 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   const [hdr, setHdr] = useState("auto"), [scrolled, setScrolled] = useState(false);
   const feedRef = useRef(null), formRef = useRef(null), anchorY = useRef(0);
   const st = useRef({}); st.current = { lost, errMode, dev, vals, feed, canF, changed, pinOk };
-  const S = { p, dev, canF, online, fwChecked, stateRead, changed };
+  const S = { p, dev, canF, online, fwChecked, stateRead, changed, ticketNo };
   const avail = mkAvail(S);
   const ns = nextStep(S);
 
@@ -506,18 +516,18 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
     switch (k) {
       case "fw_update": return { title: "Прошивка", note: `Обновление ${fw} → ${LAST}`, outcomes: [
         { label: "Прошивка обновлена", boot: true, eff: () => setDev((d) => ({ ...d, fw: LAST })), res: { tone: "ok", title: `Прошивка обновлена до ${LAST}`, diffs: [["Основной блок", fw, LAST]], text: "Блок перезагружался в загрузчик. Сессия и лента восстановлены." }, topic: "fw" },
-        { label: "Связь пропала в загрузчике", boot: "fail", res: { tone: "error", title: "Прошивка не завершена", diffs: [["Основной блок", fw, "загрузчик"]], text: "Блок остался в режиме загрузчика. Подключите его снова и повторите обновление: экран прошивки продолжит с места остановки." }, topic: "fw" },
+        { label: "Связь пропала в загрузчике", boot: "fail", res: { tone: "error", title: "Прошивка не завершена", diffs: [["Основной блок", fw, "загрузчик"]], text: "Блок остался в режиме загрузчика. Подключите его снова и повторите обновление: экран прошивки продолжит с места остановки.", g: HELP_G }, topic: "fw" },
         { label: "Прервано монтажником", res: { tone: "stop", title: "Обновление прервано", text: `Версия осталась ${fw}.` }, topic: "fw" }] };
       case "can_update": return { title: "Прошивка", note: "Обновление CAN под код автомобиля", outcomes: [
         { label: "CAN обновлён", eff: () => setCanF(false), res: { tone: "ok", title: "CAN обновлён", diffs: [["CAN", "заводской", `${p.can} · ${p.canCode}`]], text: "Настройки, обход и Clone открыты." } },
         { label: "Прервано", res: { tone: "stop", title: "CAN не обновлён", text: "Блок остался с заводским CAN." }, topic: "fw" }] };
       case "bypass_run": return { title: "Бесключевой обход", outcomes: [
         { label: "Обход обучен", eff: () => setDev((d) => ({ ...d, bypass: true })), res: { tone: "ok", title: "Обход обучен", diffs: [["Бесключевой обход", "не обучен", "обучен"]], text: "Для этого автомобиля нужен Clone — он первым в теме." }, topic: "bypass" },
-        { label: "Ошибка обучения", res: { tone: "error", title: "Обход не обучен", text: "Ключ не распознан. Положите ключ рядом с кнопкой запуска и повторите." }, topic: "bypass" },
+        { label: "Ошибка обучения", res: { tone: "error", title: "Обход не обучен", text: "Ключ не распознан. Положите ключ рядом с кнопкой запуска и повторите. Не получается — оставьте заявку, специалист перезвонит.", g: HELP_G }, topic: "bypass" },
         { label: "Прервано монтажником", res: { tone: "stop", title: "Обход не завершён", text: "Обучение остановлено на шаге 3 из 5. Блок не изменён." }, topic: "bypass" }] };
       case "clone_run": return { title: "Процедура Clone", outcomes: [
         { label: "Clone выполнен", eff: () => setDev((d) => ({ ...d, clone: true, cloneLeft: d.cloneLeft - 1 })), res: { tone: "ok", title: "Clone выполнен", diffs: [["Clone", "не выполнен", "выполнен"], ["Попытки Clone", `${n} из 3`, `${n - 1} из 3`]] } },
-        { label: "Ошибка сервера", res: { tone: "error", title: "Clone не выполнен", text: "Сервер не вычислил ключ. Попытка не списана." }, topic: "bypass" },
+        { label: "Ошибка сервера", res: { tone: "error", title: "Clone не выполнен", text: "Сервер не вычислил ключ. Попытка не списана. Оставьте заявку — специалист перезвонит и разберёт ошибку.", g: HELP_G }, topic: "bypass" },
         { label: "Прервано монтажником", res: { tone: "stop", title: "Clone прерван", text: "Попытка не списана." }, topic: "bypass" }] };
       case "all_settings": return { title: "Настройки блока", outcomes: [
         { label: "Изменено и записано", eff: () => setChanged((c) => c + 2), res: { tone: "ok", title: "Настройки записаны", diffs: [["Изменено в сессии", String(s.changed), String(s.changed + 2)]] }, topic: "settings" },
@@ -527,6 +537,19 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
       case "configurator": return simple("Конфигуратор");
       case "cars": return simple("Автомобили");
       case "support": return simple("Чат техподдержки");
+      case "tickets": return simple("Заявки на техпомощь");
+      case "ticket_new": return { title: "Заявки на техпомощь", note: "Форма «Новая заявка»: имя и телефон из профиля, данные блока приложатся сами", outcomes: [
+        { label: "Заявка отправлена", eff: () => setTicketNo(10483), res: { tone: "ok", title: "Заявка №10483 отправлена", text: "Специалист перезвонит по номеру +7 912 345-67-89. Статус — в теме «Поддержка»." }, topic: "support" },
+        { label: "Много незакрытых заявок", res: { tone: "stop", title: "Заявка не отправлена", text: "У вас много незакрытых заявок. Дождитесь звонка или закройте лишние в «Мои заявки»." }, topic: "support" },
+        { label: "Закрыто без отправки", topic: "support" }] };
+      case "devices": return { title: "Устройства системы", outcomes: [
+        { label: "Посмотрел, всё на связи", res: { tone: "ok", title: "Устройства на связи", text: "4 устройства, проблем нет." }, topic: "devices" },
+        { label: "Метка вне зоны", res: { tone: "stop", title: "1 устройство требует внимания", text: "Метка 2 вне зоны. Поднесите её к блоку или приживите заново." }, topic: "devices" },
+        { label: "Назад без изменений", topic: "devices" }] };
+      case "pairing": return { title: "Приживление устройств", outcomes: [
+        { label: "Устройство приживлено", res: { tone: "ok", title: "Метка 3 приживлена", diffs: [["Метки", "2 из 4", "3 из 4"]] }, topic: "devices" },
+        { label: "Время вышло", res: { tone: "error", title: "Устройство не приживлено", text: "Блок не дождался устройства за 2 минуты. Проверьте батарею и повторите.", g: HELP_G }, topic: "devices" },
+        { label: "Назад без изменений", topic: "devices" }] };
       default: return null;
     }
   };
@@ -602,7 +625,7 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
       const tops = matchTopics(tq), singleTop = (k) => TOPIC_ACTS[A2[k].t].filter((x) => !avail(x).hidden).length === 1, acts = matchActions(tq, tops).filter((k) => !avail(k).hidden && !(tops.includes(A2[k].t) && singleTop(k))), sets = matchSettings(tq).slice(0, 6), fa = avail("find");
       const tiles = [...tops.map((t) => topicTile(t, sideMode)).filter(Boolean).map((x) => ({ ...x, grp: "Разделы" })), ...acts.map(tileFor).map((x) => ({ ...x, grp: "Действия" })), ...sets.map((s) => ({ id: "s-" + s.id, v: "setting", grp: "Настройки", title: s.name, sub: s.path, value: K.fmt(s, vals[s.id]), blocked: !fa.ok, reason: fa.reason, onClick: () => settingToFeed(s) }))];
       if (sets.length > 1) tiles.push({ id: "all", v: "action", grp: "Настройки", icon: "format_list_bulleted", title: `Все ${matchSettings(tq).length} настроек в ленту`, sub: "Список с правкой", onClick: submit });
-      if (!tiles.length) return { key: "s0", head: { kind: "search", title: "Ничего не найдено" }, tiles: add([tileFor("all_settings"), tileFor("support")].map((x) => ({ ...x, primary: false, grp: "Попробуйте" }))) };
+      if (!tiles.length) return { key: "s0", head: { kind: "search", title: "Ничего не найдено" }, tiles: add([tileFor("ticket_new"), tileFor("support")].map((x) => ({ ...x, primary: false, grp: "Попробуйте" }))) };
       return { key: "s", head: { kind: "search", title: `Найдено: ${tiles.filter((x) => x.id !== "all").length}` }, tiles: add(tiles) };
     }
     if (lvl.kind === "topic") {
@@ -614,7 +637,9 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
     return { key: "home", head: { kind: "home", title: "Пульт" }, tiles: add([hero, ...TOPIC_ORDER.map((t) => topicTile(t, sideMode))]) };
   };
 
-  const ctx = { look: "A", avail: () => ({ ok: true }), act: () => {}, patch, patchG: () => {}, retry, vals, online, toConfirm, write, openSetting, pickSource };
+  // Чипы в карточках ленты (помощь после ошибки) — живые: отмечают выбор и запускают действие.
+  const chipAct = (k, blockId) => { if (blockId) patch(blockId, (b) => ({ g: { ...b.g, used: k } })); act(k); };
+  const ctx = { look: "A", avail, act: chipAct, patch, patchG: (id, pt) => patch(id, (b) => ({ g: { ...b.g, ...pt } })), retry, vals, online, toConfirm, write, openSetting, pickSource };
   const onScroll = (e) => {
     const el = e.currentTarget, y = el.scrollTop, atBottom = el.scrollHeight - y - el.clientHeight < 32;
     setScrolled(y > 24);

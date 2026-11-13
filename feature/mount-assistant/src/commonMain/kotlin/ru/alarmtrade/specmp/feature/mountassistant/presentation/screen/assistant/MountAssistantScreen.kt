@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
@@ -61,8 +62,6 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.rememberCa
 
 internal enum class AssistantLayout { Compact, Medium, Expanded }
 
-private val MediumFrom = 600.dp
-private val ExpandedFrom = 840.dp
 private val SideWidth = 400.dp
 private val FeedMaxWide = 760.dp
 private val ResultsMaxWidth = 712.dp
@@ -100,8 +99,8 @@ internal fun AssistantBody(
     val submit = { actions.onSubmit(match.topics.firstOrNull()) }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val layout = when {
-            maxWidth < MediumFrom -> AssistantLayout.Compact
-            maxWidth < ExpandedFrom -> AssistantLayout.Medium
+            maxWidth < CmpBreakpoints.Medium -> AssistantLayout.Compact
+            maxWidth < CmpBreakpoints.Expanded -> AssistantLayout.Medium
             else -> AssistantLayout.Expanded
         }
         if (layout == AssistantLayout.Expanded) {

@@ -46,6 +46,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_un
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_unsupported
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_verifying
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_error_writing
+import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_format_ticket
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_hint_processing
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_hint_queue
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_how_lock
@@ -58,6 +59,8 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_sta
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_verifying
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_item_stage_writing
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_label_attempts
+import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_label_ticket_origin
+import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_label_ticket_origin_fast
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_attempts_unknown
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_attempts_zero
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_confirm
@@ -65,6 +68,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_conf
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_interrupted_check
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_interrupted_kept
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_locked
+import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_msg_ticket_no_attempts
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_subtitle_already
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_subtitle_not_supported
 import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_subtitle_start
@@ -80,6 +84,7 @@ import ru.alarmtrade.specmp.core.localization.resources.autostart_clone_title_ti
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_chat
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_close
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_retry
+import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_ticket
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_msg_pin
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_title_interrupted
 import ru.alarmtrade.specmp.core.localization.resources.autostart_status_format_clone
@@ -101,6 +106,7 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartPrimaryButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartScaffold
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartSecondaryButton
+import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.AutostartTextButton
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.BannerTone
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.ExitDialog
 import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.components.Headline
@@ -129,10 +135,17 @@ internal data class CloneActions(
     val onPinSubmit: (String) -> Unit = {},
     val onExitConfirm: () -> Unit = {},
     val onOpenSupportChat: () -> Unit = {},
+    val onOpenTechRequest: (origin: String, text: String) -> Unit = { _, _ -> },
 )
 
+/** [onOpenTechRequest] — «Заявка на техпомощь» при ошибке или без попыток: откуда открыто и текст для описания. */
 @Composable
-fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () -> Unit) {
+fun CloneEntry(
+    fromBypass: Boolean,
+    onBack: () -> Unit,
+    onOpenSupportChat: () -> Unit,
+    onOpenTechRequest: (origin: String, text: String) -> Unit,
+) {
     val viewModel = koinViewModel<CloneViewModel> { parametersOf(fromBypass) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     viewModel.sideEffect.collectSideEffect { effect ->
@@ -140,7 +153,7 @@ fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () ->
             CloneEffect.Close -> onBack()
         }
     }
-    val actions = remember(viewModel, onBack, onOpenSupportChat) {
+    val actions = remember(viewModel, onBack, onOpenSupportChat, onOpenTechRequest) {
         CloneActions(
             onBack = viewModel::onBack,
             onStart = viewModel::onStartClick,
@@ -152,6 +165,7 @@ fun CloneEntry(fromBypass: Boolean, onBack: () -> Unit, onOpenSupportChat: () ->
                 onBack()
             },
             onOpenSupportChat = onOpenSupportChat,
+            onOpenTechRequest = onOpenTechRequest,
         )
     }
     CloneContent(state = state, actions = actions, onClose = onBack)
@@ -166,6 +180,7 @@ fun CloneStep(
     onNext: () -> Unit,
     onBack: () -> Unit,
     onOpenSupportChat: () -> Unit,
+    onOpenTechRequest: (origin: String, text: String) -> Unit,
 ) {
     val viewModel = koinViewModel<CloneViewModel>(key = key) { parametersOf(false) }
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -174,7 +189,7 @@ fun CloneStep(
             CloneEffect.Close -> onBack()
         }
     }
-    val actions = remember(viewModel, onBack, onOpenSupportChat) {
+    val actions = remember(viewModel, onBack, onOpenSupportChat, onOpenTechRequest) {
         CloneActions(
             onBack = viewModel::onBack,
             onStart = viewModel::onStartClick,
@@ -183,6 +198,7 @@ fun CloneStep(
             onPinSubmit = viewModel::onPinSubmit,
             onExitConfirm = viewModel::onExitConfirm,
             onOpenSupportChat = onOpenSupportChat,
+            onOpenTechRequest = onOpenTechRequest,
         )
     }
     NavigationBackHandler(
@@ -417,6 +433,42 @@ private fun Tips(tips: List<String>) {
     }
 }
 
+/** Ошибка или нет попыток: повтор (если поможет) → заявка на техпомощь → закрыть → чат. */
+@Composable
+private fun ColumnScope.CloneHelpButtons(
+    result: CloneResult,
+    canStart: Boolean,
+    actions: CloneActions,
+    onClose: () -> Unit,
+    step: CloneStepMode?,
+) {
+    val origin = cloneTicketOrigin(step)
+    val ticket = if (result is CloneResult.Failed) {
+        stringResource(Strings.string.autostart_clone_format_ticket, failureText(result.failure))
+    } else {
+        stringResource(Strings.string.autostart_clone_msg_ticket_no_attempts)
+    }
+    val onTicket = { actions.onOpenTechRequest(origin, ticket) }
+    // Повтор — только там, где он может помочь, и пока есть попытки.
+    if (result is CloneResult.Failed && result.failure.retryable && canStart) {
+        AutostartPrimaryButton(Strings.string.autostart_common_btn_retry, actions.onStart)
+        AutostartSecondaryButton(Strings.string.autostart_common_btn_ticket, onTicket)
+    } else {
+        AutostartPrimaryButton(Strings.string.autostart_common_btn_ticket, onTicket)
+        AutostartSecondaryButton(Strings.string.autostart_common_btn_close, onClose)
+    }
+    AutostartTextButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
+}
+
+@Composable
+private fun cloneTicketOrigin(step: CloneStepMode?): String = stringResource(
+    if (step != null) {
+        Strings.string.autostart_clone_label_ticket_origin_fast
+    } else {
+        Strings.string.autostart_clone_label_ticket_origin
+    },
+)
+
 @Suppress("CyclomaticComplexMethod") // таблица соответствий ошибка → текст
 @Composable
 private fun failureText(failure: CloneFailure): String = when (failure) {
@@ -453,8 +505,12 @@ private fun footer(
                     modifier = Modifier.testTag(CLONE_START_TAG),
                 )
             } else {
-                AutostartPrimaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
-                AutostartSecondaryButton(Strings.string.autostart_clone_btn_start, onClick = {}, enabled = false)
+                val origin = cloneTicketOrigin(step)
+                val ticket = stringResource(Strings.string.autostart_clone_msg_ticket_no_attempts)
+                AutostartPrimaryButton(Strings.string.autostart_common_btn_ticket, {
+                    actions.onOpenTechRequest(origin, ticket)
+                })
+                AutostartTextButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
             }
         }
     }
@@ -483,16 +539,7 @@ private fun footer(
                     onClose,
                 )
 
-                // Повтор — только там, где он может помочь, и пока есть попытки.
-                result is CloneResult.Failed && result.failure.retryable && state.canStart -> {
-                    AutostartPrimaryButton(Strings.string.autostart_common_btn_retry, actions.onStart)
-                    AutostartSecondaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
-                }
-
-                else -> {
-                    AutostartPrimaryButton(Strings.string.autostart_common_btn_chat, actions.onOpenSupportChat)
-                    AutostartSecondaryButton(Strings.string.autostart_common_btn_close, onClose)
-                }
+                else -> CloneHelpButtons(result, state.canStart, actions, onClose, step)
             }
         }
     }
