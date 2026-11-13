@@ -1,0 +1,149 @@
+<!-- @dsCard group="Проверка состояния" viewport="1200x1000" name="Проверка состояния — раскладки (исследование)" subtitle="Планшет-ландшафт, раскладной телефон, телефон-ландшафт: как сейчас и предложение, расширенный и быстрый монтаж" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Spec — Проверка состояния: раскладки</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; color: #1b1d1e; min-height: 100vh; }
+  a { color: #1A3E7A; } a:hover { color: #07203F; }
+  .wrap { max-width: 1560px; margin: 0 auto; padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 28px; }
+  .toolbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 0; background: #c9ccce; }
+  .seg { display: flex; flex-wrap: wrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  h1 { font-size: 28px; margin: 0; }
+  h2 { font-size: 22px; margin: 0; }
+  .lead { font-size: 15px; line-height: 1.5; max-width: 900px; margin: 6px 0 0; color: #2b2f31; }
+  section { display: flex; flex-direction: column; gap: 14px; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .note { background: #fff; border-radius: 16px; padding: 14px 16px; font-size: 14px; line-height: 1.45; }
+  .note b { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .note.bad b { color: #a3261b; } .note.good b { color: #1d6b34; }
+  .note ul { margin: 0; padding-left: 18px; } .note li { margin: 3px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  figcaption { font: 600 13px var(--font-sans); display: flex; gap: 8px; align-items: center; }
+  .tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #fff; }
+  .tag.now { color: #8a3a00; } .tag.new { background: #1A3E7A; color: #fff; }
+  .dev { position: relative; background: #1b1d1e; padding: 10px; border-radius: 26px; box-shadow: 0 20px 50px rgba(0,0,0,.28); }
+  .scr { overflow: hidden; border-radius: 16px; background: var(--background); }
+  .hinge { position: absolute; pointer-events: none; z-index: 20; }
+  .hinge.v { top: 10px; bottom: 10px; width: 14px; transform: translateX(-50%); background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 45%, rgba(255,255,255,.12) 55%, rgba(0,0,0,0) 100%); }
+  .hinge.h { left: 10px; right: 10px; height: 14px; transform: translateY(-50%); background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 45%, rgba(255,255,255,.12) 55%, rgba(0,0,0,0) 100%); }
+  .demo { font-size: 13px; color: #3a3f44; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./CheckState.jsx"></script>
+<script type="text/babel">
+  const DEVICES = {
+    tab:   { w: 1280, h: 800, label: "Планшет-ландшафт 1280×800", s: 0.62 },
+    open:  { w: 690, h: 829, label: "Раскладной, разложен 690×829", s: 0.72, hinge: "v" },
+    rot:   { w: 829, h: 690, label: "Раскладной, разложен горизонтально 829×690", s: 0.72, hinge: "h" },
+    low:   { w: 915, h: 412, label: "Телефон-ландшафт 915×412", s: 0.8 },
+    cover: { w: 344, h: 882, label: "Раскладной, сложен 344×882", s: 0.62 },
+  };
+  const NOTES = {
+    tab: {
+      now: ["Команды показаны дважды: квадраты в пульте и полный список справа.", "Зоны (двери, капот, датчики) спрятаны во вкладках «Подробно» и уходят ниже первого экрана — а это главное, что монтажник проверяет.", "Показатели прижаты к машине и переносятся рваными рядами."],
+      new: ["Три колонки: машина и показатели | все зоны без вкладок | команды (расширенный) или чек-лист (быстрый).", "Каждая команда — один раз. В быстром монтаже команды не мешают чек-листу — «Команды блоку» открывают лист.", "Зоны видны целиком: двери, органы управления и датчики помещаются без прокрутки."],
+    },
+    open: {
+      now: ["Ширина 690 < 760 — экран считает себя телефоном: вкладки, машина и команды столбиком, половина экрана пустая.", "Сгиб проходит по середине машины и плиток.", "В быстром монтаже чек-лист и машина на разных вкладках — не видно, как задание реагирует на дверь."],
+      new: ["Две равные панели, граница — ровно по сгибу.", "Слева всегда «живое»: статус, машина, активные зоны, показатели.", "Справа вкладки: «Проверки» · «Команды» · «Подробно» — чек-лист и машина видны одновременно."],
+    },
+    rot: {
+      now: ["Двухколоночный режим включается, но показатели выстраиваются в один столбец, машина мелкая.", "Сгиб горизонтальный — режет обе колонки посередине."],
+      new: ["Те же две панели, что в разложенном виде: одна логика при повороте.", "Сгиб горизонтальный: обе колонки прокручиваются независимо, ключевое (статус, текущее задание) — в верхней половине."],
+    },
+    low: {
+      now: ["Высоты 412 не хватает: шапка + карточка статуса съедают половину экрана, машина обрезана, команд не видно.", "В быстром монтаже видна только первая строка чек-листа."],
+      new: ["Статус переехал в шапку (пилюля «Снято с охраны · 2 с»), карточки статуса нет.", "Слева машина боком + активные зоны + показатели. Справа: 6 крупных команд (расширенный) или текущее задание + «Далее» (быстрый).", "Всё остальное — в листах «Подробно» и «Весь список»."],
+    },
+    cover: {
+      now: ["Узкий экран — работает телефонная раскладка с вкладками. Менять не нужно."],
+      new: ["Без изменений: Compact."],
+    },
+  };
+  function Frame({ dev, mode, v, dark, k }) {
+    const D = DEVICES[dev];
+    const s = D.s;
+    return (
+      <div className="dev" style={{ width: D.w * s, height: D.h * s, boxSizing: "content-box" }}>
+        <div className="scr" style={{ width: D.w * s, height: D.h * s }}>
+          <div data-theme={dark ? "dark" : undefined} style={{ width: D.w, height: D.h, transform: `scale(${s})`, transformOrigin: "top left", background: "var(--background)" }}>
+            <window.CheckStateScreen key={k + dev + mode + v} mode={mode} layoutV={v} hingeAt={D.hinge === "v" ? D.w / 2 : undefined} onBack={() => {}} />
+          </div>
+        </div>
+        {D.hinge === "v" && <div className="hinge v" style={{ left: 10 + (D.w * s) / 2 }} />}
+        {D.hinge === "h" && <div className="hinge h" style={{ top: 10 + (D.h * s) / 2 }} />}
+      </div>
+    );
+  }
+  function Block({ dev, mode, show, dark, k }) {
+    const D = DEVICES[dev], N = NOTES[dev];
+    const same = dev === "cover";
+    return (
+      <section>
+        <h2>{D.label}</h2>
+        <div className="notes">
+          <div className="note bad"><b>Сейчас</b><ul>{N.now.map((x) => <li key={x}>{x}</li>)}</ul></div>
+          <div className="note good"><b>Предложение</b><ul>{N.new.map((x) => <li key={x}>{x}</li>)}</ul></div>
+        </div>
+        <div className="row">
+          {(show !== "new" || same) && <figure><figcaption><span className="tag now">Сейчас</span>{mode === "quick" ? "Быстрый монтаж" : "Расширенный монтаж"}</figcaption><Frame dev={dev} mode={mode} v="v1" dark={dark} k={k} /></figure>}
+          {show !== "now" && !same && <figure><figcaption><span className="tag new">Предложение</span>{mode === "quick" ? "Быстрый монтаж" : "Расширенный монтаж"}</figcaption><Frame dev={dev} mode={mode} v="v2" dark={dark} k={k} /></figure>}
+        </div>
+      </section>
+    );
+  }
+  function Seg({ items, value, onChange }) { return <div className="seg">{items.map(([k, l]) => <button key={k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}</div>; }
+  function App() {
+    const q = new URLSearchParams(location.search);
+    const [mode, setMode] = React.useState(q.get("mode") || "quick");
+    const [show, setShow] = React.useState("both");
+    const [dark, setDark] = React.useState(false);
+    const [only, setOnly] = React.useState("all");
+    const [k, setK] = React.useState(0);
+    const list = only === "all" ? Object.keys(DEVICES) : [only];
+    return (
+      <div className="wrap">
+        <div>
+          <h1>Проверка состояния: планшеты в ландшафте и раскладные телефоны</h1>
+          <p className="lead">Тот же экран и те же компоненты, меняется только раскладка. Раскладку выбирает размер окна (ширина <b>и высота</b>), а не тип устройства. Макеты живые: блок присылает данные раз в 3 с, команды удерживаются, в быстром монтаже задания отмечаются сами.</p>
+        </div>
+        <div className="toolbar">
+          <Seg items={[["advanced", "Расширенный монтаж"], ["quick", "Быстрый монтаж"]]} value={mode} onChange={setMode} />
+          <Seg items={[["both", "Сейчас и предложение"], ["now", "Только сейчас"], ["new", "Только предложение"]]} value={show} onChange={setShow} />
+          <Seg items={[["l", "Светлая"], ["d", "Тёмная"]]} value={dark ? "d" : "l"} onChange={(v) => setDark(v === "d")} />
+          <Seg items={[["all", "Все окна"], ...Object.entries(DEVICES).map(([key, v]) => [key, v.label.split(" ")[0] + " " + v.w + "×" + v.h])]} value={only} onChange={setOnly} />
+          <span className="demo">Действие в машине:</span>
+          <Seg items={[["door_fl", "Водит. дверь"], ["door_fr", "Пасс. дверь"], ["hood", "Капот"], ["trunk", "Багажник"], ["ign", "Зажигание"]]} value={null} onChange={(z) => window.dispatchEvent(new CustomEvent("cs-demo", { detail: z }))} />
+          <div className="seg"><button onClick={() => setK((x) => x + 1)}>↻ Сброс</button></div>
+        </div>
+        <section>
+          <h2>Правило выбора раскладки</h2>
+          <div className="notes">
+            <div className="note"><b>Compact · ширина &lt; 600</b>Телефон и сложенный раскладной. Вкладки «Пульт / Подробно» (+ «Проверки»). Без изменений.</div>
+            <div className="note"><b>Низкое окно · высота &lt; 520</b>Телефон-ландшафт. Статус в шапке, слева машина, справа команды или текущее задание. Остальное — в листах.</div>
+            <div className="note"><b>Две панели · ширина 600–1099</b>Раскладной разложен (обе ориентации), планшет-портрет. Панели равные, граница по сгибу. Слева «живое», справа вкладки.</div>
+            <div className="note"><b>Три колонки · ширина ≥ 1100</b>Планшет-ландшафт, Desktop. Машина | зоны | команды или чек-лист. Каждая команда — один раз.</div>
+          </div>
+        </section>
+        {list.map((dev) => <Block key={dev} dev={dev} mode={mode} show={show} dark={dark} k={k} />)}
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

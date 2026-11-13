@@ -56,7 +56,7 @@
             <div className="win" data-theme={s.dark ? "dark" : undefined} style={{ width: w, height: h + 38 }}>
               <div className="titlebar"><span>Pandora Спец — {s.lang === "en" ? "Tech support requests" : "Заявки на техпомощь"}</span><span>—  ▢  ✕</span></div>
               <div className="cbody">
-                <window.TechRequestsApp key={key + size} platform="desktop" lang={s.lang} grouping={s.grouping} wide="split" scenario={s.scenario} outcome={s.outcome} />
+                <window.TechRequestsApp key={key + size} platform="desktop" lang={s.lang} grouping={s.grouping} wide="split" scenario={s.scenario} outcome={s.outcome} prefill={s.prefill} />
               </div>
             </div>
           </div>

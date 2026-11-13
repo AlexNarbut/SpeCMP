@@ -7,7 +7,6 @@ enum class MainNavigationTarget {
     FirmwareArchive,
     Cars,
     CanScanner,
-    Requests,
     Feedback,
     ProductInfo,
     TechSupportChat,

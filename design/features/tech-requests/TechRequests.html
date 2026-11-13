@@ -42,7 +42,7 @@
         <window.TrToolbar s={s} set={set} reset={reset} links={[["tech-requests-tablet", "Планшет →"], ["tech-requests-desktop", "Desktop →"], ["tech-requests-states", "Все состояния →"]]} />
         <window.AndroidDevice dark={s.dark} width={412} height={860}>
           <div data-theme={s.dark ? "dark" : undefined} style={{ height: "100%" }}>
-            <window.TechRequestsApp key={key} platform="mobile" lang={s.lang} grouping={s.grouping} wide={s.wide} scenario={s.scenario} outcome={s.outcome} />
+            <window.TechRequestsApp key={key} platform="mobile" lang={s.lang} grouping={s.grouping} wide={s.wide} scenario={s.scenario} outcome={s.outcome} prefill={s.prefill} />
           </div>
         </window.AndroidDevice>
       </React.Fragment>

@@ -454,8 +454,6 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
             VehicleSelectRoute(VehicleSelectRequest(VehicleSelectMode.VIEW, VehicleCatalog.ALL, device = null)),
         )
 
-        MainNavigationTarget.Requests -> backStack.navigateSafe(SupportChatRoute)
-
         MainNavigationTarget.TechSupportChat -> backStack.navigateSafe(SupportChatRoute)
 
         MainNavigationTarget.TechRequests -> backStack.navigateSafe(TechRequestsRoute)

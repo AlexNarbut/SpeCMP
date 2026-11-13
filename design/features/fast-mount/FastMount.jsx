@@ -921,7 +921,7 @@ function FastMountApp({ preset = "F1", conn: connProp = "ble", bypassResult = "c
       </Hero>;
       if (vv === "start") dock = <Dock wide={wide}><MainBtn text={isC ? "Начать Clone" : "Начать обучение"} icon="play_arrow" onClick={() => go(screen, "run")} /></Dock>;
       if (vv === "ok" || vv === "clone") dock = <Dock wide={wide}><MainBtn text="Далее" icon="arrow_forward" onClick={() => startReboot(screen, nextAfter(screen, conn, cloneNeeded))} /></Dock>;
-      if (vv === "error") dock = <Dock wide={wide} note="Шаг нельзя пропустить"><MainBtn text="Повторить" icon="refresh" onClick={() => go(screen, "start")} /><MainBtn outlined text="Написать в поддержку" icon="support_agent" onClick={() => window.psGo && window.psGo("support-chat")} /></Dock>;
+      if (vv === "error") dock = <Dock wide={wide} note="Шаг нельзя пропустить"><MainBtn text="Повторить" icon="refresh" onClick={() => go(screen, "start")} /><MainBtn outlined text="Заявка на техпомощь" icon="phone_callback" onClick={() => window.psTicket && window.psTicket(isC ? "Быстрый монтаж · Clone" : "Быстрый монтаж · обход", `${T[0]}. ${T[1]}`)} /><TextBtn text="Написать в чат поддержки" icon="support_agent" fullWidth style={{ height: 48 }} onClick={() => window.psGo && window.psGo("support-chat")} /></Dock>;
       break;
     }
     case "slave": {

@@ -55,6 +55,8 @@
     'check-state':          'features/check-state/CheckState.html',
     'check-state-tablet':   'features/check-state/CheckStateTablet.html',
     'check-state-parts':    'features/check-state/CheckStateParts.html',
+    'check-state-layouts':  'features/check-state/CheckStateLayouts.html',
+    'check-state-foldable': 'features/check-state/CheckStateFoldable.html',
     'peripheral-devices':         'features/peripheral-devices/PeripheralDevices.html',
     'peripheral-devices-tablet':  'features/peripheral-devices/PeripheralDevicesTablet.html',
     'peripheral-devices-foldable': 'features/peripheral-devices/PeripheralDevicesFoldable.html',
@@ -81,6 +83,14 @@
     'tech-requests-tablet':  'features/tech-requests/TechRequestsTablet.html',
     'tech-requests-desktop': 'features/tech-requests/TechRequestsDesktop.html',
     'tech-requests-states':  'features/tech-requests/TechRequestsStates.html',
+  };
+
+  // Заявка на техпомощь из сценария (обход, Clone, ассистент): открывает форму «Новая заявка»
+  // с описанием проблемы. Вариант экрана — по текущему макету (Desktop / Tablet / mobile).
+  window.psTicket = function (from, text) {
+    var f = location.pathname;
+    var key = /Desktop/i.test(f) ? 'tech-requests-desktop' : /(Tablet|Wide|Foldable)/i.test(f) ? 'tech-requests-tablet' : 'tech-requests';
+    location.href = ROOT + LINKS[key] + '?new=1&from=' + encodeURIComponent(from || '') + '&text=' + encodeURIComponent(text || '');
   };
 
   window.PS_ROOT = ROOT;

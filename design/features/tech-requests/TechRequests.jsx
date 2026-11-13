@@ -61,6 +61,7 @@ const TR_I18N = {
     snackCloseFail: "Не удалось закрыть заявку: нет подключения к интернету",
     snackSendStopped: "Отправка остановлена. Если заявка успела уйти, она появится в списке.",
     formTitle: "Новая заявка", formSub: "Специалист перезвонит по указанному номеру",
+    fromNote: (f) => `Открыто из «${f}». Текст ошибки уже в описании — допишите, что делали.`,
     name: "Как к вам обращаться", phone: "Телефон для обратного звонка", problem: "Опишите проблему",
     problemPh: "Не запускается автозапуск после установки CAN-прошивки…",
     problemHelp: "Марка и модель авто, что уже пробовали",
@@ -102,6 +103,7 @@ const TR_I18N = {
     snackCloseFail: "Couldn't close the request: no internet connection",
     snackSendStopped: "Sending stopped. If the request already went through, it will appear in the list.",
     formTitle: "New request", formSub: "A specialist will call you at this number",
+    fromNote: (f) => `Opened from “${f}”. The error text is already in the description — add what you did.`,
     name: "Your name", phone: "Phone for the call back", problem: "Describe the problem",
     problemPh: "Remote start doesn't work after installing CAN firmware…",
     problemHelp: "Car make and model, what you've already tried",
@@ -549,7 +551,7 @@ function TrSuccess({ t, no, phone, onDone }) {
 
 // ── Форма «Новая заявка» ─────────────────────────────────────────────────────
 // kind: "page" (телефон, полноэкранная) | "dialog" (широкое окно) | "panel" (split, справа от списка)
-function TrForm({ kind, t, platform, values, setValues, attempted, phase, stage, errorKind, newNo,
+function TrForm({ kind, t, platform, values, setValues, attempted, phase, stage, errorKind, newNo, origin,
   onSubmit, onCancelSend, onDone, onRequestClose, onToList, onErrorAction, focusTick, attachOpen, setAttachOpen }) {
   const taRef = React.useRef(null);
   const errs = attempted ? trValidate(values, t) : {};
@@ -596,6 +598,12 @@ function TrForm({ kind, t, platform, values, setValues, attempted, phase, stage,
       {header}
       <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
         <div style={{ padding: `16px ${pad}px 20px`, display: "flex", flexDirection: "column", gap: 20 }}>
+          {origin && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderRadius: 16, background: "var(--secondary-container)", color: "var(--on-secondary-container)" }}>
+              <CmpIcon icon="link" size={22} color="currentColor" style={{ marginTop: 1 }} />
+              <CmpText variant="bodyMedium" color="currentColor" style={{ textWrap: "pretty" }}>{t.fromNote(origin)}</CmpText>
+            </div>
+          )}
           <CmpTextField label={t.name} value={values.name} onChange={set("name")} disabled={sending} isError={!!errs.name} supportingText={errs.name} singleLine
             leadingIcon={<CmpIcon icon="person" size={22} color="currentColor" />} autoComplete="name" />
           <CmpTextField label={t.phone} value={values.phone} onChange={set("phone")} disabled={sending} isError={!!errs.phone} supportingText={errs.phone} singleLine type="tel" inputMode="tel"
@@ -629,7 +637,7 @@ function TrForm({ kind, t, platform, values, setValues, attempted, phase, stage,
 }
 
 // ── Контроллер экрана ─────────────────────────────────────────────────────────
-function trInit(scenario, lang) {
+function trInit(scenario, lang, prefill) {
   const s = {
     items: TR_ITEMS, listState: "ready", formOpen: false, phase: "edit", stage: 0, errorKind: null, newNo: null,
     values: { name: TR_PROFILE.name[lang], phone: TR_PROFILE.phone, problem: "" }, attempted: false,
@@ -650,13 +658,15 @@ function trInit(scenario, lang) {
     case "busy": s.busy = { no: 10471, kind: "close" }; break;
     case "draft": s.formOpen = true; s.values = withText; s.draftAsk = true; break;
   }
+  if (prefill && prefill.text) { s.formOpen = true; s.values = { ...s.values, problem: prefill.text + " " }; }
   return s;
 }
 
-function TechRequestsApp({ lang = "ru", platform = "mobile", grouping = "sections", wide = "split", scenario = "list", outcome = "ok", freeze = false }) {
+function TechRequestsApp({ lang = "ru", platform = "mobile", grouping = "sections", wide = "split", scenario = "list", outcome = "ok", freeze = false, prefill = null }) {
   const t = TR_I18N[lang];
   const { useState, useRef, useEffect } = React;
-  const init = React.useMemo(() => trInit(scenario, lang), []);
+  const init = React.useMemo(() => trInit(scenario, lang, prefill), []);
+  const [origin, setOrigin] = useState(prefill && prefill.from ? prefill.from : null);
   const [rootRef, mode, width] = useTrMode();
   const [items, setItems] = useState(init.items);
   const [listState, setListState] = useState(init.listState);
@@ -723,7 +733,7 @@ function TechRequestsApp({ lang = "ru", platform = "mobile", grouping = "section
     setPhase("edit"); setStage(0); showSnack(t.snackSendStopped);
   };
   const resetForm = () => {
-    setPhase("edit"); setStage(0); setErrorKind(null); setAttempted(false);
+    setPhase("edit"); setStage(0); setErrorKind(null); setAttempted(false); setOrigin(null);
     setValues({ name: TR_PROFILE.name[lang], phone: TR_PROFILE.phone, problem: "" });
   };
   const onDone = () => {
@@ -824,7 +834,7 @@ function TechRequestsApp({ lang = "ru", platform = "mobile", grouping = "section
   );
 
   const formProps = {
-    t, platform, values, setValues, attempted, phase, stage, errorKind, newNo, focusTick, attachOpen, setAttachOpen,
+    t, platform, values, setValues, attempted, phase, stage, errorKind, newNo, focusTick, attachOpen, setAttachOpen, origin,
     onSubmit: () => runSend(false), onCancelSend: cancelSend, onDone: split ? () => { const no = newNo; resetForm(); setHighlight(no); later(() => setHighlight(null), 4000); } : onDone,
     onRequestClose: split ? undefined : requestClose, onToList: toList, onErrorAction: () => runSend(false),
   };
