@@ -62,6 +62,7 @@ val specialistModule = module {
     single { get<SpecialistApp>().appUpdatesInteractor }
     single { get<SpecialistApp>().userInteractor }
     single { get<SpecialistApp>().chatInteractor }
+    single { get<SpecialistApp>().techSupportInteractor }
     single { get<SpecialistApp>().filesInteractor }
     single { get<SpecialistApp>().bluetoothConnectorInteractor }
     single { get<SpecialistApp>().usbConnectorInteractor }

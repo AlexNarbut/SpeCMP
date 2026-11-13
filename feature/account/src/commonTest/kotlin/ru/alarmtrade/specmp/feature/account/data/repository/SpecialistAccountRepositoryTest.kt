@@ -29,9 +29,9 @@ class SpecialistAccountRepositoryTest {
     )
 
     @Test
-    fun `profile takes the full name and the login as email`() = runTest {
+    fun `profile takes the full name, the login as email and the phone`() = runTest {
         assertEquals(
-            Response.Success(AccountProfile(name = "Иван Иванов", email = "ivan@mail.ru")),
+            Response.Success(AccountProfile(name = "Иван Иванов", email = "ivan@mail.ru", phone = "+79000000000")),
             repository.currentProfile(),
         )
     }
