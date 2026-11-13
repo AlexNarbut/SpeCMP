@@ -27,7 +27,7 @@
     <string name="mountassistant_search_value_keywords_settings">setting,config,dxs,param</string>
     <string name="mountassistant_search_value_keywords_state">state,sensor,door,hood,voltage,power,trunk</string>
     <string name="mountassistant_search_value_keywords_vehicle">vehicle,car,brand,make</string>
-    <string name="mountassistant_search_value_keywords_support">support,chat,help,specialist</string>
+    <string name="mountassistant_search_value_keywords_support">support,chat,help,specialist,request,call</string>
     <string name="mountassistant_topic_title_firmware">Firmware</string>
     <string name="mountassistant_topic_title_autostart">Bypass and Clone</string>
     <string name="mountassistant_topic_title_settings">Settings</string>
@@ -66,7 +66,7 @@
     <string name="mountassistant_status_label_state_warnings">Attention: %1$d</string>
     <string name="mountassistant_status_label_state_ok">All good</string>
     <string name="mountassistant_status_label_vehicle">Vehicle list</string>
-    <string name="mountassistant_status_label_support">A specialist is online</string>
+    <string name="mountassistant_status_label_support">Request or chat</string>
     <string name="mountassistant_next_msg_unknown_model_firmware">Firmware is available for this model</string>
     <string name="mountassistant_next_msg_unknown_model_support">The model is not in the database</string>
     <string name="mountassistant_next_msg_factory_can">Factory CAN locks settings, bypass and Clone</string>
@@ -213,4 +213,12 @@
     <string name="mountassistant_header_btn_can_update">Update CAN</string>
     <string name="mountassistant_header_a11y_expand">Expand the unit header</string>
     <string name="mountassistant_header_a11y_collapse">Collapse the header</string>
+    <string name="mountassistant_topic_title_devices">Devices</string>
+    <string name="mountassistant_search_value_keywords_devices">device,tag,fob,relay,pair,bind,motion sensor</string>
+    <string name="mountassistant_action_title_system_devices">System devices</string>
+    <string name="mountassistant_action_title_pairing">Pair a device</string>
+    <string name="mountassistant_action_title_ticket_new">Tech support request</string>
+    <string name="mountassistant_action_title_tickets">My requests</string>
+    <string name="mountassistant_status_label_devices">Tags, relays, sensors</string>
+    <string name="mountassistant_return_msg_help">Didn't work? Leave a request and a specialist will call you back and sort out the error.</string>
 </resources>

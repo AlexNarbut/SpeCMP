@@ -12,10 +12,21 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TopicStatusKind
 
 fun topicStatus(topic: AssistantTopic, facts: DeviceFacts, progress: MountProgress): TopicStatus = when (topic) {
     AssistantTopic.FIRMWARE -> firmwareStatus(facts, progress)
+
     AssistantTopic.AUTOSTART -> autostartStatus(facts, progress.autostart)
+
     AssistantTopic.SETTINGS -> settingsStatus(facts, progress)
+
     AssistantTopic.STATE -> stateStatus(progress)
+
+    AssistantTopic.DEVICES -> if (facts.factoryCan) {
+        TopicStatus(StatusTone.LOCK, TopicStatusKind.CanLocked)
+    } else {
+        TopicStatus(StatusTone.NEUTRAL, TopicStatusKind.Devices)
+    }
+
     AssistantTopic.VEHICLE -> TopicStatus(StatusTone.NEUTRAL, TopicStatusKind.Vehicle)
+
     AssistantTopic.SUPPORT -> TopicStatus(StatusTone.NEUTRAL, TopicStatusKind.Support)
 }
 

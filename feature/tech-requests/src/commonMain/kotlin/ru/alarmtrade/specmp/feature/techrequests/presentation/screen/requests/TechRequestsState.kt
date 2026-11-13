@@ -41,7 +41,7 @@ internal data class AttachedDevice(val model: String, val firmware: String)
 
 /** Заявка из другого сценария: форма открыта, описание начинается с текста ошибки. */
 @Immutable
-internal data class DraftPrefill(val origin: String, val text: String)
+internal data class DraftPrefill(val origin: String?, val text: String)
 
 @Immutable
 internal data class ContactPrefill(val name: String = "", val phoneDigits: String = "")
@@ -85,7 +85,7 @@ internal sealed interface TechRequestsDialog {
 
 internal fun DraftPrefill?.initialState(language: AppLocale): TechRequestsState = TechRequestsState(
     language = language,
-    form = TechRequestForm(issue = this?.text?.let { "$it " }.orEmpty()),
+    form = TechRequestForm(issue = this?.text?.takeIf { it.isNotBlank() }?.let { "$it " }.orEmpty()),
     formOpen = this != null,
     origin = this?.origin,
 )

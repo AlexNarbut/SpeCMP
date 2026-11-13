@@ -142,7 +142,7 @@ private fun searchDock(
         if (settingsShown.size > 1) add(DockTile.SearchAll(settingsShown.size))
     }
     if (tiles.isEmpty()) {
-        val fallback = listOf(AssistantAction.SETTINGS_ALL, AssistantAction.SUPPORT)
+        val fallback = listOf(AssistantAction.TICKET_NEW, AssistantAction.SUPPORT)
             .mapNotNull(action).map { it.copy(primary = false) }
         return DockUi(DockHead.Nothing, fallback.toImmutableList())
     }

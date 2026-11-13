@@ -1,5 +1,6 @@
 package ru.alarmtrade.specmp.feature.mountassistant.presentation.components
 
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SettingsSourceKind
 
@@ -16,4 +17,6 @@ internal class FeedCallbacks(
     val onWrite: (Long) -> Unit,
     val onWriteCancel: (Long) -> Unit,
     val onSourcePick: (Long, SettingsSourceKind) -> Unit,
+    /** Чипы помощи в карточке (заявка на техпомощь, чат) — то же, что действие пульта. */
+    val onAction: (AssistantAction) -> Unit,
 )

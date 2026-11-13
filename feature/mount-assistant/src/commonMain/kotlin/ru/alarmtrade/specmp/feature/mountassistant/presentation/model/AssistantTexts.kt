@@ -13,12 +13,16 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_ti
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_check
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_update_to
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_pairing
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_settings_all
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_settings_find
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_settings_load
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_state
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_state_full
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_support
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_system_devices
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_ticket_new
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_tickets
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_vehicles
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_block_label_factory_can
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_block_label_no_network
@@ -38,6 +42,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_unknown_model_firmware
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_next_msg_unknown_model_support
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_autostart
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_devices
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_firmware
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_settings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_value_keywords_state
@@ -48,6 +53,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_la
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_bypass_not_learned
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_can_locked
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_clone_needed
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_devices
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_factory_can
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_firmware_actual
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_firmware_unchecked
@@ -61,6 +67,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_la
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_support
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_status_label_vehicle
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_topic_title_autostart
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_topic_title_devices
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_topic_title_firmware
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_topic_title_settings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_topic_title_state
@@ -81,6 +88,7 @@ private val AssistantTopic.title: StringResource
         AssistantTopic.AUTOSTART -> Strings.string.mountassistant_topic_title_autostart
         AssistantTopic.SETTINGS -> Strings.string.mountassistant_topic_title_settings
         AssistantTopic.STATE -> Strings.string.mountassistant_topic_title_state
+        AssistantTopic.DEVICES -> Strings.string.mountassistant_topic_title_devices
         AssistantTopic.VEHICLE -> Strings.string.mountassistant_topic_title_vehicle
         AssistantTopic.SUPPORT -> Strings.string.mountassistant_topic_title_support
     }
@@ -91,6 +99,7 @@ private val AssistantTopic.keywords: StringResource
         AssistantTopic.AUTOSTART -> Strings.string.mountassistant_search_value_keywords_autostart
         AssistantTopic.SETTINGS -> Strings.string.mountassistant_search_value_keywords_settings
         AssistantTopic.STATE -> Strings.string.mountassistant_search_value_keywords_state
+        AssistantTopic.DEVICES -> Strings.string.mountassistant_search_value_keywords_devices
         AssistantTopic.VEHICLE -> Strings.string.mountassistant_search_value_keywords_vehicle
         AssistantTopic.SUPPORT -> Strings.string.mountassistant_search_value_keywords_support
     }
@@ -110,7 +119,11 @@ private val AssistantAction.title: StringResource
         AssistantAction.CONFIGURATOR -> Strings.string.mountassistant_action_title_configurator
         AssistantAction.STATE -> Strings.string.mountassistant_action_title_state
         AssistantAction.STATE_FULL -> Strings.string.mountassistant_action_title_state_full
+        AssistantAction.SYSTEM_DEVICES -> Strings.string.mountassistant_action_title_system_devices
+        AssistantAction.PAIRING -> Strings.string.mountassistant_action_title_pairing
         AssistantAction.VEHICLES -> Strings.string.mountassistant_action_title_vehicles
+        AssistantAction.TICKET_NEW -> Strings.string.mountassistant_action_title_ticket_new
+        AssistantAction.TICKETS -> Strings.string.mountassistant_action_title_tickets
         AssistantAction.SUPPORT -> Strings.string.mountassistant_action_title_support
     }
 
@@ -148,6 +161,7 @@ internal fun statusText(kind: TopicStatusKind): String = when (kind) {
     is TopicStatusKind.Autostart -> autostartStatusText(kind)
     is TopicStatusKind.Settings -> settingsStatusText(kind)
     is TopicStatusKind.State -> stateStatusText(kind)
+    TopicStatusKind.Devices -> stringResource(Strings.string.mountassistant_status_label_devices)
     TopicStatusKind.Vehicle -> stringResource(Strings.string.mountassistant_status_label_vehicle)
     TopicStatusKind.Support -> stringResource(Strings.string.mountassistant_status_label_support)
 }

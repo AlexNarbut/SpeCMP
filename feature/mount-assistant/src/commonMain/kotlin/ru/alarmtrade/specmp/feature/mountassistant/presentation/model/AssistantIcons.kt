@@ -10,6 +10,7 @@ internal val AssistantTopic.icon: CmpIcons
         AssistantTopic.AUTOSTART -> CmpIcons.Key
         AssistantTopic.SETTINGS -> CmpIcons.Tune
         AssistantTopic.STATE -> CmpIcons.Speed
+        AssistantTopic.DEVICES -> CmpIcons.SettingsRemote
         AssistantTopic.VEHICLE -> CmpIcons.DirectionsCar
         AssistantTopic.SUPPORT -> CmpIcons.SupportAgent
     }
@@ -29,6 +30,10 @@ internal val AssistantAction.icon: CmpIcons
         AssistantAction.CONFIGURATOR -> CmpIcons.FolderOpen
         AssistantAction.STATE -> CmpIcons.Speed
         AssistantAction.STATE_FULL -> CmpIcons.Sensors
+        AssistantAction.SYSTEM_DEVICES -> CmpIcons.SettingsRemote
+        AssistantAction.PAIRING -> CmpIcons.AddLink
         AssistantAction.VEHICLES -> CmpIcons.DirectionsCar
+        AssistantAction.TICKET_NEW -> CmpIcons.Call
+        AssistantAction.TICKETS -> CmpIcons.FactCheck
         AssistantAction.SUPPORT -> CmpIcons.SupportAgent
     }

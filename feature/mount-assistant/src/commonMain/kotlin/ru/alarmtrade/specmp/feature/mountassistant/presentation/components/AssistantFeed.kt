@@ -176,7 +176,7 @@ private fun FeedEntry(entry: JournalEntry, facts: DeviceFacts, callbacks: FeedCa
             }
         }
 
-        is JournalEntry.Return -> ReturnCard(entry)
+        is JournalEntry.Return -> ReturnCard(entry, callbacks.onAction)
 
         is JournalEntry.Confirm -> ConfirmWriteCard(entry, callbacks)
 

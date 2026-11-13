@@ -39,6 +39,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_la
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_label_from
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_label_settings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_msg_checking
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_msg_help
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_msg_settings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_msg_settings_more
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_msg_unchanged
@@ -48,6 +49,8 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_ti
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_return_value_none
 import ru.alarmtrade.specmp.core.ui.theme.cmpDomainColors
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
@@ -57,6 +60,7 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.CanFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.JournalEntry
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SnapshotChange
@@ -68,7 +72,7 @@ private const val SUCCESS_TINT = 0.2f
 
 /** Возврат с другого экрана: сначала «Перечитываем блок», потом итог сравнения «до → после». */
 @Composable
-internal fun ReturnCard(entry: JournalEntry.Return) {
+internal fun ReturnCard(entry: JournalEntry.Return, onAction: (AssistantAction) -> Unit) {
     val colors = cmpThemeColors()
     val changes = entry.changes
     val (icon, tint, strip) = when {
@@ -136,10 +140,13 @@ internal fun ReturnCard(entry: JournalEntry.Return) {
                         if (names.isNotEmpty()) WrittenSettings(names)
                     }
 
-                    else -> CmpText(
-                        text = stringResource(Strings.string.mountassistant_return_msg_unchanged),
-                        style = CmpTextStyle.BodyLarge,
-                    )
+                    else -> {
+                        CmpText(
+                            text = stringResource(Strings.string.mountassistant_return_msg_unchanged),
+                            style = CmpTextStyle.BodyLarge,
+                        )
+                        if (entry.action in AssistantAction.NeedsHelpOnFailure) HelpChips(onAction)
+                    }
                 }
             }
         }
@@ -262,4 +269,32 @@ private fun canText(can: CanFacts?, none: String): String = when {
     can == null -> none
     can.factory -> stringResource(Strings.string.mountassistant_card_value_can_factory)
     else -> listOfNotNull(can.version, can.code).joinToString(" · ").ifEmpty { none }
+}
+
+/** Помощь, если на экране не получилось: заявка на техпомощь — основной путь, чат — второй. */
+@Composable
+private fun HelpChips(onAction: (AssistantAction) -> Unit) {
+    val colors = cmpThemeColors()
+    CmpColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CmpText(
+            text = stringResource(Strings.string.mountassistant_return_msg_help),
+            style = CmpTextStyle.Body,
+            color = colors.onSurfaceVariant,
+        )
+        CmpFlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            CmpButton(
+                text = actionTitle(AssistantAction.TICKET_NEW),
+                onClick = { onAction(AssistantAction.TICKET_NEW) },
+                modifier = Modifier.heightIn(min = 48.dp),
+            )
+            CmpOutlinedButton(
+                text = actionTitle(AssistantAction.SUPPORT),
+                onClick = { onAction(AssistantAction.SUPPORT) },
+                modifier = Modifier.heightIn(min = 48.dp),
+            )
+        }
+    }
 }

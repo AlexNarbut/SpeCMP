@@ -73,6 +73,8 @@ sealed interface TopicStatusKind {
     /** Заводской CAN закрывает обход, Clone и настройки. */
     data object CanLocked : Autostart, Settings
 
+    data object Devices : TopicStatusKind
+
     data object Vehicle : TopicStatusKind
 
     data object Support : TopicStatusKind

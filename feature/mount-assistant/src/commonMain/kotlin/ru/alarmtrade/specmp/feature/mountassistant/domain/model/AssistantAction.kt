@@ -1,6 +1,6 @@
 package ru.alarmtrade.specmp.feature.mountassistant.domain.model
 
-enum class AssistantTopic { FIRMWARE, AUTOSTART, SETTINGS, STATE, VEHICLE, SUPPORT }
+enum class AssistantTopic { FIRMWARE, AUTOSTART, SETTINGS, STATE, DEVICES, VEHICLE, SUPPORT }
 
 /** IN_FEED — ответ карточкой в журнале; HANDOFF — открывает экран другой фичи. */
 enum class ActionKind { IN_FEED, HANDOFF }
@@ -51,14 +51,26 @@ enum class AssistantAction(
     CONFIGURATOR(AssistantTopic.SETTINGS, ActionKind.HANDOFF, setOf(AssistantCapability.SETTINGS)),
     STATE(AssistantTopic.STATE, ActionKind.IN_FEED, bluetooth = true),
     STATE_FULL(AssistantTopic.STATE, ActionKind.HANDOFF, bluetooth = true),
+    SYSTEM_DEVICES(AssistantTopic.DEVICES, ActionKind.HANDOFF, bluetooth = true),
+    PAIRING(
+        AssistantTopic.DEVICES,
+        ActionKind.HANDOFF,
+        setOf(AssistantCapability.DYNAMIC_DEVICES),
+        updatedCan = true,
+    ),
     VEHICLES(AssistantTopic.VEHICLE, ActionKind.HANDOFF),
+    TICKET_NEW(AssistantTopic.SUPPORT, ActionKind.HANDOFF, network = true),
+    TICKETS(AssistantTopic.SUPPORT, ActionKind.HANDOFF, network = true),
     SUPPORT(AssistantTopic.SUPPORT, ActionKind.HANDOFF),
     ;
 
     companion object {
         /** Что доступно блоку, модели которого нет в базе. */
         val ForUnknownModel: Set<AssistantAction> =
-            setOf(FIRMWARE_CHECK, FIRMWARE_UPDATE, FIRMWARE_ARCHIVE, VEHICLES, SUPPORT)
+            setOf(FIRMWARE_CHECK, FIRMWARE_UPDATE, FIRMWARE_ARCHIVE, VEHICLES, TICKET_NEW, TICKETS, SUPPORT)
+
+        /** Возврат без изменений после этих экранов — предложить заявку на техпомощь и чат. */
+        val NeedsHelpOnFailure: Set<AssistantAction> = setOf(FIRMWARE_UPDATE, CAN_UPDATE, BYPASS_RUN, CLONE_RUN)
 
         /** Быстрые действия свёрнутого пульта. */
         val Quick: List<AssistantAction> = listOf(STATE, SETTINGS_LOAD, SETTINGS_ALL)

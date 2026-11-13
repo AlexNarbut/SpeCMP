@@ -280,7 +280,9 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                 )
             },
             assistant = { onBack, onOpenSection, onOpenSettings ->
-                AdvancedMountAssistant(device, firmwareBoot, onBack, onOpenSection, onOpenSettings)
+                AdvancedMountAssistant(device, firmwareBoot, onBack, onOpenSection, onOpenSettings) {
+                    backStack.navigateSafe(TechRequestsRoute(TechRequestPrefill(origin = null, text = "")))
+                }
             },
             resumeAssistantTitle = rememberAssistantResume(device),
         )

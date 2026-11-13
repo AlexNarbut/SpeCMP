@@ -40,10 +40,13 @@ import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.Te
 @SerialName("tech-requests.TechRequestsRoute")
 data class TechRequestsRoute(val prefill: TechRequestPrefill? = null) : NavKey
 
-/** [origin] — откуда открыта заявка («Бесключевой обход»), [text] — текст ошибки для описания; оба уже локализованы. */
+/**
+ * Сразу форма «Новая заявка». [origin] — откуда открыта («Бесключевой обход»; `null` — без плашки), [text] — текст
+ * ошибки для начала описания (пусто — пустое описание); оба уже локализованы.
+ */
 @Serializable
 @SerialName("tech-requests.TechRequestPrefill")
-data class TechRequestPrefill(val origin: String, val text: String)
+data class TechRequestPrefill(val origin: String?, val text: String)
 
 /** Список заявок и форма новой; [onConnectDevice] — к выбору блока, когда его нет. */
 @Composable

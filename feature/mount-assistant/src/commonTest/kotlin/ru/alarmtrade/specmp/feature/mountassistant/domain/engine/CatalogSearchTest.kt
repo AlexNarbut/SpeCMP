@@ -12,6 +12,7 @@ class CatalogSearchTest {
         AssistantTopic.AUTOSTART to "Обход и Clone",
         AssistantTopic.SETTINGS to "Настройки",
         AssistantTopic.STATE to "Состояние",
+        AssistantTopic.DEVICES to "Устройства",
         AssistantTopic.VEHICLE to "Автомобиль",
         AssistantTopic.SUPPORT to "Поддержка",
     )
@@ -25,6 +26,8 @@ class CatalogSearchTest {
     private val keywords = mapOf(
         AssistantTopic.AUTOSTART to listOf("обход", "бесключ", "clone"),
         AssistantTopic.STATE to listOf("датчик", "капот"),
+        AssistantTopic.DEVICES to listOf("метк", "прижив"),
+        AssistantTopic.SUPPORT to listOf("заявк", "звон"),
     )
 
     private fun match(query: String) = matchCatalog(query, actionLabels, topicLabels, keywords)
@@ -40,6 +43,12 @@ class CatalogSearchTest {
         val result = match("бесключевой обход")
         assertEquals(listOf(AssistantTopic.AUTOSTART), result.topics)
         assertEquals(AssistantAction.of(AssistantTopic.AUTOSTART), result.actions)
+    }
+
+    @Test
+    fun `request and pairing words find support and devices`() {
+        assertEquals(listOf(AssistantTopic.SUPPORT), match("оставить заявку").topics)
+        assertEquals(listOf(AssistantTopic.DEVICES), match("приживить метку").topics)
     }
 
     @Test

@@ -40,14 +40,14 @@ class DockUiTest {
     @Test
     fun `topic with a single action is shown without its action`() {
         val match = CatalogMatch(
-            topics = listOf(AssistantTopic.SUPPORT, AssistantTopic.FIRMWARE),
-            actions = listOf(AssistantAction.SUPPORT, AssistantAction.FIRMWARE_CHECK),
+            topics = listOf(AssistantTopic.VEHICLE, AssistantTopic.FIRMWARE),
+            actions = listOf(AssistantAction.VEHICLES, AssistantAction.FIRMWARE_CHECK),
         )
 
-        val keys = dock(query = "чат", match = match).tiles.map { it.key }
+        val keys = dock(query = "авто", match = match).tiles.map { it.key }
 
-        assertTrue("topic:SUPPORT" in keys)
-        assertTrue("action:SUPPORT" !in keys)
+        assertTrue("topic:VEHICLE" in keys)
+        assertTrue("action:VEHICLES" !in keys)
         assertTrue("action:FIRMWARE_CHECK" in keys)
     }
 

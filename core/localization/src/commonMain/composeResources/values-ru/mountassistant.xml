@@ -27,7 +27,7 @@
     <string name="mountassistant_search_value_keywords_settings">настро,конфиг,dxs,парамет</string>
     <string name="mountassistant_search_value_keywords_state">состоян,датчик,двер,капот,напряж,питан,багаж</string>
     <string name="mountassistant_search_value_keywords_vehicle">автомоб,машин,марк</string>
-    <string name="mountassistant_search_value_keywords_support">поддерж,чат,помощ,специал</string>
+    <string name="mountassistant_search_value_keywords_support">поддерж,чат,помощ,специал,заявк,звон,перезвон</string>
     <string name="mountassistant_topic_title_firmware">Прошивка</string>
     <string name="mountassistant_topic_title_autostart">Обход и Clone</string>
     <string name="mountassistant_topic_title_settings">Настройки</string>
@@ -66,7 +66,7 @@
     <string name="mountassistant_status_label_state_warnings">Внимание: %1$d</string>
     <string name="mountassistant_status_label_state_ok">Всё в норме</string>
     <string name="mountassistant_status_label_vehicle">Список марок</string>
-    <string name="mountassistant_status_label_support">Специалист на связи</string>
+    <string name="mountassistant_status_label_support">Заявка или чат</string>
     <string name="mountassistant_next_msg_unknown_model_firmware">Для этой модели доступна прошивка</string>
     <string name="mountassistant_next_msg_unknown_model_support">Модели нет в базе</string>
     <string name="mountassistant_next_msg_factory_can">Заводской CAN закрывает настройки, обход и Clone</string>
@@ -213,4 +213,12 @@
     <string name="mountassistant_header_btn_can_update">Обновить CAN</string>
     <string name="mountassistant_header_a11y_expand">Развернуть шапку блока</string>
     <string name="mountassistant_header_a11y_collapse">Свернуть шапку</string>
+    <string name="mountassistant_topic_title_devices">Устройства</string>
+    <string name="mountassistant_search_value_keywords_devices">устройств,метк,брелок,реле,прижив,привяз,датчик движ</string>
+    <string name="mountassistant_action_title_system_devices">Устройства системы</string>
+    <string name="mountassistant_action_title_pairing">Приживить устройство</string>
+    <string name="mountassistant_action_title_ticket_new">Заявка на техпомощь</string>
+    <string name="mountassistant_action_title_tickets">Мои заявки</string>
+    <string name="mountassistant_status_label_devices">Метки, реле, датчики</string>
+    <string name="mountassistant_return_msg_help">Не получилось? Оставьте заявку — специалист перезвонит и разберёт ошибку.</string>
 </resources>

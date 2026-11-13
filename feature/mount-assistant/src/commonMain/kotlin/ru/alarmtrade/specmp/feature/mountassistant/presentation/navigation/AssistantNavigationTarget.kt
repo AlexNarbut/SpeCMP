@@ -27,5 +27,14 @@ sealed interface AssistantNavigationTarget {
 
     data object Vehicles : AssistantNavigationTarget
 
+    data object SystemDevices : AssistantNavigationTarget
+
+    data object Pairing : AssistantNavigationTarget
+
+    /** Сразу форма «Новая заявка» на техпомощь. */
+    data object TechRequestNew : AssistantNavigationTarget
+
+    data object TechRequests : AssistantNavigationTarget
+
     data object SupportChat : AssistantNavigationTarget
 }

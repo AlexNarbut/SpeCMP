@@ -67,7 +67,10 @@ class AssistantRulesTest {
                 AssistantAction.FIRMWARE_ARCHIVE,
                 AssistantAction.STATE,
                 AssistantAction.STATE_FULL,
+                AssistantAction.SYSTEM_DEVICES,
                 AssistantAction.VEHICLES,
+                AssistantAction.TICKET_NEW,
+                AssistantAction.TICKETS,
                 AssistantAction.SUPPORT,
             ),
             shown,
@@ -135,11 +138,13 @@ class AssistantRulesTest {
                 AssistantTopic.FIRMWARE,
                 AssistantTopic.AUTOSTART,
                 AssistantTopic.SETTINGS,
+                AssistantTopic.DEVICES,
                 AssistantTopic.VEHICLE,
                 AssistantTopic.SUPPORT,
             ),
             list.map { it.topic },
         )
+        assertTrue(list.first { it.topic == AssistantTopic.DEVICES }.blocked)
         assertTrue(list.first { it.topic == AssistantTopic.AUTOSTART }.blocked)
         assertFalse(list.first { it.topic == AssistantTopic.SETTINGS }.blocked)
         assertFalse(list.first { it.topic == AssistantTopic.FIRMWARE }.blocked)
