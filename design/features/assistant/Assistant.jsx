@@ -60,14 +60,15 @@ const A2 = {
   cars: { t: "cars", label: "Выбрать автомобиль", icon: "directions_car" },
   devices: { t: "devices", label: "Устройства системы", icon: "settings_remote", ble: 1 },
   pairing: { t: "devices", label: "Приживить устройство", icon: "add_link", can: 1 },
+  product: { t: "devices", label: "Информация о товаре", icon: "manage_search", net: 1, kw: ["товар", "комплект", "серийн", "штрих", "упаков"] },
   ticket_new: { t: "support", label: "Заявка на техпомощь", icon: "phone_callback", net: 1 },
   tickets: { t: "support", label: "Мои заявки", icon: "assignment", net: 1 },
   support: { t: "support", label: "Чат поддержки", icon: "support_agent" },
 };
 // Помощь после ошибки обхода / Clone / прошивки: заявка на техпомощь — первой, чат — вторым.
 const HELP_G = { items: [{ k: "ticket_new", label: "Заявка на техпомощь", icon: "phone_callback", primary: true }, { k: "support", label: "Чат поддержки", icon: "support_agent" }] };
-const TOPIC_ACTS = { fw: ["fw_update", "fw_check", "can_update", "archive"], bypass: ["bypass_status", "bypass_run", "clone_run"], settings: ["find", "load", "all_settings", "configurator"], state: ["state", "state_more"], devices: ["devices", "pairing"], cars: ["cars"], support: ["ticket_new", "tickets", "support"] };
-const INFEED = ["fw_check", "state", "bypass_status", "find", "load"];
+const TOPIC_ACTS = { fw: ["fw_update", "fw_check", "can_update", "archive"], bypass: ["bypass_status", "bypass_run", "clone_run"], settings: ["find", "load", "all_settings", "configurator"], state: ["state", "state_more"], devices: ["devices", "pairing", "product"], cars: ["cars"], support: ["ticket_new", "tickets", "support"] };
+const INFEED = ["fw_check", "state", "bypass_status", "find", "load", "product"];
 const QUICK2 = ["state", "load", "all_settings"];
 const UNSUP2 = ["fw_check", "fw_update", "archive", "cars", "ticket_new", "tickets", "support"];
 const KW = {
@@ -84,7 +85,16 @@ const initData = () => { if (SETS) return; SETS = K.SETTINGS; SBY2 = Object.from
 const stemsOf = (q) => q.toLowerCase().split(/[\s,.;:!?«»"]+/).filter((w) => w.length >= 3).map((w) => w.slice(0, Math.min(w.length, 6)));
 const matchSettings = (q) => { const st = stemsOf(q); if (!st.length) return []; return SETS.map((s) => [s, st.filter((x) => (s.name + " " + s.path).toLowerCase().includes(x)).length]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([s]) => s); };
 const matchTopics = (q) => { const t = q.toLowerCase(), st = stemsOf(q); return TOPIC_ORDER.filter((k) => KW[k].some((w) => t.includes(w)) || st.some((x) => TOPICS[k].label.toLowerCase().includes(x))); };
-const matchActions = (q, tops) => { const st = stemsOf(q); return Object.keys(A2).filter((k) => tops.includes(A2[k].t) || st.some((x) => A2[k].label.toLowerCase().includes(x))); };
+const matchActions = (q, tops) => { const st = stemsOf(q), t = q.toLowerCase(); return Object.keys(A2).filter((k) => tops.includes(A2[k].t) || st.some((x) => A2[k].label.toLowerCase().includes(x)) || (A2[k].kw || []).some((w) => t.includes(w))); };
+// Номер в строке поиска (6+ цифр, пробелы и дефисы убираем) → «Информация о товаре №…».
+const numOf = (q) => { const d = q.replace(/[\s\-]/g, ""); return /^\d{6,20}$/.test(d) ? d : null; };
+// Короткая сводка для карточки журнала (данные — из ProductInfo.jsx).
+const productData = (id, mode) => {
+  if (mode === "notfound") return { notFound: true, id };
+  const r = window.piLookup ? window.piLookup(id, "kit7") : null;
+  if (!r) return { id, name: "Pandora DX-4GS" };
+  return { id, name: r.product.name, serial: r.product.serial, date: r.product.date, kit: r.kit && { name: r.kit.name, n: r.kit.comps.length } };
+};
 const fwData2 = (dev, canF) => ({ mods: [{ name: "Основной блок", cur: dev.fw, last: LAST }, { name: "Bluetooth", cur: "1.14", last: "1.14" }, { name: "CAN", cur: canF ? "заводской" : "12.05", last: "12.05" }] });
 
 function mkAvail(S) {
@@ -419,7 +429,7 @@ function PinDialog({ onOk, onCancel }) {
 }
 
 // ── Экран ────────────────────────────────────────────────────────────────────
-function AssistantScreen({ profile = "ble", canFactory = false, online = true, errMode = false, pinRequired = false, unsaved = 0, preset = "first", keyboardDemo = false, onBack, apiRef }) {
+function AssistantScreen({ profile = "ble", canFactory = false, online = true, errMode = false, pinRequired = false, unsaved = 0, preset = "first", keyboardDemo = false, productMode = "found", platform = "mobile", onBack, apiRef }) {
   initData();
   const p = K.PROFILES[profile] || K.PROFILES.ble;
   const long = preset === "long";
@@ -457,9 +467,10 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   const [lvl, setLvl] = useState(long ? { kind: "topic", t: "bypass" } : { kind: "home" });
   const [dir, setDir] = useState("a2-r");
   const [pulse, setPulse] = useState(null);
+  const [pi, setPi] = useState(null);
   const [hdr, setHdr] = useState("auto"), [scrolled, setScrolled] = useState(false);
   const feedRef = useRef(null), formRef = useRef(null), anchorY = useRef(0);
-  const st = useRef({}); st.current = { lost, errMode, dev, vals, feed, canF, changed, pinOk };
+  const st = useRef({}); st.current = { lost, errMode, dev, vals, feed, canF, changed, pinOk, productMode };
   const S = { p, dev, canF, online, fwChecked, stateRead, changed, ticketNo };
   const avail = mkAvail(S);
   const ns = nextStep(S);
@@ -474,12 +485,14 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
   useEffect(() => { const el = feedRef.current; if (!el || feed.length === lenRef.current) return; lenRef.current = feed.length; requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })); }, [feed.length]);
   useEffect(() => { if (long) setTimeout(() => { const el = feedRef.current; if (el) el.scrollTop = el.scrollHeight; }, 350); }, []);
 
-  const AFTER = { fw: () => { setFwChecked(true); openTopic("fw"); pulseT("fw"); }, state: () => { setStateRead(true); openTopic("state"); pulseT("state"); }, bypass: () => openTopic("bypass"), settings: () => openTopic("settings"), none: () => openTopic("settings") };
+  const AFTER = { product: () => openTopic("devices"), fw: () => { setFwChecked(true); openTopic("fw"); pulseT("fw"); }, state: () => { setStateRead(true); openTopic("state"); pulseT("state"); }, bypass: () => openTopic("bypass"), settings: () => openTopic("settings"), none: () => openTopic("settings") };
   const resolve = (id, kind, attempt, extra = {}) => setTimeout(() => {
     const s = st.current;
     if (s.lost) return patch(id, { status: "error", err: "Связь с блоком прервалась во время запроса. Повторите, когда блок снова на связи." });
     if (s.errMode && attempt === 0) return patch(id, { status: "error", err: "Блок не ответил за 10 секунд. Проверьте подключение и повторите." });
+    if (kind === "product" && s.productMode === "offline" && attempt === 0) return patch(id, { status: "error", errTone: "net", err: "Нет подключения к интернету. Информация о товаре загружается с сервера." });
     let data, k = kind;
+    if (kind === "product") data = productData(p.id, s.productMode);
     if (kind === "fw") data = fwData2(s.dev, s.canF);
     if (kind === "state") data = K.stateData();
     if (kind === "bypass") data = { ...s.dev };
@@ -564,6 +577,7 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
     if (k === "state") { push(step(k)); loadCard("state"); return; }
     if (k === "bypass_status") { push(step(k)); loadCard("bypass"); return; }
     if (k === "load") { push(step(k), mk({ t: "source" })); openTopic("settings"); return; }
+    if (k === "product") { push(step(k)); loadCard("product"); return; }
     const spec = navSpec(k); if (spec) { push(step(k)); leave(spec); }
   };
   const openSetting = (s) => {
@@ -579,8 +593,15 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
       mk({ t: "card", kind: "settings", status: "data", q: "", data: { found: [s] }, editing: s.type !== "other" ? s.id : null, draft: st.current.vals[s.id] }));
     openTopic("settings");
   };
+  const openProduct = (n) => { setKb(false); setPi({ n }); };
+  const productByNum = (n) => {
+    const av = avail("product");
+    if (!av.ok) { push(mk({ t: "msg", tone: "warn", title: av.reason, text: av.full })); return; }
+    setQ(""); push(mk({ t: "step", icon: "manage_search", path: ["Устройства", `Информация о товаре №${n}`], time: tick() })); openProduct(n);
+  };
   const submit = () => {
     const t = q.trim(); if (!t) return;
+    const num = numOf(t); if (num && !avail("product").hidden) return productByNum(num);
     const sets = matchSettings(t), tops = matchTopics(t);
     if (!sets.length && tops.length) { setQ(""); setKb(false); openTopic(tops[0]); return; }
     if (!avail("find").ok) return act("find");
@@ -623,7 +644,9 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
     const tq = noSearch ? "" : q.trim();
     if (tq) {
       const tops = matchTopics(tq), singleTop = (k) => TOPIC_ACTS[A2[k].t].filter((x) => !avail(x).hidden).length === 1, acts = matchActions(tq, tops).filter((k) => !avail(k).hidden && !(tops.includes(A2[k].t) && singleTop(k))), sets = matchSettings(tq).slice(0, 6), fa = avail("find");
-      const tiles = [...tops.map((t) => topicTile(t, sideMode)).filter(Boolean).map((x) => ({ ...x, grp: "Разделы" })), ...acts.map(tileFor).map((x) => ({ ...x, grp: "Действия" })), ...sets.map((s) => ({ id: "s-" + s.id, v: "setting", grp: "Настройки", title: s.name, sub: s.path, value: K.fmt(s, vals[s.id]), blocked: !fa.ok, reason: fa.reason, onClick: () => settingToFeed(s) }))];
+      const num = numOf(tq), pa = avail("product");
+      const numTiles = num && !pa.hidden ? [{ id: "pn", v: "action", grp: "Товар", icon: "manage_search", title: `Информация о товаре №${num}`, sub: "Откроет экран", nav: true, primary: pa.ok, blocked: !pa.ok, reason: pa.reason, onClick: () => productByNum(num) }] : [];
+      const tiles = [...numTiles, ...tops.map((t) => topicTile(t, sideMode)).filter(Boolean).map((x) => ({ ...x, grp: "Разделы" })), ...acts.map(tileFor).map((x) => ({ ...x, grp: "Действия" })), ...sets.map((s) => ({ id: "s-" + s.id, v: "setting", grp: "Настройки", title: s.name, sub: s.path, value: K.fmt(s, vals[s.id]), blocked: !fa.ok, reason: fa.reason, onClick: () => settingToFeed(s) }))];
       if (sets.length > 1) tiles.push({ id: "all", v: "action", grp: "Настройки", icon: "format_list_bulleted", title: `Все ${matchSettings(tq).length} настроек в ленту`, sub: "Список с правкой", onClick: submit });
       if (!tiles.length) return { key: "s0", head: { kind: "search", title: "Ничего не найдено" }, tiles: add([tileFor("ticket_new"), tileFor("support")].map((x) => ({ ...x, primary: false, grp: "Попробуйте" }))) };
       return { key: "s", head: { kind: "search", title: `Найдено: ${tiles.filter((x) => x.id !== "all").length}` }, tiles: add(tiles) };
@@ -639,7 +662,7 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
 
   // Чипы в карточках ленты (помощь после ошибки) — живые: отмечают выбор и запускают действие.
   const chipAct = (k, blockId) => { if (blockId) patch(blockId, (b) => ({ g: { ...b.g, used: k } })); act(k); };
-  const ctx = { look: "A", avail, act: chipAct, patch, patchG: (id, pt) => patch(id, (b) => ({ g: { ...b.g, ...pt } })), retry, vals, online, toConfirm, write, openSetting, pickSource };
+  const ctx = { look: "A", avail, act: chipAct, patch, openProduct, patchG: (id, pt) => patch(id, (b) => ({ g: { ...b.g, ...pt } })), retry, vals, online, toConfirm, write, openSetting, pickSource };
   const onScroll = (e) => {
     const el = e.currentTarget, y = el.scrollTop, atBottom = el.scrollHeight - y - el.clientHeight < 32;
     setScrolled(y > 24);
@@ -736,6 +759,7 @@ function AssistantScreen({ profile = "ble", canFactory = false, online = true, e
       {lost && <K.LostStub transport={p.transport} onRestore={() => { setLost(false); setPinOk(false); }} />}
       {boot && <BootOverlay boot={boot} />}
       {pinAsk != null && <PinDialog onOk={pinOkFn} onCancel={pinCancel} />}
+      {pi && window.ProductInfoApp && <div className="a2-r" style={{ position: "absolute", inset: 0, zIndex: 8 }}><window.ProductInfoApp entry="assistant" number={pi.n} platform={platform} onBack={() => setPi(null)} /></div>}
     </div>
   );
 }
@@ -759,7 +783,7 @@ function useKit() {
 function useCtl2(init) {
   const pr = new URLSearchParams(location.search).get("profile");
   const prof = ({ alarm: "ble", module: "usb", legacy: "unsupported" })[pr] || (["ble", "usb", "unsupported"].includes(pr) ? pr : "ble");
-  const [c, setC] = useState({ dark: false, profile: prof, can: "ok", net: "on", err: "off", pin: "off", uns: "off", preset: "first", kbd: "off", ...init });
+  const [c, setC] = useState({ dark: false, profile: prof, can: "ok", net: "on", err: "off", pin: "off", uns: "off", preset: "first", kbd: "off", pim: "found", ...init });
   return [c, (k) => (v) => setC((s) => ({ ...s, [k]: v }))];
 }
 function Toolbar2({ c, set, extra, onDrop }) {
@@ -781,6 +805,7 @@ function Toolbar2({ c, set, extra, onDrop }) {
         <Seg items={[["off", "Без ошибок"], ["on", "Ошибка с 1-й попытки"]]} value={c.err} onChange={set("err")} />
         <Seg items={[["off", "Запись без PIN"], ["on", "Запись по PIN"]]} value={c.pin} onChange={set("pin")} />
         <Seg items={[["off", "Редактор чистый"], ["on", "В редакторе 3 правки"]]} value={c.uns} onChange={set("uns")} />
+        <Seg items={[["found", "Товар: найден"], ["notfound", "Товар: не найден"], ["offline", "Товар: обрыв сети"]]} value={c.pim} onChange={set("pim")} />
         <button onClick={onDrop} style={{ border: "none", background: "#fff", borderRadius: 999, padding: "10px 16px", fontFamily: DF, fontSize: 13, fontWeight: 500, cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,.18)", color: "#93000A" }}>Обрыв связи во время загрузки</button>
       </div>
     </div>
@@ -795,6 +820,7 @@ const GUIDE2 = [
   ["PIN", "Включите «Запись по PIN», найдите «темп» → «Изменить» → «Далее» → «Записать»."],
   ["Правки в редакторе", "Включите «В редакторе 3 правки» и измените настройку: карточка предупредит и запишет только её."],
   ["USB", "Переключите на USB: без «Состояния», остальные темы и следующий шаг на месте."],
+  ["Информация о товаре", "«Устройства» → «Информация о товаре»: короткая карточка в ленте, «Подробнее» — полный экран. Введите в поиск 107131 — первой строкой «Информация о товаре №107131»."],
   ["Пульт свернуть", "Прокрутите ленту вверх: пульт сворачивается до быстрых действий."],
 ];
 function Guide2() {
@@ -811,7 +837,7 @@ function Guide2() {
     </div>
   );
 }
-const props2 = (c) => ({ profile: c.profile, canFactory: c.can === "factory", online: c.net === "on", errMode: c.err === "on", pinRequired: c.pin === "on", unsaved: c.uns === "on" ? 3 : 0, preset: c.preset, keyboardDemo: c.kbd === "on" });
+const props2 = (c) => ({ profile: c.profile, canFactory: c.can === "factory", online: c.net === "on", errMode: c.err === "on", pinRequired: c.pin === "on", unsaved: c.uns === "on" ? 3 : 0, preset: c.preset, keyboardDemo: c.kbd === "on", productMode: c.pim });
 const key2 = (c, x = "") => [c.profile, c.can, c.net, c.preset, c.kbd, x].join("|");
 
 function PhoneDemo2() {
@@ -835,7 +861,7 @@ function WideDemo2() {
     <div style={{ minHeight: "100vh", background: "#c9ccce", padding: "20px 24px 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
       <Toolbar2 c={c} set={set} onDrop={() => api.current && api.current.drop()} extra={<K.Seg items={Object.entries(W).map(([k, v]) => [k, v.l])} value={c.win} onChange={set("win")} />} />
       <div style={{ fontFamily: DF, fontSize: 13, color: "#444", maxWidth: 900, textAlign: "center" }}>С 840 dp пульт стоит слева постоянно: шапка блока, следующий шаг и темы; найденное при вводе появляется справа, над строкой поиска. На Medium (800 dp) пульт внизу, лента по центру.</div>
-      <K.WindowFrame win={win} dark={c.dark}><AssistantScreen key={key2(c, c.win)} {...props2(c)} keyboardDemo={false} apiRef={api} /></K.WindowFrame>
+      <K.WindowFrame win={win} dark={c.dark}><AssistantScreen key={key2(c, c.win)} {...props2(c)} keyboardDemo={false} platform={win.kind} apiRef={api} /></K.WindowFrame>
     </div>
   );
 }

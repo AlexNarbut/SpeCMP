@@ -84,6 +84,18 @@
     'tech-requests-tablet':  'features/tech-requests/TechRequestsTablet.html',
     'tech-requests-desktop': 'features/tech-requests/TechRequestsDesktop.html',
     'tech-requests-states':  'features/tech-requests/TechRequestsStates.html',
+    'product-info':          'features/product-info/ProductInfo.dc.html',
+    'product-info-wide':     'features/product-info/ProductInfoWide.dc.html',
+    'product-info-states':   'features/product-info/ProductInfoStates.dc.html',
+  };
+
+  // «Информация о товаре»: from = home | mount | assistant; n — номер (из монтажа/ассистента — ID блока).
+  // Вариант экрана — по текущему макету: Desktop → окно 1280×800, Tablet/Wide → планшет, иначе телефон.
+  window.psProduct = function (from, n) {
+    var f = location.pathname;
+    var wide = /(Desktop|Tablet|Wide|Foldable)/i.test(f);
+    var q = '?from=' + encodeURIComponent(from || 'home') + (n ? '&n=' + encodeURIComponent(n) : '') + (/Desktop/i.test(f) ? '&win=dk' : '');
+    location.href = ROOT + LINKS[wide ? 'product-info-wide' : 'product-info'] + q;
   };
 
   // Заявка на техпомощь из сценария (обход, Clone, ассистент): открывает форму «Новая заявка»

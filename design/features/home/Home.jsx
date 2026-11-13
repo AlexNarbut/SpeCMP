@@ -83,6 +83,8 @@ function HomeApp({
       const target = isDesktop ? "configurator-desktop" : "configurator";
       if (window.psHas && window.psHas(target)) window.psGo(target);
     }
+    // «Информация о товаре» → экран с пустым полем.
+    if (key === "product" && window.psProduct) window.psProduct("home");
   };
 
   // Desktop: check for a newer app build, then surface the update banner.
