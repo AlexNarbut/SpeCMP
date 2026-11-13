@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.ManageSearch
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.Redo
@@ -313,4 +314,5 @@ fun CmpIcons.imageVector(): ImageVector = when (this) {
     CmpIcons.Language -> Icons.Filled.Language
     CmpIcons.RadioButtonUnchecked -> Icons.Filled.RadioButtonUnchecked
     CmpIcons.Outbox -> Icons.Filled.Outbox
+    CmpIcons.ManageSearch -> Icons.AutoMirrored.Filled.ManageSearch
 }

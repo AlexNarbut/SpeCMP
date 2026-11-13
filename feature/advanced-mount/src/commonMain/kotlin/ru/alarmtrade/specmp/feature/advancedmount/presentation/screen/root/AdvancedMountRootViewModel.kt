@@ -122,7 +122,7 @@ class AdvancedMountRootViewModel(
     }
 
     fun onProductInfoClick() {
-        postSideEffect(AdvancedMountRootEffect.OpenProductInfo)
+        currentState.device?.let { postSideEffect(AdvancedMountRootEffect.OpenProductInfo(it.systemId)) }
     }
 
     private companion object {

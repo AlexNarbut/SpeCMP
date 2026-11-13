@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="productinfo_main_title_screen">Информация о товаре</string>
+    <string name="productinfo_common_a11y_back">Назад</string>
+    <string name="productinfo_search_label_query">ID устройства или цифры штрих-кода</string>
+    <string name="productinfo_search_placeholder_query">Например, 107131</string>
+    <string name="productinfo_search_btn_find">Найти</string>
+    <string name="productinfo_search_a11y_clear">Очистить</string>
+    <string name="productinfo_search_error_empty">Введите номер</string>
+    <string name="productinfo_search_error_not_digits">Только цифры</string>
+    <string name="productinfo_search_error_too_long">Слишком длинный номер</string>
+    <string name="productinfo_empty_title">Найдите товар по номеру</string>
+    <string name="productinfo_empty_msg">Покажем, что это за товар, какие прошивки стояли с завода и что должно быть в комплекте.</string>
+    <string name="productinfo_empty_label_device_id">ID устройства</string>
+    <string name="productinfo_empty_hint_device_id">На наклейке блока и в приложении при подключении</string>
+    <string name="productinfo_empty_label_barcode">Штрих-код</string>
+    <string name="productinfo_empty_hint_barcode">На коробке — цифры под штрихами</string>
+    <string name="productinfo_product_title">Товар</string>
+    <string name="productinfo_kit_title">Комплект</string>
+    <string name="productinfo_product_status_connected">Подключённый блок</string>
+    <string name="productinfo_common_label_id">ID</string>
+    <string name="productinfo_common_label_serial">Серийный номер</string>
+    <string name="productinfo_product_label_factory_date">Заводская дата</string>
+    <string name="productinfo_kit_label_package_date">Дата упаковки</string>
+    <string name="productinfo_common_label_firmwares">Прошивки</string>
+    <string name="productinfo_common_label_firmware">Прошивка</string>
+    <string name="productinfo_kit_label_contents">В комплекте</string>
+    <plurals name="productinfo_kit_label_components">
+        <item quantity="one">%1$d компонент</item>
+        <item quantity="few">%1$d компонента</item>
+        <item quantity="many">%1$d компонентов</item>
+        <item quantity="other">%1$d компонента</item>
+    </plurals>
+    <string name="productinfo_components_title">Компоненты · %1$d</string>
+    <string name="productinfo_components_btn_expand_all">Раскрыть все</string>
+    <string name="productinfo_components_btn_collapse_all">Свернуть все</string>
+    <string name="productinfo_components_label_name">Название</string>
+    <string name="productinfo_components_format_firmware">Прошивка %1$s</string>
+    <plurals name="productinfo_components_label_firmware_count">
+        <item quantity="one">%1$d прошивка</item>
+        <item quantity="few">%1$d прошивки</item>
+        <item quantity="many">%1$d прошивок</item>
+        <item quantity="other">%1$d прошивки</item>
+    </plurals>
+    <string name="productinfo_components_format_serial">S/N %1$s</string>
+    <string name="productinfo_components_format_id">ID %1$s</string>
+    <string name="productinfo_components_msg_no_serial">Без серийного номера</string>
+    <string name="productinfo_components_msg_no_firmware">Без прошивки</string>
+    <string name="productinfo_result_error_not_found">Товар с номером %1$s не найден</string>
+    <string name="productinfo_result_msg_not_found">Проверьте номер и попробуйте ещё раз.</string>
+    <string name="productinfo_result_error_server">Не удалось загрузить данные. Сервер не ответил.</string>
+    <string name="productinfo_result_btn_retry">Повторить</string>
+    <string name="productinfo_common_a11y_copy">Скопировать: %1$s</string>
+    <string name="productinfo_common_msg_copied">Скопировано: %1$s</string>
+</resources>

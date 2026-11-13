@@ -18,7 +18,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_a11y_back
-import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_title_product_info
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_extras_title_remote_sync
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_msg_stub
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_sections_subtitle_assistant
@@ -179,7 +178,6 @@ internal fun sectionPainter(section: MountSection): Painter = painterResource(se
 @Composable
 private fun extraTitle(extra: MountExtra): String = stringResource(
     when (extra) {
-        MountExtra.PRODUCT_INFO -> Strings.string.advancedmount_extras_title_product_info
         MountExtra.REMOTE_SYNC -> Strings.string.advancedmount_extras_title_remote_sync
     },
 )
@@ -197,7 +195,6 @@ internal fun SectionStubScreen(section: MountSection, deviceTitle: String, onBac
 @Composable
 internal fun ExtraStubScreen(extra: MountExtra, deviceTitle: String, onBack: () -> Unit) {
     val icon = when (extra) {
-        MountExtra.PRODUCT_INFO -> null
         MountExtra.REMOTE_SYNC -> painterResource(Res.drawable.mount_remote_sync)
     }
     StubScreen(title = extraTitle(extra), deviceTitle = deviceTitle, icon = icon, onBack = onBack)

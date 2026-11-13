@@ -170,4 +170,5 @@ enum class CmpIcons {
     Language,
     RadioButtonUnchecked,
     Outbox,
+    ManageSearch,
 }
