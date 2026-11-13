@@ -72,6 +72,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -84,8 +85,6 @@ import ru.alarmtrade.specmp.feature.device.autostart.ui.presentation.step.Autost
 
 enum class AutostartLayout { Compact, Medium, Expanded }
 
-private val MediumFrom = 600.dp
-private val ExpandedFrom = 840.dp
 private val MediumMaxWidth = 680.dp
 private val ExpandedMaxWidth = 1040.dp
 private val SideWidth = 360.dp
@@ -104,8 +103,8 @@ private const val TICK_MILLIS = 1_000L
 private const val ILLUSTRATION_RATIO = 800f / 550f
 
 internal fun autostartLayoutOf(width: Dp): AutostartLayout = when {
-    width < MediumFrom -> AutostartLayout.Compact
-    width < ExpandedFrom -> AutostartLayout.Medium
+    width < CmpBreakpoints.Medium -> AutostartLayout.Compact
+    width < CmpBreakpoints.Expanded -> AutostartLayout.Medium
     else -> AutostartLayout.Expanded
 }
 

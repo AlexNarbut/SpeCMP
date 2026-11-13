@@ -84,6 +84,7 @@ import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -103,7 +104,6 @@ import specmp.feature.device.peripherals.generated.resources.Res
 import specmp.feature.device.peripherals.generated.resources.peripherals_ic_menu_peripheral_devices
 
 private val WideFrom = 760.dp
-private val WidePanelFrom = 1100.dp
 private val ListMaxWidth = 640.dp
 private val CompactMaxWidth = 720.dp
 private val ButtonHeight = 56.dp
@@ -182,7 +182,7 @@ internal fun SystemDevicesContent(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val wide = maxWidth >= WideFrom
-        val panelWidth = if (maxWidth >= WidePanelFrom) 460.dp else 380.dp
+        val panelWidth = if (maxWidth >= CmpBreakpoints.Large) 460.dp else 380.dp
         CmpScaffold(
             topBar = { TopBar(state, actions, wide) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },

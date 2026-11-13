@@ -66,6 +66,7 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.hideKeyboardOnScroll
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBarStyle
@@ -152,8 +153,8 @@ fun SupportChatScreen(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val layoutMode = when {
-            maxWidth >= 840.dp -> SupportChatLayoutMode.Expanded
-            maxWidth >= 600.dp -> SupportChatLayoutMode.Medium
+            maxWidth >= CmpBreakpoints.Expanded -> SupportChatLayoutMode.Expanded
+            maxWidth >= CmpBreakpoints.Medium -> SupportChatLayoutMode.Medium
             else -> SupportChatLayoutMode.Compact
         }
 

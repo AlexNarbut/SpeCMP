@@ -104,6 +104,9 @@ import ru.alarmtrade.specmp.core.ui.view.icon.imageVector
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpWidthClass
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpWindowSize
+import ru.alarmtrade.specmp.core.ui.view.layout.cmpWindowSize
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTabItem
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTabRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -146,9 +149,6 @@ internal const val CHECK_STATE_TABS_TAG = "devicestate_tabs"
  */
 private enum class CheckStateLayout { Compact, Low, Split, Desk }
 
-private val SplitFrom = 600.dp
-private val DeskFrom = 1100.dp
-private val LowBelow = 520.dp
 private val WideDeskFrom = 1240.dp
 private const val ALARM_BORDER_MIN_ALPHA = 0.25f
 private const val ALARM_BORDER_MILLIS = 500
@@ -252,7 +252,7 @@ internal fun CheckStateContent(
         remember(actions) { { actions.onCommand(it.command) } }
     var sheet by rememberSaveable { mutableStateOf<PanelKind?>(null) }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val layout = checkStateLayout(maxWidth, maxHeight)
+        val layout = checkStateLayout(cmpWindowSize)
         CmpScaffold(
             topBar = { CheckStateTopBar(state, actions, fastMount, subtitle, layout) },
             snackbarHost = { CmpSnackbarHost(hostState = snackbar) },
@@ -291,10 +291,10 @@ internal fun CheckStateContent(
     CheckStateDialogs(state, actions)
 }
 
-private fun checkStateLayout(width: Dp, height: Dp): CheckStateLayout = when {
-    height < LowBelow && width >= SplitFrom -> CheckStateLayout.Low
-    width >= DeskFrom -> CheckStateLayout.Desk
-    width >= SplitFrom -> CheckStateLayout.Split
+private fun checkStateLayout(window: CmpWindowSize): CheckStateLayout = when {
+    window.isLowHeight -> CheckStateLayout.Low
+    window.atLeast(CmpWidthClass.Large) -> CheckStateLayout.Desk
+    window.atLeast(CmpWidthClass.Medium) -> CheckStateLayout.Split
     else -> CheckStateLayout.Compact
 }
 

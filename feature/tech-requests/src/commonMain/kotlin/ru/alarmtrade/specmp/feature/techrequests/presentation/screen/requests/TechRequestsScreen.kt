@@ -54,6 +54,8 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHost
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpWidthClass
+import ru.alarmtrade.specmp.core.ui.view.layout.cmpWindowSize
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
@@ -74,14 +76,12 @@ import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.su
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.subcomponents.TechRequestsEmpty
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.subcomponents.TechRequestsLoadError
 
-/** Compact < 600, Medium 600–839 (форма — диалог), Expanded ≥ 840 и desktop от 780 (список + панель формы). */
+/** Compact — список + FAB, Medium — форма диалогом, от Expanded (desktop — от 780) — список + панель формы. */
 private enum class TechRequestsLayout { Compact, Medium, Split }
 
 private const val SKELETON_COUNT = 4
 private const val LOAD_MORE_THRESHOLD = 3
-private val SplitFrom = 840.dp
 private val DesktopSplitFrom = 780.dp
-private val MediumFrom = 600.dp
 
 @Composable
 internal fun TechRequestsScreen(
@@ -92,9 +92,11 @@ internal fun TechRequestsScreen(
 ) {
     val keyboardHints = remember { showsKeyboardHints() }
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val window = cmpWindowSize
+        val desktopSplit = keyboardHints && maxWidth >= DesktopSplitFrom
         val layout = when {
-            maxWidth >= SplitFrom || (keyboardHints && maxWidth >= DesktopSplitFrom) -> TechRequestsLayout.Split
-            maxWidth >= MediumFrom -> TechRequestsLayout.Medium
+            window.atLeast(CmpWidthClass.Expanded) || desktopSplit -> TechRequestsLayout.Split
+            window.atLeast(CmpWidthClass.Medium) -> TechRequestsLayout.Medium
             else -> TechRequestsLayout.Compact
         }
         val panelWidth = when {

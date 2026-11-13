@@ -1,15 +1,12 @@
 package ru.alarmtrade.specmp.feature.device.firmware.ui.presentation.components
 
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 
 internal enum class FirmwareLayout { Compact, Medium, Expanded }
 
-private val MediumFrom = 600.dp
-private val ExpandedFrom = 840.dp
-
 internal fun firmwareLayoutOf(width: Dp): FirmwareLayout = when {
-    width < MediumFrom -> FirmwareLayout.Compact
-    width < ExpandedFrom -> FirmwareLayout.Medium
+    width < CmpBreakpoints.Medium -> FirmwareLayout.Compact
+    width < CmpBreakpoints.Expanded -> FirmwareLayout.Medium
     else -> FirmwareLayout.Expanded
 }

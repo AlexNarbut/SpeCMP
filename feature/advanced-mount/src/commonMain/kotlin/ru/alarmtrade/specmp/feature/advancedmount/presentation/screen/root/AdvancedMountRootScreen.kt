@@ -94,6 +94,7 @@ import ru.alarmtrade.specmp.core.ui.view.divider.CmpDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpBox
+import ru.alarmtrade.specmp.core.ui.view.layout.CmpBreakpoints
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpColumn
 import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
@@ -184,8 +185,8 @@ internal fun AdvancedMountRootContent(state: AdvancedMountRootState, actions: Ad
     ) { padding ->
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
             val layout = when {
-                maxWidth < 600.dp -> MountLayout.Compact
-                maxWidth < 840.dp -> MountLayout.Medium
+                maxWidth < CmpBreakpoints.Medium -> MountLayout.Compact
+                maxWidth < CmpBreakpoints.Expanded -> MountLayout.Medium
                 else -> MountLayout.Expanded
             }
             val header: @Composable () -> Unit = {
