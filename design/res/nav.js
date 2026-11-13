@@ -39,6 +39,7 @@
     firmware:            'features/firmware/Firmware.html',
     'firmware-tablet':    'features/firmware/FirmwareTablet.html',
     'firmware-desktop':   'features/firmware/FirmwareDesktop.html',
+    'firmware-foldable':  'features/firmware/FirmwareFoldable.html',
     'vehicle-select':          'features/vehicle-select/VehicleSelect.html',
     'vehicle-select-tablet':   'features/vehicle-select/VehicleSelectTablet.html',
     'vehicle-select-desktop':  'features/vehicle-select/VehicleSelectDesktop.html',

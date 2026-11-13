@@ -64,6 +64,9 @@ class FirmwareCheckGallery {
     fun list() = render("03_list", base)
 
     @Test
+    fun singleModule() = render("03b_single_module", base.copy(content = LCEState.Content(listOf(update))))
+
+    @Test
     fun cardStates() = render(
         "04_card_states",
         base.copy(

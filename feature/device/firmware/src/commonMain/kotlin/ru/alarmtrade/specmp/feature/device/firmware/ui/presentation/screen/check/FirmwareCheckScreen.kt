@@ -120,7 +120,10 @@ private fun ReadyBody(
     layout: FirmwareLayout,
     actions: FirmwareCheckActions,
 ) {
-    val columns = if (layout == FirmwareLayout.Compact) 1 else 2
+    // Две колонки — только на широком окне и при нескольких модулях; раскладной, планшет-портрет и одиночный
+    // модуль на широком окне — широкие карточки во всю строку (в половине ширины узкие колонки рвут подписи).
+    val columns = if (layout == FirmwareLayout.Expanded && modules.size > 1) 2 else 1
+    val wideCards = layout == FirmwareLayout.Medium || (layout == FirmwareLayout.Expanded && modules.size == 1)
     CmpColumn(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -151,6 +154,7 @@ private fun ReadyBody(
                             onDescription = { actions.onDescriptionClick(card.id) },
                             onUpdate = { actions.onUpdateClick(card.id) },
                             modifier = Modifier.weight(1f),
+                            wide = wideCards,
                         )
                     }
                     // Нечётная последняя строка: пустое место, чтобы карточка не растягивалась на всю ширину.
