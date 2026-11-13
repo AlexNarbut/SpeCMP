@@ -15,6 +15,7 @@ import ru.alarmtrade.specialist.domain.alarmDevice.information.DevicePackageConf
 import ru.alarmtrade.specialist.domain.alarmDevice.information.DevicePackageFirmwareInfo
 import ru.alarmtrade.specialist.domain.alarmDevice.information.DevicePackageInformation
 import ru.alarmtrade.specialist.domain.errors.alarmDevice.DevicePackageInformationNotFoundException
+import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
@@ -82,16 +83,29 @@ class SpecialistProductInfoRepositoryTest {
 
         assertIs<ProductNotFoundException>(assertIs<Response.Error>(repository.find(7)).exception)
     }
+
+    @Test
+    fun enabledOnlyWithProductSearchFeature() = runTest {
+        assertEquals(Response.Success(false), repository.isEnabled())
+
+        source.features = SpecialistResponse.Success(listOf(UserAppFeature.PRODUCT_SEARCH))
+
+        assertEquals(Response.Success(true), repository.isEnabled())
+    }
 }
 
 private class FakeProductInfoDataSource : ProductInfoDataSource {
     var response: SpecialistResponse<DevicePackageInformation> = SpecialistResponse.Success(sdkPackage())
     var requestedId: Long? = null
 
+    var features: SpecialistResponse<List<UserAppFeature>> = SpecialistResponse.Success(emptyList())
+
     override suspend fun packageInformation(id: Long): SpecialistResponse<DevicePackageInformation> {
         requestedId = id
         return response
     }
+
+    override suspend fun userAppFeatures(): SpecialistResponse<List<UserAppFeature>> = features
 }
 
 private fun sdkPackage(): DevicePackageInformation = DevicePackageInformation(

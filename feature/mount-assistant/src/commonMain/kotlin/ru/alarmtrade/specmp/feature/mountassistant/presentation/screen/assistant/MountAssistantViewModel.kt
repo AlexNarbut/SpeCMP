@@ -25,10 +25,12 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSetting
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.SettingsWrite
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.availability
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.diffTo
+import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.productNumberOf
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.snapshotOf
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.topics
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantCapability
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantProductNotFoundException
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantWriteException
@@ -174,6 +176,12 @@ class MountAssistantViewModel(
         val query = currentState.query.trim()
         val facts = currentState.facts
         if (query.isEmpty() || facts == null) return
+        val number = productNumberOf(query)
+        val product = availability(AssistantAction.PRODUCT_INFO, facts, journal.state.value.progress)
+        if (number != null && product != Availability.Hidden) {
+            onProductNumber(number)
+            return
+        }
         val find = availability(AssistantAction.SETTINGS_FIND, facts, journal.state.value.progress)
         if (find is Availability.Blocked) {
             onActionClick(AssistantAction.SETTINGS_FIND)
@@ -315,6 +323,20 @@ class MountAssistantViewModel(
         beginHandoff(AssistantAction.SETTINGS_LOAD, AssistantNavigationTarget.SettingsEditor(openLoad = true))
     }
 
+    /** «Информация о товаре №…» из поиска: шаг в журнале и полный экран с этим номером. */
+    fun onProductNumber(number: String) {
+        if (!allowed(AssistantAction.PRODUCT_INFO)) return
+        clearSearch()
+        journal.append(listOf(JournalEntry.Step(nextId(), StepTitle.ProductNumber(number), clock.now())))
+        onProductOpen(number)
+    }
+
+    /** Полный экран «Информация о товаре»; [query] `null` — искать по другому номеру. */
+    fun onProductOpen(query: String?) {
+        val systemId = currentState.facts?.systemId ?: return
+        postSideEffect(MountAssistantEffect.Navigate(AssistantNavigationTarget.ProductInfo(query, systemId)))
+    }
+
     fun onRetry(entryId: Long) {
         val entry = journal.state.value.entries.firstOrNull { it.id == entryId } as? JournalEntry.Result ?: return
         journal.update(entryId) { (it as? JournalEntry.Result)?.copy(content = ResultContent.Loading) ?: it }
@@ -351,6 +373,8 @@ class MountAssistantViewModel(
             AssistantAction.STATE -> startResult(action, ResultRequest.State)
 
             AssistantAction.AUTOSTART_STATUS -> startResult(action, ResultRequest.Autostart)
+
+            AssistantAction.PRODUCT_INFO -> startResult(action, ResultRequest.Product)
 
             AssistantAction.SETTINGS_LOAD -> {
                 val stepId = nextId()
@@ -613,7 +637,19 @@ class MountAssistantViewModel(
             ResultContent.AutostartData(status, bypassVariant())
         }
 
+        ResultRequest.Product -> loadProduct()
+
         is ResultRequest.Settings -> loadSettings(request)
+    }
+
+    private suspend fun loadProduct(): ResultContent {
+        val systemId = currentState.facts?.systemId ?: return ResultContent.Error(ResultFailure.LinkLost)
+        val response = withContext(dispatchers.io) { devices.product(systemId) }
+        return if ((response as? Response.Error)?.exception is AssistantProductNotFoundException) {
+            ResultContent.ProductNotFound(systemId)
+        } else {
+            response.toContent(ResultContent::ProductData)
+        }
     }
 
     private suspend fun loadSettings(request: ResultRequest.Settings): ResultContent {
@@ -676,6 +712,7 @@ class MountAssistantViewModel(
             ResultRequest.Firmware -> AssistantTopic.FIRMWARE
             ResultRequest.State -> AssistantTopic.STATE
             ResultRequest.Autostart -> AssistantTopic.AUTOSTART
+            ResultRequest.Product -> AssistantTopic.DEVICES
             is ResultRequest.Settings -> AssistantTopic.SETTINGS
         }
 

@@ -170,6 +170,8 @@ private class FakeProductInfoRepository : ProductInfoRepository {
         requests += id
         return answer(id)
     }
+
+    override suspend fun isEnabled(): Response<Boolean> = Response.Success(true)
 }
 
 private fun info(id: Long, components: Int = 0): ProductInfo = ProductInfo(

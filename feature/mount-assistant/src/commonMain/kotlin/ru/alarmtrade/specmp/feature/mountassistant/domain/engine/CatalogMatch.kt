@@ -47,3 +47,14 @@ fun stemRanges(text: String, query: String): List<IntRange> {
         .mapNotNull { stem -> lower.indexOf(stem).takeIf { it >= 0 }?.let { it until it + stem.length } }
         .sortedBy { it.first }
 }
+
+private val NumberSeparators = Regex("""[\s\-]""")
+private const val PRODUCT_NUMBER_MIN = 6
+private const val PRODUCT_NUMBER_MAX = 19
+
+/** Запрос — номер товара (ID устройства или цифры штрих-кода): только цифры, 6–19 после пробелов и дефисов. */
+fun productNumberOf(query: String): String? {
+    val digits = query.trim().replace(NumberSeparators, "")
+    val fits = digits.length in PRODUCT_NUMBER_MIN..PRODUCT_NUMBER_MAX && digits.all { it in '0'..'9' }
+    return digits.takeIf { fits && it.toLongOrNull() != null }
+}

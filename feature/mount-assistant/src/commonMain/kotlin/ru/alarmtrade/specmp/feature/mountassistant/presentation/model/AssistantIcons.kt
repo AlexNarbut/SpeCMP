@@ -32,6 +32,7 @@ internal val AssistantAction.icon: CmpIcons
         AssistantAction.STATE_FULL -> CmpIcons.Sensors
         AssistantAction.SYSTEM_DEVICES -> CmpIcons.SettingsRemote
         AssistantAction.PAIRING -> CmpIcons.AddLink
+        AssistantAction.PRODUCT_INFO -> CmpIcons.ManageSearch
         AssistantAction.VEHICLES -> CmpIcons.DirectionsCar
         AssistantAction.TICKET_NEW -> CmpIcons.Call
         AssistantAction.TICKETS -> CmpIcons.FactCheck

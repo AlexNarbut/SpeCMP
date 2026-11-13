@@ -68,6 +68,7 @@ class AssistantRulesTest {
                 AssistantAction.STATE,
                 AssistantAction.STATE_FULL,
                 AssistantAction.SYSTEM_DEVICES,
+                AssistantAction.PRODUCT_INFO,
                 AssistantAction.VEHICLES,
                 AssistantAction.TICKET_NEW,
                 AssistantAction.TICKETS,
@@ -132,7 +133,8 @@ class AssistantRulesTest {
 
     @Test
     fun `topics keep order, drop empty and mark fully blocked`() {
-        val list = topics(facts(transport = AssistantTransport.USB, can = FactoryCan), empty)
+        // Без «Информации о товаре»: она не зависит от CAN и сняла бы блокировку темы устройств.
+        val list = topics(facts(transport = AssistantTransport.USB, can = FactoryCan, productSearch = false), empty)
         assertEquals(
             listOf(
                 AssistantTopic.FIRMWARE,
@@ -207,5 +209,14 @@ class AssistantRulesTest {
             NextStep(AssistantAction.SUPPORT, NextStepReason.UNKNOWN_MODEL_SUPPORT),
             nextStep(facts(capabilities = null, online = false), empty),
         )
+    }
+
+    @Test
+    fun `product info needs the account feature and the network, not the model`() {
+        val action = AssistantAction.PRODUCT_INFO
+        assertEquals(Availability.Hidden, availability(action, facts(productSearch = false), empty))
+        assertEquals(offline, availability(action, facts(online = false), empty))
+        assertEquals(Availability.Available, availability(action, facts(capabilities = null), empty))
+        assertEquals(Availability.Available, availability(action, facts(transport = AssistantTransport.USB), empty))
     }
 }

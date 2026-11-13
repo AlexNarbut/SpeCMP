@@ -19,4 +19,6 @@ internal class FeedCallbacks(
     val onSourcePick: (Long, SettingsSourceKind) -> Unit,
     /** Чипы помощи в карточке (заявка на техпомощь, чат) — то же, что действие пульта. */
     val onAction: (AssistantAction) -> Unit,
+    /** «Информация о товаре» полным экраном; `null` — искать по другому номеру. */
+    val onProductOpen: (query: String?) -> Unit,
 )

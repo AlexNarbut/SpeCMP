@@ -2,6 +2,7 @@ package ru.alarmtrade.specmp.feature.mountassistant.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantProduct
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AutostartStatus
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
@@ -12,6 +13,17 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateSummary
 /** Факты о подключённом блоке и сети; `null` — блок не в рабочем режиме. */
 interface AssistantDeviceRepository {
     fun facts(): Flow<Response<DeviceFacts?>>
+
+    /** Товар по ID блока; нет на сервере — `AssistantProductNotFoundException`. */
+    suspend fun product(systemId: Long): Response<AssistantProduct>
+}
+
+/** «Информация о товаре» (`feature/product-info`): адаптер — в `composeApp`. */
+interface AssistantProductRepository {
+    /** Включена ли функция пользователю; без ответа сервера — `false`. */
+    fun enabled(): Flow<Response<Boolean>>
+
+    suspend fun summary(id: Long): Response<AssistantProduct>
 }
 
 interface AssistantFirmwareRepository {

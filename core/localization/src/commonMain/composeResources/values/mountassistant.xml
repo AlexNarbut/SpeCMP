@@ -214,11 +214,28 @@
     <string name="mountassistant_header_a11y_expand">Expand the unit header</string>
     <string name="mountassistant_header_a11y_collapse">Collapse the header</string>
     <string name="mountassistant_topic_title_devices">Devices</string>
-    <string name="mountassistant_search_value_keywords_devices">device,tag,fob,relay,pair,bind,motion sensor</string>
+    <string name="mountassistant_search_value_keywords_devices">device,tag,fob,relay,pair,bind,motion sensor,product,package,kit,serial,barcode</string>
     <string name="mountassistant_action_title_system_devices">System devices</string>
     <string name="mountassistant_action_title_pairing">Pair a device</string>
     <string name="mountassistant_action_title_ticket_new">Tech support request</string>
     <string name="mountassistant_action_title_tickets">My requests</string>
     <string name="mountassistant_status_label_devices">Tags, relays, sensors</string>
     <string name="mountassistant_return_msg_help">Didn't work? Leave a request and a specialist will call you back and sort out the error.</string>
+    <string name="mountassistant_action_title_product_info">Product information</string>
+    <string name="mountassistant_search_label_product">Product</string>
+    <string name="mountassistant_product_format_number">Product information #%1$s</string>
+    <string name="mountassistant_product_btn_details">Details</string>
+    <string name="mountassistant_product_btn_other_number">Search by another number</string>
+    <string name="mountassistant_product_label_id">ID</string>
+    <string name="mountassistant_product_label_serial">Serial number</string>
+    <string name="mountassistant_product_label_factory_date">Manufacture date</string>
+    <string name="mountassistant_product_label_kit">Kit</string>
+    <plurals name="mountassistant_product_label_components">
+        <item quantity="one">%1$d component</item>
+        <item quantity="other">%1$d components</item>
+    </plurals>
+    <string name="mountassistant_product_status_not_found">Not in the database</string>
+    <string name="mountassistant_product_title_not_found">No product found for ID %1$s</string>
+    <string name="mountassistant_product_msg_not_found">The unit may have been sold outside the system — this is not an error. You can search by the barcode on the box.</string>
+    <string name="mountassistant_product_format_short">#%1$s</string>
 </resources>

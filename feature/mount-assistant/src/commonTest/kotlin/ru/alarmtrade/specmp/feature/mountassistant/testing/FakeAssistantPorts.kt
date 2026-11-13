@@ -5,12 +5,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsSessionController
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.DeviceSettingsWrites
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.SettingsWrite
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantCapability
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantProduct
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantProductKit
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTransport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AutostartStatus
@@ -26,6 +29,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateSummary
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantAutostartRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantDeviceRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantFirmwareRepository
+import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantProductRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantSettingsRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantStateRepository
 
@@ -37,6 +41,7 @@ internal val testFacts = DeviceFacts(
     capabilities = AssistantCapability.entries.toSet(),
     can = CanFacts(factory = false, code = "1234", version = "12.05"),
     online = true,
+    productSearch = true,
 )
 
 internal val testCheck = FirmwareCheck(
@@ -45,10 +50,34 @@ internal val testCheck = FirmwareCheck(
 
 internal val testSummary = StateSummary(true, emptySet(), false, false, 12.6f, 20)
 
+internal val testProduct = AssistantProduct(
+    id = 77,
+    name = "Pandora DX-4GS",
+    serial = "4123700000077",
+    factoryDate = LocalDate(2024, 10, 14),
+    kit = AssistantProductKit("Pandora DX-4GS Lora", components = 5),
+)
+
 internal class FakeAssistantDeviceRepository(facts: DeviceFacts? = testFacts) : AssistantDeviceRepository {
     val facts = MutableStateFlow(facts)
+    var product: Response<AssistantProduct> = Response.Success(testProduct)
+    val productRequests = mutableListOf<Long>()
 
     override fun facts(): Flow<Response<DeviceFacts?>> = this.facts.map { Response.Success(it) }
+
+    override suspend fun product(systemId: Long): Response<AssistantProduct> {
+        productRequests += systemId
+        return product
+    }
+}
+
+internal class FakeAssistantProductRepository(enabled: Boolean = true) : AssistantProductRepository {
+    val enabled = MutableStateFlow(enabled)
+    var summary: Response<AssistantProduct> = Response.Success(testProduct)
+
+    override fun enabled(): Flow<Response<Boolean>> = this.enabled.map { Response.Success(it) }
+
+    override suspend fun summary(id: Long): Response<AssistantProduct> = summary
 }
 
 internal class FakeAssistantFirmwareRepository : AssistantFirmwareRepository {

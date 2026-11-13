@@ -289,7 +289,16 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                 )
             },
             assistant = { onBack, onOpenSection, onOpenSettings ->
-                AdvancedMountAssistant(device, firmwareBoot, onBack, onOpenSection, onOpenSettings) {
+                AdvancedMountAssistant(
+                    device = device,
+                    firmwareBoot = firmwareBoot,
+                    onBack = onBack,
+                    onOpenSection = onOpenSection,
+                    onOpenSettings = onOpenSettings,
+                    onOpenProductInfo = { target ->
+                        backStack.navigateSafe(ProductInfoRoute(target.query, target.connectedId))
+                    },
+                ) {
                     backStack.navigateSafe(TechRequestsRoute(TechRequestPrefill(origin = null, text = "")))
                 }
             },

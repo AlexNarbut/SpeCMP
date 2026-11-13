@@ -30,6 +30,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_titl
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_title_nothing
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_a11y_close
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_label_actions
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_label_product
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_label_settings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_label_topics
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_search_label_try
@@ -134,6 +135,7 @@ private fun ResultGroupRows(
         CmpText(
             text = stringResource(
                 when (group) {
+                    ResultGroup.PRODUCT -> Strings.string.mountassistant_search_label_product
                     ResultGroup.TOPICS -> Strings.string.mountassistant_search_label_topics
                     ResultGroup.ACTIONS -> Strings.string.mountassistant_search_label_actions
                     ResultGroup.SETTINGS -> Strings.string.mountassistant_search_label_settings
@@ -172,7 +174,10 @@ private fun ResultRow(
     val content = tileContent(tile, firmwareVersion)
     val filled = content.filled && !content.blocked
     val setting = (tile as? DockTile.Setting)?.setting
-    val ranges = setting?.nameHighlights?.takeIf { it.isNotEmpty() } ?: stemRanges(content.title, query)
+    val ranges = when {
+        tile is DockTile.ProductNumber -> emptyList()
+        else -> setting?.nameHighlights?.takeIf { it.isNotEmpty() } ?: stemRanges(content.title, query)
+    }
     val subtitle = if (setting != null && !content.blocked) setting.path.joinToString(" › ") else content.subtitle
     val dashed = colors.outline.takeIf { content.blocked }
     CmpSurface(

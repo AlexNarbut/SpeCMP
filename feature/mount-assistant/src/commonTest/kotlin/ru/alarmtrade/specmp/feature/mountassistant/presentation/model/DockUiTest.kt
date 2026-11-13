@@ -8,6 +8,8 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.CatalogMatch
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.facts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.BlockReason
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.MountProgress
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.screen.assistant.DockLevel
 import ru.alarmtrade.specmp.feature.mountassistant.testing.switchSetting
@@ -78,5 +80,21 @@ class DockUiTest {
 
         assertEquals(listOf(ResultGroup.TRY), groups.map { it.first })
         assertTrue(groups.single().second.all { it is DockTile.Action })
+    }
+
+    @Test
+    fun `a number comes first as the product row, blocked offline, hidden without the feature`() {
+        val none = CatalogMatch(emptyList(), emptyList())
+        fun dockFor(f: DeviceFacts) = dockOf(f, progress, DockLevel.Home, "107131", none, emptyList(), pulse = null)
+
+        val dock = dockFor(facts)
+        assertEquals(DockTile.ProductNumber("107131", blocked = null), dock.tiles.first())
+        assertEquals(DockHead.Found(1), dock.head)
+        assertEquals(ResultGroup.PRODUCT, resultGroups(dock).first().first)
+
+        val offline = dockFor(facts(online = false)).tiles.first()
+        assertEquals(DockTile.ProductNumber("107131", BlockReason.NO_NETWORK), offline)
+
+        assertEquals(DockHead.Nothing, dockFor(facts(productSearch = false)).head)
     }
 }

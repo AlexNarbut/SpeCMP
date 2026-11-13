@@ -14,7 +14,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.screen.assistant
 
 val mountAssistantModule = module {
     singleOf(::AssistantJournalImpl) bind AssistantJournal::class
-    single<AssistantDeviceRepository> { AssistantDeviceRepositoryImpl(get(), getOrNull()) }
+    single<AssistantDeviceRepository> { AssistantDeviceRepositoryImpl(get(), getOrNull(), get()) }
     singleOf(::AssistantSettingsRepositoryImpl) bind AssistantSettingsRepository::class
     viewModelOf(::MountAssistantViewModel)
 }

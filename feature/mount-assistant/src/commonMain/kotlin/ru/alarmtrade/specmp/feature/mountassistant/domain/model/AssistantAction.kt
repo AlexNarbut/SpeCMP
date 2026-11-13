@@ -58,6 +58,7 @@ enum class AssistantAction(
         setOf(AssistantCapability.DYNAMIC_DEVICES),
         updatedCan = true,
     ),
+    PRODUCT_INFO(AssistantTopic.DEVICES, ActionKind.IN_FEED, network = true),
     VEHICLES(AssistantTopic.VEHICLE, ActionKind.HANDOFF),
     TICKET_NEW(AssistantTopic.SUPPORT, ActionKind.HANDOFF, network = true),
     TICKETS(AssistantTopic.SUPPORT, ActionKind.HANDOFF, network = true),
@@ -67,7 +68,16 @@ enum class AssistantAction(
     companion object {
         /** Что доступно блоку, модели которого нет в базе. */
         val ForUnknownModel: Set<AssistantAction> =
-            setOf(FIRMWARE_CHECK, FIRMWARE_UPDATE, FIRMWARE_ARCHIVE, VEHICLES, TICKET_NEW, TICKETS, SUPPORT)
+            setOf(
+                FIRMWARE_CHECK,
+                FIRMWARE_UPDATE,
+                FIRMWARE_ARCHIVE,
+                PRODUCT_INFO,
+                VEHICLES,
+                TICKET_NEW,
+                TICKETS,
+                SUPPORT,
+            )
 
         /** Возврат без изменений после этих экранов — предложить заявку на техпомощь и чат. */
         val NeedsHelpOnFailure: Set<AssistantAction> = setOf(FIRMWARE_UPDATE, CAN_UPDATE, BYPASS_RUN, CLONE_RUN)

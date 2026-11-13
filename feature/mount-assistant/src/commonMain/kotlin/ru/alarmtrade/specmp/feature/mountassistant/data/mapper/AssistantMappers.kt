@@ -19,7 +19,11 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.FoundSetting
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SettingEditor
 
-internal fun AlarmDevice.toFacts(transport: ConnectionTransport, online: Boolean): DeviceFacts = DeviceFacts(
+internal fun AlarmDevice.toFacts(
+    transport: ConnectionTransport,
+    online: Boolean,
+    productSearch: Boolean,
+): DeviceFacts = DeviceFacts(
     systemId = systemId,
     title = title,
     firmwareVersion = displayFirmwareVersion,
@@ -27,6 +31,7 @@ internal fun AlarmDevice.toFacts(transport: ConnectionTransport, online: Boolean
     capabilities = features?.takeIf { modelInDatabase }?.mapNotNull { it.toCapability() }?.toSet(),
     can = can?.let { CanFacts(it.isFactory, it.code.ifBlank { null }, it.firmwareVersion.ifBlank { null }) },
     online = online,
+    productSearch = productSearch,
 )
 
 private fun ConnectionTransport.toAssistant(): AssistantTransport = when (this) {

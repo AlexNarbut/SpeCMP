@@ -56,6 +56,7 @@ fun MountAssistantEntry(onBack: () -> Unit, onNavigate: (AssistantNavigationTarg
                     is DockTile.Action -> viewModel.onActionClick(tile.action)
                     is DockTile.Setting -> viewModel.onSettingPick(tile.setting.id)
                     is DockTile.SearchAll -> viewModel.onSearchSubmit(topic = null)
+                    is DockTile.ProductNumber -> viewModel.onProductNumber(tile.number)
                 }
             },
             onTopicBack = viewModel::onTopicBack,
@@ -78,6 +79,7 @@ fun MountAssistantEntry(onBack: () -> Unit, onNavigate: (AssistantNavigationTarg
                 onWriteCancel = viewModel::onWriteCancel,
                 onSourcePick = viewModel::onSourcePick,
                 onAction = viewModel::onActionClick,
+                onProductOpen = viewModel::onProductOpen,
             ),
         )
     }

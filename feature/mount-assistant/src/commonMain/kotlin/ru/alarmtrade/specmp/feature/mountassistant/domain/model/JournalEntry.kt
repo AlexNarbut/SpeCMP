@@ -56,6 +56,11 @@ sealed interface StepTitle {
     data object Reflash : StepTitle {
         override val topic: AssistantTopic get() = AssistantTopic.FIRMWARE
     }
+
+    /** «Информация о товаре №…» из строки поиска. */
+    data class ProductNumber(val number: String) : StepTitle {
+        override val topic: AssistantTopic get() = AssistantTopic.DEVICES
+    }
 }
 
 sealed interface ResultRequest {
@@ -64,6 +69,9 @@ sealed interface ResultRequest {
     data object State : ResultRequest
 
     data object Autostart : ResultRequest
+
+    /** Товар подключённого блока. */
+    data object Product : ResultRequest
 
     /** [query] — поиск; [settingId] — одна выбранная настройка. */
     data class Settings(val query: String, val settingId: Int? = null) : ResultRequest
@@ -82,6 +90,11 @@ sealed interface ResultContent {
 
     /** [variant] — настройка «Вариант бесключевого обхода»; `null` — у блока её нет или настройки не прочитаны. */
     data class AutostartData(val status: AutostartStatus, val variant: FoundSetting? = null) : Data
+
+    data class ProductData(val product: AssistantProduct) : Data
+
+    /** Товара с ID блока нет на сервере. */
+    data class ProductNotFound(val id: Long) : Data
 
     /** [editing] — настройка, открытая на правку, [draft] — её новое значение. */
     data class SettingsData(

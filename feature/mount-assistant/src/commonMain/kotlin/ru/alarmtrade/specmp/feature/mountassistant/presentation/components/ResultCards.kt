@@ -114,7 +114,7 @@ internal fun DeviceResultCard(
             is ResultContent.FirmwareData -> FirmwareBody(content.check, content.can, onModuleArchive, onModuleFlash)
             is ResultContent.StateData -> StateBody(content.summary)
             is ResultContent.AutostartData -> AutostartBody(content.status, content.variant)
-            is ResultContent.SettingsData -> Unit
+            is ResultContent.SettingsData, is ResultContent.ProductData, is ResultContent.ProductNotFound -> Unit
         }
     }
 }
@@ -157,7 +157,11 @@ private fun ResultBadge(content: ResultContent.Data) {
             AssistantPill(text = stringResource(Strings.string.mountassistant_card_status_all_good), tone = PillTone.OK)
         }
 
-        is ResultContent.AutostartData, is ResultContent.SettingsData -> Unit
+        is ResultContent.AutostartData,
+        is ResultContent.SettingsData,
+        is ResultContent.ProductData,
+        is ResultContent.ProductNotFound,
+        -> Unit
     }
 }
 

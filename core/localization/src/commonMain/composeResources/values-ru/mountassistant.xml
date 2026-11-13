@@ -214,11 +214,30 @@
     <string name="mountassistant_header_a11y_expand">Развернуть шапку блока</string>
     <string name="mountassistant_header_a11y_collapse">Свернуть шапку</string>
     <string name="mountassistant_topic_title_devices">Устройства</string>
-    <string name="mountassistant_search_value_keywords_devices">устройств,метк,брелок,реле,прижив,привяз,датчик движ</string>
+    <string name="mountassistant_search_value_keywords_devices">устройств,метк,брелок,реле,прижив,привяз,датчик движ,товар,комплект,серийн,штрих,упаков</string>
     <string name="mountassistant_action_title_system_devices">Устройства системы</string>
     <string name="mountassistant_action_title_pairing">Приживить устройство</string>
     <string name="mountassistant_action_title_ticket_new">Заявка на техпомощь</string>
     <string name="mountassistant_action_title_tickets">Мои заявки</string>
     <string name="mountassistant_status_label_devices">Метки, реле, датчики</string>
     <string name="mountassistant_return_msg_help">Не получилось? Оставьте заявку — специалист перезвонит и разберёт ошибку.</string>
+    <string name="mountassistant_action_title_product_info">Информация о товаре</string>
+    <string name="mountassistant_search_label_product">Товар</string>
+    <string name="mountassistant_product_format_number">Информация о товаре №%1$s</string>
+    <string name="mountassistant_product_btn_details">Подробнее</string>
+    <string name="mountassistant_product_btn_other_number">Искать по другому номеру</string>
+    <string name="mountassistant_product_label_id">ID</string>
+    <string name="mountassistant_product_label_serial">Серийный номер</string>
+    <string name="mountassistant_product_label_factory_date">Заводская дата</string>
+    <string name="mountassistant_product_label_kit">Комплект</string>
+    <plurals name="mountassistant_product_label_components">
+        <item quantity="one">%1$d компонент</item>
+        <item quantity="few">%1$d компонента</item>
+        <item quantity="many">%1$d компонентов</item>
+        <item quantity="other">%1$d компонента</item>
+    </plurals>
+    <string name="mountassistant_product_status_not_found">Нет в базе</string>
+    <string name="mountassistant_product_title_not_found">Товар с ID %1$s не найден</string>
+    <string name="mountassistant_product_msg_not_found">Блок мог быть продан не через систему — это не ошибка. Можно поискать по штрих-коду с коробки.</string>
+    <string name="mountassistant_product_format_short">№%1$s</string>
 </resources>

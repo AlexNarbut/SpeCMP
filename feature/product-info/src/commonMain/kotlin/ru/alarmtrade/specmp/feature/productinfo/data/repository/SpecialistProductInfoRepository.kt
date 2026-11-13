@@ -4,9 +4,11 @@ import ru.alarmtrade.common.core.exceptions.ContentParsingException
 import ru.alarmtrade.common.core.response.Response as SpecialistResponse
 import ru.alarmtrade.common.core.response.mapException
 import ru.alarmtrade.specialist.domain.errors.alarmDevice.DevicePackageInformationNotFoundException
+import ru.alarmtrade.specialist.domain.user.UserAppFeature
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.appError
+import ru.alarmtrade.specmp.core.common.map
 import ru.alarmtrade.specmp.core.specialist.sdk.toResponse
 import ru.alarmtrade.specmp.feature.productinfo.data.datasource.ProductInfoDataSource
 import ru.alarmtrade.specmp.feature.productinfo.data.mapper.toDomain
@@ -21,6 +23,9 @@ internal class SpecialistProductInfoRepository(private val dataSource: ProductIn
             is SpecialistResponse.Success -> Response.Success(response.value.toDomain())
             is SpecialistResponse.Error -> response.toFindError(id)
         }
+
+    override suspend fun isEnabled(): Response<Boolean> =
+        dataSource.userAppFeatures().toResponse().map { UserAppFeature.PRODUCT_SEARCH in it }
 
     /**
      * SDK заворачивает в `DevicePackageInformationNotFoundException` любую ошибку запроса, в том числе обрыв сети.

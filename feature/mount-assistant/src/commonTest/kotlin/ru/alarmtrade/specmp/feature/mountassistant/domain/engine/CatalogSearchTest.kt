@@ -79,4 +79,14 @@ class CatalogSearchTest {
         assertEquals(emptyList(), stemRanges("Прошивка", "ab"))
         assertEquals(emptyList(), stemRanges("Прошивка", "датчик"))
     }
+
+    @Test
+    fun `product number is 6 to 19 digits, spaces and dashes ignored`() {
+        assertEquals("107131", productNumberOf(" 107131 "))
+        assertEquals("4123700107131", productNumberOf("4 123700-107131"))
+        assertEquals(null, productNumberOf("12345"))
+        assertEquals(null, productNumberOf("107131a"))
+        assertEquals(null, productNumberOf("9223372036854775808"))
+        assertEquals(null, productNumberOf("сирена"))
+    }
 }

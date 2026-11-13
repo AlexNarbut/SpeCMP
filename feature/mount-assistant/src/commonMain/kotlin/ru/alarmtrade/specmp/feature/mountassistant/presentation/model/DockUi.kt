@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.toImmutableList
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.CatalogMatch
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.availability
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.nextStep
+import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.productNumberOf
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.topicStatus
 import ru.alarmtrade.specmp.feature.mountassistant.domain.engine.topics
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ActionKind
@@ -73,6 +74,11 @@ sealed interface DockTile {
     data class SearchAll(val count: Int) : DockTile {
         override val key: String get() = "all"
     }
+
+    /** Запрос — номер товара: открыть «Информацию о товаре» с ним. */
+    data class ProductNumber(val number: String, val blocked: BlockReason?) : DockTile {
+        override val key: String get() = "product"
+    }
 }
 
 private const val SEARCH_SETTINGS_LIMIT = 6
@@ -106,7 +112,10 @@ fun dockOf(
             pulseSeq = pulse?.takeIf { it.topic == topic }?.seq,
         )
     }
-    if (query.isNotBlank()) return searchDock(facts, progress, match, settings, topicTiles, ::action)
+    if (query.isNotBlank()) {
+        val product = productNumberOf(query)?.let { number -> productTile(number, facts, progress) }
+        return searchDock(facts, progress, match, settings, topicTiles, product, ::action)
+    }
     return when (level) {
         DockLevel.Home -> {
             val blocked = availability(next.action, facts, progress) as? Availability.Blocked
@@ -121,12 +130,21 @@ fun dockOf(
     }
 }
 
+private fun productTile(number: String, facts: DeviceFacts, progress: MountProgress): DockTile.ProductNumber? =
+    when (val available = availability(AssistantAction.PRODUCT_INFO, facts, progress)) {
+        Availability.Hidden -> null
+        is Availability.Blocked -> DockTile.ProductNumber(number, available.reason)
+        Availability.Available -> DockTile.ProductNumber(number, blocked = null)
+    }
+
+@Suppress("LongParameterList") // входы пульта поиска: факты, ход монтажа, совпадения, настройки, плитки тем, товар
 private fun searchDock(
     facts: DeviceFacts,
     progress: MountProgress,
     match: CatalogMatch,
     settings: List<FoundSetting>,
     topicTiles: Map<AssistantTopic, DockTile.Topic>,
+    product: DockTile.ProductNumber?,
     action: (AssistantAction) -> DockTile.Action?,
 ): DockUi {
     val findBlocked = availability(AssistantAction.SETTINGS_FIND, facts, progress)
@@ -134,6 +152,7 @@ private fun searchDock(
     val topics = match.topics.mapNotNull(topicTiles::get)
     val singleActionTopics = topics.filter { it.single != null }.map { it.topic }
     val tiles = buildList {
+        product?.let(::add)
         addAll(topics)
         addAll(match.actions.filterNot { it.topic in singleActionTopics }.mapNotNull(action))
         settingsShown.take(SEARCH_SETTINGS_LIMIT).forEach {
@@ -160,7 +179,7 @@ fun quickActions(facts: DeviceFacts, progress: MountProgress): ImmutableList<Doc
 
 val EmptyDock: DockUi = DockUi(DockHead.Home, persistentListOf())
 
-enum class ResultGroup { TOPICS, ACTIONS, SETTINGS, TRY }
+enum class ResultGroup { PRODUCT, TOPICS, ACTIONS, SETTINGS, TRY }
 
 /** Найденное по группам в порядке показа; при пустом результате — действия-подсказки одной группой. */
 fun resultGroups(results: DockUi): List<Pair<ResultGroup, ImmutableList<DockTile>>> {
@@ -168,6 +187,7 @@ fun resultGroups(results: DockUi): List<Pair<ResultGroup, ImmutableList<DockTile
     return results.tiles
         .groupBy { tile ->
             when (tile) {
+                is DockTile.ProductNumber -> ResultGroup.PRODUCT
                 is DockTile.Topic -> ResultGroup.TOPICS
                 is DockTile.Hero, is DockTile.Action -> ResultGroup.ACTIONS
                 is DockTile.Setting, is DockTile.SearchAll -> ResultGroup.SETTINGS
