@@ -129,6 +129,57 @@ internal fun StatusHero(state: CheckStateState, modifier: Modifier = Modifier) {
     }
 }
 
+/** Статус в шапке низкого окна (телефон-ландшафт): карточки статуса там нет. */
+@Composable
+internal fun StatusPill(state: CheckStateState, modifier: Modifier = Modifier) {
+    val vehicle = state.vehicle
+    val style = heroStyle(state)
+    CmpRow(
+        modifier = modifier
+            .heightIn(min = 40.dp)
+            .background(style.background, CircleShape)
+            .padding(start = 10.dp, end = 14.dp)
+            .testTag(CHECK_STATE_HERO_TAG),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        when (val icon = style.icon) {
+            is HeroIcon.Vector -> CmpIcon(
+                icon = icon.icon,
+                contentDescription = null,
+                tint = style.content,
+                modifier = Modifier.size(22.dp),
+            )
+
+            is HeroIcon.Drawable -> CmpIcon(
+                painter = painterResource(icon.drawable),
+                contentDescription = null,
+                tint = style.content,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+        val title = when {
+            vehicle == null -> Strings.string.devicestate_hero_loading_first
+            state.alarm -> Strings.string.devicestate_hero_status_alarm
+            else -> vehicle.security.title
+        }
+        CmpText(
+            text = stringResource(title),
+            color = style.content,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        state.staleSeconds?.let { stale ->
+            CmpText(
+                text = stringResource(Strings.string.devicestate_hero_format_stale, stale),
+                color = style.content,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
 private sealed interface HeroIcon {
     data class Vector(val icon: CmpIcons) : HeroIcon
 

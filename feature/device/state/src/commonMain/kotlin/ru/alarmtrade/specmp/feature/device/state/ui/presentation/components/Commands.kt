@@ -8,13 +8,16 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -333,6 +336,7 @@ internal fun CommandsGrid(
     columns: Int,
     onFire: (CommandUi) -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     CmpColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         commands.chunked(columns).forEach { row ->
@@ -343,6 +347,7 @@ internal fun CommandsGrid(
                         status = status(command),
                         enabled = enabled,
                         onFire = onFire,
+                        compact = compact,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -361,27 +366,35 @@ internal fun AllCommandsSheet(
     onFire: (CommandUi) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    PanelSheet(title = stringResource(Strings.string.devicestate_commands_title_sheet), onDismiss = onDismiss) {
+        CommandsGrid(
+            commands = commands,
+            status = status,
+            enabled = enabled,
+            columns = columns,
+            onFire = onFire,
+            modifier = Modifier.padding(end = 8.dp, top = 4.dp),
+        )
+    }
+}
+
+/** Лист снизу с заголовком и «Закрыть»: все команды, «Подробно», весь чек-лист в низком окне. */
+@Composable
+internal fun PanelSheet(title: String, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     CmpBottomSheet(onDismissRequest = onDismiss) {
         CmpColumn(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, bottom = 20.dp)) {
             CmpRow(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                CmpText(
-                    text = stringResource(Strings.string.devicestate_commands_title_sheet),
-                    fontSize = 22.sp,
-                    modifier = Modifier.weight(1f),
-                )
+                CmpText(text = title, fontSize = 22.sp, modifier = Modifier.weight(1f))
                 CmpIconButton(
                     onClick = onDismiss,
                     icon = CmpIcons.Close,
                     contentDescription = stringResource(Strings.string.devicestate_commands_a11y_close),
                 )
             }
-            CommandsGrid(
-                commands = commands,
-                status = status,
-                enabled = enabled,
-                columns = columns,
-                onFire = onFire,
-                modifier = Modifier.padding(end = 8.dp, top = 4.dp),
+            CmpColumn(
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                content = content,
             )
         }
     }
