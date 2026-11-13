@@ -16,8 +16,8 @@ import ru.alarmtrade.specmp.core.common.AppDispatchers
 import ru.alarmtrade.specmp.core.common.Response
 import ru.alarmtrade.specmp.core.common.onError
 import ru.alarmtrade.specmp.core.lifecycle.AppForegroundProvider
-import ru.alarmtrade.specmp.core.permissions.BlePermissionResult
 import ru.alarmtrade.specmp.core.permissions.DeviceAccessRequirement
+import ru.alarmtrade.specmp.core.permissions.PermissionResult
 import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
@@ -141,9 +141,9 @@ class ScanDeviceViewModel(
     private suspend fun checkPermission(): Boolean {
         reduce { copy(step = ScanStep.PermissionCheck) }
         return when (val result = permissionsProvider.requestBlePermissions()) {
-            BlePermissionResult.Granted -> true
+            PermissionResult.Granted -> true
 
-            is BlePermissionResult.Denied -> {
+            is PermissionResult.Denied -> {
                 reduce { copy(step = ScanStep.Denied(canOpenSettings = result.canOpenSettings)) }
                 false
             }

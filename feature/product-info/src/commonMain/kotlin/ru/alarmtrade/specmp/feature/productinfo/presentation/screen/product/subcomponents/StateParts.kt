@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -15,11 +16,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
+import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_btn_scan
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_hint_barcode
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_hint_device_id
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_label_barcode
@@ -27,15 +31,17 @@ import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_label_
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_msg
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_empty_title
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
+import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpSkeleton
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
+import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoTags
 
 /** Начальное состояние: где взять номер. */
 @Composable
-internal fun EmptyHint(wide: Boolean, modifier: Modifier = Modifier) {
+internal fun EmptyHint(wide: Boolean, onScan: (() -> Unit)?, modifier: Modifier = Modifier) {
     val colors = cmpThemeColors()
     Column(
         modifier = modifier.fillMaxWidth().padding(vertical = if (wide) 40.dp else 28.dp),
@@ -96,6 +102,27 @@ internal fun EmptyHint(wide: Boolean, modifier: Modifier = Modifier) {
                 tips(Modifier.fillMaxWidth())
             }
         }
+        if (onScan != null) ScanButton(onScan, Modifier.padding(top = 4.dp).testTag(ProductInfoTags.SCAN_EMPTY))
+    }
+}
+
+@Composable
+internal fun ScanButton(onScan: () -> Unit, modifier: Modifier = Modifier) {
+    val primary = cmpThemeColors().primary
+    CmpOutlinedButton(onClick = onScan, modifier = modifier.heightIn(min = 56.dp)) {
+        CmpIcon(
+            icon = CmpIcons.QrCodeScanner,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = primary,
+        )
+        CmpText(
+            text = stringResource(Strings.string.productinfo_empty_btn_scan),
+            modifier = Modifier.padding(start = 8.dp),
+            color = primary,
+            fontWeight = FontWeight.Medium,
+            style = CmpTextStyle.BodyLarge,
+        )
     }
 }
 

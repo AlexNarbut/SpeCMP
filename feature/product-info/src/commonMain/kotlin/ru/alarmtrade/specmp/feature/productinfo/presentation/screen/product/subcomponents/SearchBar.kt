@@ -10,6 +10,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_a11y_clear
+import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_a11y_scan
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_btn_find
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_error_empty
 import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_error_not_digits
@@ -28,6 +31,7 @@ import ru.alarmtrade.specmp.core.localization.resources.productinfo_search_place
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
+import ru.alarmtrade.specmp.core.ui.view.divider.CmpVerticalDivider
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.input.CmpTextField
@@ -45,6 +49,8 @@ internal fun SearchBar(
     onQueryChange: (String) -> Unit,
     onClear: () -> Unit,
     onSearch: () -> Unit,
+    onScan: (() -> Unit)?,
+    focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
     val colors = cmpThemeColors()
@@ -64,19 +70,12 @@ internal fun SearchBar(
             CmpTextField(
                 value = query,
                 onValueChange = onQueryChange,
-                modifier = Modifier.weight(1f).testTag(ProductInfoTags.QUERY),
+                modifier = Modifier.weight(1f).focusRequester(focusRequester).testTag(ProductInfoTags.QUERY),
                 placeholder = stringResource(Strings.string.productinfo_search_placeholder_query),
                 isError = error != null,
                 singleLine = true,
-                trailingIcon = if (query.isNotEmpty()) {
-                    {
-                        CmpIconButton(
-                            onClick = onClear,
-                            icon = CmpIcons.Close,
-                            contentDescription = stringResource(Strings.string.productinfo_search_a11y_clear),
-                            modifier = Modifier.testTag(ProductInfoTags.CLEAR),
-                        )
-                    }
+                trailingIcon = if (query.isNotEmpty() || onScan != null) {
+                    { FieldActions(clear = if (query.isNotEmpty()) onClear else null, onScan = onScan) }
                 } else {
                     null
                 },
@@ -99,6 +98,31 @@ internal fun SearchBar(
                 )
                 CmpText(text = error.text(), color = colors.error, style = CmpTextStyle.Body)
             }
+        }
+    }
+}
+
+@Composable
+private fun FieldActions(clear: (() -> Unit)?, onScan: (() -> Unit)?) {
+    val colors = cmpThemeColors()
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (clear != null) {
+            CmpIconButton(
+                onClick = clear,
+                icon = CmpIcons.Close,
+                contentDescription = stringResource(Strings.string.productinfo_search_a11y_clear),
+                modifier = Modifier.testTag(ProductInfoTags.CLEAR),
+            )
+        }
+        if (onScan != null) {
+            if (clear != null) CmpVerticalDivider(modifier = Modifier.height(28.dp), color = colors.outlineVariant)
+            CmpIconButton(
+                onClick = onScan,
+                icon = CmpIcons.QrCodeScanner,
+                contentDescription = stringResource(Strings.string.productinfo_search_a11y_scan),
+                modifier = Modifier.testTag(ProductInfoTags.SCAN),
+                tint = colors.primary,
+            )
         }
     }
 }

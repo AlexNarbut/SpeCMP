@@ -37,6 +37,15 @@
         android:name="android.hardware.bluetooth"
         android:required="false" />
 
+    <!-- Сканер штрих-кода «Информации о товаре»: камера не обязательна — без неё поиск по номеру вручную. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <!-- Подключение устройств по USB (host-режим) -->
     <uses-feature
         android:name="android.hardware.usb.host"

@@ -18,9 +18,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import ru.alarmtrade.permissions.common.Permission
+import ru.alarmtrade.permissions.common.PermissionsController
+import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.common.AppException
 import ru.alarmtrade.specmp.core.common.Response
+import ru.alarmtrade.specmp.core.permissions.PermissionResult
+import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.testing.testDispatchers
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductInfo
@@ -31,6 +36,7 @@ import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductUnit
 import ru.alarmtrade.specmp.feature.productinfo.domain.repository.ProductInfoRepository
 import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoError
 import ru.alarmtrade.specmp.feature.productinfo.presentation.screen.product.ProductInfoArgs
+import ru.alarmtrade.specmp.feature.productinfo.presentation.screen.product.ProductInfoEffect
 import ru.alarmtrade.specmp.feature.productinfo.presentation.screen.product.ProductInfoViewModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,6 +44,8 @@ class ProductInfoViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeProductInfoRepository()
+    private val permissions = FakePermissions()
+    private val effects = mutableListOf<ProductInfoEffect>()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -46,8 +54,14 @@ class ProductInfoViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(query: String? = null, connectedId: Long? = null): ProductInfoViewModel {
-        val vm = ProductInfoViewModel(ProductInfoArgs(query, connectedId), repository, testDispatchers(dispatcher))
+        val vm = ProductInfoViewModel(
+            ProductInfoArgs(query, connectedId),
+            repository,
+            permissions,
+            testDispatchers(dispatcher),
+        )
         backgroundScope.launch { vm.state.collect {} }
+        backgroundScope.launch { vm.sideEffect.collect { effects += it } }
         return vm
     }
 
@@ -160,6 +174,68 @@ class ProductInfoViewModelTest {
         advanceUntilIdle()
         assertTrue(vm.state.value.expanded.isEmpty())
     }
+
+    @Test
+    fun `granted camera opens the scanner, a scanned number is searched`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onScanClick()
+        advanceUntilIdle()
+        assertEquals(BarcodeScannerAccess.GRANTED, vm.state.value.scanner)
+
+        vm.onScanned("4123700107131")
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.scanner)
+        assertEquals("4123700107131", vm.state.value.query)
+        assertEquals(listOf(4123700107131L), repository.requests)
+    }
+
+    @Test
+    fun `denied camera can be asked again, denied forever leads to settings`() = runTest(dispatcher) {
+        permissions.camera = PermissionResult.Denied(canOpenSettings = false)
+        val vm = viewModel()
+        vm.onScanClick()
+        advanceUntilIdle()
+        assertEquals(BarcodeScannerAccess.DENIED, vm.state.value.scanner)
+
+        permissions.camera = PermissionResult.Denied(canOpenSettings = true)
+        vm.onScanAccessRetry()
+        advanceUntilIdle()
+        assertEquals(BarcodeScannerAccess.BLOCKED, vm.state.value.scanner)
+
+        vm.onScanOpenSettings()
+        assertEquals(1, permissions.settingsOpened)
+        assertNull(vm.state.value.scanner)
+    }
+
+    @Test
+    fun `manual input closes the scanner and focuses the field`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onScanClick()
+        advanceUntilIdle()
+
+        vm.onScanManual()
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.scanner)
+        assertEquals(listOf<ProductInfoEffect>(ProductInfoEffect.FocusQuery), effects)
+    }
+}
+
+private class FakePermissions : PermissionsProvider {
+    var camera: PermissionResult = PermissionResult.Granted
+    var settingsOpened = 0
+
+    override fun getController(): PermissionsController = error("not used")
+    override fun getBlePermission(): List<Permission> = emptyList()
+    override fun isLocationEnabled(): Boolean = true
+    override fun openLocationSettings() = Unit
+    override fun openBluetoothSettings() = Unit
+    override fun openAppSettings() {
+        settingsOpened++
+    }
+
+    override suspend fun requestCameraPermission(): PermissionResult = camera
 }
 
 private class FakeProductInfoRepository : ProductInfoRepository {

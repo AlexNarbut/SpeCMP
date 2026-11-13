@@ -3,7 +3,10 @@ package ru.alarmtrade.specmp.feature.productinfo.presentation.screen.product
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.withContext
+import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.common.AppDispatchers
+import ru.alarmtrade.specmp.core.permissions.PermissionResult
+import ru.alarmtrade.specmp.core.permissions.PermissionsProvider
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.lce.asLCEState
 import ru.alarmtrade.specmp.core.ui.viewmodel.BaseViewModel
@@ -15,8 +18,9 @@ import ru.alarmtrade.specmp.feature.productinfo.presentation.model.ProductInfoEr
 internal class ProductInfoViewModel(
     args: ProductInfoArgs,
     private val repository: ProductInfoRepository,
+    private val permissions: PermissionsProvider,
     private val dispatchers: AppDispatchers,
-) : BaseViewModel<ProductInfoState, Nothing>(args.initialState()) {
+) : BaseViewModel<ProductInfoState, ProductInfoEffect>(args.initialState()) {
 
     override suspend fun onStart() {
         val initial = ProductQuery.parse(currentState.query)
@@ -56,6 +60,47 @@ internal class ProductInfoViewModel(
         }
     }
 
+    fun onScanClick() {
+        reduce { copy(scanner = BarcodeScannerAccess.REQUESTING) }
+        requestCamera()
+    }
+
+    fun onScanAccessRetry() {
+        requestCamera()
+    }
+
+    fun onScanOpenSettings() {
+        permissions.openAppSettings()
+        reduce { copy(scanner = null) }
+    }
+
+    /** Номер из штрих-кода: в поле и сразу поиск, как в старом Android-приложении (без диалога подтверждения). */
+    fun onScanned(number: String) {
+        reduce { copy(scanner = null, query = number, queryError = null) }
+        onSearch()
+    }
+
+    fun onScanClose() {
+        reduce { copy(scanner = null) }
+    }
+
+    fun onScanManual() {
+        reduce { copy(scanner = null) }
+        postSideEffect(ProductInfoEffect.FocusQuery)
+    }
+
+    private fun requestCamera() {
+        launchReplacing(CAMERA) {
+            val access = when (val result = permissions.requestCameraPermission()) {
+                PermissionResult.Granted -> BarcodeScannerAccess.GRANTED
+
+                is PermissionResult.Denied ->
+                    if (result.canOpenSettings) BarcodeScannerAccess.BLOCKED else BarcodeScannerAccess.DENIED
+            }
+            reduce { if (scanner != null) copy(scanner = access) else this }
+        }
+    }
+
     private fun search(id: Long) {
         launchReplacing(SEARCH) {
             reduce { copy(result = LCEState.Loading, searchedId = id, expanded = persistentSetOf()) }
@@ -66,6 +111,7 @@ internal class ProductInfoViewModel(
 
     private companion object {
         const val SEARCH = "search"
+        const val CAMERA = "camera"
         const val MAX_QUERY_LENGTH = 40
     }
 }

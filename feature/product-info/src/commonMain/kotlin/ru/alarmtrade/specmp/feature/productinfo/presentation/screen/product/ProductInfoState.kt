@@ -3,6 +3,7 @@ package ru.alarmtrade.specmp.feature.productinfo.presentation.screen.product
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentSetOf
+import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductInfo
 import ru.alarmtrade.specmp.feature.productinfo.domain.model.ProductQueryError
@@ -24,6 +25,8 @@ internal data class ProductInfoState(
     val searchedId: Long? = null,
     val connectedId: Long? = null,
     val expanded: PersistentSet<Int> = persistentSetOf(),
+    /** Сканер штрих-кода открыт (`null` — закрыт) и что с доступом к камере. */
+    val scanner: BarcodeScannerAccess? = null,
 ) {
     /** Пометка «Подключённый блок» — по ID найденного товара, а не по тексту поля. */
     val isConnectedUnit: Boolean

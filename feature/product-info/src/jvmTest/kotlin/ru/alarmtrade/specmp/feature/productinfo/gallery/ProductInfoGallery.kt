@@ -4,6 +4,7 @@ import java.io.File
 import kotlin.test.Test
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.datetime.LocalDate
+import ru.alarmtrade.specmp.core.barcode.BarcodeScannerAccess
 import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.ui.lce.LCEState
 import ru.alarmtrade.specmp.core.ui.view.dialog.CmpSnackbarHostState
@@ -21,7 +22,7 @@ import ru.alarmtrade.specmp.feature.productinfo.presentation.screen.product.Prod
 class ProductInfoGallery {
 
     private val outDir = File("build/state-gallery/product-info")
-    private val actions = ProductInfoActions({}, {}, {}, {}, {}, {}, {}, {})
+    private val actions = ProductInfoActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
     private val date = LocalDate(2024, 10, 14)
     private val product = ProductUnit(
@@ -64,7 +65,7 @@ class ProductInfoGallery {
         ProductKit("Pandora DX-4GS · комплект с брелоком D-030", "K-2410-118342", LocalDate(2024, 10, 21), components)
 
     private fun render(name: String, state: ProductInfoState) = StateGallery.render(outDir, name) {
-        ProductInfoScreen(state = state, actions = actions, snackbar = CmpSnackbarHostState())
+        ProductInfoScreen(state = state, actions = actions, snackbar = CmpSnackbarHostState(), scanAvailable = true)
     }
 
     @Test
@@ -110,5 +111,24 @@ class ProductInfoGallery {
     fun serverError() = render(
         "08-server",
         ProductInfoState(query = "107131", result = LCEState.Error(ProductInfoError.Unknown)),
+    )
+
+    @Test
+    fun scannerNoAccess() = render(
+        "09-scanner-denied",
+        ProductInfoState(scanner = BarcodeScannerAccess.DENIED),
+    )
+
+    @Test
+    fun scannerBlocked() = render(
+        "10-scanner-blocked",
+        ProductInfoState(scanner = BarcodeScannerAccess.BLOCKED),
+    )
+
+    // На JVM камеры нет — показывается «Камера недоступна».
+    @Test
+    fun scannerUnavailable() = render(
+        "11-scanner-unavailable",
+        ProductInfoState(scanner = BarcodeScannerAccess.GRANTED),
     )
 }

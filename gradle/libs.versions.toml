@@ -23,6 +23,8 @@ kotlinx-serialization = "1.11.0"
 coil = "3.5.0"
 multiplatformSettings = "1.3.0"
 kotlinx-datetime = "0.6.2"
+camerax = "1.6.2"
+mlkit-barcode = "17.3.0"
 kotlinx-collections-immutable = "0.3.8"
 buildConfig = "6.0.10"
 materialKolor = "4.1.1"
@@ -83,6 +85,11 @@ coil = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 multiplatformSettings = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+androidx-camera-mlkit-vision = { module = "androidx.camera:camera-mlkit-vision", version.ref = "camerax" }
+mlkit-barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlkit-barcode" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }

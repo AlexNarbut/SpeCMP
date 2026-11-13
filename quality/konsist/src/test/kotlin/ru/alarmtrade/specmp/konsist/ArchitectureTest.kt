@@ -533,7 +533,7 @@ class ArchitectureTest {
                 testName = "capability-usage",
                 additionalMessage = "Платформенные возможности: API core.permissions (PermissionsProvider, " +
                     "BindEffect, permissionsModule, blePermissions) и moko-permissions в фиче — только data, di и " +
-                    "ViewModel (значения DeviceAccessRequirement/BlePermissionResult — всем); порты " +
+                    "ViewModel (значения DeviceAccessRequirement/PermissionResult — всем); порты " +
                     "presentation/platform фичи — только presentation своего модуля, di и composition roots; " +
                     "общие порты feature/device/presentation-core — presentation любой фичи. " +
                     "docs/patterns.md, «Платформенные возможности»",
@@ -1249,7 +1249,7 @@ private fun String.isLifecycleImport(): Boolean = removeSuffix(".*").let { name 
     (name == LIFECYCLE_PACKAGE || name.startsWith("$LIFECYCLE_PACKAGE.")) && !name.startsWith("$LIFECYCLE_PACKAGE.di")
 }
 
-// API core.permissions, которое обращается к ОС; значения (DeviceAccessRequirement, BlePermissionResult) — не оно.
+// API core.permissions, которое обращается к ОС; значения (DeviceAccessRequirement, PermissionResult) — не оно.
 private val PERMISSIONS_API = setOf("PermissionsProvider", "BindEffect", "permissionsModule", "blePermissions")
     .map { "$ROOT.core.permissions.$it" }
 private const val MOKO_PERMISSIONS = "dev.icerock.moko.permissions"

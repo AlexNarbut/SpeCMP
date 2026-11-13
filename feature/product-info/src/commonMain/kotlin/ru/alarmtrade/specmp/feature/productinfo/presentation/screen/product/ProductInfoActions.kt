@@ -12,4 +12,10 @@ internal data class ProductInfoActions(
     val onToggleComponent: (Int) -> Unit,
     val onToggleAll: () -> Unit,
     val onCopy: (String) -> Unit,
+    val onScan: () -> Unit,
+    val onScanAccessRetry: () -> Unit,
+    val onScanOpenSettings: () -> Unit,
+    val onScanned: (String) -> Unit,
+    val onScanClose: () -> Unit,
+    val onScanManual: () -> Unit,
 )

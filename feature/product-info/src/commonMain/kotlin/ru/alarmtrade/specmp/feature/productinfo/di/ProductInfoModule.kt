@@ -18,6 +18,7 @@ val productInfoModule = module {
         ProductInfoViewModel(
             args = params.get<ProductInfoArgs>(),
             repository = get(),
+            permissions = get(),
             dispatchers = get(),
         )
     }

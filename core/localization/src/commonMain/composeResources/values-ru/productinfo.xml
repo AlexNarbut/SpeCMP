@@ -6,6 +6,8 @@
     <string name="productinfo_search_placeholder_query">Например, 107131</string>
     <string name="productinfo_search_btn_find">Найти</string>
     <string name="productinfo_search_a11y_clear">Очистить</string>
+    <string name="productinfo_search_a11y_scan">Сканировать штрих-код</string>
+    <string name="productinfo_empty_btn_scan">Сканировать штрих-код</string>
     <string name="productinfo_search_error_empty">Введите номер</string>
     <string name="productinfo_search_error_not_digits">Только цифры</string>
     <string name="productinfo_search_error_too_long">Слишком длинный номер</string>

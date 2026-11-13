@@ -36,6 +36,7 @@ core/localization/src/commonMain/composeResources/
 | `advancedmount` | `feature/advanced-mount` |
 | `techrequests` | `feature/tech-requests` (заявки на техпомощь) |
 | `productinfo` | `feature/product-info` (информация о товаре) |
+| `barcode` | `core/barcode` (сканер штрих-кода) |
 | `vehicle`, `configurator` | `feature/vehicle-ui`, `feature/configurator-ui` |
 | `firmware`, `settings` | `feature/device/firmware`, `feature/device/settings-ui` |
 | `deviceselect`, `deviceinteraction` | `feature/device/selection`, `feature/device/interaction-ui`, `feature/device/presentation-core` |

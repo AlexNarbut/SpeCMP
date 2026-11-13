@@ -6,6 +6,8 @@
     <string name="productinfo_search_placeholder_query">e.g. 107131</string>
     <string name="productinfo_search_btn_find">Search</string>
     <string name="productinfo_search_a11y_clear">Clear</string>
+    <string name="productinfo_search_a11y_scan">Scan barcode</string>
+    <string name="productinfo_empty_btn_scan">Scan barcode</string>
     <string name="productinfo_search_error_empty">Enter a number</string>
     <string name="productinfo_search_error_not_digits">Digits only</string>
     <string name="productinfo_search_error_too_long">Number is too long</string>

@@ -12,6 +12,8 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Камера нужна для сканирования штрих-кодов товара</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Доступ к Bluetooth нужен для поиска и подключения устройств Pandora</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
