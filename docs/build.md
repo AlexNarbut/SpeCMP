@@ -23,6 +23,8 @@
 | iOS framework | `./gradlew :composeApp:embedAndSignAppleFrameworkForXcode` |
 | Запустить Desktop | `./gradlew :desktopApp:run` |
 | Собрать Desktop пакет | `./gradlew :desktopApp:packageDistributionForCurrentOS` |
+
+Модули JDK пакета перечислены в `desktopApp/build.gradle.kts` (`nativeDistributions.modules`): jlink кладёт только их. Новая зависимость падает в упакованном приложении с `NoClassDefFoundError: java/...` — сверить `./gradlew :desktopApp:suggestRuntimeModules` и дописать модуль; проверка — запуск `desktopApp/build/compose/binaries/main/app/SpeCMP.app/Contents/MacOS/SpeCMP` из терминала.
 | Тесты (commonTest + jvmTest на JVM) | `./gradlew jvmTest` / модуля — `./gradlew :feature:login:jvmTest`; `allTests`/`test` не использовать — гоняют iOS, Android host-тестов нет |
 | Стиль и импорты (ktlint + compose-rules) | `./gradlew spotlessCheck` / автофикс — `./gradlew spotlessApply` ([`code-quality.md`](code-quality.md)) |
 | Смысловой анализ (detekt) | `./gradlew detektCheck --continue` / модуля — `./gradlew :feature:login:detektCheck` |

@@ -79,6 +79,20 @@ compose.desktop {
                 TargetFormat.Deb,
             )
             packageName = "SpeCMP"
+            // jlink кладёт в пакет только перечисленные модули JDK (`suggestRuntimeModules` + то, что грузится
+            // рефлексией): без java.sql упакованное приложение падает на старте (локальная база SDK).
+            modules(
+                "java.instrument",
+                "java.management",
+                "java.naming",
+                "java.prefs",
+                "java.sql",
+                "jdk.charsets",
+                "jdk.crypto.ec",
+                "jdk.localedata",
+                "jdk.unsupported",
+                "jdk.xml.dom",
+            )
             packageVersion = libs.versions.app.versionName.get()
 
             macOS {
