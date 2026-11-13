@@ -145,8 +145,9 @@ commonMain.dependencies {
 | Кнопка с иконкой | `button/CmpIconButton.kt` |
 | Кнопка шага −/+ с автоповтором при удержании | `button/CmpStepButton.kt` |
 | FAB | `button/CmpFloatingActionButton.kt` |
-| Текстовое поле | `input/CmpTextField.kt` |
+| Текстовое поле (многострочное — `singleLine = false`, `minLines`/`maxLines`) | `input/CmpTextField.kt` |
 | Поле поиска (лупа, «очистить») | `input/CmpSearchField.kt` |
+| Телефон с маской страны (Европа, СНГ; значение — цифры с кодом, логика — `PhoneNumbers` в `core/common`) | `input/CmpPhoneField.kt` |
 | Поле цифрового кода по ячейкам (CAN-код) | `input/CmpCodeField.kt` |
 | Скрытие клавиатуры: тап вне поля, прокрутка, зона «не снимать фокус» | `input/KeyboardDismiss.kt` |
 | Выпадающий список (поле) | `input/CmpDropdown.kt` |

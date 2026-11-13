@@ -78,6 +78,7 @@ fun AdvancedMountNavGraph(
     systemDevices: @Composable (onBack: () -> Unit, onOpenPairing: () -> Unit) -> Unit,
     dynamicDevices: @Composable (onBack: () -> Unit, onOpenSystemDevices: () -> Unit) -> Unit,
     vehicles: @Composable (onBack: () -> Unit) -> Unit,
+    techRequests: @Composable (onBack: () -> Unit) -> Unit,
     assistant: @Composable (
         onBack: () -> Unit,
         onOpenSection: (MountSection) -> Unit,
@@ -85,15 +86,7 @@ fun AdvancedMountNavGraph(
     ) -> Unit,
     resumeAssistantTitle: String? = null,
 ) {
-    val backStack = if (resumeAssistantTitle == null) {
-        rememberNavBackStack(navConfig, AdvancedMountRootRoute)
-    } else {
-        rememberNavBackStack(
-            navConfig,
-            AdvancedMountRootRoute,
-            AdvancedMountSectionRoute(MountSection.ASSISTANT, resumeAssistantTitle),
-        )
-    }
+    val backStack = rememberAdvancedMountBackStack(resumeAssistantTitle)
 
     NavDisplay(
         backStack = backStack,
@@ -177,6 +170,8 @@ fun AdvancedMountNavGraph(
 
                     MountSection.VEHICLES -> vehicles { backStack.popSafe() }
 
+                    MountSection.TECH_REQUESTS -> techRequests { backStack.popSafe() }
+
                     else -> SectionStubScreen(section = key.section, deviceTitle = key.deviceTitle, onBack = {
                         backStack.popSafe()
                     })
@@ -208,3 +203,15 @@ private fun PeripheralsSection(
         }
     }
 }
+
+@Composable
+private fun rememberAdvancedMountBackStack(resumeAssistantTitle: String?): NavBackStack<NavKey> =
+    if (resumeAssistantTitle == null) {
+        rememberNavBackStack(navConfig, AdvancedMountRootRoute)
+    } else {
+        rememberNavBackStack(
+            navConfig,
+            AdvancedMountRootRoute,
+            AdvancedMountSectionRoute(MountSection.ASSISTANT, resumeAssistantTitle),
+        )
+    }

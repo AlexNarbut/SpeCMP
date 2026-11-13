@@ -26,6 +26,7 @@ import ru.alarmtrade.specmp.feature.login.di.loginModule
 import ru.alarmtrade.specmp.feature.main.di.mainModule
 import ru.alarmtrade.specmp.feature.mountassistant.di.mountAssistantModule
 import ru.alarmtrade.specmp.feature.supportchat.di.supportChatModule
+import ru.alarmtrade.specmp.feature.techrequests.di.techRequestsModule
 import ru.alarmtrade.specmp.feature.vehicle.di.vehicleModule
 import ru.alarmtrade.specmp.feature.vehicle.ui.di.vehicleUiModule
 
@@ -41,6 +42,7 @@ fun appKoinModules(appVersionName: String, appVersionCode: Int): List<Module> = 
     add(loginModule)
     add(mainModule)
     add(supportChatModule)
+    add(techRequestsModule)
     add(deviceSelectionModule)
     add(deviceInteractionModule)
     add(deviceFirmwareModule)

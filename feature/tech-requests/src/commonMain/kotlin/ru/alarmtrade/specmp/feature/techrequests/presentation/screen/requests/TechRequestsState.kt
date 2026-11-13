@@ -25,6 +25,7 @@ internal data class TechRequestsState(
     val sending: TechRequestSending = TechRequestSending.Idle,
     val highlightedId: Long? = null,
     val pendingActionId: Long? = null,
+    val pendingAction: RequestAction? = null,
     val dialog: TechRequestsDialog? = null,
     val prefill: ContactPrefill = ContactPrefill(),
 ) {

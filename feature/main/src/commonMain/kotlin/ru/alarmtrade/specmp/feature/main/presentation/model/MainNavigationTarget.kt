@@ -11,6 +11,7 @@ enum class MainNavigationTarget {
     Feedback,
     ProductInfo,
     TechSupportChat,
+    TechRequests,
     Warehouse1C,
     Settings,
     AppUpdate,

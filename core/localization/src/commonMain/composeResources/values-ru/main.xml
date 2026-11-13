@@ -30,6 +30,8 @@
     <string name="main_main_msg_product_info">Найти информацию о товаре и комплектации</string>
     <string name="main_main_title_tech_support_chat">Чат тех. поддержки</string>
     <string name="main_main_msg_tech_support_chat">Напишите в чат нашему специалисту о вашей проблеме</string>
+    <string name="main_main_title_tech_requests">Заявки на техпомощь</string>
+    <string name="main_main_msg_tech_requests">Закажите обратный звонок специалиста и следите за заявками</string>
     <string name="main_main_title_warehouse_1c">Склад 1С</string>
     <string name="main_main_msg_warehouse_1c">Открыть интеграцию со складом</string>
 

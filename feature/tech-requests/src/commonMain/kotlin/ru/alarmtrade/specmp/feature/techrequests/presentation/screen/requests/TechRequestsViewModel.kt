@@ -163,7 +163,7 @@ internal class TechRequestsViewModel(
         intent {
             val confirm = currentState.dialog as? TechRequestsDialog.Confirm ?: return@intent
             if (currentState.pendingActionId != null) return@intent
-            reduce { copy(dialog = null, pendingActionId = confirm.id) }
+            reduce { copy(dialog = null, pendingActionId = confirm.id, pendingAction = confirm.action) }
             val response = withContext(dispatchers.io) {
                 when (confirm.action) {
                     RequestAction.Cancel -> repository.cancel(confirm.id)
@@ -172,12 +172,17 @@ internal class TechRequestsViewModel(
             }
             when (response) {
                 is Response.Success -> {
-                    reduce { copy(pendingActionId = null).withStatus(confirm.id, confirm.action.resultStatus) }
+                    reduce {
+                        copy(
+                            pendingActionId = null,
+                            pendingAction = null,
+                        ).withStatus(confirm.id, confirm.action.resultStatus)
+                    }
                     postSideEffect(TechRequestsEffect.ActionDone(confirm.action))
                 }
 
                 is Response.Error -> {
-                    reduce { copy(pendingActionId = null) }
+                    reduce { copy(pendingActionId = null, pendingAction = null) }
                     postSideEffect(
                         TechRequestsEffect.ActionFailed(confirm.action, TechRequestsError.from(response.exception)),
                     )

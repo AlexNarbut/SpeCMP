@@ -12,6 +12,7 @@ import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_firmware_a
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_product_info
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_quick_mount
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_requests
+import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_tech_requests
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_tech_support_chat
 import ru.alarmtrade.specmp.core.localization.resources.main_main_msg_warehouse_1c
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_advanced_mount
@@ -23,6 +24,7 @@ import ru.alarmtrade.specmp.core.localization.resources.main_main_title_firmware
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_product_info
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_quick_mount
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_requests
+import ru.alarmtrade.specmp.core.localization.resources.main_main_title_tech_requests
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_tech_support_chat
 import ru.alarmtrade.specmp.core.localization.resources.main_main_title_warehouse_1c
 import ru.alarmtrade.specmp.feature.main.domain.model.MainUserAppFeatures
@@ -37,6 +39,7 @@ import specmp.feature.main.generated.resources.firmware_archive
 import specmp.feature.main.generated.resources.orders
 import specmp.feature.main.generated.resources.product_search
 import specmp.feature.main.generated.resources.settings_configurator
+import specmp.feature.main.generated.resources.tech_requests
 import specmp.feature.main.generated.resources.user_manual_request
 import specmp.feature.main.generated.resources.vehicle_support
 
@@ -121,6 +124,13 @@ enum class MainHomeAction(
         icon = Res.drawable.chat,
         title = Strings.string.main_main_title_tech_support_chat,
         description = Strings.string.main_main_msg_tech_support_chat,
+    ),
+    TechRequests(
+        target = MainNavigationTarget.TechRequests,
+        group = MainHomeActionGroup.Tool,
+        icon = Res.drawable.tech_requests,
+        title = Strings.string.main_main_title_tech_requests,
+        description = Strings.string.main_main_msg_tech_requests,
     ),
     Warehouse1C(
         target = MainNavigationTarget.Warehouse1C,

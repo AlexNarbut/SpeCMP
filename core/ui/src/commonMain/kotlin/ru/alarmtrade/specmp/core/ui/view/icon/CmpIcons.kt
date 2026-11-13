@@ -167,4 +167,7 @@ enum class CmpIcons {
     Bolt,
     Tune,
     Speed,
+    Language,
+    RadioButtonUnchecked,
+    Outbox,
 }
