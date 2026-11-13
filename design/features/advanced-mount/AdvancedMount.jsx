@@ -352,6 +352,7 @@ function AdvancedMountScreen({ profile = "alarm", initialState = "ready", mode =
     : (s.key === "devices" && window.psHas && window.psHas("peripheral-devices")) ? window.psGo(layout === "compact" ? "peripheral-devices" : "peripheral-devices-tablet")
     : (s.key === "extra" && !(canLocked && s.needsCan) && window.psHas && window.psHas("peripheral-devices")) ? (location.href = window.PS_ROOT + window.PS_LINKS[layout === "compact" ? "peripheral-devices" : "peripheral-devices-tablet"] + "?screen=pairing")
     : (s.key === "check" && window.psHas && window.psHas("check-state")) ? window.psGo(layout === "compact" ? "check-state" : "check-state-tablet")
+    : (s.key === "tickets" && window.psHas && window.psHas("tech-requests")) ? window.psGo(layout === "compact" ? "tech-requests" : "tech-requests-tablet")
     : setSection(s);
   const effItems = state === "empty" ? [] : items;
 

@@ -77,6 +77,10 @@
     'support-chat':         'features/support-chat/SupportChat.html',
     'support-chat-tablet':  'features/support-chat/SupportChatTablet.html',
     'support-chat-desktop': 'features/support-chat/SupportChatDesktop.html',
+    'tech-requests':         'features/tech-requests/TechRequests.html',
+    'tech-requests-tablet':  'features/tech-requests/TechRequestsTablet.html',
+    'tech-requests-desktop': 'features/tech-requests/TechRequestsDesktop.html',
+    'tech-requests-states':  'features/tech-requests/TechRequestsStates.html',
   };
 
   window.PS_ROOT = ROOT;

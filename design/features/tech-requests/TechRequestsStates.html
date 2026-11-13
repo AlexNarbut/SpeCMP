@@ -1,0 +1,90 @@
+<!-- @dsCard group="Заявки на техпомощь" viewport="1200x900" name="Заявки на техпомощь — состояния" subtitle="Доска статичных кадров: телефон (светлая/тёмная) и широкое окно" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Спец — Заявки на техпомощь — все состояния</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1180px; padding: 0 16px; }
+  .toolbar .break { flex-basis: 100%; height: 0; }
+  .lbl { font-size: 12px; color: #3b3f41; font-weight: 600; }
+  .seg { display: flex; flex-wrap: wrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 7px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .link { border: none; background: #fff; border-radius: 999px; padding: 7px 13px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #1A3E7A; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .scaler { transform-origin: top left; }
+  .tablet { background: #1b1d1e; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); }
+  .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+  .win { border-radius: 10px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); display: flex; flex-direction: column; }
+  .titlebar { height: 38px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); font-size: 13px; font-weight: 500; }
+  .cbody { flex: 1; min-height: 0; display: flex; background: var(--background); }
+  a { color: #1A3E7A; } a:hover { color: #07203F; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./TechRequests.jsx"></script>
+<script type="text/babel">
+  const PHONE = [
+    ["list", "Список · секции", { grouping: "sections" }],
+    ["list", "Список · фильтр-чипы", { grouping: "chips" }],
+    ["empty", "Пусто"], ["loading", "Загрузка"], ["error", "Ошибка загрузки"],
+    ["busy", "Действие в процессе"], ["confirm", "Подтверждение отмены"],
+    ["form", "Форма"], ["formErrors", "Ошибки полей"], ["sending", "Отправка"], ["success", "Успех"], ["limit", "Лимит заявок"], ["draft", "Черновик при закрытии"],
+  ];
+  const DARK = [["list", "Список"], ["formErrors", "Форма с ошибками"], ["sending", "Отправка"], ["empty", "Пусто"]];
+  const WIDE = [["list", "Список + панель", { wide: "split" }, false], ["form", "Список + диалог (планшет)", { wide: "dialog" }, false], ["limit", "Лимит · тёмная", { wide: "split" }, true], ["list", "Тёмная · чипы", { wide: "split", grouping: "chips" }, true]];
+  function Phone({ sc, label, extra = {}, dark, lang }) {
+    return (
+      <figure style={{ margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        <figcaption style={{ font: "600 13px var(--font-sans)", color: "#2b2f31" }}>{label}</figcaption>
+        <div data-theme={dark ? "dark" : undefined} style={{ width: 412, height: 860, borderRadius: 24, overflow: "hidden", boxShadow: "0 12px 40px rgba(0,0,0,.22)", background: "var(--background)" }}>
+          <window.TechRequestsApp freeze scenario={sc} lang={lang} platform="mobile" {...extra} />
+        </div>
+      </figure>
+    );
+  }
+  function Wide({ sc, label, extra, dark, lang }) {
+    const s = 0.62;
+    return (
+      <figure style={{ margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        <figcaption style={{ font: "600 13px var(--font-sans)", color: "#2b2f31" }}>{label} · 1280×800</figcaption>
+        <div style={{ width: 1280 * s, height: 800 * s, borderRadius: 12, overflow: "hidden", boxShadow: "0 12px 40px rgba(0,0,0,.22)" }}>
+          <div data-theme={dark ? "dark" : undefined} style={{ width: 1280, height: 800, transform: `scale(${s})`, transformOrigin: "top left", background: "var(--background)" }}>
+            <window.TechRequestsApp freeze scenario={sc} lang={lang} platform="desktop" {...extra} />
+          </div>
+        </div>
+      </figure>
+    );
+  }
+  function Board() {
+    const [lang, setLang] = React.useState("ru");
+    const H = ({ children }) => <h2 style={{ font: "700 20px var(--font-sans)", color: "#1b1d1e", margin: "12px 0 0", width: "100%" }}>{children}</h2>;
+    return (
+      <div style={{ width: "100%", maxWidth: 1900, padding: "0 32px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="toolbar" style={{ justifyContent: "flex-start", padding: 0 }}>
+          <div className="seg"><button className={lang === "ru" ? "on" : ""} onClick={() => setLang("ru")}>RU</button><button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</button></div>
+          <button className="link" onClick={() => window.psGo("tech-requests")}>Живой макет: mobile →</button>
+          <button className="link" onClick={() => window.psGo("tech-requests-desktop")}>Desktop →</button>
+        </div>
+        <H>Телефон · светлая</H>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 28 }}>{PHONE.map(([sc, l, e], i) => <Phone key={lang + i} sc={sc} label={l} extra={e} lang={lang} />)}</div>
+        <H>Телефон · тёмная</H>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 28 }}>{DARK.map(([sc, l], i) => <Phone key={lang + i} sc={sc} label={l} dark lang={lang} />)}</div>
+        <H>Широкое окно (планшет-ландшафт / desktop)</H>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 28 }}>{WIDE.map(([sc, l, e, d], i) => <Wide key={lang + i} sc={sc} label={l} extra={e} dark={d} lang={lang} />)}</div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Board />);
+</script>
+</body>
+</html>

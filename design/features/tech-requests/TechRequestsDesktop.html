@@ -1,0 +1,70 @@
+<!-- @dsCard group="Заявки на техпомощь" viewport="900x640" name="Заявки на техпомощь (desktop)" subtitle="Compose Desktop 1280×800 / min 800×600 — список + панель формы; Ctrl+Enter" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Pandora Спец — Заявки на техпомощь (desktop)</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #c9ccce; min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 0 28px; box-sizing: border-box; }
+  .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1180px; padding: 0 16px; }
+  .toolbar .break { flex-basis: 100%; height: 0; }
+  .lbl { font-size: 12px; color: #3b3f41; font-weight: 600; }
+  .seg { display: flex; flex-wrap: wrap; background: #fff; border-radius: 18px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .seg button { border: none; background: transparent; padding: 7px 12px; border-radius: 999px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #444; }
+  .seg button.on { background: #1A3E7A; color: #fff; }
+  .link { border: none; background: #fff; border-radius: 999px; padding: 7px 13px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; color: #1A3E7A; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  .scaler { transform-origin: top left; }
+  .tablet { background: #1b1d1e; border-radius: 28px; padding: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.32); }
+  .screen { border-radius: 14px; overflow: hidden; background: var(--background); }
+  .win { border-radius: 10px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.32); display: flex; flex-direction: column; }
+  .titlebar { height: 38px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: var(--surface-container); color: var(--on-surface); border-bottom: 1px solid var(--outline-variant); font-size: 13px; font-weight: 500; }
+  .cbody { flex: 1; min-height: 0; display: flex; background: var(--background); }
+  a { color: #1A3E7A; } a:hover { color: #07203F; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../res/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" src="./TechRequests.jsx"></script>
+<script type="text/babel" src="./tr-host.jsx"></script>
+<script type="text/babel">
+  const SIZES = { min: { w: 800, h: 600 }, expanded: { w: 1100, h: 760 }, large: { w: 1280, h: 800 } };
+  function DesktopApp() {
+    const [s, set, key, reset] = window.useTrHost();
+    const [size, setSize] = React.useState("large");
+    const { w, h } = SIZES[size];
+    
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      const f = () => setScale(Math.min(1, (window.innerWidth - 48) / w, (window.innerHeight - 260) / h + 38));
+      f(); window.addEventListener("resize", f); return () => window.removeEventListener("resize", f);
+    }, [w, h + 38]);
+    return (
+      <React.Fragment>
+        <window.TrToolbar s={s} set={set} reset={reset} links={[["tech-requests", "Mobile →"], ["tech-requests-tablet", "Планшет →"], ["tech-requests-states", "Все состояния →"]]} />
+        <div className="seg">
+          {Object.entries(SIZES).map(([k, v]) => <button key={k} className={size === k ? "on" : ""} onClick={() => setSize(k)}>{v.w}×{v.h}</button>)}
+        </div>
+        <div style={{ width: w * scale, height: (h + 38) * scale }}>
+          <div className="scaler" style={{ transform: `scale(${scale})` }}>
+            <div className="win" data-theme={s.dark ? "dark" : undefined} style={{ width: w, height: h + 38 }}>
+              <div className="titlebar"><span>Pandora Спец — {s.lang === "en" ? "Tech support requests" : "Заявки на техпомощь"}</span><span>—  ▢  ✕</span></div>
+              <div className="cbody">
+                <window.TechRequestsApp key={key + size} platform="desktop" lang={s.lang} grouping={s.grouping} wide="split" scenario={s.scenario} outcome={s.outcome} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<DesktopApp />);
+</script>
+</body>
+</html>
