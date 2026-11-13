@@ -14,6 +14,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_error_cancel
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_list_error_close
@@ -25,20 +26,34 @@ import ru.alarmtrade.specmp.core.ui.view.dialog.rememberCmpSnackbarHostState
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.TechRequestFormActions
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.TechRequestsActions
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.textOf
+import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.DraftPrefill
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.RequestAction
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.TechRequestsEffect
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.TechRequestsScreen
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.TechRequestsViewModel
 
-/** Вход с главного экрана (блок может быть не подключён). Из расширенного монтажа — тот же [TechRequestsEntry]. */
+/**
+ * Экран заявок поверх текущего; [prefill] — открыть сразу «Новую заявку» с описанием (ошибка обхода, Clone…).
+ * Из расширенного монтажа без предзаполнения — тот же [TechRequestsEntry] в слоте графа.
+ */
 @Serializable
 @SerialName("tech-requests.TechRequestsRoute")
-data object TechRequestsRoute : NavKey
+data class TechRequestsRoute(val prefill: TechRequestPrefill? = null) : NavKey
+
+/** [origin] — откуда открыта заявка («Бесключевой обход»), [text] — текст ошибки для описания; оба уже локализованы. */
+@Serializable
+@SerialName("tech-requests.TechRequestPrefill")
+data class TechRequestPrefill(val origin: String, val text: String)
 
 /** Список заявок и форма новой; [onConnectDevice] — к выбору блока, когда его нет. */
 @Composable
-fun TechRequestsEntry(onBack: () -> Unit, onConnectDevice: () -> Unit, onOpenChat: () -> Unit) {
-    val viewModel = koinViewModel<TechRequestsViewModel>()
+fun TechRequestsEntry(
+    onBack: () -> Unit,
+    onConnectDevice: () -> Unit,
+    onOpenChat: () -> Unit,
+    prefill: TechRequestPrefill? = null,
+) {
+    val viewModel = koinViewModel<TechRequestsViewModel> { parametersOf(prefill?.toDraftPrefill()) }
     val state = viewModel.state.collectAsStateWithLifecycle()
     val snackbar = rememberCmpSnackbarHostState()
     val scope = rememberCoroutineScope()
@@ -97,3 +112,5 @@ private suspend fun TechRequestsEffect.message(): String = when (this) {
 
     TechRequestsEffect.SendingStopped -> getString(Strings.string.techrequests_list_msg_sending_stopped)
 }
+
+private fun TechRequestPrefill.toDraftPrefill(): DraftPrefill = DraftPrefill(origin, text)

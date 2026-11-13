@@ -2,7 +2,7 @@
 <resources>
     <string name="autostart_common_a11y_back">Back</string>
     <string name="autostart_common_a11y_locked">You can’t leave until writing is finished</string>
-    <string name="autostart_common_btn_chat">Contact support</string>
+    <string name="autostart_common_btn_chat">Write to support chat</string>
     <string name="autostart_common_btn_retry">Retry</string>
     <string name="autostart_common_btn_next">Next</string>
     <string name="autostart_common_btn_close">Close</string>
@@ -189,4 +189,12 @@
     <string name="autostart_clone_error_device_id">Clone error. Unknown device</string>
     <string name="autostart_clone_error_attempts">Clone error. No Clone attempts left. Contact technical support</string>
     <string name="autostart_clone_error_denied">This device has no access to the Clone procedure</string>
+    <string name="autostart_common_btn_ticket">Tech support request</string>
+    <string name="autostart_bypass_label_ticket_origin">Keyless bypass</string>
+    <string name="autostart_bypass_label_ticket_origin_fast">Quick install · bypass</string>
+    <string name="autostart_clone_label_ticket_origin">Clone procedure</string>
+    <string name="autostart_clone_label_ticket_origin_fast">Quick install · Clone</string>
+    <string name="autostart_bypass_format_ticket">Keyless bypass: learning failed. %1$s</string>
+    <string name="autostart_clone_format_ticket">Clone procedure: %1$s</string>
+    <string name="autostart_clone_msg_ticket_no_attempts">Clone procedure: no attempts left. Additional attempts are needed.</string>
 </resources>

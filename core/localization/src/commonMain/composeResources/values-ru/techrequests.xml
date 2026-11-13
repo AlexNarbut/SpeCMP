@@ -84,4 +84,5 @@
     <string name="techrequests_form_msg_discard">Введённый текст не сохранится.</string>
     <string name="techrequests_form_btn_discard">Удалить</string>
     <string name="techrequests_form_btn_keep_editing">Продолжить</string>
+    <string name="techrequests_form_msg_origin">Открыто из «%1$s». Текст ошибки уже в описании — допишите, что делали.</string>
 </resources>

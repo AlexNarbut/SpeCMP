@@ -90,13 +90,16 @@ internal fun FastMountGraph(backStack: NavBackStack<NavKey>) {
                 exit = FastMountExit.ADVANCED_MOUNT
                 onExit()
             },
-            slots = fastMountSlots(onOpenSupportChat),
+            slots = fastMountSlots(onOpenSupportChat, backStack.techRequestOpener()),
         )
     }
 }
 
 @Composable
-private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
+private fun fastMountSlots(
+    onOpenSupportChat: () -> Unit,
+    onOpenTechRequest: (origin: String, text: String) -> Unit,
+): FastMountSlots {
     val opener = rememberSupportChatFileOpener()
     return remember(opener) {
         FastMountSlots(
@@ -142,6 +145,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     onNext = onNext,
                     onBack = step.onBack,
                     onOpenSupportChat = onOpenSupportChat,
+                    onOpenTechRequest = onOpenTechRequest,
                 )
             },
             clone = { step, onNext ->
@@ -152,6 +156,7 @@ private fun fastMountSlots(onOpenSupportChat: () -> Unit): FastMountSlots {
                     onNext = onNext,
                     onBack = step.onBack,
                     onOpenSupportChat = onOpenSupportChat,
+                    onOpenTechRequest = onOpenTechRequest,
                 )
             },
             systemCheck = { step, checklist, actions ->

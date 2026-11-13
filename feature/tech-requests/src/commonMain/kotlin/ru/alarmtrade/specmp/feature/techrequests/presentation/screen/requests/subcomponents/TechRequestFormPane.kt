@@ -64,6 +64,7 @@ import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_loadin
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_loading_sending
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_msg_attach_note
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_msg_cancel_note
+import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_msg_origin
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_msg_sent
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_placeholder_issue
 import ru.alarmtrade.specmp.core.localization.resources.techrequests_form_subtitle_callback
@@ -114,6 +115,7 @@ internal fun TechRequestFormPane(
     keyboardHints: Boolean,
     actions: TechRequestFormActions,
     modifier: Modifier = Modifier,
+    origin: String? = null,
 ) {
     val colors = cmpThemeColors()
     val inProgress = sending is TechRequestSending.InProgress
@@ -152,6 +154,7 @@ internal fun TechRequestFormPane(
                 .padding(horizontal = horizontal, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
+            origin?.let { OriginNote(it) }
             FormFields(form, enabled = !inProgress, actions = actions)
             AttachBlock(device, language, initiallyOpen = kind == FormKind.Panel)
         }
@@ -184,6 +187,24 @@ private fun FormHeader(kind: FormKind, onClose: () -> Unit) {
         if (kind == FormKind.Dialog) {
             CmpIconButton(onClick = onClose, icon = CmpIcons.Close, contentDescription = close)
         }
+    }
+}
+
+@Composable
+private fun OriginNote(origin: String) {
+    val colors = cmpThemeColors()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.secondaryContainer, RoundedCornerShape(16.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        CmpIcon(icon = CmpIcons.Link, contentDescription = null, tint = colors.onSecondaryContainer)
+        CmpText(
+            text = stringResource(Strings.string.techrequests_form_msg_origin, origin),
+            color = colors.onSecondaryContainer,
+        )
     }
 }
 

@@ -68,6 +68,7 @@ import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
+import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestPrefill
 import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestsEntry
 import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestsRoute
 import ru.alarmtrade.specmp.feature.vehicle.domain.model.CarSummary
@@ -150,11 +151,12 @@ private fun AuthedNavGraph() {
                     fileOpener = rememberSupportChatFileOpener(),
                 )
             }
-            entry<TechRequestsRoute> { _ ->
+            entry<TechRequestsRoute> { key ->
                 TechRequestsEntry(
                     onBack = { backStack.popSafe() },
                     onConnectDevice = { backStack.navigateSafe(DeviceSelectionRoute) },
                     onOpenChat = { backStack.navigateSafe(SupportChatRoute) },
+                    prefill = key.prefill,
                 )
             }
             entry<DeviceSelectionRoute> { _ ->
@@ -243,10 +245,16 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                     onBack = onBack,
                     onOpenClone = onOpenClone,
                     onOpenSupportChat = onOpenSupportChat,
+                    onOpenTechRequest = backStack.techRequestOpener(),
                 )
             },
             clone = { fromBypass, onBack, onOpenSupportChat ->
-                CloneEntry(fromBypass = fromBypass, onBack = onBack, onOpenSupportChat = onOpenSupportChat)
+                CloneEntry(
+                    fromBypass = fromBypass,
+                    onBack = onBack,
+                    onOpenSupportChat = onOpenSupportChat,
+                    onOpenTechRequest = backStack.techRequestOpener(),
+                )
             },
             checkState = { onBack -> CheckStateEntry(onBack = onBack) },
             systemDevices = { onBack, onOpenPairing ->
@@ -456,7 +464,7 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.TechSupportChat -> backStack.navigateSafe(SupportChatRoute)
 
-        MainNavigationTarget.TechRequests -> backStack.navigateSafe(TechRequestsRoute)
+        MainNavigationTarget.TechRequests -> backStack.navigateSafe(TechRequestsRoute())
 
         MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 
@@ -477,4 +485,9 @@ private fun AppStartLoading() {
     ) {
         CmpCircularProgressIndicator(color = cmpThemeColors().primary)
     }
+}
+
+/** «Заявка на техпомощь» из сценария (обход, Clone): экран заявок поверх, сессия с блоком остаётся открытой. */
+internal fun NavBackStack<NavKey>.techRequestOpener(): (origin: String, text: String) -> Unit = { origin, text ->
+    navigateSafe(TechRequestsRoute(TechRequestPrefill(origin, text)))
 }

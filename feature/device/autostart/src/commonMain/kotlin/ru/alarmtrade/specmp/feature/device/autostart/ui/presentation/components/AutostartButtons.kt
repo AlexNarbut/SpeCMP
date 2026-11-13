@@ -12,6 +12,7 @@ import ru.alarmtrade.specmp.core.localization.resources.Strings
 import ru.alarmtrade.specmp.core.localization.resources.autostart_common_btn_next
 import ru.alarmtrade.specmp.core.ui.view.button.CmpButton
 import ru.alarmtrade.specmp.core.ui.view.button.CmpOutlinedButton
+import ru.alarmtrade.specmp.core.ui.view.button.CmpTextButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcons
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
@@ -42,6 +43,15 @@ internal fun AutostartSecondaryButton(
 }
 
 @Composable
+internal fun AutostartTextButton(text: StringResource, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    CmpTextButton(
+        text = stringResource(text),
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().height(AutostartTextButtonHeight),
+    )
+}
+
+@Composable
 internal fun StepNextButton(next: AutostartStepNext, onClick: () -> Unit, modifier: Modifier = Modifier) {
     next.error?.let { error ->
         InfoBanner(icon = CmpIcons.ErrorOutline, tone = BannerTone.Error, text = error)
@@ -58,3 +68,5 @@ internal fun StepNextButton(next: AutostartStepNext, onClick: () -> Unit, modifi
         }
     }
 }
+
+private val AutostartTextButtonHeight = 48.dp

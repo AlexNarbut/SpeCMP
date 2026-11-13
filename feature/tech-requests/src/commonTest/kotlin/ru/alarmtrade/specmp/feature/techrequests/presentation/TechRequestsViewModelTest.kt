@@ -54,6 +54,7 @@ import ru.alarmtrade.specmp.feature.techrequests.domain.model.TechRequestSubmitS
 import ru.alarmtrade.specmp.feature.techrequests.domain.repository.TechRequestsRepository
 import ru.alarmtrade.specmp.feature.techrequests.domain.techRequest
 import ru.alarmtrade.specmp.feature.techrequests.presentation.model.TechRequestsError
+import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.DraftPrefill
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.RequestAction
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.SubmitStage
 import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.TechRequestSending
@@ -86,13 +87,20 @@ class TechRequestsViewModelTest {
         }
     }
 
-    private fun TestScope.viewModel(withDevice: Boolean = true): TechRequestsViewModel {
+    private fun TestScope.viewModel(withDevice: Boolean = true, prefill: DraftPrefill? = null): TechRequestsViewModel {
         val session = testDeviceSession(
             sessionRepository,
             dispatcher = dispatcher,
             transport = ConnectionTransport.BLE.takeIf { withDevice },
         )
-        val vm = TechRequestsViewModel(session, repository, account, testDispatchers(dispatcher), RussianLocale)
+        val vm = TechRequestsViewModel(
+            session,
+            repository,
+            account,
+            testDispatchers(dispatcher),
+            RussianLocale,
+            prefill,
+        )
             .also { viewModels += it }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.state.collect {} }
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { vm.sideEffect.collect { effects += it } }
@@ -367,6 +375,20 @@ class TechRequestsViewModelTest {
         runCurrent()
 
         assertEquals(TechRequestStatus.IN_PROCESS, vm.state.value.statusOf(5))
+    }
+
+    @Test
+    fun prefillOpensFormWithErrorTextAndOrigin() = test {
+        val vm = viewModel(prefill = DraftPrefill("Процедура Clone", "Процедура Clone: ошибка записи"))
+
+        assertTrue(vm.state.value.formOpen)
+        assertEquals("Процедура Clone", vm.state.value.origin)
+        assertEquals("Процедура Clone: ошибка записи ", vm.state.value.form.issue)
+        assertEquals("Иван", vm.state.value.form.name)
+
+        vm.onDiscardDraft()
+        runCurrent()
+        assertNull(vm.state.value.origin)
     }
 
     @Test

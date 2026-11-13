@@ -318,6 +318,7 @@ private fun SidePanel(
                 language = current.language,
                 keyboardHints = keyboardHints,
                 actions = actions.form,
+                origin = current.origin,
                 modifier = Modifier.padding(start = 1.dp),
             )
         } else {
@@ -349,6 +350,7 @@ private fun FormOverlay(
             language = current.language,
             keyboardHints = keyboardHints,
             actions = actions.form,
+            origin = current.origin,
             modifier = paneModifier,
         )
     }

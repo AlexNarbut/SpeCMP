@@ -2,7 +2,7 @@
 <resources>
     <string name="autostart_common_a11y_back">Назад</string>
     <string name="autostart_common_a11y_locked">Выход недоступен до завершения записи</string>
-    <string name="autostart_common_btn_chat">В чат поддержки</string>
+    <string name="autostart_common_btn_chat">Написать в чат поддержки</string>
     <string name="autostart_common_btn_retry">Повторить</string>
     <string name="autostart_common_btn_next">Далее</string>
     <string name="autostart_common_btn_close">Закрыть</string>
@@ -189,4 +189,12 @@
     <string name="autostart_clone_error_device_id">Ошибка процедуры Clone. Неопознанное устройство</string>
     <string name="autostart_clone_error_attempts">Ошибка процедуры Clone. Закончились доступные попытки процедуры Clone. Обратитесь в тех. поддержку</string>
     <string name="autostart_clone_error_denied">У данного устройства нет доступа для процедуры Clone</string>
+    <string name="autostart_common_btn_ticket">Заявка на техпомощь</string>
+    <string name="autostart_bypass_label_ticket_origin">Бесключевой обход</string>
+    <string name="autostart_bypass_label_ticket_origin_fast">Быстрый монтаж · обход</string>
+    <string name="autostart_clone_label_ticket_origin">Процедура Clone</string>
+    <string name="autostart_clone_label_ticket_origin_fast">Быстрый монтаж · Clone</string>
+    <string name="autostart_bypass_format_ticket">Бесключевой обход: обучение не выполнено. %1$s</string>
+    <string name="autostart_clone_format_ticket">Процедура Clone: %1$s</string>
+    <string name="autostart_clone_msg_ticket_no_attempts">Процедура Clone: исчерпано число попыток. Нужны дополнительные попытки.</string>
 </resources>

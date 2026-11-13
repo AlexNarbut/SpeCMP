@@ -28,6 +28,8 @@ internal data class TechRequestsState(
     val pendingAction: RequestAction? = null,
     val dialog: TechRequestsDialog? = null,
     val prefill: ContactPrefill = ContactPrefill(),
+    /** Откуда открыта заявка (плашка над полями); сбрасывается вместе с формой. */
+    val origin: String? = null,
 ) {
     val canCreate: Boolean get() = device != null
     val canLoadMore: Boolean get() = requests is LCEState.Content && hasMore && !loadingMore && moreError == null
@@ -36,6 +38,10 @@ internal data class TechRequestsState(
 /** Модель и прошивка блока для блока «Что отправим». */
 @Immutable
 internal data class AttachedDevice(val model: String, val firmware: String)
+
+/** Заявка из другого сценария: форма открыта, описание начинается с текста ошибки. */
+@Immutable
+internal data class DraftPrefill(val origin: String, val text: String)
 
 @Immutable
 internal data class ContactPrefill(val name: String = "", val phoneDigits: String = "")
@@ -76,3 +82,10 @@ internal sealed interface TechRequestsDialog {
 
     data object NoDevice : TechRequestsDialog
 }
+
+internal fun DraftPrefill?.initialState(language: AppLocale): TechRequestsState = TechRequestsState(
+    language = language,
+    form = TechRequestForm(issue = this?.text?.let { "$it " }.orEmpty()),
+    formOpen = this != null,
+    origin = this?.origin,
+)

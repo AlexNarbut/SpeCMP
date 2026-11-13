@@ -62,6 +62,7 @@ internal fun TechRequestsState.withClearedForm(): TechRequestsState = copy(
     form = TechRequestForm(name = prefill.name, phoneDigits = prefill.phoneDigits),
     sending = TechRequestSending.Idle,
     formOpen = false,
+    origin = null,
 )
 
 private fun TechRequestsState.loaded(): TechRequestList =

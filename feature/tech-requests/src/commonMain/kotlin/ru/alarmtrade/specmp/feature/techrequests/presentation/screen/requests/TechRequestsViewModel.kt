@@ -32,9 +32,10 @@ internal class TechRequestsViewModel(
     private val accountRepository: AccountRepository,
     private val dispatchers: AppDispatchers,
     localeStore: AppLocaleStore,
+    prefill: DraftPrefill? = null,
 ) : BaseDeviceViewModel<TechRequestsState, TechRequestsEffect>(
     deviceSession,
-    TechRequestsState(language = localeStore.current()),
+    prefill.initialState(localeStore.current()),
 ) {
 
     override suspend fun onStart() {

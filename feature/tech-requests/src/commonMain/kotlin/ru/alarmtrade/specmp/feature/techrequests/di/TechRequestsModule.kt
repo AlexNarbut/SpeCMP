@@ -1,7 +1,7 @@
 package ru.alarmtrade.specmp.feature.techrequests.di
 
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.feature.techrequests.data.datasource.SpecialistTechRequestsDataSource
@@ -13,5 +13,14 @@ import ru.alarmtrade.specmp.feature.techrequests.presentation.screen.requests.Te
 val techRequestsModule = module {
     singleOf(::SpecialistTechRequestsDataSource) bind TechRequestsDataSource::class
     singleOf(::SpecialistTechRequestsRepository) bind TechRequestsRepository::class
-    viewModelOf(::TechRequestsViewModel)
+    viewModel { params ->
+        TechRequestsViewModel(
+            deviceSession = get(),
+            repository = get(),
+            accountRepository = get(),
+            dispatchers = get(),
+            localeStore = get(),
+            prefill = params.getOrNull(),
+        )
+    }
 }
