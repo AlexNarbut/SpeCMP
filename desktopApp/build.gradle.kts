@@ -38,34 +38,23 @@ dependencies {
     implementation(libs.kotlinx.coroutines.swing)
 }
 
-// usb4java в SDK несёт нативную библиотеку только для darwin-x86-64: на macOS arm64 USB работает лишь на x86_64-JDK.
-// Выбор JDK: `compose.jvmHome` → на macOS arm64 установленный x86_64-JDK 17 → JDK Gradle.
+// USB на JVM в SDK — нативный HID через JNA (с common 2.0.125, раньше usb4java только под x86_64): JDK любой
+// архитектуры, на Apple Silicon — нативный arm64. Пакету нужен полный JDK с jpackage (JBR из Android Studio, которым
+// часто запущен Gradle, его не содержит). Выбор: `compose.jvmHome` → на macOS установленный JDK 17 → JDK Gradle.
 val composeJvmHome: String? = providers.gradleProperty("compose.jvmHome").orNull
     ?: rootProject.file("local.properties").takeIf { it.exists() }?.let { file ->
         Properties().apply { file.inputStream().use(::load) }.getProperty("compose.jvmHome")
     }
 
-val isMacArm = System.getProperty("os.name").startsWith("Mac") && System.getProperty("os.arch") == "aarch64"
-val macX64JvmHome: String? = if (composeJvmHome == null && isMacArm) {
+val macJdk17Home: String? = if (composeJvmHome == null && System.getProperty("os.name").startsWith("Mac")) {
     providers.exec {
-        commandLine("/usr/libexec/java_home", "-a", "x86_64", "-v", "17")
+        commandLine("/usr/libexec/java_home", "-v", "17")
         isIgnoreExitValue = true
     }.standardOutput.asText.orNull?.trim()?.takeIf { it.startsWith("/") }
 } else {
     null
 }
-val desktopJvmHome: String? = composeJvmHome ?: macX64JvmHome
-
-if (isMacArm && desktopJvmHome == null) {
-    tasks.withType<JavaExec>().matching { it.name == "run" }.configureEach {
-        doFirst {
-            logger.warn(
-                "WARNING: macOS arm64 без x86_64-JDK 17 — USB-устройства не будут найдены (usb4java). " +
-                    "Установите x86_64-JDK 17 или задайте compose.jvmHome, см. docs/build.md.",
-            )
-        }
-    }
-}
+val desktopJvmHome: String? = composeJvmHome ?: macJdk17Home
 
 compose.desktop {
     application {

@@ -61,12 +61,13 @@ Desktop-пакет: `desktopApp/build/compose/binaries/main/`
    `spotlessCheck` запускается git-хуком pre-commit, `detektCheck` — pre-push (активация: `pre-commit install`).
 3. **Тесты затронутых модулей зелёные:** `./gradlew :<module>:jvmTest` (все — `./gradlew jvmTest`).
 
-**Desktop + USB на macOS (Apple Silicon).** USB-слой SDK на JVM (`usb4java` 1.3.0) содержит нативную библиотеку
-только для `darwin-x86-64`: на arm64-JDK USB-устройства молча не находятся. Запускать на x86_64-JDK через
-`compose.jvmHome` — в `local.properties` (`compose.jvmHome=/path/to/x86_64-jdk-17/Contents/Home`) или
-`./gradlew :desktopApp:run -Pcompose.jvmHome=…`. Без ключа на macOS arm64 `desktopApp/build.gradle.kts` сам берёт
-установленный x86_64-JDK 17 (`/usr/libexec/java_home -a x86_64 -v 17`); не нашёл — JDK Gradle (USB не заработает).
-Явный `compose.jvmHome` приоритетнее; нет x86_64-JDK — `run` предупреждает об этом при запуске.
+**Desktop + USB на macOS (Apple Silicon).** USB-слой SDK на JVM — нативный HID через JNA (с common 2.0.125; раньше
+`usb4java` с библиотекой только для `darwin-x86-64`). Подходит JDK любой архитектуры: запуск и пакет на Apple Silicon —
+нативные arm64, Intel-JDK и Rosetta не нужны. Пакету (`packageDistributionForCurrentOS`) нужен полный JDK
+с `jpackage` — JBR Android Studio, на котором часто запущен Gradle, его не содержит. Поэтому на macOS без
+`compose.jvmHome` (`local.properties` или `-Pcompose.jvmHome=…`) сборка берёт установленный JDK 17
+(`/usr/libexec/java_home -v 17`), иначе — JDK Gradle. Если у установленного `SpeCMP.app` в Finder → «Свойства» включено «Открыть с помощью Rosetta»,
+macOS пишет «не поддерживается этим компьютером Mac» — галочку снять.
 В репозитории есть общая Run-конфигурация `desktopApp` (`.run/`, Gradle `:desktopApp:run`): IDE подхватывает её при
 открытии проекта — запускать её, а не `main()` из гуттера (гуттер берёт JDK проекта и обходит этот выбор). Если USB не находится — проверить, на каком JDK запущено приложение (запуск
 из IDE берёт JDK из настроек Run/Gradle, а не из `desktopApp`).
