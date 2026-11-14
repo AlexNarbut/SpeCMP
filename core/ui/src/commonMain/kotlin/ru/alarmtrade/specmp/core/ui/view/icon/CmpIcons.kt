@@ -170,4 +170,12 @@ enum class CmpIcons {
     Language,
     RadioButtonUnchecked,
     Outbox,
+    ManageSearch,
+    FlashOn,
+    FlashOff,
+    NoPhotography,
+    VideocamOff,
+    QrCodeScanner,
+    Keyboard,
+    PhotoCamera,
 }

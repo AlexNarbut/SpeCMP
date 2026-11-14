@@ -1,6 +1,9 @@
 package ru.alarmtrade.specmp.feature.mountassistant.domain.model
 
-/** [capabilities] `null` — модели нет в базе; [can] `null` — CAN у устройства нет. */
+/**
+ * [capabilities] `null` — модели нет в базе; [can] `null` — CAN у устройства нет; [productSearch] — пользователю
+ * доступна «Информация о товаре» (функция аккаунта, не блока).
+ */
 data class DeviceFacts(
     val systemId: Long,
     val title: String,
@@ -9,6 +12,7 @@ data class DeviceFacts(
     val capabilities: Set<AssistantCapability>?,
     val can: CanFacts?,
     val online: Boolean,
+    val productSearch: Boolean = false,
 ) {
     val inDatabase: Boolean get() = capabilities != null
 

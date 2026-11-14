@@ -9,3 +9,4 @@
 - Плитку «Чат тех. поддержки» прячет только явный ответ сервера «недоступен» (`ChatAvailability.statusCode != 0`); пока ответа нет или опрос упал (нет сети) — плитка видна, ошибка опроса не меняет уже известный ответ. Часов работы у поддержки нет.
 - Карточки `Requests` и `TechSupportChat` эмитят навигационное действие в чат; сам `SupportChatRoute` подключается только в `composeApp`. В drawer перехода в чат нет.
 - Строковые ресурсы модуля — `main_*` (EN/RU) в `composeResources`.
+- Карточка `ProductInfo` (только при `UserAppFeature.PRODUCT_SEARCH`, `MainUserAppFeatures.hasProductSearch`) эмитит `MainNavigationTarget.ProductInfo` → `ProductInfoRoute()` (`feature/product-info`) в `composeApp`.

@@ -17,7 +17,19 @@ data class CmpDomainColors(
     val busBean: Color,
     val busImmobilizer: Color,
     val busUnknown: Color,
+    /** Слой камеры (сканер штрих-кода): всегда тёмный, независимо от темы приложения. */
+    val camera: Color = CameraBackground,
+    val cameraScrim: Color = CameraScrim,
+    val onCamera: Color = OnCamera,
+    val onCameraVariant: Color = OnCameraVariant,
+    val cameraControl: Color = CameraControl,
 )
+
+private val CameraBackground = Color(0xFF0D0F10)
+private val CameraScrim = Color(0x94000000)
+private val OnCamera = Color(0xFFFFFFFF)
+private val OnCameraVariant = Color(0xCCFFFFFF)
+private val CameraControl = Color(0x29FFFFFF)
 
 private val LightDomainColors = CmpDomainColors(
     success = Color(0xFF79BD5B),

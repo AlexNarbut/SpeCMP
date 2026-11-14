@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="barcode_scanner_title">Сканер штрих-кода</string>
+    <string name="barcode_scanner_a11y_close">Закрыть сканер</string>
+    <string name="barcode_scanner_a11y_torch_on">Включить фонарик</string>
+    <string name="barcode_scanner_a11y_torch_off">Выключить фонарик</string>
+    <string name="barcode_scanner_hint_frame">Совместите штрих-код с рамкой</string>
+    <string name="barcode_scanner_hint_where">Штрих-код — на коробке или наклейке блока. Распознаётся сам, нажимать ничего не нужно.</string>
+    <string name="barcode_scanner_hint_slow">Не распознаётся? Поднесите телефон ближе, включите фонарик или введите цифры вручную.</string>
+    <string name="barcode_scanner_btn_manual">Ввести вручную</string>
+    <string name="barcode_scanner_msg_found">Распознано · ищем товар</string>
+    <string name="barcode_scanner_title_no_access">Нет доступа к камере</string>
+    <string name="barcode_scanner_error_denied">Чтобы считать штрих-код, разрешите приложению использовать камеру. Или введите цифры вручную.</string>
+    <string name="barcode_scanner_error_blocked">Доступ к камере запрещён. Разрешите его в настройках телефона или введите цифры вручную.</string>
+    <string name="barcode_scanner_btn_allow">Разрешить доступ</string>
+    <string name="barcode_scanner_btn_settings">Открыть настройки</string>
+    <string name="barcode_scanner_title_unavailable">Камера недоступна</string>
+    <string name="barcode_scanner_error_unavailable">Закройте другие приложения, которые её используют, или введите цифры вручную.</string>
+</resources>

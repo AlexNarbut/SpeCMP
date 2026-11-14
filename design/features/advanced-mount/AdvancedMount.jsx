@@ -156,6 +156,12 @@ function DeviceHeader({ p, mode = "work", layout, onInfo, onCanHint, hideRows = 
             <CmpText variant={wide ? "headlineSmall" : "titleLarge"} color="var(--primary)" maxLines={1}>{p.name}</CmpText>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--on-surface-variant)" }}>ID {p.id}</span>
           </div>
+          {p.product && !hideRows && (layout === "compact"
+            ? <button type="button" className="am-prod" onClick={onInfo} aria-label="Информация о товаре" title="Информация о товаре"
+                style={{ flex: "0 0 auto", width: 64, minHeight: 56, padding: "6px 4px", boxSizing: "border-box", border: "none", borderRadius: 14, background: "var(--secondary-container)", color: "var(--on-secondary-container)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, lineHeight: "16px" }}>
+                <CmpIcon icon="inventory_2" size={24} color="currentColor" />Товар
+              </button>
+            : <CmpOutlinedButton text="Информация о товаре" icon="inventory_2" onClick={onInfo} style={{ height: 48, whiteSpace: "nowrap", flex: "0 0 auto" }} />)}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <Chip icon={t.icon} text={t.text} />
@@ -177,9 +183,6 @@ function DeviceHeader({ p, mode = "work", layout, onInfo, onCanHint, hideRows = 
             </>)}
             {p.imei && (<><CmpDivider /><Row label="IMEI GSM модема" value={p.imei} /></>)}
           </div>
-        )}
-        {p.product && !hideRows && (
-          <CmpOutlinedButton text="Информация о товаре" icon="inventory_2" fullWidth onClick={onInfo} />
         )}
       </div>
     </CmpSurface>
@@ -364,7 +367,7 @@ function AdvancedMountScreen({ profile = "alarm", initialState = "ready", mode =
     <div role="button" aria-label="Удалённая синхронизация" tabIndex={0} style={{ width: 48, height: 48, display: "grid", placeItems: "center", borderRadius: 999, cursor: "pointer", color: "var(--primary)" }}><span className="am-pulse" style={{ display: "grid", animation: "amPulse 1.8s ease-in-out infinite" }}><SvgIcon src="other/udalennaya_sinhronizaciya_topbar.svg" size={30} /></span></div>
   ) : undefined;
 
-  const header = <DeviceHeader p={p} mode={mode} layout={layout} onCanHint={() => setDialog("hint")} onInfo={() => {}} />;
+  const header = <DeviceHeader p={p} mode={mode} layout={layout} onCanHint={() => setDialog("hint")} onInfo={() => window.psProduct && window.psProduct("mount", p.id)} />;
   const area = <GridArea p={p} state={state} layout={layout} items={effItems} canLocked={canLocked} unread={unread} onOpen={open} setState={setState} />;
   const pad = layout === "compact" ? 14 : 24;
 

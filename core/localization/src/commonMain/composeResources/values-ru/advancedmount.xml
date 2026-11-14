@@ -15,6 +15,7 @@
     <string name="advancedmount_header_label_can_code">CAN код</string>
     <string name="advancedmount_header_label_imei">IMEI GSM модема</string>
     <string name="advancedmount_common_btn_product_info">Информация о товаре</string>
+    <string name="advancedmount_common_btn_product_info_short">Товар</string>
     <string name="advancedmount_sections_title_assistant">Ассистент</string>
     <string name="advancedmount_sections_subtitle_assistant">Выберите действие — результат и следующий шаг появятся в ленте</string>
     <string name="advancedmount_sections_subtitle_assistant_limited">Для этого блока доступно меньше действий: прошивка, автомобили, чат поддержки</string>
@@ -66,6 +67,5 @@
     <string name="advancedmount_dialog_msg_can_hint">Функционал данного устройства зависит от прошивки CAN. Теперь в первую очередь при настройке устройства необходимо определиться с CAN кодом автомобиля, обновить прошивку устройства под этот CAN код, а потом донастраивать систему и проверять ее функции</string>
     <string name="advancedmount_common_btn_ok">Понятно</string>
     <string name="advancedmount_sections_msg_stub">Раздел в разработке.</string>
-    <string name="advancedmount_extras_title_product_info">Информация о товаре</string>
     <string name="advancedmount_extras_title_remote_sync">Удалённая синхронизация</string>
 </resources>

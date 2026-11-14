@@ -54,6 +54,7 @@ import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_go_update
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_ok
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_product_info
+import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_product_info_short
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_btn_retry
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_error_subtitle
 import ru.alarmtrade.specmp.core.localization.resources.advancedmount_common_error_title
@@ -100,8 +101,10 @@ import ru.alarmtrade.specmp.core.ui.view.layout.CmpRow
 import ru.alarmtrade.specmp.core.ui.view.navigation.CmpTopAppBar
 import ru.alarmtrade.specmp.core.ui.view.progress.CmpCircularProgressIndicator
 import ru.alarmtrade.specmp.core.ui.view.scaffold.CmpScaffold
+import ru.alarmtrade.specmp.core.ui.view.surface.CmpClickableSurface
 import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
+import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountError
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountExtra
 import ru.alarmtrade.specmp.feature.advancedmount.presentation.model.MountSection
@@ -136,6 +139,7 @@ internal fun AdvancedMountRootScreen(
     onSectionClick: (MountSection, String) -> Unit,
     onExtraClick: (MountExtra, String) -> Unit,
     onOpenSupportChat: () -> Unit,
+    onOpenProductInfo: (systemId: Long) -> Unit,
     onBack: () -> Unit,
 ) {
     val viewModel = koinViewModel<AdvancedMountRootViewModel>()
@@ -146,7 +150,7 @@ internal fun AdvancedMountRootScreen(
         when (effect) {
             is AdvancedMountRootEffect.OpenSection -> onSectionClick(effect.section, deviceTitle)
             AdvancedMountRootEffect.OpenSupportChat -> onOpenSupportChat()
-            AdvancedMountRootEffect.OpenProductInfo -> onExtraClick(MountExtra.PRODUCT_INFO, deviceTitle)
+            is AdvancedMountRootEffect.OpenProductInfo -> onOpenProductInfo(effect.systemId)
             AdvancedMountRootEffect.OpenRemoteSync -> onExtraClick(MountExtra.REMOTE_SYNC, deviceTitle)
         }
     }
@@ -332,6 +336,10 @@ private fun DeviceHeaderCard(
                         color = colors.onSurfaceVariant,
                     )
                 }
+                // На Expanded шапка — узкая левая колонка: полная кнопка сжала бы имя блока.
+                if (state.productInfo) {
+                    ProductInfoButton(compact = layout != MountLayout.Medium, onClick = actions.onProductInfoClick)
+                }
             }
             CmpRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.transport?.let { transport ->
@@ -399,22 +407,6 @@ private fun DeviceHeaderCard(
                 state.imei?.let {
                     CmpDivider()
                     HeaderRow(stringResource(Strings.string.advancedmount_header_label_imei), it)
-                }
-            }
-            if (state.productInfo) {
-                CmpOutlinedButton(onClick = actions.onProductInfoClick, modifier = Modifier.fillMaxWidth()) {
-                    CmpIcon(
-                        icon = CmpIcons.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = colors.primary,
-                    )
-                    CmpText(
-                        text = stringResource(Strings.string.advancedmount_common_btn_product_info),
-                        modifier = Modifier.padding(start = 8.dp),
-                        fontWeight = FontWeight.Medium,
-                        color = colors.primary,
-                    )
                 }
             }
         }
@@ -834,3 +826,51 @@ private fun WarningDialog(
         dismissButton = dismissText?.let { { CmpTextButton(text = it, onClick = onDismiss) } },
     )
 }
+
+/** «Информация о товаре» в шапке блока: плитка «Товар» или (шапка во всю ширину, Medium) кнопка с полной подписью. */
+@Composable
+private fun ProductInfoButton(compact: Boolean, onClick: () -> Unit) {
+    val colors = cmpThemeColors()
+    if (compact) {
+        CmpClickableSurface(
+            onClick = onClick,
+            modifier = Modifier.size(width = 64.dp, height = 56.dp).testTag(PRODUCT_INFO_TAG),
+            shape = RoundedCornerShape(14.dp),
+            color = colors.secondaryContainer,
+            contentColor = colors.onSecondaryContainer,
+        ) {
+            CmpColumn(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                CmpIcon(icon = CmpIcons.Inventory2, contentDescription = null, tint = colors.onSecondaryContainer)
+                CmpText(
+                    text = stringResource(Strings.string.advancedmount_common_btn_product_info_short),
+                    fontWeight = FontWeight.Medium,
+                    color = colors.onSecondaryContainer,
+                    style = CmpTextStyle.Caption,
+                    maxLines = 1,
+                )
+            }
+        }
+    } else {
+        CmpOutlinedButton(onClick = onClick, modifier = Modifier.height(48.dp).testTag(PRODUCT_INFO_TAG)) {
+            CmpIcon(
+                icon = CmpIcons.Inventory2,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = colors.primary,
+            )
+            CmpText(
+                text = stringResource(Strings.string.advancedmount_common_btn_product_info),
+                modifier = Modifier.padding(start = 8.dp),
+                fontWeight = FontWeight.Medium,
+                color = colors.primary,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+private const val PRODUCT_INFO_TAG = "advancedmount_product_info"

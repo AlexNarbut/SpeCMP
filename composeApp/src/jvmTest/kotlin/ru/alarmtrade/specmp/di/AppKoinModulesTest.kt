@@ -48,6 +48,10 @@ class AppKoinModulesTest {
                     internalType("feature.configurator.ui.presentation.navigation.SourceKey\$File"),
                 ),
                 internalDefinition(
+                    "feature.productinfo.presentation.screen.product.ProductInfoViewModel",
+                    internalType("feature.productinfo.presentation.screen.product.ProductInfoArgs"),
+                ),
+                internalDefinition(
                     "feature.device.settings.ui.presentation.screen.editor.DeviceSettingsViewModel",
                     SettingsSource::class,
                     internalType("feature.device.settings.ui.presentation.screen.editor.SettingsEditorOptions"),

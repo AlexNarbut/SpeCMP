@@ -9,6 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlinx.datetime.Instant
 import org.jetbrains.skia.EncodedImageFormat
+import ru.alarmtrade.specmp.core.common.ApiError
 import ru.alarmtrade.specmp.core.ui.theme.AppTheme
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
@@ -20,6 +21,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.JournalEntry
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.JournalState
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.MountProgress
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ResultContent
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ResultFailure
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ResultRequest
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.SnapshotChange
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StateZone
@@ -29,6 +31,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.presentation.components.FeedC
 import ru.alarmtrade.specmp.feature.mountassistant.testing.switchSetting
 import ru.alarmtrade.specmp.feature.mountassistant.testing.testCheck
 import ru.alarmtrade.specmp.feature.mountassistant.testing.testFacts
+import ru.alarmtrade.specmp.feature.mountassistant.testing.testProduct
 import ru.alarmtrade.specmp.feature.mountassistant.testing.testSummary
 import ru.alarmtrade.specmp.feature.mountassistant.testing.timeSetting
 
@@ -63,6 +66,7 @@ class AssistantLayoutRenderTest {
             onWriteCancel = {},
             onSourcePick = { _, _ -> },
             onAction = {},
+            onProductOpen = {},
         ),
     )
 
@@ -111,7 +115,28 @@ class AssistantLayoutRenderTest {
         JournalEntry.Return(17, AssistantAction.CLONE_RUN, changes = emptyList()),
     )
 
+    private val productJournal = listOf(
+        JournalEntry.Greeting(1),
+        step(2, AssistantAction.PRODUCT_INFO),
+        JournalEntry.Result(3, ResultRequest.Product, ResultContent.ProductData(testProduct)),
+        step(4, AssistantAction.PRODUCT_INFO),
+        JournalEntry.Result(5, ResultRequest.Product, ResultContent.ProductNotFound(77)),
+        step(6, AssistantAction.PRODUCT_INFO),
+        JournalEntry.Result(7, ResultRequest.Product, ResultContent.Error(ResultFailure.Common(ApiError.NoConnection))),
+        JournalEntry.Step(8, StepTitle.ProductNumber("4123700107131"), at),
+    )
+
     private val states = mapOf(
+        "product" to MountAssistantState(
+            facts = testFacts,
+            journal = JournalState(entries = productJournal),
+            level = DockLevel.Topic(AssistantTopic.DEVICES),
+        ),
+        "product-search" to MountAssistantState(
+            facts = testFacts,
+            journal = JournalState(entries = productJournal.take(3)),
+            query = "4123700107131",
+        ),
         "first" to
             MountAssistantState(facts = testFacts, journal = JournalState(entries = listOf(JournalEntry.Greeting(1)))),
         "topic" to MountAssistantState(

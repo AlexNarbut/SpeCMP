@@ -28,6 +28,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_card_btn_
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_feed_label_open_in_settings
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_feed_label_query
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_feed_label_search
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_format_number
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.time.currentTimeZone
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -138,6 +139,7 @@ private fun StepTitle.icon(): CmpIcons = when (this) {
     is StepTitle.Setting -> CmpIcons.Tune
     StepTitle.OpenInSettings -> CmpIcons.OpenInNew
     StepTitle.Reflash -> AssistantAction.FIRMWARE_UPDATE.icon
+    is StepTitle.ProductNumber -> AssistantAction.PRODUCT_INFO.icon
 }
 
 @Composable
@@ -169,6 +171,13 @@ private fun FeedEntry(entry: JournalEntry, facts: DeviceFacts, callbacks: FeedCa
 
             ResultRequest.Autostart ->
                 DeviceResultCard(entry.id, DeviceResultKind.AUTOSTART, entry.content) { callbacks.onRetry(entry.id) }
+
+            ResultRequest.Product -> ProductResultCard(
+                entryId = entry.id,
+                content = entry.content,
+                onOpen = callbacks.onProductOpen,
+                onRetry = { callbacks.onRetry(entry.id) },
+            )
 
             is ResultRequest.Settings -> {
                 val request = entry.request as ResultRequest.Settings
@@ -221,6 +230,9 @@ private fun StepLabel(step: JournalEntry.Step) {
 
         StepTitle.Reflash -> topicTitle(StepTitle.Reflash.topic) to
             stringResource(Strings.string.mountassistant_card_btn_reflash)
+
+        is StepTitle.ProductNumber -> topicTitle(title.topic) to
+            stringResource(Strings.string.mountassistant_product_format_number, title.number)
     }
     CmpRow(modifier = Modifier.fillMaxWidth().heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
         CmpFlowRow(

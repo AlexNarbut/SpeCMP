@@ -18,6 +18,7 @@ internal fun facts(
     can: CanFacts? = CanFacts(factory = false, code = "1234", version = "12.05"),
     online: Boolean = true,
     firmware: String = "3.56",
+    productSearch: Boolean = true,
 ) = DeviceFacts(
     systemId = 1,
     title = "DX-4G",
@@ -26,6 +27,7 @@ internal fun facts(
     capabilities = capabilities,
     can = can,
     online = online,
+    productSearch = productSearch,
 )
 
 internal val FactoryCan = CanFacts(factory = true, code = null, version = null)

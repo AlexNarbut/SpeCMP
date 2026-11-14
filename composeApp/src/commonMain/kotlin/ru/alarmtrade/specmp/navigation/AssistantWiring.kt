@@ -54,6 +54,7 @@ internal fun AdvancedMountAssistant(
     onBack: () -> Unit,
     onOpenSection: (MountSection) -> Unit,
     onOpenSettings: (focusSettingId: Int?, openLoad: Boolean) -> Unit,
+    onOpenProductInfo: (AssistantNavigationTarget.ProductInfo) -> Unit,
     onOpenNewTechRequest: () -> Unit,
 ) {
     val onFlash = { boot: FirmwareAutoBoot ->
@@ -93,6 +94,8 @@ internal fun AdvancedMountAssistant(
 
                 target is AssistantNavigationTarget.SettingsEditor ->
                     onOpenSettings(target.focusSettingId, target.openLoad)
+
+                target is AssistantNavigationTarget.ProductInfo -> onOpenProductInfo(target)
 
                 target == AssistantNavigationTarget.TechRequestNew -> onOpenNewTechRequest()
             }
@@ -162,6 +165,7 @@ private fun AssistantNavigationTarget.section(): MountSection? = when (this) {
     is AssistantNavigationTarget.FirmwareFlash,
     is AssistantNavigationTarget.FirmwareArchive,
     is AssistantNavigationTarget.SettingsEditor,
+    is AssistantNavigationTarget.ProductInfo,
     AssistantNavigationTarget.TechRequestNew,
     -> null
 }

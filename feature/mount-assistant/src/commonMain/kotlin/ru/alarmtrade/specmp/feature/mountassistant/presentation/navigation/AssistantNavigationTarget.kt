@@ -31,6 +31,9 @@ sealed interface AssistantNavigationTarget {
 
     data object Pairing : AssistantNavigationTarget
 
+    /** «Информация о товаре» поверх монтажа: [query] — номер (пусто — ввести другой), [connectedId] — ID блока. */
+    data class ProductInfo(val query: String?, val connectedId: Long) : AssistantNavigationTarget
+
     /** Сразу форма «Новая заявка» на техпомощь. */
     data object TechRequestNew : AssistantNavigationTarget
 

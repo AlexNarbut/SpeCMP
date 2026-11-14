@@ -742,7 +742,7 @@ Konsist `capability-usage`:
 
 - API `core/permissions`, которое обращается к ОС (`PermissionsProvider`, `BindEffect`, `permissionsModule`,
   `blePermissions`), и moko-permissions — в фиче только `data`, `di` и файл ViewModel (`ScanDeviceViewModel`); значения
-  (`DeviceAccessRequirement`, `BlePermissionResult`) — всем. Composition roots — свободно.
+  (`DeviceAccessRequirement`, `PermissionResult`) — всем. Composition roots — свободно.
 - Порты `presentation/platform` фичи (пикеры, сохранение, открытие файлов) — только presentation своего модуля, `di` и
   composition roots. Общие порты фич устройства (файлы настроек `.dxs`: `SettingsFilePicker`/`SettingsFileSaver`) —
   в `feature/device/presentation-core` (`platform`), их импортирует presentation любой фичи.

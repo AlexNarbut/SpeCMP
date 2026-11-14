@@ -23,6 +23,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantCapabil
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTransport
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.CanFacts
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.DeviceFacts
+import ru.alarmtrade.specmp.feature.mountassistant.testing.FakeAssistantProductRepository
 
 class AssistantDeviceRepositoryImplTest {
     private class FakeNetworkMonitor : NetworkMonitor {
@@ -37,6 +38,8 @@ class AssistantDeviceRepositoryImplTest {
     private val sessionRepository = FakeDeviceSessionRepository(device)
     private val network = FakeNetworkMonitor()
 
+    private val products = FakeAssistantProductRepository(enabled = false)
+
     private fun TestScope.repository(monitor: NetworkMonitor? = network) = AssistantDeviceRepositoryImpl(
         testDeviceSession(
             sessionRepository,
@@ -44,6 +47,7 @@ class AssistantDeviceRepositoryImplTest {
             transport = ConnectionTransport.USB,
         ),
         monitor,
+        products,
     )
 
     private suspend fun AssistantDeviceRepositoryImpl.ready(): DeviceFacts? =
@@ -86,5 +90,20 @@ class AssistantDeviceRepositoryImplTest {
         repository.ready()
         sessionRepository.link.value = DeviceLinkState.DISCONNECTED
         assertNull((repository.facts().first() as Response.Success).value)
+    }
+
+    @Test
+    fun `product search follows the account feature`() = runTest {
+        val repository = repository()
+        assertEquals(false, repository.ready()?.productSearch)
+
+        products.enabled.value = true
+
+        assertEquals(
+            true,
+            repository.facts().first {
+                (it as Response.Success).value?.productSearch == true
+            }.let { true },
+        )
     }
 }

@@ -14,13 +14,19 @@ import ru.alarmtrade.specmp.feature.mountassistant.domain.model.NextStepReason
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.TopicAvailability
 
 fun availability(action: AssistantAction, facts: DeviceFacts, progress: MountProgress): Availability = when {
-    !facts.inDatabase && action !in AssistantAction.ForUnknownModel -> Availability.Hidden
-    !facts.supports(action) -> Availability.Hidden
-    action == AssistantAction.FIRMWARE_UPDATE && progress.firmware?.updateAvailable != true -> Availability.Hidden
-    action == AssistantAction.CAN_UPDATE && facts.can == null -> Availability.Hidden
+    hidden(action, facts, progress) -> Availability.Hidden
     action.updatedCan && facts.factoryCan -> Availability.Blocked(BlockReason.FACTORY_CAN, AssistantAction.CAN_UPDATE)
     action.network && !facts.online -> Availability.Blocked(BlockReason.NO_NETWORK, fix = null)
     else -> Availability.Available
+}
+
+private fun hidden(action: AssistantAction, facts: DeviceFacts, progress: MountProgress): Boolean = when {
+    !facts.inDatabase && action !in AssistantAction.ForUnknownModel -> true
+    !facts.supports(action) -> true
+    action == AssistantAction.FIRMWARE_UPDATE -> progress.firmware?.updateAvailable != true
+    action == AssistantAction.CAN_UPDATE -> facts.can == null
+    action == AssistantAction.PRODUCT_INFO -> !facts.productSearch
+    else -> false
 }
 
 private fun DeviceFacts.supports(action: AssistantAction): Boolean {

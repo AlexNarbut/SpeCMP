@@ -5,14 +5,17 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.alarmtrade.specmp.assistant.AppAssistantAutostartRepository
 import ru.alarmtrade.specmp.assistant.AppAssistantFirmwareRepository
+import ru.alarmtrade.specmp.assistant.AppAssistantProductRepository
 import ru.alarmtrade.specmp.assistant.AppAssistantStateRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantAutostartRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantFirmwareRepository
+import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantProductRepository
 import ru.alarmtrade.specmp.feature.mountassistant.domain.repository.AssistantStateRepository
 
-/** Ассистент не зависит от обособленных фич прошивки, автозапуска и состояния: их связывает корень приложения. */
+/** Ассистент не зависит от обособленных фич прошивки, автозапуска, состояния и товара: их связывает корень. */
 val assistantPortsModule = module {
     singleOf(::AppAssistantFirmwareRepository) bind AssistantFirmwareRepository::class
     singleOf(::AppAssistantAutostartRepository) bind AssistantAutostartRepository::class
     singleOf(::AppAssistantStateRepository) bind AssistantStateRepository::class
+    singleOf(::AppAssistantProductRepository) bind AssistantProductRepository::class
 }

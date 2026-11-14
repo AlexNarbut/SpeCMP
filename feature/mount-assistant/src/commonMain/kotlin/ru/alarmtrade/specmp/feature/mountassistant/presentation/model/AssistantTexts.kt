@@ -14,6 +14,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_ti
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_update
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_firmware_update_to
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_pairing
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_product_info
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_settings_all
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_settings_find
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_action_title_settings_load
@@ -121,6 +122,7 @@ private val AssistantAction.title: StringResource
         AssistantAction.STATE_FULL -> Strings.string.mountassistant_action_title_state_full
         AssistantAction.SYSTEM_DEVICES -> Strings.string.mountassistant_action_title_system_devices
         AssistantAction.PAIRING -> Strings.string.mountassistant_action_title_pairing
+        AssistantAction.PRODUCT_INFO -> Strings.string.mountassistant_action_title_product_info
         AssistantAction.VEHICLES -> Strings.string.mountassistant_action_title_vehicles
         AssistantAction.TICKET_NEW -> Strings.string.mountassistant_action_title_ticket_new
         AssistantAction.TICKETS -> Strings.string.mountassistant_action_title_tickets

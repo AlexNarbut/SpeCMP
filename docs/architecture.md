@@ -131,6 +131,11 @@ composition root подключает оба. Публичный вход UI-м�
 - `PermissionsProvider` — разрешения и состояние радио (BLE, геолокация); типы библиотеки разрешений наружу не выходят
   (Konsist `capability-usage`)
 
+### core/barcode
+- Пакет: `ru.alarmtrade.specmp.core.barcode`
+- Сканер штрих-кода: `BarcodeScanner` (общий Compose-слой), камера — CameraX + ML Kit (Android), AVFoundation (iOS); на
+  desktop нет (`isBarcodeScanAvailable`). Подробно — `core/AGENTS.md`
+
 ### core/network
 - Пакет: `ru.alarmtrade.specmp.core.network`
 - HTTP-движки Ktor для SDK и Coil (OkHttp на Android/JVM, Darwin на iOS); `NetworkMonitor` — доступность сети
@@ -316,6 +321,7 @@ commonMain.dependencies {
 | core/common       | `ru.alarmtrade.specmp.core.common`        |
 | core/lifecycle    | `ru.alarmtrade.specmp.core.lifecycle`     |
 | core/permissions  | `ru.alarmtrade.specmp.core.permissions`   |
+| core/barcode      | `ru.alarmtrade.specmp.core.barcode`       |
 | core/localization | `ru.alarmtrade.specmp.core.localization`  |
 | core/network      | `ru.alarmtrade.specmp.core.network`       |
 | core/specialist   | `ru.alarmtrade.specmp.core.specialist`    |

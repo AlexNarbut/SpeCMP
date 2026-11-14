@@ -42,6 +42,7 @@ import ru.alarmtrade.specmp.feature.device.settings.domain.model.SettingsSource
 import ru.alarmtrade.specmp.feature.device.settings.domain.service.SettingsWrite
 import ru.alarmtrade.specmp.feature.mountassistant.data.service.AssistantJournalImpl
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantProductNotFoundException
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantSettingValue
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantTopic
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantWriteException
@@ -73,6 +74,7 @@ import ru.alarmtrade.specmp.feature.mountassistant.testing.FakeSettingsWrites
 import ru.alarmtrade.specmp.feature.mountassistant.testing.switchSetting
 import ru.alarmtrade.specmp.feature.mountassistant.testing.testCheck
 import ru.alarmtrade.specmp.feature.mountassistant.testing.testFacts
+import ru.alarmtrade.specmp.feature.mountassistant.testing.testProduct
 import ru.alarmtrade.specmp.feature.mountassistant.testing.timeSetting
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -635,5 +637,65 @@ class MountAssistantViewModelTest {
         store.put("assistant", vm)
         store.clear()
         assertEquals(listOf<SettingsSource>(SettingsSource.Device), sessions.discarded)
+    }
+
+    @Test
+    fun `product info shows the connected block product, details open the full screen`() = test {
+        val (vm, effects) = viewModel()
+        vm.onActionClick(AssistantAction.PRODUCT_INFO)
+        runCurrent()
+
+        val card = assertIs<JournalEntry.Result>(entries().last())
+        assertEquals(ResultRequest.Product, card.request)
+        assertEquals(ResultContent.ProductData(testProduct), card.content)
+        assertEquals(listOf(testFacts.systemId), devices.productRequests)
+        assertEquals(DockLevel.Topic(AssistantTopic.DEVICES), vm.state.value.level)
+
+        vm.onProductOpen(testProduct.id.toString())
+        runCurrent()
+        assertEquals(
+            MountAssistantEffect.Navigate(AssistantNavigationTarget.ProductInfo("77", testFacts.systemId)),
+            effects.last(),
+        )
+    }
+
+    @Test
+    fun `unknown product is a neutral card, not an error`() = test {
+        devices.product = Response.Error(AssistantProductNotFoundException())
+        val (vm, _) = viewModel()
+        vm.onActionClick(AssistantAction.PRODUCT_INFO)
+        runCurrent()
+
+        assertEquals(
+            ResultContent.ProductNotFound(testFacts.systemId),
+            (entries().last() as JournalEntry.Result).content,
+        )
+    }
+
+    @Test
+    fun `a number in the search opens the product screen instead of the settings search`() = test {
+        val (vm, effects) = viewModel()
+        vm.onQueryChange("4123 700107131")
+        vm.onSearchSubmit(topic = null)
+        runCurrent()
+
+        assertEquals(StepTitle.ProductNumber("4123700107131"), (entries().last() as JournalEntry.Step).title)
+        assertEquals("", vm.state.value.query)
+        assertEquals(
+            MountAssistantEffect.Navigate(AssistantNavigationTarget.ProductInfo("4123700107131", testFacts.systemId)),
+            effects.last(),
+        )
+    }
+
+    @Test
+    fun `without the account feature a number is an ordinary query`() = test {
+        devices.facts.value = testFacts.copy(productSearch = false)
+        val (vm, effects) = viewModel()
+        vm.onQueryChange("107131")
+        vm.onSearchSubmit(topic = null)
+        runCurrent()
+
+        assertTrue(effects.none { it is MountAssistantEffect.Navigate })
+        assertTrue(entries().none { (it as? JournalEntry.Step)?.title is StepTitle.ProductNumber })
     }
 }

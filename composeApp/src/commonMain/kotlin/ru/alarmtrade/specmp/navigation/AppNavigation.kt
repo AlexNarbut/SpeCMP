@@ -66,6 +66,8 @@ import ru.alarmtrade.specmp.feature.login.presentation.navigation.LoginNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.model.MainNavigationTarget
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainNavGraph
 import ru.alarmtrade.specmp.feature.main.presentation.navigation.MainRoute
+import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoEntry
+import ru.alarmtrade.specmp.feature.productinfo.presentation.navigation.ProductInfoRoute
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatEntry
 import ru.alarmtrade.specmp.feature.supportchat.presentation.navigation.SupportChatRoute
 import ru.alarmtrade.specmp.feature.techrequests.presentation.navigation.TechRequestPrefill
@@ -94,6 +96,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(MainRoute::class, MainRoute.serializer())
             subclass(SupportChatRoute::class, SupportChatRoute.serializer())
             subclass(TechRequestsRoute::class, TechRequestsRoute.serializer())
+            subclass(ProductInfoRoute::class, ProductInfoRoute.serializer())
             subclass(DeviceSelectionRoute::class, DeviceSelectionRoute.serializer())
             subclass(AdvancedMountRoute::class, AdvancedMountRoute.serializer())
             subclass(FastMountSelectionRoute::class, FastMountSelectionRoute.serializer())
@@ -159,6 +162,9 @@ private fun AuthedNavGraph() {
                     prefill = key.prefill,
                 )
             }
+            entry<ProductInfoRoute> { key ->
+                ProductInfoEntry(onBack = { backStack.popSafe() }, query = key.query, connectedId = key.connectedId)
+            }
             entry<DeviceSelectionRoute> { _ ->
                 DeviceSelectionNavGraph(
                     // Сессия создана — поиск заменяется flow работы с устройством:
@@ -219,6 +225,9 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
         AdvancedMountNavGraph(
             onExit = onExit,
             onOpenSupportChat = { backStack.navigateSafe(SupportChatRoute) },
+            onOpenProductInfo = { systemId ->
+                backStack.navigateSafe(ProductInfoRoute(query = systemId.toString(), connectedId = systemId))
+            },
             firmwareCheck = { onBack -> AssistantFirmwareCheck(firmwareBoot, onBack) },
             settingsEditor = { onBack, onOpenFirmwareUpdate, focusSettingId, openLoad ->
                 DeviceSettingsEditor(
@@ -280,7 +289,16 @@ private fun AdvancedMountFlow(backStack: NavBackStack<NavKey>) {
                 )
             },
             assistant = { onBack, onOpenSection, onOpenSettings ->
-                AdvancedMountAssistant(device, firmwareBoot, onBack, onOpenSection, onOpenSettings) {
+                AdvancedMountAssistant(
+                    device = device,
+                    firmwareBoot = firmwareBoot,
+                    onBack = onBack,
+                    onOpenSection = onOpenSection,
+                    onOpenSettings = onOpenSettings,
+                    onOpenProductInfo = { target ->
+                        backStack.navigateSafe(ProductInfoRoute(target.query, target.connectedId))
+                    },
+                ) {
                     backStack.navigateSafe(TechRequestsRoute(TechRequestPrefill(origin = null, text = "")))
                 }
             },
@@ -468,11 +486,12 @@ private fun navigateFromMain(target: MainNavigationTarget, backStack: NavBackSta
 
         MainNavigationTarget.TechRequests -> backStack.navigateSafe(TechRequestsRoute())
 
+        MainNavigationTarget.ProductInfo -> backStack.navigateSafe(ProductInfoRoute())
+
         MainNavigationTarget.Settings -> backStack.navigateSafe(AppSettingsRoute)
 
         MainNavigationTarget.CanScanner,
         MainNavigationTarget.Feedback,
-        MainNavigationTarget.ProductInfo,
         MainNavigationTarget.Warehouse1C,
         MainNavigationTarget.AppUpdate,
         -> Unit

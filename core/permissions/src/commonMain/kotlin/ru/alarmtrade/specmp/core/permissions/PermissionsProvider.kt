@@ -29,7 +29,7 @@ interface PermissionsProvider {
 
     fun openAppSettings() = getController().openAppSettings()
 
-    suspend fun requestBlePermissions(): BlePermissionResult {
+    suspend fun requestBlePermissions(): PermissionResult {
         val controller = getController()
         getBlePermission().forEach { permission ->
             try {
@@ -37,22 +37,39 @@ interface PermissionsProvider {
                     controller.providePermission(permission)
                 }
             } catch (ignored: DeniedAlwaysException) {
-                return BlePermissionResult.Denied(canOpenSettings = true)
+                return PermissionResult.Denied(canOpenSettings = true)
             } catch (ignored: DeniedException) {
-                return BlePermissionResult.Denied(canOpenSettings = false)
+                return PermissionResult.Denied(canOpenSettings = false)
             } catch (ignored: RequestCanceledException) {
-                return BlePermissionResult.Denied(canOpenSettings = false)
+                return PermissionResult.Denied(canOpenSettings = false)
             }
         }
-        return BlePermissionResult.Granted
+        return PermissionResult.Granted
+    }
+
+    /** Камера для сканера штрих-кода; уже выдано — без системного диалога. */
+    suspend fun requestCameraPermission(): PermissionResult {
+        val controller = getController()
+        return try {
+            if (controller.getPermissionState(Permission.CAMERA) != PermissionState.Granted) {
+                controller.providePermission(Permission.CAMERA)
+            }
+            PermissionResult.Granted
+        } catch (ignored: DeniedAlwaysException) {
+            PermissionResult.Denied(canOpenSettings = true)
+        } catch (ignored: DeniedException) {
+            PermissionResult.Denied(canOpenSettings = false)
+        } catch (ignored: RequestCanceledException) {
+            PermissionResult.Denied(canOpenSettings = false)
+        }
     }
 }
 
-/** [Denied.canOpenSettings] — отклонено навсегда: исправить можно только в настройках. */
-sealed interface BlePermissionResult {
-    data object Granted : BlePermissionResult
+/** Результат запроса разрешения (BLE, камера); [Denied.canOpenSettings] — отклонено навсегда: только в настройках. */
+sealed interface PermissionResult {
+    data object Granted : PermissionResult
 
-    data class Denied(val canOpenSettings: Boolean) : BlePermissionResult
+    data class Denied(val canOpenSettings: Boolean) : PermissionResult
 }
 
 expect fun permissionsModule(): Module

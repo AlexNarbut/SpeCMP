@@ -25,7 +25,7 @@ const {
 const ICON = {
   quick: "bolt", extended: "tune",
   configurator: "settings", firmware: "archive", cars: "directions_car",
-  requests: "assignment", feedback: "feedback", product: "info",
+  requests: "assignment", feedback: "feedback", product: "manage_search",
   menu: "menu", sync: "sync", settings: "settings", logout: "logout",
   themeDark: "dark_mode", themeLight: "light_mode", status: "check_circle", person: "person",
   support: "support_agent",
@@ -43,7 +43,7 @@ const TOOLS = [
   { key: "cars",         svg: "vehicle_support",       title: "Автомобили",            desc: "Поддерживаемые автомобили и функции" },
   { key: "requests",     svg: "tech_requests",         title: "Заявки на техпомощь",   desc: "Обратный звонок специалиста и история заявок" },
   { key: "feedback",     svg: "feedback",              title: "Обратная связь",        desc: "Отзыв о монтаже и улучшениях" },
-  { key: "product",      svg: "articles",              title: "Информация о товаре",   desc: "Поиск информации о продукте" },
+  { key: "product",      icon: "manage_search",       title: "Информация о товаре",   desc: "Найти информацию о товаре и комплектации" },
 ];
 
 const PROFILES = {

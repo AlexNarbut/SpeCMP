@@ -67,6 +67,5 @@ internal fun Set<DeviceFeature>?.toSections(bluetooth: Boolean): List<MountSecti
 @Serializable
 @SerialName("advanced-mount.MountExtra")
 enum class MountExtra {
-    PRODUCT_INFO,
     REMOTE_SYNC,
 }

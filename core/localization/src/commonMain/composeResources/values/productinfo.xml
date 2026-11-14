@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="productinfo_main_title_screen">Product information</string>
+    <string name="productinfo_common_a11y_back">Back</string>
+    <string name="productinfo_search_label_query">Device ID or barcode digits</string>
+    <string name="productinfo_search_placeholder_query">e.g. 107131</string>
+    <string name="productinfo_search_btn_find">Search</string>
+    <string name="productinfo_search_a11y_clear">Clear</string>
+    <string name="productinfo_search_a11y_scan">Scan barcode</string>
+    <string name="productinfo_empty_btn_scan">Scan barcode</string>
+    <string name="productinfo_search_error_empty">Enter a number</string>
+    <string name="productinfo_search_error_not_digits">Digits only</string>
+    <string name="productinfo_search_error_too_long">Number is too long</string>
+    <string name="productinfo_empty_title">Find a product by its number</string>
+    <string name="productinfo_empty_msg">We will show what the product is, which firmware it shipped with and what should be in the kit.</string>
+    <string name="productinfo_empty_label_device_id">Device ID</string>
+    <string name="productinfo_empty_hint_device_id">On the unit label and in the app when connected</string>
+    <string name="productinfo_empty_label_barcode">Barcode</string>
+    <string name="productinfo_empty_hint_barcode">On the box — the digits under the bars</string>
+    <string name="productinfo_product_title">Product</string>
+    <string name="productinfo_kit_title">Kit</string>
+    <string name="productinfo_product_status_connected">Connected unit</string>
+    <string name="productinfo_common_label_id">ID</string>
+    <string name="productinfo_common_label_serial">Serial number</string>
+    <string name="productinfo_product_label_factory_date">Manufacture date</string>
+    <string name="productinfo_kit_label_package_date">Packing date</string>
+    <string name="productinfo_common_label_firmwares">Firmware</string>
+    <string name="productinfo_common_label_firmware">Firmware</string>
+    <string name="productinfo_kit_label_contents">In the kit</string>
+    <plurals name="productinfo_kit_label_components">
+        <item quantity="one">%1$d component</item>
+        <item quantity="other">%1$d components</item>
+    </plurals>
+    <string name="productinfo_components_title">Components · %1$d</string>
+    <string name="productinfo_components_btn_expand_all">Expand all</string>
+    <string name="productinfo_components_btn_collapse_all">Collapse all</string>
+    <string name="productinfo_components_label_name">Name</string>
+    <string name="productinfo_components_format_firmware">Firmware %1$s</string>
+    <plurals name="productinfo_components_label_firmware_count">
+        <item quantity="one">%1$d firmware</item>
+        <item quantity="other">%1$d firmwares</item>
+    </plurals>
+    <string name="productinfo_components_format_serial">S/N %1$s</string>
+    <string name="productinfo_components_format_id">ID %1$s</string>
+    <string name="productinfo_components_msg_no_serial">No serial number</string>
+    <string name="productinfo_components_msg_no_firmware">No firmware</string>
+    <string name="productinfo_components_value_none" translatable="false">—</string>
+    <string name="productinfo_result_error_not_found">No product found for %1$s</string>
+    <string name="productinfo_result_msg_not_found">Check the number and try again.</string>
+    <string name="productinfo_result_error_server">Couldn’t load data. The server didn’t respond.</string>
+    <string name="productinfo_result_btn_retry">Retry</string>
+    <string name="productinfo_common_a11y_copy">Copy: %1$s</string>
+    <string name="productinfo_common_msg_copied">Copied: %1$s</string>
+</resources>

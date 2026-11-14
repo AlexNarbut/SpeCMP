@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="barcode_scanner_title">Barcode scanner</string>
+    <string name="barcode_scanner_a11y_close">Close scanner</string>
+    <string name="barcode_scanner_a11y_torch_on">Turn on flashlight</string>
+    <string name="barcode_scanner_a11y_torch_off">Turn off flashlight</string>
+    <string name="barcode_scanner_hint_frame">Fit the barcode in the frame</string>
+    <string name="barcode_scanner_hint_where">The barcode is on the box or on the unit label. It is read automatically, no need to tap anything.</string>
+    <string name="barcode_scanner_hint_slow">Not reading? Move the phone closer, turn on the flashlight or enter the digits manually.</string>
+    <string name="barcode_scanner_btn_manual">Enter manually</string>
+    <string name="barcode_scanner_msg_found">Recognized · searching for the product</string>
+    <string name="barcode_scanner_title_no_access">No camera access</string>
+    <string name="barcode_scanner_error_denied">To read a barcode, allow the app to use the camera. Or enter the digits manually.</string>
+    <string name="barcode_scanner_error_blocked">Camera access is denied. Allow it in the phone settings or enter the digits manually.</string>
+    <string name="barcode_scanner_btn_allow">Allow access</string>
+    <string name="barcode_scanner_btn_settings">Open settings</string>
+    <string name="barcode_scanner_title_unavailable">Camera unavailable</string>
+    <string name="barcode_scanner_error_unavailable">Close other apps that use it, or enter the digits manually.</string>
+</resources>

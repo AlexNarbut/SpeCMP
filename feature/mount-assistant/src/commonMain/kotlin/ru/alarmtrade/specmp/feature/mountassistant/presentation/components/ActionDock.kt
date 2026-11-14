@@ -44,6 +44,7 @@ import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_labe
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_title_found
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_title_home
 import ru.alarmtrade.specmp.core.localization.resources.mountassistant_dock_title_nothing
+import ru.alarmtrade.specmp.core.localization.resources.mountassistant_product_format_short
 import ru.alarmtrade.specmp.core.ui.theme.cmpThemeColors
 import ru.alarmtrade.specmp.core.ui.view.button.CmpIconButton
 import ru.alarmtrade.specmp.core.ui.view.icon.CmpIcon
@@ -56,6 +57,7 @@ import ru.alarmtrade.specmp.core.ui.view.surface.CmpSurface
 import ru.alarmtrade.specmp.core.ui.view.text.CmpText
 import ru.alarmtrade.specmp.core.ui.view.text.CmpTextStyle
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.ActionKind
+import ru.alarmtrade.specmp.feature.mountassistant.domain.model.AssistantAction
 import ru.alarmtrade.specmp.feature.mountassistant.domain.model.StatusTone
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockHead
 import ru.alarmtrade.specmp.feature.mountassistant.presentation.model.DockTile
@@ -188,7 +190,7 @@ private fun TileCarousel(
                 onClick = { onTile(tile) },
                 tag = tileTag(tile),
                 modifier = Modifier.height(tileHeight),
-                width = if (tile is DockTile.Hero) 280.dp else 184.dp,
+                width = if (tile is DockTile.Hero || tile is DockTile.ProductNumber) 280.dp else 184.dp,
                 pulseSeq = tile.pulseSeq(),
                 dense = true,
             )
@@ -240,6 +242,16 @@ internal fun tileContent(tile: DockTile, firmwareVersion: String): TileContent =
     is DockTile.Action -> actionContent(tile)
 
     is DockTile.Setting -> settingContent(tile)
+
+    is DockTile.ProductNumber -> TileContent(
+        variant = TileVariant.ACTION,
+        title = stringResource(Strings.string.mountassistant_product_format_short, tile.number),
+        subtitle = tile.blocked?.let { blockLabel(it) } ?: actionTitle(AssistantAction.PRODUCT_INFO),
+        icon = AssistantAction.PRODUCT_INFO.icon,
+        filled = tile.blocked == null,
+        blocked = tile.blocked != null,
+        corner = TileCorner.OPENS,
+    )
 
     is DockTile.SearchAll -> TileContent(
         variant = TileVariant.ACTION,

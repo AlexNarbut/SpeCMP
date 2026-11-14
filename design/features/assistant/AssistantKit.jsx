@@ -285,12 +285,13 @@ function Pill({ tone = "neutral", icon, children }) {
 }
 function CardShell({ b, ctx, icon, title, badge, children, rows = 3, heavy }) {
   const st = b.status || "data";
+  const net = st === "error" && b.errTone === "net";
   return (
     <CmpSurface color="var(--asst-card)" radius={16} border={!heavy} style={{ boxSizing: "border-box", overflow: "hidden", ...(heavy ? { border: "2px solid var(--primary)", boxShadow: "var(--elevation-2)" } : null) }}>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ width: 40, height: 40, borderRadius: 12, background: st === "error" ? "var(--error-container)" : "var(--primary-container)", color: st === "error" ? "var(--on-error-container)" : "var(--on-primary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-            <CmpIcon icon={st === "error" ? "error" : icon} size={22} />
+          <span style={{ width: 40, height: 40, borderRadius: 12, background: net ? "var(--surface-container-highest)" : st === "error" ? "var(--error-container)" : "var(--primary-container)", color: net ? "var(--on-surface-variant)" : st === "error" ? "var(--on-error-container)" : "var(--on-primary-container)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <CmpIcon icon={net ? "wifi_off" : st === "error" ? "error" : icon} size={22} />
           </span>
           <div style={{ flex: 1, minWidth: 0 }}><CmpText variant="titleMedium">{title}</CmpText></div>
           {st === "data" && badge}
@@ -456,7 +457,45 @@ function SettingsBody({ b, ctx }) {
   );
 }
 
+const compsLabel = (n) => { const a = n % 10, h = n % 100; return `${n} ${a === 1 && h !== 11 ? "компонент" : a >= 2 && a <= 4 && (h < 12 || h > 14) ? "компонента" : "компонентов"}`; };
+// Информация о товаре — коротко про подключённый блок; полный экран — «Подробнее».
+function ProductBody({ d, ctx }) {
+  if (d.notFound) return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+      <CmpText variant="titleMedium">{`Товар с ID ${d.id} не найден`}</CmpText>
+      <CmpText variant="bodyLarge" color="var(--on-surface-variant)">Блок мог быть продан не через систему — это не ошибка. Можно поискать по штрих-коду с коробки.</CmpText>
+      <CmpOutlinedButton text="Искать по другому номеру" icon="search" onClick={() => ctx.openProduct && ctx.openProduct("")} style={{ height: 48, marginTop: 4 }} />
+    </div>
+  );
+  const rows = [["ID", d.id], ["Серийный номер", d.serial], ["Заводская дата", d.date]].filter(([, v]) => v);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <CmpText variant="titleLarge">{d.name}</CmpText>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {rows.map(([l, v], i) => (
+          <div key={l} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: 12, minHeight: 48, borderTop: i ? "1px solid var(--outline-variant)" : "none" }}>
+            <span style={{ flex: "1 1 120px" }}><CmpText variant="bodyLarge" color="var(--on-surface-variant)">{l}</CmpText></span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 500, color: "var(--on-surface)", overflowWrap: "anywhere" }}>{v}</span>
+          </div>
+        ))}
+      </div>
+      {d.kit && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "10px 12px", borderRadius: 12, background: "var(--surface-container)", flexWrap: "wrap" }}>
+          <CmpIcon icon="inventory_2" size={24} color="var(--primary)" />
+          <div style={{ flex: "1 1 160px", minWidth: 0, display: "flex", flexDirection: "column" }}>
+            <CmpText variant="labelLarge" color="var(--on-surface-variant)">Комплект</CmpText>
+            <CmpText variant="titleMedium">{d.kit.name}</CmpText>
+          </div>
+          <Pill tone="info">{compsLabel(d.kit.n)}</Pill>
+        </div>
+      )}
+      <CmpButton text="Подробнее" icon="open_in_new" onClick={() => ctx.openProduct && ctx.openProduct(d.id)} style={{ height: 48, alignSelf: "flex-start" }} />
+    </div>
+  );
+}
+
 function CardBlock({ b, ctx }) {
+  if (b.kind === "product") return <CardShell b={b} ctx={ctx} icon="manage_search" title="Информация о товаре" rows={4} badge={b.data && b.data.notFound ? <Pill tone="neutral">Нет в базе</Pill> : null}>{b.data && <ProductBody d={b.data} ctx={ctx} />}</CardShell>;
   if (b.kind === "fw") return <CardShell b={b} ctx={ctx} icon="system_update" title="Прошивка" badge={b.data && (b.data.mods.some((m) => m.cur !== m.last) ? <Pill tone="warn">Есть обновление</Pill> : <Pill tone="ok" icon="check_circle">Актуальна</Pill>)}>{b.data && <FirmwareBody d={b.data} />}</CardShell>;
   if (b.kind === "state") return <CardShell b={b} ctx={ctx} icon="speed" title="Состояние блока" rows={4} badge={<Pill tone="warn" icon="warning">1 внимание</Pill>}>{b.data && <StateBody d={b.data} />}</CardShell>;
   if (b.kind === "bypass") return <CardShell b={b} ctx={ctx} icon="key" title="Обход и Clone">{b.data && <BypassBody d={b.data} />}</CardShell>;
