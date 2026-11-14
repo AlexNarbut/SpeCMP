@@ -324,39 +324,23 @@ function HomeDrawer({ variant = "modal", profile, dark, onDark, syncing, onSync,
           spin={syncing}
           trailing={syncing ? <CmpCircularProgressIndicator size={20} strokeWidth={2.5} /> : null}
         />
-        {appUpdate && (
+        {appUpdate && appUpdate.platform === "desktop" && (
           <DrawerRow
             icon={ICON.appUpdate}
-            label={appUpdate.state === "checking" ? "Проверка обновлений…" : "Проверить обновления"}
-            onClick={appUpdate.state === "checking" ? undefined : appUpdate.onCheck}
-            trailing={appUpdate.state === "checking" ? <CmpCircularProgressIndicator size={20} strokeWidth={2.5} /> : null}
+            label="Проверить обновления"
+            onClick={appUpdate.onCheck}
           />
+        )}
+        {appUpdate && appUpdate.platform !== "desktop" && window.AppUpdate && (
+          <window.AppUpdate.MenuUpdateRow dot={appUpdate.state === "available"} onClick={() => appUpdate.onOpen("menu")} />
         )}
         <DrawerRow icon={ICON.settings} label="Настройки" onClick={() => onNav("settings")} />
         <DrawerRow icon={ICON.logout} label="Выход" onClick={() => onNav("logout")} />
       </div>
       <div style={{ flex: 1 }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 12 }}>
-        {appUpdate && appUpdate.state === "available" && (
-          <CmpSurface
-            onClick={appUpdate.onOpen}
-            color="var(--primary-container)"
-            contentColor="var(--on-primary-container)"
-            radius={12}
-            className="ps-focusable"
-            role="button"
-            tabIndex={0}
-            style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", cursor: "pointer" }}
-          >
-            <CmpIcon icon={ICON.appUpdate} size={24} color="var(--on-primary-container)" />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <CmpText variant="labelLarge" weight={600} color="var(--on-primary-container)">Доступна новая версия</CmpText>
-              <div style={{ marginTop: 1 }}>
-                <CmpText variant="labelMedium" color="color-mix(in srgb, var(--on-primary-container) 78%, transparent)">{appUpdate.latest} · нажмите, чтобы обновить</CmpText>
-              </div>
-            </div>
-            <CmpIcon icon="ChevronRight" size={22} color="var(--on-primary-container)" />
-          </CmpSurface>
+        {appUpdate && appUpdate.platform === "desktop" && window.AppUpdate && (
+          <window.AppUpdate.SideUpdateBlock c={appUpdate.ctl} onOpen={() => appUpdate.onOpen("sidebar")} />
         )}
         <div style={{ padding: "0 12px", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           <CmpText variant="labelMedium" color="var(--on-surface-variant)">Pandora Спец · версия {(appUpdate && appUpdate.current) || "2.4.1"}</CmpText>
@@ -373,7 +357,7 @@ function HomeDrawer({ variant = "modal", profile, dark, onDark, syncing, onSync,
 }
 
 // ── Top app bar ───────────────────────────────────────────────────────────────
-function HomeTopBar({ compactStatus = false, syncing = false, loading = false, onMenu, title = "Pandora Спец", back = false, onBack }) {
+function HomeTopBar({ compactStatus = false, syncing = false, loading = false, onMenu, title = "Pandora Спец", back = false, onBack, required = null }) {
   return (
     <CmpTopAppBar
       centered
@@ -382,13 +366,13 @@ function HomeTopBar({ compactStatus = false, syncing = false, loading = false, o
       navigationIcon={back
         ? <CmpIconButton icon="ArrowBack" contentDescription="Назад" onClick={onBack} />
         : <CmpIconButton icon={ICON.menu} contentDescription="Открыть меню" onClick={onMenu} disabled={loading} />}
-      actions={(loading || back) ? null : <StatusChip compact={compactStatus} syncing={syncing} />}
+      actions={(loading || back) ? null : <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>{required && window.AppUpdate && <window.AppUpdate.RequiredUpdateButton onClick={required} />}<StatusChip compact={compactStatus} syncing={syncing} /></span>}
     />
   );
 }
 
 // ── Screen body (cards + tools), no visible section headings ─────────────────
-function HomeContent({ mode, cardVariant = "centered", onNav = () => {} }) {
+function HomeContent({ mode, cardVariant = "centered", onNav = () => {}, banner = null }) {
   const compact = mode === "compact";
   const mainCols = compact ? 1 : 2;
   const toolCols = mode === "large" ? 4 : mode === "expanded" ? 3 : mode === "medium" ? 2 : 1;
@@ -399,6 +383,7 @@ function HomeContent({ mode, cardVariant = "centered", onNav = () => {} }) {
   return (
     <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
       <div style={{ maxWidth: maxW, margin: "0 auto", padding: `${pad}px ${pad}px ${pad + 8}px`, display: "flex", flexDirection: "column", gap: mode === "compact" ? 16 : 24, boxSizing: "border-box" }}>
+        {banner}
         {/* Primary scenarios — two equal action cards */}
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${mainCols}, 1fr)`, gap: mode === "compact" ? 12 : 16 }}>
           {MAIN_ACTIONS.map((item) => (
@@ -516,6 +501,7 @@ function HomeScreen({
         title={inUpdate ? "Обновление приложения" : "Pandora Спец"}
         back={inUpdate}
         onBack={onBackHome}
+        required={appUpdate && appUpdate.required ? () => appUpdate.onOpen("required") : null}
       />
       {loading && <CmpLinearProgressIndicator />}
 
@@ -528,11 +514,21 @@ function HomeScreen({
         {loading
           ? <HomeSkeleton mode={mode} cardVariant={cardVariant} />
           : inUpdate
-            ? (window.AppUpdate
-                ? <window.AppUpdate.UpdateFlow mode={mode} current={appUpdate ? appUpdate.current : "2.4.1"} latest={appUpdate ? appUpdate.latest : "2.5.0"} onLater={onBackHome} />
+            ? (window.AppUpdate && appUpdate
+                ? <window.AppUpdate.UpdateRoute ctl={appUpdate.ctl} mode={mode} from={appUpdate.from} onLater={onBackHome} />
                 : null)
-            : <HomeContent mode={mode} cardVariant={cardVariant} onNav={onNav} />}
+            : <HomeContent mode={mode} cardVariant={cardVariant} onNav={onNav}
+                banner={appUpdate && appUpdate.platform !== "desktop" && appUpdate.state === "available" && !appUpdate.bannerHidden && window.AppUpdate
+                  ? <window.AppUpdate.UpdateBanner latest={appUpdate.latest} onOpen={() => appUpdate.onOpen("banner")} onClose={appUpdate.onHideBanner} />
+                  : null} />}
       </div>
+
+      {appUpdate && appUpdate.toast && !inUpdate && window.AppUpdate && (
+        <div style={{ position: "absolute", left: 16, right: 16, bottom: 16, zIndex: 20, display: "flex", justifyContent: "center" }}>
+          <window.AppUpdate.UpdateToast latest={appUpdate.latest} onUpdate={appUpdate.onToastUpdate} onClose={appUpdate.onToastClose} />
+        </div>
+      )}
+      {appUpdate && window.AppUpdate && <window.AppUpdate.UpdateDialogs c={appUpdate.ctl} />}
 
       {showModal && (
         <div style={{ position: "absolute", inset: 0, zIndex: 10, display: "flex" }}>
